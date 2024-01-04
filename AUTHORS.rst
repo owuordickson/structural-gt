@@ -1,7 +1,7 @@
 Credits:
 --------
 
-1. Nicholus Kotov <kotov@umich.edu>
+1. Nicholas Kotov <kotov@umich.edu>
 
 
 Development Lead:
