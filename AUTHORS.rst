@@ -1,5 +1,4 @@
 Credits:
-
 --------
 
 1. Nicholus Kotov <kotov@umich.edu>
