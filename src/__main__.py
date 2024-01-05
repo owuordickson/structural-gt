@@ -27,14 +27,20 @@ __author__ = "Dickson Owuor"
 __credits__ = "Chemical Engineering Department, University of Michigan"
 
 
+import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 
 
 class MainFrame(ttk.Frame):
 
     def __init__(self, container):
         super().__init__(container)
+
+        # variables to store path and dir
+        self.img_path = ''
+        self.save_dir = ''
+        self.error_msg = ''
 
         # set up grid layout
         self.columnconfigure(0, weight=2)
@@ -44,7 +50,7 @@ class MainFrame(ttk.Frame):
         self.__create_widgets()
 
     def __create_widgets(self):
-        
+
         # (button) About
         self.btn_about = ttk.Button(self, text='About')
         self.btn_about['command'] = self.btn_about_clicked
@@ -79,8 +85,35 @@ class MainFrame(ttk.Frame):
         )
 
     def btn_select_img_clicked(self):
-        self.btn_chaosgt['state'] = 'normal'
-        pass
+
+        # disable btn_select until image is loaded
+        self.btn_select_img['state'] = 'disabled'
+
+        # ask the user to select their image
+        fd_image = filedialog.askopenfilename()
+
+        # testing if the file is a workable image
+        if fd_image.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+
+            # removing the prvious canvas image
+            # cnv_list = self.slaves
+            # for cnv in cnv_list:
+            #    if isinstance(cnv, tk.Canvas):
+            #        cnv.destroy()
+            
+            # split the file location into file name and path
+            self.save_dir, self.img_path = os.path.split(fd_image)
+
+            # enable ChaosGT button and Select button
+            self.btn_select_img['state'] = 'normal'
+            self.btn_chaosgt['state'] = 'normal'
+        else:
+            self.error_msg = "Error: file needs to be a .tif, .png, or .jpg"
+
+            # disable ChaosGT button
+            self.btn_select_img['state'] = 'normal'
+            self.btn_chaosgt['state'] = 'disabled'
+
 
     def btn_chaosgt_clicked(self):
         pass
