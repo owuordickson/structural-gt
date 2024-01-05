@@ -65,9 +65,6 @@ class MainFrame(ttk.Frame):
         self.cvs_image = tk.Canvas(self, width=300, height=300, bg='white')
         self.cvs_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
 
-        #for widget in self.winfo_children():
-        #    widget.grid(padx=5, pady=2)
-
     def btn_about_clicked(self):
         about_info = "Chaos-GT is an application for implemeting chaos engineering in nano-structures. "\
                      "The application was designed by Dickson Owuor and Nicholas Kotov."\
@@ -109,5 +106,4 @@ class ChaosApp(tk.Tk):
 if __name__ == "__main__":
 
     app = ChaosApp()
-    # frame = MainFrame(app)
     app.mainloop()
