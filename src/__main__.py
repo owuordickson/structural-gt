@@ -44,22 +44,26 @@ class MainFrame(ttk.Frame):
         self.__create_widgets()
 
     def __create_widgets(self):
+        # pixel component
+        # pixel = tk.PhotoImage(width=1, height=1)
+
         # (button) About
         self.btn_about = ttk.Button(self, text='About')
         self.btn_about['command'] = self.btn_about_clicked
         self.btn_about.grid(column=1, row=0, padx=5, pady=5, sticky=tk.E)
 
         # (button) Select Image
-        self.btn_select_img = ttk.Button(self, text='Select Image')
+        self.btn_select_img = tk.Button(self, text='Select Image', width=15, height=2, compound='c')
+        self.btn_select_img['fg'] = 'dark green'
         self.btn_select_img['command'] = self.btn_select_img_clicked
         self.btn_select_img.grid(column=0, row=1, padx=5, pady=2, sticky=tk.EW)
 
         # (button) ChaosGT Image
-        self.btn_chaosgt = ttk.Button(self, text='Proceed to Chaos GT')
+        self.btn_chaosgt = tk.Button(self, text='Proceed to Chaos GT', width=15, height=2, compound='c')
+        self.btn_chaosgt['fg'] = 'dark green'
         self.btn_chaosgt['command'] = self.btn_chaosgt_clicked
+        self.btn_chaosgt['state'] = 'disabled'
         self.btn_chaosgt.grid(column=0, row=2, padx=5, pady=2, sticky=tk.NW)
-        # self.btn_chaosgt.state(['disabled'])
-        self.btn_chaosgt.grid_forget()
 
         # Image Placeholder
         self.cvs_image = tk.Canvas(self, width=300, height=300, bg='white')
@@ -77,8 +81,7 @@ class MainFrame(ttk.Frame):
         )
 
     def btn_select_img_clicked(self):
-        self.btn_chaosgt.grid(column=0, row=2, sticky=tk.NW)
-        # self.btn_chaosgt.state(['!disabled'])
+        self.btn_chaosgt['state'] = 'normal'
         pass
 
     def btn_chaosgt_clicked(self):
