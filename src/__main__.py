@@ -44,9 +44,7 @@ class MainFrame(ttk.Frame):
         self.__create_widgets()
 
     def __create_widgets(self):
-        # pixel component
-        # pixel = tk.PhotoImage(width=1, height=1)
-
+        
         # (button) About
         self.btn_about = ttk.Button(self, text='About')
         self.btn_about['command'] = self.btn_about_clicked
