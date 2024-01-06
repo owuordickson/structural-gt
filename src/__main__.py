@@ -147,7 +147,6 @@ class MainFrame(ttk.Frame):
             self.pgb_status.grid_forget()
             self.lbl_msg['text'] = self.error_msg
 
-
     def btn_chaosgt_clicked(self):
         pass
 
