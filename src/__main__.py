@@ -27,9 +27,11 @@ __author__ = "Dickson Owuor"
 __credits__ = "Chemical Engineering Department, University of Michigan"
 
 
+import cv2
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from PIL import Image, ImageTk
 
 
 class MainFrame(ttk.Frame):
@@ -38,9 +40,8 @@ class MainFrame(ttk.Frame):
         super().__init__(container)
 
         # variables to store path and dir
-        self.img_path = ''
-        self.save_dir = ''
         self.error_msg = ''
+        self.orig_img = None
 
         # set up grid layout
         self.columnconfigure(0, weight=2)
@@ -70,8 +71,11 @@ class MainFrame(ttk.Frame):
         self.btn_chaosgt.grid(column=0, row=2, padx=5, pady=2, sticky=tk.NW)
 
         # Image Placeholder
-        self.cvs_image = tk.Canvas(self, width=300, height=300, bg='white')
-        self.cvs_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
+        pixel = tk.PhotoImage(width=1, height=1)
+        self.lbl_image = tk.Label(self, image=pixel, width=300, height=300, bg='white')
+        self.lbl_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
+        # self.cvs_image = tk.Canvas(self, width=300, height=300, bg='white')
+        # self.cvs_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
 
     def btn_about_clicked(self):
         about_info = "Chaos-GT is an application for implemeting chaos engineering in nano-structures. "\
@@ -90,10 +94,10 @@ class MainFrame(ttk.Frame):
         self.btn_select_img['state'] = 'disabled'
 
         # ask the user to select their image
-        fd_image = filedialog.askopenfilename()
+        fd_image_file = filedialog.askopenfilename()
 
         # testing if the file is a workable image
-        if fd_image.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+        if fd_image_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
 
             # removing the prvious canvas image
             # cnv_list = self.slaves
@@ -102,7 +106,48 @@ class MainFrame(ttk.Frame):
             #        cnv.destroy()
             
             # split the file location into file name and path
-            self.save_dir, self.img_path = os.path.split(fd_image)
+            save_dir, file_name = os.path.split(fd_image_file)
+
+            # standardizing image size and resizing it
+            # raw_img = cv2.imread(os.path.join(save_dir, file_name), cv2.IMREAD_GRAYSCALE)
+            # w, h = raw_img.shape
+            # if (h > w):
+            #    scalefactor = 512 / h
+            # else:
+            #    scalefactor = 512 / w
+            # std_width = int(scalefactor * w)
+            # std_height = int(scalefactor * h)
+            # std_size = (std_height, std_width)
+            # self.orig_img = cv2.resize(raw_img, std_size)
+
+            # read and load image from file
+            raw_img = cv2.imread(os.path.join(save_dir, file_name), cv2.IMREAD_GRAYSCALE)
+
+            # standardizing image size and resizing it
+            w, h = raw_img.shape
+            if (h > w):
+                scalefactor = 512 / h
+            else:
+                scalefactor = 512 / w
+            std_width = int(scalefactor * w)
+            std_height = int(scalefactor * h)
+            std_size = (std_height, std_width)
+            std_img = cv2.resize(raw_img, std_size)
+            self.orig_img = std_img
+
+            # re-arrange the color channel
+            # b,g,r = cv2.split(std_img)
+            # img_arr = cv2.merge((r,g,b))
+
+            # convert the Image object into a TkPhoto object
+            img = Image.fromarray(std_img)
+            img_tk = ImageTk.PhotoImage(image=img)
+
+            # remove current image and place the new one
+            # self.lbl_image.grid_forget()
+            self.lbl_image = tk.Label(self, image=img_tk, width=300, height=300)
+            self.lbl_image.image = img_tk
+            self.lbl_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
 
             # enable ChaosGT button and Select button
             self.btn_select_img['state'] = 'normal'
