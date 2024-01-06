@@ -99,53 +99,22 @@ class MainFrame(ttk.Frame):
         # testing if the file is a workable image
         if fd_image_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
 
-            # removing the prvious canvas image
-            # cnv_list = self.slaves
-            # for cnv in cnv_list:
-            #    if isinstance(cnv, tk.Canvas):
-            #        cnv.destroy()
-            
             # split the file location into file name and path
             save_dir, file_name = os.path.split(fd_image_file)
 
-            # standardizing image size and resizing it
-            # raw_img = cv2.imread(os.path.join(save_dir, file_name), cv2.IMREAD_GRAYSCALE)
-            # w, h = raw_img.shape
-            # if (h > w):
-            #    scalefactor = 512 / h
-            # else:
-            #    scalefactor = 512 / w
-            # std_width = int(scalefactor * w)
-            # std_height = int(scalefactor * h)
-            # std_size = (std_height, std_width)
-            # self.orig_img = cv2.resize(raw_img, std_size)
-
             # read and load image from file
-            raw_img = cv2.imread(os.path.join(save_dir, file_name), cv2.IMREAD_GRAYSCALE)
+            self.orig_img = cv2.imread(os.path.join(save_dir, file_name), cv2.IMREAD_GRAYSCALE)
 
-            # standardizing image size and resizing it
-            w, h = raw_img.shape
-            if (h > w):
-                scalefactor = 512 / h
-            else:
-                scalefactor = 512 / w
-            std_width = int(scalefactor * w)
-            std_height = int(scalefactor * h)
-            std_size = (std_height, std_width)
-            std_img = cv2.resize(raw_img, std_size)
-            self.orig_img = std_img
-
-            # re-arrange the color channel
-            # b,g,r = cv2.split(std_img)
-            # img_arr = cv2.merge((r,g,b))
+            # resize image to 300 pixel
+            std_img = self.resize_img(300)
 
             # convert the Image object into a TkPhoto object
             img = Image.fromarray(std_img)
             img_tk = ImageTk.PhotoImage(image=img)
 
-            # remove current image and place the new one
-            # self.lbl_image.grid_forget()
-            self.lbl_image = tk.Label(self, image=img_tk, width=300, height=300)
+            # remove previous image and place the new one
+            self.lbl_image.destroy()
+            self.lbl_image = tk.Label(self, image=img_tk)
             self.lbl_image.image = img_tk
             self.lbl_image.grid(column=1, row=1, rowspan=12, padx=5, pady=2, sticky=tk.EW)
 
@@ -162,6 +131,18 @@ class MainFrame(ttk.Frame):
 
     def btn_chaosgt_clicked(self):
         pass
+
+    def resize_img(self, size):
+        w, h = self.orig_img.shape
+        if (h > w):
+            scalefactor = size / h
+        else:
+            scalefactor = size / w
+        std_width = int(scalefactor * w)
+        std_height = int(scalefactor * h)
+        std_size = (std_height, std_width)
+        std_img = cv2.resize(self.orig_img, std_size)
+        return std_img
 
 
 
