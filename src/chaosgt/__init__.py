@@ -6,4 +6,6 @@
 
 from .entrypoints import main_cli, main_gui
 
+__version__ = "0.0.1"
+
 __all__ = ['main_cli', 'main_gui']
