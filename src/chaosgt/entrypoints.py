@@ -3,7 +3,17 @@
 # 3.0.  See the LICENSE file in the root of this
 # repository for complete details.
 
+"""
+Entry points that allow users to execute GUI or Cli programs
+"""
 
-from .entrypoints import main_cli, main_gui
+from _gui_windows import ChaosGUI
 
-__all__ = ['main_cli', 'main_gui']
+
+def main_gui():
+    app = ChaosGUI()
+    app.mainloop()
+
+
+def main_cli():
+    pass

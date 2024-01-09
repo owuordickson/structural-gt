@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaos-gt"
+version = "0.0.1"
+#dependencies = [
+#  "httpx",
+#  "gidgethub[httpx]>4.0.0",
+#  "django>2.1; os_name != 'nt'",
+#  "django>2.0; os_name == 'nt'",
+#]
+requires-python = ">=3.9.11,<4.0"
+authors = [
+  {name = "Dickson Owuor", email = "owuordickson@gmail.com"},
+  {name = "Nicholas Kotov", email = "kotov@umich.edu"}
+]
+maintainers = [
+  {name = "Dickson Owuor", email = "owuordickson@gmail.com"}
+]
+description = "A software tool that implements chaos engineering in nano-structures."
+readme =  "README.md"
+license = {file = "LICENSE"}
+keywords = ["nano-particles", "nano-structures", "chaos-theory"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.9",
+  "License :: OSI Approved :: GNU General Public License v3 License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+#[project.optional-dependencies]
+#gui = ["PyQt5"]
+#cli = [
+#  "rich",
+#  "click",
+#]
+
+[project.urls]
+Homepage = "https://github.com/owuordickson/chaos-gt"
+Documentation = "http://chaos-gt.readthedocs.io"
+Repository = "https://github.com/owuordickson/chaos-gt.git"
+"Bug Tracker" = "https://github.com/owuordickson/chaos-gt/issues"
+Changelog = "https://github.com/owuordickson/chaos-gt/blob/master/CHANGELOG.md"
+
+[project.scripts]
+chaosgt-cli = "chaosgt:main_cli"
+
+[project.gui-scripts]
+chaosgt-gui = "chaosgt:main_gui"
+
+#[project.entry-points."spam.magical"]
+#tomatoes = "spam:main_tomatoes"
