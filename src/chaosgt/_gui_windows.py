@@ -38,6 +38,7 @@ class LaunchWindow(ttk.Frame):
         # initialize widgets
         self.__create_widgets()
 
+    # noinspection PyTypeChecker
     def __create_widgets(self):
 
         # (button) About
@@ -61,11 +62,11 @@ class LaunchWindow(ttk.Frame):
         # (label) Show status/error
         self.pgb_status = ttk.Progressbar(self, mode='indeterminate')
         # self.pgb_status.grid(column=0, row=3, padx=5, pady=5, sticky=tk.SW)
-        self.pgb_status.grid_forget();  # hide temporarily
+        self.pgb_status.grid_forget()  # hide temporarily
 
         self.lbl_msg = tk.Label(self, text='', fg='gray')
         # self.lbl_msg.grid(column=0, row=4, padx=5, pady=2, sticky=tk.NW)
-        self.lbl_msg.grid_forget();  # hide temporarily
+        self.lbl_msg.grid_forget()  # hide temporarily
 
         # Image Placeholder
         pixel = tk.PhotoImage(width=1, height=1)
@@ -186,6 +187,7 @@ class ChaosGUI(tk.Tk):
         # configure the root window
         self.title('Chaos Engineering in NP')
         self.geometry('640x360')
+        # noinspection PyTypeChecker
         self.resizable(0, 0)
 
         # layout for root window

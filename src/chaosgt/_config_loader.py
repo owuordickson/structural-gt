@@ -1,5 +1,5 @@
 import configparser
-from os import path
+# from os import path
 import pathlib
 
 
@@ -11,8 +11,8 @@ def load():
     # print(config.sections())
 
     # Image Path
-    datadir = config.get('image', 'datadir')
-    imagepath = config.get('image', 'imagepath')
-    file_path = path.join(datadir, imagepath)
+    # datadir = config.get('image', 'datadir')
+    # imagepath = config.get('image', 'imagepath')
+    # file_path = path.join(datadir, imagepath)
 
     return config
