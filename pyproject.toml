@@ -36,7 +36,7 @@ classifiers = [
 # docs = []
 
 #[project.optional-dependencies]
-#gui = ["PyQt5"]
+gui = ["tk-tools", "pillow"]
 #cli = [
 #  "rich",
 #  "click",

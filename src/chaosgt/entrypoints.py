@@ -7,7 +7,7 @@
 Entry points that allow users to execute GUI or Cli programs
 """
 
-from _gui_windows import ChaosGUI
+from ._gui_windows import ChaosGUI
 
 
 def main_gui():

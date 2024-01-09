@@ -92,13 +92,13 @@ class LaunchWindow(ttk.Frame):
         fd_image_file = filedialog.askopenfilename()
 
         # testing if the file is a workable image
-        if fd_image_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+        if fd_image_file.endswith(('.tiff', '.png', '.jpg', '.jpeg')):
 
             # split the file location into file name and path
             save_dir, file_name = os.path.split(fd_image_file)
 
             # load image from file and resize it to 300 pixel
-            std_img = resize_img(load_img_from_file(os.path.join(save_dir, file_name), 300))
+            std_img = resize_img(load_img_from_file(os.path.join(save_dir, file_name)), 300)
 
             # convert the Image object into a TkPhoto object
             img = Image.fromarray(std_img)
