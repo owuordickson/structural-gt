@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Chaos Graph Theory Tool"
+project = "Chaos Engineering Tool"
 copyright = "2024, Michigan University"
 author = "Dickson Owuor"
 
