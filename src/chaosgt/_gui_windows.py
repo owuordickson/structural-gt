@@ -102,6 +102,7 @@ class LaunchWindow(ttk.Frame):
             # load image from file and resize it to 300 pixel
             self.chaos_obj = ChaoticStruct(os.path.join(save_dir, file_name))
             std_img = self.chaos_obj.resize_img(300)
+            self.chaos_obj.compute_fractal_dimension()
 
             # convert the Image object into a TkPhoto object
             img = Image.fromarray(std_img)
