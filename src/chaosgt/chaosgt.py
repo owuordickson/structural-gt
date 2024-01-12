@@ -36,7 +36,7 @@ class ChaoticStruct:
         print(fd_metrics.slope)
         x = np.log(np.array(fd_metrics.size))
         y = np.log(np.array(fd_metrics.count))
-        fD = np.polyfit(x, y, 1)[0]  # D = lim r -> 0 log(Nr)/log(1/r)
+        fD = np.polyfit(x, y, 1)[0]  # fD = lim r -> 0 log(Nr)/log(1/r)
         print(fD)
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
