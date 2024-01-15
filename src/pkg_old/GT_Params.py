@@ -26,8 +26,10 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import settings
+import itertools
 from statistics import mean
 from time import sleep
+from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
 from networkx.algorithms import degree_assortativity_coefficient
@@ -206,7 +208,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Average closeness centrality")
         data_dict["y"].append(Ccent)
 
-
     settings.progress(80)
 
     # calculating eigenvector centrality
@@ -226,12 +227,37 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Average eigenvector centrality")
         data_dict["y"].append(Ecent)
 
+    # calculating graph conductance
+    settings.update_label("Calculating graph conductance...")
+    # largest_cc = max(nx.connected_components(G), key=len)
+    # smallest_cc = min(nx.connected_components(G), key=len)
+    # print(smallest_cc)
+    # print(G.nodes)
+    # print(largest_cc)
+    # g_conduct = nx.conductance(G, smallest_cc)
 
+    #conn_nodes = nx.connected_components(G)
+    #list_cond = []
+    # for n in conn_nodes:
+    #    try:
+    #        g_conduct = nx.conductance(G, n)
+    #        print(nx.cut_size(G, n))
+    #        list_cond.append(g_conduct)
+    #    except ZeroDivisionError:
+    #        list_cond.append(0)
+    # print(list_cond)
 
+    # Calculate conductance based on the clustering
+    # conductance_value = calculate_conductance(G, labels)
+    # print(conductance_value)
+    conductance_value = compute_all_subsets_conductance(G, 100)
+    data_dict["x"].append("Graph Conductance")
+    data_dict["y"].append(conductance_value)
 
     data = pd.DataFrame(data_dict)
 
     return data, klist, Tlist, BCdist, CCdist, ECdist
+
 
 def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, Do_Ast, Do_WI, multigraph):
 
@@ -344,3 +370,71 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
     wdata = pd.DataFrame(wdata_dict)
 
     return wdata, klist, BCdist, CCdist, ECdist
+
+
+def calculate_conductance_by_clustering(graph, num_clusters):
+    """
+    Calculate conductance based on a clustering of the graph.
+
+    Parameters:
+    - graph: NetworkX Graph
+    - num_clusters: int value of number of clusters
+
+    Returns:
+    - conductance: Float, conductance value
+    """
+    total_cut_edges = 0
+    # total_internal_edges = 0
+    num_total_edges = graph.number_of_edges()
+
+    # Use spectral clustering to get cluster assignments
+    num_clusters = 5  # You can adjust the number of clusters as needed
+    cluster_labels = spectral_clustering(nx.to_numpy_array(graph), n_clusters=num_clusters)
+
+    for edge in graph.edges():
+        if cluster_labels[edge[0]] != cluster_labels[edge[1]]:
+            total_cut_edges += 1
+        # else:
+        #    total_internal_edges += 1
+
+    conductance = total_cut_edges / (2 * num_total_edges)
+    return conductance
+
+
+def compute_all_subsets_conductance(graph, max_iter):
+    """
+    Compute conductance for all non-majority subsets of the vertex set.
+
+    Parameters:
+    - graph: NetworkX Graph
+
+    Returns:
+    - conductances: Dictionary containing conductance values for each subset
+    """
+    conductances = {}
+
+    # Get the vertex set
+    vertex_set = set(graph.nodes())
+    min_conductance = np.inf
+    i = 0
+
+    # Iterate through all possible subsets
+    for r in range(1, len(vertex_set) // 2 + 1):  # Consider subsets of size up to half the vertex set
+        for subset in itertools.combinations(vertex_set, r):
+            try:
+                # Calculate conductance for the subset
+                conductance_value = nx.conductance(graph, list(subset))
+                if conductance_value > 0 and conductance_value< min_conductance:
+                    min_conductance = conductance_value
+                conductances[subset] = conductance_value
+                print(conductance_value)
+            except ZeroDivisionError:
+                pass
+            if i >= max_iter:
+                return min_conductance
+            i += 1
+            # complement_set = set(vertex_set) - set(subset)
+            # Uncomment the following line if you also want conductance for the complement set
+            # conductances[complement_set] = nx.conductance(graph, list(complement_set))
+    print(conductances)
+    return min_conductance

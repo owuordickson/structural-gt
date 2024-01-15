@@ -36,7 +36,7 @@ import csv
 import cv2
 import time
 import skel_ID
-from StructuralGT import GetWeights, GT_Params, process_image
+import GetWeights, GT_Params, process_image
 import numpy as np
 import sknw
 import datetime

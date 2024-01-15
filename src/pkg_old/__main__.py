@@ -24,7 +24,7 @@ Contact email: vecdrew@umich.edu
 from tkinter import *
 import tkinter.messagebox
 
-from StructuralGT import gui_multi_image, gui_single_image
+import gui_multi_image, gui_single_image
 
 window = Tk()
 window.title("StructuralGT Image Entry Selection")
