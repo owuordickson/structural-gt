@@ -424,7 +424,7 @@ def compute_all_subsets_conductance(graph, max_iter):
             try:
                 # Calculate conductance for the subset
                 conductance_value = nx.conductance(graph, list(subset))
-                if conductance_value > 0 and conductance_value< min_conductance:
+                if 0 < conductance_value < min_conductance:
                     min_conductance = conductance_value
                 conductances[subset] = conductance_value
                 print(conductance_value)
