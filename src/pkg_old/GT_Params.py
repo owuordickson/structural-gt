@@ -27,9 +27,12 @@ import pandas as pd
 import numpy as np
 import settings
 import itertools
+import math
 from statistics import mean
 from time import sleep
 from sklearn.cluster import spectral_clustering
+from scipy.sparse import csgraph
+from scipy.linalg import eigvals
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
 from networkx.algorithms import degree_assortativity_coefficient
@@ -60,15 +63,11 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     if Do_ANC | Do_dia:
         connected_graph = nx.is_connected(G)
 
-
-
-
     data_dict["x"].append("Number of nodes")
     data_dict["y"].append(nnum)
 
     data_dict["x"].append("Number of edges")
     data_dict["y"].append(enum)
-
 
     settings.progress(35)
 
@@ -88,7 +87,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Average degree")
         data_dict["y"].append(k)
 
-
     settings.progress(40)
 
     # calculating network diameter
@@ -101,7 +99,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Network diameter")
         data_dict["y"].append(dia)
 
-
     settings.progress(45)
 
     # calculating graph density
@@ -111,7 +108,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         GD = round(GD, 5)
         data_dict["x"].append("Graph density")
         data_dict["y"].append(GD)
-
 
     settings.progress(50)
 
@@ -123,15 +119,12 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Global efficiency")
         data_dict["y"].append(Eff)
 
-
     if (Do_WI == 1):
         settings.update_label("Calculating WI...")
         WI = wiener_index(G)
         WI = round(WI, 1)
         data_dict["x"].append("Wiener Index")
         data_dict["y"].append(WI)
-
-
 
     settings.progress(55)
 
@@ -148,7 +141,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Average clustering coefficient")
         data_dict["y"].append(clust)
 
-
     settings.progress(60)
 
     # calculating average nodal connectivity
@@ -163,7 +155,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["x"].append("Average nodal connectivity")
         data_dict["y"].append(ANC)
 
-
     settings.progress(65)
 
     # calculating assortativity coefficient
@@ -173,7 +164,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         Ast = round(Ast, 5)
         data_dict["x"].append("Assortativity coefficient")
         data_dict["y"].append(Ast)
-
 
     settings.progress(70)
 
@@ -190,7 +180,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         Bcent = round(Bcent, 5)
         data_dict["x"].append("Average betweenness centrality")
         data_dict["y"].append(Bcent)
-
 
     settings.progress(75)
 
@@ -236,8 +225,8 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     # print(largest_cc)
     # g_conduct = nx.conductance(G, smallest_cc)
 
-    #conn_nodes = nx.connected_components(G)
-    #list_cond = []
+    # conn_nodes = nx.connected_components(G)
+    # list_cond = []
     # for n in conn_nodes:
     #    try:
     #        g_conduct = nx.conductance(G, n)
@@ -250,7 +239,12 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     # Calculate conductance based on the clustering
     # conductance_value = calculate_conductance(G, labels)
     # print(conductance_value)
-    conductance_value = compute_all_subsets_conductance(G, 100)
+    # conductance_value = compute_all_subsets_conductance(G, 100)
+    # conductance_value = approx_conductance_eigenvalues(G)
+    conductance_value = approx_conductance_eigenvalues(G)
+    # from networkx.algorithms.flow import shortest_augmenting_path
+    # cut_edges = nx.minimum_edge_cut(G, flow_func=shortest_augmenting_path)
+    # conductance_value = len(cut_edges) / G.number_of_edges()
     data_dict["x"].append("Graph Conductance")
     data_dict["y"].append(conductance_value)
 
@@ -409,9 +403,9 @@ def compute_all_subsets_conductance(graph, max_iter):
     - graph: NetworkX Graph
 
     Returns:
-    - conductances: Dictionary containing conductance values for each subset
+    - conductance_dict: Dictionary containing conductance values for each subset
     """
-    conductances = {}
+    conductance_dict = {}
 
     # Get the vertex set
     vertex_set = set(graph.nodes())
@@ -424,9 +418,9 @@ def compute_all_subsets_conductance(graph, max_iter):
             try:
                 # Calculate conductance for the subset
                 conductance_value = nx.conductance(graph, list(subset))
-                if 0 < conductance_value < min_conductance:
+                if conductance_value < min_conductance:
                     min_conductance = conductance_value
-                conductances[subset] = conductance_value
+                conductance_dict[subset] = conductance_value
                 print(conductance_value)
             except ZeroDivisionError:
                 pass
@@ -435,6 +429,169 @@ def compute_all_subsets_conductance(graph, max_iter):
             i += 1
             # complement_set = set(vertex_set) - set(subset)
             # Uncomment the following line if you also want conductance for the complement set
-            # conductances[complement_set] = nx.conductance(graph, list(complement_set))
-    print(conductances)
+            # conductance_dict[complement_set] = nx.conductance(graph, list(complement_set))
+    print(conductance_dict)
     return min_conductance
+
+
+def approx_conductance_by_spectral(graph):
+    # conductance is closely approximable via eigenvalue computation, \
+    # a fact which has been well-known and well-used in the graph theory community
+
+    # The Laplacian matrix of a directed graph is by definition generally non-symmetric,
+    # while, e.g., traditional spectral clustering is primarily developed for undirected
+    # graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply
+    # techniques requiring the symmetry is to turn the original directed graph into an
+    # undirected graph and build the Laplacian matrix for the latter.
+
+    # We need to remove isolated nodes (in order to avoid singular adjacency matrix).
+    # The degree of a node is the number of edges incident to that node.
+    # When a node has a degree of zero, it means that there are no edges
+    # connected to that node. In other words, the node is isolated from
+    # the rest of the graph.
+
+    # a. Identify isolated nodes
+    isolated_nodes = list(nx.isolates(graph))
+
+    # b. Remove isolated nodes
+    graph.remove_nodes_from(isolated_nodes)
+
+    # It is important to notice our graph is (mostly) a directed graph,
+    # meaning that it is: (asymmetric) with self-looping nodes (non-zero diag)
+    # adj_mat = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0]])
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 1. Remove non-zero diagonal values from Adjacency matrix
+    # np.fill_diagonal(adj_mat, 0)
+
+    # 2. Symmetric-ize the Adjacency matrix
+    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+    # 3. Compute Degree matrix
+    deg_mat = np.diag(np.sum(adj_mat, axis=1))
+    # print(deg_mat)
+
+    # 4. Compute Identity matrix
+    id_mat = np.identity(adj_mat.shape[0])
+
+    # 5. Compute (Degree inverse squared) D^{-1/2} matrix
+    # Check for singular matrices
+    if np.any(np.diag(deg_mat) == 0):
+        # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
+        # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
+        print("Graph has nodes with zero degree. Cannot compute conductance")
+        return None
+    # try:
+    #    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
+    # except np.linalg.LinAlgError:
+    #    deg_inv_sqrt = np.linalg.pinv(np.sqrt(deg_mat))
+    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
+
+    # 6. Compute Laplacian matrix
+    lpl_mat = deg_mat - adj_mat
+
+    # 7. Compute normalized-Laplacian matrix
+    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, adj_mat).dot(deg_inv_sqrt)
+
+    # 8. Compute eigenvalues
+    eigenvalues, _ = np.linalg.eig(norm_lpl_mat)
+
+    # 9. Remove duplicates and sort the eigenvalues in ascending order
+    vals = set(eigenvalues)
+    sorted_vals = np.array(list(vals))
+    sorted_vals.sort()
+    sorted_vals = np.round(sorted_vals, decimals=3)
+
+    # 10. Approximate conductance using the 2nd smallest eigenvalue
+    conductance_val = sorted_vals[1] / 2
+    print(adj_mat)
+    print(deg_mat)
+    print(id_mat)
+    print(lpl_mat)
+    print(norm_lpl_mat)
+    print(eigenvalues)
+    print(sorted_vals)
+    print(conductance_val)
+    return conductance_val
+
+
+def approx_conductance_eigenvalues(graph):
+    # conductance is closely approximable via eigenvalue computation, \
+    # a fact which has been well-known and well-used in the graph theory community
+
+    # The Laplacian matrix of a directed graph is by definition generally non-symmetric,
+    # while, e.g., traditional spectral clustering is primarily developed for undirected
+    # graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply
+    # techniques requiring the symmetry is to turn the original directed graph into an
+    # undirected graph and build the Laplacian matrix for the latter.
+
+    # laplacian_matrix = nx.normalized_laplacian_matrix(graph).toarray()
+    # adjacency_matrix = nx.adjacency_matrix(graph).toarray()
+    # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
+    # eigenvalues = nx.normalized_laplacian_spectrum(graph)
+
+    A = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0]])
+    # A = nx.adjacency_matrix(graph).todense()  # produces A with non-zero diagonal values (meaning nodes have loops)
+    np.fill_diagonal(A, 0)
+    W = np.maximum(A, A.transpose())
+    # Solve lack of symmetry
+    print(A)
+    print("\n")
+    print(W)
+    print("\n")
+    print(is_symmetric(W))
+
+
+    A = W
+    n = A.shape[0]
+    D = np.zeros((n, n))
+    for i in range(n):
+        D[i, i] = np.sum(A[i, :])
+    L = D - A
+    # A.tofile('adj.csv', sep=',')
+    # np.diag(A).tofile('adj-diag.csv', sep=',')
+    # np.diag(D).tofile("deg.csv", sep=',')
+    print(L)
+
+    # D2 = np.empty_like(D)
+    # for i in range(n):
+    #   D2[i, i] = 1 / np.sqrt(D2[i, i])
+    # L2 = np.matmul(np.matmul(D2, L), D2)
+    # print(L2)
+
+    # eigenvalues, _ = np.linalg.eigh(L2)
+    G = nx.from_numpy_array(W)  # create a graph
+    laplacian_matrix = nx.laplacian_matrix(G).toarray()
+    norm_laplacian_matrix = nx.normalized_laplacian_matrix(G).toarray()
+    # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
+    eigenvalues = nx.normalized_laplacian_spectrum(G)
+
+    # Remove duplicates and sort the eigenvalues in ascending order
+    vals = set(eigenvalues)
+    sorted_vals = np.array(list(vals))
+    sorted_vals.sort()
+
+    # Sort the eigenvalues in descending order
+    # eigenvalues[::-1].sort()
+
+    # approximate conductance using the 2nd smallest eigenvalue
+    conductance_val = sorted_vals[1]/2
+    # conductance_val_2 = math.sqrt((2*eigenvalues[1]))
+    # print((1-eigenvalues[1]))
+    print(laplacian_matrix)
+    print("\n")
+    print(norm_laplacian_matrix)
+    print("\n")
+    print(eigenvalues)
+    print(sorted_vals)
+    print(conductance_val)
+    # print(conductance_val_2)
+    return conductance_val
+
+
+# Defining a function to check symmetric matrix
+def is_symmetric(mat):
+    transmat = np.array(mat).transpose()
+    if np.array_equal(mat, transmat):
+        return True
+    return False
