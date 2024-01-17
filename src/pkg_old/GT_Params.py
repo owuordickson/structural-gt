@@ -218,33 +218,11 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
 
     # calculating graph conductance
     settings.update_label("Calculating graph conductance...")
-    # largest_cc = max(nx.connected_components(G), key=len)
-    # smallest_cc = min(nx.connected_components(G), key=len)
-    # print(smallest_cc)
-    # print(G.nodes)
-    # print(largest_cc)
-    # g_conduct = nx.conductance(G, smallest_cc)
 
-    # conn_nodes = nx.connected_components(G)
-    # list_cond = []
-    # for n in conn_nodes:
-    #    try:
-    #        g_conduct = nx.conductance(G, n)
-    #        print(nx.cut_size(G, n))
-    #        list_cond.append(g_conduct)
-    #    except ZeroDivisionError:
-    #        list_cond.append(0)
-    # print(list_cond)
-
-    # Calculate conductance based on the clustering
     # conductance_value = calculate_conductance(G, labels)
-    # print(conductance_value)
     # conductance_value = compute_all_subsets_conductance(G, 100)
     # conductance_value = approx_conductance_eigenvalues(G)
     conductance_value = approx_conductance_eigenvalues(G)
-    # from networkx.algorithms.flow import shortest_augmenting_path
-    # cut_edges = nx.minimum_edge_cut(G, flow_func=shortest_augmenting_path)
-    # conductance_value = len(cut_edges) / G.number_of_edges()
     data_dict["x"].append("Graph Conductance")
     data_dict["y"].append(conductance_value)
 
