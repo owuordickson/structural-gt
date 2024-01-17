@@ -222,7 +222,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     # conductance_value = calculate_conductance(G, labels)
     # conductance_value = compute_all_subsets_conductance(G, 100)
     # conductance_value = approx_conductance_eigenvalues(G)
-    conductance_value = approx_conductance_eigenvalues(G)
+    conductance_value = approx_conductance_by_spectral(G)
     data_dict["x"].append("Graph Conductance")
     data_dict["y"].append(conductance_value)
 
@@ -429,15 +429,16 @@ def approx_conductance_by_spectral(graph):
     # the rest of the graph.
 
     # a. Identify isolated nodes
-    isolated_nodes = list(nx.isolates(graph))
+    sp_graph = graph.copy()
+    isolated_nodes = list(nx.isolates(sp_graph))
 
     # b. Remove isolated nodes
-    graph.remove_nodes_from(isolated_nodes)
+    sp_graph.remove_nodes_from(isolated_nodes)
 
     # It is important to notice our graph is (mostly) a directed graph,
     # meaning that it is: (asymmetric) with self-looping nodes (non-zero diag)
     # adj_mat = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0]])
-    adj_mat = nx.adjacency_matrix(graph).todense()
+    adj_mat = nx.adjacency_matrix(sp_graph).todense()
 
     # 1. Remove non-zero diagonal values from Adjacency matrix
     # np.fill_diagonal(adj_mat, 0)
@@ -472,24 +473,25 @@ def approx_conductance_by_spectral(graph):
     norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, adj_mat).dot(deg_inv_sqrt)
 
     # 8. Compute eigenvalues
-    eigenvalues, _ = np.linalg.eig(norm_lpl_mat)
+    e_vals, e_vecs = np.linalg.eigh(norm_lpl_mat)
 
     # 9. Remove duplicates and sort the eigenvalues in ascending order
-    vals = set(eigenvalues)
+    eigenvalues = e_vals.real
+    round_vals = np.round(eigenvalues, decimals=5)
+    vals = set(round_vals)
     sorted_vals = np.array(list(vals))
     sorted_vals.sort()
-    sorted_vals = np.round(sorted_vals, decimals=3)
 
     # 10. Approximate conductance using the 2nd smallest eigenvalue
     conductance_val = sorted_vals[1] / 2
-    print(adj_mat)
-    print(deg_mat)
-    print(id_mat)
-    print(lpl_mat)
-    print(norm_lpl_mat)
-    print(eigenvalues)
-    print(sorted_vals)
-    print(conductance_val)
+    # print(adj_mat)
+    # print(deg_mat)
+    # print(id_mat)
+    # print(lpl_mat)
+    # print(norm_lpl_mat)
+    # print(eigenvalues)
+    # print(sorted_vals)
+    # print(conductance_val)
     return conductance_val
 
 
