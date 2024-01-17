@@ -221,8 +221,8 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
 
     # conductance_value = calculate_conductance(G, labels)
     # conductance_value = compute_all_subsets_conductance(G, 100)
-    # conductance_value = approx_conductance_eigenvalues(G)
-    conductance_value = approx_conductance_by_spectral(G)
+    conductance_value = approx_conductance_eigenvalues(G)
+    # conductance_value = approx_conductance_by_spectral(G)
     data_dict["x"].append("Graph Conductance")
     data_dict["y"].append(conductance_value)
 
@@ -413,20 +413,22 @@ def compute_all_subsets_conductance(graph, max_iter):
 
 
 def approx_conductance_by_spectral(graph):
-    # conductance is closely approximable via eigenvalue computation, \
-    # a fact which has been well-known and well-used in the graph theory community
+    """
+        Conductance is closely approximable via eigenvalue computation,\
+    a fact which has been well-known and well-used in the graph theory community.\
 
-    # The Laplacian matrix of a directed graph is by definition generally non-symmetric,
-    # while, e.g., traditional spectral clustering is primarily developed for undirected
-    # graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply
-    # techniques requiring the symmetry is to turn the original directed graph into an
-    # undirected graph and build the Laplacian matrix for the latter.
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+    while, e.g., traditional spectral clustering is primarily developed for undirected\
+    graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+    techniques requiring the symmetry is to turn the original directed graph into an\
+    undirected graph and build the Laplacian matrix for the latter.\
 
-    # We need to remove isolated nodes (in order to avoid singular adjacency matrix).
-    # The degree of a node is the number of edges incident to that node.
-    # When a node has a degree of zero, it means that there are no edges
-    # connected to that node. In other words, the node is isolated from
-    # the rest of the graph.
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+    The degree of a node is the number of edges incident to that node.\
+    When a node has a degree of zero, it means that there are no edges\
+    connected to that node. In other words, the node is isolated from\
+    the rest of the graph.
+    """
 
     # a. Identify isolated nodes
     sp_graph = graph.copy()
@@ -444,7 +446,7 @@ def approx_conductance_by_spectral(graph):
     # np.fill_diagonal(adj_mat, 0)
 
     # 2. Symmetric-ize the Adjacency matrix
-    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+    adj_mat = np.logical_or(adj_mat, adj_mat.transpose())
 
     # 3. Compute Degree matrix
     deg_mat = np.diag(np.sum(adj_mat, axis=1))
@@ -460,10 +462,6 @@ def approx_conductance_by_spectral(graph):
         # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
         print("Graph has nodes with zero degree. Cannot compute conductance")
         return None
-    # try:
-    #    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
-    # except np.linalg.LinAlgError:
-    #    deg_inv_sqrt = np.linalg.pinv(np.sqrt(deg_mat))
     deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
 
     # 6. Compute Laplacian matrix
@@ -477,74 +475,56 @@ def approx_conductance_by_spectral(graph):
 
     # 9. Remove duplicates and sort the eigenvalues in ascending order
     eigenvalues = e_vals.real
-    round_vals = np.round(eigenvalues, decimals=5)
-    vals = set(round_vals)
+    # round_vals = np.round(eigenvalues, decimals=5)
+    vals = set(eigenvalues)
     sorted_vals = np.array(list(vals))
     sorted_vals.sort()
 
     # 10. Approximate conductance using the 2nd smallest eigenvalue
-    conductance_val = sorted_vals[1] / 2
+    # conductance_val_1 = math.sqrt(sorted_vals[1])
+    conductance_val_2 = sorted_vals[1] / 2
     # print(adj_mat)
     # print(deg_mat)
     # print(id_mat)
     # print(lpl_mat)
     # print(norm_lpl_mat)
-    # print(eigenvalues)
+    print(eigenvalues)
     # print(sorted_vals)
     # print(conductance_val)
-    return conductance_val
+    # print(conductance_val_1)
+    print(conductance_val_2)
+    return conductance_val_2
 
 
 def approx_conductance_eigenvalues(graph):
-    # conductance is closely approximable via eigenvalue computation, \
-    # a fact which has been well-known and well-used in the graph theory community
+    """
+        Conductance is closely approximable via eigenvalue computation,\
+    a fact which has been well-known and well-used in the graph theory community.\
 
-    # The Laplacian matrix of a directed graph is by definition generally non-symmetric,
-    # while, e.g., traditional spectral clustering is primarily developed for undirected
-    # graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply
-    # techniques requiring the symmetry is to turn the original directed graph into an
-    # undirected graph and build the Laplacian matrix for the latter.
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+    while, e.g., traditional spectral clustering is primarily developed for undirected\
+    graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+    techniques requiring the symmetry is to turn the original directed graph into an\
+    undirected graph and build the Laplacian matrix for the latter.\
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+    The degree of a node is the number of edges incident to that node.\
+    When a node has a degree of zero, it means that there are no edges\
+    connected to that node. In other words, the node is isolated from\
+    the rest of the graph.
+    """
+
+    # a. Identify isolated nodes
+    sp_graph = graph.copy()
+    isolated_nodes = list(nx.isolates(sp_graph))
+
+    # b. Remove isolated nodes
+    sp_graph.remove_nodes_from(isolated_nodes)
 
     # laplacian_matrix = nx.normalized_laplacian_matrix(graph).toarray()
     # adjacency_matrix = nx.adjacency_matrix(graph).toarray()
     # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
-    # eigenvalues = nx.normalized_laplacian_spectrum(graph)
-
-    A = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0]])
-    # A = nx.adjacency_matrix(graph).todense()  # produces A with non-zero diagonal values (meaning nodes have loops)
-    np.fill_diagonal(A, 0)
-    W = np.maximum(A, A.transpose())
-    # Solve lack of symmetry
-    print(A)
-    print("\n")
-    print(W)
-    print("\n")
-    print(is_symmetric(W))
-
-
-    A = W
-    n = A.shape[0]
-    D = np.zeros((n, n))
-    for i in range(n):
-        D[i, i] = np.sum(A[i, :])
-    L = D - A
-    # A.tofile('adj.csv', sep=',')
-    # np.diag(A).tofile('adj-diag.csv', sep=',')
-    # np.diag(D).tofile("deg.csv", sep=',')
-    print(L)
-
-    # D2 = np.empty_like(D)
-    # for i in range(n):
-    #   D2[i, i] = 1 / np.sqrt(D2[i, i])
-    # L2 = np.matmul(np.matmul(D2, L), D2)
-    # print(L2)
-
-    # eigenvalues, _ = np.linalg.eigh(L2)
-    G = nx.from_numpy_array(W)  # create a graph
-    laplacian_matrix = nx.laplacian_matrix(G).toarray()
-    norm_laplacian_matrix = nx.normalized_laplacian_matrix(G).toarray()
-    # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
-    eigenvalues = nx.normalized_laplacian_spectrum(G)
+    eigenvalues = nx.normalized_laplacian_spectrum(sp_graph)
 
     # Remove duplicates and sort the eigenvalues in ascending order
     vals = set(eigenvalues)
@@ -555,18 +535,15 @@ def approx_conductance_eigenvalues(graph):
     # eigenvalues[::-1].sort()
 
     # approximate conductance using the 2nd smallest eigenvalue
-    conductance_val = sorted_vals[1]/2
-    # conductance_val_2 = math.sqrt((2*eigenvalues[1]))
-    # print((1-eigenvalues[1]))
-    print(laplacian_matrix)
-    print("\n")
-    print(norm_laplacian_matrix)
-    print("\n")
+    # conductance_val_1 = math.sqrt(sorted_vals[1])
+    conductance_val_2 = sorted_vals[1] / 2
+
     print(eigenvalues)
-    print(sorted_vals)
-    print(conductance_val)
-    # print(conductance_val_2)
-    return conductance_val
+    # print(sorted_vals)
+    # print(conductance_val)
+    # print(conductance_val_1)
+    print(conductance_val_2)
+    return conductance_val_2
 
 
 # Defining a function to check symmetric matrix

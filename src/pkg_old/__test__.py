@@ -7,4 +7,5 @@ adj_mat = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0,
 G = nx.from_numpy_array(adj_mat)  # create a graph
 GT_Params.approx_conductance_by_spectral(G)
 
-# GT_Params.approx_conductance_eigenvalues(None)
+print("\n ...NEXT ... \n")
+GT_Params.approx_conductance_eigenvalues(G)
