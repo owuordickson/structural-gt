@@ -430,31 +430,25 @@ def approx_conductance_by_spectral(graph):
     the rest of the graph.
     """
 
-    # a. Identify isolated nodes
-    # sp_graph = graph.copy()
-    # isolated_nodes = list(nx.isolates(sp_graph))
-
-    # b. Remove isolated nodes
-    # sp_graph.remove_nodes_from(isolated_nodes)
-
     # It is important to notice our graph is (mostly) a directed graph,
     # meaning that it is: (asymmetric) with self-looping nodes (non-zero diag)
     # adj_mat = np.array([[0, 1, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [1, 0, 1, 0, 0]])
-    adj_mat = nx.adjacency_matrix(graph).todense()
+    temp_adj_mat = nx.adjacency_matrix(graph).todense()
 
     # 1. Symmetric-ize the Adjacency matrix
-    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+    temp_adj_mat = np.maximum(temp_adj_mat, temp_adj_mat.transpose())
 
     # 2. Remove non-zero diagonal values from Adjacency matrix
-    np.fill_diagonal(adj_mat, 0)
+    np.fill_diagonal(temp_adj_mat, 0)
 
     # 2a. Identify isolated nodes
-    sp_graph = nx.from_numpy_array(adj_mat)  # create a graph
+    sp_graph = nx.from_numpy_array(temp_adj_mat)  # create new graph
     # sp_graph = graph.copy()
     isolated_nodes = list(nx.isolates(sp_graph))
 
     # 2b. Remove isolated nodes
     sp_graph.remove_nodes_from(isolated_nodes)
+    adj_mat = nx.adjacency_matrix(sp_graph).todense()
 
     # 3. Compute Degree matrix
     deg_mat = np.diag(np.sum(adj_mat, axis=1))
@@ -480,7 +474,7 @@ def approx_conductance_by_spectral(graph):
     # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
 
     # 8. Compute eigenvalues
-    e_vals, e_vecs = np.linalg.eig(norm_lpl_mat)
+    e_vals = np.linalg.eigvalsh(norm_lpl_mat)
 
     # 9. Remove duplicates and sort the eigenvalues in ascending order
     eigenvalues = e_vals
@@ -492,14 +486,15 @@ def approx_conductance_by_spectral(graph):
     # 10. Approximate conductance using the 2nd smallest eigenvalue
     # conductance_val_max = math.sqrt(sorted_vals[1])
     conductance_val_min = sorted_vals[1] / 2
-    print(adj_mat)
+    # print(adj_mat)
     # print(adj_mat.shape)
     # print(deg_mat)
+    # print(deg_inv_sqrt)
     # print(id_mat)
     # print(lpl_mat)
     # print(norm_lpl_mat)
-    print(eigenvalues)
-    # print(sorted_vals)
+    # print(eigenvalues)
+    print(sorted_vals)
     # print(conductance_val)
     # print(conductance_val_max)
     print(conductance_val_min)
@@ -524,23 +519,26 @@ def approx_conductance_eigenvalues(graph):
     the rest of the graph.
     """
 
-    # a. Identify isolated nodes
-    sp_graph = graph.copy()
+    temp_adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 1. Symmetric-ize the Adjacency matrix
+    temp_adj_mat = np.maximum(temp_adj_mat, temp_adj_mat.transpose())
+
+    # 2. Remove non-zero diagonal values from Adjacency matrix
+    np.fill_diagonal(temp_adj_mat, 0)
+
+    # 2a. Identify isolated nodes
+    sp_graph = nx.from_numpy_array(temp_adj_mat)  # create new graph
+    # sp_graph = graph.copy()
     isolated_nodes = list(nx.isolates(sp_graph))
 
-    # b. Remove isolated nodes
+    # 2b. Remove isolated nodes
     sp_graph.remove_nodes_from(isolated_nodes)
 
-    # Symmetric-ize the Adjacency matrix
-    adj_mat = nx.adjacency_matrix(sp_graph).todense()
-    # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
-    np.fill_diagonal(adj_mat, 0)
-    G = nx.from_numpy_array(adj_mat)  # create a graph
-
-    # laplacian_matrix = nx.normalized_laplacian_matrix(graph).toarray()
-    # adjacency_matrix = nx.adjacency_matrix(graph).toarray()
-    # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
-    eigenvalues = nx.normalized_laplacian_spectrum(G)
+    laplacian_matrix = nx.normalized_laplacian_matrix(sp_graph).toarray()
+    # adjacency_matrix = nx.adjacency_matrix(sp_graph).toarray()
+    eigenvalues = np.linalg.eigvalsh(laplacian_matrix)
+    # eigenvalues = nx.normalized_laplacian_spectrum(sp_graph)
 
     # Remove duplicates and sort the eigenvalues in ascending order
     # vals = set(eigenvalues)
@@ -555,9 +553,10 @@ def approx_conductance_eigenvalues(graph):
     # conductance_val_max = math.sqrt(sorted_vals[1])
     conductance_val_min = sorted_vals[1] / 2
 
-    print(adj_mat)
-    print(eigenvalues)
-    # print(sorted_vals)
+    # print(temp_adj_mat)
+    # print(laplacian_matrix)
+    # print(eigenvalues)
+    print(sorted_vals)
     # print(conductance_val)
     # print(conductance_val_max)
     print(conductance_val_min)
