@@ -25,6 +25,7 @@ from __main__ import *
 import networkx as nx
 import pandas as pd
 import numpy as np
+import scipy as sp
 import settings
 import itertools
 import math
@@ -32,7 +33,6 @@ from statistics import mean
 from time import sleep
 from sklearn.cluster import spectral_clustering
 from scipy.sparse import csgraph
-from scipy.linalg import eigvals
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
 from networkx.algorithms import degree_assortativity_coefficient
@@ -218,13 +218,15 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
 
     # calculating graph conductance
     settings.update_label("Calculating graph conductance...")
-
-    # conductance_value = calculate_conductance(G, labels)
     # conductance_value = compute_all_subsets_conductance(G, 100)
     # conductance_value = approx_conductance_eigenvalues(G)
-    conductance_value = approx_conductance_by_spectral(G)
-    data_dict["x"].append("Graph Conductance")
-    data_dict["y"].append(conductance_value)
+    # conductance_value = approx_conductance_by_spectral(G)
+    # data_dict["x"].append("Graph Conductance")
+    # data_dict["y"].append(conductance_value)
+    res = approx_conductance_by_spectral(G)
+    for item in res:
+        data_dict["x"].append(item["name"])
+        data_dict["y"].append(item["value"])
 
     data = pd.DataFrame(data_dict)
 
@@ -391,28 +393,192 @@ def compute_all_subsets_conductance(graph, max_iter):
     i = 0
 
     # Iterate through all possible subsets
-    for r in range(1, len(vertex_set) // 2 + 1):  # Consider subsets of size up to half the vertex set
-        for subset in itertools.combinations(vertex_set, r):
-            try:
-                # Calculate conductance for the subset
-                conductance_value = nx.conductance(graph, list(subset))
-                if conductance_value < min_conductance:
-                    min_conductance = conductance_value
-                conductance_dict[subset] = conductance_value
-                print(conductance_value)
-            except ZeroDivisionError:
-                pass
-            if i >= max_iter:
-                return min_conductance
-            i += 1
-            # complement_set = set(vertex_set) - set(subset)
-            # Uncomment the following line if you also want conductance for the complement set
-            # conductance_dict[complement_set] = nx.conductance(graph, list(complement_set))
+    connected_components = list(nx.connected_components(graph))
+    for component in connected_components:
+        try:
+            # Calculate conductance for the subset
+            conductance_value = nx.conductance(graph, component)
+            if conductance_value < min_conductance:
+                min_conductance = conductance_value
+            conductance_dict[component] = conductance_value
+            print(conductance_value)
+        except ZeroDivisionError:
+            pass
+        if i >= max_iter:
+            return min_conductance
+        i += 1
+        # complement_set = set(vertex_set) - set(subset)
+        # Uncomment the following line if you also want conductance for the complement set
+        # conductance_dict[complement_set] = nx.conductance(graph, list(complement_set))
+
+    # for r in range(1, len(vertex_set) // 2 + 1):  # Consider subsets of size up to half the vertex set
+    #    for subset in itertools.combinations(vertex_set, r):
+
     print(conductance_dict)
     return min_conductance
 
 
 def approx_conductance_by_spectral(graph):
+    """
+        Conductance is closely approximable via eigenvalue computation,\
+    a fact which has been well-known and well-used in the graph theory community.\
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+    while, e.g., traditional spectral clustering is primarily developed for undirected\
+    graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+    techniques requiring the symmetry is to turn the original directed graph into an\
+    undirected graph and build the Laplacian matrix for the latter.\
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+    The degree of a node is the number of edges incident to that node.\
+    When a node has a degree of zero, it means that there are no edges\
+    connected to that node. In other words, the node is isolated from\
+    the rest of the graph.
+    """
+
+    # It is important to notice our graph is (mostly) a directed graph,
+    # meaning that it is: (asymmetric) with self-looping nodes
+
+    data = []
+
+    # 1. Make a copy of the graph
+    # eig_graph = graph.copy()
+
+    # 2a. Remove self-looping edges
+    eig_graph = remove_self_loops(graph)
+
+    # 2b. Identify isolated nodes
+    isolated_nodes = list(nx.isolates(eig_graph))
+
+    # 2c. Remove isolated nodes
+    eig_graph.remove_nodes_from(isolated_nodes)
+
+    # 3a. Check connectivity of graph
+    try:
+        # does not work if graphs has disconnected sub-graphs
+        fiedler_vector = nx.fiedler_vector(eig_graph)
+    except nx.NetworkXNotImplemented:
+        # Graph is directed.
+        non_directed_graph = make_graph_symmetrical(eig_graph)
+        try:
+            nx.fiedler_vector(non_directed_graph)
+        except nx.NetworkXNotImplemented:
+            print("Graph is directed. Cannot compute conductance")
+            return None
+        except nx.NetworkXError:
+            # Graph has less than two nodes or is not connected.
+            sub_graph_largest, sub_graph_smallest, size = graph_components(eig_graph)
+            eig_graph = sub_graph_largest
+            data.append({"name": "Subgraph Count", "value": size})
+            data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
+            data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
+            data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
+            data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
+    except nx.NetworkXError:
+        # Graph has less than two nodes or is not connected.
+        sub_graph_largest, sub_graph_smallest, size = graph_components(eig_graph)
+        eig_graph = sub_graph_largest
+        data.append({"name": "Subgraph Count", "value": size})
+        data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
+        data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
+        data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
+        data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
+
+    # 4. Compute normalized-laplacian matrix
+    norm_laplacian_matrix = compute_norm_laplacian_matrix(eig_graph)
+    # norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
+
+    # 5. Compute eigenvalues
+    # e_vals, _ = np.linalg.eig(norm_laplacian_matrix)
+    e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
+
+    # 6. Approximate conductance using the 2nd smallest eigenvalue
+    eigenvalues = e_vals.real
+    val_max, val_min = compute_conductance_range(eigenvalues)
+    data.append({"name": "Graph Conductance (max)", "value": val_max})
+    data.append({"name": "Graph Conductance (min)", "value": val_min})
+
+    print(val_max)
+    print(val_min)
+    return data
+
+
+def approx_conductance_eigenvalues(graph):
+    """
+        Conductance is closely approximable via eigenvalue computation,\
+    a fact which has been well-known and well-used in the graph theory community.\
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+    while, e.g., traditional spectral clustering is primarily developed for undirected\
+    graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+    techniques requiring the symmetry is to turn the original directed graph into an\
+    undirected graph and build the Laplacian matrix for the latter.\
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+    The degree of a node is the number of edges incident to that node.\
+    When a node has a degree of zero, it means that there are no edges\
+    connected to that node. In other words, the node is isolated from\
+    the rest of the graph.
+    """
+
+    temp_adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 1. Symmetric-ize the Adjacency matrix
+    # temp_adj_mat = np.maximum(temp_adj_mat, temp_adj_mat.transpose())
+
+    # 2. Remove (self-loops) non-zero diagonal values from Adjacency matrix
+    np.fill_diagonal(temp_adj_mat, 0)
+
+    # 2a. Identify isolated nodes
+    graph_symmetric = nx.from_numpy_array(temp_adj_mat)  # create new graph
+
+    # graph_symmetric = graph.copy()
+    isolated_nodes = list(nx.isolates(graph_symmetric))
+
+    # 2b. Remove isolated nodes
+    graph_symmetric.remove_nodes_from(isolated_nodes)
+
+    # 3a. Identify connected components
+    connected_components = list(nx.connected_components(graph))
+
+    # 3b. Find the largest connected component
+    largest_component = max(connected_components, key=len)
+
+    # 3c. Create a new graph containing only the largest connected component
+    sub_graph_largest = graph.subgraph(largest_component)
+
+    fiedler_vector = nx.fiedler_vector(sub_graph_largest)  # does not work is sub-graphs are disconnected
+
+    laplacian_matrix = nx.normalized_laplacian_matrix(sub_graph_largest).toarray()
+    # adjacency_matrix = nx.adjacency_matrix(sub_graph_largest).toarray()
+    eigenvalues = np.linalg.eigvals(laplacian_matrix)
+    # eigenvalues = nx.normalized_laplacian_spectrum(sub_graph_largest)  # NOT ACCURATE
+
+    # Remove duplicates and sort the eigenvalues in ascending order
+    # vals = set(eigenvalues)
+    # sorted_vals = np.array(list(vals))
+    sorted_vals = np.array(eigenvalues)
+    sorted_vals.sort()
+
+    # Sort the eigenvalues in descending order
+    # eigenvalues[::-1].sort()
+
+    # approximate conductance using the 2nd smallest eigenvalue
+    # conductance_val_max = math.sqrt(sorted_vals[1])
+    conductance_val_min = sorted_vals[1] / 2
+
+    # print(temp_adj_mat)
+    # print(laplacian_matrix)
+    # print(eigenvalues)
+    print(sorted_vals)
+    print(fiedler_vector)
+    # print(conductance_val)
+    # print(conductance_val_max)
+    print(conductance_val_min)
+    return conductance_val_min
+
+
+def old_approx_conductance_by_spectral(graph):
     """
         Conductance is closely approximable via eigenvalue computation,\
     a fact which has been well-known and well-used in the graph theory community.\
@@ -450,14 +616,14 @@ def approx_conductance_by_spectral(graph):
     sp_graph.remove_nodes_from(isolated_nodes)
     adj_mat = nx.adjacency_matrix(sp_graph).todense()
 
-    # 3. Compute Degree matrix
+    # 3a. Compute Degree matrix
     deg_mat = np.diag(np.sum(adj_mat, axis=1))
     # print(deg_mat)
 
-    # 4. Compute Identity matrix
+    # 3b. Compute Identity matrix
     id_mat = np.identity(adj_mat.shape[0])
 
-    # 5. Compute (Degree inverse squared) D^{-1/2} matrix
+    # 3c. Compute (Degree inverse squared) D^{-1/2} matrix
     # Check for singular matrices
     if np.any(np.diag(deg_mat) == 0):
         # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
@@ -466,15 +632,16 @@ def approx_conductance_by_spectral(graph):
         return None
     deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
 
-    # 6. Compute Laplacian matrix
+    # 3d. Compute Laplacian matrix
     lpl_mat = deg_mat - adj_mat
 
-    # 7. Compute normalized-Laplacian matrix
+    # 3e. Compute normalized-Laplacian matrix
     norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
     # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
 
     # 8. Compute eigenvalues
-    e_vals = np.linalg.eigvalsh(norm_lpl_mat)
+    e_vals, _ = np.linalg.eig(norm_lpl_mat)
+    e_vals = sp.linalg.eigvals(norm_lpl_mat)
 
     # 9. Remove duplicates and sort the eigenvalues in ascending order
     eigenvalues = e_vals
@@ -486,6 +653,47 @@ def approx_conductance_by_spectral(graph):
     # 10. Approximate conductance using the 2nd smallest eigenvalue
     # conductance_val_max = math.sqrt(sorted_vals[1])
     conductance_val_min = sorted_vals[1] / 2
+    # print(eigenvalues)
+    print(sorted_vals)
+    # print(conductance_val)
+    # print(conductance_val_max)
+    print(conductance_val_min)
+    return conductance_val_min
+
+
+def compute_norm_laplacian_matrix(graph):
+    """
+    Compute normalized-laplacian-matrix
+
+    :param adj_mat:
+    :return:
+    """
+
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 2. Compute Degree matrix
+    deg_mat = np.diag(np.sum(adj_mat, axis=1))
+
+    # 3. Compute Identity matrix
+    id_mat = np.identity(adj_mat.shape[0])
+
+    # 4. Compute (Degree inverse squared) D^{-1/2} matrix
+    # Check for singular matrices
+    if np.any(np.diag(deg_mat) == 0):
+        # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
+        # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
+        print("Graph has nodes with zero degree. Cannot compute conductance")
+        return None
+    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
+
+    # 5. Compute Laplacian matrix
+    lpl_mat = deg_mat - adj_mat
+
+    # 6. Compute normalized-Laplacian matrix
+    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
+    # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
+
     # print(adj_mat)
     # print(adj_mat.shape)
     # print(deg_mat)
@@ -493,79 +701,100 @@ def approx_conductance_by_spectral(graph):
     # print(id_mat)
     # print(lpl_mat)
     # print(norm_lpl_mat)
-    # print(eigenvalues)
-    print(sorted_vals)
-    # print(conductance_val)
-    # print(conductance_val_max)
-    print(conductance_val_min)
-    return conductance_val_min
+    return norm_lpl_mat
 
 
-def approx_conductance_eigenvalues(graph):
+def remove_self_loops(graph):
     """
-        Conductance is closely approximable via eigenvalue computation,\
-    a fact which has been well-known and well-used in the graph theory community.\
+    Remove self-loops from graph, they cause zero values in Degree matrix.
 
-        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
-    while, e.g., traditional spectral clustering is primarily developed for undirected\
-    graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
-    techniques requiring the symmetry is to turn the original directed graph into an\
-    undirected graph and build the Laplacian matrix for the latter.\
-
-        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
-    The degree of a node is the number of edges incident to that node.\
-    When a node has a degree of zero, it means that there are no edges\
-    connected to that node. In other words, the node is isolated from\
-    the rest of the graph.
+    :param graph:
+    :return:
     """
 
-    temp_adj_mat = nx.adjacency_matrix(graph).todense()
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
 
-    # 1. Symmetric-ize the Adjacency matrix
-    temp_adj_mat = np.maximum(temp_adj_mat, temp_adj_mat.transpose())
+    # 2. Symmetric-ize the Adjacency matrix
+    # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
 
-    # 2. Remove non-zero diagonal values from Adjacency matrix
-    np.fill_diagonal(temp_adj_mat, 0)
+    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+    np.fill_diagonal(adj_mat, 0)
 
-    # 2a. Identify isolated nodes
-    sp_graph = nx.from_numpy_array(temp_adj_mat)  # create new graph
-    # sp_graph = graph.copy()
-    isolated_nodes = list(nx.isolates(sp_graph))
+    # 4. Create new graph
+    new_graph = nx.from_numpy_array(adj_mat)
 
-    # 2b. Remove isolated nodes
-    sp_graph.remove_nodes_from(isolated_nodes)
+    return new_graph
 
-    laplacian_matrix = nx.normalized_laplacian_matrix(sp_graph).toarray()
-    # adjacency_matrix = nx.adjacency_matrix(sp_graph).toarray()
-    eigenvalues = np.linalg.eigvalsh(laplacian_matrix)
-    # eigenvalues = nx.normalized_laplacian_spectrum(sp_graph)
 
-    # Remove duplicates and sort the eigenvalues in ascending order
-    # vals = set(eigenvalues)
-    # sorted_vals = np.array(list(vals))
-    sorted_vals = np.array(eigenvalues)
+def make_graph_symmetrical(graph):
+    """
+
+    :param graph:
+    :return:
+    """
+
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 2. Symmetric-ize the Adjacency matrix
+    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+    np.fill_diagonal(adj_mat, 0)
+
+    # 4. Create new graph
+    new_graph = nx.from_numpy_array(adj_mat)
+
+    return new_graph
+
+
+def graph_components(graph):
+    """
+
+    :param graph:
+    :return:
+    """
+
+    # 1. Identify connected components
+    connected_components = list(nx.connected_components(graph))
+
+    # 2. Find the largest/smallest connected component
+    largest_component = max(connected_components, key=len)
+    smallest_component = min(connected_components, key=len)
+
+    # 3. Create a new graph containing only the largest/smallest connected component
+    sub_graph_largest = graph.subgraph(largest_component)
+    sub_graph_smallest = graph.subgraph(smallest_component)
+
+    component_count = len(connected_components)
+    # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
+    # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
+    # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
+    # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
+
+    return sub_graph_largest, sub_graph_smallest, component_count
+
+
+def compute_conductance_range(eig_vals):
+    """
+
+    :param eig_vals:
+    :return:
+    """
+
+    # Sort the eigenvalues in ascending order
+    sorted_vals = np.array(eig_vals)
     sorted_vals.sort()
 
     # Sort the eigenvalues in descending order
     # eigenvalues[::-1].sort()
 
     # approximate conductance using the 2nd smallest eigenvalue
-    # conductance_val_max = math.sqrt(sorted_vals[1])
-    conductance_val_min = sorted_vals[1] / 2
+    try:
+        conductance_max = math.sqrt((2 * sorted_vals[1]))
+    except ValueError:
+        conductance_max = None
+    conductance_min = sorted_vals[1] / 2
 
-    # print(temp_adj_mat)
-    # print(laplacian_matrix)
-    # print(eigenvalues)
-    print(sorted_vals)
-    # print(conductance_val)
-    # print(conductance_val_max)
-    print(conductance_val_min)
-    return conductance_val_min
-
-
-# Defining a function to check symmetric matrix
-def is_symmetric(mat):
-    transmat = np.array(mat).transpose()
-    if np.array_equal(mat, transmat):
-        return True
-    return False
+    return conductance_max, conductance_min
