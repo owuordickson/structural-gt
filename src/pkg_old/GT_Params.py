@@ -446,7 +446,7 @@ def approx_conductance_by_spectral(graph):
     # np.fill_diagonal(adj_mat, 0)
 
     # 2. Symmetric-ize the Adjacency matrix
-    adj_mat = np.logical_or(adj_mat, adj_mat.transpose())
+    # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
 
     # 3. Compute Degree matrix
     deg_mat = np.diag(np.sum(adj_mat, axis=1))
@@ -468,21 +468,22 @@ def approx_conductance_by_spectral(graph):
     lpl_mat = deg_mat - adj_mat
 
     # 7. Compute normalized-Laplacian matrix
-    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, adj_mat).dot(deg_inv_sqrt)
+    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
+    # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
 
     # 8. Compute eigenvalues
-    e_vals, e_vecs = np.linalg.eigh(norm_lpl_mat)
+    e_vals, e_vecs = np.linalg.eig(norm_lpl_mat)
 
     # 9. Remove duplicates and sort the eigenvalues in ascending order
-    eigenvalues = e_vals.real
+    eigenvalues = e_vals
     # round_vals = np.round(eigenvalues, decimals=5)
-    vals = set(eigenvalues)
-    sorted_vals = np.array(list(vals))
+    # vals = set(eigenvalues)
+    sorted_vals = np.array(eigenvalues)
     sorted_vals.sort()
 
     # 10. Approximate conductance using the 2nd smallest eigenvalue
-    # conductance_val_1 = math.sqrt(sorted_vals[1])
-    conductance_val_2 = sorted_vals[1] / 2
+    # conductance_val_max = math.sqrt(sorted_vals[1])
+    conductance_val_min = sorted_vals[1] / 2
     # print(adj_mat)
     # print(deg_mat)
     # print(id_mat)
@@ -491,9 +492,9 @@ def approx_conductance_by_spectral(graph):
     print(eigenvalues)
     # print(sorted_vals)
     # print(conductance_val)
-    # print(conductance_val_1)
-    print(conductance_val_2)
-    return conductance_val_2
+    # print(conductance_val_max)
+    print(conductance_val_min)
+    return conductance_val_min
 
 
 def approx_conductance_eigenvalues(graph):
@@ -521,29 +522,38 @@ def approx_conductance_eigenvalues(graph):
     # b. Remove isolated nodes
     sp_graph.remove_nodes_from(isolated_nodes)
 
+    # 1. Remove non-zero diagonal values from Adjacency matrix
+    adj_mat = nx.adjacency_matrix(sp_graph).todense()
+    np.fill_diagonal(adj_mat, 0)
+
+    # 2. Symmetric-ize the Adjacency matrix
+    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+    G = nx.from_numpy_array(adj_mat)  # create a graph
+
     # laplacian_matrix = nx.normalized_laplacian_matrix(graph).toarray()
     # adjacency_matrix = nx.adjacency_matrix(graph).toarray()
     # eigenvalues, _ = np.linalg.eigh(laplacian_matrix)
-    eigenvalues = nx.normalized_laplacian_spectrum(sp_graph)
+    eigenvalues = nx.normalized_laplacian_spectrum(G)
 
     # Remove duplicates and sort the eigenvalues in ascending order
-    vals = set(eigenvalues)
-    sorted_vals = np.array(list(vals))
+    # vals = set(eigenvalues)
+    # sorted_vals = np.array(list(vals))
+    sorted_vals = np.array(eigenvalues)
     sorted_vals.sort()
 
     # Sort the eigenvalues in descending order
     # eigenvalues[::-1].sort()
 
     # approximate conductance using the 2nd smallest eigenvalue
-    # conductance_val_1 = math.sqrt(sorted_vals[1])
-    conductance_val_2 = sorted_vals[1] / 2
+    # conductance_val_max = math.sqrt(sorted_vals[1])
+    conductance_val_min = sorted_vals[1] / 2
 
     print(eigenvalues)
     # print(sorted_vals)
     # print(conductance_val)
-    # print(conductance_val_1)
-    print(conductance_val_2)
-    return conductance_val_2
+    # print(conductance_val_max)
+    print(conductance_val_min)
+    return conductance_val_min
 
 
 # Defining a function to check symmetric matrix
