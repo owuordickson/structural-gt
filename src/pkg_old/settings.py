@@ -22,6 +22,7 @@ Contact email: vecdrew@umich.edu
 """
 
 from __main__ import *
+from tkinter import *
 
 from tkinter.ttk import Progressbar
 from matplotlib import cm, colors
@@ -43,12 +44,11 @@ import datetime
 import single_image_looper
 
 
-
 def progress(currentValue):
-
     # setting the progressbar
-    progressbar["value"]=currentValue
+    progressbar["value"] = currentValue
     progressbar.update()  # Force an update of the GUI
+
 
 def update_label(label_text):
     label_count.set(label_text)
@@ -58,19 +58,19 @@ def update_label(label_text):
 def norm_value(value, data_list):
     min_val = min(data_list)
     max_val = max(data_list)
-    #min_val = -1
-    #max_val = 1
+    # min_val = -1
+    # max_val = 1
 
-    #Normalize a value in the range from 0 to 1 based on a given data range
+    # Normalize a value in the range from 0 to 1 based on a given data range
     norm_value = (value - min_val) / (max_val - min_val)
 
     return norm_value
 
+
 def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, laplacian, \
               scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
               no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, Do_clust, \
-              Do_ANC, Do_Ast, heatmap):
-
+              Do_ANC, Do_Ast, Do_cond, heatmap):
     # Updating the label alert
     update_label("Processing image...")
 
@@ -122,7 +122,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
         # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
         for (s, e) in G.edges():
-            if(weighted == 1):
+            if (weighted == 1):
                 ge = G[s][e]['pts']
                 pix_width, wt = GetWeights.assignweightsbywidth(ge, img_bin)
                 G[s][e]['pixel width'] = pix_width
@@ -134,9 +134,9 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     if no_self_loops:
         if multigraph:
             g = G
-            for (s, e)  in list(G.edges()):
+            for (s, e) in list(G.edges()):
                 if s == e:
-                   g.remove_edge(s, e)
+                    g.remove_edge(s, e)
             G = g
         else:
             for (s, e) in G.edges():
@@ -146,14 +146,14 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     progress(30)
 
     # running GT calcs
-    data, klist, Tlist, BCdist, CCdist, ECdist= \
+    data, klist, Tlist, BCdist, CCdist, ECdist = \
         GT_Params.run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, \
-                               Do_clust, Do_ANC, Do_Ast, Do_WI, multigraph)
+                               Do_clust, Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph)
     progress(85)
 
     # running weighted calcs if requested
-    if(weighted == 1):
-        w_data, w_klist, w_BCdist, w_CCdist, w_ECdist= \
+    if (weighted == 1):
+        w_data, w_klist, w_BCdist, w_CCdist, w_ECdist = \
             GT_Params.run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, Do_Ast, Do_WI, \
                                             multigraph)
     progress(90)
@@ -201,12 +201,10 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         pdf.savefig()
         plt.close()
 
-
-
         # plotting skeletal images
         f2 = plt.figure(figsize=(8.5, 11), dpi=400)
         f2.add_subplot(2, 1, 1)
-        #skel_int = -1*(skel_int-1)
+        # skel_int = -1*(skel_int-1)
         plt.imshow(skel_int, cmap='gray')
         plt.scatter(Bp_coord_x, Bp_coord_y, s=0.25, c='b')
         plt.scatter(Ep_coord_x, Ep_coord_y, s=0.25, c='r')
@@ -245,42 +243,50 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
 
         progress(95)
 
-        # displaying all of the GT calculations requested
-        f3 = plt.figure(figsize=(8.5, 11), dpi=300)
+        # displaying all the GT calculations requested
+        # Modified Output to show GI calculations on entire page
         if weighted == 1:
-            f3.add_subplot(2, 1, 1)
-            f3.patch.set_visible(False)
+            f3a = plt.figure(figsize=(8.5, 11), dpi=300)
+            f3a.add_subplot(1, 1, 1)
+            f3a.patch.set_visible(False)
             plt.axis('off')
             colw = [2 / 3, 1 / 3]
             table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
             table.scale(1, 1.5)
             plt.title("Unweighted GT parameters")
+            pdf.savefig()
+            plt.close()
             try:
-                f3.add_subplot(2, 1, 2)
-                f3.patch.set_visible(False)
+                f3b = plt.figure(figsize=(8.5, 11), dpi=300)
+                f3b.add_subplot(1, 1, 1)
+                f3b.patch.set_visible(False)
                 plt.axis('off')
+                colw = [2 / 3, 1 / 3]
                 table2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
                 table2.scale(1, 1.5)
                 plt.title("Weighted GT Parameters")
+                pdf.savefig()
+                plt.close()
             except:
                 pass
-
         else:
-            f3.add_subplot(2, 2, 1)
-            f3.patch.set_visible(False)
+            f3a = plt.figure(figsize=(8.5, 11), dpi=300)
+            f3a.add_subplot(1, 1, 1)
+            f3a.patch.set_visible(False)
             plt.axis('off')
             colw = [2 / 3, 1 / 3]
-            # try:
-            table = plt.table(cellText=data.values[:, :], loc='center', colWidths=colw, cellLoc='left')
+            table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
             table.scale(1, 1.5)
-            # except:
-            #     table = plt.table(cellText=[["Number of Nodes","Number of Edges"],["Value",]])
-            plt.title("Unweighted GT Parameters")
+            plt.title("Unweighted GT parameters")
+            pdf.savefig()
+            plt.close()
+
+            f3b = plt.figure(figsize=(8.5, 11), dpi=300)
             if Do_kdist:
-                f3.add_subplot(2, 2, 2)
+                f3b.add_subplot(2, 2, 1)
                 bins1 = np.arange(0.5, max(klist) + 1.5, 1)
                 try:
-                    k_sig = str(round(stdev(klist),3))
+                    k_sig = str(round(stdev(klist), 3))
                 except:
                     k_sig = "N/A"
                 k_txt = "Degree Distribution: $\sigma$=" + k_sig
@@ -289,7 +295,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.xlabel("Degree")
                 plt.ylabel("Counts")
             if (Do_clust and multigraph == 0):
-                f3.add_subplot(2, 2, 3)
+                f3b.add_subplot(2, 2, 2)
                 binsT = np.linspace(min(Tlist), max(Tlist), 50)
                 try:
                     T_sig = str(round(stdev(Tlist), 3))
@@ -300,17 +306,11 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.title(T_txt)
                 plt.xlabel("Clust. Coeff.")
                 plt.ylabel("Counts")
-        try:
             pdf.savefig()
-        except:
-            None
-        try:
             plt.close()
-        except:
-            None
 
-        if(multigraph == 0 and weighted == 0):
-            if(Do_BCdist or Do_CCdist or Do_ECdist):
+        if (multigraph == 0 and weighted == 0):
+            if (Do_BCdist or Do_CCdist or Do_ECdist):
                 f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                 if Do_BCdist:
                     f4.add_subplot(2, 2, 1)
@@ -349,8 +349,6 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                     plt.xlabel("Eigenvector value")
                     plt.ylabel("Counts")
 
-
-
             try:
                 pdf.savefig()
             except:
@@ -359,7 +357,6 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.close()
             except:
                 None
-
 
         # displaying weighted GT parameters if requested
         if (weighted == 1):
@@ -370,7 +367,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
             g_count = Do_kdist + Do_clust + Do_BCdist + Do_CCdist + Do_ECdist
             g_count2 = g_count - Do_clust + 1
             index = 1
-            if(g_count > 2):
+            if (g_count > 2):
                 sy1 = 2
                 fnt = font2
             else:
@@ -390,19 +387,19 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.xlabel("Degree", fontdict=fnt)
                 plt.ylabel("Counts", fontdict=fnt)
                 index += 1
-            #if Do_clust:
-                #f4.add_subplot(sy1, 2, index)
-                #binsT = np.linspace(min(Tlist), max(Tlist), 50)
-                #try:
-                    #T_sig = str(round(stdev(Tlist), 3))
-                #except:
-                    #T_sig = "N/A"
-                #T_txt = "Clustering Coefficients: $\sigma$=" + T_sig
-                #plt.hist(Tlist, bins=binsT)
-                #plt.title(T_txt, fontdict=fnt)
-                #plt.xlabel("Clust. Coeff.", fontdict=fnt)
-                #plt.ylabel("Counts", fontdict=fnt)
-                #index += 1
+            # if Do_clust:
+            # f4.add_subplot(sy1, 2, index)
+            # binsT = np.linspace(min(Tlist), max(Tlist), 50)
+            # try:
+            # T_sig = str(round(stdev(Tlist), 3))
+            # except:
+            # T_sig = "N/A"
+            # T_txt = "Clustering Coefficients: $\sigma$=" + T_sig
+            # plt.hist(Tlist, bins=binsT)
+            # plt.title(T_txt, fontdict=fnt)
+            # plt.xlabel("Clust. Coeff.", fontdict=fnt)
+            # plt.ylabel("Counts", fontdict=fnt)
+            # index += 1
             if Do_BCdist:
                 f4.add_subplot(sy1, 2, index)
                 bins2 = np.linspace(min(BCdist), max(BCdist), 50)
@@ -442,54 +439,52 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.xlabel("Eigenvector value", fontdict=fnt)
                 plt.ylabel("Counts", fontdict=fnt)
 
-
             pdf.savefig()
             plt.close()
 
-
             f5 = plt.figure(figsize=(8.5, 11), dpi=400)
-            if(g_count2 > 2):
+            if (g_count2 > 2):
                 sy2 = 2
                 fnt = font2
             else:
                 sy2 = 1
                 fnt = font1
             index = 1
-            #f5.add_subplot(sy2, 2, index)
-            #weight_data = []
-            #if multigraph:
-                #for (s, e) in G.edges():
-                    #for k in range(int(len(G[s][e]))):
-                        #weight_data.append(G[s][e][k]['weight'])
-                    #try:
-                        #bins7 = np.linspace(min(weight_data), max(weight_data), 50)
-                    #except:
-                        # this only happens if there are no edges I hope
-                        #bins7 = np.linspace(0, 1, 50)
-            #else:
-                #for (s, e) in G.edges():
-                    #weight_data.append(G[s][e]['weight'])
-                #try:
-                    #bins7 = np.linspace(min(weight_data), max(weight_data), 50)
-                #except:
-                    # this only happens if there are no edges I hope
-                    #bins7 = np.linspace(0, 1, 50)
-            #try:
-                #wt_sig = str(round(stdev(weight_data),3))
-            #except:
-                #wt_sig = "N/A"
-            #wt_txt = "Edge weight Dist.: $\sigma$=" + wt_sig
-            #plt.hist(weight_data, bins=bins7)
-            #plt.title(wt_txt, fontdict=fnt)
-            #plt.xlabel("Line Weight", fontdict=fnt)
-            #plt.xticks(fontsize=8)
-            #plt.ylabel("Counts", fontdict=fnt)
-            #index += 1
+            # f5.add_subplot(sy2, 2, index)
+            # weight_data = []
+            # if multigraph:
+            # for (s, e) in G.edges():
+            # for k in range(int(len(G[s][e]))):
+            # weight_data.append(G[s][e][k]['weight'])
+            # try:
+            # bins7 = np.linspace(min(weight_data), max(weight_data), 50)
+            # except:
+            # this only happens if there are no edges I hope
+            # bins7 = np.linspace(0, 1, 50)
+            # else:
+            # for (s, e) in G.edges():
+            # weight_data.append(G[s][e]['weight'])
+            # try:
+            # bins7 = np.linspace(min(weight_data), max(weight_data), 50)
+            # except:
+            # this only happens if there are no edges I hope
+            # bins7 = np.linspace(0, 1, 50)
+            # try:
+            # wt_sig = str(round(stdev(weight_data),3))
+            # except:
+            # wt_sig = "N/A"
+            # wt_txt = "Edge weight Dist.: $\sigma$=" + wt_sig
+            # plt.hist(weight_data, bins=bins7)
+            # plt.title(wt_txt, fontdict=fnt)
+            # plt.xlabel("Line Weight", fontdict=fnt)
+            # plt.xticks(fontsize=8)
+            # plt.ylabel("Counts", fontdict=fnt)
+            # index += 1
             if Do_kdist:
                 f5.add_subplot(sy2, 2, index)
                 bins4 = np.arange(0.5, max(w_klist) + 1.5, 1)
                 try:
-                    wk_sig = str(round(stdev(w_klist),3))
+                    wk_sig = str(round(stdev(w_klist), 3))
                 except:
                     wk_sig = "N/A"
                 wk_txt = "Weighted Degree: $\sigma$=" + wk_sig
@@ -503,7 +498,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 bins5 = np.linspace(min(w_BCdist), max(w_BCdist), 50)
                 plt.hist(w_BCdist, bins=bins5)
                 try:
-                    wBC_sig = str(round(stdev(w_BCdist),3))
+                    wBC_sig = str(round(stdev(w_BCdist), 3))
                 except:
                     wBC_sig = "N/A"
                 wBC_txt = "Width-Weighted Betweeness: $\sigma$=" + wBC_sig
@@ -515,7 +510,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 f5.add_subplot(sy2, 2, index)
                 bins6 = np.linspace(min(w_CCdist), max(w_CCdist), 50)
                 try:
-                    wCC_sig = str(round(stdev(w_CCdist),3))
+                    wCC_sig = str(round(stdev(w_CCdist), 3))
                 except:
                     wCC_sig = "N/A"
                 wCC_txt = "Length-Weighted Closeness: $\sigma$=" + wCC_sig
@@ -530,7 +525,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 bins7 = np.linspace(min(w_ECdist), max(w_ECdist), 50)
                 plt.hist(w_ECdist, bins=bins7)
                 try:
-                    wEC_sig = str(round(stdev(w_ECdist),3))
+                    wEC_sig = str(round(stdev(w_ECdist), 3))
                 except:
                     wEC_sig = "N/A"
                 wEC_txt = "Width-Weighted Eigenvector Cent.: $\sigma$=" + wEC_sig
@@ -546,7 +541,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
             lw = 1.5
             update_label("Generating heat maps...")
             time.sleep(0.5)
-            if(Do_kdist == 1):
+            if (Do_kdist == 1):
                 f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
                 f6a.add_subplot(1, 1, 1)
                 plt.imshow(src, cmap='gray')
@@ -762,8 +757,8 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         pdf.savefig()
         plt.close()
 
-    if(Exp_EL == 1):
-        if(weighted == 1):
+    if (Exp_EL == 1):
+        if (weighted == 1):
             fields = ['Source', 'Target', 'Weight', 'Length']
             el = nx.generate_edgelist(G, delimiter=',', data=["weight", "length"])
             with open(file2, 'w', newline='') as csvfile:
@@ -785,7 +780,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 writer.writerow(fields)
                 for line in el:
                     line = str(line)
-                    row=line.split(',')
+                    row = line.split(',')
                     try:
                         writer.writerow(row)
                     except:
@@ -793,7 +788,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
             csvfile.close()
 
     # exporting as gephi file
-    if(Do_gexf == 1):
+    if (Do_gexf == 1):
         if multigraph:
             # deleting extraneous info and then exporting the final skeleton
             for (x) in G.nodes():
@@ -820,12 +815,11 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
 
 
 def get_checks():
-
     # global variables for all of the check boxes
     global Gamma, md_filter, g_blur, autolvl, fg_color, laplacian, scharr, sobel, lowpass, Thresh_method, asize, \
         bsize, wsize, thresh, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
         no_self_loops, multigraph, Do_clust, Do_ANC, Do_GD, Do_Eff, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_dia, \
-        Do_Ast, Do_WI, heatmap
+        Do_Ast, Do_WI, Do_cond, heatmap
 
     # checkboxes for image detection settings
     thresh = var10.get()
@@ -879,15 +873,15 @@ def get_checks():
         bsize = 3
         blursize.delete(0, END)
         blursize.insert('end', bsize)
-    if(bsize%2 == 0):
+    if (bsize % 2 == 0):
         bsize = int(bsize) + 1
         blursize.delete(0, END)
         blursize.insert('end', bsize)
-    if(bsize > 255):
+    if (bsize > 255):
         bsize = 255
         blursize.delete(0, END)
         blursize.insert('end', bsize)
-    elif(bsize<0):
+    elif (bsize < 0):
         bsize = 3
         blursize.delete(0, END)
         blursize.insert('end', bsize)
@@ -915,11 +909,11 @@ def get_checks():
         r_size = 100
         removesize.delete(0, END)
         removesize.insert('end', r_size)
-    if(r_size > 50000):
+    if (r_size > 50000):
         r_size = 50000
         removesize.delete(0, END)
         removesize.insert('end', r_size)
-    elif(r_size<0):
+    elif (r_size < 0):
         r_size = 2
         removesize.delete(0, END)
         removesize.insert('end', r_size)
@@ -931,11 +925,11 @@ def get_checks():
         wsize = 10
         windowsize.delete(0, END)
         windowsize.insert('end', wsize)
-    if(wsize > 500):
+    if (wsize > 500):
         wsize = 500
         windowsize.delete(0, END)
         windowsize.insert('end', wsize)
-    elif(wsize<0):
+    elif (wsize < 0):
         wsize = 2
         windowsize.delete(0, END)
         windowsize.insert('end', wsize)
@@ -952,18 +946,17 @@ def get_checks():
     Do_dia = var38.get()
     Do_Ast = var39.get()
     Do_WI = var40.get()
+    Do_cond = var41.get()
     heatmap = var29.get()
-
 
     # returning all the values
     return Gamma, md_filter, g_blur, autolvl, fg_color, Thresh_method, asize, bsize, wsize, thresh, laplacian, scharr, \
-           sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
-           no_self_loops, multigraph, Do_clust, Do_ANC, Do_GD, Do_Eff, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, \
-           Do_dia, Do_Ast, Do_WI, heatmap
+        sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
+        no_self_loops, multigraph, Do_clust, Do_ANC, Do_GD, Do_Eff, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, \
+        Do_dia, Do_Ast, Do_WI, Do_cond, heatmap
 
 
 def get_Settings(filename):
-
     # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
     global run_info
     run_info = "Run Info\n"
@@ -1010,7 +1003,6 @@ def get_Settings(filename):
 
 
 def Preview_button():
-
     # run get_checks() to get all the entered information
     # this function only actually needs image detection settings
     get_checks()
@@ -1025,7 +1017,7 @@ def Preview_button():
     img_bin = img_bin
 
     # making a histogram of the grayscale values of all the pixels in the filtered image
-    histo = cv2.calcHist([img_filt], [0], None, [256], [0,256])
+    histo = cv2.calcHist([img_filt], [0], None, [256], [0, 256])
     # making a plot with the matlab plotting module
     f = plt.figure(figsize=(4, 4), dpi=200)
 
@@ -1034,7 +1026,7 @@ def Preview_button():
     plt.imshow(raw_img, cmap='gray')
     plt.xticks([])
     plt.yticks([])
-    plt.title("Original Image", fontsize= 10)
+    plt.title("Original Image", fontsize=10)
 
     # top right plot is the processed image
     # the processed image is affected by the four checkboxes in the image detection settings
@@ -1043,19 +1035,19 @@ def Preview_button():
     plt.imshow(img_filt, cmap='gray')
     plt.xticks([])
     plt.yticks([])
-    plt.title("Processed Image", fontsize= 10)
+    plt.title("Processed Image", fontsize=10)
 
     # bottom left is histogram of the processed image
     f.add_subplot(2, 2, 3)
     plt.plot(histo, color='blue')
-    if(Thresh_method == 0):
-        Th = np.array([[thresh, thresh],[0,max(histo)]], dtype='object')
-        plt.plot(Th[0],Th[1], ls='--', color='black')
-    elif(Thresh_method == 2):
+    if (Thresh_method == 0):
+        Th = np.array([[thresh, thresh], [0, max(histo)]], dtype='object')
+        plt.plot(Th[0], Th[1], ls='--', color='black')
+    elif (Thresh_method == 2):
         Th = np.array([[ret, ret], [0, max(histo)]], dtype='object')
         plt.plot(Th[0], Th[1], ls='--', color='black')
     plt.yticks([])
-    plt.title("Histogram of Processed Image", fontsize= 10)
+    plt.title("Histogram of Processed Image", fontsize=10)
     plt.xlabel("Pixel values")
     plt.ylabel("Counts")
 
@@ -1064,14 +1056,13 @@ def Preview_button():
     plt.imshow(img_bin, cmap='gray')
     plt.xticks([])
     plt.yticks([])
-    plt.title("Binary Image", fontsize= 10)
+    plt.title("Binary Image", fontsize=10)
 
     # showing the plots
     plt.show(block=True)
 
 
 def Proceed_button():
-
     # starting the image analysis, first by finding the values of all the check boxes
     # also getting the start time for the actual time intensive part of the program
     print("Running...")
@@ -1088,7 +1079,7 @@ def Proceed_button():
     save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
               laplacian, scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, \
               display_nodeID, no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, \
-              Do_Eff, Do_clust, Do_ANC, Do_Ast, heatmap)
+              Do_Eff, Do_clust, Do_ANC, Do_Ast, Do_cond, heatmap)
 
     progress(100)
     update_label("Done!")
@@ -1105,7 +1096,6 @@ def Proceed_button():
 
 
 def adjust_settings(root, source, saveloc, filename):
-
     # adjusting the settings for a new image
     root.destroy()
     global src, file, file1, file2, oldfilename
@@ -1125,7 +1115,6 @@ def adjust_settings(root, source, saveloc, filename):
 
 
 def make_settings(root, source, saveloc, filename):
-
     # close previous window, open a new one
     root.destroy()
     global settings
@@ -1157,23 +1146,23 @@ def make_settings(root, source, saveloc, filename):
     frame4 = Frame(settings)
 
     # separating the gui into four sections
-    label1 = Label(settings, text = 'Image Detection Settings', bg="Gray", font="Bold", padx=200)
+    label1 = Label(settings, text='Image Detection Settings', bg="Gray", font="Bold", padx=200)
     label1.grid(row=0, column=0)
     frame1.grid(row=1, column=0)
-    label2 = Label(settings, text = 'Binary Image Preview', bg="Gray", font="Bold", padx=211)
+    label2 = Label(settings, text='Binary Image Preview', bg="Gray", font="Bold", padx=211)
     label2.grid(row=2, column=0)
     frame2.grid(row=3, column=0)
-    label3 = Label(settings, text = 'Graph Extraction Settings', bg="Gray", font="Bold", padx=220)
+    label3 = Label(settings, text='Graph Extraction Settings', bg="Gray", font="Bold", padx=220)
     label3.grid(row=0, column=1)
     frame3.grid(row=1, column=1)
-    label4 = Label(settings, text = 'NetworkX Calculation Settings', bg="Gray", font="Bold", padx=205)
+    label4 = Label(settings, text='NetworkX Calculation Settings', bg="Gray", font="Bold", padx=205)
     label4.grid(row=2, column=1)
     frame4.grid(row=3, column=1)
 
     # this is for all the boolean check boxes
     # please note that its only some of the numbers from 11 to 39, not all of them
     # the the 10s place is the frame the variable is in
-    global  var10, var11, var12, var13, var14, var15, var16, var17, var18, var19, var1f, var20, var21, var22, var23, \
+    global var10, var11, var12, var13, var14, var15, var16, var17, var18, var19, var1f, var20, var21, var22, var23, \
         var24, var25, var26, var27, var28, var29, var30, var31, var32, var33, var34, var35, var36, var37, var38, \
         var39, var40, var41
 
@@ -1209,6 +1198,7 @@ def make_settings(root, source, saveloc, filename):
     var38 = IntVar()
     var39 = IntVar()
     var40 = IntVar()
+    var41 = IntVar()
 
     # all the checkboxes and their corresponding variables when clicked
     c11 = Checkbutton(frame1, text='Apply median filter', variable=var11, onvalue=1, offvalue=0)
@@ -1239,12 +1229,13 @@ def make_settings(root, source, saveloc, filename):
     c37 = Checkbutton(frame4, text='Calculate average clustering coefficient', variable=var37, onvalue=1, offvalue=0)
     c38 = Checkbutton(frame4, text='Calculate network diameter', variable=var38, onvalue=1, offvalue=0)
     c39 = Checkbutton(frame4, text='Calculate assortativity coefficient', variable=var39, onvalue=1, offvalue=0)
+    c41 = Checkbutton(frame4, text='Calculate graph conductance', variable=var41, onvalue=1, offvalue=0)
     c29 = Checkbutton(frame4, text='Display Heat Maps', variable=var29, onvalue=1, offvalue=0)
 
     # radio button for the type of image detection since you can only run one at once
-    R1 = Radiobutton(frame1, text='Global Threshold', variable = var15, value=0)
-    R2 = Radiobutton(frame1, text='Adaptive Threshold', variable = var15, value=1)
-    R3 = Radiobutton(frame1, text='OTSU Threshold', variable = var15, value=2)
+    R1 = Radiobutton(frame1, text='Global Threshold', variable=var15, value=0)
+    R2 = Radiobutton(frame1, text='Adaptive Threshold', variable=var15, value=1)
+    R3 = Radiobutton(frame1, text='OTSU Threshold', variable=var15, value=2)
     R1.grid(row=0, column=1)
     R2.grid(row=1, column=1)
     R3.grid(row=2, column=1)
@@ -1254,7 +1245,6 @@ def make_settings(root, source, saveloc, filename):
     s1.set(1.00)
     s2 = Scale(frame1, label='Global threshold value', variable=var10, from_=1, to=255, length=300, orient=HORIZONTAL)
     s2.set(127)
-
 
     # global variables for the only integer values that the user can enter
     global adaptsize, blursize, windowsize, threshval, removesize
@@ -1305,6 +1295,7 @@ def make_settings(root, source, saveloc, filename):
     c37.grid(row=5, column=0)
     c38.grid(row=6, column=0)
     c39.grid(row=6, column=2)
+    c41.grid(row=7, column=2)
     c29.grid(row=1, column=0)
     c40.grid(row=7, column=0)
 
@@ -1318,7 +1309,7 @@ def make_settings(root, source, saveloc, filename):
     removesize.grid(row=5, column=1)
 
     def select_all():
-        cbox_list = [c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40]
+        cbox_list = [c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40, c41]
         for i in cbox_list:
             i.select()
 
@@ -1329,12 +1320,12 @@ def make_settings(root, source, saveloc, filename):
     button1 = Button(frame1, text="Advanced Preview...", command=Preview_button)
     button2 = Button(frame4, text="Proceed", command=Proceed_button)
     button3 = Button(frame4, text="New Image", command=lambda: single_image_looper.make_gui())
-    button4 = Button(frame4, text='Select All...', command=lambda:select_all())
+    button4 = Button(frame4, text='Select All...', command=lambda: select_all())
 
     button1.grid(row=9, column=1)
     button2.grid(row=8, column=2)
     button3.grid(row=10, column=2)
-    button4.grid(row=0,column=0)
+    button4.grid(row=0, column=0)
 
     global label_count
     label_count = StringVar()
@@ -1363,13 +1354,12 @@ def make_settings(root, source, saveloc, filename):
 
     global progressbar
     # a convenient progressbar, not indicative of the actual relative time left for the program to finish
-    progressbar= Progressbar(frame4,orient="horizontal",length=300,mode="determinate")
+    progressbar = Progressbar(frame4, orient="horizontal", length=300, mode="determinate")
     progressbar.grid(row=10, column=0)
-    maxValue=100
-    currentValue=0
-    progressbar["value"]=currentValue
-    progressbar["maximum"]=maxValue
+    maxValue = 100
+    currentValue = 0
+    progressbar["value"] = currentValue
+    progressbar["maximum"] = maxValue
 
     # keeping the window alive
     settings.mainloop()
-

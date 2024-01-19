@@ -39,7 +39,7 @@ from networkx.algorithms.wiener import wiener_index
 
 
 def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, Do_clust, \
-                 Do_ANC, Do_Ast, Do_WI, multigraph):
+                 Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph):
 
     # getting nodes and edges and defining variables for later use
     klist = [0]
@@ -214,16 +214,17 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         data_dict["y"].append(Ecent)
 
     # calculating graph conductance
-    settings.update_label("Calculating graph conductance...")
-    # conductance_value = compute_all_subsets_conductance(G, 100)
-    # conductance_value = approx_conductance_eigenvalues(G)
-    # conductance_value = approx_conductance_by_spectral(G)
-    # data_dict["x"].append("Graph Conductance")
-    # data_dict["y"].append(conductance_value)
-    res = approx_conductance_by_spectral(G)
-    for item in res:
-        data_dict["x"].append(item["name"])
-        data_dict["y"].append(item["value"])
+    if (Do_cond == 1):
+        settings.update_label("Calculating graph conductance...")
+        # conductance_value = compute_all_subsets_conductance(G, 100)
+        # conductance_value = approx_conductance_eigenvalues(G)
+        # conductance_value = approx_conductance_by_spectral(G)
+        # data_dict["x"].append("Graph Conductance")
+        # data_dict["y"].append(conductance_value)
+        res = approx_conductance_by_spectral(G)
+        for item in res:
+            data_dict["x"].append(item["name"])
+            data_dict["y"].append(item["value"])
 
     data = pd.DataFrame(data_dict)
 

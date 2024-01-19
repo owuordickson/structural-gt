@@ -22,6 +22,7 @@ Contact email: vecdrew@umich.edu
 """
 
 from __main__ import *
+from tkinter import *
 
 from tkinter.ttk import Progressbar
 from matplotlib import cm, colors
@@ -48,6 +49,7 @@ def progress(currentValue):
     progressbar["value"] = currentValue
     progressbar.update()  # Force an update of the GUI
 
+
 def norm_value(value, data_list):
     min_val = min(data_list)
     max_val = max(data_list)
@@ -59,10 +61,11 @@ def norm_value(value, data_list):
 
     return norm_value
 
+
 def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, laplacian, \
               scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
               no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, Do_clust, \
-              Do_ANC, Do_Ast, heatmap):
+              Do_ANC, Do_Ast, Do_cond, heatmap):
 
 
     # processing the image itself to create a binary image img_bin and updating progress
@@ -138,7 +141,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     just_data = []
     data, just_data, klist, Tlist, BCdist, CCdist, ECdist= \
         GT_Params_multi.run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, \
-                                     Do_clust, Do_ANC, Do_Ast, Do_WI, multigraph)
+                                     Do_clust, Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph)
     progress(80)
 
     # running weighted calcs if requested
@@ -235,38 +238,49 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         progress(95)
 
         # displaying all of the GT calculations requested
-        f3 = plt.figure(figsize=(8.5, 11), dpi=300)
+        # Modified Output to show GI calculations on entire page
         if weighted == 1:
-            f3.add_subplot(2, 1, 1)
-            f3.patch.set_visible(False)
+            f3a = plt.figure(figsize=(8.5, 11), dpi=300)
+            f3a.add_subplot(1, 1, 1)
+            f3a.patch.set_visible(False)
             plt.axis('off')
             colw = [2 / 3, 1 / 3]
-            table = plt.table(cellText=data.values[:, 0:], loc='upper center', colWidths=colw, cellLoc='left')
+            table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
             table.scale(1, 1.5)
             plt.title("Unweighted GT parameters")
+            pdf.savefig()
+            plt.close()
             try:
-                f3.add_subplot(2, 1, 2)
-                f3.patch.set_visible(False)
+                f3b = plt.figure(figsize=(8.5, 11), dpi=300)
+                f3b.add_subplot(1, 1, 1)
+                f3b.patch.set_visible(False)
                 plt.axis('off')
+                colw = [2 / 3, 1 / 3]
                 table2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
                 table2.scale(1, 1.5)
                 plt.title("Weighted GT Parameters")
+                pdf.savefig()
+                plt.close()
             except:
                 pass
-
         else:
-            f3.add_subplot(2, 2, 1)
-            f3.patch.set_visible(False)
+            f3a = plt.figure(figsize=(8.5, 11), dpi=300)
+            f3a.add_subplot(1, 1, 1)
+            f3a.patch.set_visible(False)
             plt.axis('off')
             colw = [2 / 3, 1 / 3]
-            table = plt.table(cellText=data.values[:, :], loc='center', colWidths=colw, cellLoc='left')
+            table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
             table.scale(1, 1.5)
-            plt.title("Unweighted GT Parameters")
+            plt.title("Unweighted GT parameters")
+            pdf.savefig()
+            plt.close()
+
+            f3b = plt.figure(figsize=(8.5, 11), dpi=300)
             if Do_kdist:
-                f3.add_subplot(2, 2, 2)
+                f3b.add_subplot(2, 2, 1)
                 bins1 = np.arange(0.5, max(klist) + 1.5, 1)
                 try:
-                    k_sig = str(round(stdev(klist),3))
+                    k_sig = str(round(stdev(klist), 3))
                 except:
                     k_sig = "N/A"
                 k_txt = "Degree Distribution: $\sigma$=" + k_sig
@@ -275,7 +289,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.xlabel("Degree")
                 plt.ylabel("Counts")
             if (Do_clust and multigraph == 0):
-                f3.add_subplot(2, 2, 3)
+                f3b.add_subplot(2, 2, 2)
                 binsT = np.linspace(min(Tlist), max(Tlist), 50)
                 try:
                     T_sig = str(round(stdev(Tlist), 3))
@@ -286,14 +300,8 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
                 plt.title(T_txt)
                 plt.xlabel("Clust. Coeff.")
                 plt.ylabel("Counts")
-        try:
             pdf.savefig()
-        except:
-            None
-        try:
             plt.close()
-        except:
-            None
 
         if(multigraph == 0 and weighted == 0):
             if(Do_BCdist or Do_CCdist or Do_ECdist):
@@ -783,13 +791,14 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
 
     label_count.set("Done")
 
+
 def get_checks():
 
     # global variables for all of the check boxes
     global Gamma, md_filter, g_blur, autolvl, fg_color, laplacian, scharr, sobel, lowpass, Thresh_method, asize, \
         bsize, wsize, thresh, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
         no_self_loops, multigraph, Do_clust, Do_ANC, Do_GD, Do_Eff, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_dia, \
-        Do_Ast, Do_WI, heatmap
+        Do_Ast, Do_WI, Do_cond, heatmap
 
     # checkboxes for image detection settings
     thresh = var10.get()
@@ -916,13 +925,14 @@ def get_checks():
     Do_dia = var38.get()
     Do_Ast = var39.get()
     Do_WI = var40.get()
+    Do_cond = var41.get()
     heatmap = var29.get()
 
     # returning all the values
     return Gamma, md_filter, g_blur, autolvl, fg_color, Thresh_method, asize, bsize, wsize, thresh, laplacian, scharr, \
            sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, display_nodeID, \
            no_self_loops, multigraph, Do_clust, Do_ANC, Do_GD, Do_Eff, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, \
-           Do_dia, Do_Ast, Do_WI, heatmap
+           Do_dia, Do_Ast, Do_WI, Do_cond, heatmap
 
 
 def start_csv():
@@ -940,6 +950,7 @@ def start_csv():
     Do_dia = var38.get()
     Do_Ast = var39.get()
     Do_WI = var40.get()
+    Do_cond = var41.get()
     multigraph = var28.get()
     leftcol = ['']
     leftcol.append('Number of Nodes')
@@ -972,6 +983,8 @@ def start_csv():
         leftcol.append('Average Closeness Centrality')
     if Do_ECdist == 1:
         leftcol.append('Average Eigenvector Centrality')
+    if Do_cond == 1:
+        leftcol.append('Graph Conductance')
 
     if weighted == 1:
 
@@ -996,6 +1009,7 @@ def start_csv():
             leftcol.append('Width-Weighted Average Eigenvector Centrality')
 
     return leftcol
+
 
 def get_Settings(filename):
 
@@ -1042,6 +1056,7 @@ def get_Settings(filename):
         run_info = run_info + " || Multigraph allowed"
 
     return run_info
+
 
 def Proceed_button(sources, filenames, saveloc):
     # starting the image analysis, first by finding the values of all the check boxes
@@ -1095,7 +1110,7 @@ def Proceed_button(sources, filenames, saveloc):
         save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
                   laplacian, scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, \
                   display_nodeID, no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, \
-                  Do_Eff, Do_clust, Do_ANC, Do_Ast, heatmap)
+                  Do_Eff, Do_clust, Do_ANC, Do_Ast, Do_cond, heatmap)
 
         j = 1
         compiled_data[0][filename_index] = old_filename
@@ -1174,7 +1189,7 @@ def make_settings(root, sources, saveloc, filenames):
     # the the 10s place is the frame the variable is in
     global var10, var11, var12, var13, var14, var15, var16, var17, var18, var19, var1f, var20, var21, var22, var23, \
         var24, var25, var26, var27, var28, var29, var30, var31, var32, var33, var34, var35, var36, var37, var38, \
-        var39, var40
+        var39, var40, var41
 
     var10 = IntVar()
     var11 = IntVar()
@@ -1208,6 +1223,7 @@ def make_settings(root, sources, saveloc, filenames):
     var38 = IntVar()
     var39 = IntVar()
     var40 = IntVar()
+    var41 = IntVar()
 
     # all the checkboxes and their corresponding variables when clicked
     c11 = Checkbutton(frame1, text='Apply median filter', variable=var11, onvalue=1, offvalue=0)
@@ -1238,6 +1254,7 @@ def make_settings(root, sources, saveloc, filenames):
     c37 = Checkbutton(frame4, text='Calculate average clustering coefficient', variable=var37, onvalue=1, offvalue=0)
     c38 = Checkbutton(frame4, text='Calculate network diameter', variable=var38, onvalue=1, offvalue=0)
     c39 = Checkbutton(frame4, text='Calculate assortativity coefficient', variable=var39, onvalue=1, offvalue=0)
+    c41 = Checkbutton(frame4, text='Calculate graph conductance', variable=var41, onvalue=1, offvalue=0)
     c29 = Checkbutton(frame4, text='Display Heat Maps', variable=var29, onvalue=1, offvalue=0)
 
     # radio button for the type of image detection since you can only run one at once
@@ -1303,6 +1320,7 @@ def make_settings(root, sources, saveloc, filenames):
     c37.grid(row=5, column=0)
     c38.grid(row=6, column=0)
     c39.grid(row=6, column=2)
+    c41.grid(row=7, column=2)
     c29.grid(row=1, column=0)
     c40.grid(row=7, column=0)
 
@@ -1332,7 +1350,7 @@ def make_settings(root, sources, saveloc, filenames):
     label_counter.grid(row=10, column=2)
 
     def select_all():
-        cbox_list = [c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40]
+        cbox_list = [c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40, c41]
         for i in cbox_list:
             i.select()
 

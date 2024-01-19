@@ -39,7 +39,7 @@ from networkx.algorithms.wiener import wiener_index
 
 
 def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, \
-                               Do_clust, Do_ANC, Do_Ast, Do_WI, multigraph):
+                               Do_clust, Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph):
 
     # getting nodes and edges and defining variables for later use
     klist = [0]
@@ -211,7 +211,8 @@ def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist
             data_dict["x"].append("Average eigenvector centrality")
             data_dict["y"].append(Ecent)
 
-        # calculating graph conductance
+    # calculating graph conductance
+    if (Do_cond == 1):
         # settings.update_label("Calculating graph conductance...")
         res = approx_conductance_by_spectral(G)
         for item in res:
