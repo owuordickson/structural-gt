@@ -31,6 +31,7 @@ window.title("StructuralGT Image Entry Selection")
 
 # All this really does is let you choose single or multi image options
 
+
 def about_window():
     about_info = "StructuralGT: Automated graph theory analysis of network materials. " \
                  "Performs image detection and graph theory calculation on digital images of networks." \
@@ -50,6 +51,7 @@ def about_window():
                  "along with this program.  If not, see <https://www.gnu.org/licenses/>."
 
     tkinter.messagebox.showinfo('About StructuralGT', about_info)
+
 
 def multi_image():
 

@@ -27,12 +27,9 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import settings
-import itertools
 import math
-from statistics import mean
 from time import sleep
 from sklearn.cluster import spectral_clustering
-from scipy.sparse import csgraph
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
 from networkx.algorithms import degree_assortativity_coefficient
@@ -252,9 +249,6 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
     if Do_ANC:
         connected_graph = nx.is_connected(G)
 
-
-
-
     if(Do_kdist == 1):
         klist1 = nx.degree(G, weight='weight')
         ksum = 0
@@ -274,7 +268,6 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["x"].append("Length-weighted Wiener Index")
         wdata_dict["y"].append(WI)
 
-
     if (Do_ANC == 1):
         if connected_graph:
             max_flow = float(0)
@@ -291,13 +284,11 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["x"].append("Max flow between periphery")
         wdata_dict["y"].append(max_flow)
 
-
     if (Do_Ast == 1):
         Ast = degree_assortativity_coefficient(G, weight = 'pixel width')
         Ast = round(Ast, 5)
         wdata_dict["x"].append("Weighted assortativity coefficient")
         wdata_dict["y"].append(Ast)
-
 
     if(Do_BCdist == 1):
         BCdist1 = betweenness_centrality(G, weight='weight')
@@ -311,7 +302,6 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["x"].append("Width-weighted average betweenness centrality")
         wdata_dict["y"].append(Bcent)
 
-
     if(Do_CCdist == 1):
         CCdist1 = closeness_centrality(G, distance='length')
         Csum = 0
@@ -323,7 +313,6 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         Ccent = round(Ccent, 5)
         wdata_dict["x"].append("Length-weighted average closeness centrality")
         wdata_dict["y"].append(Ccent)
-
 
     if (Do_ECdist == 1):
         try:
@@ -340,82 +329,9 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["x"].append("Width-weighted average eigenvector centrality")
         wdata_dict["y"].append(Ecent)
 
-
     wdata = pd.DataFrame(wdata_dict)
 
     return wdata, klist, BCdist, CCdist, ECdist
-
-
-def calculate_conductance_by_clustering(graph, num_clusters):
-    """
-    Calculate conductance based on a clustering of the graph.
-
-    Parameters:
-    - graph: NetworkX Graph
-    - num_clusters: int value of number of clusters
-
-    Returns:
-    - conductance: Float, conductance value
-    """
-    total_cut_edges = 0
-    # total_internal_edges = 0
-    num_total_edges = graph.number_of_edges()
-
-    # Use spectral clustering to get cluster assignments
-    num_clusters = 5  # You can adjust the number of clusters as needed
-    cluster_labels = spectral_clustering(nx.to_numpy_array(graph), n_clusters=num_clusters)
-
-    for edge in graph.edges():
-        if cluster_labels[edge[0]] != cluster_labels[edge[1]]:
-            total_cut_edges += 1
-        # else:
-        #    total_internal_edges += 1
-
-    conductance = total_cut_edges / (2 * num_total_edges)
-    return conductance
-
-
-def compute_all_subsets_conductance(graph, max_iter):
-    """
-    Compute conductance for all non-majority subsets of the vertex set.
-
-    Parameters:
-    - graph: NetworkX Graph
-
-    Returns:
-    - conductance_dict: Dictionary containing conductance values for each subset
-    """
-    conductance_dict = {}
-
-    # Get the vertex set
-    vertex_set = set(graph.nodes())
-    min_conductance = np.inf
-    i = 0
-
-    # Iterate through all possible subsets
-    connected_components = list(nx.connected_components(graph))
-    for component in connected_components:
-        try:
-            # Calculate conductance for the subset
-            conductance_value = nx.conductance(graph, component)
-            if conductance_value < min_conductance:
-                min_conductance = conductance_value
-            conductance_dict[component] = conductance_value
-            print(conductance_value)
-        except ZeroDivisionError:
-            pass
-        if i >= max_iter:
-            return min_conductance
-        i += 1
-        # complement_set = set(vertex_set) - set(subset)
-        # Uncomment the following line if you also want conductance for the complement set
-        # conductance_dict[complement_set] = nx.conductance(graph, list(complement_set))
-
-    # for r in range(1, len(vertex_set) // 2 + 1):  # Consider subsets of size up to half the vertex set
-    #    for subset in itertools.combinations(vertex_set, r):
-
-    print(conductance_dict)
-    return min_conductance
 
 
 def approx_conductance_by_spectral(graph):
@@ -498,9 +414,148 @@ def approx_conductance_by_spectral(graph):
     data.append({"name": "Graph Conductance (max)", "value": val_max})
     data.append({"name": "Graph Conductance (min)", "value": val_min})
 
-    print(val_max)
-    print(val_min)
+    # print(val_max)
+    # print(val_min)
     return data
+
+
+def compute_norm_laplacian_matrix(graph):
+    """
+    Compute normalized-laplacian-matrix
+
+    :param adj_mat:
+    :return:
+    """
+
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 2. Compute Degree matrix
+    deg_mat = np.diag(np.sum(adj_mat, axis=1))
+
+    # 3. Compute Identity matrix
+    id_mat = np.identity(adj_mat.shape[0])
+
+    # 4. Compute (Degree inverse squared) D^{-1/2} matrix
+    # Check for singular matrices
+    if np.any(np.diag(deg_mat) == 0):
+        # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
+        # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
+        print("Graph has nodes with zero degree. Cannot compute conductance")
+        return None
+    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
+
+    # 5. Compute Laplacian matrix
+    lpl_mat = deg_mat - adj_mat
+
+    # 6. Compute normalized-Laplacian matrix
+    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
+    # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
+
+    # print(adj_mat)
+    # print(adj_mat.shape)
+    # print(deg_mat)
+    # print(deg_inv_sqrt)
+    # print(id_mat)
+    # print(lpl_mat)
+    # print(norm_lpl_mat)
+    return norm_lpl_mat
+
+
+def remove_self_loops(graph):
+    """
+    Remove self-loops from graph, they cause zero values in Degree matrix.
+
+    :param graph:
+    :return:
+    """
+
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 2. Symmetric-ize the Adjacency matrix
+    # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+    np.fill_diagonal(adj_mat, 0)
+
+    # 4. Create new graph
+    new_graph = nx.from_numpy_array(adj_mat)
+
+    return new_graph
+
+
+def make_graph_symmetrical(graph):
+    """
+
+    :param graph:
+    :return:
+    """
+
+    # 1. Get Adjacency matrix
+    adj_mat = nx.adjacency_matrix(graph).todense()
+
+    # 2. Symmetric-ize the Adjacency matrix
+    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+    np.fill_diagonal(adj_mat, 0)
+
+    # 4. Create new graph
+    new_graph = nx.from_numpy_array(adj_mat)
+
+    return new_graph
+
+
+def graph_components(graph):
+    """
+
+    :param graph:
+    :return:
+    """
+
+    # 1. Identify connected components
+    connected_components = list(nx.connected_components(graph))
+
+    # 2. Find the largest/smallest connected component
+    largest_component = max(connected_components, key=len)
+    smallest_component = min(connected_components, key=len)
+
+    # 3. Create a new graph containing only the largest/smallest connected component
+    sub_graph_largest = graph.subgraph(largest_component)
+    sub_graph_smallest = graph.subgraph(smallest_component)
+
+    component_count = len(connected_components)
+    # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
+    # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
+    # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
+    # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
+
+    return sub_graph_largest, sub_graph_smallest, component_count
+
+
+def compute_conductance_range(eig_vals):
+    """
+
+    :param eig_vals:
+    :return:
+    """
+
+    # Sort the eigenvalues in ascending order
+    sorted_vals = np.array(eig_vals)
+    sorted_vals.sort()
+
+    # Sort the eigenvalues in descending order
+    # eigenvalues[::-1].sort()
+
+    # approximate conductance using the 2nd smallest eigenvalue
+    try:
+        conductance_max = math.sqrt((2 * sorted_vals[1]))
+    except ValueError:
+        conductance_max = None
+    conductance_min = sorted_vals[1] / 2
+
+    return conductance_max, conductance_min
 
 
 def approx_conductance_eigenvalues(graph):
@@ -661,140 +716,73 @@ def old_approx_conductance_by_spectral(graph):
     return conductance_val_min
 
 
-def compute_norm_laplacian_matrix(graph):
+def calculate_conductance_by_clustering(graph, num_clusters):
     """
-    Compute normalized-laplacian-matrix
+    Calculate conductance based on a clustering of the graph.
 
-    :param adj_mat:
-    :return:
+    Parameters:
+    - graph: NetworkX Graph
+    - num_clusters: int value of number of clusters
+
+    Returns:
+    - conductance: Float, conductance value
     """
+    total_cut_edges = 0
+    # total_internal_edges = 0
+    num_total_edges = graph.number_of_edges()
 
-    # 1. Get Adjacency matrix
-    adj_mat = nx.adjacency_matrix(graph).todense()
+    # Use spectral clustering to get cluster assignments
+    num_clusters = 5  # You can adjust the number of clusters as needed
+    cluster_labels = spectral_clustering(nx.to_numpy_array(graph), n_clusters=num_clusters)
 
-    # 2. Compute Degree matrix
-    deg_mat = np.diag(np.sum(adj_mat, axis=1))
+    for edge in graph.edges():
+        if cluster_labels[edge[0]] != cluster_labels[edge[1]]:
+            total_cut_edges += 1
+        # else:
+        #    total_internal_edges += 1
 
-    # 3. Compute Identity matrix
-    id_mat = np.identity(adj_mat.shape[0])
-
-    # 4. Compute (Degree inverse squared) D^{-1/2} matrix
-    # Check for singular matrices
-    if np.any(np.diag(deg_mat) == 0):
-        # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
-        # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
-        print("Graph has nodes with zero degree. Cannot compute conductance")
-        return None
-    deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
-
-    # 5. Compute Laplacian matrix
-    lpl_mat = deg_mat - adj_mat
-
-    # 6. Compute normalized-Laplacian matrix
-    norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
-    # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
-
-    # print(adj_mat)
-    # print(adj_mat.shape)
-    # print(deg_mat)
-    # print(deg_inv_sqrt)
-    # print(id_mat)
-    # print(lpl_mat)
-    # print(norm_lpl_mat)
-    return norm_lpl_mat
+    conductance = total_cut_edges / (2 * num_total_edges)
+    return conductance
 
 
-def remove_self_loops(graph):
+def compute_all_subsets_conductance(graph, max_iter):
     """
-    Remove self-loops from graph, they cause zero values in Degree matrix.
+    Compute conductance for all non-majority subsets of the vertex set.
 
-    :param graph:
-    :return:
+    Parameters:
+    - graph: NetworkX Graph
+
+    Returns:
+    - conductance_dict: Dictionary containing conductance values for each subset
     """
+    conductance_dict = {}
 
-    # 1. Get Adjacency matrix
-    adj_mat = nx.adjacency_matrix(graph).todense()
+    # Get the vertex set
+    vertex_set = set(graph.nodes())
+    min_conductance = np.inf
+    i = 0
 
-    # 2. Symmetric-ize the Adjacency matrix
-    # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
-
-    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-    np.fill_diagonal(adj_mat, 0)
-
-    # 4. Create new graph
-    new_graph = nx.from_numpy_array(adj_mat)
-
-    return new_graph
-
-
-def make_graph_symmetrical(graph):
-    """
-
-    :param graph:
-    :return:
-    """
-
-    # 1. Get Adjacency matrix
-    adj_mat = nx.adjacency_matrix(graph).todense()
-
-    # 2. Symmetric-ize the Adjacency matrix
-    adj_mat = np.maximum(adj_mat, adj_mat.transpose())
-
-    # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-    np.fill_diagonal(adj_mat, 0)
-
-    # 4. Create new graph
-    new_graph = nx.from_numpy_array(adj_mat)
-
-    return new_graph
-
-
-def graph_components(graph):
-    """
-
-    :param graph:
-    :return:
-    """
-
-    # 1. Identify connected components
+    # Iterate through all possible subsets
     connected_components = list(nx.connected_components(graph))
+    for component in connected_components:
+        try:
+            # Calculate conductance for the subset
+            conductance_value = nx.conductance(graph, component)
+            if conductance_value < min_conductance:
+                min_conductance = conductance_value
+            conductance_dict[component] = conductance_value
+            print(conductance_value)
+        except ZeroDivisionError:
+            pass
+        if i >= max_iter:
+            return min_conductance
+        i += 1
+        # complement_set = set(vertex_set) - set(subset)
+        # Uncomment the following line if you also want conductance for the complement set
+        # conductance_dict[complement_set] = nx.conductance(graph, list(complement_set))
 
-    # 2. Find the largest/smallest connected component
-    largest_component = max(connected_components, key=len)
-    smallest_component = min(connected_components, key=len)
+    # for r in range(1, len(vertex_set) // 2 + 1):  # Consider subsets of size up to half the vertex set
+    #    for subset in itertools.combinations(vertex_set, r):
 
-    # 3. Create a new graph containing only the largest/smallest connected component
-    sub_graph_largest = graph.subgraph(largest_component)
-    sub_graph_smallest = graph.subgraph(smallest_component)
-
-    component_count = len(connected_components)
-    # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
-    # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
-    # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
-    # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
-
-    return sub_graph_largest, sub_graph_smallest, component_count
-
-
-def compute_conductance_range(eig_vals):
-    """
-
-    :param eig_vals:
-    :return:
-    """
-
-    # Sort the eigenvalues in ascending order
-    sorted_vals = np.array(eig_vals)
-    sorted_vals.sort()
-
-    # Sort the eigenvalues in descending order
-    # eigenvalues[::-1].sort()
-
-    # approximate conductance using the 2nd smallest eigenvalue
-    try:
-        conductance_max = math.sqrt((2 * sorted_vals[1]))
-    except ValueError:
-        conductance_max = None
-    conductance_min = sorted_vals[1] / 2
-
-    return conductance_max, conductance_min
+    print(conductance_dict)
+    return min_conductance
