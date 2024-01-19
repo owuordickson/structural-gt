@@ -31,6 +31,7 @@ def unitvector(u,v):
     # returns the unit vector in the direction from v to u
     return vec/np.linalg.norm(vec)
 
+
 def halflength(u,v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
@@ -39,6 +40,7 @@ def halflength(u,v):
 
     # returns half of the length of the vector
     return np.linalg.norm(vec)/2
+
 
 def findorthogonal(u,v):
     # Inputs:
@@ -55,6 +57,7 @@ def findorthogonal(u,v):
     # Returns the coordinates of the midpoint of vector u,v; the orthogonal unit vector
     return (v + n*hl), orth
 
+
 def boundarycheck(coord, w, h):
     # Inputs:
     # coord: the coordinate (x,y) to check; no (x,y,z) compatibility yet
@@ -68,6 +71,7 @@ def boundarycheck(coord, w, h):
 
     # returns the boolean oob (1 if boundary error); coordinates (reset to (1,1) if boundary error)
     return oob, coord
+
 
 def lengthtoedge(m,orth,img_bin):
     # Inputs:
@@ -105,6 +109,7 @@ def lengthtoedge(m,orth,img_bin):
 
     # returns the length between l1 and l2, which is the width of the fiber associated with an edge, at its midpoint
     return np.linalg.norm(l1-l2)
+
 
 def assignweightsbywidth(ge, img_bin):
     # Inputs:
