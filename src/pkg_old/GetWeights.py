@@ -23,7 +23,7 @@ Contact email: vecdrew@umich.edu
 import numpy as np
 
 
-def unitvector(u,v):
+def unitvector(u, v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
 
@@ -33,7 +33,7 @@ def unitvector(u,v):
     return vec/np.linalg.norm(vec)
 
 
-def halflength(u,v):
+def halflength(u, v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
 
@@ -43,7 +43,7 @@ def halflength(u,v):
     return np.linalg.norm(vec)/2
 
 
-def findorthogonal(u,v):
+def findorthogonal(u, v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
 
@@ -74,7 +74,7 @@ def boundarycheck(coord, w, h):
     return oob, coord
 
 
-def lengthtoedge(m,orth,img_bin):
+def lengthtoedge(m, orth, img_bin):
     # Inputs:
     # m: the midpoint of a trace of an edge
     # orth: an orthogonal unit vector
