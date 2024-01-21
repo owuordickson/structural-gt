@@ -22,6 +22,7 @@ Contact email: vecdrew@umich.edu
 
 import numpy as np
 
+
 def unitvector(u,v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
@@ -36,7 +37,7 @@ def halflength(u,v):
     # Inputs:
     # u, v: two coordinates (x, y) or (x, y, z)
 
-    vec = u-v # find the vector between u and v
+    vec = u-v  # find the vector between u and v
 
     # returns half of the length of the vector
     return np.linalg.norm(vec)/2

@@ -27,6 +27,7 @@ import numpy as np
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
+
 def adjust_gamma(image, gamma):
     if(gamma != 1.00):
         invGamma = 1.00/gamma
@@ -35,6 +36,7 @@ def adjust_gamma(image, gamma):
         return cv2.LUT(image,table)
     else:
         return image
+
 
 def Hamming_window(image, windowsize):
     w, h = image.shape
@@ -112,7 +114,7 @@ def binarize(source, Threshtype, gamma, md_filter, g_blur, autolvl, fg_color, \
 
     # applying autolevel filter
     if (autolvl == 1):
-        img = autolevel(img, selem=selem)
+        img = autolevel(img, footprint=selem)
 
     # applying a scharr filter, and then taking that image and weighting it 25% with the original
     # this should bring out the edges without separating each "edge" into two separate parallel ones
