@@ -10,9 +10,15 @@ def load():
     config.read(config_file)
     # print(config.sections())
 
-    # Image Path
-    # datadir = config.get('image', 'datadir')
-    # imagepath = config.get('image', 'imagepath')
-    # file_path = path.join(datadir, imagepath)
+    # 1. Image Path
+    imagepath = config.get('image-dir', 'single_image_path')
+    multi_imagepath = config.get('image-dir', 'multi_image_path')
+    output_path = config.get('image-dir', 'gt_output_path')
+
+    # 2. Image Detection settings
+
+    # 3. Graph Extraction Settings
+
+    # 4. Networkx Calculation Settings
 
     return config
