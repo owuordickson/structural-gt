@@ -7,10 +7,10 @@ Credits:
 Development Lead:
 -----------------
 
-1. Dickson Owuor <owuordickson@gmail.com>
+1. Drew Vecchio <vecdrew@umich.edu>
 
 
 Contributors:
 -------------
 
-1. 
+1. Dickson Owuor <owuordickson@gmail.com>
