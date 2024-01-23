@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "StructuralGT"
+version='1.0.1b1'
+dependencies = [
+  "numpy",
+  "pandas",
+  "opencv-python"
+]
+requires-python = ">=3.8,<3.9"
+authors = [
+  {name = "Drew Vecchio", email = "vecdrew@umich.edu"},
+  {name = "Nicholas Kotov", email = "kotov@umich.edu"}
+]
+description = "Automated graph theory analysis of digital structural networks images."
+readme =  "README.md"
+license = {file = "LICENSE"}
+keywords = ["nano-particles", "nano-structures", "chaos-theory"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.8",
+  "License :: OSI Approved :: GNU General Public License v3 License",
+]
