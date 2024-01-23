@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chaos-gt"
-# version = "0.0.1"
 dynamic = ["version"]
 dependencies = [
   "numpy==1.22.0",
@@ -34,7 +33,7 @@ classifiers = [
 
 # docs = []
 
-#[project.optional-dependencies]
+[project.optional-dependencies]
 gui = ["tk-tools", "pillow"]
 #cli = [
 #  "rich",
