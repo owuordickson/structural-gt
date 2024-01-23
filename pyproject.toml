@@ -10,7 +10,7 @@ dependencies = [
   "pandas==1.3.3",
   "opencv-python"
 ]
-requires-python = ">=3.9.11,<4.0"
+requires-python = ">=3.12,<3.13"
 authors = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"},
   {name = "Nicholas Kotov", email = "kotov@umich.edu"}
@@ -24,7 +24,7 @@ license = {file = "LICENSE"}
 keywords = ["nano-particles", "nano-structures", "chaos-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.12",
   "License :: OSI Approved :: GNU General Public License v3 License",
   "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",
