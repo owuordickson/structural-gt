@@ -1106,7 +1106,7 @@ def Proceed_button(sources, filenames, saveloc):
         get_checks()
         progress(5)
 
-        # save_data calls everything else and saves the results
+        # save_data calls everything else and saves the GT Output
         save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
                   laplacian, scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, \
                   display_nodeID, no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, \

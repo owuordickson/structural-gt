@@ -163,7 +163,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     img_bin = img_bin
     histo = cv2.calcHist([img_filt], [0], None, [256], [0, 256])
 
-    update_label("Generating PDF results...")
+    update_label("Generating PDF GT Output...")
     # exporting to pdf
     with PdfPages(file) as pdf:
         font1 = {'fontsize': 12}
@@ -1075,7 +1075,7 @@ def Proceed_button():
     get_Settings(oldfilename)
     progress(5)
 
-    # save_data calls everything else and saves the results
+    # save_data calls everything else and saves the GT Output
     save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
               laplacian, scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, \
               display_nodeID, no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, \

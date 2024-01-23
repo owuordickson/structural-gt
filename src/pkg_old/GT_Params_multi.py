@@ -60,7 +60,7 @@ def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist
     if Do_ANC | Do_dia:
         connected_graph = nx.is_connected(G)
 
-    # making a dictionary for the parameters and results
+    # making a dictionary for the parameters and GT Output
     just_data.append(nnum)
     data_dict["x"].append("Number of nodes")
     data_dict["y"].append(nnum)
