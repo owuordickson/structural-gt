@@ -29,6 +29,7 @@ import gui_multi_image, gui_single_image
 window = Tk()
 window.title("StructuralGT Image Entry Selection")
 
+
 # All this really does is let you choose single or multi image options
 
 
@@ -54,7 +55,6 @@ def about_window():
 
 
 def multi_image():
-
     # This just gives a small warning before you select multi image settings
     # there isn't one for single image settings because that should be the default choice
     multi = Tk()
@@ -65,10 +65,10 @@ def multi_image():
     mframe_2.pack()
 
     label_multi = Label(mframe_1, text="This method is for analysis of multiple images at the same time\n"
-                                        "All images must be separate files with proper file extensions\n"
-                                        "Note: You will NOT be able to crop and preview images before analysis\n"
-                                        "Please use the single-image option to test settings and preview images "
-                                        "before proceeding")
+                                       "All images must be separate files with proper file extensions\n"
+                                       "Note: You will NOT be able to crop and preview images before analysis\n"
+                                       "Please use the single-image option to test settings and preview images "
+                                       "before proceeding")
 
     button_back = Button(mframe_2, text="Go Back", command=multi.destroy)
     button_proceed_multi = Button(mframe_2, text="Proceed", command=lambda: gui_multi_image.make_gui(window, multi))
@@ -86,7 +86,8 @@ frame_2 = Frame(window)
 frame_1.pack()
 frame_2.pack()
 
-button1 = Button(frame_2, text="Single Image StructuralGT", bg="Green", command=lambda: gui_single_image.make_gui(window))
+button1 = Button(frame_2, text="Single Image StructuralGT", bg="Green",
+                 command=lambda: gui_single_image.make_gui(window))
 button2 = Button(frame_2, text="Multi-Image StructuralGT", bg="Light Blue", command=multi_image)
 button_about = Button(frame_2, text="About...", command=about_window)
 label1 = Label(frame_1, text="Please select an Image entry method")
