@@ -21,11 +21,9 @@ Contributers: Drew Vecchio, Samuel Mahler, Mark D. Hammig, Nicholas A. Kotov
 Contact email: vecdrew@umich.edu
 """
 
-from __main__ import *
 from tkinter import *
 
 from tkinter.ttk import Progressbar
-from matplotlib import cm, colors
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from statistics import stdev

@@ -21,7 +21,6 @@ Contributers: Drew Vecchio, Samuel Mahler, Mark D. Hammig, Nicholas A. Kotov
 Contact email: vecdrew@umich.edu
 """
 
-from __main__ import *
 import networkx as nx
 import pandas as pd
 import numpy as np
