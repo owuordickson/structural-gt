@@ -1,6 +1,4 @@
 SETTING UP WORKSPACE IN PyCharm
-
-1. SETUP GITHUB
 mkdir chaos-gt
 cd chaos-gt/
 git init
@@ -8,8 +6,3 @@ git remote add origin https://github.com/owuordickson/chaos-gt.git
 git fetch origin
 git pull origin main
 git worktree add ../drew_gt origin/drew
-
-2. SETUP PYCHARM
-create new Project call it "chaos-gt"
-create another Project "drew_gt" and attach it to the previous one
-create different pyenv environments for each
