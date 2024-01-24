@@ -25,6 +25,7 @@ from tkinter import *
 import tkinter.messagebox
 import gui_multi_image, gui_single_image
 
+
 window = Tk()
 window.title("StructuralGT Image Entry Selection")
 
