@@ -1,0 +1,8 @@
+SETTING UP WORKSPACE IN PyCharm
+mkdir chaos-gt
+cd chaos-gt/
+git init
+git remote add origin https://github.com/owuordickson/chaos-gt.git
+git fetch origin
+git pull origin main
+git worktree add ../drew_gt origin/drew
