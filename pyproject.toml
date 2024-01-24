@@ -6,8 +6,14 @@ build-backend = "setuptools.build_meta"
 name = "chaos-gt"
 dynamic = ["version"]
 dependencies = [
-  "numpy==1.22.0",
-  "pandas==1.3.3",
+  "numpy",
+  "pandas",
+  "networkx",
+  "sknw",
+  "pillow",
+  "matplotlib",
+  "scikit-image",
+  "scikit-learn",
   "opencv-python"
 ]
 requires-python = ">=3.12,<3.13"
