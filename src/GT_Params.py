@@ -39,14 +39,13 @@ from networkx.algorithms.wiener import wiener_index
 
 def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, Do_clust, \
                  Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph):
-
     # getting nodes and edges and defining variables for later use
     klist = [0]
     Tlist = [0]
     BCdist = [0]
     CCdist = [0]
     ECdist = [0]
-    data_dict = {"x":[], "y":[]}
+    data_dict = {"x": [], "y": []}
 
     if multigraph:
         Do_BCdist = 0
@@ -70,7 +69,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     # calculating parameters as requested
 
     # creating degree histogram
-    if(Do_kdist == 1):
+    if (Do_kdist == 1):
         settings.update_label("Calculating degree...")
         klist1 = nx.degree(G)
         ksum = 0
@@ -78,7 +77,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
         for j in range(len(klist1)):
             ksum += klist1[j]
             klist[j] = klist1[j]
-        k = ksum/len(klist1)
+        k = ksum / len(klist1)
         k = round(k, 5)
         data_dict["x"].append("Average degree")
         data_dict["y"].append(k)
@@ -86,7 +85,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     settings.progress(40)
 
     # calculating network diameter
-    if(Do_dia ==1):
+    if (Do_dia == 1):
         settings.update_label("Calculating diameter...")
         if connected_graph:
             dia = int(diameter(G))
@@ -98,7 +97,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     settings.progress(45)
 
     # calculating graph density
-    if(Do_GD == 1):
+    if (Do_GD == 1):
         settings.update_label("Calculating density...")
         GD = nx.density(G)
         GD = round(GD, 5)
@@ -125,7 +124,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     settings.progress(55)
 
     # calculating clustering coefficients
-    if(Do_clust == 1):
+    if (Do_clust == 1):
         settings.update_label("Calculating clustering...")
         sleep(5)
         Tlist1 = clustering(G)
@@ -180,7 +179,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     settings.progress(75)
 
     # calculating closeness centrality
-    if(Do_CCdist == 1):
+    if (Do_CCdist == 1):
         settings.update_label("Calculating closeness...")
         CCdist1 = closeness_centrality(G)
         Csum = 0
@@ -196,7 +195,7 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
     settings.progress(80)
 
     # calculating eigenvector centrality
-    if(Do_ECdist == 1):
+    if (Do_ECdist == 1):
         settings.update_label("Calculating eigenvector...")
         try:
             ECdist1 = eigenvector_centrality(G, max_iter=100)
@@ -231,7 +230,6 @@ def run_GT_calcs(G, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do
 
 
 def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, Do_Ast, Do_WI, multigraph):
-
     settings.update_label("Performing weighted analysis...")
 
     # includes weight in the calculations
@@ -249,18 +247,17 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
     if Do_ANC:
         connected_graph = nx.is_connected(G)
 
-    if(Do_kdist == 1):
+    if (Do_kdist == 1):
         klist1 = nx.degree(G, weight='weight')
         ksum = 0
         klist = np.zeros(len(klist1))
         for j in range(len(klist1)):
             ksum += klist1[j]
             klist[j] = klist1[j]
-        k = ksum/len(klist1)
+        k = ksum / len(klist1)
         k = round(k, 5)
         wdata_dict["x"].append("Weighted average degree")
         wdata_dict["y"].append(k)
-
 
     if (Do_WI == 1):
         WI = wiener_index(G, weight='length')
@@ -285,12 +282,12 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["y"].append(max_flow)
 
     if (Do_Ast == 1):
-        Ast = degree_assortativity_coefficient(G, weight = 'pixel width')
+        Ast = degree_assortativity_coefficient(G, weight='pixel width')
         Ast = round(Ast, 5)
         wdata_dict["x"].append("Weighted assortativity coefficient")
         wdata_dict["y"].append(Ast)
 
-    if(Do_BCdist == 1):
+    if (Do_BCdist == 1):
         BCdist1 = betweenness_centrality(G, weight='weight')
         Bsum = 0
         BCdist = np.zeros(len(BCdist1))
@@ -302,7 +299,7 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
         wdata_dict["x"].append("Width-weighted average betweenness centrality")
         wdata_dict["y"].append(Bcent)
 
-    if(Do_CCdist == 1):
+    if (Do_CCdist == 1):
         CCdist1 = closeness_centrality(G, distance='length')
         Csum = 0
         CCdist = np.zeros(len(CCdist1))
