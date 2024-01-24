@@ -37,6 +37,7 @@ import process_image
 import skel_ID
 import GetWeights, GT_Params_multi
 import numpy as np
+from itertools import cycle
 import sknw
 import csv
 import datetime
@@ -137,7 +138,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     global just_data
     # running GT calcs
     just_data = []
-    data, just_data, klist, Tlist, BCdist, CCdist, ECdist= \
+    data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents= \
         GT_Params_multi.run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, \
                                      Do_clust, Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph)
     progress(80)
@@ -194,8 +195,8 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         progress(90)
 
         # plotting skeletal images
-        f2 = plt.figure(figsize=(8.5, 11), dpi=400)
-        f2.add_subplot(2, 1, 1)
+        f2a = plt.figure(figsize=(8.5, 11), dpi=400)
+        f2a.add_subplot(2, 1, 1)
         #skel_int = -1*(skel_int-1)
         plt.imshow(skel_int, cmap='gray')
         plt.scatter(Bp_coord_x, Bp_coord_y, s=0.25, c='b')
@@ -203,7 +204,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         plt.xticks([])
         plt.yticks([])
         plt.title("Skeletal Image")
-        f2.add_subplot(2, 1, 2)
+        f2a.add_subplot(2, 1, 2)
         plt.imshow(src, cmap='gray')
         if multigraph:
             for (s, e) in G.edges():
@@ -230,6 +231,24 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
         plt.xticks([])
         plt.yticks([])
         plt.title("Final Graph")
+        pdf.savefig()
+        plt.close()
+
+        f2b = plt.figure(figsize=(8.5, 11), dpi=400)
+        f2b.add_subplot(1, 1, 1)
+        plt.imshow(src, cmap='gray')
+        color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+        color_cycle = cycle(color_list)
+        for component in SGcomponents:
+            sg = G.subgraph(component)
+            color = next(color_cycle)
+            for (s, e) in sg.edges():
+                ge = sg[s][e]['pts']
+                plt.plot(ge[:, 1], ge[:, 0], color)
+        # plt.axis("off")
+        plt.xticks([])
+        plt.yticks([])
+        plt.title("Sub Graphs")
         pdf.savefig()
         plt.close()
 

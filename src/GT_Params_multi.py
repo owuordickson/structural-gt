@@ -45,6 +45,7 @@ def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist
     BCdist = [0]
     CCdist = [0]
     ECdist = [0]
+    SGcomponents = []
     if multigraph:
         Do_BCdist = 0
         Do_ECdist = 0
@@ -212,14 +213,14 @@ def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist
     # calculating graph conductance
     if (Do_cond == 1):
         # settings.update_label("Calculating graph conductance...")
-        res = approx_conductance_by_spectral(G)
+        res, SGcomponents = approx_conductance_by_spectral(G)
         for item in res:
             data_dict["x"].append(item["name"])
             data_dict["y"].append(item["value"])
 
     data = pd.DataFrame(data_dict)
 
-    return data, just_data, klist, Tlist, BCdist, CCdist, ECdist
+    return data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents
 
 
 def run_weighted_GT_calcs(G, just_data, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, Do_Ast, Do_WI, multigraph):
@@ -354,6 +355,7 @@ def approx_conductance_by_spectral(graph):
     # meaning that it is: (asymmetric) with self-looping nodes
 
     data = []
+    sub_components = []
 
     # 1. Make a copy of the graph
     # eig_graph = graph.copy()
@@ -381,7 +383,7 @@ def approx_conductance_by_spectral(graph):
             return None
         except nx.NetworkXError:
             # Graph has less than two nodes or is not connected.
-            sub_graph_largest, sub_graph_smallest, size = graph_components(eig_graph)
+            sub_graph_largest, sub_graph_smallest, size, sub_components = graph_components(eig_graph)
             eig_graph = sub_graph_largest
             data.append({"name": "Subgraph Count", "value": size})
             data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
@@ -390,7 +392,7 @@ def approx_conductance_by_spectral(graph):
             data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
     except nx.NetworkXError:
         # Graph has less than two nodes or is not connected.
-        sub_graph_largest, sub_graph_smallest, size = graph_components(eig_graph)
+        sub_graph_largest, sub_graph_smallest, size, sub_components = graph_components(eig_graph)
         eig_graph = sub_graph_largest
         data.append({"name": "Subgraph Count", "value": size})
         data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
@@ -414,7 +416,7 @@ def approx_conductance_by_spectral(graph):
 
     # print(val_max)
     # print(val_min)
-    return data
+    return data, sub_components
 
 
 def compute_norm_laplacian_matrix(graph):
@@ -529,7 +531,7 @@ def graph_components(graph):
     # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
     # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
 
-    return sub_graph_largest, sub_graph_smallest, component_count
+    return sub_graph_largest, sub_graph_smallest, component_count, connected_components
 
 
 def compute_conductance_range(eig_vals):
