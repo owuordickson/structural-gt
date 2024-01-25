@@ -45,27 +45,6 @@ class GraphStruct:
         std_img = cv2.resize(self.img, std_size)
         return std_img
 
-    def compute_fractal_dimension(self):
-        # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
-        fd_metrics = ps.metrics.boxcount(self.img)
-        print(fd_metrics.slope)
-        x = np.log(np.array(fd_metrics.size))
-        y = np.log(np.array(fd_metrics.count))
-        fD = np.polyfit(x, y, 1)[0]  # fD = lim r -> 0 log(Nr)/log(1/r)
-        print(fD)
-
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-        ax1.set_yscale('log')
-        ax1.set_xscale('log')
-        ax1.set_xlabel('box size')
-        ax1.set_ylabel('box count')
-        ax2.set_xlabel('box size')
-        ax2.set_ylabel('slope')
-        ax2.set_xscale('log')
-        ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
-        ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
-        plt.show()
-
     def process_img(self):
         """
 
@@ -268,6 +247,33 @@ class GraphStruct:
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
 
+    def compute_fractal_dimension(self):
+        # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
+        fd_metrics = ps.metrics.boxcount(self.img)
+        print(fd_metrics.slope)
+        x = np.log(np.array(fd_metrics.size))
+        y = np.log(np.array(fd_metrics.count))
+        fractal_dimension = np.polyfit(x, y, 1)[0]  # fractal_dimension = lim r -> 0 log(Nr)/log(1/r)
+        print(fractal_dimension)
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+        ax1.set_yscale('log')
+        ax1.set_xscale('log')
+        ax1.set_xlabel('box size')
+        ax1.set_ylabel('box count')
+        ax2.set_xlabel('box size')
+        ax2.set_ylabel('slope')
+        ax2.set_xscale('log')
+        ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
+        ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
+        plt.show()
+
+    def compute_gt_metrics(self):
+        pass
+
+    def compute_weighted_gt_metrics(self):
+        pass
+
     @staticmethod
     def load_img_from_file(file):
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
@@ -332,24 +338,64 @@ class GraphSkeleton:
         # img_bin: the binary image that the graph is derived from
 
         # check to see if ge is an empty or unity list, if so, set wt to 1
-        if (len(ge) < 2):
+        if len(ge) < 2:
             pix_width = 10
             wt = 1
         # if ge exists, find the midpoint of the trace, and orthogonal unit vector
         else:
-            endindex = len(ge) - 1
-            midindex = int(len(ge) / 2)
+            end_index = len(ge) - 1
+            mid_index = int(len(ge) / 2)
             pt1 = ge[0]
-            pt2 = ge[endindex]
-            m = ge[midindex]
-            midpt, orth = findorthogonal(pt1, pt2)
+            pt2 = ge[end_index]
+            m = ge[mid_index]
+            mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
             m[0] = int(m[0])
             m[1] = int(m[1])
-            pix_width = int(lengthtoedge(m, orth, img_bin))
-            wt = lengthtoedge(m, orth, img_bin) / 10
+            pix_width = int(self.length_to_edge(m, ortho))
+            wt = self.length_to_edge(m, ortho) / 10
 
         # returns the width in pixels; the weight which is the width normalized by 10
         return pix_width, wt
+
+    def length_to_edge(self, m, ortho):
+        # Inputs:
+        # m: the midpoint of a trace of an edge
+        # ortho: an orthogonal unit vector
+        # img_bin: the binary image that the graph is derived from
+
+        img_bin = self.img_bin
+        w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
+        check = 0  # initializing boolean check
+        i = 0  # initializing iterative variable
+        l1 = np.nan
+        l2 = np.nan
+        while check == 0:  # iteratively check along orthogonal vector to see if the coordinate is either...
+            pt_check = m + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
+            pt_check[0], pt_check[1] = int(pt_check[0]), int(pt_check[1])
+            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
+            if img_bin[int(pt_check[0])][int(pt_check[1])] == 0 or oob == 1:
+                edge = m + (i - 1) * ortho
+                edge[0], edge[1] = int(edge[0]), int(edge[1])
+                l1 = edge  # When the check indicates oob or black space, assign width to l1
+                check = 1
+            else:
+                i += 1
+        check = 0
+        i = 0
+        while check == 0:  # Repeat, but following the negative orthogonal vector
+            pt_check = m - i * ortho
+            pt_check[0], pt_check[1] = int(pt_check[0]), int(pt_check[1])
+            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
+            if img_bin[int(pt_check[0])][int(pt_check[1])] == 0 or oob == 1:
+                edge = m - (i - 1) * ortho
+                edge[0], edge[1] = int(edge[0]), int(edge[1])
+                l2 = edge  # When the check indicates oob or black space, assign width to l1
+                check = 1
+            else:
+                i += 1
+
+        # returns the length between l1 and l2, which is the width of the fiber associated with an edge, at its midpoint
+        return np.linalg.norm(l1 - l2)
 
     @staticmethod
     def branched_points(skeleton):
@@ -589,45 +635,26 @@ class GraphSkeleton:
                 else:
                     wide_nodes[x, y] = 1
 
-        # re-skeletonzing wide-nodes and returning it, nearby nodes in radius 2 of each other should have been merged
+        # re-skeletonizing wide-nodes and returning it, nearby nodes in radius 2 of each other should have been merged
         new_skel = skeletonize(wide_nodes)
         return new_skel
-
-    @staticmethod
-    def unit_vector(u, v):
-        # Inputs:
-        # u, v: two coordinates (x, y) or (x, y, z)
-
-        vec = u - v  # find the vector between u and v
-
-        # returns the unit vector in the direction from v to u
-        return vec / np.linalg.norm(vec)
-
-    @staticmethod
-    def half_length(u, v):
-        # Inputs:
-        # u, v: two coordinates (x, y) or (x, y, z)
-
-        vec = u - v  # find the vector between u and v
-
-        # returns half of the length of the vector
-        return np.linalg.norm(vec) / 2
 
     @staticmethod
     def find_orthogonal(u, v):
         # Inputs:
         # u, v: two coordinates (x, y) or (x, y, z)
+        vec = u - v  # find the vector between u and v
 
-        n = unitvector(u, v)  # make n a unit vector along u,v
-        if (np.isnan(n[0]) or np.isnan(n[1])):
+        n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
+        if np.isnan(n[0]) or np.isnan(n[1]):
             n[0], n[1] = float(0), float(0)
-        hl = halflength(u, v)  # find the half-length of the vector u,v
-        orth = np.random.randn(2)  # take a random vector
-        orth -= orth.dot(n) * n  # make it orthogonal to vector u,v
-        orth /= np.linalg.norm(orth)  # make it a unit vector
+        hl = np.linalg.norm(vec) / 2  # find the half-length of the vector u,v
+        ortho = np.random.randn(2)  # take a random vector
+        ortho -= ortho.dot(n) * n  # make it orthogonal to vector u,v
+        ortho /= np.linalg.norm(ortho)  # make it a unit vector
 
         # Returns the coordinates of the midpoint of vector u,v; the orthogonal unit vector
-        return (v + n * hl), orth
+        return (v + n * hl), ortho
 
     @staticmethod
     def boundary_check(coord, w, h):
@@ -637,47 +664,9 @@ class GraphSkeleton:
 
         oob = 0  # Generate a boolean check for out-of-boundary
         # Check if coordinate is within the boundary
-        if (coord[0] < 0 or coord[1] < 0 or coord[0] > (w - 1) or coord[1] > (h - 1)):
+        if coord[0] < 0 or coord[1] < 0 or coord[0] > (w - 1) or coord[1] > (h - 1):
             oob = 1
             coord[0], coord[1] = 1, 1
 
         # returns the boolean oob (1 if boundary error); coordinates (reset to (1,1) if boundary error)
         return oob, coord
-
-    @staticmethod
-    def length_to_edge(m, orth, img_bin):
-        # Inputs:
-        # m: the midpoint of a trace of an edge
-        # orth: an orthogonal unit vector
-        # img_bin: the binary image that the graph is derived from
-
-        w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
-        check = 0  # initializing boolean check
-        i = 0  # initializing iterative variable
-        while (check == 0):  # iteratively check along orthogonal vector to see if the coordinate is either...
-            ptcheck = m + i * orth  # ... out of bounds, or no longer within the fiber in img_bin
-            ptcheck[0], ptcheck[1] = int(ptcheck[0]), int(ptcheck[1])
-            oob, ptcheck = boundarycheck(ptcheck, w, h)
-            if (img_bin[int(ptcheck[0])][int(ptcheck[1])] == 0 or oob == 1):
-                edge = m + (i - 1) * orth
-                edge[0], edge[1] = int(edge[0]), int(edge[1])
-                l1 = edge  # When the check indicates oob or black space, assign width to l1
-                check = 1
-            else:
-                i += 1
-        check = 0
-        i = 0
-        while (check == 0):  # Repeat, but following the negative orthogonal vector
-            ptcheck = m - i * orth
-            ptcheck[0], ptcheck[1] = int(ptcheck[0]), int(ptcheck[1])
-            oob, ptcheck = boundarycheck(ptcheck, w, h)
-            if (img_bin[int(ptcheck[0])][int(ptcheck[1])] == 0 or oob == 1):
-                edge = m - (i - 1) * orth
-                edge[0], edge[1] = int(edge[0]), int(edge[1])
-                l2 = edge  # When the check indicates oob or black space, assign width to l1
-                check = 1
-            else:
-                i += 1
-
-        # returns the length between l1 and l2, which is the width of the fiber associated with an edge, at its midpoint
-        return np.linalg.norm(l1 - l2)
