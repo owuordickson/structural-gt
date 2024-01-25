@@ -334,6 +334,8 @@ def run_weighted_GT_calcs(G, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, 
 
 def approx_conductance_by_spectral(graph):
     """
+        https://doi.org/10.1016/j.procs.2013.09.311
+        
         Conductance is closely approximable via eigenvalue computation,\
     a fact which has been well-known and well-used in the graph theory community.\
 
@@ -348,6 +350,7 @@ def approx_conductance_by_spectral(graph):
     When a node has a degree of zero, it means that there are no edges\
     connected to that node. In other words, the node is isolated from\
     the rest of the graph.
+
     """
 
     # It is important to notice our graph is (mostly) a directed graph,

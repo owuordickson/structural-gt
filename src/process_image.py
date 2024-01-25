@@ -55,6 +55,7 @@ def Hamming_window(image, windowsize):
     filtered_img = filtered_img.astype(np.uint8)
     return filtered_img
 
+
 def thresh_it(image, Threshtype, fg_color, asize, thresh):
 
     # only needed for OTSU threshold
@@ -98,7 +99,6 @@ def binarize(source, Threshtype, gamma, md_filter, g_blur, autolvl, fg_color, \
     # applies a low-pass filter
     if(lowpass ==1):
         img = Hamming_window(img, wsize)
-
 
     # making a 5x5 array of all 1's for median filter, and a disk for the autolevel filter
     darray = np.zeros((5, 5)) + 1
