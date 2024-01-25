@@ -9,6 +9,8 @@ Processing of images and chaos engineering
 
 import cv2
 import numpy as np
+from skimage.morphology import disk
+from skimage.filters.rank import autolevel, median
 import matplotlib.pyplot as plt
 import porespy as ps
 
@@ -58,6 +60,139 @@ class GraphStruct:
         ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
+
+    def process_img(self):
+        """
+
+        :return:
+        """
+
+        options = self.configs_img
+        img_processed = self.img.copy()
+
+        if options.gamma != 1.00:
+            inv_gamma = 1.00 / options.gamma
+            table = np.array([((i / 255.0) ** inv_gamma) * 255
+                              for i in np.arange(0, 256)]).astype('uint8')
+            img_processed = cv2.LUT(img_processed, table)
+
+        # applies a low-pass filter
+        if options.apply_lowpass == 1:
+            w, h = img_processed.shape
+            ham1x = np.hamming(w)[:, None]  # 1D hamming
+            ham1y = np.hamming(h)[:, None]  # 1D hamming
+            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** options.filter_window_size  # expand to 2D hamming
+            f = cv2.dft(img_processed.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
+            f_shifted = np.fft.fftshift(f)
+            f_complex = f_shifted[:, :, 0] * 1j + f_shifted[:, :, 1]
+            f_filtered = ham2d * f_complex
+            f_filtered_shifted = np.fft.fftshift(f_filtered)
+            inv_img = np.fft.ifft2(f_filtered_shifted)  # inverse F.T.
+            filtered_img = np.abs(inv_img)
+            filtered_img -= filtered_img.min()
+            filtered_img = filtered_img * 255 / filtered_img.max()
+            img_processed = filtered_img.astype(np.uint8)
+
+        # applying median filter
+        if options.apply_median == 1:
+            # making a 5x5 array of all 1's for median filter
+            d_array = np.zeros((5, 5)) + 1
+            img_processed = median(img_processed, d_array)
+
+        # applying gaussian blur
+        if options.apply_gaussian == 1:
+            b_size = options.blurring_window_size
+            img_processed = cv2.GaussianBlur(img_processed, (b_size, b_size), 0)
+
+        # applying auto-level filter
+        if options.apply_autolevel == 1:
+            # making a disk for the auto-level filter
+            auto_lvl_disk = disk(options.blurring_window_size)
+            img_processed = autolevel(img_processed, footprint=auto_lvl_disk)
+
+        # applying a scharr filter, and then taking that image and weighting it 25% with the original
+        # this should bring out the edges without separating each "edge" into two separate parallel ones
+        if options.apply_scharr == 1:
+            d_depth = cv2.CV_16S
+            grad_x = cv2.Scharr(img_processed, d_depth, 1, 0)
+            grad_y = cv2.Scharr(img_processed, d_depth, 0, 1)
+            abs_grad_x = cv2.convertScaleAbs(grad_x)
+            abs_grad_y = cv2.convertScaleAbs(grad_y)
+            dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+            dst = cv2.convertScaleAbs(dst)
+            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
+            img_processed = cv2.convertScaleAbs(img_processed)
+
+        # applying sobel filter
+        if options.apply_sobel == 1:
+            scale = 1
+            delta = 0
+            d_depth = cv2.CV_16S
+            grad_x = cv2.Sobel(img_processed, d_depth, 1, 0, ksize=3, scale=scale, delta=delta,
+                               borderType=cv2.BORDER_DEFAULT)
+            grad_y = cv2.Sobel(img_processed, d_depth, 0, 1, ksize=3, scale=scale, delta=delta,
+                               borderType=cv2.BORDER_DEFAULT)
+            abs_grad_x = cv2.convertScaleAbs(grad_x)
+            abs_grad_y = cv2.convertScaleAbs(grad_y)
+            dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+            dst = cv2.convertScaleAbs(dst)
+            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
+            img_processed = cv2.convertScaleAbs(img_processed)
+
+        # applying laplacian filter
+        if options.apply_laplacian == 1:
+            d_depth = cv2.CV_16S
+            dst = cv2.Laplacian(img_processed, d_depth, ksize=5)
+
+            # dst = cv2.Canny(img_processed, 100, 200); # canny edge detection test
+            dst = cv2.convertScaleAbs(dst)
+            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
+            img_processed = cv2.convertScaleAbs(img_processed)
+
+        return img_processed
+
+    def binarize_img(self):
+        """
+
+        :return:
+        """
+        image = self.img_processed.copy()
+        img_bin = None
+        options = self.configs_img
+        # only needed for OTSU threshold
+        otsu_res = 0
+
+        if image is None:
+            return None
+
+        # applying universal threshold, checking if it should be inverted (dark foreground)
+        if options.threshold_type == 0:
+            if options.apply_dark_foreground == 1:
+                img_bin = cv2.threshold(image, options.threshold_global, 255, cv2.THRESH_BINARY_INV)[1]
+            else:
+                img_bin = cv2.threshold(image, options.threshold_global, 255, cv2.THRESH_BINARY)[1]
+
+        # adaptive threshold generation
+        elif options.threshold_type == 1:
+            if options.apply_dark_foreground == 1:
+                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                cv2.THRESH_BINARY_INV, options.threshold_adaptive, 2)
+            else:
+                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                cv2.THRESH_BINARY, options.threshold_adaptive, 2)
+
+        # OTSU threshold generation
+        elif options.threshold_type == 2:
+            if options.apply_dark_foreground == 1:
+                temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+                img_bin = temp[1]
+                otsu_res = temp[0]
+            else:
+                temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                img_bin = temp[1]
+                otsu_res = temp[0]
+
+        return img_bin, otsu_res
 
     @staticmethod
     def load_img_from_file(file):

@@ -33,7 +33,7 @@ def load():
     options_img.apply_scharr = int(config.get('detection-settings', 'use_scharr_gradient'))
     options_img.apply_sobel = int(config.get('detection-settings', 'use_sobel_gradient'))
     options_img.apply_median = int(config.get('detection-settings', 'apply_median_filter'))
-    options_img.apply_gaussian = int(config.get('detection-settings', 'apply_gaussian_filter'))
+    options_img.apply_gaussian = int(config.get('detection-settings', 'apply_gaussian_blur'))
     options_img.apply_lowpass = int(config.get('detection-settings', 'apply_lowpass_filter'))
     options_img.apply_dark_foreground = int(config.get('detection-settings', 'dark_foreground'))
 
