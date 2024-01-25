@@ -30,8 +30,6 @@ from skimage.morphology import disk, remove_small_objects
 from skimage.morphology import binary_dilation as dilate
 
 
-
-
 def branchedPoints(skel):
 
     # defining branch shapes to locate nodes
@@ -234,6 +232,7 @@ def endPoints(skel):
     ep = ep1 + ep2 + ep3 + ep4 + ep5 + ep6 + ep7 + ep8 + ep9
     return ep
 
+
 def pruning(skeleton, size, Bps):
     branchpoints = Bps
     #remove iteratively end points "size" times from the skeleton
@@ -271,6 +270,7 @@ def merge_nodes(skeleton):
     # reskeletonzing widenodes and returning it, nearby nodes in radius 2 of each other should have been merged
     newskel = skeletonize(widenodes)
     return newskel
+
 
 def make_skel(img_bin, merge, prune, clean, r_size):
 
