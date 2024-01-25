@@ -29,7 +29,7 @@ class GraphStruct:
         self.configs_graph = options_gte
         self.img = GraphStruct.load_img_from_file(img_path)
         self.img_bin = None
-        self.img_processed = None
+        self.img_filtered = None
         self.graph_skeleton = None
         self.nx_graph = None
 
@@ -128,7 +128,7 @@ class GraphStruct:
             d_depth = cv2.CV_16S
             dst = cv2.Laplacian(img_processed, d_depth, ksize=5)
 
-            # dst = cv2.Canny(img_processed, 100, 200); # canny edge detection test
+            # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             dst = cv2.convertScaleAbs(dst)
             img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
             img_processed = cv2.convertScaleAbs(img_processed)
@@ -140,7 +140,7 @@ class GraphStruct:
 
         :return:
         """
-        image = self.img_processed.copy()
+        image = self.img_filtered.copy()
         img_bin = None
         options = self.configs_img
         # only needed for OTSU threshold
