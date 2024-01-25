@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 import porespy as ps
 
 
-class ChaoticStruct:
+class GraphStruct:
 
     def __init__(self, img_path):
-        self.img = ChaoticStruct.load_img_from_file(img_path)
+        self.img = GraphStruct.load_img_from_file(img_path)
 
     def resize_img(self, size):
         w, h = self.img.shape

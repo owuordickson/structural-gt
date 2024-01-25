@@ -11,7 +11,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-from .chaosgt import ChaoticStruct
+from .chaosgt import GraphStruct
 
 
 class LaunchWindow(ttk.Frame):
@@ -100,7 +100,7 @@ class LaunchWindow(ttk.Frame):
             save_dir, file_name = os.path.split(fd_image_file)
 
             # load image from file and resize it to 300 pixel
-            self.chaos_obj = ChaoticStruct(os.path.join(save_dir, file_name))
+            self.chaos_obj = GraphStruct(os.path.join(save_dir, file_name))
             std_img = self.chaos_obj.resize_img(300)
             self.chaos_obj.compute_fractal_dimension()
 
