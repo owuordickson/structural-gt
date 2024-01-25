@@ -12,11 +12,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import porespy as ps
 
+from _config_loader import load
+
 
 class GraphStruct:
 
     def __init__(self, img_path):
+        _, options_path, options_img, options_gte, _ = load()
+        self.configs_path = options_path
+        self.configs_img = options_img
+        self.configs_graph = options_gte
         self.img = GraphStruct.load_img_from_file(img_path)
+        self.img_bin = None
+        self.img_processed = None
 
     def resize_img(self, size):
         w, h = self.img.shape
