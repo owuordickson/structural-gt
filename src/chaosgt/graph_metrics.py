@@ -10,7 +10,8 @@ Compute graph theory metrics
 import cv2
 import csv
 import math
-import os
+import time
+# import os
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -41,12 +42,12 @@ class GraphMetrics:
         self.closeness_distribution = [0]
         self.eigenvector_distribution = [0]
         self.nx_subgraph_components = []
-        self.weighted_output_data = None  # w_data
-        self.weighted_degree_distribution = [0]  # w_klist
+        self.weighted_output_data = None
+        self.weighted_degree_distribution = [0]
         self.weighted_clustering_coefficients = [0]  # NOT USED
-        self.weighted_betweenness_distribution = [0]  # w_BCdist
-        self.weighted_closeness_distribution = [0]  # w_CCdist
-        self.weighted_eigenvector_distribution = [0]  # w_ECdist
+        self.weighted_betweenness_distribution = [0]
+        self.weighted_closeness_distribution = [0]
+        self.weighted_eigenvector_distribution = [0]
 
     def compute_gt_metrics(self):
         """
@@ -315,8 +316,6 @@ class GraphMetrics:
     def generate_pdf_output(self):
         """
 
-        :param data:
-        :param w_data:
         :return:
         """
 
@@ -347,8 +346,8 @@ class GraphMetrics:
 
         # update_label("Generating PDF GT Output...")
         with PdfPages(pdf_file) as pdf:
-            font1 = {'fontsize': 12}
-            font2 = {'fontsize': 9}
+            font_1 = {'fontsize': 12}
+            font_2 = {'fontsize': 9}
             # plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
             f1 = plt.figure(figsize=(8.5, 8.5), dpi=400)
             f1.add_subplot(2, 2, 1)
@@ -486,14 +485,14 @@ class GraphMetrics:
                 f3b = plt.figure(figsize=(8.5, 11), dpi=300)
                 if Do_kdist:
                     f3b.add_subplot(2, 2, 1)
-                    bins1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
+                    bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
-                        k_sig = str(round(stdev(deg_distribution), 3))
+                        deg_val = str(round(stdev(deg_distribution), 3))
                     except:
-                        k_sig = "N/A"
-                    k_txt = str("Degree Distribution: $\sigma$=" + k_sig)
-                    plt.hist(deg_distribution, bins=bins1)
-                    plt.title(k_txt)
+                        deg_val = "N/A"
+                    deg_txt = str("Degree Distribution: $\sigma$=" + deg_val)
+                    plt.hist(deg_distribution, bins=bins_1)
+                    plt.title(deg_txt)
                     plt.xlabel("Degree")
                     plt.ylabel("Counts")
                 if (Do_clust) and (opt_gte.disable_multigraph == 0):
@@ -511,30 +510,30 @@ class GraphMetrics:
                 pdf.savefig()
                 plt.close()
 
-            if (multigraph == 0) and (weighted == 0):
-                if (Do_BCdist or Do_CCdist or Do_ECdist):
+            if (opt_gte.disable_multigraph == 0) and (opt_gte.weighted_by_diameter == 0):
+                if Do_BCdist or Do_CCdist or Do_ECdist:
                     f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                     if Do_BCdist:
                         f4.add_subplot(2, 2, 1)
-                        bins2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
+                        bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                         try:
                             bt_val = str(round(stdev(bet_distribution), 3))
                         except:
                             bt_val = "N/A"
                         bc_txt = str("Betweenness Centrality: $\sigma$=" + bt_val)
-                        plt.hist(bet_distribution, bins=bins2)
+                        plt.hist(bet_distribution, bins=bins_2)
                         plt.title(bc_txt)
                         plt.xlabel("Betweenness value")
                         plt.ylabel("Counts")
                     if Do_CCdist:
                         f4.add_subplot(2, 2, 2)
-                        bins3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
+                        bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                         try:
                             cc_val = str(round(stdev(clo_distribution), 3))
                         except:
                             cc_val = "N/A"
-                        cc_txt = str("Closeness Centrality: $\sigma$=" + cc_val)
-                        plt.hist(clo_distribution, bins=bins3)
+                        cc_txt = str(r"Closeness Centrality: $\sigma$=" + cc_val)
+                        plt.hist(clo_distribution, bins=bins_3)
                         plt.title(cc_txt)
                         plt.xlabel("Closeness value")
                         plt.ylabel("Counts")
@@ -566,56 +565,56 @@ class GraphMetrics:
                     Do_ECdist = 0
                     Do_clust = 0
                 g_count = Do_kdist + Do_clust + Do_BCdist + Do_CCdist + Do_ECdist
-                g_count2 = g_count - Do_clust + 1
+                g_count_2 = g_count - Do_clust + 1
                 index = 1
-                if (g_count > 2):
-                    sy1 = 2
-                    fnt = font2
+                if g_count > 2:
+                    sy_1 = 2
+                    fnt = font_2
                 else:
-                    sy1 = 1
-                    fnt = font1
+                    sy_1 = 1
+                    fnt = font_1
                 f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                 if Do_kdist:
-                    f4.add_subplot(sy1, 2, index)
-                    bins1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
+                    f4.add_subplot(sy_1, 2, index)
+                    bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
-                        k_sig = str(round(stdev(deg_distribution), 3))
+                        deg_val = str(round(stdev(deg_distribution), 3))
                     except:
-                        k_sig = "N/A"
-                    k_txt = "Degree Distribution: $\sigma$=" + k_sig
-                    plt.hist(deg_distribution, bins=bins1)
-                    plt.title(k_txt, fontdict=fnt)
+                        deg_val = "N/A"
+                    deg_txt = "Degree Distribution: $\sigma$=" + deg_val
+                    plt.hist(deg_distribution, bins=bins_1)
+                    plt.title(deg_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_BCdist:
-                    f4.add_subplot(sy1, 2, index)
-                    bins2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
+                    f4.add_subplot(sy_1, 2, index)
+                    bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
                         bt_val = str(round(stdev(bet_distribution), 3))
                     except:
                         bt_val = "N/A"
                     bc_txt = "Betweenness Centrality: $\sigma$=" + bt_val
-                    plt.hist(bet_distribution, bins=bins2)
+                    plt.hist(bet_distribution, bins=bins_2)
                     plt.title(bc_txt, fontdict=fnt)
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_CCdist:
-                    f4.add_subplot(sy1, 2, index)
-                    bins3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
+                    f4.add_subplot(sy_1, 2, index)
+                    bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                     try:
                         cc_val = str(round(stdev(clo_distribution), 3))
                     except:
                         cc_val = "N/A"
                     cc_txt = "Closeness Centrality: $\sigma$=" + cc_val
-                    plt.hist(clo_distribution, bins=bins3)
+                    plt.hist(clo_distribution, bins=bins_3)
                     plt.title(cc_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_ECdist:
-                    f4.add_subplot(sy1, 2, index)
+                    f4.add_subplot(sy_1, 2, index)
                     bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
                         ec_val = str(round(stdev(eig_distribution), 3))
@@ -631,49 +630,49 @@ class GraphMetrics:
                 plt.close()
 
                 f5 = plt.figure(figsize=(8.5, 11), dpi=400)
-                if (g_count2 > 2):
+                if g_count_2 > 2:
                     sy2 = 2
-                    fnt = font2
+                    fnt = font_2
                 else:
                     sy2 = 1
-                    fnt = font1
+                    fnt = font_1
                 index = 1
                 if Do_kdist:
                     f5.add_subplot(sy2, 2, index)
                     bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
-                        wk_sig = str(round(stdev(w_deg_distribution), 3))
+                        w_deg_val = str(round(stdev(w_deg_distribution), 3))
                     except:
-                        wk_sig = "N/A"
-                    wk_txt = "Weighted Degree: $\sigma$=" + wk_sig
+                        w_deg_val = "N/A"
+                    w_deg_txt = "Weighted Degree: $\sigma$=" + w_deg_val
                     plt.hist(w_deg_distribution, bins=bins4)
-                    plt.title(wk_txt, fontdict=fnt)
+                    plt.title(w_deg_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_BCdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
-                    plt.hist(w_bet_distribution, bins=bins5)
+                    bins_5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
+                    plt.hist(w_bet_distribution, bins=bins_5)
                     try:
-                        wBC_sig = str(round(stdev(w_bet_distribution), 3))
+                        w_bt_val = str(round(stdev(w_bet_distribution), 3))
                     except:
-                        wBC_sig = "N/A"
-                    wBC_txt = "Width-Weighted Betweeness: $\sigma$=" + wBC_sig
-                    plt.title(wBC_txt, fontdict=fnt)
+                        w_bt_val = "N/A"
+                    w_bt_txt = "Width-Weighted Betweenness: $\sigma$=" + w_bt_val
+                    plt.title(w_bt_txt, fontdict=fnt)
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_CCdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
+                    bins_6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                     try:
-                        wCC_sig = str(round(stdev(w_clo_distribution), 3))
+                        w_clo_val = str(round(stdev(w_clo_distribution), 3))
                     except:
-                        wCC_sig = "N/A"
-                    wCC_txt = "Length-Weighted Closeness: $\sigma$=" + wCC_sig
-                    plt.hist(w_clo_distribution, bins=bins6)
-                    plt.title(wCC_txt, fontdict=fnt)
+                        w_clo_val = "N/A"
+                    w_clo_txt = "Length-Weighted Closeness: $\sigma$=" + w_clo_val
+                    plt.hist(w_clo_distribution, bins=bins_6)
+                    plt.title(w_clo_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.xticks(fontsize=8)
                     plt.ylabel("Counts", fontdict=fnt)
@@ -683,23 +682,23 @@ class GraphMetrics:
                     bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
                     plt.hist(w_eig_distribution, bins=bins7)
                     try:
-                        wEC_sig = str(round(stdev(w_eig_distribution), 3))
+                        w_ec_val = str(round(stdev(w_eig_distribution), 3))
                     except:
-                        wEC_sig = "N/A"
-                    wEC_txt = "Width-Weighted Eigenvector Cent.: $\sigma$=" + wEC_sig
-                    plt.title(wEC_txt, fontdict=fnt)
-                    plt.xlabel("Eigenvetor value", fontdict=fnt)
+                        w_ec_val = "N/A"
+                    w_ec_txt = "Width-Weighted Eigenvector Cent.: $\sigma$=" + w_ec_val
+                    plt.title(w_ec_txt, fontdict=fnt)
+                    plt.xlabel("Eigenvector value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
 
                 pdf.savefig()
                 plt.close()
 
-            if heatmap:
+            if opt_gtc.display_heatmaps:
                 sz = 30
                 lw = 1.5
                 # update_label("Generating heat maps...")
                 time.sleep(0.5)
-                if (Do_kdist == 1):
+                if Do_kdist == 1:
                     f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6a.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -717,12 +716,12 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Degree Heatmap', fontdict=font1)
+                    plt.title('Degree Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_kdist == 1 and weighted == 1):
+                if (Do_kdist == 1) and (opt_gte.weighted_by_diameter == 1):
                     f6b = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6b.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -740,12 +739,12 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Weighted Degree Heatmap', fontdict=font1)
+                    plt.title('Weighted Degree Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if Do_clust == 1 and opt_gte.disable_multigraph == 0:
+                if (Do_clust == 1) and (opt_gte.disable_multigraph == 0):
                     f6c = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6c.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -763,12 +762,12 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Clustering Coefficient Heatmap', fontdict=font1)
+                    plt.title('Clustering Coefficient Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if Do_BCdist == 1 and opt_gte.disable_multigraph == 0:
+                if (Do_BCdist == 1) and (opt_gte.disable_multigraph == 0):
                     f6d = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6d.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -786,7 +785,7 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Betweenness Centrality Heatmap', fontdict=font1)
+                    plt.title('Betweenness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
@@ -809,12 +808,12 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Width-Weighted Betweenness Centrality Heatmap', fontdict=font1)
+                    plt.title('Width-Weighted Betweenness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_CCdist == 1):
+                if Do_CCdist == 1:
                     f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6f.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -832,7 +831,7 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Closeness Centrality Heatmap', fontdict=font1)
+                    plt.title('Closeness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
@@ -855,12 +854,12 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Length-Weighted Closeness Centrality Heatmap', fontdict=font1)
+                    plt.title('Length-Weighted Closeness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_ECdist == 1 and opt_gte.disable_multigraph == 0):
+                if (Do_ECdist == 1) and (opt_gte.disable_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -878,7 +877,7 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Eigenvector Centrality Heatmap', fontdict=font1)
+                    plt.title('Eigenvector Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
@@ -901,7 +900,7 @@ class GraphMetrics:
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
-                    plt.title('Width-Weighted Eigenvector Centrality Heatmap', fontdict=font1)
+                    plt.title('Width-Weighted Eigenvector Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
                     pdf.savefig()
@@ -909,13 +908,13 @@ class GraphMetrics:
 
             f8 = plt.figure(figsize=(8.5, 8.5), dpi=300)
             f8.add_subplot(1, 1, 1)
-            plt.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
+            plt.text(0.5, 0.5, self.get_info(), horizontalalignment='center', verticalalignment='center')
             plt.xticks([])
             plt.yticks([])
             pdf.savefig()
             plt.close()
 
-        if (Exp_EL == 1):
+        if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
                 el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
@@ -928,7 +927,7 @@ class GraphMetrics:
                         try:
                             writer.writerow(row)
                         except:
-                            None
+                            pass
                 csvfile.close()
             else:
                 fields = ['Source', 'Target']
@@ -942,11 +941,11 @@ class GraphMetrics:
                         try:
                             writer.writerow(row)
                         except:
-                            None
+                            pass
                 csvfile.close()
 
         # exporting as gephi file
-        if (Do_gexf == 1):
+        if opt_gte.export_as_gexf == 1:
             if opt_gte.disable_multigraph:
                 # deleting extraneous info and then exporting the final skeleton
                 for (x) in nx_graph.nodes():
@@ -958,7 +957,6 @@ class GraphMetrics:
                             del nx_graph[s][e][k]['pts']
                         except KeyError:
                             pass
-
                 nx.write_gexf(nx_graph, gexf_file)
             else:
                 # deleting extraneous info and then exporting the final skeleton
@@ -968,6 +966,51 @@ class GraphMetrics:
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
+
+    def get_info(self):
+        # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
+        run_info = "Run Info\n"
+        """
+        run_info = run_info + oldfilename
+        now = datetime.datetime.now()
+        run_info = run_info + " || " + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
+        if Thresh_method == 0:
+            run_info = run_info + " || Global Threshold (" + str(thresh) + ")"
+        elif Thresh_method == 1:
+            run_info = run_info + " || Adaptive Threshold, " + str(asize) + " bit kernel"
+        elif Thresh_method == 2:
+            run_info = run_info + " || OTSU Threshold"
+        if Gamma != 1:
+            run_info = run_info + "|| Gamma = " + str(Gamma)
+        if md_filter:
+            run_info = run_info + " || Median Filter"
+        if g_blur:
+            run_info = run_info + " || Gaussian Blur, " + str(bsize) + " bit kernel"
+        if autolvl:
+            run_info = run_info + " || Autolevel"
+        if fg_color:
+            run_info = run_info + " || Dark Foreground"
+        if laplacian:
+            run_info = run_info + " || Laplacian Gradient"
+        if scharr:
+            run_info = run_info + " || Scharr Gradient"
+        if sobel:
+            run_info = run_info + " || Sobel Gradient"
+        if lowpass:
+            run_info = run_info + " || Low-pass filter" + str(wsize)
+        run_info = run_info + "\n"
+        if merge_nodes:
+            run_info = run_info + " || Merge Nodes"
+        if prune:
+            run_info = run_info + " || Prune Dangling Edges"
+        if clean:
+            run_info = run_info + " || Remove Objects of Size " + str(r_size)
+        if no_self_loops:
+            run_info = run_info + " || Remove Self Loops"
+        if multigraph:
+            run_info = run_info + " || Multigraph allowed"
+        """
+        return run_info
 
     def approx_conductance_by_spectral(self):
         """
@@ -1086,7 +1129,7 @@ class GraphMetrics:
         deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
 
         # 5. Compute Laplacian matrix
-        lpl_mat = deg_mat - adj_mat
+        # lpl_mat = deg_mat - adj_mat
 
         # 6. Compute normalized-Laplacian matrix
         norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
