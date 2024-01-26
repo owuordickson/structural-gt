@@ -153,7 +153,7 @@ class GraphMetrics:
 
         # settings.progress(65)
         # calculating betweenness centrality histogram
-        if (not options.disable_multigraph) and (options.display_betweeness_histogram == 1):
+        if (not options.disable_multigraph) and (options.display_betweenness_histogram == 1):
             # settings.update_label("Calculating betweenness...")
             b_distribution_1 = betweenness_centrality(graph)
             b_sum = 0
@@ -209,7 +209,7 @@ class GraphMetrics:
             for item in res_items:
                 data_dict["x"].append(item["name"])
                 data_dict["y"].append(item["value"])
-        self.nx_subgraph_components = sg_components
+            self.nx_subgraph_components = sg_components
         self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
@@ -888,7 +888,7 @@ class GraphMetrics:
         # 3a. Check connectivity of graph
         try:
             # does not work if graphs has disconnected sub-graphs
-            fiedler_vector = nx.fiedler_vector(eig_graph)
+            nx.fiedler_vector(eig_graph)
         except nx.NetworkXNotImplemented:
             # Graph is directed.
             non_directed_graph = GraphMetrics.make_graph_symmetrical(eig_graph)

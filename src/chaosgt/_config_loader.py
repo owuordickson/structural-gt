@@ -52,28 +52,27 @@ def load():
     # 4. Networkx Calculation Settings
     options_gtc.display_heatmaps = int(config.get('computation-settings', 'display_heatmaps'))
     options_gtc.display_degree_histogram = int(config.get('computation-settings', 'display_degree_histogram'))
-    options_gtc.display_betweeness_histogram = int(config.get('computation-settings',\
-                                                              'display_betweeness_centrality_histogram'))
-    options_gtc.display_closeness_histogram = int(config.get('computation-settings',\
+    options_gtc.display_betweenness_histogram = int(config.get('computation-settings',
+                                                               'display_betweenness_centrality_histogram'))
+    options_gtc.display_closeness_histogram = int(config.get('computation-settings',
                                                              'display_closeness_centrality_histogram'))
-    options_gtc.display_eigenvector_histogram = int(config.get('computation-settings',\
+    options_gtc.display_eigenvector_histogram = int(config.get('computation-settings',
                                                                'display_eigenvector_centrality_histogram'))
-    options_gtc.compute_nodal_connectivity = int(config.get('computation-settings',\
+    options_gtc.compute_nodal_connectivity = int(config.get('computation-settings',
                                                             'compute_avg_nodal_connectivity'))
-    options_gtc.compute_graph_density = int(config.get('computation-settings',\
+    options_gtc.compute_graph_density = int(config.get('computation-settings',
                                                        'compute_graph_density'))
-    options_gtc.compute_graph_conductance = int(config.get('computation-settings',\
+    options_gtc.compute_graph_conductance = int(config.get('computation-settings',
                                                            'compute_graph_conductance'))
-    options_gtc.compute_global_efficiency = int(config.get('computation-settings',\
+    options_gtc.compute_global_efficiency = int(config.get('computation-settings',
                                                            'compute_global_efficiency'))
-    options_gtc.compute_clustering_coef = int(config.get('computation-settings',\
+    options_gtc.compute_clustering_coef = int(config.get('computation-settings',
                                                          'compute_avg_clustering_coef'))
-    options_gtc.compute_assortativity_coef = int(config.get('computation-settings',\
+    options_gtc.compute_assortativity_coef = int(config.get('computation-settings',
                                                             'compute_assortativity_coef'))
-    options_gtc.compute_network_diameter = int(config.get('computation-settings',\
+    options_gtc.compute_network_diameter = int(config.get('computation-settings',
                                                           'compute_network_diameter'))
-    options_gtc.compute_wiener_index = int(config.get('computation-settings',\
+    options_gtc.compute_wiener_index = int(config.get('computation-settings',
                                                       'compute_wiener_index'))
 
     return config, options_path, options_img, options_gte, options_gtc
-
