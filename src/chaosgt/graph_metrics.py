@@ -17,7 +17,7 @@ import numpy as np
 import scipy as sp
 import networkx as nx
 from time import sleep
-from statistics import stdev
+from statistics import stdev, StatisticsError
 from itertools import cycle
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -35,14 +35,14 @@ class GraphMetrics:
     def __init__(self, g_obj, configs):
         self.g_struct = g_obj
         self.configs = configs
-        self.output_data = None
+        self.output_data = pd.DataFrame([])
         self.degree_distribution = [0]
         self.clustering_coefficients = [0]
         self.betweenness_distribution = [0]
         self.closeness_distribution = [0]
         self.eigenvector_distribution = [0]
         self.nx_subgraph_components = []
-        self.weighted_output_data = None
+        self.weighted_output_data = pd.DataFrame([])
         self.weighted_degree_distribution = [0]
         self.weighted_clustering_coefficients = [0]  # NOT USED
         self.weighted_betweenness_distribution = [0]
@@ -456,20 +456,19 @@ class GraphMetrics:
                 plt.title("Unweighted GT parameters")
                 pdf.savefig()
                 plt.close()
-                try:
-                    f3b = plt.figure(figsize=(8.5, 11), dpi=300)
-                    f3b.add_subplot(1, 1, 1)
-                    f3b.patch.set_visible(False)
-                    plt.axis('off')
-                    col_width = [2 / 3, 1 / 3]
-                    table2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width,
-                                       cellLoc='left')
-                    table2.scale(1, 1.5)
-                    plt.title("Weighted GT Parameters")
-                    pdf.savefig()
-                    plt.close()
-                except:
-                    pass
+                # try:  # generates exception is w_data is None
+                f3b = plt.figure(figsize=(8.5, 11), dpi=300)
+                f3b.add_subplot(1, 1, 1)
+                f3b.patch.set_visible(False)
+                plt.axis('off')
+                col_width = [2 / 3, 1 / 3]
+                tab_2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
+                tab_2.scale(1, 1.5)
+                plt.title("Weighted GT Parameters")
+                pdf.savefig()
+                plt.close()
+                # except:
+                #    pass
             else:
                 f3a = plt.figure(figsize=(8.5, 11), dpi=300)
                 f3a.add_subplot(1, 1, 1)
@@ -488,21 +487,21 @@ class GraphMetrics:
                     bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
                         deg_val = str(round(stdev(deg_distribution), 3))
-                    except:
+                    except StatisticsError:
                         deg_val = "N/A"
-                    deg_txt = str("Degree Distribution: $\sigma$=" + deg_val)
+                    deg_txt = r'Degree Distribution: $\sigma$=' + str(deg_val)
                     plt.hist(deg_distribution, bins=bins_1)
                     plt.title(deg_txt)
                     plt.xlabel("Degree")
                     plt.ylabel("Counts")
-                if (Do_clust) and (opt_gte.disable_multigraph == 0):
+                if Do_clust and (opt_gte.disable_multigraph == 0):
                     f3b.add_subplot(2, 2, 2)
                     bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
                     try:
                         t_val = str(round(stdev(cluster_coefs), 3))
-                    except:
+                    except StatisticsError:
                         t_val = "N/A"
-                    t_txt = str("Clustering Coefficients: $\sigma$=" + t_val)
+                    t_txt = r"Clustering Coefficients: $\sigma$=" + str(t_val)
                     plt.hist(cluster_coefs, bins=bins_t)
                     plt.title(t_txt)
                     plt.xlabel("Clust. Coeff.")
@@ -518,9 +517,9 @@ class GraphMetrics:
                         bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                         try:
                             bt_val = str(round(stdev(bet_distribution), 3))
-                        except:
+                        except StatisticsError:
                             bt_val = "N/A"
-                        bc_txt = str("Betweenness Centrality: $\sigma$=" + bt_val)
+                        bc_txt = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
                         plt.hist(bet_distribution, bins=bins_2)
                         plt.title(bc_txt)
                         plt.xlabel("Betweenness value")
@@ -530,9 +529,9 @@ class GraphMetrics:
                         bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                         try:
                             cc_val = str(round(stdev(clo_distribution), 3))
-                        except:
+                        except StatisticsError:
                             cc_val = "N/A"
-                        cc_txt = str(r"Closeness Centrality: $\sigma$=" + cc_val)
+                        cc_txt = r"Closeness Centrality: $\sigma$=" + str(cc_val)
                         plt.hist(clo_distribution, bins=bins_3)
                         plt.title(cc_txt)
                         plt.xlabel("Closeness value")
@@ -542,21 +541,15 @@ class GraphMetrics:
                         bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                         try:
                             ec_val = str(round(stdev(eig_distribution), 3))
-                        except:
+                        except StatisticsError:
                             ec_val = "N/A"
-                        ec_txt = str("Eigenvector Centrality: $\sigma$=" + ec_val)
+                        ec_txt = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
                         plt.hist(eig_distribution, bins=bins4)
                         plt.title(ec_txt)
                         plt.xlabel("Eigenvector value")
                         plt.ylabel("Counts")
-                try:
                     pdf.savefig()
-                except:
-                    pass
-                try:
                     plt.close()
-                except:
-                    pass
 
             # displaying weighted GT parameters if requested
             if opt_gte.weighted_by_diameter == 1:
@@ -579,9 +572,9 @@ class GraphMetrics:
                     bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
                         deg_val = str(round(stdev(deg_distribution), 3))
-                    except:
+                    except StatisticsError:
                         deg_val = "N/A"
-                    deg_txt = "Degree Distribution: $\sigma$=" + deg_val
+                    deg_txt = r"Degree Distribution: $\sigma$=" + str(deg_val)
                     plt.hist(deg_distribution, bins=bins_1)
                     plt.title(deg_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
@@ -592,9 +585,9 @@ class GraphMetrics:
                     bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
                         bt_val = str(round(stdev(bet_distribution), 3))
-                    except:
+                    except StatisticsError:
                         bt_val = "N/A"
-                    bc_txt = "Betweenness Centrality: $\sigma$=" + bt_val
+                    bc_txt = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
                     plt.hist(bet_distribution, bins=bins_2)
                     plt.title(bc_txt, fontdict=fnt)
                     plt.xlabel("Betweenness value", fontdict=fnt)
@@ -605,9 +598,9 @@ class GraphMetrics:
                     bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                     try:
                         cc_val = str(round(stdev(clo_distribution), 3))
-                    except:
+                    except StatisticsError:
                         cc_val = "N/A"
-                    cc_txt = "Closeness Centrality: $\sigma$=" + cc_val
+                    cc_txt = r"Closeness Centrality: $\sigma$=" + str(cc_val)
                     plt.hist(clo_distribution, bins=bins_3)
                     plt.title(cc_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
@@ -618,14 +611,13 @@ class GraphMetrics:
                     bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
                         ec_val = str(round(stdev(eig_distribution), 3))
-                    except:
+                    except StatisticsError:
                         ec_val = "N/A"
-                    bc_txt = "Eigenvector Centrality: $\sigma$=" + ec_val
+                    bc_txt = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
                     plt.hist(bet_distribution, bins=bins4)
                     plt.title(bc_txt, fontdict=fnt)
                     plt.xlabel("Eigenvector value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
-
                 pdf.savefig()
                 plt.close()
 
@@ -642,9 +634,9 @@ class GraphMetrics:
                     bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
                         w_deg_val = str(round(stdev(w_deg_distribution), 3))
-                    except:
+                    except StatisticsError:
                         w_deg_val = "N/A"
-                    w_deg_txt = "Weighted Degree: $\sigma$=" + w_deg_val
+                    w_deg_txt = r"Weighted Degree: $\sigma$=" + str(w_deg_val)
                     plt.hist(w_deg_distribution, bins=bins4)
                     plt.title(w_deg_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
@@ -656,9 +648,9 @@ class GraphMetrics:
                     plt.hist(w_bet_distribution, bins=bins_5)
                     try:
                         w_bt_val = str(round(stdev(w_bet_distribution), 3))
-                    except:
+                    except StatisticsError:
                         w_bt_val = "N/A"
-                    w_bt_txt = "Width-Weighted Betweenness: $\sigma$=" + w_bt_val
+                    w_bt_txt = r"Width-Weighted Betweenness: $\sigma$=" + str(w_bt_val)
                     plt.title(w_bt_txt, fontdict=fnt)
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
@@ -668,9 +660,9 @@ class GraphMetrics:
                     bins_6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                     try:
                         w_clo_val = str(round(stdev(w_clo_distribution), 3))
-                    except:
+                    except StatisticsError:
                         w_clo_val = "N/A"
-                    w_clo_txt = "Length-Weighted Closeness: $\sigma$=" + w_clo_val
+                    w_clo_txt = r"Length-Weighted Closeness: $\sigma$=" + str(w_clo_val)
                     plt.hist(w_clo_distribution, bins=bins_6)
                     plt.title(w_clo_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
@@ -683,16 +675,16 @@ class GraphMetrics:
                     plt.hist(w_eig_distribution, bins=bins7)
                     try:
                         w_ec_val = str(round(stdev(w_eig_distribution), 3))
-                    except:
+                    except StatisticsError:
                         w_ec_val = "N/A"
-                    w_ec_txt = "Width-Weighted Eigenvector Cent.: $\sigma$=" + w_ec_val
+                    w_ec_txt = r"Width-Weighted Eigenvector Cent.: $\sigma$=" + str(w_ec_val)
                     plt.title(w_ec_txt, fontdict=fnt)
                     plt.xlabel("Eigenvector value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
-
                 pdf.savefig()
                 plt.close()
 
+            # displaying heatmaps
             if opt_gtc.display_heatmaps:
                 sz = 30
                 lw = 1.5
@@ -906,6 +898,7 @@ class GraphMetrics:
                     pdf.savefig()
                     plt.close()
 
+            # displaying run information
             f8 = plt.figure(figsize=(8.5, 8.5), dpi=300)
             f8.add_subplot(1, 1, 1)
             plt.text(0.5, 0.5, self.get_info(), horizontalalignment='center', verticalalignment='center')
@@ -926,7 +919,7 @@ class GraphMetrics:
                         row = line.split(',')
                         try:
                             writer.writerow(row)
-                        except:
+                        except csv.Error:
                             pass
                 csvfile.close()
             else:
@@ -940,7 +933,7 @@ class GraphMetrics:
                         row = line.split(',')
                         try:
                             writer.writerow(row)
-                        except:
+                        except csv.Error:
                             pass
                 csvfile.close()
 
