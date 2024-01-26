@@ -6,6 +6,7 @@ cd chaos-gt/
 git init
 git remote add origin https://github.com/owuordickson/chaos-gt.git
 git fetch origin
+git fetch origin drew
 git pull origin main
 git worktree add ../drew_gt origin/drew
 
