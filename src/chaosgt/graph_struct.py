@@ -32,6 +32,11 @@ class GraphStruct:
         self.graph_skeleton = None
         self.nx_graph = None
 
+    def fit(self):
+        self.img_filtered = self.process_img()
+        self.img_bin, _ = self.binarize_img(self.img_filtered.copy())
+        self.extract_graph()
+
     def resize_img(self, size):
         w, h = self.img.shape
         if h > w:
@@ -51,21 +56,21 @@ class GraphStruct:
         """
 
         options = self.configs_img
-        img_processed = self.img.copy()
+        filtered_img = self.img.copy()
 
         if options.gamma != 1.00:
             inv_gamma = 1.00 / options.gamma
             table = np.array([((i / 255.0) ** inv_gamma) * 255
                               for i in np.arange(0, 256)]).astype('uint8')
-            img_processed = cv2.LUT(img_processed, table)
+            filtered_img = cv2.LUT(filtered_img, table)
 
         # applies a low-pass filter
         if options.apply_lowpass == 1:
-            w, h = img_processed.shape
+            w, h = filtered_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
             ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** options.filter_window_size  # expand to 2D hamming
-            f = cv2.dft(img_processed.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
+            f = cv2.dft(filtered_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
             f_shifted = np.fft.fftshift(f)
             f_complex = f_shifted[:, :, 0] * 1j + f_shifted[:, :, 1]
             f_filtered = ham2d * f_complex
@@ -74,72 +79,72 @@ class GraphStruct:
             filtered_img = np.abs(inv_img)
             filtered_img -= filtered_img.min()
             filtered_img = filtered_img * 255 / filtered_img.max()
-            img_processed = filtered_img.astype(np.uint8)
+            filtered_img = filtered_img.astype(np.uint8)
 
         # applying median filter
         if options.apply_median == 1:
             # making a 5x5 array of all 1's for median filter
             d_array = np.zeros((5, 5)) + 1
-            img_processed = median(img_processed, d_array)
+            filtered_img = median(filtered_img, d_array)
 
         # applying gaussian blur
         if options.apply_gaussian == 1:
             b_size = options.blurring_window_size
-            img_processed = cv2.GaussianBlur(img_processed, (b_size, b_size), 0)
+            filtered_img = cv2.GaussianBlur(filtered_img, (b_size, b_size), 0)
 
         # applying auto-level filter
         if options.apply_autolevel == 1:
             # making a disk for the auto-level filter
             auto_lvl_disk = disk(options.blurring_window_size)
-            img_processed = autolevel(img_processed, footprint=auto_lvl_disk)
+            filtered_img = autolevel(filtered_img, footprint=auto_lvl_disk)
 
         # applying a scharr filter, and then taking that image and weighting it 25% with the original
         # this should bring out the edges without separating each "edge" into two separate parallel ones
         if options.apply_scharr == 1:
             d_depth = cv2.CV_16S
-            grad_x = cv2.Scharr(img_processed, d_depth, 1, 0)
-            grad_y = cv2.Scharr(img_processed, d_depth, 0, 1)
+            grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
+            grad_y = cv2.Scharr(filtered_img, d_depth, 0, 1)
             abs_grad_x = cv2.convertScaleAbs(grad_x)
             abs_grad_y = cv2.convertScaleAbs(grad_y)
             dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
             dst = cv2.convertScaleAbs(dst)
-            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
-            img_processed = cv2.convertScaleAbs(img_processed)
+            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
+            filtered_img = cv2.convertScaleAbs(filtered_img)
 
         # applying sobel filter
         if options.apply_sobel == 1:
             scale = 1
             delta = 0
             d_depth = cv2.CV_16S
-            grad_x = cv2.Sobel(img_processed, d_depth, 1, 0, ksize=3, scale=scale, delta=delta,
+            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=3, scale=scale, delta=delta,
                                borderType=cv2.BORDER_DEFAULT)
-            grad_y = cv2.Sobel(img_processed, d_depth, 0, 1, ksize=3, scale=scale, delta=delta,
+            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=3, scale=scale, delta=delta,
                                borderType=cv2.BORDER_DEFAULT)
             abs_grad_x = cv2.convertScaleAbs(grad_x)
             abs_grad_y = cv2.convertScaleAbs(grad_y)
             dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
             dst = cv2.convertScaleAbs(dst)
-            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
-            img_processed = cv2.convertScaleAbs(img_processed)
+            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
+            filtered_img = cv2.convertScaleAbs(filtered_img)
 
         # applying laplacian filter
         if options.apply_laplacian == 1:
             d_depth = cv2.CV_16S
-            dst = cv2.Laplacian(img_processed, d_depth, ksize=5)
+            dst = cv2.Laplacian(filtered_img, d_depth, ksize=5)
 
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             dst = cv2.convertScaleAbs(dst)
-            img_processed = cv2.addWeighted(img_processed, 0.75, dst, 0.25, 0)
-            img_processed = cv2.convertScaleAbs(img_processed)
+            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
+            filtered_img = cv2.convertScaleAbs(filtered_img)
 
-        return img_processed
+        return filtered_img
 
-    def binarize_img(self):
+    def binarize_img(self, image):
         """
 
         :return:
         """
-        image = self.img_filtered.copy()
+        # image = self.img_filtered.copy()
         img_bin = None
         options = self.configs_img
         # only needed for OTSU threshold
