@@ -7,12 +7,19 @@
 Compute graph theory metrics
 """
 
-
 import math
 import pandas as pd
 import numpy as np
 import scipy as sp
 import networkx as nx
+from time import sleep
+from sklearn.cluster import spectral_clustering
+from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
+from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
+from networkx.algorithms import degree_assortativity_coefficient
+from networkx.algorithms.flow import maximum_flow
+from networkx.algorithms.distance_measures import diameter, periphery
+from networkx.algorithms.wiener import wiener_index
 
 
 class GraphMetrics:
@@ -20,11 +27,190 @@ class GraphMetrics:
     def __init__(self, g_obj, configs):
         self.g_struct = g_obj
         self.configs = configs
-        # data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents
-        # wdata, klist, BCdist, CCdist, ECdist
+        self.output_data = None
+        self.degree_distribution = [0]
+        self.clustering_coefficients = [0]
+        self.betweenness_distribution = [0]
+        self.closeness_distribution = [0]
+        self.eigenvector_distribution = [0]
+        self.nx_subgraph_components = []
+        self.weighted_output_data = None  # w_data
+        self.weighted_degree_distribution = [0]  # w_klist
+        self.weighted_clustering_coefficients = [0]  # w_Tlist
+        self.weighted_betweenness_distribution = [0]  # w_BCdist
+        self.weighted_closeness_distribution = [0]  # w_CCdist
+        self.weighted_eigenvector_distribution = [0]  # w_ECdist
 
     def compute_gt_metrics(self):
-        pass
+        """
+
+        :return:
+        """
+
+        graph = self.g_struct.nx_graph
+        options = self.configs
+        data_dict = {"x": [], "y": []}
+
+        node_count = int(nx.number_of_nodes(graph))
+        edge_count = int(nx.number_of_edges(graph))
+
+        data_dict["x"].append("Number of nodes")
+        data_dict["y"].append(node_count)
+
+        data_dict["x"].append("Number of edges")
+        data_dict["y"].append(edge_count)
+
+        # settings.progress(35)
+        # calculating parameters as requested
+
+        # creating degree histogram
+        if options.display_degree_histogram == 1:
+            # settings.update_label("Calculating degree...")
+            deg_distribution_1 = nx.degree(graph)
+            deg_sum = 0
+            deg_distribution = np.zeros(len(deg_distribution_1))
+            for j in range(len(deg_distribution_1)):
+                deg_sum += deg_distribution_1[j]
+                deg_distribution[j] = deg_distribution_1[j]
+            deg = deg_sum / len(deg_distribution_1)
+            deg = round(deg, 5)
+            self.degree_distribution = deg_distribution
+            data_dict["x"].append("Average degree")
+            data_dict["y"].append(deg)
+
+        # settings.progress(40)
+        # calculating network diameter
+        if options.compute_network_diameter == 1:
+            # settings.update_label("Calculating diameter...")
+            connected_graph = nx.is_connected(graph)
+            if connected_graph:
+                dia = int(diameter(graph))
+            else:
+                dia = 'NaN'
+            data_dict["x"].append("Network diameter")
+            data_dict["y"].append(dia)
+
+        # calculating average nodal connectivity
+        if options.compute_nodal_connectivity == 1:
+            # settings.update_label("Calculating connectivity...")
+            connected_graph = nx.is_connected(graph)
+            if connected_graph:
+                avg_nodal_con = average_node_connectivity(graph)
+                avg_nodal_con = round(avg_nodal_con, 5)
+            else:
+                avg_nodal_con = 'NaN'
+            data_dict["x"].append("Average nodal connectivity")
+            data_dict["y"].append(avg_nodal_con)
+
+        # settings.progress(45)
+        # calculating graph density
+        if options.compute_graph_density == 1:
+            # settings.update_label("Calculating density...")
+            g_density = nx.density(graph)
+            g_density = round(g_density, 5)
+            data_dict["x"].append("Graph density")
+            data_dict["y"].append(g_density)
+
+        # settings.progress(50)
+        # calculating global efficiency
+        if options.compute_global_efficiency == 1:
+            # settings.update_label("Calculating efficiency...")
+            g_eff = global_efficiency(graph)
+            g_eff = round(g_eff, 5)
+            data_dict["x"].append("Global efficiency")
+            data_dict["y"].append(g_eff)
+
+        if options.compute_wiener_index == 1:
+            # settings.update_label("Calculating w_index...")
+            w_index = wiener_index(graph)
+            w_index = round(w_index, 1)
+            data_dict["x"].append("Wiener Index")
+            data_dict["y"].append(w_index)
+
+        # settings.progress(55)
+        # calculating assortativity coefficient
+        if options.compute_assortativity_coef == 1:
+            # settings.update_label("Calculating assortativity...")
+            a_coef = degree_assortativity_coefficient(graph)
+            a_coef = round(a_coef, 5)
+            data_dict["x"].append("Assortativity coefficient")
+            data_dict["y"].append(a_coef)
+
+        # settings.progress(60)
+        # calculating clustering coefficients
+        if (not options.disable_multigraph) and (options.compute_clustering_coef == 1):
+            # settings.update_label("Calculating clustering...")
+            sleep(5)
+            avg_coefficients_1 = clustering(graph)
+            avg_coefficients = np.zeros(len(avg_coefficients_1))
+            for j in range(len(avg_coefficients_1)):
+                avg_coefficients[j] = avg_coefficients_1[j]
+            clust = average_clustering(graph)
+            clust = round(clust, 5)
+            self.clustering_coefficients = avg_coefficients
+            data_dict["x"].append("Average clustering coefficient")
+            data_dict["y"].append(clust)
+
+        # settings.progress(65)
+        # calculating betweenness centrality histogram
+        if (not options.disable_multigraph) and (options.display_betweeness_histogram == 1):
+            # settings.update_label("Calculating betweenness...")
+            b_distribution_1 = betweenness_centrality(graph)
+            b_sum = 0
+            b_distribution = np.zeros(len(b_distribution_1))
+            for j in range(len(b_distribution_1)):
+                b_sum += b_distribution_1[j]
+                b_distribution[j] = b_distribution_1[j]
+            b_val = b_sum / len(b_distribution_1)
+            b_val = round(b_val, 5)
+            self.betweenness_distribution = b_distribution
+            data_dict["x"].append("Average betweenness centrality")
+            data_dict["y"].append(b_val)
+
+        # settings.progress(70)
+        # calculating eigenvector centrality
+        if (not options.disable_multigraph) and (options.display_eigenvector_histogram == 1):
+            # settings.update_label("Calculating eigenvector...")
+            try:
+                e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
+            except:
+                e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
+            e_sum = 0
+            e_vecs = np.zeros(len(e_vecs_1))
+            for j in range(len(e_vecs_1)):
+                e_sum += e_vecs_1[j]
+                e_vecs[j] = e_vecs_1[j]
+            e_val = e_sum / len(e_vecs_1)
+            e_val = round(e_val, 5)
+            self.eigenvector_distribution = e_vecs
+            data_dict["x"].append("Average eigenvector centrality")
+            data_dict["y"].append(e_val)
+
+        # settings.progress(75)
+        # calculating closeness centrality
+        if options.display_closeness_histogram == 1:
+            # settings.update_label("Calculating closeness...")
+            close_distribution_1 = closeness_centrality(graph)
+            c_sum = 0
+            close_distribution = np.zeros(len(close_distribution_1))
+            for j in range(len(close_distribution_1)):
+                c_sum += close_distribution_1[j]
+                close_distribution[j] = close_distribution_1[j]
+            c_val = c_sum / len(close_distribution_1)
+            c_val = round(c_val, 5)
+            self.closeness_distribution = close_distribution
+            data_dict["x"].append("Average closeness centrality")
+            data_dict["y"].append(c_val)
+
+        # settings.progress(80)
+        # calculating graph conductance
+        if options.compute_graph_conductance == 1:
+            res_items, sg_components = self.approx_conductance_by_spectral()
+            for item in res_items:
+                data_dict["x"].append(item["name"])
+                data_dict["y"].append(item["value"])
+        self.nx_subgraph_components = sg_components
+        self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
         pass
@@ -886,4 +1072,3 @@ class GraphMetrics:
         conductance_min = sorted_vals[1] / 2
 
         return conductance_max, conductance_min
-
