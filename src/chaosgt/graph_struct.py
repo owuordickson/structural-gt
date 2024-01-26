@@ -8,6 +8,8 @@ Processing of images and chaos engineering
 """
 
 import cv2
+import re
+import os
 import numpy as np
 import sknw
 from skimage.morphology import disk
@@ -28,14 +30,36 @@ class GraphStruct:
         self.configs_graph = options_gte
         self.img = GraphStruct.load_img_from_file(img_path)
         self.img_bin = None
+        self.otsu_val = None
         self.img_filtered = None
         self.graph_skeleton = None
         self.nx_graph = None
 
     def fit(self):
         self.img_filtered = self.process_img()
-        self.img_bin, _ = self.binarize_img(self.img_filtered.copy())
+        self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
         self.extract_graph()
+
+    def create_filenames(self, image_path):
+        """
+            Making the new filenames
+        :return:
+        """
+        filename = image_path  # self.configs_path.single_imagepath
+        output_location = self.configs_path.output_path
+
+        filename = re.sub('.png', '', filename)
+        filename = re.sub('.tif', '', filename)
+        filename = re.sub('.jpg', '', filename)
+        filename = re.sub('.jpeg', '', filename)
+        g_filename = filename + "_graph.gexf"
+        el_filename = filename + "_EL.csv"
+        pdf_filename = filename + "_SGT_results.pdf"
+        pdf_file = os.path.join(output_location, pdf_filename)
+        gexf_file = os.path.join(output_location, g_filename)
+        csv_file = os.path.join(output_location, el_filename)
+
+        return pdf_file, gexf_file, csv_file
 
     def resize_img(self, size):
         w, h = self.img.shape

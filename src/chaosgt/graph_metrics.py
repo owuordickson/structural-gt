@@ -7,13 +7,19 @@
 Compute graph theory metrics
 """
 
+import cv2
+import csv
 import math
+import os
 import pandas as pd
 import numpy as np
 import scipy as sp
 import networkx as nx
 from time import sleep
-# from statistics import stdev
+from statistics import stdev
+from itertools import cycle
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
@@ -37,7 +43,7 @@ class GraphMetrics:
         self.nx_subgraph_components = []
         self.weighted_output_data = None  # w_data
         self.weighted_degree_distribution = [0]  # w_klist
-        self.weighted_clustering_coefficients = [0]  # w_Tlist
+        self.weighted_clustering_coefficients = [0]  # NOT USED
         self.weighted_betweenness_distribution = [0]  # w_BCdist
         self.weighted_closeness_distribution = [0]  # w_CCdist
         self.weighted_eigenvector_distribution = [0]  # w_ECdist
@@ -139,7 +145,7 @@ class GraphMetrics:
 
         # settings.progress(60)
         # calculating clustering coefficients
-        if (not options.disable_multigraph) and (options.compute_clustering_coef == 1):
+        if (options.disable_multigraph == 0) and (options.compute_clustering_coef == 1):
             # settings.update_label("Calculating clustering...")
             sleep(5)
             avg_coefficients_1 = clustering(graph)
@@ -154,7 +160,7 @@ class GraphMetrics:
 
         # settings.progress(65)
         # calculating betweenness centrality histogram
-        if (not options.disable_multigraph) and (options.display_betweenness_histogram == 1):
+        if (options.disable_multigraph == 0) and (options.display_betweenness_histogram == 1):
             # settings.update_label("Calculating betweenness...")
             b_distribution_1 = betweenness_centrality(graph)
             b_sum = 0
@@ -170,7 +176,7 @@ class GraphMetrics:
 
         # settings.progress(70)
         # calculating eigenvector centrality
-        if (not options.disable_multigraph) and (options.display_eigenvector_histogram == 1):
+        if (options.disable_multigraph == 0) and (options.display_eigenvector_histogram == 1):
             # settings.update_label("Calculating eigenvector...")
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
@@ -306,15 +312,41 @@ class GraphMetrics:
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
-    def generate_pdf_output(self, data, w_data):
-        # raw_img = src
-        # img_filt = img
-        # img_bin = img_bin
-        # histo = cv2.calcHist([img_filt], [0], None, [256], [0, 256])
+    def generate_pdf_output(self):
+        """
+
+        :param data:
+        :param w_data:
+        :return:
+        """
+
+        opt_img = self.g_struct.configs_img
+        opt_gte = self.g_struct.configs_graph
+        opt_gtc = self.configs
+
+        deg_distribution = self.degree_distribution
+        w_deg_distribution = self.weighted_degree_distribution
+        cluster_coefs = self.clustering_coefficients
+        # w_cluster_coefs = self.weighted_clustering_coefficients
+        bet_distribution = self.betweenness_distribution
+        w_bet_distribution = self.weighted_betweenness_distribution
+        clo_distribution = self.closeness_distribution
+        w_clo_distribution = self.weighted_closeness_distribution
+        eig_distribution = self.eigenvector_distribution
+        w_eig_distribution = self.weighted_eigenvector_distribution
+
+        data = self.output_data
+        w_data = self.weighted_output_data
+        nx_graph = self.g_struct.nx_graph
+
+        raw_img = self.g_struct.img
+        filtered_img = self.g_struct.img_filtered
+        img_bin = self.g_struct.img_bin
+        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
+        pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.configs_path.single_imagepath)
 
         # update_label("Generating PDF GT Output...")
-        """"
-        with PdfPages(file) as pdf:
+        with PdfPages(pdf_file) as pdf:
             font1 = {'fontsize': 12}
             font2 = {'fontsize': 9}
             # plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
@@ -325,18 +357,20 @@ class GraphMetrics:
             plt.yticks([])
             plt.title("Original Image")
             f1.add_subplot(2, 2, 2)
-            plt.imshow(img_filt, cmap='gray')
+            plt.imshow(filtered_img, cmap='gray')
             plt.xticks([])
             plt.yticks([])
             plt.title("Processed Image")
             f1.add_subplot(2, 2, 3)
-            plt.plot(histo)
-            if (Thresh_method == 0):
-                Th = np.array([[thresh, thresh], [0, max(histo)]], dtype='object')
-                plt.plot(Th[0], Th[1], ls='--', color='black')
-            elif (Thresh_method == 2):
-                Th = np.array([[ret, ret], [0, max(histo)]], dtype='object')
-                plt.plot(Th[0], Th[1], ls='--', color='black')
+            plt.plot(img_histogram)
+            if opt_img.threshold_type == 0:
+                thresh_arr = np.array([[self.g_struct.threshold_global, self.g_struct.threshold_global],
+                                       [0, max(img_histogram)]], dtype='object')
+                plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            elif opt_img.threshold_type == 2:
+                thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
+                                       [0, max(img_histogram)]], dtype='object')
+                plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
             plt.yticks([])
             plt.title("Histogram of Processed Image")
             plt.xlabel("Pixel values")
@@ -351,34 +385,35 @@ class GraphMetrics:
             plt.close()
 
             # plotting skeletal images
+            g_skel = self.g_struct.graph_skeleton
             f2a = plt.figure(figsize=(8.5, 11), dpi=400)
             f2a.add_subplot(2, 1, 1)
-            # skel_int = -1*(skel_int-1)
-            plt.imshow(skel_int, cmap='gray')
-            plt.scatter(Bp_coord_x, Bp_coord_y, s=0.25, c='b')
-            plt.scatter(Ep_coord_x, Ep_coord_y, s=0.25, c='r')
+            # g_skel.skel_int = -1*(g_skel.skel_int-1)
+            plt.imshow(g_skel.skel_int, cmap='gray')
+            plt.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
+            plt.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
             plt.xticks([])
             plt.yticks([])
             plt.title("Skeletal Image")
             f2a.add_subplot(2, 1, 2)
-            plt.imshow(src, cmap='gray')
-            if multigraph:
-                for (s, e) in G.edges():
-                    for k in range(int(len(G[s][e]))):
-                        ge = G[s][e][k]['pts']
+            plt.imshow(raw_img, cmap='gray')
+            if opt_gte.disable_multigraph:
+                for (s, e) in nx_graph.edges():
+                    for k in range(int(len(nx_graph[s][e]))):
+                        ge = nx_graph[s][e][k]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'red')
             else:
-                for (s, e) in G.edges():
-                    ge = G[s][e]['pts']
+                for (s, e) in nx_graph.edges():
+                    ge = nx_graph[s][e]['pts']
                     plt.plot(ge[:, 1], ge[:, 0], 'red')
 
             # plotting the final graph with the nodes
-            nodes = G.nodes()
+            nodes = nx_graph.nodes()
             gn = np.array([nodes[i]['o'] for i in nodes])
-            if (display_nodeID == 1):
-                i = 0;
+            if opt_gte.display_node_id == 1:
+                i = 0
                 for x, y in zip(gn[:, 1], gn[:, 0]):
-                    plt.annotate(i, (x, y), fontsize=5)
+                    plt.annotate(str(i), (x, y), fontsize=5)
                     i += 1
                 plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
@@ -390,35 +425,34 @@ class GraphMetrics:
             pdf.savefig()
             plt.close()
 
+            # plotting sub-graph network
             f2b = plt.figure(figsize=(8.5, 11), dpi=400)
             f2b.add_subplot(1, 1, 1)
-            plt.imshow(src, cmap='gray')
+            plt.imshow(raw_img, cmap='gray')
             color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
             color_cycle = cycle(color_list)
-            for component in SGcomponents:
-                sg = G.subgraph(component)
+            for component in self.nx_subgraph_components:
+                sg = nx_graph.subgraph(component)
                 color = next(color_cycle)
                 for (s, e) in sg.edges():
                     ge = sg[s][e]['pts']
                     plt.plot(ge[:, 1], ge[:, 0], color)
-            # plt.axis("off")
             plt.xticks([])
             plt.yticks([])
             plt.title("Sub Graphs")
             pdf.savefig()
             plt.close()
 
-            progress(95)
-
+            # progress(95)
             # displaying all the GT calculations requested
             # Modified Output to show GI calculations on entire page
-            if weighted == 1:
+            if opt_gte.weighted_by_diameter == 1:
                 f3a = plt.figure(figsize=(8.5, 11), dpi=300)
                 f3a.add_subplot(1, 1, 1)
                 f3a.patch.set_visible(False)
                 plt.axis('off')
-                colw = [2 / 3, 1 / 3]
-                table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
+                col_width = [2 / 3, 1 / 3]
+                table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
                 table.scale(1, 1.5)
                 plt.title("Unweighted GT parameters")
                 pdf.savefig()
@@ -428,8 +462,9 @@ class GraphMetrics:
                     f3b.add_subplot(1, 1, 1)
                     f3b.patch.set_visible(False)
                     plt.axis('off')
-                    colw = [2 / 3, 1 / 3]
-                    table2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
+                    col_width = [2 / 3, 1 / 3]
+                    table2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width,
+                                       cellLoc='left')
                     table2.scale(1, 1.5)
                     plt.title("Weighted GT Parameters")
                     pdf.savefig()
@@ -441,8 +476,8 @@ class GraphMetrics:
                 f3a.add_subplot(1, 1, 1)
                 f3a.patch.set_visible(False)
                 plt.axis('off')
-                colw = [2 / 3, 1 / 3]
-                table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=colw, cellLoc='left')
+                col_width = [2 / 3, 1 / 3]
+                table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
                 table.scale(1, 1.5)
                 plt.title("Unweighted GT parameters")
                 pdf.savefig()
@@ -451,82 +486,82 @@ class GraphMetrics:
                 f3b = plt.figure(figsize=(8.5, 11), dpi=300)
                 if Do_kdist:
                     f3b.add_subplot(2, 2, 1)
-                    bins1 = np.arange(0.5, max(klist) + 1.5, 1)
+                    bins1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
-                        k_sig = str(round(stdev(klist), 3))
+                        k_sig = str(round(stdev(deg_distribution), 3))
                     except:
                         k_sig = "N/A"
-                    k_txt = "Degree Distribution: $\sigma$=" + k_sig
-                    plt.hist(klist, bins=bins1)
+                    k_txt = str("Degree Distribution: $\sigma$=" + k_sig)
+                    plt.hist(deg_distribution, bins=bins1)
                     plt.title(k_txt)
                     plt.xlabel("Degree")
                     plt.ylabel("Counts")
-                if (Do_clust and multigraph == 0):
+                if (Do_clust) and (opt_gte.disable_multigraph == 0):
                     f3b.add_subplot(2, 2, 2)
-                    binsT = np.linspace(min(Tlist), max(Tlist), 50)
+                    bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
                     try:
-                        T_sig = str(round(stdev(Tlist), 3))
+                        t_val = str(round(stdev(cluster_coefs), 3))
                     except:
-                        T_sig = "N/A"
-                    T_txt = "Clustering Coefficients: $\sigma$=" + T_sig
-                    plt.hist(Tlist, bins=binsT)
-                    plt.title(T_txt)
+                        t_val = "N/A"
+                    t_txt = str("Clustering Coefficients: $\sigma$=" + t_val)
+                    plt.hist(cluster_coefs, bins=bins_t)
+                    plt.title(t_txt)
                     plt.xlabel("Clust. Coeff.")
                     plt.ylabel("Counts")
                 pdf.savefig()
                 plt.close()
 
-            if (multigraph == 0 and weighted == 0):
+            if (multigraph == 0) and (weighted == 0):
                 if (Do_BCdist or Do_CCdist or Do_ECdist):
                     f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                     if Do_BCdist:
                         f4.add_subplot(2, 2, 1)
-                        bins2 = np.linspace(min(BCdist), max(BCdist), 50)
+                        bins2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                         try:
-                            BC_sig = str(round(stdev(BCdist), 3))
+                            bt_val = str(round(stdev(bet_distribution), 3))
                         except:
-                            BC_sig = "N/A"
-                        BC_txt = "Betweenness Centrality: $\sigma$=" + BC_sig
-                        plt.hist(BCdist, bins=bins2)
-                        plt.title(BC_txt)
+                            bt_val = "N/A"
+                        bc_txt = str("Betweenness Centrality: $\sigma$=" + bt_val)
+                        plt.hist(bet_distribution, bins=bins2)
+                        plt.title(bc_txt)
                         plt.xlabel("Betweenness value")
                         plt.ylabel("Counts")
                     if Do_CCdist:
                         f4.add_subplot(2, 2, 2)
-                        bins3 = np.linspace(min(CCdist), max(CCdist), 50)
+                        bins3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                         try:
-                            CC_sig = str(round(stdev(CCdist), 3))
+                            cc_val = str(round(stdev(clo_distribution), 3))
                         except:
-                            CC_sig = "N/A"
-                        CC_txt = "Closeness Centrality: $\sigma$=" + CC_sig
-                        plt.hist(CCdist, bins=bins3)
-                        plt.title(CC_txt)
+                            cc_val = "N/A"
+                        cc_txt = str("Closeness Centrality: $\sigma$=" + cc_val)
+                        plt.hist(clo_distribution, bins=bins3)
+                        plt.title(cc_txt)
                         plt.xlabel("Closeness value")
                         plt.ylabel("Counts")
                     if Do_ECdist:
                         f4.add_subplot(2, 2, 3)
-                        bins4 = np.linspace(min(ECdist), max(ECdist), 50)
+                        bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                         try:
-                            EC_sig = str(round(stdev(ECdist), 3))
+                            ec_val = str(round(stdev(eig_distribution), 3))
                         except:
-                            EC_sig = "N/A"
-                        EC_txt = "Eigenvector Centrality: $\sigma$=" + EC_sig
-                        plt.hist(ECdist, bins=bins4)
-                        plt.title(EC_txt)
+                            ec_val = "N/A"
+                        ec_txt = str("Eigenvector Centrality: $\sigma$=" + ec_val)
+                        plt.hist(eig_distribution, bins=bins4)
+                        plt.title(ec_txt)
                         plt.xlabel("Eigenvector value")
                         plt.ylabel("Counts")
                 try:
                     pdf.savefig()
                 except:
-                    None
+                    pass
                 try:
                     plt.close()
                 except:
-                    None
+                    pass
 
             # displaying weighted GT parameters if requested
-            if (weighted == 1):
-                if multigraph:
+            if opt_gte.weighted_by_diameter == 1:
+                if opt_gte.disable_multigraph:
                     Do_BCdist = 0
                     Do_ECdist = 0
                     Do_clust = 0
@@ -542,53 +577,53 @@ class GraphMetrics:
                 f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                 if Do_kdist:
                     f4.add_subplot(sy1, 2, index)
-                    bins1 = np.arange(0.5, max(klist) + 1.5, 1)
+                    bins1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
-                        k_sig = str(round(stdev(klist), 3))
+                        k_sig = str(round(stdev(deg_distribution), 3))
                     except:
                         k_sig = "N/A"
                     k_txt = "Degree Distribution: $\sigma$=" + k_sig
-                    plt.hist(klist, bins=bins1)
+                    plt.hist(deg_distribution, bins=bins1)
                     plt.title(k_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_BCdist:
                     f4.add_subplot(sy1, 2, index)
-                    bins2 = np.linspace(min(BCdist), max(BCdist), 50)
+                    bins2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
-                        BC_sig = str(round(stdev(BCdist), 3))
+                        bt_val = str(round(stdev(bet_distribution), 3))
                     except:
-                        BC_sig = "N/A"
-                    BC_txt = "Betweenness Centrality: $\sigma$=" + BC_sig
-                    plt.hist(BCdist, bins=bins2)
-                    plt.title(BC_txt, fontdict=fnt)
+                        bt_val = "N/A"
+                    bc_txt = "Betweenness Centrality: $\sigma$=" + bt_val
+                    plt.hist(bet_distribution, bins=bins2)
+                    plt.title(bc_txt, fontdict=fnt)
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_CCdist:
                     f4.add_subplot(sy1, 2, index)
-                    bins3 = np.linspace(min(CCdist), max(CCdist), 50)
+                    bins3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                     try:
-                        CC_sig = str(round(stdev(CCdist), 3))
+                        cc_val = str(round(stdev(clo_distribution), 3))
                     except:
-                        CC_sig = "N/A"
-                    CC_txt = "Closeness Centrality: $\sigma$=" + CC_sig
-                    plt.hist(CCdist, bins=bins3)
-                    plt.title(CC_txt, fontdict=fnt)
+                        cc_val = "N/A"
+                    cc_txt = "Closeness Centrality: $\sigma$=" + cc_val
+                    plt.hist(clo_distribution, bins=bins3)
+                    plt.title(cc_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_ECdist:
                     f4.add_subplot(sy1, 2, index)
-                    bins4 = np.linspace(min(ECdist), max(ECdist), 50)
+                    bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
-                        EC_sig = str(round(stdev(ECdist), 3))
+                        ec_val = str(round(stdev(eig_distribution), 3))
                     except:
-                        EC_sig = "N/A"
-                    BC_txt = "Eigenvector Centrality: $\sigma$=" + EC_sig
-                    plt.hist(BCdist, bins=bins4)
-                    plt.title(BC_txt, fontdict=fnt)
+                        ec_val = "N/A"
+                    bc_txt = "Eigenvector Centrality: $\sigma$=" + ec_val
+                    plt.hist(bet_distribution, bins=bins4)
+                    plt.title(bc_txt, fontdict=fnt)
                     plt.xlabel("Eigenvector value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
 
@@ -605,23 +640,23 @@ class GraphMetrics:
                 index = 1
                 if Do_kdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins4 = np.arange(0.5, max(w_klist) + 1.5, 1)
+                    bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
-                        wk_sig = str(round(stdev(w_klist), 3))
+                        wk_sig = str(round(stdev(w_deg_distribution), 3))
                     except:
                         wk_sig = "N/A"
                     wk_txt = "Weighted Degree: $\sigma$=" + wk_sig
-                    plt.hist(w_klist, bins=bins4)
+                    plt.hist(w_deg_distribution, bins=bins4)
                     plt.title(wk_txt, fontdict=fnt)
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_BCdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins5 = np.linspace(min(w_BCdist), max(w_BCdist), 50)
-                    plt.hist(w_BCdist, bins=bins5)
+                    bins5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
+                    plt.hist(w_bet_distribution, bins=bins5)
                     try:
-                        wBC_sig = str(round(stdev(w_BCdist), 3))
+                        wBC_sig = str(round(stdev(w_bet_distribution), 3))
                     except:
                         wBC_sig = "N/A"
                     wBC_txt = "Width-Weighted Betweeness: $\sigma$=" + wBC_sig
@@ -631,13 +666,13 @@ class GraphMetrics:
                     index += 1
                 if Do_CCdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins6 = np.linspace(min(w_CCdist), max(w_CCdist), 50)
+                    bins6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                     try:
-                        wCC_sig = str(round(stdev(w_CCdist), 3))
+                        wCC_sig = str(round(stdev(w_clo_distribution), 3))
                     except:
                         wCC_sig = "N/A"
                     wCC_txt = "Length-Weighted Closeness: $\sigma$=" + wCC_sig
-                    plt.hist(w_CCdist, bins=bins6)
+                    plt.hist(w_clo_distribution, bins=bins6)
                     plt.title(wCC_txt, fontdict=fnt)
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.xticks(fontsize=8)
@@ -645,10 +680,10 @@ class GraphMetrics:
                     index += 1
                 if Do_ECdist:
                     f5.add_subplot(sy2, 2, index)
-                    bins7 = np.linspace(min(w_ECdist), max(w_ECdist), 50)
-                    plt.hist(w_ECdist, bins=bins7)
+                    bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
+                    plt.hist(w_eig_distribution, bins=bins7)
                     try:
-                        wEC_sig = str(round(stdev(w_ECdist), 3))
+                        wEC_sig = str(round(stdev(w_eig_distribution), 3))
                     except:
                         wEC_sig = "N/A"
                     wEC_txt = "Width-Weighted Eigenvector Cent.: $\sigma$=" + wEC_sig
@@ -662,23 +697,23 @@ class GraphMetrics:
             if heatmap:
                 sz = 30
                 lw = 1.5
-                update_label("Generating heat maps...")
+                # update_label("Generating heat maps...")
                 time.sleep(0.5)
                 if (Do_kdist == 1):
                     f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6a.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=klist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=deg_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -690,18 +725,18 @@ class GraphMetrics:
                 if (Do_kdist == 1 and weighted == 1):
                     f6b = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6b.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_klist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_deg_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -710,21 +745,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_clust == 1 and multigraph == 0):
+                if Do_clust == 1 and opt_gte.disable_multigraph == 0:
                     f6c = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6c.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=Tlist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=cluster_coefs, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -733,21 +768,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_BCdist == 1 and multigraph == 0):
+                if Do_BCdist == 1 and opt_gte.disable_multigraph == 0:
                     f6d = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6d.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=BCdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=bet_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -756,21 +791,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_BCdist == 1 and weighted == 1 and multigraph == 0):
+                if (Do_BCdist == 1) and (opt_gte.weighted_by_diameter == 1) and (opt_gte.disable_multigraph == 0):
                     f6e = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6e.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_BCdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_bet_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -782,18 +817,18 @@ class GraphMetrics:
                 if (Do_CCdist == 1):
                     f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6f.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=CCdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=clo_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -802,21 +837,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_CCdist == 1 and weighted == 1):
+                if (Do_CCdist == 1) and (opt_gte.weighted_by_diameter == 1):
                     f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6f.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_CCdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_clo_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -825,21 +860,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_ECdist == 1 and multigraph == 0):
+                if (Do_ECdist == 1 and opt_gte.disable_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=ECdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=eig_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -848,21 +883,21 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_ECdist == 1 and weighted == 1 and multigraph == 0):
+                if (Do_ECdist == 1) and (opt_gte.weighted_by_diameter == 1) and (opt_gte.disable_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
-                    plt.imshow(src, cmap='gray')
-                    nodes = G.nodes()
+                    plt.imshow(raw_img, cmap='gray')
+                    nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_ECdist, cmap='plasma')
-                    if multigraph:
-                        for (s, e) in G.edges():
-                            for k in range(int(len(G[s][e]))):
-                                ge = G[s][e][k]['pts']
+                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_eig_distribution, cmap='plasma')
+                    if opt_gte.disable_multigraph:
+                        for (s, e) in nx_graph.edges():
+                            for k in range(int(len(nx_graph[s][e]))):
+                                ge = nx_graph[s][e][k]['pts']
                                 plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     else:
-                        for (s, e) in G.edges():
-                            ge = G[s][e]['pts']
+                        for (s, e) in nx_graph.edges():
+                            ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
@@ -881,10 +916,10 @@ class GraphMetrics:
             plt.close()
 
         if (Exp_EL == 1):
-            if (weighted == 1):
+            if opt_gte.weighted_by_diameter == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
-                el = nx.generate_edgelist(G, delimiter=',', data=["weight", "length"])
-                with open(file2, 'w', newline='') as csvfile:
+                el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
+                with open(csv_file, 'w', newline='') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(fields)
                     for line in el:
@@ -897,8 +932,8 @@ class GraphMetrics:
                 csvfile.close()
             else:
                 fields = ['Source', 'Target']
-                el = nx.generate_edgelist(G, delimiter=',', data=False)
-                with open(file2, 'w', newline='') as csvfile:
+                el = nx.generate_edgelist(nx_graph, delimiter=',', data=False)
+                with open(csv_file, 'w', newline='') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(fields)
                     for line in el:
@@ -912,29 +947,27 @@ class GraphMetrics:
 
         # exporting as gephi file
         if (Do_gexf == 1):
-            if multigraph:
+            if opt_gte.disable_multigraph:
                 # deleting extraneous info and then exporting the final skeleton
-                for (x) in G.nodes():
-                    del G.nodes[x]['pts']
-                    del G.nodes[x]['o']
-                for (s, e) in G.edges():
-                    for k in range(int(len(G[s][e]))):
+                for (x) in nx_graph.nodes():
+                    del nx_graph.nodes[x]['pts']
+                    del nx_graph.nodes[x]['o']
+                for (s, e) in nx_graph.edges():
+                    for k in range(int(len(nx_graph[s][e]))):
                         try:
-                            del G[s][e][k]['pts']
+                            del nx_graph[s][e][k]['pts']
                         except KeyError:
-                            None
+                            pass
 
-                nx.write_gexf(G, file1)
+                nx.write_gexf(nx_graph, gexf_file)
             else:
                 # deleting extraneous info and then exporting the final skeleton
-                for (x) in G.nodes():
-                    del G.nodes[x]['pts']
-                    del G.nodes[x]['o']
-                for (s, e) in G.edges():
-                    del G[s][e]['pts']
-                nx.write_gexf(G, file1)
-        """
-        pass
+                for (x) in nx_graph.nodes():
+                    del nx_graph.nodes[x]['pts']
+                    del nx_graph.nodes[x]['o']
+                for (s, e) in nx_graph.edges():
+                    del nx_graph[s][e]['pts']
+                nx.write_gexf(nx_graph, gexf_file)
 
     def approx_conductance_by_spectral(self):
         """
