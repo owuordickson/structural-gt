@@ -401,8 +401,8 @@ def approx_conductance_by_spectral(graph):
         data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
 
     # 4. Compute normalized-laplacian matrix
-    norm_laplacian_matrix = compute_norm_laplacian_matrix(eig_graph)
-    # norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
+    # norm_laplacian_matrix = compute_norm_laplacian_matrix(eig_graph)
+    norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
 
     # 5. Compute eigenvalues
     # e_vals, _ = np.linalg.eig(norm_laplacian_matrix)
