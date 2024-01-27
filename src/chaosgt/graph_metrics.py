@@ -554,13 +554,12 @@ class GraphMetrics:
             # displaying weighted GT parameters if requested
             if opt_gte.weighted_by_diameter == 1:
                 if opt_gte.disable_multigraph:
-                    Do_BCdist = 0
-                    Do_ECdist = 0
-                    Do_clust = 0
-                g_count = Do_kdist + Do_clust + Do_BCdist + Do_CCdist + Do_ECdist
-                g_count_2 = g_count - Do_clust + 1
+                    g_count_1 = Do_kdist + Do_CCdist
+                else:
+                    g_count_1 = Do_kdist + Do_clust + Do_BCdist + Do_CCdist + Do_ECdist
+                g_count_2 = g_count_1 - Do_clust + 1
                 index = 1
-                if g_count > 2:
+                if g_count_1 > 2:
                     sy_1 = 2
                     fnt = font_2
                 else:
@@ -580,7 +579,7 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_BCdist:
+                if Do_BCdist and (opt_gte.disable_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
@@ -606,7 +605,7 @@ class GraphMetrics:
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_ECdist:
+                if Do_ECdist and (opt_gte.disable_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
@@ -623,14 +622,14 @@ class GraphMetrics:
 
                 f5 = plt.figure(figsize=(8.5, 11), dpi=400)
                 if g_count_2 > 2:
-                    sy2 = 2
+                    sy_2 = 2
                     fnt = font_2
                 else:
-                    sy2 = 1
+                    sy_2 = 1
                     fnt = font_1
                 index = 1
                 if Do_kdist:
-                    f5.add_subplot(sy2, 2, index)
+                    f5.add_subplot(sy_2, 2, index)
                     bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
                         w_deg_val = str(round(stdev(w_deg_distribution), 3))
@@ -642,8 +641,8 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_BCdist:
-                    f5.add_subplot(sy2, 2, index)
+                if Do_BCdist and (opt_gte.disable_multigraph == 0):
+                    f5.add_subplot(sy_2, 2, index)
                     bins_5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
                     plt.hist(w_bet_distribution, bins=bins_5)
                     try:
@@ -656,7 +655,7 @@ class GraphMetrics:
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
                 if Do_CCdist:
-                    f5.add_subplot(sy2, 2, index)
+                    f5.add_subplot(sy_2, 2, index)
                     bins_6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                     try:
                         w_clo_val = str(round(stdev(w_clo_distribution), 3))
@@ -669,8 +668,8 @@ class GraphMetrics:
                     plt.xticks(fontsize=8)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_ECdist:
-                    f5.add_subplot(sy2, 2, index)
+                if Do_ECdist and (opt_gte.disable_multigraph == 0):
+                    f5.add_subplot(sy_2, 2, index)
                     bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
                     plt.hist(w_eig_distribution, bins=bins7)
                     try:
@@ -1001,7 +1000,7 @@ class GraphMetrics:
         if no_self_loops:
             run_info = run_info + " || Remove Self Loops"
         if multigraph:
-            run_info = run_info + " || Multigraph allowed"
+            run_info = run_info + " || Multi-graph allowed"
         """
         return run_info
 
