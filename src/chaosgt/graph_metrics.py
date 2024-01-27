@@ -11,6 +11,7 @@ import cv2
 import csv
 import math
 import time
+import datetime
 # import os
 import pandas as pd
 import numpy as np
@@ -967,10 +968,10 @@ class GraphMetrics:
     def get_info(self):
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
         run_info = "Run Info\n"
-        """
-        run_info = run_info + oldfilename
+        run_info = run_info + self.g_struct.configs_path.single_imagepath
         now = datetime.datetime.now()
         run_info = run_info + " || " + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
+        """
         if Thresh_method == 0:
             run_info = run_info + " || Global Threshold (" + str(thresh) + ")"
         elif Thresh_method == 1:
