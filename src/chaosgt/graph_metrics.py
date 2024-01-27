@@ -345,7 +345,7 @@ class GraphMetrics:
         pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.configs_path.single_imagepath)
 
         # update_label("Generating PDF GT Output...")
-        with PdfPages(pdf_file) as pdf:
+        with (PdfPages(pdf_file) as pdf):
             font_1 = {'fontsize': 12}
             font_2 = {'fontsize': 9}
             # plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
@@ -482,7 +482,7 @@ class GraphMetrics:
                 plt.close()
 
                 f3b = plt.figure(figsize=(8.5, 11), dpi=300)
-                if Do_kdist:
+                if opt_gtc.display_degree_histogram == 1:
                     f3b.add_subplot(2, 2, 1)
                     bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
@@ -494,7 +494,7 @@ class GraphMetrics:
                     plt.title(deg_txt)
                     plt.xlabel("Degree")
                     plt.ylabel("Counts")
-                if Do_clust and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.disable_multigraph == 0):
                     f3b.add_subplot(2, 2, 2)
                     bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
                     try:
@@ -510,9 +510,10 @@ class GraphMetrics:
                 plt.close()
 
             if (opt_gte.disable_multigraph == 0) and (opt_gte.weighted_by_diameter == 0):
-                if Do_BCdist or Do_CCdist or Do_ECdist:
+                if (opt_gtc.display_betweenness_histogram == 1) or (opt_gtc.display_closeness_histogram == 1) or\
+                        (opt_gtc.display_eigenvector_histogram == 1):
                     f4 = plt.figure(figsize=(8.5, 11), dpi=400)
-                    if Do_BCdist:
+                    if opt_gtc.display_betweenness_histogram == 1:
                         f4.add_subplot(2, 2, 1)
                         bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                         try:
@@ -524,7 +525,7 @@ class GraphMetrics:
                         plt.title(bc_txt)
                         plt.xlabel("Betweenness value")
                         plt.ylabel("Counts")
-                    if Do_CCdist:
+                    if opt_gtc.display_closeness_histogram == 1:
                         f4.add_subplot(2, 2, 2)
                         bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                         try:
@@ -536,7 +537,7 @@ class GraphMetrics:
                         plt.title(cc_txt)
                         plt.xlabel("Closeness value")
                         plt.ylabel("Counts")
-                    if Do_ECdist:
+                    if opt_gtc.display_eigenvector_histogram == 1:
                         f4.add_subplot(2, 2, 3)
                         bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                         try:
@@ -554,10 +555,12 @@ class GraphMetrics:
             # displaying weighted GT parameters if requested
             if opt_gte.weighted_by_diameter == 1:
                 if opt_gte.disable_multigraph:
-                    g_count_1 = Do_kdist + Do_CCdist
+                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.display_closeness_histogram
                 else:
-                    g_count_1 = Do_kdist + Do_clust + Do_BCdist + Do_CCdist + Do_ECdist
-                g_count_2 = g_count_1 - Do_clust + 1
+                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.compute_clustering_coef +\
+                                opt_gtc.display_betweenness_histogram + opt_gtc.display_closeness_histogram +\
+                                opt_gtc.display_eigenvector_histogram
+                g_count_2 = g_count_1 - opt_gtc.compute_clustering_coef + 1
                 index = 1
                 if g_count_1 > 2:
                     sy_1 = 2
@@ -566,7 +569,7 @@ class GraphMetrics:
                     sy_1 = 1
                     fnt = font_1
                 f4 = plt.figure(figsize=(8.5, 11), dpi=400)
-                if Do_kdist:
+                if opt_gtc.display_degree_histogram:
                     f4.add_subplot(sy_1, 2, index)
                     bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
                     try:
@@ -579,7 +582,7 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_BCdist and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
@@ -592,7 +595,7 @@ class GraphMetrics:
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_CCdist:
+                if opt_gtc.display_closeness_histogram == 1:
                     f4.add_subplot(sy_1, 2, index)
                     bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                     try:
@@ -605,7 +608,7 @@ class GraphMetrics:
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_ECdist and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
@@ -628,7 +631,7 @@ class GraphMetrics:
                     sy_2 = 1
                     fnt = font_1
                 index = 1
-                if Do_kdist:
+                if opt_gtc.display_degree_histogram:
                     f5.add_subplot(sy_2, 2, index)
                     bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
@@ -641,7 +644,7 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_BCdist and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f5.add_subplot(sy_2, 2, index)
                     bins_5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
                     plt.hist(w_bet_distribution, bins=bins_5)
@@ -654,7 +657,7 @@ class GraphMetrics:
                     plt.xlabel("Betweenness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_CCdist:
+                if opt_gtc.display_closeness_histogram == 1:
                     f5.add_subplot(sy_2, 2, index)
                     bins_6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                     try:
@@ -668,7 +671,7 @@ class GraphMetrics:
                     plt.xticks(fontsize=8)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if Do_ECdist and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f5.add_subplot(sy_2, 2, index)
                     bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
                     plt.hist(w_eig_distribution, bins=bins7)
@@ -689,7 +692,7 @@ class GraphMetrics:
                 lw = 1.5
                 # update_label("Generating heat maps...")
                 time.sleep(0.5)
-                if Do_kdist == 1:
+                if opt_gtc.display_degree_histogram == 1:
                     f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6a.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -712,7 +715,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_kdist == 1) and (opt_gte.weighted_by_diameter == 1):
+                if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
                     f6b = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6b.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -735,7 +738,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_clust == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.disable_multigraph == 0):
                     f6c = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6c.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -758,7 +761,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_BCdist == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f6d = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6d.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -781,7 +784,8 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_BCdist == 1) and (opt_gte.weighted_by_diameter == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
+                        (opt_gte.disable_multigraph == 0):
                     f6e = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6e.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -804,7 +808,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if Do_CCdist == 1:
+                if opt_gtc.display_closeness_histogram == 1:
                     f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6f.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -827,7 +831,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_CCdist == 1) and (opt_gte.weighted_by_diameter == 1):
+                if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
                     f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6f.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -850,7 +854,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_ECdist == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
@@ -873,7 +877,8 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (Do_ECdist == 1) and (opt_gte.weighted_by_diameter == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
+                        (opt_gte.disable_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
