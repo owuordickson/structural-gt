@@ -12,7 +12,6 @@ import csv
 import math
 import time
 import datetime
-# import os
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -967,47 +966,47 @@ class GraphMetrics:
 
     def get_info(self):
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
+        opt_img = self.g_struct.configs_img
+        opt_gte = self.g_struct.configs_graph
         run_info = "Run Info\n"
         run_info = run_info + self.g_struct.configs_path.single_imagepath
         now = datetime.datetime.now()
         run_info = run_info + " || " + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
-        """
-        if Thresh_method == 0:
-            run_info = run_info + " || Global Threshold (" + str(thresh) + ")"
-        elif Thresh_method == 1:
-            run_info = run_info + " || Adaptive Threshold, " + str(asize) + " bit kernel"
-        elif Thresh_method == 2:
+        if opt_img.threshold_type == 0:
+            run_info = run_info + " || Global Threshold (" + str(opt_img.threshold_global) + ")"
+        elif opt_img.threshold_type == 1:
+            run_info = run_info + " || Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
+        elif opt_img.threshold_type == 2:
             run_info = run_info + " || OTSU Threshold"
-        if Gamma != 1:
-            run_info = run_info + "|| Gamma = " + str(Gamma)
-        if md_filter:
+        if opt_img.gamma != 1:
+            run_info = run_info + "|| Gamma = " + str(opt_img.gamma)
+        if opt_img.apply_median:
             run_info = run_info + " || Median Filter"
-        if g_blur:
-            run_info = run_info + " || Gaussian Blur, " + str(bsize) + " bit kernel"
-        if autolvl:
+        if opt_img.apply_gaussian:
+            run_info = run_info + " || Gaussian Blur, " + str(opt_img.blurring_window_size) + " bit kernel"
+        if opt_img.apply_autolevel:
             run_info = run_info + " || Autolevel"
-        if fg_color:
+        if opt_img.apply_dark_foreground:
             run_info = run_info + " || Dark Foreground"
-        if laplacian:
+        if opt_img.apply_laplacian:
             run_info = run_info + " || Laplacian Gradient"
-        if scharr:
+        if opt_img.apply_scharr:
             run_info = run_info + " || Scharr Gradient"
-        if sobel:
+        if opt_img.apply_sobel:
             run_info = run_info + " || Sobel Gradient"
-        if lowpass:
-            run_info = run_info + " || Low-pass filter" + str(wsize)
+        if opt_img.apply_lowpass:
+            run_info = run_info + " || Low-pass filter" + str(opt_img.filter_window_size)
         run_info = run_info + "\n"
-        if merge_nodes:
+        if opt_gte.merge_nearby_nodes:
             run_info = run_info + " || Merge Nodes"
-        if prune:
+        if opt_gte.prune_dangling_edges:
             run_info = run_info + " || Prune Dangling Edges"
-        if clean:
-            run_info = run_info + " || Remove Objects of Size " + str(r_size)
-        if no_self_loops:
+        if opt_gte.remove_disconnected_segments:
+            run_info = run_info + " || Remove Objects of Size " + str(opt_gte.remove_object_size)
+        if opt_gte.remove_self_loops:
             run_info = run_info + " || Remove Self Loops"
-        if multigraph:
+        if opt_gte.disable_multigraph:
             run_info = run_info + " || Multi-graph allowed"
-        """
         return run_info
 
     def approx_conductance_by_spectral(self):
