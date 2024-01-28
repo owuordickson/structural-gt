@@ -4,16 +4,5 @@
 # repository for complete details.
 
 """
-Entry points that allow users to execute GUI or Cli programs
+Terminal interface implementations
 """
-
-from ._gui_main import ChaosGUI
-
-
-def main_gui():
-    app = ChaosGUI()
-    app.mainloop()
-
-
-def main_cli():
-    pass
