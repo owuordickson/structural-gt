@@ -243,6 +243,7 @@ class GraphMetrics:
         data_dict = {"x": [], "y": []}
 
         if options.display_degree_histogram == 1:
+            print("Compute weighted graph degree...")
             deg_distribution_1 = nx.degree(graph, weight='weight')
             deg_sum = 0
             deg_distribution = np.zeros(len(deg_distribution_1))
@@ -256,12 +257,14 @@ class GraphMetrics:
             data_dict["y"].append(deg)
 
         if options.compute_wiener_index == 1:
+            print("Compute weighted wiener index...")
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
             data_dict["x"].append("Length-weighted Wiener Index")
             data_dict["y"].append(w_index)
 
         if options.compute_nodal_connectivity == 1:
+            print("Compute weighted nodal connectivity...")
             connected_graph = nx.is_connected(graph)
             if connected_graph:
                 max_flow = float(0)
@@ -279,12 +282,14 @@ class GraphMetrics:
             data_dict["y"].append(max_flow)
 
         if options.compute_assortativity_coef == 1:
+            print("Compute weighted assortativity...")
             a_coef = degree_assortativity_coefficient(graph, weight='pixel width')
             a_coef = round(a_coef, 5)
             data_dict["x"].append("Weighted assortativity coefficient")
             data_dict["y"].append(a_coef)
 
         if options.display_betweenness_histogram == 1:
+            print("Compute weighted betweenness centrality...")
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_sum = 0
             b_distribution = np.zeros(len(b_distribution_1))
@@ -298,6 +303,7 @@ class GraphMetrics:
             data_dict["y"].append(b_val)
 
         if options.display_closeness_histogram == 1:
+            print("Compute weighted closeness centrality...")
             close_distribution_1 = closeness_centrality(graph, distance='length')
             c_sum = 0
             close_distribution = np.zeros(len(close_distribution_1))
@@ -311,6 +317,7 @@ class GraphMetrics:
             data_dict["y"].append(c_val)
 
         if options.display_eigenvector_histogram == 1:
+            print("Compute weighted eigenvector centrality...")
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.NetworkXPointlessConcept or nx.NetworkXError or nx.PowerIterationFailedConvergence:
