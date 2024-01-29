@@ -81,12 +81,18 @@ def terminal_app():
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
     graph_obj = GraphStruct(img_path, out_dir, options_img, options_gte)
+    graph_obj.add_listener(print_progress)
     graph_obj.fit()
     metrics_obj = GraphMetrics(graph_obj, options_gtc)
+    metrics_obj.add_listener(print_progress)
     metrics_obj.compute_gt_metrics()
     if options_gte.weighted_by_diameter:
         metrics_obj.compute_weighted_gt_metrics()
     metrics_obj.generate_pdf_output()
+
+
+def print_progress(x, y):
+    print(str(x) + ": " + y)
 
 
 def get_num_cores():

@@ -16,7 +16,6 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import networkx as nx
-from time import sleep
 from statistics import stdev, StatisticsError
 from itertools import cycle
 import matplotlib.pyplot as plt
@@ -33,6 +32,7 @@ from networkx.algorithms.wiener import wiener_index
 class GraphMetrics:
 
     def __init__(self, g_obj, configs):
+        self.__listeners = []
         self.g_struct = g_obj
         self.configs = configs
         self.output_data = pd.DataFrame([])
@@ -48,6 +48,34 @@ class GraphMetrics:
         self.weighted_betweenness_distribution = [0]
         self.weighted_closeness_distribution = [0]
         self.weighted_eigenvector_distribution = [0]
+
+    def add_listener(self, func):
+        """
+        Add functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func in self.__listeners:
+            return
+        self.__listeners.append(func)
+
+    def remove_listener(self, func):
+        """
+        Remove functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func not in self.__listeners:
+            return
+        self.__listeners.remove(func)
+
+    # Trigger events.
+    def update_status(self, args=None):
+        # Run all the functions that are saved.
+        if args is None:
+            args = []
+        for func in self.__listeners:
+            func(*args)
 
     def compute_gt_metrics(self):
         """
@@ -69,13 +97,9 @@ class GraphMetrics:
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
 
-        # settings.progress(35)
-        # calculating parameters as requested
-
         # creating degree histogram
         if options.display_degree_histogram == 1:
-            print("Computing graph degree...")
-            # settings.update_label("Calculating degree...")
+            self.update_status([3, "Computing graph degree..."])
             deg_distribution_1 = nx.degree(graph)
             deg_sum = 0
             deg_distribution = np.zeros(len(deg_distribution_1))
@@ -88,7 +112,6 @@ class GraphMetrics:
             data_dict["x"].append("Average degree")
             data_dict["y"].append(deg)
 
-        # settings.progress(40)
         if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
             connected_graph = nx.is_connected(graph)
         else:
@@ -96,8 +119,7 @@ class GraphMetrics:
 
         # calculating network diameter
         if options.compute_network_diameter == 1:
-            print("Computing network diameter...")
-            # settings.update_label("Calculating diameter...")
+            self.update_status([3, "Computing network diameter..."])
             if connected_graph:
                 dia = int(diameter(graph))
             else:
@@ -107,8 +129,7 @@ class GraphMetrics:
 
         # calculating average nodal connectivity
         if options.compute_nodal_connectivity == 1:
-            print("Computing nodal connectivity...")
-            # settings.update_label("Calculating connectivity...")
+            self.update_status([3, "Computing nodal connectivity..."])
             if connected_graph:
                 avg_nodal_con = average_node_connectivity(graph)
                 avg_nodal_con = round(avg_nodal_con, 5)
@@ -117,50 +138,41 @@ class GraphMetrics:
             data_dict["x"].append("Average nodal connectivity")
             data_dict["y"].append(avg_nodal_con)
 
-        # settings.progress(45)
         # calculating graph density
         if options.compute_graph_density == 1:
-            print("Computing graph density...")
-            # settings.update_label("Calculating density...")
+            self.update_status([3, "Computing graph density..."])
             g_density = nx.density(graph)
             g_density = round(g_density, 5)
             data_dict["x"].append("Graph density")
             data_dict["y"].append(g_density)
 
-        # settings.progress(50)
         # calculating global efficiency
         if options.compute_global_efficiency == 1:
-            print("Computing global efficiency...")
-            # settings.update_label("Calculating efficiency...")
+            self.update_status([3, "Computing global efficiency..."])
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
             data_dict["x"].append("Global efficiency")
             data_dict["y"].append(g_eff)
 
         if options.compute_wiener_index == 1:
-            print("Computing wiener index...")
+            self.update_status([3, "Computing wiener index..."])
             # settings.update_label("Calculating w_index...")
             w_index = wiener_index(graph)
             w_index = round(w_index, 1)
             data_dict["x"].append("Wiener Index")
             data_dict["y"].append(w_index)
 
-        # settings.progress(55)
         # calculating assortativity coefficient
         if options.compute_assortativity_coef == 1:
-            print("Computing assortativity coefficient...")
-            # settings.update_label("Calculating assortativity...")
+            self.update_status([3, "Computing assortativity coefficient..."])
             a_coef = degree_assortativity_coefficient(graph)
             a_coef = round(a_coef, 5)
             data_dict["x"].append("Assortativity coefficient")
             data_dict["y"].append(a_coef)
 
-        # settings.progress(60)
         # calculating clustering coefficients
         if (options_gte.is_multigraph == 0) and (options.compute_clustering_coef == 1):
-            print("Computing clustering coefficients...")
-            # settings.update_label("Calculating clustering...")
-            sleep(5)
+            self.update_status([3, "Computing clustering coefficients..."])
             avg_coefficients_1 = clustering(graph)
             avg_coefficients = np.zeros(len(avg_coefficients_1))
             for j in range(len(avg_coefficients_1)):
@@ -171,11 +183,9 @@ class GraphMetrics:
             data_dict["x"].append("Average clustering coefficient")
             data_dict["y"].append(clust)
 
-        # settings.progress(65)
         # calculating betweenness centrality histogram
         if (options_gte.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
-            print("Computing betweenness centrality...")
-            # settings.update_label("Calculating betweenness...")
+            self.update_status([3, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
             b_sum = 0
             b_distribution = np.zeros(len(b_distribution_1))
@@ -191,8 +201,7 @@ class GraphMetrics:
         # settings.progress(70)
         # calculating eigenvector centrality
         if (options_gte.is_multigraph == 0) and (options.display_eigenvector_histogram == 1):
-            print("Computing eigenvector centrality...")
-            # settings.update_label("Calculating eigenvector...")
+            self.update_status([3, "Computing eigenvector centrality..."])
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
             except nx.exception.PowerIterationFailedConvergence:
@@ -208,11 +217,9 @@ class GraphMetrics:
             data_dict["x"].append("Average eigenvector centrality")
             data_dict["y"].append(e_val)
 
-        # settings.progress(75)
         # calculating closeness centrality
         if options.display_closeness_histogram == 1:
-            print("Computing closeness centrality...")
-            # settings.update_label("Calculating closeness...")
+            self.update_status([3, "Computing closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph)
             c_sum = 0
             close_distribution = np.zeros(len(close_distribution_1))
@@ -228,7 +235,7 @@ class GraphMetrics:
         # settings.progress(80)
         # calculating graph conductance
         if options.compute_graph_conductance == 1:
-            print("Computing graph conductance...")
+            self.update_status([3, "Computing graph conductance..."])
             res_items, sg_components = self.approx_conductance_by_spectral()
             for item in res_items:
                 data_dict["x"].append(item["name"])
@@ -244,7 +251,7 @@ class GraphMetrics:
         data_dict = {"x": [], "y": []}
 
         if options.display_degree_histogram == 1:
-            print("Compute weighted graph degree...")
+            self.update_status([3, "Compute weighted graph degree..."])
             deg_distribution_1 = nx.degree(graph, weight='weight')
             deg_sum = 0
             deg_distribution = np.zeros(len(deg_distribution_1))
@@ -258,14 +265,14 @@ class GraphMetrics:
             data_dict["y"].append(deg)
 
         if options.compute_wiener_index == 1:
-            print("Compute weighted wiener index...")
+            self.update_status([3, "Compute weighted wiener index..."])
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
             data_dict["x"].append("Length-weighted Wiener Index")
             data_dict["y"].append(w_index)
 
         if options.compute_nodal_connectivity == 1:
-            print("Compute weighted nodal connectivity...")
+            self.update_status([3, "Compute weighted nodal connectivity..."])
             connected_graph = nx.is_connected(graph)
             if connected_graph:
                 max_flow = float(0)
@@ -283,14 +290,14 @@ class GraphMetrics:
             data_dict["y"].append(max_flow)
 
         if options.compute_assortativity_coef == 1:
-            print("Compute weighted assortativity...")
+            self.update_status([3, "Compute weighted assortativity..."])
             a_coef = degree_assortativity_coefficient(graph, weight='pixel width')
             a_coef = round(a_coef, 5)
             data_dict["x"].append("Weighted assortativity coefficient")
             data_dict["y"].append(a_coef)
 
         if options.display_betweenness_histogram == 1:
-            print("Compute weighted betweenness centrality...")
+            self.update_status([3, "Compute weighted betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_sum = 0
             b_distribution = np.zeros(len(b_distribution_1))
@@ -304,7 +311,7 @@ class GraphMetrics:
             data_dict["y"].append(b_val)
 
         if options.display_closeness_histogram == 1:
-            print("Compute weighted closeness centrality...")
+            self.update_status([3, "Compute weighted closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph, distance='length')
             c_sum = 0
             close_distribution = np.zeros(len(close_distribution_1))
@@ -318,7 +325,7 @@ class GraphMetrics:
             data_dict["y"].append(c_val)
 
         if options.display_eigenvector_histogram == 1:
-            print("Compute weighted eigenvector centrality...")
+            self.update_status([3, "Compute weighted eigenvector centrality..."])
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.exception.PowerIterationFailedConvergence:
@@ -366,8 +373,7 @@ class GraphMetrics:
         img_bin = self.g_struct.img_bin
         pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.img_path)
 
-        print("Generating PDF GT Output...")
-        # update_label("Generating PDF GT Output...")
+        self.update_status([4, "Generating PDF GT Output..."])
         with (PdfPages(pdf_file) as pdf):
             font_1 = {'fontsize': 12}
             font_2 = {'fontsize': 9}
@@ -533,7 +539,7 @@ class GraphMetrics:
                 plt.close()
 
             if (opt_gte.is_multigraph == 0) and (opt_gte.weighted_by_diameter == 0):
-                if (opt_gtc.display_betweenness_histogram == 1) or (opt_gtc.display_closeness_histogram == 1) or\
+                if (opt_gtc.display_betweenness_histogram == 1) or (opt_gtc.display_closeness_histogram == 1) or \
                         (opt_gtc.display_eigenvector_histogram == 1):
                     f4 = plt.figure(figsize=(8.5, 11), dpi=400)
                     if opt_gtc.display_betweenness_histogram == 1:
@@ -580,8 +586,8 @@ class GraphMetrics:
                 if opt_gte.is_multigraph:
                     g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.display_closeness_histogram
                 else:
-                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.compute_clustering_coef +\
-                                opt_gtc.display_betweenness_histogram + opt_gtc.display_closeness_histogram +\
+                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.compute_clustering_coef + \
+                                opt_gtc.display_betweenness_histogram + opt_gtc.display_closeness_histogram + \
                                 opt_gtc.display_eigenvector_histogram
                 g_count_2 = g_count_1 - opt_gtc.compute_clustering_coef + 1
                 index = 1
@@ -711,10 +717,9 @@ class GraphMetrics:
 
             # displaying heatmaps
             if opt_gtc.display_heatmaps == 1:
-                print("Generating heatmaps...")
+                self.update_status([4, "Generating heatmaps..."])
                 sz = 30
                 lw = 1.5
-                # update_label("Generating heat maps...")
                 time.sleep(0.5)
                 if opt_gtc.display_degree_histogram == 1:
                     f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
@@ -796,7 +801,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                         (opt_gte.is_multigraph == 0):
                     f6e = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6e.add_subplot(1, 1, 1)
@@ -877,7 +882,7 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                         (opt_gte.is_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
@@ -1088,8 +1093,6 @@ class GraphMetrics:
         data.append({"name": "Graph Conductance (max)", "value": val_max})
         data.append({"name": "Graph Conductance (min)", "value": val_min})
 
-        # print(val_max)
-        # print(val_min)
         return data, sub_components
 
     @staticmethod

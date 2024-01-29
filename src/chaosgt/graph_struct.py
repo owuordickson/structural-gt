@@ -22,6 +22,7 @@ from .graph_skeleton import GraphSkeleton
 class GraphStruct:
 
     def __init__(self, img_path, out_path, options_img, options_gte):
+        self.__listeners = []
         self.configs_img = options_img
         self.configs_graph = options_gte
         self.output_path = out_path
@@ -34,11 +35,39 @@ class GraphStruct:
         self.graph_skeleton = None
         self.nx_graph = None
 
+    def add_listener(self, func):
+        """
+        Add functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func in self.__listeners:
+            return
+        self.__listeners.append(func)
+
+    def remove_listener(self, func):
+        """
+        Remove functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func not in self.__listeners:
+            return
+        self.__listeners.remove(func)
+
+    # Trigger events.
+    def update_status(self, args=None):
+        # Run all the functions that are saved.
+        if args is None:
+            args = []
+        for func in self.__listeners:
+            func(*args)
+
     def fit(self):
-        print("Processing image...")
+        self.update_status([1, "Processing image..."])
         self.img_filtered = self.process_img()
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
-        print("Extracting graph...")
+        self.update_status([2, "Extracting graph..."])
         self.extract_graph()
 
     def create_filenames(self, image_path):
@@ -277,6 +306,7 @@ class GraphStruct:
                         self.nx_graph.remove_edge(s, e)
 
     def compute_fractal_dimension(self):
+        self.update_status([-1, "Computing fractal dimension..."])
         # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
         fd_metrics = ps.metrics.boxcount(self.img)
         print(fd_metrics.slope)
