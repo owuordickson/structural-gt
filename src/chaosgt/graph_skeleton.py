@@ -378,7 +378,7 @@ class GraphSkeleton:
         # u, v: two coordinates (x, y) or (x, y, z)
         vec = u - v  # find the vector between u and v
 
-        if np.count_nonzero(vec) == 0:
+        if np.count_nonzero(vec) == 0:  # prevents divide by zero
             n = vec
         else:
             n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
