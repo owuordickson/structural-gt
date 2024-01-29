@@ -195,7 +195,7 @@ class GraphMetrics:
             # settings.update_label("Calculating eigenvector...")
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
-            except nx.NetworkXPointlessConcept or nx.NetworkXError or nx.PowerIterationFailedConvergence:
+            except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
             e_sum = 0
             e_vecs = np.zeros(len(e_vecs_1))
@@ -321,7 +321,7 @@ class GraphMetrics:
             print("Compute weighted eigenvector centrality...")
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
-            except nx.NetworkXPointlessConcept or nx.NetworkXError or nx.PowerIterationFailedConvergence:
+            except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000, weight='weight')
             e_sum = 0
             e_vecs = np.zeros(len(e_vecs_1))
@@ -711,6 +711,7 @@ class GraphMetrics:
 
             # displaying heatmaps
             if opt_gtc.display_heatmaps == 1:
+                print("Generating heatmaps...")
                 sz = 30
                 lw = 1.5
                 # update_label("Generating heat maps...")
