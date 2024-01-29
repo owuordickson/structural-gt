@@ -39,10 +39,24 @@ def main_cli():
         # 2. Verify image file or image-dir
         if is_multi == 1:
             # Process multiple images in one folder
-            pass
+            # getting the file names and directory
+            files = os.listdir(img_path)
+            files = sorted(files, key=str.lower)
+            # out_path = img_path
+            filenames = []
+            for a_file in files:
+                if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                    print(a_file)
+                    filenames.append(a_file)
+            if len(filenames) <= 0:
+                raise "No workable images found! File have to be a .tif, .png, or .jpg"
         else:
             # Process only a single image file
-            pass
+            # testing if file is a workable image
+            if img_path.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                pass
+            else:
+                raise "File has to be a .tif, .png, or .jpg"
 
         # 3. Verify output directory
 

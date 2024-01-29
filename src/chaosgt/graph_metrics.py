@@ -379,7 +379,7 @@ class GraphMetrics:
             f1.add_subplot(2, 2, 3)
             plt.plot(img_histogram)
             if opt_img.threshold_type == 0:
-                thresh_arr = np.array([[self.g_struct.threshold_global, self.g_struct.threshold_global],
+                thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
                                        [0, max(img_histogram)]], dtype='object')
                 plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
             elif opt_img.threshold_type == 2:

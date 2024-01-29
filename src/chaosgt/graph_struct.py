@@ -25,7 +25,8 @@ class GraphStruct:
         self.configs_img = options_img
         self.configs_graph = options_gte
         self.output_path = out_path
-        self.img = GraphStruct.load_img_from_file(img_path)
+        self.img_raw = GraphStruct.load_img_from_file(img_path)
+        self.img = self.resize_img(512)
         self.img_path = img_path
         self.img_bin = None
         self.otsu_val = None
@@ -45,7 +46,7 @@ class GraphStruct:
             Making the new filenames
         :return:
         """
-        filename = image_path  # self.configs_path.single_imagepath
+        _, filename = os.path.split(image_path)
         output_location = self.output_path
 
         filename = re.sub('.png', '', filename)
@@ -62,7 +63,7 @@ class GraphStruct:
         return pdf_file, gexf_file, csv_file
 
     def resize_img(self, size):
-        w, h = self.img.shape
+        w, h = self.img_raw.shape
         if h > w:
             scale_factor = size / h
         else:
@@ -70,7 +71,7 @@ class GraphStruct:
         std_width = int(scale_factor * w)
         std_height = int(scale_factor * h)
         std_size = (std_height, std_width)
-        std_img = cv2.resize(self.img, std_size)
+        std_img = cv2.resize(self.img_raw, std_size)
         return std_img
 
     def process_img(self):
