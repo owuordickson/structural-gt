@@ -88,11 +88,15 @@ class GraphMetrics:
             data_dict["y"].append(deg)
 
         # settings.progress(40)
+        if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
+            connected_graph = nx.is_connected(graph)
+        else:
+            connected_graph = None
+
         # calculating network diameter
         if options.compute_network_diameter == 1:
             print("Computing network diameter...")
             # settings.update_label("Calculating diameter...")
-            connected_graph = nx.is_connected(graph)
             if connected_graph:
                 dia = int(diameter(graph))
             else:
@@ -104,7 +108,6 @@ class GraphMetrics:
         if options.compute_nodal_connectivity == 1:
             print("Computing nodal connectivity...")
             # settings.update_label("Calculating connectivity...")
-            connected_graph = nx.is_connected(graph)
             if connected_graph:
                 avg_nodal_con = average_node_connectivity(graph)
                 avg_nodal_con = round(avg_nodal_con, 5)
