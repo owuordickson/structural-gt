@@ -363,7 +363,6 @@ class GraphMetrics:
         raw_img = self.g_struct.img
         filtered_img = self.g_struct.img_filtered
         img_bin = self.g_struct.img_bin
-        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
         pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.img_path)
 
         print("Generating PDF GT Output...")
@@ -372,6 +371,7 @@ class GraphMetrics:
             font_1 = {'fontsize': 12}
             font_2 = {'fontsize': 9}
             # plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+            img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
             f1 = plt.figure(figsize=(8.5, 8.5), dpi=400)
             f1.add_subplot(2, 2, 1)
             plt.imshow(raw_img, cmap='gray')
@@ -438,7 +438,6 @@ class GraphMetrics:
                     plt.annotate(str(i), (x, y), fontsize=5)
                     i += 1
                 plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-
             else:
                 plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
             plt.xticks([])
@@ -768,15 +767,9 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=cluster_coefs, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
+                    for (s, e) in nx_graph.edges():
+                        ge = nx_graph[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
                     plt.title('Clustering Coefficient Heatmap', fontdict=font_1)
@@ -791,15 +784,9 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=bet_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
+                    for (s, e) in nx_graph.edges():
+                        ge = nx_graph[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
                     plt.title('Betweenness Centrality Heatmap', fontdict=font_1)
@@ -815,15 +802,9 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_bet_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
+                    for (s, e) in nx_graph.edges():
+                        ge = nx_graph[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
                     plt.title('Width-Weighted Betweenness Centrality Heatmap', fontdict=font_1)
@@ -884,15 +865,9 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=eig_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
+                    for (s, e) in nx_graph.edges():
+                        ge = nx_graph[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
                     plt.title('Eigenvector Centrality Heatmap', fontdict=font_1)
@@ -908,15 +883,9 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_eig_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
+                    for (s, e) in nx_graph.edges():
+                        ge = nx_graph[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
                     plt.xticks([])
                     plt.yticks([])
                     plt.title('Width-Weighted Eigenvector Centrality Heatmap', fontdict=font_1)

@@ -61,12 +61,13 @@ def terminal_app():
         if alg == 0:
             file_count = len(filenames)
             for i in range(file_count):
+                print(f'Analyzing Image: {i+1}/{len(filenames)}')
                 im_path = filenames[i]
                 produce_metrics(im_path, out_dir, options_img, options_gte, options_gtc)
 
                 # updating the images completed
                 print("Results generated for " + im_path)
-                print(f'Images Completed: {i+1}/{len(filenames)}')
+                # print(f'Images Completed: {i+1}/{len(filenames)}')
                 print("----------------\n\n")
         else:
             raise "Wrong algorithm choice!"
