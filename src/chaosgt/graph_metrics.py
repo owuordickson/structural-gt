@@ -73,6 +73,7 @@ class GraphMetrics:
 
         # creating degree histogram
         if options.display_degree_histogram == 1:
+            print("Computing graph degree...")
             # settings.update_label("Calculating degree...")
             deg_distribution_1 = nx.degree(graph)
             deg_sum = 0
@@ -89,6 +90,7 @@ class GraphMetrics:
         # settings.progress(40)
         # calculating network diameter
         if options.compute_network_diameter == 1:
+            print("Computing network diameter...")
             # settings.update_label("Calculating diameter...")
             connected_graph = nx.is_connected(graph)
             if connected_graph:
@@ -100,6 +102,7 @@ class GraphMetrics:
 
         # calculating average nodal connectivity
         if options.compute_nodal_connectivity == 1:
+            print("Computing nodal connectivity...")
             # settings.update_label("Calculating connectivity...")
             connected_graph = nx.is_connected(graph)
             if connected_graph:
@@ -113,6 +116,7 @@ class GraphMetrics:
         # settings.progress(45)
         # calculating graph density
         if options.compute_graph_density == 1:
+            print("Computing graph density...")
             # settings.update_label("Calculating density...")
             g_density = nx.density(graph)
             g_density = round(g_density, 5)
@@ -122,6 +126,7 @@ class GraphMetrics:
         # settings.progress(50)
         # calculating global efficiency
         if options.compute_global_efficiency == 1:
+            print("Computing global efficiency...")
             # settings.update_label("Calculating efficiency...")
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
@@ -129,6 +134,7 @@ class GraphMetrics:
             data_dict["y"].append(g_eff)
 
         if options.compute_wiener_index == 1:
+            print("Computing wiener index...")
             # settings.update_label("Calculating w_index...")
             w_index = wiener_index(graph)
             w_index = round(w_index, 1)
@@ -138,6 +144,7 @@ class GraphMetrics:
         # settings.progress(55)
         # calculating assortativity coefficient
         if options.compute_assortativity_coef == 1:
+            print("Computing assortativity coefficient...")
             # settings.update_label("Calculating assortativity...")
             a_coef = degree_assortativity_coefficient(graph)
             a_coef = round(a_coef, 5)
@@ -146,7 +153,8 @@ class GraphMetrics:
 
         # settings.progress(60)
         # calculating clustering coefficients
-        if (options.disable_multigraph == 0) and (options.compute_clustering_coef == 1):
+        if (options.is_multigraph == 0) and (options.compute_clustering_coef == 1):
+            print("Computing clustering coefficients...")
             # settings.update_label("Calculating clustering...")
             sleep(5)
             avg_coefficients_1 = clustering(graph)
@@ -161,7 +169,8 @@ class GraphMetrics:
 
         # settings.progress(65)
         # calculating betweenness centrality histogram
-        if (options.disable_multigraph == 0) and (options.display_betweenness_histogram == 1):
+        if (options.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
+            print("Computing betweenness centrality...")
             # settings.update_label("Calculating betweenness...")
             b_distribution_1 = betweenness_centrality(graph)
             b_sum = 0
@@ -177,7 +186,8 @@ class GraphMetrics:
 
         # settings.progress(70)
         # calculating eigenvector centrality
-        if (options.disable_multigraph == 0) and (options.display_eigenvector_histogram == 1):
+        if (options.is_multigraph == 0) and (options.display_eigenvector_histogram == 1):
+            print("Computing eigenvector centrality...")
             # settings.update_label("Calculating eigenvector...")
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
@@ -197,6 +207,7 @@ class GraphMetrics:
         # settings.progress(75)
         # calculating closeness centrality
         if options.display_closeness_histogram == 1:
+            print("Computing closeness centrality...")
             # settings.update_label("Calculating closeness...")
             close_distribution_1 = closeness_centrality(graph)
             c_sum = 0
@@ -213,6 +224,7 @@ class GraphMetrics:
         # settings.progress(80)
         # calculating graph conductance
         if options.compute_graph_conductance == 1:
+            print("Computing graph conductance...")
             res_items, sg_components = self.approx_conductance_by_spectral()
             for item in res_items:
                 data_dict["x"].append(item["name"])
@@ -342,8 +354,9 @@ class GraphMetrics:
         filtered_img = self.g_struct.img_filtered
         img_bin = self.g_struct.img_bin
         img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
-        pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.configs_path.single_imagepath)
+        pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.img_path)
 
+        print("Generating PDF GT Output...")
         # update_label("Generating PDF GT Output...")
         with (PdfPages(pdf_file) as pdf):
             font_1 = {'fontsize': 12}
@@ -396,7 +409,7 @@ class GraphMetrics:
             plt.title("Skeletal Image")
             f2a.add_subplot(2, 1, 2)
             plt.imshow(raw_img, cmap='gray')
-            if opt_gte.disable_multigraph:
+            if opt_gte.is_multigraph:
                 for (s, e) in nx_graph.edges():
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
@@ -494,7 +507,7 @@ class GraphMetrics:
                     plt.title(deg_txt)
                     plt.xlabel("Degree")
                     plt.ylabel("Counts")
-                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
                     f3b.add_subplot(2, 2, 2)
                     bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
                     try:
@@ -509,7 +522,7 @@ class GraphMetrics:
                 pdf.savefig()
                 plt.close()
 
-            if (opt_gte.disable_multigraph == 0) and (opt_gte.weighted_by_diameter == 0):
+            if (opt_gte.is_multigraph == 0) and (opt_gte.weighted_by_diameter == 0):
                 if (opt_gtc.display_betweenness_histogram == 1) or (opt_gtc.display_closeness_histogram == 1) or\
                         (opt_gtc.display_eigenvector_histogram == 1):
                     f4 = plt.figure(figsize=(8.5, 11), dpi=400)
@@ -554,7 +567,7 @@ class GraphMetrics:
 
             # displaying weighted GT parameters if requested
             if opt_gte.weighted_by_diameter == 1:
-                if opt_gte.disable_multigraph:
+                if opt_gte.is_multigraph:
                     g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.display_closeness_histogram
                 else:
                     g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.compute_clustering_coef +\
@@ -582,7 +595,7 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
                     try:
@@ -608,7 +621,7 @@ class GraphMetrics:
                     plt.xlabel("Closeness value", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f4.add_subplot(sy_1, 2, index)
                     bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                     try:
@@ -644,7 +657,7 @@ class GraphMetrics:
                     plt.xlabel("Degree", fontdict=fnt)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f5.add_subplot(sy_2, 2, index)
                     bins_5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
                     plt.hist(w_bet_distribution, bins=bins_5)
@@ -671,7 +684,7 @@ class GraphMetrics:
                     plt.xticks(fontsize=8)
                     plt.ylabel("Counts", fontdict=fnt)
                     index += 1
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f5.add_subplot(sy_2, 2, index)
                     bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
                     plt.hist(w_eig_distribution, bins=bins7)
@@ -699,7 +712,7 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=deg_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -722,7 +735,7 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_deg_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -738,14 +751,14 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
                     f6c = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6c.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=cluster_coefs, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -761,14 +774,14 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f6d = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6d.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=bet_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -785,14 +798,14 @@ class GraphMetrics:
                     pdf.savefig()
                     plt.close()
                 if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
-                        (opt_gte.disable_multigraph == 0):
+                        (opt_gte.is_multigraph == 0):
                     f6e = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6e.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_bet_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -815,7 +828,7 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=clo_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -838,7 +851,7 @@ class GraphMetrics:
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_clo_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -854,14 +867,14 @@ class GraphMetrics:
                     cbar.set_label('Value')
                     pdf.savefig()
                     plt.close()
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.disable_multigraph == 0):
+                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=eig_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -878,14 +891,14 @@ class GraphMetrics:
                     pdf.savefig()
                     plt.close()
                 if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and\
-                        (opt_gte.disable_multigraph == 0):
+                        (opt_gte.is_multigraph == 0):
                     f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
                     f6h.add_subplot(1, 1, 1)
                     plt.imshow(raw_img, cmap='gray')
                     nodes = nx_graph.nodes()
                     gn = np.array([nodes[i]['o'] for i in nodes])
                     plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_eig_distribution, cmap='plasma')
-                    if opt_gte.disable_multigraph:
+                    if opt_gte.is_multigraph:
                         for (s, e) in nx_graph.edges():
                             for k in range(int(len(nx_graph[s][e]))):
                                 ge = nx_graph[s][e][k]['pts']
@@ -943,7 +956,7 @@ class GraphMetrics:
 
         # exporting as gephi file
         if opt_gte.export_as_gexf == 1:
-            if opt_gte.disable_multigraph:
+            if opt_gte.is_multigraph:
                 # deleting extraneous info and then exporting the final skeleton
                 for (x) in nx_graph.nodes():
                     del nx_graph.nodes[x]['pts']
@@ -969,7 +982,7 @@ class GraphMetrics:
         opt_img = self.g_struct.configs_img
         opt_gte = self.g_struct.configs_graph
         run_info = "Run Info\n"
-        run_info = run_info + self.g_struct.configs_path.single_imagepath
+        run_info = run_info + self.g_struct.img_path
         now = datetime.datetime.now()
         run_info = run_info + " || " + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
         if opt_img.threshold_type == 0:
@@ -1005,7 +1018,7 @@ class GraphMetrics:
             run_info = run_info + " || Remove Objects of Size " + str(opt_gte.remove_object_size)
         if opt_gte.remove_self_loops:
             run_info = run_info + " || Remove Self Loops"
-        if opt_gte.disable_multigraph:
+        if opt_gte.is_multigraph:
             run_info = run_info + " || Multi-graph allowed"
         return run_info
 

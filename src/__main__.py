@@ -27,7 +27,8 @@ __author__ = "Dickson Owuor"
 __credits__ = "Chemical Engineering Department, University of Michigan"
 
 
-from chaosgt.entrypoints import main_gui
+from chaosgt.entrypoints import main_gui, main_cli
 
 if __name__ == "__main__":
-    main_gui()
+    # main_gui()
+    main_cli()

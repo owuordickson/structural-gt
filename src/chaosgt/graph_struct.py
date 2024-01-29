@@ -15,20 +15,18 @@ import sknw
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 import matplotlib.pyplot as plt
-import porespy as ps
-
-from _config_loader import load
-from graph_skeleton import GraphSkeleton
+# import porespy as ps
+from .graph_skeleton import GraphSkeleton
 
 
 class GraphStruct:
 
-    def __init__(self, img_path):
-        _, options_path, options_img, options_gte, _ = load()
-        self.configs_path = options_path
+    def __init__(self, img_path, out_path, options_img, options_gte):
         self.configs_img = options_img
         self.configs_graph = options_gte
+        self.output_path = out_path
         self.img = GraphStruct.load_img_from_file(img_path)
+        self.img_path = img_path
         self.img_bin = None
         self.otsu_val = None
         self.img_filtered = None
@@ -36,8 +34,10 @@ class GraphStruct:
         self.nx_graph = None
 
     def fit(self):
+        print("Processing image...")
         self.img_filtered = self.process_img()
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
+        print("Extracting graph...")
         self.extract_graph()
 
     def create_filenames(self, image_path):
@@ -46,7 +46,7 @@ class GraphStruct:
         :return:
         """
         filename = image_path  # self.configs_path.single_imagepath
-        output_location = self.configs_path.output_path
+        output_location = self.output_path
 
         filename = re.sub('.png', '', filename)
         filename = re.sub('.tif', '', filename)
@@ -218,7 +218,7 @@ class GraphStruct:
         self.graph_skeleton = graph_skel
 
         # skeleton analysis object with sknw
-        if configs.disable_multigraph:
+        if configs.is_multigraph:
             nx_graph = sknw.build_sknw(img_skel, multi=True)
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -264,7 +264,7 @@ class GraphStruct:
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
         if configs.remove_self_loops:
-            if configs.disable_multigraph:
+            if configs.is_multigraph:
                 g = self.nx_graph
                 for (s, e) in list(self.nx_graph.edges()):
                     if s == e:

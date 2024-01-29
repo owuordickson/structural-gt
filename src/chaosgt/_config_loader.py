@@ -1,6 +1,8 @@
+import sys
 import configparser
 # from os import path
 import pathlib
+from optparse import OptionParser
 from ypstruct import struct
 
 
@@ -15,10 +17,13 @@ def load():
     options_gte = struct()
     options_gtc = struct()
 
+    cpus = int(config.get('computation', 'cpu_cores'))
+
     # 1. Image Path
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
-    options_path.single_imagepath = config.get('image-dir', 'single_image_path')
-    options_path.multi_imagepath = config.get('image-dir', 'multi_image_path')
+    options_path.image_path = config.get('image-dir', 'image_path')
+    # options_path.single_imagepath = config.get('image-dir', 'single_image_path')
+    # options_path.multi_imagepath = config.get('image-dir', 'multi_image_path')
     options_path.output_path = config.get('image-dir', 'gt_output_path')
 
     # 2. Image Detection settings
@@ -43,7 +48,7 @@ def load():
     options_gte.remove_disconnected_segments = int(config.get('extraction-settings', 'remove_disconnected_segments'))
     options_gte.remove_self_loops = int(config.get('extraction-settings', 'remove_self_loops'))
     options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
-    options_gte.disable_multigraph = int(config.get('extraction-settings', 'disable_multigraph'))
+    options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
     options_gte.weighted_by_diameter = int(config.get('extraction-settings', 'weighted_by_diameter'))
     options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
     options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
@@ -75,4 +80,36 @@ def load():
     options_gtc.compute_wiener_index = int(config.get('computation-settings',
                                                       'compute_wiener_index'))
 
-    return config, options_path, options_img, options_gte, options_gtc
+    opt_parser = OptionParser()
+    opt_parser.add_option('-f', '--inputImage',
+                          dest='filePath',
+                          help='path to image file/folder containing images',
+                          default=options_path.image_path,
+                          type='string')
+    opt_parser.add_option('-o', '--outputFolder',
+                          dest='outputDir',
+                          help='directory path for saving GT output',
+                          default=options_path.output_path,
+                          type='string')
+    opt_parser.add_option('-a', '--algorithmChoice',
+                          dest='algChoice',
+                          help='select GT algorithm',
+                          default=0,
+                          type='int')
+    opt_parser.add_option('-m', '--isMultiImage',
+                          dest='multiImage',
+                          help='is it a multi-image (multiple images in a folder) analysis?',
+                          default=options_path.is_multi_image,
+                          type='int')
+    opt_parser.add_option('-c', '--cores',
+                          dest='numCores',
+                          help='number of cores',
+                          default=cpus,
+                          type='int')
+    (options, args) = opt_parser.parse_args()
+
+    if options.filePath is None:
+        print("Usage: $python3 ")
+        sys.exit('System will exit')
+
+    return config, options, options_img, options_gte, options_gtc
