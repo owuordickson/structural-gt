@@ -57,6 +57,7 @@ class GraphMetrics:
 
         graph = self.g_struct.nx_graph
         options = self.configs
+        options_gte = self.g_struct.configs_graph
         data_dict = {"x": [], "y": []}
 
         node_count = int(nx.number_of_nodes(graph))
@@ -156,7 +157,7 @@ class GraphMetrics:
 
         # settings.progress(60)
         # calculating clustering coefficients
-        if (options.is_multigraph == 0) and (options.compute_clustering_coef == 1):
+        if (options_gte.is_multigraph == 0) and (options.compute_clustering_coef == 1):
             print("Computing clustering coefficients...")
             # settings.update_label("Calculating clustering...")
             sleep(5)
@@ -172,7 +173,7 @@ class GraphMetrics:
 
         # settings.progress(65)
         # calculating betweenness centrality histogram
-        if (options.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
+        if (options_gte.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
             print("Computing betweenness centrality...")
             # settings.update_label("Calculating betweenness...")
             b_distribution_1 = betweenness_centrality(graph)
@@ -189,7 +190,7 @@ class GraphMetrics:
 
         # settings.progress(70)
         # calculating eigenvector centrality
-        if (options.is_multigraph == 0) and (options.display_eigenvector_histogram == 1):
+        if (options_gte.is_multigraph == 0) and (options.display_eigenvector_histogram == 1):
             print("Computing eigenvector centrality...")
             # settings.update_label("Calculating eigenvector...")
             try:
@@ -653,7 +654,7 @@ class GraphMetrics:
                     sy_2 = 1
                     fnt = font_1
                 index = 1
-                if opt_gtc.display_degree_histogram:
+                if opt_gtc.display_degree_histogram == 1:
                     f5.add_subplot(sy_2, 2, index)
                     bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                     try:
@@ -709,7 +710,7 @@ class GraphMetrics:
                 plt.close()
 
             # displaying heatmaps
-            if opt_gtc.display_heatmaps:
+            if opt_gtc.display_heatmaps == 1:
                 sz = 30
                 lw = 1.5
                 # update_label("Generating heat maps...")
