@@ -89,6 +89,8 @@ def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
     if options_gte.weighted_by_diameter:
         metrics_obj.compute_weighted_gt_metrics()
     metrics_obj.generate_pdf_output()
+    graph_obj.remove_listener(print_progress)
+    metrics_obj.remove_listener(print_progress)
 
 
 def print_progress(x, y):
