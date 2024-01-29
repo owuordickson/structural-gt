@@ -378,7 +378,10 @@ class GraphSkeleton:
         # u, v: two coordinates (x, y) or (x, y, z)
         vec = u - v  # find the vector between u and v
 
-        n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
+        if np.count_nonzero(vec) == 0:
+            n = vec
+        else:
+            n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
         if np.isnan(n[0]) or np.isnan(n[1]):
             n[0], n[1] = float(0), float(0)
         hl = np.linalg.norm(vec) / 2  # find the half-length of the vector u,v
