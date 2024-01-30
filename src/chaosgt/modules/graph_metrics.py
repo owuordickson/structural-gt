@@ -1105,6 +1105,9 @@ class GraphMetrics:
         :return:
         """
 
+        # Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
+        # Note: only works with fully-connected graphs
+
         graph = self.g_struct.nx_graph
 
         # 1. Compute laplacian matrix L = D - A
