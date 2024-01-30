@@ -1,6 +1,10 @@
 SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
 1. Login and navigate to Terminal
-2. python3 -m venv chaos_venv
-3. source chaos_venv/bin/activate
-4. pip install numpy
-5. deactivate
+2. cd chaos-gt
+3. python3 -m venv chaos_venv
+4. source chaos_venv/bin/activate
+5. pip install -r requirements.txt
+6. pip install .
+7. deactivate
+8. .venv_chaos/bin/chaosgt-cli
+9. .venv_chaos/bin/chaosgt-gui

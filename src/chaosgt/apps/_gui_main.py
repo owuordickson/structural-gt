@@ -11,7 +11,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-from .graph_struct import GraphStruct
+from src.chaosgt.modules.graph_struct import GraphStruct
 
 
 class LaunchWindow(ttk.Frame):

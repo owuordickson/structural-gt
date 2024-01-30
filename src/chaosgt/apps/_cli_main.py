@@ -10,9 +10,9 @@ Terminal interface implementations
 import time
 import os
 import multiprocessing as mp
-from ._config_loader import load
-from .graph_struct import GraphStruct
-from .graph_metrics import GraphMetrics
+from src.chaosgt.configs._config_loader import load
+from src.chaosgt.modules.graph_struct import GraphStruct
+from src.chaosgt.modules.graph_metrics import GraphMetrics
 
 
 def terminal_app():
@@ -56,6 +56,10 @@ def terminal_app():
                 raise "File has to be a .tif, .png, or .jpg"
 
         # 3. Verify output directory
+        if not os.path.isdir(out_dir):
+            path, _ = os.path.split(filenames[0])
+            out_dir = path
+
         # 4. Run GT program
         start = time.time()
         if alg == 0:

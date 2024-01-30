@@ -16,7 +16,7 @@ dependencies = [
   "scikit-learn",
   "opencv-python"
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 authors = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"},
   {name = "Nicholas Kotov", email = "kotov@umich.edu"}
@@ -30,7 +30,7 @@ license = {file = "LICENSE"}
 keywords = ["nano-particles", "nano-structures", "chaos-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.11",
   "License :: OSI Approved :: GNU General Public License v3 License",
   "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",
