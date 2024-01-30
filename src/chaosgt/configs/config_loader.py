@@ -1,4 +1,11 @@
+# SPDX-License-Identifier: GNU GPL v3
+# This file is dual licensed under the terms of the GNU General Public, Version
+# 3.0.  See the LICENSE file in the root of this
+# repository for complete details.
 
+"""
+Loads default configurations from 'configs.ini' file
+"""
 
 import os
 import sys
@@ -116,7 +123,7 @@ def load():
     (options, args) = opt_parser.parse_args()
 
     if options.filePath is None:
-        print("Usage: $python3 ")
+        print("Usage: bin/chaosgt-cli -f examples/Cont-SR_NPs.tif -o results/    ")
         sys.exit('System will exit')
 
     return config, options, options_img, options_gte, options_gtc

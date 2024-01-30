@@ -16,8 +16,11 @@ from .apps.cli_main import terminal_app
 
 
 def main_gui():
-    app = ChaosGUI()
-    app.mainloop()
+    try:
+        app = ChaosGUI()
+        app.mainloop()
+    except NameError:
+        raise ModuleNotFoundError("Please install 'Python3-tk'")
 
 
 def main_cli():
