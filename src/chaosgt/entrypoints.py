@@ -8,13 +8,14 @@ Entry points that allow users to execute GUI or Cli programs
 """
 
 
-from .apps._gui_main import ChaosGUI
-from .apps._cli_main import terminal_app
+# from .apps.gui_main import ChaosGUI
+from .apps.cli_main import terminal_app
 
 
 def main_gui():
-    app = ChaosGUI()
-    app.mainloop()
+    # app = ChaosGUI()
+    # app.mainloop()
+    pass
 
 
 def main_cli():

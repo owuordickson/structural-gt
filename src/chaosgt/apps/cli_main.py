@@ -10,7 +10,7 @@ Terminal interface implementations
 import time
 import os
 import multiprocessing as mp
-from ..configs._config_loader import load
+from ..configs.config_loader import load
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
 
@@ -43,7 +43,7 @@ def terminal_app():
                     print(a_file)
                     filenames.append(os.path.join(out_path, a_file))
             if len(filenames) <= 0:
-                raise "No workable images found! File have to be a .tif, .png, or .jpg"
+                raise Exception("No workable images found! File have to be a .tif, .png, or .jpg")
         else:
             # Process only a single image file
             # testing if file is a workable image
@@ -51,9 +51,9 @@ def terminal_app():
                 if os.path.isfile(img_path):
                     filenames.append(img_path)
                 else:
-                    raise "File does not exist! Select valid file path."
+                    raise Exception("File does not exist! Select valid file path.")
             else:
-                raise "File has to be a .tif, .png, or .jpg"
+                raise Exception("File has to be a .tif, .png, or .jpg")
 
         # 3. Verify output directory
         if not os.path.isdir(out_dir):
@@ -74,7 +74,7 @@ def terminal_app():
                 # print(f'Images Completed: {i+1}/{len(filenames)}')
                 print("----------------\n\n")
         else:
-            raise "Wrong algorithm choice!"
+            raise Exception("Wrong algorithm choice!")
         duration = time.time() - start
         out_line = "Run-time: " + str(duration) + " seconds\n"
         out_line += "Number of cores: " + str(num_cores) + '\n'

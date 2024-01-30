@@ -4,8 +4,14 @@
 # repository for complete details.
 
 # ONLY ADD MODULES
-# from .entrypoints import main_cli, main_gui
+from .modules.graph_metrics import GraphMetrics
+from .modules.graph_skeleton import GraphSkeleton
+from .modules.graph_struct import GraphStruct
+
+from .entrypoints import main_cli
+from .entrypoints import main_gui
+
 
 __version__ = "0.0.1"
 
-# __all__ = ['main_cli', 'main_gui']
+__all__ = ['GraphMetrics', 'GraphStruct']  # packages available in 'from chaosgt import *'

@@ -8,7 +8,7 @@ from ypstruct import struct
 
 def load():
     # Load configuration from file
-    config_file = pathlib.Path(__file__).parent.absolute() / "configs.cfg"
+    config_file = pathlib.Path(__file__).parent.absolute() / "_configs.cfg"
     config = configparser.SafeConfigParser()
     config.read(config_file)
     # print(config.sections())
