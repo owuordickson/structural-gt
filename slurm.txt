@@ -14,10 +14,12 @@ SETTING UP GIT POST-HOOK (to allow update push)
 8. chmod +x hooks/post-receive
 
 
+
 SETTING UP PYCHARM (to push live updates)
 1. git remote add live ssh://owuor@greatlakes.arc-ts.umich.edu/home/owuor/chaosgt.git
 2. git push live +main:refs/heads/main
 3. git push live main
+
 
 
 SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
