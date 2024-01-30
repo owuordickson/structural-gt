@@ -25,10 +25,11 @@ SETTING UP PYCHARM (to push live updates)
 SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
 1. Login and navigate to Terminal
 2. cd chaos-gt
-3. python3 -m venv chaos_venv
-4. source chaos_venv/bin/activate
-5. pip install -r requirements.txt
-6. pip install .
-7. deactivate
-8. chaos_venv/bin/chaosgt-cli -f examples/Cont-SR_NPs.tif -o results/
-9. chaos_venv/bin/chaosgt-gui
+3. python3 -m venv .venv_chaos
+4. source .venv_chaos/bin/activate
+5. pip install --upgrade pip
+6. pip install -r requirements.txt
+7. pip install .
+8. deactivate
+9. .venv_chaos/bin/chaosgt-cli -f examples/Cont-SR_NPs.tif -o results/
+10. .venv_chaos/bin/chaosgt-gui
