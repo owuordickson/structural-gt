@@ -1,3 +1,25 @@
+SETTING UP GIT POST-HOOK (to allow update push)
+1. cd /home/owuor/chaosgt.git
+1. mkdir chaosgt.git
+2. cd chaosgt.git
+3. git init --bare
+4. cd chaosgt.git/hooks
+5. touch post-receive
+6. nano post-receive
+
+    #!/bin/sh
+    GIT_WORK_TREE=/home/owuor/kotov_lab/chaos-gt git checkout -f main
+
+7. save the 'post-receive' file
+8. chmod +x hooks/post-receive
+
+
+SETTING UP PYCHARM (to push live updates)
+1. git remote add live ssh://owuor@/home/owuor/chaosgt.git
+2. git push live +main:refs/heads/main
+3. git push live main
+
+
 SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
 1. Login and navigate to Terminal
 2. cd chaos-gt

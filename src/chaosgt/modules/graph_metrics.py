@@ -1010,18 +1010,18 @@ class GraphMetrics:
 
     def approx_conductance_by_spectral(self):
         """
-            https://doi.org/10.1016/j.procs.2013.09.311
+        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311
 
-            Conductance can closely be approximated via eigenvalue computation,\
-        a fact which has been well-known and well-used in the graph theory community.\
+        Conductance can closely be approximated via eigenvalue computation,\
+        a fact which has been well-known and well-used in the graph theory community.
 
-            The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
         while, e.g., traditional spectral clustering is primarily developed for undirected\
         graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
         techniques requiring the symmetry is to turn the original directed graph into an\
-        undirected graph and build the Laplacian matrix for the latter.\
+        undirected graph and build the Laplacian matrix for the latter.
 
-            We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
         The degree of a node is the number of edges incident to that node.\
         When a node has a degree of zero, it means that there are no edges\
         connected to that node. In other words, the node is isolated from\
@@ -1094,6 +1094,26 @@ class GraphMetrics:
         data.append({"name": "Graph Conductance (min)", "value": val_min})
 
         return data, sub_components
+
+    def compute_betweenness_centrality(self):
+        """
+        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
+
+        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
+        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
+
+        :return:
+        """
+
+        graph = self.g_struct.nx_graph
+
+        # 1. Compute laplacian matrix L = D - A
+        lpl_mat = nx.laplacian_matrix(graph).toarray()
+
+        # 2. Remove any single row and corresponding column from L
+        # 3. Invert the resulting matrix
+        # 4. Add back the removed row and column to form matrix T
+        # 5. Calculate betweenness from T
 
     @staticmethod
     def compute_norm_laplacian_matrix(graph):
