@@ -12,6 +12,6 @@ from .entrypoints import main_cli
 from .entrypoints import main_gui
 
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 __all__ = ['GraphMetrics', 'GraphStruct']  # packages available in 'from chaosgt import *'

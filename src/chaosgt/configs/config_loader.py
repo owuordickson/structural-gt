@@ -1,23 +1,30 @@
+
+
+import os
 import sys
 import configparser
-# from os import path
-import pathlib
 from optparse import OptionParser
 from ypstruct import struct
 
 
 def load():
     # Load configuration from file
-    config_file = pathlib.Path(__file__).parent.absolute() / "_configs.cfg"
-    config = configparser.SafeConfigParser()
-    config.read(config_file)
+    config = configparser.ConfigParser()
+    try:
+        config_file = os.path.join(os.getcwd(), 'chaosgt/configs/configs.ini')
+        config.read(config_file)
+        cpus = int(config.get('computation', 'cpu_cores'))
+    except configparser.NoSectionError:
+        config_file = os.path.join(os.getcwd(), 'src/chaosgt/configs/configs.ini')
+        config.read(config_file)
+        cpus = int(config.get('computation', 'cpu_cores'))
+    # print(config_file)
     # print(config.sections())
+
     options_path = struct()
     options_img = struct()
     options_gte = struct()
     options_gtc = struct()
-
-    cpus = int(config.get('computation', 'cpu_cores'))
 
     # 1. Image Path
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))

@@ -8,14 +8,16 @@ Entry points that allow users to execute GUI or Cli programs
 """
 
 
-# from .apps.gui_main import ChaosGUI
+try:
+    from .apps.gui_main import ChaosGUI
+except ImportError or ModuleNotFoundError:
+    print("Please install 'Python3-tk'")
 from .apps.cli_main import terminal_app
 
 
 def main_gui():
-    # app = ChaosGUI()
-    # app.mainloop()
-    pass
+    app = ChaosGUI()
+    app.mainloop()
 
 
 def main_cli():
