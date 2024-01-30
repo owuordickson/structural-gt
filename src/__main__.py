@@ -30,5 +30,5 @@ __credits__ = "Chemical Engineering Department, University of Michigan"
 from chaosgt.entrypoints import main_gui, main_cli
 
 if __name__ == "__main__":
-    main_gui()
-    # main_cli()
+    # main_gui()
+    main_cli()

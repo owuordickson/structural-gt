@@ -10,9 +10,9 @@ Terminal interface implementations
 import time
 import os
 import multiprocessing as mp
-from src.chaosgt.configs._config_loader import load
-from src.chaosgt.modules.graph_struct import GraphStruct
-from src.chaosgt.modules.graph_metrics import GraphMetrics
+from ..configs._config_loader import load
+from ..modules.graph_struct import GraphStruct
+from ..modules.graph_metrics import GraphMetrics
 
 
 def terminal_app():

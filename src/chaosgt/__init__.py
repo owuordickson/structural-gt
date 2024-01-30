@@ -3,9 +3,9 @@
 # 3.0.  See the LICENSE file in the root of this
 # repository for complete details.
 
-
-from .entrypoints import main_cli, main_gui
+# ONLY ADD MODULES
+# from .entrypoints import main_cli, main_gui
 
 __version__ = "0.0.1"
 
-__all__ = ['main_cli', 'main_gui']
+# __all__ = ['main_cli', 'main_gui']
