@@ -319,16 +319,19 @@ class GraphStruct:
         # 1. Identify connected components
         connected_components = list(nx.connected_components(self.nx_graph))
 
-        # 2. Find the largest/smallest connected component
-        largest_component = max(connected_components, key=len)
+        if len(connected_components) <= 0:
+            return self.nx_graph, 1
+        else:
+            # 2. Find the largest/smallest connected component
+            largest_component = max(connected_components, key=len)
 
-        # 3. Create a new graph containing only the largest connected component
-        graph_largest = self.nx_graph.subgraph(largest_component)
+            # 3. Create a new graph containing only the largest connected component
+            graph_largest = self.nx_graph.subgraph(largest_component)
 
-        # 4. Compute proportion
-        ratio = graph_largest.number_of_nodes() / self.nx_graph.number_of_nodes()
+            # 4. Compute proportion
+            ratio = graph_largest.number_of_nodes() / self.nx_graph.number_of_nodes()
 
-        return graph_largest, round(ratio, 4)
+            return graph_largest, round(ratio, 4)
 
     def compute_fractal_dimension(self):
         self.update_status([-1, "Computing fractal dimension..."])

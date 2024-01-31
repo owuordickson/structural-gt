@@ -73,6 +73,8 @@ def load():
     options_gtc.display_degree_histogram = int(config.get('computation-settings', 'display_degree_histogram'))
     options_gtc.display_betweenness_histogram = int(config.get('computation-settings',
                                                                'display_betweenness_centrality_histogram'))
+    options_gtc.display_currentflow_histogram = int(config.get('computation-settings',
+                                                               'display_current_flow_betweenness_centrality_histogram'))
     options_gtc.display_closeness_histogram = int(config.get('computation-settings',
                                                              'display_closeness_centrality_histogram'))
     options_gtc.display_eigenvector_histogram = int(config.get('computation-settings',
