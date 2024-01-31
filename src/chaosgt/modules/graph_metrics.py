@@ -181,8 +181,6 @@ class GraphMetrics:
             self.update_status([3, "Computing clustering coefficients..."])
             avg_coefficients_1 = clustering(graph)
             avg_coefficients = np.array(list(avg_coefficients_1.values()))
-            # for j in range(len(avg_coefficients_1)):
-            #     avg_coefficients[j] = avg_coefficients_1[j]
             clust = average_clustering(graph)
             clust = round(clust, 5)
             self.clustering_coefficients = avg_coefficients
@@ -193,12 +191,7 @@ class GraphMetrics:
         if (options_gte.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
             self.update_status([3, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
-            # b_sum = 0
             b_distribution = np.array(list(b_distribution_1.values()))
-            # for j in range(len(b_distribution_1)):
-            #    b_sum += b_distribution_1[j]
-            #    b_distribution[j] = b_distribution_1[j]
-            # b_val = b_sum / len(b_distribution_1)
             b_val = round(np.average(b_distribution), 5)
             self.betweenness_distribution = b_distribution
             data_dict["x"].append("Average betweenness centrality")
@@ -211,12 +204,7 @@ class GraphMetrics:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
-            # e_sum = 0
             e_vecs = np.array(list(e_vecs_1.values()))
-            # for j in range(len(e_vecs_1)):
-            #    e_sum += e_vecs_1[j]
-            #    e_vecs[j] = e_vecs_1[j]
-            # e_val = e_sum / len(e_vecs_1)
             e_val = round(np.average(e_vecs), 5)
             self.eigenvector_distribution = e_vecs
             data_dict["x"].append("Average eigenvector centrality")
@@ -226,12 +214,7 @@ class GraphMetrics:
         if options.display_closeness_histogram == 1:
             self.update_status([3, "Computing closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph)
-            # c_sum = 0
             close_distribution = np.array(list(close_distribution_1.values()))
-            # for j in range(len(close_distribution_1)):
-            #    c_sum += close_distribution_1[j]
-            #    close_distribution[j] = close_distribution_1[j]
-            # c_val = c_sum / len(close_distribution_1)
             c_val = round(np.average(close_distribution), 5)
             self.closeness_distribution = close_distribution
             data_dict["x"].append("Average closeness centrality")
@@ -327,13 +310,8 @@ class GraphMetrics:
         if options.display_betweenness_histogram == 1:
             self.update_status([3, "Compute weighted betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
-            b_sum = 0
-            b_distribution = np.zeros(len(b_distribution_1))
-            for j in range(len(b_distribution_1)):
-                b_sum += b_distribution_1[j]
-                b_distribution[j] = b_distribution_1[j]
-            b_val = b_sum / len(b_distribution_1)
-            b_val = round(b_val, 5)
+            b_distribution = np.array(list(b_distribution_1.values()))
+            b_val = round(np.average(b_distribution), 5)
             self.weighted_betweenness_distribution = b_distribution
             data_dict["x"].append("Width-weighted average betweenness centrality")
             data_dict["y"].append(b_val)
@@ -341,13 +319,8 @@ class GraphMetrics:
         if options.display_closeness_histogram == 1:
             self.update_status([3, "Compute weighted closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph, distance='length')
-            c_sum = 0
-            close_distribution = np.zeros(len(close_distribution_1))
-            for j in range(len(close_distribution_1)):
-                c_sum += close_distribution_1[j]
-                close_distribution[j] = close_distribution_1[j]
-            c_val = c_sum / len(close_distribution_1)
-            c_val = round(c_val, 5)
+            close_distribution = np.array(list(close_distribution_1.values()))
+            c_val = round(np.average(close_distribution), 5)
             self.weighted_closeness_distribution = close_distribution
             data_dict["x"].append("Length-weighted average closeness centrality")
             data_dict["y"].append(c_val)
@@ -358,13 +331,8 @@ class GraphMetrics:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000, weight='weight')
-            e_sum = 0
-            e_vecs = np.zeros(len(e_vecs_1))
-            for j in range(len(e_vecs_1)):
-                e_sum += e_vecs_1[j]
-                e_vecs[j] = e_vecs_1[j]
-            e_val = e_sum / len(e_vecs_1)
-            e_val = round(e_val, 5)
+            e_vecs = np.array(list(e_vecs_1.values()))
+            e_val = round(np.average(e_vecs), 5)
             self.weighted_eigenvector_distribution = e_vecs
             data_dict["x"].append("Width-weighted average eigenvector centrality")
             data_dict["y"].append(e_val)
@@ -551,20 +519,8 @@ class GraphMetrics:
                 plt.title(deg_txt)
                 plt.xlabel("Degree")
                 plt.ylabel("Counts")
-            if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
-                f4a.add_subplot(2, 2, 2)
-                bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
-                try:
-                    t_val = str(round(stdev(cluster_coefs), 3))
-                except StatisticsError:
-                    t_val = "N/A"
-                t_txt = r"Clustering Coefficients: $\sigma$=" + str(t_val)
-                plt.hist(cluster_coefs, bins=bins_t)
-                plt.title(t_txt)
-                plt.xlabel("Clust. Coeff.")
-                plt.ylabel("Counts")
             if opt_gtc.display_closeness_histogram == 1:
-                f4a.add_subplot(2, 2, 3)
+                f4a.add_subplot(2, 2, 2)
                 bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
                 try:
                     cc_val = str(round(stdev(clo_distribution), 3))
@@ -591,8 +547,20 @@ class GraphMetrics:
                 plt.title(bc_txt)
                 plt.xlabel("Betweenness value")
                 plt.ylabel("Counts")
-            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
+            if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
                 f4b.add_subplot(2, 2, 2)
+                bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
+                try:
+                    t_val = str(round(stdev(cluster_coefs), 3))
+                except StatisticsError:
+                    t_val = "N/A"
+                t_txt = r"Clustering Coefficients: $\sigma$=" + str(t_val)
+                plt.hist(cluster_coefs, bins=bins_t)
+                plt.title(t_txt)
+                plt.xlabel("Clust. Coeff.")
+                plt.ylabel("Counts")
+            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
+                f4b.add_subplot(2, 2, 3)
                 bins_2 = np.linspace(min(cf_distribution), max(cf_distribution), 50)
                 try:
                     cf_val = str(round(stdev(cf_distribution), 3))
@@ -604,7 +572,7 @@ class GraphMetrics:
                 plt.xlabel("Betweenness value")
                 plt.ylabel("Counts")
             if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
-                f4b.add_subplot(2, 2, 3)
+                f4b.add_subplot(2, 2, 4)
                 bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
                 try:
                     ec_val = str(round(stdev(eig_distribution), 3))
