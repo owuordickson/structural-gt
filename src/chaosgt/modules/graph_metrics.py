@@ -1105,16 +1105,26 @@ class GraphMetrics:
         Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
         that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
 
+        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
+        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
+        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
+        sections of the graph. An average is computed after an iteration of x random walks along edges.
+
+        This measure is already implemented in 'networkx' package. Here is the link:\
+        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
+
         :return:
         """
 
-        # Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
-        # Note: only works with fully-connected graphs
+        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
+        # (NOT TRUE) Note: only works with fully-connected graphs
+        # So, random betweenness centrality is computed between source node and destination node.
 
         graph = self.g_struct.nx_graph
 
         # 1. Compute laplacian matrix L = D - A
         lpl_mat = nx.laplacian_matrix(graph).toarray()
+        print(lpl_mat)
 
         # 2. Remove any single row and corresponding column from L
         # 3. Invert the resulting matrix
