@@ -10,8 +10,9 @@ Processing of images and chaos engineering
 import cv2
 import re
 import os
-import numpy as np
 import sknw
+import numpy as np
+import networkx as nx
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 import matplotlib.pyplot as plt
@@ -34,6 +35,8 @@ class GraphStruct:
         self.img_filtered = None
         self.graph_skeleton = None
         self.nx_graph = None
+        self.nx_connected_graph = None
+        self.connectedness_ratio = 0
 
     def add_listener(self, func):
         """
@@ -69,6 +72,8 @@ class GraphStruct:
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
         self.update_status([2, "Extracting graph..."])
         self.extract_graph()
+        self.update_status([2, "Finding largest sub-graph..."])
+        self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
 
     def create_filenames(self, image_path):
         """
@@ -304,6 +309,26 @@ class GraphStruct:
                 for (s, e) in self.nx_graph.edges():
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
+
+    def find_largest_subgraph(self):
+        """
+
+        :return:
+        """
+
+        # 1. Identify connected components
+        connected_components = list(nx.connected_components(self.nx_graph))
+
+        # 2. Find the largest/smallest connected component
+        largest_component = max(connected_components, key=len)
+
+        # 3. Create a new graph containing only the largest connected component
+        graph_largest = self.nx_graph.subgraph(largest_component)
+
+        # 4. Compute proportion
+        ratio = graph_largest.number_of_nodes() / self.nx_graph.number_of_nodes()
+
+        return graph_largest, round(ratio, 4)
 
     def compute_fractal_dimension(self):
         self.update_status([-1, "Computing fractal dimension..."])

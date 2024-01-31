@@ -97,6 +97,9 @@ class GraphMetrics:
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
 
+        data_dict["x"].append("Connectedness ratio")
+        data_dict["y"].append(str(self.g_struct.connectedness_ratio * 100) + "%")
+
         # creating degree histogram
         if options.display_degree_histogram == 1:
             self.update_status([3, "Computing graph degree..."])
