@@ -20,3 +20,4 @@ https://www.youtube.com/watch?v=S3qftloOO4U&list=PLScxCGLsaFgpiHgPEScWFiENtpSyx4
 pip install pyqt6
 pip install pyqt6-tools
 open qt-designer (.venv_chaos\Lib\site-packages\qt6_applications\Qt\bin\designer.exe) "Run as administrator"
+convert .ui to .py using terminal (pyuic6 -o gui_main_qt.py -x gui.ui)
