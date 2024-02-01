@@ -106,17 +106,12 @@ class GraphMetrics:
         # creating degree histogram
         if options.display_degree_histogram == 1:
             self.update_status([3, "Computing graph degree..."])
-            deg_distribution_1 = nx.degree(graph)
-            deg_sum = 0
-            deg_distribution = np.zeros(len(deg_distribution_1))
-            for j in range(len(deg_distribution_1)):
-                deg_sum += deg_distribution_1[j]
-                deg_distribution[j] = deg_distribution_1[j]
-            deg = deg_sum / len(deg_distribution_1)
-            deg = round(deg, 5)
+            deg_distribution_1 = dict(nx.degree(graph))
+            deg_distribution = np.array(list(deg_distribution_1.values()))
+            deg_val = round(np.average(deg_distribution), 5)
             self.degree_distribution = deg_distribution
             data_dict["x"].append("Average degree")
-            data_dict["y"].append(deg)
+            data_dict["y"].append(deg_val)
 
         if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
             connected_graph = nx.is_connected(graph)

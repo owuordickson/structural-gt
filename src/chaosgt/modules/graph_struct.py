@@ -190,7 +190,6 @@ class GraphStruct:
         if options.apply_laplacian == 1:
             d_depth = cv2.CV_16S
             dst = cv2.Laplacian(filtered_img, d_depth, ksize=5)
-
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             dst = cv2.convertScaleAbs(dst)
             filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
