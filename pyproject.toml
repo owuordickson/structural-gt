@@ -10,7 +10,6 @@ dependencies = [
   "pandas",
   "networkx",
   "sknw",
-  "pillow",
   "matplotlib",
   "scikit-image",
   "scikit-learn",
@@ -40,7 +39,7 @@ classifiers = [
 # docs = []
 
 [project.optional-dependencies]
-gui = ["pyqt6"]
+gui = ["pyqt6", "pillow"]
 cli = []
 # cli = [
 #  "rich",
