@@ -107,7 +107,7 @@ class GraphMetrics:
         if options.display_degree_histogram == 1:
             self.update_status([3, "Computing graph degree..."])
             deg_distribution_1 = dict(nx.degree(graph))
-            deg_distribution = np.array(list(deg_distribution_1.values()))
+            deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             deg_val = round(np.average(deg_distribution), 5)
             self.degree_distribution = deg_distribution
             data_dict["x"].append("Average degree")
@@ -175,7 +175,7 @@ class GraphMetrics:
         if (options_gte.is_multigraph == 0) and (options.compute_clustering_coef == 1):
             self.update_status([3, "Computing clustering coefficients..."])
             avg_coefficients_1 = clustering(graph)
-            avg_coefficients = np.array(list(avg_coefficients_1.values()))
+            avg_coefficients = np.array(list(avg_coefficients_1.values()), dtype=float)
             clust = average_clustering(graph)
             clust = round(clust, 5)
             self.clustering_coefficients = avg_coefficients
@@ -186,7 +186,7 @@ class GraphMetrics:
         if (options_gte.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
             self.update_status([3, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
-            b_distribution = np.array(list(b_distribution_1.values()))
+            b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             b_val = round(np.average(b_distribution), 5)
             self.betweenness_distribution = b_distribution
             data_dict["x"].append("Average betweenness centrality")
@@ -199,7 +199,7 @@ class GraphMetrics:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
-            e_vecs = np.array(list(e_vecs_1.values()))
+            e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
             e_val = round(np.average(e_vecs), 5)
             self.eigenvector_distribution = e_vecs
             data_dict["x"].append("Average eigenvector centrality")
@@ -209,7 +209,7 @@ class GraphMetrics:
         if options.display_closeness_histogram == 1:
             self.update_status([3, "Computing closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph)
-            close_distribution = np.array(list(close_distribution_1.values()))
+            close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             c_val = round(np.average(close_distribution), 5)
             self.closeness_distribution = close_distribution
             data_dict["x"].append("Average closeness centrality")
@@ -240,7 +240,7 @@ class GraphMetrics:
 
             self.update_status([3, "Computing current-flow betweenness centrality..."])
             cf_distribution_1 = nx.current_flow_betweenness_centrality_subset(gph, source_nodes, target_nodes)
-            cf_distribution = np.array(list(cf_distribution_1.values()))
+            cf_distribution = np.array(list(cf_distribution_1.values()), dtype=float)
             cf_val = np.average(cf_distribution)
             cf_val = round(cf_val, 5)
             self.currentflow_distribution = cf_distribution
@@ -258,17 +258,12 @@ class GraphMetrics:
 
         if options.display_degree_histogram == 1:
             self.update_status([3, "Compute weighted graph degree..."])
-            deg_distribution_1 = nx.degree(graph, weight='weight')
-            deg_sum = 0
-            deg_distribution = np.zeros(len(deg_distribution_1))
-            for j in range(len(deg_distribution_1)):
-                deg_sum += deg_distribution_1[j]
-                deg_distribution[j] = deg_distribution_1[j]
-            deg = deg_sum / len(deg_distribution_1)
-            deg = round(deg, 5)
+            deg_distribution_1 = dict(nx.degree(graph, weight='weight'))
+            deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
+            deg_val = round(np.average(deg_distribution), 5)
             self.weighted_degree_distribution = deg_distribution
             data_dict["x"].append("Weighted average degree")
-            data_dict["y"].append(deg)
+            data_dict["y"].append(deg_val)
 
         if options.compute_wiener_index == 1:
             self.update_status([3, "Compute weighted wiener index..."])
@@ -305,7 +300,7 @@ class GraphMetrics:
         if options.display_betweenness_histogram == 1:
             self.update_status([3, "Compute weighted betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
-            b_distribution = np.array(list(b_distribution_1.values()))
+            b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             b_val = round(np.average(b_distribution), 5)
             self.weighted_betweenness_distribution = b_distribution
             data_dict["x"].append("Width-weighted average betweenness centrality")
@@ -314,7 +309,7 @@ class GraphMetrics:
         if options.display_closeness_histogram == 1:
             self.update_status([3, "Compute weighted closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph, distance='length')
-            close_distribution = np.array(list(close_distribution_1.values()))
+            close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             c_val = round(np.average(close_distribution), 5)
             self.weighted_closeness_distribution = close_distribution
             data_dict["x"].append("Length-weighted average closeness centrality")
@@ -326,7 +321,7 @@ class GraphMetrics:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000, weight='weight')
-            e_vecs = np.array(list(e_vecs_1.values()))
+            e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
             e_val = round(np.average(e_vecs), 5)
             self.weighted_eigenvector_distribution = e_vecs
             data_dict["x"].append("Width-weighted average eigenvector centrality")
