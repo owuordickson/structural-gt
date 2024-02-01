@@ -57,7 +57,7 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <spacer name="vspc_top">
+        <spacer name="vsp_top">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -83,7 +83,7 @@
         <widget class="QLineEdit" name="txt_x2"/>
        </item>
        <item row="8" column="0">
-        <spacer name="vspc_bottom">
+        <spacer name="vsp_bottom">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
