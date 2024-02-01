@@ -14,3 +14,9 @@ git worktree add ../drew_gt origin/drew
 create new Project call it "chaos-gt"
 create another Project "drew_gt" and attach it to the previous one
 create different pyenv environments for each
+
+3. SETUP Qt DESIGNER
+https://www.youtube.com/watch?v=S3qftloOO4U&list=PLScxCGLsaFgpiHgPEScWFiENtpSyx4YNP
+pip install pyqt6
+pip install pyqt6-tools
+open qt-designer (.venv_chaos\Lib\site-packages\qt6_applications\Qt\bin\designer.exe) "Run as administrator"
