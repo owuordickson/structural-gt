@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>816</width>
-    <height>539</height>
+    <width>961</width>
+    <height>723</height>
    </rect>
   </property>
   <property name="font">
@@ -19,70 +19,178 @@
    <string>Chaos GT</string>
   </property>
   <widget class="QWidget" name="wdt_main">
-   <layout class="QGridLayout" name="grid_layout_main" rowstretch="0" columnstretch="2,4,1">
-    <item row="0" column="2">
-     <widget class="QGroupBox" name="grp_right">
+   <layout class="QGridLayout" name="grid_layout_main" rowstretch="0,0" columnstretch="2,5,1">
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="grp_img">
+      <layout class="QGridLayout" name="grid_layout_img" rowstretch="8,1">
+       <item row="0" column="0">
+        <widget class="QWidget" name="wdt_img" native="true"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="grp_img_nav">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string/>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_img_nav">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="btn_prev">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>&lt;&lt; previous</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="btn_next">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>next &gt;&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <spacer name="hsp_img_nav">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QGroupBox" name="grp_tasks">
       <property name="title">
-       <string>Controls</string>
+       <string/>
       </property>
       <property name="alignment">
        <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
       </property>
-      <layout class="QGridLayout" name="grid_layout_right">
-       <item row="3" column="0">
-        <widget class="QLabel" name="lbl_x1">
-         <property name="text">
-          <string>x1</string>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+      <layout class="QGridLayout" name="grid_layout_tasks">
+       <item row="6" column="0" colspan="2">
+        <widget class="QGroupBox" name="grp_crop">
+         <property name="title">
+          <string>Cropping</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
+         <layout class="QGridLayout" name="grid_layout_crop">
+          <item row="2" column="0">
+           <widget class="QLabel" name="lbl_x1">
+            <property name="text">
+             <string>x1</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="lbl_y1">
+            <property name="text">
+             <string>y1</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="txt_y2"/>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="lbl_y2">
+            <property name="text">
+             <string>y2</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="lbl_x2">
+            <property name="text">
+             <string>x2</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="txt_y1"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="txt_x1"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="txt_x2"/>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="QPushButton" name="btn_crop">
+            <property name="text">
+             <string>Crop</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="QPushButton" name="btn_crop">
-         <property name="text">
-          <string>Crop</string>
+       <item row="8" column="0" colspan="2">
+        <widget class="QGroupBox" name="grp_compute">
+         <property name="title">
+          <string>Computing</string>
          </property>
+         <layout class="QGridLayout" name="grid_layout_compute">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="btn_gt_metrics">
+            <property name="text">
+             <string>GT Metrics</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="btn_chaos_gt">
+            <property name="text">
+             <string>Chaos GT</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="btn_fd">
+            <property name="text">
+             <string>Fractal Dimen.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="lbl_y1">
-         <property name="text">
-          <string>y1</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <spacer name="vsp_top">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="lbl_x2">
-         <property name="text">
-          <string>x2</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QLineEdit" name="txt_x2"/>
-       </item>
-       <item row="8" column="0">
+       <item row="7" column="1">
         <spacer name="vsp_bottom">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -95,38 +203,60 @@
          </property>
         </spacer>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="lbl_title_crop">
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="1" colspan="2">
+     <widget class="QGroupBox" name="grp_path">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QGridLayout" name="grid_layout_path">
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="txt_img_path"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_out_path">
          <property name="font">
           <font>
            <bold>true</bold>
           </font>
          </property>
          <property name="text">
-          <string>Crop Image</string>
+          <string>Output Dir</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="txt_y1"/>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="txt_x1"/>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLineEdit" name="txt_y2"/>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="lbl_y2">
+       <item row="2" column="2">
+        <widget class="QPushButton" name="btn_select_out_path">
          <property name="text">
-          <string>y2</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <string>Select</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="txt_out_path"/>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="btn_select_img_path">
+         <property name="text">
+          <string>Select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_img_path">
+         <property name="font">
+          <font>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Image Path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
         <widget class="QCheckBox" name="cbx_multi">
          <property name="font">
           <font>
@@ -141,12 +271,18 @@
       </layout>
      </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QGroupBox" name="grp_left">
+    <item row="0" column="0" rowspan="2">
+     <widget class="QGroupBox" name="grp_settings">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="title">
        <string>Settings</string>
       </property>
-      <layout class="QGridLayout" name="grid_layout_left">
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+      <layout class="QGridLayout" name="grid_layout_settings">
        <item row="0" column="0">
         <widget class="QTreeView" name="tree_settings"/>
        </item>
@@ -160,68 +296,6 @@
       </layout>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QGroupBox" name="grp_center">
-      <layout class="QGridLayout" name="grid_layout_center" rowstretch="0,1,0,5">
-       <item row="3" column="0">
-        <widget class="QWidget" name="wdt_img" native="true"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QGroupBox" name="grp_path">
-         <property name="title">
-          <string/>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="1" column="2">
-           <widget class="QPushButton" name="btn_select_img_path">
-            <property name="text">
-             <string>Select</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="lbl_img_path">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Image Path</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QPushButton" name="btn_select_out_path">
-            <property name="text">
-             <string>Select</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="txt_out_path"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="txt_img_path"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="lbl_out_path">
-            <property name="font">
-             <font>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Output Dir</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menu_bar">
@@ -229,7 +303,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>816</width>
+     <width>961</width>
      <height>22</height>
     </rect>
    </property>
