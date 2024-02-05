@@ -92,68 +92,30 @@
        <bool>true</bool>
       </property>
       <layout class="QGridLayout" name="grid_layout_tasks">
-       <item row="6" column="0" colspan="2">
-        <widget class="QGroupBox" name="grp_crop">
+       <item row="10" column="0" colspan="2">
+        <widget class="QGroupBox" name="grp_compute">
          <property name="title">
-          <string>Cropping</string>
+          <string>Computing</string>
          </property>
-         <layout class="QGridLayout" name="grid_layout_crop">
-          <item row="2" column="0">
-           <widget class="QLabel" name="lbl_x1">
-            <property name="text">
-             <string>x1</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
+         <layout class="QGridLayout" name="grid_layout_compute">
           <item row="3" column="0">
-           <widget class="QLabel" name="lbl_y1">
+           <widget class="QPushButton" name="btn_chaos_gt">
             <property name="text">
-             <string>y1</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <string>Chaos GT</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="txt_y2"/>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="lbl_y2">
+          <item row="2" column="0">
+           <widget class="QPushButton" name="btn_fd">
             <property name="text">
-             <string>y2</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <string>Fractal Dimen.</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="lbl_x2">
+          <item row="1" column="0">
+           <widget class="QPushButton" name="btn_gt_metrics">
             <property name="text">
-             <string>x2</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="txt_y1"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="txt_x1"/>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="txt_x2"/>
-          </item>
-          <item row="8" column="0" colspan="2">
-           <widget class="QPushButton" name="btn_crop">
-            <property name="text">
-             <string>Crop</string>
+             <string>GT Metrics</string>
             </property>
            </widget>
           </item>
@@ -161,37 +123,94 @@
         </widget>
        </item>
        <item row="8" column="0" colspan="2">
-        <widget class="QGroupBox" name="grp_compute">
+        <widget class="QGroupBox" name="grp_graph">
          <property name="title">
-          <string>Computing</string>
+          <string>Graph Tools</string>
          </property>
-         <layout class="QGridLayout" name="grid_layout_compute">
+         <layout class="QGridLayout" name="grid_layout_graph">
           <item row="0" column="0">
-           <widget class="QPushButton" name="btn_gt_metrics">
+           <widget class="QPushButton" name="btn_show_graph">
             <property name="text">
-             <string>GT Metrics</string>
+             <string>Show Graph</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="btn_chaos_gt">
+          <item row="3" column="0">
+           <widget class="QPushButton" name="btn_save_graph">
             <property name="text">
-             <string>Chaos GT</string>
+             <string>Save Graph</string>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QPushButton" name="btn_fd">
+           <widget class="QPushButton" name="btn_quick_graph_metrics">
             <property name="text">
-             <string>Fractal Dimen.</string>
+             <string>Quick Metrics</string>
             </property>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="7" column="1">
-        <spacer name="vsp_bottom">
+       <item row="7" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QGroupBox" name="grp_crop">
+         <property name="title">
+          <string>Enhancing Tools</string>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_crop">
+          <item row="4" column="0" colspan="2">
+           <widget class="QPushButton" name="btn_crop">
+            <property name="text">
+             <string>Crop</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QSpinBox" name="spb_brightness">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QSpinBox" name="spb_contrast">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="lbl_brightness">
+            <property name="text">
+             <string>Brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="lbl_contrast">
+            <property name="text">
+             <string>Contrast</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
