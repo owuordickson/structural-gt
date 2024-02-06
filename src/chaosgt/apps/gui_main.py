@@ -569,6 +569,18 @@ class AnalysisUI(QtWidgets.QMainWindow):
         root_node.appendRow(options_save)
         self.tree_settings.setModel(tree_model)
 
+    def init_img_filter_settings(self):
+        pass
+
+    def init_img_binary_settings(self):
+        pass
+
+    def init_img_path_settings(self):
+        pass
+
+    def init_img_enhance_tools(self):
+        pass
+
 
 class TreeItem(QtGui.QStandardItem):
 
