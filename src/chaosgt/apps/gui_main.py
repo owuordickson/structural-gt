@@ -10,14 +10,16 @@ import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class AnalysisUI(object):
-    def __init__(self, window):
-        window.setObjectName("window_main")
-        window.resize(961, 723)
+class AnalysisUI(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setObjectName("window_main")
+        self.resize(961, 723)
         font = QtGui.QFont()
         font.setBold(False)
-        window.setFont(font)
-        self.wdt_main = QtWidgets.QWidget(parent=window)
+        self.setFont(font)
+
+        self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
         self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
         self.grid_layout_main.setObjectName("grid_layout_main")
@@ -172,21 +174,22 @@ class AnalysisUI(object):
         self.grid_layout_main.setColumnStretch(0, 2)
         self.grid_layout_main.setColumnStretch(1, 5)
         self.grid_layout_main.setColumnStretch(2, 1)
-        window.setCentralWidget(self.wdt_main)
-        self.menu_bar = QtWidgets.QMenuBar(parent=window)
+
+        self.setCentralWidget(self.wdt_main)
+        self.menu_bar = QtWidgets.QMenuBar(parent=self)
         self.menu_bar.setGeometry(QtCore.QRect(0, 0, 961, 22))
         self.menu_bar.setObjectName("menu_bar")
-        window.setMenuBar(self.menu_bar)
-        self.status_bar = QtWidgets.QStatusBar(parent=window)
+        self.setMenuBar(self.menu_bar)
+        self.status_bar = QtWidgets.QStatusBar(parent=self)
         self.status_bar.setObjectName("status_bar")
-        window.setStatusBar(self.status_bar)
+        self.setStatusBar(self.status_bar)
 
-        self.re_translate_ui(window)
-        QtCore.QMetaObject.connectSlotsByName(window)
+        self.re_translate_ui()
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-    def re_translate_ui(self, window):
+    def re_translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        window.setWindowTitle(_translate("window_main", "Chaos GT"))
+        self.setWindowTitle(_translate("window_main", "Chaos GT"))
         self.btn_prev.setText(_translate("window_main", "<< previous"))
         self.btn_next.setText(_translate("window_main", "next >>"))
         self.grp_compute.setTitle(_translate("window_main", "Computing"))
@@ -210,9 +213,8 @@ class AnalysisUI(object):
         self.lbl_cite.setText(_translate("window_main", "Cite our work using ..."))
 
 
-if __name__ == "__main__":
+def pyqt_app():
     app = QtWidgets.QApplication(sys.argv)
-    window_main = QtWidgets.QMainWindow()
-    ui = AnalysisUI(window_main)
-    window_main.show()
+    analysis_ui = AnalysisUI()
+    analysis_ui.show()
     sys.exit(app.exec())

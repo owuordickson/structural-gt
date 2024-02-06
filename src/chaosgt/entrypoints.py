@@ -7,7 +7,10 @@
 Entry points that allow users to execute GUI or Cli programs
 """
 
+from .apps.gui_main import pyqt_app
+from .apps.cli_main import terminal_app
 
+"""
 try:
     from .apps.gui_main_tk import ChaosGUI
 except ImportError or ModuleNotFoundError:
@@ -21,6 +24,11 @@ def main_gui():
         app.mainloop()
     except NameError:
         raise ModuleNotFoundError("Please install 'Python3-tk'")
+"""
+
+
+def main_gui():
+    pyqt_app()
 
 
 def main_cli():
