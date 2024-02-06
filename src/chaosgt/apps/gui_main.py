@@ -263,33 +263,6 @@ class TreeItem(QtGui.QStandardItem):
         self.setCheckable(set_checkable)
 
 
-class SpinBoxDelegate(QtWidgets.QStyledItemDelegate):
-    """A delegate that allows the user to change integer values from the model
-       using a spin box widget. """
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def createEditor(self, parent, option, index):
-        editor = QtWidgets.QSpinBox(parent)
-        editor.setFrame(False)
-        editor.setMinimum(0)
-        editor.setMaximum(100)
-        return editor
-
-    def setEditorData(self, editor, index):
-        value = index.model().data(index, QtCore.Qt.ItemDataRole.EditRole)
-        editor.setValue(value)
-
-    def setModelData(self, editor, model, index):
-        editor.interpretText()
-        value = editor.value()
-        model.setData(index, value, QtCore.Qt.ItemDataRole.EditRole)
-
-    def updateEditorGeometry(self, editor, option, index):
-        editor.setGeometry(option.rect)
-
-
 def pyqt_app():
     app = QtWidgets.QApplication(sys.argv)
     analysis_ui = AnalysisUI()
