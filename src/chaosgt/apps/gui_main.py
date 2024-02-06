@@ -222,23 +222,34 @@ class AnalysisUI(QtWidgets.QMainWindow):
         tree_model = QtGui.QStandardItemModel()
         root_node = tree_model.invisibleRootItem()
 
-        options_detection = TreeItem('Detection Settings', 12, set_bold=True)
-        threshold_item = TreeItem('Binary Threshold', 10)
-
+        options_detection = TreeItem('[Detection Settings]', 12, set_bold=True)
+        threshold_item = TreeItem('Binary Threshold', 10, set_checkable=True)
         options_detection.appendRow(threshold_item)
 
-        options_extraction = TreeItem('Extraction Settings', 12, set_bold=True)
-        options_compute = TreeItem('Computation Settings', 12, set_bold=True)
+        global_thresh_item = TreeItem('Global Threshold', 10, set_checkable=True)
+        # global_thresh_item = SpinBoxItem('Global Threshold')
+        options_detection.appendRow(global_thresh_item)
+        # spinbox = QtWidgets.QSpinBox()
+        # spinbox.setMinimum(0)
+        # spinbox.setMaximum(100)
+        # self.tree_settings.setIndexWidget(tree_model.indexFromItem(global_thresh_item), spinbox)
+        # self.tree_settings.setIndexWidget(tree_model.indexFromItem(global_thresh_item), spinbox)
+
+        # delegate = SpinBoxDelegate()
+
+        options_extraction = TreeItem('[Extraction Settings]', 12, set_bold=True)
+        options_compute = TreeItem('[Computation Settings]', 12, set_bold=True)
 
         root_node.appendRow(options_detection)
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
         self.tree_settings.setModel(tree_model)
+        # self.tree_settings.setItemDelegate(delegate)
 
 
 class TreeItem(QtGui.QStandardItem):
 
-    def __init__(self, text='', font_size=12, set_bold=False, color=QtGui.QColor(0, 0, 0)):
+    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, color=QtGui.QColor(0, 0, 0)):
         super().__init__()
 
         font = QtGui.QFont()
@@ -249,6 +260,34 @@ class TreeItem(QtGui.QStandardItem):
         self.setForeground(color)
         self.setFont(font)
         self.setText(text)
+        self.setCheckable(set_checkable)
+
+
+class SpinBoxDelegate(QtWidgets.QStyledItemDelegate):
+    """A delegate that allows the user to change integer values from the model
+       using a spin box widget. """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def createEditor(self, parent, option, index):
+        editor = QtWidgets.QSpinBox(parent)
+        editor.setFrame(False)
+        editor.setMinimum(0)
+        editor.setMaximum(100)
+        return editor
+
+    def setEditorData(self, editor, index):
+        value = index.model().data(index, QtCore.Qt.ItemDataRole.EditRole)
+        editor.setValue(value)
+
+    def setModelData(self, editor, model, index):
+        editor.interpretText()
+        value = editor.value()
+        model.setData(index, value, QtCore.Qt.ItemDataRole.EditRole)
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
 
 def pyqt_app():
