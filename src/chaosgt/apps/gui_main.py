@@ -8,7 +8,7 @@
 
 import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
-from ..configs.config_loader import load
+# from ..configs.config_loader import load
 
 
 class AnalysisUI(QtWidgets.QMainWindow):
