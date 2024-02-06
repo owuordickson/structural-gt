@@ -331,7 +331,7 @@
          </property>
          <layout class="QGridLayout" name="grid_layout_filters" columnstretch="1,6,1">
           <item row="4" column="0">
-           <widget class="QCheckBox" name="cbx_lapacian">
+           <widget class="QCheckBox" name="cbx_laplacian">
             <property name="text">
              <string>Laplacian</string>
             </property>
@@ -602,7 +602,7 @@
          </property>
          <layout class="QGridLayout" name="grid_layout_binary" columnstretch="1,6,1">
           <item row="3" column="0">
-           <widget class="QRadioButton" name="rdo_otsu_theshold">
+           <widget class="QRadioButton" name="rdo_otsu_threshold">
             <property name="text">
              <string>OTSU</string>
             </property>
@@ -647,7 +647,7 @@
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QRadioButton" name="rdo_adaptive_theshold">
+           <widget class="QRadioButton" name="rdo_adaptive_threshold">
             <property name="text">
              <string>Adaptive</string>
             </property>
@@ -657,7 +657,7 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QRadioButton" name="rdo_global_theshold">
+           <widget class="QRadioButton" name="rdo_global_threshold">
             <property name="text">
              <string>Global</string>
             </property>
