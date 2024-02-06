@@ -8,6 +8,7 @@
 
 import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
+from ..configs.config_loader import load
 
 
 class AnalysisUI(QtWidgets.QMainWindow):
@@ -183,8 +184,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(parent=self)
         self.status_bar.setObjectName("status_bar")
         self.setStatusBar(self.status_bar)
+        self.tree_model = None
 
         self.re_translate_ui()
+        self.init_tree()
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def re_translate_ui(self):
@@ -211,6 +214,41 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.setText(_translate("window_main", "Multiple Images"))
         self.grp_settings.setTitle(_translate("window_main", "Settings"))
         self.lbl_cite.setText(_translate("window_main", "Cite our work using ..."))
+
+    def init_tree(self):
+        # config, options, options_img, options_gte, options_gtc = load()
+
+        self.tree_settings.setHeaderHidden(True)
+        tree_model = QtGui.QStandardItemModel()
+        root_node = tree_model.invisibleRootItem()
+
+        options_detection = TreeItem('Detection Settings', 12, set_bold=True)
+        threshold_item = TreeItem('Binary Threshold', 10)
+
+        options_detection.appendRow(threshold_item)
+
+        options_extraction = TreeItem('Extraction Settings', 12, set_bold=True)
+        options_compute = TreeItem('Computation Settings', 12, set_bold=True)
+
+        root_node.appendRow(options_detection)
+        root_node.appendRow(options_extraction)
+        root_node.appendRow(options_compute)
+        self.tree_settings.setModel(tree_model)
+
+
+class TreeItem(QtGui.QStandardItem):
+
+    def __init__(self, text='', font_size=12, set_bold=False, color=QtGui.QColor(0, 0, 0)):
+        super().__init__()
+
+        font = QtGui.QFont()
+        font.setPointSize(font_size)
+        font.setBold(set_bold)
+
+        self.setEditable(False)
+        self.setForeground(color)
+        self.setFont(font)
+        self.setText(text)
 
 
 def pyqt_app():
