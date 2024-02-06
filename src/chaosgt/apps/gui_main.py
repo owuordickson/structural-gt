@@ -8,7 +8,7 @@
 
 import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
-# from .configs.config_loader import load
+from ..configs.config_loader import load
 
 
 class AnalysisUI(QtWidgets.QMainWindow):
@@ -448,29 +448,73 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_adaptive_threshold_value.setText(_translate("window_main", "99"))
 
     def init_tree(self):
-        # config, options, options_img, options_gte, options_gtc = load()
+        # 1. Fetch configs
+        config, options, options_img, options_gte, options_gtc = load()
 
+        # 2. Init treeview
         self.tree_settings.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         root_node = tree_model.invisibleRootItem()
 
-        options_detection = TreeItem('[Detection Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 0))
-        threshold_item = TreeItem('Binary Threshold', 9, set_checkable=True)
-        options_detection.appendRow(threshold_item)
+        # 3. Add Extraction items
+        options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 255))
+        weighted_item = TreeItem('Weighted by Diameter', 9, set_checkable=True,
+                                 color=QtGui.QColor(0, 0, 255), data=options_gte.weighted_by_diameter)
+        options_extraction.appendRow(weighted_item)
 
-        options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True)
-        options_compute = TreeItem('[Computation Settings]', 11, set_bold=True)
+        merge_nearby_item = TreeItem('Merge Nearby Nodes', 9, set_checkable=True,
+                                     color=QtGui.QColor(0, 0, 255), data=options_gte.merge_nearby_nodes)
+        options_extraction.appendRow(merge_nearby_item)
 
-        root_node.appendRow(options_detection)
+        prune_dangling_item = TreeItem('Prune Dangling Edges', 9, set_checkable=True,
+                                       color=QtGui.QColor(0, 0, 255), data=options_gte.prune_dangling_edges)
+        options_extraction.appendRow(prune_dangling_item)
+
+        remove_disconnected_item = TreeItem('Remove Disconnected Segments', 9, set_checkable=True,
+                                            color=QtGui.QColor(0, 0, 255),
+                                            data=options_gte.remove_disconnected_segments)
+        options_extraction.appendRow(remove_disconnected_item)
+
+        remove_loops_item = TreeItem('Remove Self Loops (set size)', 9, set_checkable=True,
+                                     color=QtGui.QColor(0, 0, 255), data=options_gte.remove_self_loops)
+        options_extraction.appendRow(remove_loops_item)
+
+        remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False, set_editable=True,
+                                    color=QtGui.QColor(0, 0, 255))
+        remove_loops_item.appendRow(remove_size_item)
+
+        is_multigraph_item = TreeItem('Is Multigraph?', 9, set_checkable=True,
+                                      color=QtGui.QColor(0, 0, 255), data=options_gte.is_multigraph)
+        options_extraction.appendRow(is_multigraph_item)
+
+        node_id_item = TreeItem('Display Node ID', 9, set_checkable=True,
+                                color=QtGui.QColor(0, 0, 255), data=options_gte.display_node_id)
+        options_extraction.appendRow(node_id_item)
+
+        # 4. Add Computation items
+        options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(255, 0, 0))
+
+        # 5. Add Save items
+        options_save = TreeItem('[Save Files]', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
+        export_gexf_item = TreeItem('Export as gexf', 9, set_checkable=True,
+                                    color=QtGui.QColor(99, 99, 99), data=options_gte.export_as_gexf)
+        options_save.appendRow(export_gexf_item)
+
+        export_edge_item = TreeItem('Export Edge List', 9, set_checkable=True,
+                                    color=QtGui.QColor(99, 99, 99), data=options_gte.export_edge_list)
+        options_save.appendRow(export_edge_item)
+
+        # 6. Append all data
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
+        root_node.appendRow(options_save)
         self.tree_settings.setModel(tree_model)
 
 
 class TreeItem(QtGui.QStandardItem):
 
     def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, set_editable=False,
-                 color=QtGui.QColor(0, 0, 0)):
+                 color=QtGui.QColor(0, 0, 0), data=-1):
         super().__init__()
 
         font = QtGui.QFont()
@@ -483,6 +527,12 @@ class TreeItem(QtGui.QStandardItem):
         self.setText(text)
         self.setCheckable(set_checkable)
         self.setEditable(set_editable)
+        self.setData(data)
+
+        if int(self.data()) == 1:
+            self.setCheckState(QtCore.Qt.CheckState.Checked)
+        elif int(self.data()) == 0:
+            self.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
 
 def pyqt_app():
