@@ -9,7 +9,7 @@ Entry points that allow users to execute GUI or Cli programs
 
 
 try:
-    from .apps.gui_main import ChaosGUI
+    from .apps.gui_main_tk import ChaosGUI
 except ImportError or ModuleNotFoundError:
     print("Please install 'Python3-tk'")
 from .apps.cli_main import terminal_app
