@@ -493,6 +493,65 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         # 4. Add Computation items
         options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(255, 0, 0))
+        heatmaps_item = TreeItem('Display Heatmaps', 9, set_checkable=True, color=QtGui.QColor(255, 0, 0),
+                                 data=options_gtc.display_heatmaps)
+        options_compute.appendRow(heatmaps_item)
+
+        degree_item = TreeItem('Average Degree', 9, set_checkable=True, color=QtGui.QColor(255, 0, 0),
+                               data=options_gtc.display_degree_histogram)
+        options_compute.appendRow(degree_item)
+
+        network_diameter_item = TreeItem('Network Diameter', 9, set_checkable=True,
+                                         color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_network_diameter)
+        options_compute.appendRow(network_diameter_item)
+
+        anc_item = TreeItem('Average Nodal Connectivity', 9, set_checkable=True,
+                            color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_nodal_connectivity)
+        options_compute.appendRow(anc_item)
+
+        clustering_coef_item = TreeItem('Average Clustering Coefficient', 9, set_checkable=True,
+                                        color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_clustering_coef)
+        options_compute.appendRow(clustering_coef_item)
+
+        assortativity_coef_item = TreeItem('Assortativity Coefficient', 9, set_checkable=True,
+                                           color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_assortativity_coef)
+        options_compute.appendRow(assortativity_coef_item)
+
+        betweenness_centrality_item = TreeItem('Betweenness Centrality', 9, set_checkable=True,
+                                               color=QtGui.QColor(255, 0, 0),
+                                               data=options_gtc.display_betweenness_histogram)
+        options_compute.appendRow(betweenness_centrality_item)
+
+        # current_betweenness_item = TreeItem('Current Flow Betweenness Centrality', 9, set_checkable=True,
+        #                                    color=QtGui.QColor(255, 0, 0),
+        #                                    data=options_gtc.display_currentflow_histogram)
+        # options_compute.appendRow(current_betweenness_item)
+
+        closeness_centrality_item = TreeItem('Closeness Centrality', 9, set_checkable=True,
+                                             color=QtGui.QColor(255, 0, 0),
+                                             data=options_gtc.display_closeness_histogram)
+        options_compute.appendRow(closeness_centrality_item)
+
+        eigenvector_centrality_item = TreeItem('Eigenvector Centrality', 9, set_checkable=True,
+                                               color=QtGui.QColor(255, 0, 0),
+                                               data=options_gtc.display_eigenvector_histogram)
+        options_compute.appendRow(eigenvector_centrality_item)
+
+        graph_density_item = TreeItem('Graph Density', 9, set_checkable=True,
+                                      color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_graph_density)
+        options_compute.appendRow(graph_density_item)
+
+        graph_conductance_item = TreeItem('Graph Conductance', 9, set_checkable=True,
+                                          color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_graph_conductance)
+        options_compute.appendRow(graph_conductance_item)
+
+        global_efficiency_item = TreeItem('Global Efficiency', 9, set_checkable=True,
+                                          color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_global_efficiency)
+        options_compute.appendRow(global_efficiency_item)
+
+        wiener_index_item = TreeItem('Wiener Index', 9, set_checkable=True,
+                                     color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_wiener_index)
+        options_compute.appendRow(wiener_index_item)
 
         # 5. Add Save items
         options_save = TreeItem('[Save Files]', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
