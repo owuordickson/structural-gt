@@ -143,8 +143,8 @@ class GraphStruct:
         # applying median filter
         if options.apply_median == 1:
             # making a 5x5 array of all 1's for median filter
-            d_array = np.zeros((5, 5)) + 1
-            filtered_img = median(filtered_img, d_array)
+            med_disk = disk(5)
+            filtered_img = median(filtered_img, med_disk)
 
         # applying gaussian blur
         if options.apply_gaussian == 1:

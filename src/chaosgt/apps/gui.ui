@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>Dickson Owuor</author>
  <class>window_main</class>
  <widget class="QMainWindow" name="window_main">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>961</width>
-    <height>723</height>
+    <width>1038</width>
+    <height>811</height>
    </rect>
   </property>
   <property name="font">
@@ -82,6 +83,12 @@
     </item>
     <item row="1" column="2">
      <widget class="QGroupBox" name="grp_tasks">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="title">
        <string/>
       </property>
@@ -95,7 +102,7 @@
        <item row="10" column="0" colspan="2">
         <widget class="QGroupBox" name="grp_compute">
          <property name="title">
-          <string>Computing</string>
+          <string>Computations</string>
          </property>
          <layout class="QGridLayout" name="grid_layout_compute">
           <item row="3" column="0">
@@ -108,7 +115,7 @@
           <item row="2" column="0">
            <widget class="QPushButton" name="btn_fd">
             <property name="text">
-             <string>Fractal Dimen.</string>
+             <string> Fractal Dimension </string>
             </property>
            </widget>
           </item>
@@ -153,7 +160,7 @@
         </widget>
        </item>
        <item row="7" column="0">
-        <spacer name="verticalSpacer">
+        <spacer name="vpc_computation_1">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -183,12 +190,21 @@
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>0</number>
+            </property>
            </widget>
           </item>
           <item row="6" column="1">
            <widget class="QSpinBox" name="spb_contrast">
             <property name="alignment">
              <set>Qt::AlignCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
             </property>
            </widget>
           </item>
@@ -210,7 +226,7 @@
         </widget>
        </item>
        <item row="9" column="0">
-        <spacer name="verticalSpacer_2">
+        <spacer name="vsp_computation_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -295,6 +311,12 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="title">
        <string>Settings</string>
       </property>
@@ -303,13 +325,313 @@
       </property>
       <layout class="QGridLayout" name="grid_layout_settings">
        <item row="0" column="0">
-        <widget class="QTreeView" name="tree_settings"/>
+        <widget class="QGroupBox" name="grp_img_filters">
+         <property name="title">
+          <string>Image Filters</string>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_filters" columnstretch="1,6,1">
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="cbx_lapacian">
+            <property name="text">
+             <string>Laplacian</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="cbx_autolevel">
+            <property name="text">
+             <string>Auto Level</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="cbx_gaussian_blur">
+            <property name="text">
+             <string>Gaussian Blur</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="spn_lowpass">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="cbx_scharr">
+            <property name="text">
+             <string>Scharr</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLabel" name="lbl_sobel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>3</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSlider" name="sld_sobel">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>7</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+            <property name="pageStep">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="cbx_sobel">
+            <property name="text">
+             <string>Sobel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="cbx_lowpass">
+            <property name="text">
+             <string>Lowpass</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="spn_autolevel">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="correctionMode">
+             <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="lbl_laplacian">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>3</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="spn_gaussian_blur">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="correctionMode">
+             <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSlider" name="sld_laplacian">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>7</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+            <property name="pageStep">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
-       <item row="1" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="lbl_cite">
          <property name="text">
           <string>Cite our work using ...</string>
          </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QTreeView" name="tree_settings"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="grp_img_binary">
+         <property name="title">
+          <string>Image Binary</string>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_binary" columnstretch="1,6,1">
+          <item row="3" column="0">
+           <widget class="QRadioButton" name="rdo_otsu_theshold">
+            <property name="text">
+             <string>OTSU</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btn_grp_binary</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="spn_adaptive_threshold">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="readOnly">
+             <bool>false</bool>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::UpDownArrows</enum>
+            </property>
+            <property name="correctionMode">
+             <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+            </property>
+            <property name="showGroupSeparator" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="sld_global_threshold">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+            <property name="value">
+             <number>127</number>
+            </property>
+            <property name="tracking">
+             <bool>true</bool>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>false</bool>
+            </property>
+            <property name="invertedControls">
+             <bool>false</bool>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QRadioButton" name="rdo_adaptive_theshold">
+            <property name="text">
+             <string>Adaptive</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btn_grp_binary</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="rdo_global_theshold">
+            <property name="text">
+             <string>Global</string>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btn_grp_binary</string>
+            </attribute>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="lbl_global_threshold_value">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>120</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="3">
+           <widget class="QCheckBox" name="cbx_dark_foreground">
+            <property name="text">
+             <string>Apply Dark Foreground</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -322,7 +644,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>961</width>
+     <width>1038</width>
      <height>22</height>
     </rect>
    </property>
@@ -331,4 +653,7 @@
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="btn_grp_binary"/>
+ </buttongroups>
 </ui>

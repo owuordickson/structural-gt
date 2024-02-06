@@ -249,7 +249,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
 class TreeItem(QtGui.QStandardItem):
 
-    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, color=QtGui.QColor(0, 0, 0)):
+    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, set_editable=False,
+                 color=QtGui.QColor(0, 0, 0)):
         super().__init__()
 
         font = QtGui.QFont()
@@ -261,6 +262,7 @@ class TreeItem(QtGui.QStandardItem):
         self.setFont(font)
         self.setText(text)
         self.setCheckable(set_checkable)
+        self.setEditable(set_editable)
 
 
 def pyqt_app():
