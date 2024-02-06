@@ -226,17 +226,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         threshold_item = TreeItem('Binary Threshold', 10, set_checkable=True)
         options_detection.appendRow(threshold_item)
 
-        global_thresh_item = TreeItem('Global Threshold', 10, set_checkable=True)
-        # global_thresh_item = SpinBoxItem('Global Threshold')
-        options_detection.appendRow(global_thresh_item)
-        # spinbox = QtWidgets.QSpinBox()
-        # spinbox.setMinimum(0)
-        # spinbox.setMaximum(100)
-        # self.tree_settings.setIndexWidget(tree_model.indexFromItem(global_thresh_item), spinbox)
-        # self.tree_settings.setIndexWidget(tree_model.indexFromItem(global_thresh_item), spinbox)
-
-        # delegate = SpinBoxDelegate()
-
         options_extraction = TreeItem('[Extraction Settings]', 12, set_bold=True)
         options_compute = TreeItem('[Computation Settings]', 12, set_bold=True)
 
@@ -244,7 +233,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
         self.tree_settings.setModel(tree_model)
-        # self.tree_settings.setItemDelegate(delegate)
 
 
 class TreeItem(QtGui.QStandardItem):
