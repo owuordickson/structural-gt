@@ -807,6 +807,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             self.btn_prev.setEnabled(False)
 
+    def on_zoom_in(self, event):
+        self.scale *= 2
+        self.resize_image()
+
+    def on_zoom_out(self, event):
+        self.scale /= 2
+        self.resize_image()
+
+    def resize_image(self):
+        size = self.pixmap.size()
+        scaled_pixmap = self.pixmap.scaled(self.scale * size)
+        self.label.setPixmap(scaled_pixmap)
+
     def _btn_crop_clicked(self):
         return
         """
