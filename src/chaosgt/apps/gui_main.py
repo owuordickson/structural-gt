@@ -29,6 +29,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_img = QtWidgets.QGridLayout(self.grp_img)
         self.grid_layout_img.setObjectName("grid_layout_img")
         self.lbl_img = QtWidgets.QLabel(parent=self.grp_img)
+        self.lbl_img.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_img.setObjectName("lbl_img")
         self.grid_layout_img.addWidget(self.lbl_img, 0, 0, 1, 1)
         self.grp_img_nav = QtWidgets.QGroupBox(parent=self.grp_img)
@@ -638,6 +639,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
+        if self.img_path == '':
+            self.lbl_img.setText("Add 'Image Path' using the 'Select' button")
 
         # Listeners
         self.btn_select_img_path.clicked.connect(self._btn_select_img_path_clicked)
@@ -698,6 +701,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
             if len(self.file_names) > 0:
                 self.img_path = self.file_names[0]
+                img_pixmap = QtGui.QPixmap(self.img_path)
+                w = self.lbl_img.width()
+                h = self.lbl_img.height()
+                self.lbl_img.setText('')
+                self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(True)
@@ -712,9 +720,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
             save_dir, file_name = os.path.split(fd_image_file)
             self.img_path = fd_image_file
             img_pixmap = QtGui.QPixmap(self.img_path)
-
-            img_pixmap_scaled = img_pixmap.scaledToWidth(600)
-            self.lbl_img.setPixmap(img_pixmap_scaled)
+            w = self.lbl_img.width()
+            h = self.lbl_img.height()
+            self.lbl_img.setText('')
+            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
