@@ -373,6 +373,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.img_path = ''
         self.output_path = ''
         self.file_names = []
+        self.current_img_file_index = 0
 
         self.re_translate_ui()
         self._init_configs()
@@ -647,7 +648,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_select_out_path.clicked.connect(self._btn_select_out_path_clicked)
         self.cbx_multi.stateChanged.connect(self._cbx_multi_changed)
         self.btn_next.clicked.connect(self._btn_next_clicked)
-        self.btn_prev.clicked.connect(self._btn_prev_next)
+        self.btn_prev.clicked.connect(self._btn_prev_clicked)
 
     def _init_tools(self):
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
@@ -675,10 +676,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 dialog.exec()
 
             if len(self.file_names) > 0:
-                self.img_path = self.file_names[0]
+                self.current_img_file_index = 0
+                self.img_path = self.file_names[self.current_img_file_index]
                 self.txt_img_path.setText(img_dir)
                 self.btn_next.setEnabled(True)
-                self.btn_prev.setEnabled(True)
+                self.btn_prev.setEnabled(False)
         else:
             self.txt_img_path.setText(self.img_path)
             self.btn_next.setEnabled(False)
@@ -700,7 +702,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 dialog.exec()
 
             if len(self.file_names) > 0:
-                self.img_path = self.file_names[0]
+                self.current_img_file_index = 0
+                self.img_path = self.file_names[self.current_img_file_index]
                 img_pixmap = QtGui.QPixmap(self.img_path)
                 w = self.lbl_img.width()
                 h = self.lbl_img.height()
@@ -708,7 +711,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
                 self.btn_next.setEnabled(True)
-                self.btn_prev.setEnabled(True)
+                self.btn_prev.setEnabled(False)
                 self.txt_img_path.setText(fd_image_dir)
                 if self.output_path == '':
                     self.output_path = fd_image_dir
@@ -738,10 +741,36 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.txt_out_path.setText(fd_out_dir)
 
     def _btn_next_clicked(self):
-        pass
+        if self.current_img_file_index < (len(self.file_names) - 1):
+            self.current_img_file_index += 1
+            self.img_path = self.file_names[self.current_img_file_index]
+            img_pixmap = QtGui.QPixmap(self.img_path)
+            w = self.lbl_img.width()
+            h = self.lbl_img.height()
+            self.lbl_img.setText('')
+            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
-    def _btn_prev_next(self):
-        pass
+            self.btn_prev.setEnabled(True)
+            if self.current_img_file_index == (len(self.file_names) - 1):
+                self.btn_next.setEnabled(False)
+        else:
+            self.btn_next.setEnabled(False)
+
+    def _btn_prev_clicked(self):
+        if self.current_img_file_index > 0:
+            self.current_img_file_index -= 1
+            self.img_path = self.file_names[self.current_img_file_index]
+            img_pixmap = QtGui.QPixmap(self.img_path)
+            w = self.lbl_img.width()
+            h = self.lbl_img.height()
+            self.lbl_img.setText('')
+            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+
+            self.btn_next.setEnabled(True)
+            if self.current_img_file_index == 0:
+                self.btn_prev.setEnabled(False)
+        else:
+            self.btn_prev.setEnabled(False)
 
     def _btn_crop_clicked(self):
         # from PyQt5.QtGui import QPixmap
