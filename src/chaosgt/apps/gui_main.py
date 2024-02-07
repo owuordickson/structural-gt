@@ -230,6 +230,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_scharr = QtWidgets.QCheckBox(parent=self.grp_img_filters)
         self.cbx_scharr.setObjectName("cbx_scharr")
         self.grid_layout_filters.addWidget(self.cbx_scharr, 7, 0, 1, 1)
+        self.cbx_median = QtWidgets.QCheckBox(parent=self.grp_img_filters)
+        self.cbx_median.setObjectName("cbx_median")
+        self.grid_layout_filters.addWidget(self.cbx_median, 8, 0, 1, 1)
         self.sld_autolevel = QtWidgets.QSlider(parent=self.grp_img_filters)
         self.sld_autolevel.setMinimum(1)
         self.sld_autolevel.setSingleStep(2)
@@ -399,7 +402,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.setStatusBar(self.status_bar)
 
         self.re_translate_ui()
-        self.init_tree()
+        self._init_configs()
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def re_translate_ui(self):
@@ -432,6 +435,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_gaussian_blur.setText(_translate("window_main", "Gaussian Blur"))
         self.lbl_lut_gamma_title.setText(_translate("window_main", "LUT Gamma"))
         self.cbx_scharr.setText(_translate("window_main", "Scharr"))
+        self.cbx_median.setText(_translate("window_main", "Median"))
         self.lbl_autolevel.setText(_translate("window_main", "10"))
         self.lbl_sobel.setText(_translate("window_main", "3"))
         self.cbx_sobel.setText(_translate("window_main", "Sobel"))
@@ -447,16 +451,33 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_dark_foreground.setText(_translate("window_main", "Apply Dark Foreground"))
         self.lbl_adaptive_threshold_value.setText(_translate("window_main", "99"))
 
-    def init_tree(self):
+    def _init_configs(self):
         # 1. Fetch configs
         config, options, options_img, options_gte, options_gtc = load()
 
-        # 2. Init treeview
+        # 2. Initialize Settings
+        self._init_tree(options_gte, options_gtc)
+
+        # 3. Initialize Filter Settings
+        self._init_img_filter_settings(options_img)
+
+        # 4. Initialize Binary Settings
+        self._init_img_binary_settings(options_img)
+
+        # 5. Initialize Enhance Tools
+        # self._init_img_enhance_tools()
+
+        # 6. initialize Image Paths
+        self._init_img_path_settings(options)
+
+    def _init_tree(self, options_gte, options_gtc):
+
+        # 1. Init treeview
         self.tree_settings.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         root_node = tree_model.invisibleRootItem()
 
-        # 3. Add Extraction items
+        # 2. Add Extraction items
         options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 255))
         weighted_item = TreeItem('Weighted by Diameter', 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 255), data=options_gte.weighted_by_diameter)
@@ -491,7 +512,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                 color=QtGui.QColor(0, 0, 255), data=options_gte.display_node_id)
         options_extraction.appendRow(node_id_item)
 
-        # 4. Add Computation items
+        # 3. Add Computation items
         options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(255, 0, 0))
         heatmaps_item = TreeItem('Display Heatmaps', 9, set_checkable=True, color=QtGui.QColor(255, 0, 0),
                                  data=options_gtc.display_heatmaps)
@@ -553,7 +574,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                      color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_wiener_index)
         options_compute.appendRow(wiener_index_item)
 
-        # 5. Add Save items
+        # 4. Add Save items
         options_save = TreeItem('[Save Files]', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
         export_gexf_item = TreeItem('Export as gexf', 9, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_as_gexf)
@@ -563,23 +584,83 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_edge_list)
         options_save.appendRow(export_edge_item)
 
-        # 6. Append all data
+        # 5. Append all data
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
         root_node.appendRow(options_save)
         self.tree_settings.setModel(tree_model)
 
-    def init_img_filter_settings(self):
-        pass
+    def _init_img_filter_settings(self, options_img):
+        # range between 0.01-5.0
+        self.sld_lut_gamma.setValue(int(options_img.gamma))
+        self.lbl_lut_gamma.setText(str(options_img.gamma))
 
-    def init_img_binary_settings(self):
-        pass
+        # must be odd integer
+        self.cbx_gaussian_blur.setChecked(options_img.apply_gaussian)
+        self.cbx_autolevel.setChecked(options_img.apply_autolevel)
+        self.sld_gaussian.setValue(options_img.blurring_window_size)
+        self.sld_autolevel.setValue(options_img.blurring_window_size)
+        self.lbl_gaussian.setText(str(options_img.blurring_window_size))
+        self.lbl_autolevel.setText(str(options_img.blurring_window_size))
 
-    def init_img_path_settings(self):
-        pass
+        self.cbx_lowpass.setChecked(options_img.apply_lowpass)
+        self.spn_lowpass.setValue(options_img.filter_window_size)
 
-    def init_img_enhance_tools(self):
-        pass
+        self.cbx_laplacian.setChecked(options_img.apply_laplacian)
+        self.sld_laplacian.setValue(5)
+        self.lbl_laplacian.setText(str(5))
+
+        self.cbx_sobel.setChecked(options_img.apply_sobel)
+        self.sld_sobel.setValue(5)
+        self.lbl_sobel.setText(str(5))
+
+        self.cbx_scharr.setChecked(options_img.apply_scharr)
+
+        self.cbx_median.setChecked(options_img.apply_median)
+
+    def _init_img_binary_settings(self, options_img):
+
+        if options_img.threshold_type == 2:
+            self.rdo_otsu_threshold.setChecked(True)
+        elif options_img.threshold_type == 1:
+            self.rdo_adaptive_threshold.setChecked(True)
+        else:
+            self.rdo_global_threshold.setChecked(True)
+
+        # range between 1-255
+        self.sld_global_threshold.setValue(options_img.threshold_global)
+        self.lbl_global_threshold_value.setText(str(options_img.threshold_global))
+
+        # must be odd integer
+        self.sld_adaptive_threshold.setValue(options_img.threshold_adaptive)
+        self.lbl_adaptive_threshold_value.setText(str(options_img.threshold_adaptive))
+
+        self.cbx_dark_foreground.setChecked(options_img.apply_dark_foreground)
+
+    def _init_img_path_settings(self, options):
+
+        self.cbx_multi.setChecked(options.multiImage)
+        if options.multiImage == 1:
+            self.btn_next.setEnabled(True)
+            self.btn_prev.setEnabled(True)
+        else:
+            self.btn_next.setEnabled(False)
+            self.btn_prev.setEnabled(False)
+        # if self.txt_img_path == '':
+        #    self.wdt_img
+        # filePath = ../examples/
+        # outputDir = ../results/tests
+
+    # def _init_img_enhance_tools(self):
+        # from PyQt5.QtGui import QPixmap
+        # from qcrop.ui import QCrop
+        # original_image = QPixmap(...)
+        # crop_tool = QCrop(original_image)
+        # status = crop_tool.exec()
+        # if status == Qt.Accepted:
+        #    cropped_image = crop_tool.image
+        # else crop_tool.image == original_image
+    #    pass
 
 
 class TreeItem(QtGui.QStandardItem):
