@@ -8,7 +8,7 @@
 
 import os
 import sys
-from qcrop.ui import QCrop
+# from qcrop.ui import QCrop
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 
