@@ -209,12 +209,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_lut_gamma.setObjectName("sld_lut_gamma")
         self.grid_layout_filters.addWidget(self.sld_lut_gamma, 0, 1, 1, 1)
         self.lbl_lut_gamma = QtWidgets.QLabel(parent=self.grp_img_filters)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Preferred)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_lut_gamma.sizePolicy().hasHeightForWidth())
-        self.lbl_lut_gamma.setSizePolicy(size_policy)
+        self.lbl_lut_gamma.setFixedWidth(30)
         self.lbl_lut_gamma.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_lut_gamma.setObjectName("lbl_lut_gamma")
         self.grid_layout_filters.addWidget(self.lbl_lut_gamma, 0, 2, 1, 1)
@@ -241,22 +236,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_autolevel.setObjectName("sld_autolevel")
         self.grid_layout_filters.addWidget(self.sld_autolevel, 2, 1, 1, 1)
         self.lbl_autolevel = QtWidgets.QLabel(parent=self.grp_img_filters)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Preferred)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_autolevel.sizePolicy().hasHeightForWidth())
-        self.lbl_autolevel.setSizePolicy(size_policy)
+        self.lbl_autolevel.setFixedWidth(30)
         self.lbl_autolevel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_autolevel.setObjectName("lbl_autolevel")
         self.grid_layout_filters.addWidget(self.lbl_autolevel, 2, 2, 1, 1)
         self.lbl_sobel = QtWidgets.QLabel(parent=self.grp_img_filters)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Fixed)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_sobel.sizePolicy().hasHeightForWidth())
-        self.lbl_sobel.setSizePolicy(size_policy)
+        self.lbl_sobel.setFixedWidth(30)
         self.lbl_sobel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_sobel.setObjectName("lbl_sobel")
         self.grid_layout_filters.addWidget(self.lbl_sobel, 5, 2, 1, 1)
@@ -282,22 +267,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_sobel.setObjectName("cbx_sobel")
         self.grid_layout_filters.addWidget(self.cbx_sobel, 5, 0, 1, 1)
         self.lbl_gaussian = QtWidgets.QLabel(parent=self.grp_img_filters)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Preferred)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_gaussian.sizePolicy().hasHeightForWidth())
-        self.lbl_gaussian.setSizePolicy(size_policy)
+        self.lbl_gaussian.setFixedWidth(30)
         self.lbl_gaussian.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_gaussian.setObjectName("lbl_gaussian")
         self.grid_layout_filters.addWidget(self.lbl_gaussian, 1, 2, 1, 1)
         self.lbl_laplacian = QtWidgets.QLabel(parent=self.grp_img_filters)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Fixed)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_laplacian.sizePolicy().hasHeightForWidth())
-        self.lbl_laplacian.setSizePolicy(size_policy)
+        self.lbl_laplacian.setFixedWidth(30)
         self.lbl_laplacian.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_laplacian.setObjectName("lbl_laplacian")
         self.grid_layout_filters.addWidget(self.lbl_laplacian, 4, 2, 1, 1)
@@ -354,13 +329,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_grp_binary.addButton(self.rdo_global_threshold)
         self.grid_layout_binary.addWidget(self.rdo_global_threshold, 1, 0, 1, 1)
         self.lbl_global_threshold_value = QtWidgets.QLabel(parent=self.grp_img_binary)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Fixed)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_global_threshold_value.sizePolicy().hasHeightForWidth())
-        self.lbl_global_threshold_value.setSizePolicy(size_policy)
-        self.lbl_global_threshold_value.setMinimumSize(QtCore.QSize(0, 0))
+        self.lbl_global_threshold_value.setFixedWidth(30)
         self.lbl_global_threshold_value.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_global_threshold_value.setObjectName("lbl_global_threshold_value")
         self.grid_layout_binary.addWidget(self.lbl_global_threshold_value, 1, 2, 1, 1)
@@ -375,12 +344,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_adaptive_threshold.setObjectName("sld_adaptive_threshold")
         self.grid_layout_binary.addWidget(self.sld_adaptive_threshold, 2, 1, 1, 1)
         self.lbl_adaptive_threshold_value = QtWidgets.QLabel(parent=self.grp_img_binary)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
-                                            QtWidgets.QSizePolicy.Policy.Preferred)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.lbl_adaptive_threshold_value.sizePolicy().hasHeightForWidth())
-        self.lbl_adaptive_threshold_value.setSizePolicy(size_policy)
+        self.lbl_adaptive_threshold_value.setFixedWidth(30)
         self.lbl_adaptive_threshold_value.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_adaptive_threshold_value.setObjectName("lbl_adaptive_threshold_value")
         self.grid_layout_binary.addWidget(self.lbl_adaptive_threshold_value, 2, 2, 1, 1)
@@ -592,7 +556,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _init_img_filter_settings(self, options_img):
         # range between 0.01-5.0
-        self.sld_lut_gamma.setValue(int(options_img.gamma))
+        self.sld_lut_gamma.setValue(int(options_img.gamma * 10))
         self.lbl_lut_gamma.setText(str(options_img.gamma))
 
         # must be odd integer
@@ -618,6 +582,18 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.cbx_median.setChecked(options_img.apply_median)
 
+        # Listeners
+        self.sld_lut_gamma.valueChanged.connect(
+            lambda: self.lbl_lut_gamma.setText(str(self.sld_lut_gamma.value() / 10)))
+        self.sld_gaussian.valueChanged.connect(lambda: self.lbl_gaussian.setText(
+            str(self.sld_gaussian.value() + 1 if self.sld_gaussian.value() % 2 == 0 else self.sld_gaussian.value())))
+        self.sld_autolevel.valueChanged.connect(lambda: self.lbl_autolevel.setText(
+            str(self.sld_autolevel.value() + 1 if self.sld_autolevel.value() % 2 == 0 else self.sld_autolevel.value())))
+        self.sld_laplacian.valueChanged.connect(lambda: self.lbl_laplacian.setText(
+            str(self.sld_laplacian.value() + 1 if self.sld_laplacian.value() % 2 == 0 else self.sld_laplacian.value())))
+        self.sld_sobel.valueChanged.connect(lambda: self.lbl_sobel.setText(
+            str(self.sld_sobel.value() + 1 if self.sld_sobel.value() % 2 == 0 else self.sld_sobel.value())))
+
     def _init_img_binary_settings(self, options_img):
 
         if options_img.threshold_type == 2:
@@ -637,6 +613,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.cbx_dark_foreground.setChecked(options_img.apply_dark_foreground)
 
+        # Listeners
+        self.sld_global_threshold.valueChanged.connect(
+            lambda: self.lbl_global_threshold_value.setText(str(self.sld_global_threshold.value())))
+        self.sld_adaptive_threshold.valueChanged.connect(lambda: self.lbl_adaptive_threshold_value.setText(
+            str(self.sld_adaptive_threshold.value() + 1 if self.sld_adaptive_threshold.value() % 2 == 0 else
+                self.sld_adaptive_threshold.value())))
+
     def _init_img_path_settings(self, options):
 
         self.cbx_multi.setChecked(options.multiImage)
@@ -650,16 +633,27 @@ class AnalysisUI(QtWidgets.QMainWindow):
         #    self.wdt_img
         # filePath = ../examples/
         # outputDir = ../results/tests
+        # Listeners
+        self.cbx_multi.stateChanged.connect(self.cbx_multi_changed)
+
+    def cbx_multi_changed(self):
+        if self.cbx_multi.isChecked():
+            self.btn_next.setEnabled(True)
+            self.btn_prev.setEnabled(True)
+        else:
+            self.btn_next.setEnabled(False)
+            self.btn_prev.setEnabled(False)
+
 
     # def _init_img_enhance_tools(self):
-        # from PyQt5.QtGui import QPixmap
-        # from qcrop.ui import QCrop
-        # original_image = QPixmap(...)
-        # crop_tool = QCrop(original_image)
-        # status = crop_tool.exec()
-        # if status == Qt.Accepted:
-        #    cropped_image = crop_tool.image
-        # else crop_tool.image == original_image
+    # from PyQt5.QtGui import QPixmap
+    # from qcrop.ui import QCrop
+    # original_image = QPixmap(...)
+    # crop_tool = QCrop(original_image)
+    # status = crop_tool.exec()
+    # if status == Qt.Accepted:
+    #    cropped_image = crop_tool.image
+    # else crop_tool.image == original_image
     #    pass
 
 
