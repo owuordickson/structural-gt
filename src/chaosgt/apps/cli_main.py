@@ -43,7 +43,7 @@ def terminal_app():
                     print(a_file)
                     filenames.append(os.path.join(out_path, a_file))
             if len(filenames) <= 0:
-                raise Exception("No workable images found! File have to be a .tif, .png, or .jpg")
+                raise Exception("No workable images found! Files have to be either .tif, .png, or .jpg")
         else:
             # Process only a single image file
             # testing if file is a workable image

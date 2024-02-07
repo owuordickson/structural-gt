@@ -366,6 +366,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.status_bar.setObjectName("status_bar")
         self.setStatusBar(self.status_bar)
 
+        self.img_path = ''
+        self.output_path = ''
+        self.file_names = []
+
         self.re_translate_ui()
         self._init_configs()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -652,24 +656,72 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
 
     def _cbx_multi_changed(self):
-        if self.cbx_multi.isChecked():
-            self.btn_next.setEnabled(True)
-            self.btn_prev.setEnabled(True)
+        if self.cbx_multi.isChecked() and os.path.isfile(self.img_path):
+            # split the file location into file name and path
+            img_dir, file_name = os.path.split(self.img_path)
+            files = os.listdir(img_dir)
+            files = sorted(files, key=str.lower)
+            self.file_names = []
+            for a_file in files:
+                if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                    self.file_names.append(os.path.join(img_dir, a_file))
+            if len(self.file_names) <= 0:
+                dialog = CustomDialog("Fatal Error",
+                                      "No workable images found! Files have to be either .tif, .png, or .jpg")
+                dialog.exec()
+
+            if len(self.file_names) > 0:
+                self.img_path = self.file_names[0]
+                self.txt_img_path.setText(img_dir)
+                self.btn_next.setEnabled(True)
+                self.btn_prev.setEnabled(True)
         else:
+            self.txt_img_path.setText(self.img_path)
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
 
     def _btn_select_img_path_clicked(self):
-        fd_image_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
-                                                                 filter="Image files (*.jpg *.gif *.tif *.png *.jpeg)")
-        # split the file location into file name and path
-        save_dir, file_name = os.path.split(fd_image_file)
+        if self.cbx_multi.isChecked():
+            fd_image_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
 
-        self.txt_img_path.setText(fd_image_file)
-        self.txt_out_path.setText(save_dir)
+            files = os.listdir(fd_image_dir)
+            files = sorted(files, key=str.lower)
+            self.file_names = []
+            for a_file in files:
+                if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                    self.file_names.append(os.path.join(fd_image_dir, a_file))
+            if len(self.file_names) <= 0:
+                dialog = CustomDialog("Fatal Error",
+                                      "No workable images found! Files have to be either .tif, .png, or .jpg")
+                dialog.exec()
+
+            if len(self.file_names) > 0:
+                self.img_path = self.file_names[0]
+
+                self.btn_next.setEnabled(True)
+                self.btn_prev.setEnabled(True)
+                self.txt_img_path.setText(fd_image_dir)
+                if self.output_path == '':
+                    self.output_path = fd_image_dir
+                    self.txt_out_path.setText(fd_image_dir)
+        else:
+            fd_image_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
+                                                                     filter="Image files (*.jpg *.tif *.png *.jpeg)")
+            # split the file location into file name and path
+            save_dir, file_name = os.path.split(fd_image_file)
+            self.img_path = fd_image_file
+
+            self.btn_next.setEnabled(False)
+            self.btn_prev.setEnabled(False)
+            self.txt_img_path.setText(self.img_path)
+            if self.output_path == '':
+                self.txt_out_path.setText(save_dir)
+                self.output_path = save_dir
 
     def _btn_select_out_path_clicked(self):
-        pass
+        fd_out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
+        self.output_path = fd_out_dir
+        self.txt_out_path.setText(fd_out_dir)
 
     def _btn_next_clicked(self):
         pass
@@ -730,6 +782,24 @@ class TreeItem(QtGui.QStandardItem):
         elif int(self.data()) == 0:
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
+
+class CustomDialog(QtWidgets.QDialog):
+    def __init__(self, title, message, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle(title)
+
+        dialog_button = QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+
+        self.buttonBox = QtWidgets.QDialogButtonBox(dialog_button)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QtWidgets.QVBoxLayout()
+        message = QtWidgets.QLabel(message)
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
 
 def pyqt_app():
     app = QtWidgets.QApplication(sys.argv)
