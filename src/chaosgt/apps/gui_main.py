@@ -28,9 +28,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_img.setObjectName("grp_img")
         self.grid_layout_img = QtWidgets.QGridLayout(self.grp_img)
         self.grid_layout_img.setObjectName("grid_layout_img")
-        self.wdt_img = QtWidgets.QWidget(parent=self.grp_img)
-        self.wdt_img.setObjectName("wdt_img")
-        self.grid_layout_img.addWidget(self.wdt_img, 0, 0, 1, 1)
+        self.lbl_img = QtWidgets.QLabel(parent=self.grp_img)
+        self.lbl_img.setObjectName("lbl_img")
+        self.grid_layout_img.addWidget(self.lbl_img, 0, 0, 1, 1)
         self.grp_img_nav = QtWidgets.QGroupBox(parent=self.grp_img)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -95,7 +95,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_graph.addWidget(self.btn_show_graph, 0, 0, 1, 1)
         self.btn_save_graph = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_save_graph.setObjectName("btn_save_graph")
-        self.grid_layout_graph.addWidget(self.btn_save_graph, 3, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_save_graph, 2, 0, 1, 1)
         self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
         self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 1, 0, 1, 1)
@@ -107,26 +107,29 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
         self.grid_layout_crop.setObjectName("grid_layout_crop")
+        self.btn_apply_filters = QtWidgets.QPushButton(parent=self.grp_crop)
+        self.btn_apply_filters.setObjectName("btn_apply_filters")
+        self.grid_layout_crop.addWidget(self.btn_apply_filters, 0, 0, 1, 2)
         self.btn_crop = QtWidgets.QPushButton(parent=self.grp_crop)
         self.btn_crop.setObjectName("btn_crop")
-        self.grid_layout_crop.addWidget(self.btn_crop, 4, 0, 1, 2)
+        self.grid_layout_crop.addWidget(self.btn_crop, 1, 0, 1, 2)
         self.spb_brightness = QtWidgets.QSpinBox(parent=self.grp_crop)
         self.spb_brightness.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.spb_brightness.setMaximum(100)
         self.spb_brightness.setProperty("value", 0)
         self.spb_brightness.setObjectName("spb_brightness")
-        self.grid_layout_crop.addWidget(self.spb_brightness, 5, 1, 1, 1)
+        self.grid_layout_crop.addWidget(self.spb_brightness, 2, 1, 1, 1)
         self.spb_contrast = QtWidgets.QSpinBox(parent=self.grp_crop)
         self.spb_contrast.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.spb_contrast.setMaximum(100)
         self.spb_contrast.setObjectName("spb_contrast")
-        self.grid_layout_crop.addWidget(self.spb_contrast, 6, 1, 1, 1)
+        self.grid_layout_crop.addWidget(self.spb_contrast, 3, 1, 1, 1)
         self.lbl_brightness = QtWidgets.QLabel(parent=self.grp_crop)
         self.lbl_brightness.setObjectName("lbl_brightness")
-        self.grid_layout_crop.addWidget(self.lbl_brightness, 5, 0, 1, 1)
+        self.grid_layout_crop.addWidget(self.lbl_brightness, 2, 0, 1, 1)
         self.lbl_contrast = QtWidgets.QLabel(parent=self.grp_crop)
         self.lbl_contrast.setObjectName("lbl_contrast")
-        self.grid_layout_crop.addWidget(self.lbl_contrast, 6, 0, 1, 1)
+        self.grid_layout_crop.addWidget(self.lbl_contrast, 3, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_crop, 6, 0, 1, 2)
         spacer_item2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                              QtWidgets.QSizePolicy.Policy.Expanding)
@@ -384,6 +387,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_fd.setText(_translate("window_main", " Fractal Dimension "))
         self.btn_gt_metrics.setText(_translate("window_main", "GT Metrics"))
         self.grp_graph.setTitle(_translate("window_main", "Graph Tools"))
+        self.btn_apply_filters.setText(_translate("window_main", "Apply Filters"))
         self.btn_show_graph.setText(_translate("window_main", "Show Graph"))
         self.btn_save_graph.setText(_translate("window_main", "Save Graph"))
         self.btn_quick_graph_metrics.setText(_translate("window_main", "Quick Metrics"))
@@ -634,11 +638,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
-        # if self.txt_img_path == '':
-        #    self.wdt_img
-        # filePath = ../examples/
-        # outputDir = ../results/tests
-        # self.btn_select_out_path
+
         # Listeners
         self.btn_select_img_path.clicked.connect(self._btn_select_img_path_clicked)
         self.btn_select_out_path.clicked.connect(self._btn_select_out_path_clicked)
@@ -648,6 +648,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _init_tools(self):
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
+        self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
         self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
         self.btn_save_graph.clicked.connect(self._btn_save_graph_clicked)
@@ -666,7 +667,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     self.file_names.append(os.path.join(img_dir, a_file))
             if len(self.file_names) <= 0:
-                dialog = CustomDialog("Fatal Error",
+                dialog = CustomDialog("File Error",
                                       "No workable images found! Files have to be either .tif, .png, or .jpg")
                 dialog.exec()
 
@@ -691,7 +692,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     self.file_names.append(os.path.join(fd_image_dir, a_file))
             if len(self.file_names) <= 0:
-                dialog = CustomDialog("Fatal Error",
+                dialog = CustomDialog("File Error",
                                       "No workable images found! Files have to be either .tif, .png, or .jpg")
                 dialog.exec()
 
@@ -710,6 +711,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
             # split the file location into file name and path
             save_dir, file_name = os.path.split(fd_image_file)
             self.img_path = fd_image_file
+            img_pixmap = QtGui.QPixmap(self.img_path)
+
+            img_pixmap_scaled = img_pixmap.scaledToWidth(600)
+            self.lbl_img.setPixmap(img_pixmap_scaled)
 
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
@@ -738,6 +743,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # if status == Qt.Accepted:
         #    cropped_image = crop_tool.image
         # else crop_tool.image == original_image
+        pass
+
+    def _btn_apply_filters_clicked(self):
         pass
 
     def _btn_show_graph_clicked(self):
@@ -800,6 +808,7 @@ class CustomDialog(QtWidgets.QDialog):
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
+
 
 def pyqt_app():
     app = QtWidgets.QApplication(sys.argv)
