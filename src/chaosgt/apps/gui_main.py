@@ -8,6 +8,7 @@
 
 import os
 import sys
+from qcrop.ui import QCrop
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 
@@ -16,22 +17,62 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setObjectName("window_main")
-        self.resize(1038, 811)
+        self.resize(1047, 860)
         font = QtGui.QFont()
         font.setBold(False)
         self.setFont(font)
         self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
+
+        self.setCentralWidget(self.wdt_main)
+        self.menu_bar = QtWidgets.QMenuBar(parent=self)
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1038, 22))
+        self.menu_bar.setObjectName("menu_bar")
+        self.setMenuBar(self.menu_bar)
+        self.status_bar = QtWidgets.QStatusBar(parent=self)
+        self.status_bar.setObjectName("status_bar")
+        self.setStatusBar(self.status_bar)
+
         self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
         self.grid_layout_main.setObjectName("grid_layout_main")
         self.grp_img = QtWidgets.QGroupBox(parent=self.wdt_main)
         self.grp_img.setObjectName("grp_img")
         self.grid_layout_img = QtWidgets.QGridLayout(self.grp_img)
         self.grid_layout_img.setObjectName("grid_layout_img")
+
+        self.grp_img_zoom = QtWidgets.QGroupBox(parent=self.grp_img)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.grp_img_zoom.sizePolicy().hasHeightForWidth())
+        self.grp_img_zoom.setSizePolicy(size_policy)
+        self.grp_img_zoom.setTitle("")
+        self.grp_img_zoom.setFlat(True)
+        self.grp_img_zoom.setObjectName("grp_img_zoom")
+        self.grid_layout_zoom = QtWidgets.QGridLayout(self.grp_img_zoom)
+        self.grid_layout_zoom.setObjectName("grid_layout_zoom")
+        self.lbl_zoom = QtWidgets.QLabel(parent=self.grp_img_zoom)
+        self.lbl_zoom.setObjectName("lbl_zoom")
+        self.grid_layout_zoom.addWidget(self.lbl_zoom, 0, 2, 1, 1)
+        self.btn_zoom_out = QtWidgets.QPushButton(parent=self.grp_img_zoom)
+        self.btn_zoom_out.setObjectName("btn_zoom_out")
+        self.grid_layout_zoom.addWidget(self.btn_zoom_out, 0, 0, 1, 1)
+        self.btn_zoom_in = QtWidgets.QPushButton(parent=self.grp_img_zoom)
+        self.btn_zoom_in.setObjectName("btn_zoom_in")
+        self.grid_layout_zoom.addWidget(self.btn_zoom_in, 0, 4, 1, 1)
+        spacer_item_1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
+                                              QtWidgets.QSizePolicy.Policy.Minimum)
+        self.grid_layout_zoom.addItem(spacer_item_1, 0, 1, 1, 1)
+        spacer_item_2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
+                                              QtWidgets.QSizePolicy.Policy.Minimum)
+        self.grid_layout_zoom.addItem(spacer_item_2, 0, 3, 1, 1)
+        self.grid_layout_img.addWidget(self.grp_img_zoom, 0, 0, 1, 1)
+
         self.lbl_img = QtWidgets.QLabel(parent=self.grp_img)
         self.lbl_img.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_img.setObjectName("lbl_img")
-        self.grid_layout_img.addWidget(self.lbl_img, 0, 0, 1, 1)
+        self.grid_layout_img.addWidget(self.lbl_img, 1, 0, 1, 1)
+
         self.grp_img_nav = QtWidgets.QGroupBox(parent=self.grp_img)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -54,9 +95,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
                                             QtWidgets.QSizePolicy.Policy.Minimum)
         self.grid_layout_img_nav.addItem(spacer_item, 0, 1, 1, 1)
-        self.grid_layout_img.addWidget(self.grp_img_nav, 1, 0, 1, 1)
-        self.grid_layout_img.setRowStretch(0, 8)
-        self.grid_layout_img.setRowStretch(1, 1)
+        self.grid_layout_img.addWidget(self.grp_img_nav, 2, 0, 1, 1)
+
         self.grid_layout_main.addWidget(self.grp_img, 1, 1, 1, 1)
         self.grp_tasks = QtWidgets.QGroupBox(parent=self.wdt_main)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum,
@@ -101,9 +141,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
         self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 1, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
-        spacer_item1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
-                                             QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_tasks.addItem(spacer_item1, 7, 0, 1, 1)
+        spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                              QtWidgets.QSizePolicy.Policy.Expanding)
+        self.grid_layout_tasks.addItem(spacer_item_1, 7, 0, 1, 1)
         self.grp_crop = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
@@ -132,9 +172,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_contrast.setObjectName("lbl_contrast")
         self.grid_layout_crop.addWidget(self.lbl_contrast, 3, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_crop, 6, 0, 1, 2)
-        spacer_item2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
-                                             QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_tasks.addItem(spacer_item2, 9, 0, 1, 1)
+        spacer_item_2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                              QtWidgets.QSizePolicy.Policy.Expanding)
+        self.grid_layout_tasks.addItem(spacer_item_2, 9, 0, 1, 1)
         self.grid_layout_main.addWidget(self.grp_tasks, 1, 2, 1, 1)
         self.grp_path = QtWidgets.QGroupBox(parent=self.wdt_main)
         self.grp_path.setTitle("")
@@ -361,14 +401,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_main.setColumnStretch(0, 2)
         self.grid_layout_main.setColumnStretch(1, 5)
         self.grid_layout_main.setColumnStretch(2, 1)
-        self.setCentralWidget(self.wdt_main)
-        self.menu_bar = QtWidgets.QMenuBar(parent=self)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1038, 22))
-        self.menu_bar.setObjectName("menu_bar")
-        self.setMenuBar(self.menu_bar)
-        self.status_bar = QtWidgets.QStatusBar(parent=self)
-        self.status_bar.setObjectName("status_bar")
-        self.setStatusBar(self.status_bar)
 
         self.img_path = ''
         self.output_path = ''
@@ -384,6 +416,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.setWindowTitle(_translate("window_main", "Chaos GT"))
         self.btn_prev.setText(_translate("window_main", "<< previous"))
         self.btn_next.setText(_translate("window_main", "next >>"))
+        self.lbl_zoom.setText(_translate("window_main", "Zoom"))
+        self.btn_zoom_out.setText(_translate("window_main", "-"))
+        self.btn_zoom_in.setText(_translate("window_main", "+"))
         self.grp_compute.setTitle(_translate("window_main", "Computations"))
         self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
         self.btn_fd.setText(_translate("window_main", " Fractal Dimension "))
@@ -773,15 +808,20 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.btn_prev.setEnabled(False)
 
     def _btn_crop_clicked(self):
-        # from PyQt5.QtGui import QPixmap
-        # from qcrop.ui import QCrop
-        # original_image = QPixmap(...)
-        # crop_tool = QCrop(original_image)
-        # status = crop_tool.exec()
-        # if status == Qt.Accepted:
-        #    cropped_image = crop_tool.image
-        # else crop_tool.image == original_image
-        pass
+        return
+        """
+        if self.img_path != '':
+            original_image = QtGui.QPixmap(self.img_path)
+            crop_tool = QCrop(original_image)
+            status = crop_tool.exec()
+            print(status)
+            if status == Qt.Accepted:
+                cropped_image = crop_tool.image
+                w = self.lbl_img.width()
+                h = self.lbl_img.height()
+                self.lbl_img.setText('')
+                self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+        """
 
     def _btn_apply_filters_clicked(self):
         pass

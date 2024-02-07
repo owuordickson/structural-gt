@@ -39,7 +39,7 @@ classifiers = [
 # docs = []
 
 [project.optional-dependencies]
-gui = ["pyqt6", "pillow"]
+gui = ["pyqt6", "pillow", "qcrop"]
 cli = []
 # cli = [
 #  "rich",

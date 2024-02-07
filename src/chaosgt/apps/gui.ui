@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>1047</width>
-    <height>811</height>
+    <height>860</height>
    </rect>
   </property>
   <property name="font">
@@ -23,11 +23,15 @@
    <layout class="QGridLayout" name="grid_layout_main" rowstretch="0,0" columnstretch="2,5,1">
     <item row="1" column="1">
      <widget class="QGroupBox" name="grp_img">
-      <layout class="QGridLayout" name="grid_layout_img" rowstretch="8,1">
-       <item row="0" column="0">
-        <widget class="QWidget" name="wdt_img" native="true"/>
-       </item>
+      <layout class="QGridLayout" name="grid_layout_img" rowstretch="0,0,0">
        <item row="1" column="0">
+        <widget class="QLabel" name="lbl_img">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
         <widget class="QGroupBox" name="grp_img_nav">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -64,6 +68,71 @@
           </item>
           <item row="0" column="1">
            <spacer name="hsp_img_nav">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="grp_img_zoom">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string/>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+         <layout class="QGridLayout" name="grid_layout_zoom">
+          <item row="0" column="2">
+           <widget class="QLabel" name="lbl_zoom">
+            <property name="text">
+             <string>Zoom</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="btn_zoom_out">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="btn_zoom_in">
+            <property name="text">
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <spacer name="hsp_img_zoom_1">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3">
+           <spacer name="hsp_img_zoom_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
