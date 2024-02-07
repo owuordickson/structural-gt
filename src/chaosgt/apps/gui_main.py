@@ -428,8 +428,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # 4. Initialize Binary Settings
         self._init_img_binary_settings(options_img)
 
-        # 5. Initialize Enhance Tools
-        # self._init_img_enhance_tools()
+        # 5. Initialize Enhance and Compute Tools
+        self._init_tools()
 
         # 6. initialize Image Paths
         self._init_img_path_settings(options)
@@ -633,10 +633,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
         #    self.wdt_img
         # filePath = ../examples/
         # outputDir = ../results/tests
+        # self.btn_select_out_path
         # Listeners
-        self.cbx_multi.stateChanged.connect(self.cbx_multi_changed)
+        self.btn_select_img_path.clicked.connect(self._btn_select_img_path_clicked)
+        self.btn_select_out_path.clicked.connect(self._btn_select_out_path_clicked)
+        self.cbx_multi.stateChanged.connect(self._cbx_multi_changed)
+        self.btn_next.clicked.connect(self._btn_next_clicked)
+        self.btn_prev.clicked.connect(self._btn_prev_next)
 
-    def cbx_multi_changed(self):
+    def _init_tools(self):
+        self.btn_crop.clicked.connect(self._btn_crop_clicked)
+        self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
+        self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
+        self.btn_save_graph.clicked.connect(self._btn_save_graph_clicked)
+        self.btn_gt_metrics.clicked.connect(self._btn_compute_gt_metrics_clicked)
+        self.btn_fd.clicked.connect(self._btn_compute_fd_clicked)
+        self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
+
+    def _cbx_multi_changed(self):
         if self.cbx_multi.isChecked():
             self.btn_next.setEnabled(True)
             self.btn_prev.setEnabled(True)
@@ -644,17 +658,46 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
 
+    def _btn_select_img_path_clicked(self):
+        pass
 
-    # def _init_img_enhance_tools(self):
-    # from PyQt5.QtGui import QPixmap
-    # from qcrop.ui import QCrop
-    # original_image = QPixmap(...)
-    # crop_tool = QCrop(original_image)
-    # status = crop_tool.exec()
-    # if status == Qt.Accepted:
-    #    cropped_image = crop_tool.image
-    # else crop_tool.image == original_image
-    #    pass
+    def _btn_select_out_path_clicked(self):
+        pass
+
+    def _btn_next_clicked(self):
+        pass
+
+    def _btn_prev_next(self):
+        pass
+
+    def _btn_crop_clicked(self):
+        # from PyQt5.QtGui import QPixmap
+        # from qcrop.ui import QCrop
+        # original_image = QPixmap(...)
+        # crop_tool = QCrop(original_image)
+        # status = crop_tool.exec()
+        # if status == Qt.Accepted:
+        #    cropped_image = crop_tool.image
+        # else crop_tool.image == original_image
+        pass
+
+    def _btn_show_graph_clicked(self):
+        pass
+
+    def _btn_quick_metrics_clicked(self):
+        pass
+
+    def _btn_save_graph_clicked(self):
+        pass
+
+    def _btn_compute_gt_metrics_clicked(self):
+        pass
+
+    def _btn_compute_fd_clicked(self):
+        pass
+
+    def _btn_chaos_gt_clicked(self):
+        pass
 
 
 class TreeItem(QtGui.QStandardItem):
