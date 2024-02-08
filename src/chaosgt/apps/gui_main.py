@@ -9,6 +9,7 @@
 import os
 import sys
 # from qcrop.ui import QCrop
+from ypstruct import struct
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 
@@ -406,6 +407,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.output_path = ''
         self.file_names = []
         self.current_img_file_index = 0
+        self.img_scale = 1
 
         self.re_translate_ui()
         self._init_configs()
@@ -608,21 +610,21 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # must be odd integer
         self.cbx_gaussian_blur.setChecked(options_img.apply_gaussian)
         self.cbx_autolevel.setChecked(options_img.apply_autolevel)
-        self.sld_gaussian.setValue(options_img.blurring_window_size)
-        self.sld_autolevel.setValue(options_img.blurring_window_size)
-        self.lbl_gaussian.setText(str(options_img.blurring_window_size))
-        self.lbl_autolevel.setText(str(options_img.blurring_window_size))
+        self.sld_gaussian.setValue(options_img.gaussian_blurring_size)
+        self.sld_autolevel.setValue(options_img.autolevel_blurring_size)
+        self.lbl_gaussian.setText(str(options_img.gaussian_blurring_size))
+        self.lbl_autolevel.setText(str(options_img.autolevel_blurring_size))
 
         self.cbx_lowpass.setChecked(options_img.apply_lowpass)
-        self.spn_lowpass.setValue(options_img.filter_window_size)
+        self.spn_lowpass.setValue(options_img.lowpass_window_size)
 
         self.cbx_laplacian.setChecked(options_img.apply_laplacian)
-        self.sld_laplacian.setValue(5)
-        self.lbl_laplacian.setText(str(5))
+        self.sld_laplacian.setValue(options_img.laplacian_kernel_size)
+        self.lbl_laplacian.setText(str(options_img.laplacian_kernel_size))
 
         self.cbx_sobel.setChecked(options_img.apply_sobel)
-        self.sld_sobel.setValue(5)
-        self.lbl_sobel.setText(str(5))
+        self.sld_sobel.setValue(options_img.sobel_kernel_size)
+        self.lbl_sobel.setText(str(options_img.sobel_kernel_size))
 
         self.cbx_scharr.setChecked(options_img.apply_scharr)
 
@@ -684,9 +686,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.stateChanged.connect(self._cbx_multi_changed)
         self.btn_next.clicked.connect(self._btn_next_clicked)
         self.btn_prev.clicked.connect(self._btn_prev_clicked)
+        self.btn_zoom_in.clicked.connect(self._btn_zoom_in_clicked)
+        self.btn_zoom_out.clicked.connect(self._btn_zoom_out_clicked)
 
     def _init_tools(self):
-        self.btn_crop.clicked.connect(self._btn_crop_clicked)
+        # self.btn_crop.clicked.connect(self._btn_crop_clicked)
         self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
         self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
@@ -739,11 +743,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if len(self.file_names) > 0:
                 self.current_img_file_index = 0
                 self.img_path = self.file_names[self.current_img_file_index]
-                img_pixmap = QtGui.QPixmap(self.img_path)
-                w = self.lbl_img.width()
-                h = self.lbl_img.height()
-                self.lbl_img.setText('')
-                self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+                self._load_image()
 
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
@@ -757,11 +757,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             # split the file location into file name and path
             save_dir, file_name = os.path.split(fd_image_file)
             self.img_path = fd_image_file
-            img_pixmap = QtGui.QPixmap(self.img_path)
-            w = self.lbl_img.width()
-            h = self.lbl_img.height()
-            self.lbl_img.setText('')
-            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+            self._load_image()
 
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
@@ -779,11 +775,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.current_img_file_index < (len(self.file_names) - 1):
             self.current_img_file_index += 1
             self.img_path = self.file_names[self.current_img_file_index]
-            img_pixmap = QtGui.QPixmap(self.img_path)
-            w = self.lbl_img.width()
-            h = self.lbl_img.height()
-            self.lbl_img.setText('')
-            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+            self._load_image()
 
             self.btn_prev.setEnabled(True)
             if self.current_img_file_index == (len(self.file_names) - 1):
@@ -795,11 +787,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.current_img_file_index > 0:
             self.current_img_file_index -= 1
             self.img_path = self.file_names[self.current_img_file_index]
-            img_pixmap = QtGui.QPixmap(self.img_path)
-            w = self.lbl_img.width()
-            h = self.lbl_img.height()
-            self.lbl_img.setText('')
-            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+            self._load_image()
 
             self.btn_next.setEnabled(True)
             if self.current_img_file_index == 0:
@@ -807,22 +795,35 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             self.btn_prev.setEnabled(False)
 
-    def on_zoom_in(self, event):
-        self.scale *= 2
-        self.resize_image()
+    def _btn_zoom_in_clicked(self):
+        if self.img_scale < 1:
+            self.img_scale = 1
+        else:
+            self.img_scale *= 1.25
+        # self._rescale_image()
 
-    def on_zoom_out(self, event):
-        self.scale /= 2
-        self.resize_image()
+    def _btn_zoom_out_clicked(self):
+        if self.img_scale > 1:
+            self.img_scale = 1
+        else:
+            self.img_scale /= 1.25
+        # self._rescale_image()
 
-    def resize_image(self):
-        size = self.pixmap.size()
-        scaled_pixmap = self.pixmap.scaled(self.scale * size)
-        self.label.setPixmap(scaled_pixmap)
+    def _load_image(self):
+        self.img_scale = 1
+        img_pixmap = QtGui.QPixmap(self.img_path)
+        w = self.lbl_img.width()
+        h = self.lbl_img.height()
+        self.lbl_img.setText('')
+        self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
+    def _rescale_image(self):
+        img_pixmap = QtGui.QPixmap(self.img_path)
+        size = img_pixmap.size()
+        self.lbl_img.setPixmap(img_pixmap.scaled((self.img_scale * size)))
+
+    """
     def _btn_crop_clicked(self):
-        return
-        """
         if self.img_path != '':
             original_image = QtGui.QPixmap(self.img_path)
             crop_tool = QCrop(original_image)
@@ -834,10 +835,45 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 h = self.lbl_img.height()
                 self.lbl_img.setText('')
                 self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
-        """
+    """
 
     def _btn_apply_filters_clicked(self):
-        pass
+        options_img = struct()
+        bin_btn_type = self.btn_grp_binary.checkedButton()
+        if bin_btn_type == self.rdo_otsu_threshold:
+            options_img.threshold_type = 2
+        elif bin_btn_type == self.rdo_adaptive_threshold:
+            options_img.threshold_type = 1
+        else:
+            options_img.threshold_type = 0
+        options_img.threshold_global = int(self.lbl_global_threshold_value.text())
+        options_img.threshold_adaptive = int(self.lbl_adaptive_threshold_value.text())
+        options_img.gamma = float(self.lbl_lut_gamma.text())
+        options_img.gaussian_blurring_size = int(self.lbl_gaussian.text())
+        options_img.autolevel_blurring_size = int(self.lbl_autolevel.text())
+        options_img.lowpass_window_size = int(self.spn_lowpass.text())
+        options_img.laplacian_kernel_size = int(self.lbl_laplacian.text())
+        options_img.sobel_kernel_size = int(self.lbl_sobel.text())
+        options_img.apply_autolevel = int(self.cbx_autolevel.isChecked())
+        options_img.apply_laplacian = int(self.cbx_laplacian.isChecked())
+        options_img.apply_scharr = int(self.cbx_scharr.isChecked())
+        options_img.apply_sobel = int(self.cbx_sobel.isChecked())
+        options_img.apply_median = int(self.cbx_median.isChecked())
+        options_img.apply_gaussian = int(self.cbx_gaussian_blur.isChecked())
+        options_img.apply_lowpass = int(self.cbx_lowpass.isChecked())
+        options_img.apply_dark_foreground = int(self.cbx_dark_foreground.isChecked())
+
+        options_gte = struct()
+        options_gte.merge_nearby_nodes = int()
+        options_gte.prune_dangling_edges = int()
+        options_gte.remove_disconnected_segments = int()
+        options_gte.remove_self_loops = int()
+        options_gte.remove_object_size = int()
+        options_gte.is_multigraph = int()
+        options_gte.weighted_by_diameter = int()
+        options_gte.export_edge_list = int()
+        options_gte.export_as_gexf = int()
+        options_gte.display_node_id = int()
 
     def _btn_show_graph_clicked(self):
         pass

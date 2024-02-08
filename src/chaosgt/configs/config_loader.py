@@ -45,8 +45,11 @@ def load():
     options_img.threshold_global = int(config.get('detection-settings', 'global_threshold_value'))
     options_img.threshold_adaptive = int(config.get('detection-settings', 'adaptive_local_threshold_value'))
     options_img.gamma = float(config.get('detection-settings', 'adjust_gamma'))
-    options_img.blurring_window_size = int(config.get('detection-settings', 'blurring_window_size'))
-    options_img.filter_window_size = int(config.get('detection-settings', 'filter_window_size'))
+    options_img.gaussian_blurring_size = int(config.get('detection-settings', 'blurring_window_size'))
+    options_img.autolevel_blurring_size = int(config.get('detection-settings', 'blurring_window_size'))
+    options_img.lowpass_window_size = int(config.get('detection-settings', 'filter_window_size'))
+    options_img.laplacian_kernel_size = 3
+    options_img.sobel_kernel_size = 3
     options_img.apply_autolevel = int(config.get('detection-settings', 'use_autolevel'))
     options_img.apply_laplacian = int(config.get('detection-settings', 'use_laplacian_gradient'))
     options_img.apply_scharr = int(config.get('detection-settings', 'use_scharr_gradient'))

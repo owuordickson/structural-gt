@@ -128,7 +128,7 @@ class GraphStruct:
             w, h = filtered_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
-            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** options.filter_window_size  # expand to 2D hamming
+            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** options.lowpass_window_size  # expand to 2D hamming
             f = cv2.dft(filtered_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
             f_shifted = np.fft.fftshift(f)
             f_complex = f_shifted[:, :, 0] * 1j + f_shifted[:, :, 1]
@@ -148,13 +148,13 @@ class GraphStruct:
 
         # applying gaussian blur
         if options.apply_gaussian == 1:
-            b_size = options.blurring_window_size
+            b_size = options.gaussian_blurring_size
             filtered_img = cv2.GaussianBlur(filtered_img, (b_size, b_size), 0)
 
         # applying auto-level filter
         if options.apply_autolevel == 1:
             # making a disk for the auto-level filter
-            auto_lvl_disk = disk(options.blurring_window_size)
+            auto_lvl_disk = disk(options.autolevel_blurring_size)
             filtered_img = autolevel(filtered_img, footprint=auto_lvl_disk)
 
         # applying a scharr filter, and then taking that image and weighting it 25% with the original
@@ -175,10 +175,10 @@ class GraphStruct:
             scale = 1
             delta = 0
             d_depth = cv2.CV_16S
-            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=3, scale=scale, delta=delta,
-                               borderType=cv2.BORDER_DEFAULT)
-            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=3, scale=scale, delta=delta,
-                               borderType=cv2.BORDER_DEFAULT)
+            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=options.sobel_kernel_size, scale=scale,
+                               delta=delta, borderType=cv2.BORDER_DEFAULT)
+            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=options.sobel_kernel_size, scale=scale,
+                               delta=delta, borderType=cv2.BORDER_DEFAULT)
             abs_grad_x = cv2.convertScaleAbs(grad_x)
             abs_grad_y = cv2.convertScaleAbs(grad_y)
             dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
@@ -189,7 +189,7 @@ class GraphStruct:
         # applying laplacian filter
         if options.apply_laplacian == 1:
             d_depth = cv2.CV_16S
-            dst = cv2.Laplacian(filtered_img, d_depth, ksize=5)
+            dst = cv2.Laplacian(filtered_img, d_depth, ksize=options.laplacian_kernel_size)
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             dst = cv2.convertScaleAbs(dst)
             filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
