@@ -12,6 +12,8 @@ import sys
 from ypstruct import struct
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
+from ..modules.graph_struct import GraphStruct
+from ..modules.graph_metrics import GraphMetrics
 
 
 class AnalysisUI(QtWidgets.QMainWindow):
@@ -408,6 +410,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.file_names = []
         self.current_img_file_index = 0
         self.img_scale = 1
+        self.graph_obj = None
 
         self.re_translate_ui()
         self._init_configs()
@@ -838,6 +841,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
     """
 
     def _btn_apply_filters_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
         options_img = struct()
         bin_btn_type = self.btn_grp_binary.checkedButton()
         if bin_btn_type == self.rdo_otsu_threshold:
@@ -864,16 +871,55 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_img.apply_dark_foreground = int(self.cbx_dark_foreground.isChecked())
 
         options_gte = struct()
-        options_gte.merge_nearby_nodes = int()
-        options_gte.prune_dangling_edges = int()
-        options_gte.remove_disconnected_segments = int()
-        options_gte.remove_self_loops = int()
-        options_gte.remove_object_size = int()
-        options_gte.is_multigraph = int()
-        options_gte.weighted_by_diameter = int()
-        options_gte.export_edge_list = int()
-        options_gte.export_as_gexf = int()
-        options_gte.display_node_id = int()
+        options_gte.merge_nearby_nodes = 0
+        options_gte.prune_dangling_edges = 0
+        options_gte.remove_disconnected_segments = 0
+        options_gte.remove_self_loops = 0
+        options_gte.remove_object_size = 0
+        options_gte.is_multigraph = 0
+        options_gte.weighted_by_diameter = 0
+        options_gte.display_node_id = 0
+        options_gte.export_edge_list = 0
+        options_gte.export_as_gexf = 0
+
+        model = self.tree_settings.model()
+        root_index = model.index(0, 0)  # Assuming the root index is at row 0, column 0
+        for i in range(model.rowCount(root_index)):
+            child_index = model.index(i, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Merge Nearby Nodes':
+                    options_gte.merge_nearby_nodes = 1
+                if item.text() == 'Prune Dangling Edges':
+                    options_gte.prune_dangling_edges = 1
+                if item.text() == 'Remove Disconnected Segments':
+                    options_gte.remove_disconnected_segments = 1
+                if item.text() == 'Remove Self Loops (set size)':
+                    options_gte.remove_self_loops = 1
+                    sub_item = item.child(0)
+                    options_gte.remove_object_size = int(sub_item.text())
+                if item.text() == 'Is Multigraph?':
+                    options_gte.is_multigraph = 1
+                if item.text() == 'Weighted by Diameter':
+                    options_gte.weighted_by_diameter = 1
+                if item.text() == 'Display Node ID':
+                    options_gte.display_node_id = 1
+
+        root_index = model.index(2, 0)
+        child_index = model.index(0, 0, root_index)
+        item = model.itemFromIndex(child_index)
+        if item.text() == 'Export Edge List':
+            options_gte.export_edge_list = 1
+
+        child_index = model.index(1, 0, root_index)
+        item = model.itemFromIndex(child_index)
+        if item.text() == 'Export as gexf':
+            options_gte.export_as_gexf = 1
+
+        self.graph_obj = GraphStruct(self.img_path, self.output_path, options_img, options_gte)
+        self.graph_obj.add_listener(AnalysisUI.update_progress)
+        self.graph_obj.fit()
+        self.graph_obj.update_status([0, "Image filtering completed."])
 
     def _btn_show_graph_clicked(self):
         pass
@@ -885,13 +931,84 @@ class AnalysisUI(QtWidgets.QMainWindow):
         pass
 
     def _btn_compute_gt_metrics_clicked(self):
-        pass
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
+
+        options_gtc = struct()
+        options_gtc.display_heatmaps = 0
+        options_gtc.display_degree_histogram = 0
+        options_gtc.display_betweenness_histogram = 0
+        options_gtc.display_currentflow_histogram = 0
+        options_gtc.display_closeness_histogram = 0
+        options_gtc.display_eigenvector_histogram = 0
+        options_gtc.compute_nodal_connectivity = 0
+        options_gtc.compute_graph_density = 0
+        options_gtc.compute_graph_conductance = 0
+        options_gtc.compute_global_efficiency = 0
+        options_gtc.compute_clustering_coef = 0
+        options_gtc.compute_assortativity_coef = 0
+        options_gtc.compute_network_diameter = 0
+        options_gtc.compute_wiener_index = 0
+
+        model = self.tree_settings.model()
+        root_index = model.index(1, 0)  # Assuming the root index is at row 0, column 0
+        for i in range(model.rowCount(root_index)):
+            child_index = model.index(i, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Display Heatmaps':
+                    options_gtc.display_heatmaps = 1
+                if item.text() == 'Average Degree':
+                    options_gtc.display_degree_histogram = 1
+                if item.text() == 'Betweenness Centrality':
+                    options_gtc.display_betweenness_histogram = 1
+                if item.text() == '':
+                    options_gtc.display_currentflow_histogram = 1
+                if item.text() == 'Closeness Centrality':
+                    options_gtc.display_closeness_histogram = 1
+                if item.text() == 'Eigenvector Centrality':
+                    options_gtc.display_eigenvector_histogram = 1
+                if item.text() == 'Average Nodal Connectivity':
+                    options_gtc.compute_nodal_connectivity = 1
+                if item.text() == 'Graph Density':
+                    options_gtc.compute_graph_density = 1
+                if item.text() == 'Graph Conductance':
+                    options_gtc.compute_graph_conductance = 1
+                if item.text() == 'Global Efficiency':
+                    options_gtc.compute_global_efficiency = 1
+                if item.text() == 'Average Clustering Coefficient':
+                    options_gtc.compute_clustering_coef = 1
+                if item.text() == 'Assortativity Coefficient':
+                    options_gtc.compute_assortativity_coef = 1
+                if item.text() == 'Network Diameter':
+                    options_gtc.compute_network_diameter = 1
+                if item.text() == 'Wiener Index':
+                    options_gtc.compute_wiener_index = 1
+
+        options_gte = self.graph_obj.configs_graph
+        metrics_obj = GraphMetrics(self.graph_obj, options_gtc)
+        metrics_obj.add_listener(AnalysisUI.update_progress)
+        metrics_obj.compute_gt_metrics()
+        if options_gte.weighted_by_diameter:
+            metrics_obj.compute_weighted_gt_metrics()
+        metrics_obj.generate_pdf_output()
+        metrics_obj.update_status([0, "GT calculations completed."])
+        self.graph_obj.remove_listener(AnalysisUI.update_progress)
+        metrics_obj.remove_listener(AnalysisUI.update_progress)
 
     def _btn_compute_fd_clicked(self):
         pass
 
     def _btn_chaos_gt_clicked(self):
         pass
+
+    @staticmethod
+    def update_progress(x, y):
+        print(str(x) + ": " + y)
 
 
 class TreeItem(QtGui.QStandardItem):
