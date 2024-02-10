@@ -138,15 +138,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_graph.setObjectName("grp_graph")
         self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
         self.grid_layout_graph.setObjectName("grid_layout_graph")
+        self.btn_show_original_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_original_img.setObjectName("btn_show_original_img")
+        self.grid_layout_graph.addWidget(self.btn_show_original_img, 0, 0, 1, 1)
+        self.btn_show_processed_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_processed_img.setObjectName("btn_show_processed_img")
+        self.grid_layout_graph.addWidget(self.btn_show_processed_img, 1, 0, 1, 1)
+        self.btn_show_binary_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_binary_img.setObjectName("btn_show_binary_img")
+        self.grid_layout_graph.addWidget(self.btn_show_binary_img, 2, 0, 1, 1)
         self.btn_show_graph = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_show_graph.setObjectName("btn_show_graph")
-        self.grid_layout_graph.addWidget(self.btn_show_graph, 0, 0, 1, 1)
-        self.btn_save_graph = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_save_graph.setObjectName("btn_save_graph")
-        self.grid_layout_graph.addWidget(self.btn_save_graph, 2, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_show_graph, 3, 0, 1, 1)
         self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
-        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 1, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
+        self.btn_save_graph = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_save_graph.setObjectName("btn_save_graph")
+        self.grid_layout_graph.addWidget(self.btn_save_graph, 5, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
         spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                               QtWidgets.QSizePolicy.Policy.Expanding)
@@ -432,11 +441,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
         self.btn_fd.setText(_translate("window_main", " Fractal Dimension "))
         self.btn_gt_metrics.setText(_translate("window_main", "GT Metrics"))
-        self.grp_graph.setTitle(_translate("window_main", "Graph Tools"))
+        self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
         self.btn_apply_filters.setText(_translate("window_main", "Apply Filters"))
+        self.btn_show_original_img.setText(_translate("window_main", "Original Image"))
+        self.btn_show_processed_img.setText(_translate("window_main", "Processed Image"))
+        self.btn_show_binary_img.setText(_translate("window_main", "Binary Image"))
         self.btn_show_graph.setText(_translate("window_main", "Show Graph"))
-        self.btn_save_graph.setText(_translate("window_main", "Save Graph"))
         self.btn_quick_graph_metrics.setText(_translate("window_main", "Quick Metrics"))
+        self.btn_save_graph.setText(_translate("window_main", "Save Graph"))
         self.grp_crop.setTitle(_translate("window_main", "Enhancing Tools"))
         self.btn_crop.setText(_translate("window_main", "Crop"))
         self.lbl_brightness.setText(_translate("window_main", "Brightness"))
@@ -699,6 +711,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _init_tools(self):
         # self.btn_crop.clicked.connect(self._btn_crop_clicked)
         self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
+        self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
+        self.btn_show_processed_img.clicked.connect(self._btn_show_processed_img_clicked)
+        self.btn_show_binary_img.clicked.connect(self._btn_show_binary_img_clicked)
         self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
         self.btn_save_graph.clicked.connect(self._btn_save_graph_clicked)
@@ -825,7 +840,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             img_pixmap = QtGui.QPixmap(self.img_path)
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
         else:
-            self.lbl_img.setPixmap(img_pixmap)
+            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
     def _rescale_image(self):
         img_pixmap = QtGui.QPixmap(self.img_path)
@@ -926,10 +941,42 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.graph_obj = GraphStruct(self.img_path, self.output_path, options_img, options_gte)
         self.graph_obj.add_listener(AnalysisUI.update_progress)
         self.graph_obj.fit()
+        self.graph_obj.update_status([0, "Image filtering completed."])
+
+        self._btn_show_processed_img_clicked()
+
+    def _btn_show_original_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        self._load_image()
+
+    def _btn_show_processed_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
+
         img = Image.fromarray(self.graph_obj.img_filtered)
         q_img = ImageQt.toqpixmap(img)
         self._load_image(q_img)
-        self.graph_obj.update_status([0, "Image filtering completed."])
+
+    def _btn_show_binary_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
+
+        img = Image.fromarray(self.graph_obj.img_bin)
+        q_img = ImageQt.toqpixmap(img)
+        self._load_image(q_img)
 
     def _btn_show_graph_clicked(self):
         if self.img_path == '':
