@@ -13,8 +13,7 @@ import numpy as np
 from ypstruct import struct
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# from PIL import Image
-from PIL.ImageQt import ImageQt
+from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 from ..modules.graph_struct import GraphStruct
@@ -817,13 +816,16 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.img_scale /= 1.25
         # self._rescale_image()
 
-    def _load_image(self):
+    def _load_image(self, img_pixmap=None):
         self.img_scale = 1
-        img_pixmap = QtGui.QPixmap(self.img_path)
         w = self.lbl_img.width()
         h = self.lbl_img.height()
         self.lbl_img.setText('')
-        self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+        if img_pixmap is None:
+            img_pixmap = QtGui.QPixmap(self.img_path)
+            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+        else:
+            self.lbl_img.setPixmap(img_pixmap)
 
     def _rescale_image(self):
         img_pixmap = QtGui.QPixmap(self.img_path)
@@ -924,6 +926,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.graph_obj = GraphStruct(self.img_path, self.output_path, options_img, options_gte)
         self.graph_obj.add_listener(AnalysisUI.update_progress)
         self.graph_obj.fit()
+        img = Image.fromarray(self.graph_obj.img_filtered)
+        q_img = ImageQt.toqpixmap(img)
+        self._load_image(q_img)
         self.graph_obj.update_status([0, "Image filtering completed."])
 
     def _btn_show_graph_clicked(self):
@@ -959,22 +964,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         ax.set_axis_off()
         canvas.draw()
 
-        # size = canvas.size()
         img = canvas.buffer_rgba()
         h, w, _ = img.shape
         # w, h = int(fig.figbbox.width), int(fig.figbbox.height)
         img = QtGui.QImage(img, w, h, QtGui.QImage.Format.Format_ARGB32)
         img_pixmap = QtGui.QPixmap(img)
-
-        # rgba = np.asarray(canvas.buffer_rgba())
-        # img = ImageQt(canvas.buffer_rgba())
-        # img_pixmap = QtGui.QPixmap.fromImage(img)
-
-        self.img_scale = 1
-        w = self.lbl_img.width()
-        h = self.lbl_img.height()
-        self.lbl_img.setText('')
-        self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
+        self._load_image(img_pixmap)
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
