@@ -938,8 +938,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         raw_img = self.graph_obj.img
         opt_gte = self.graph_obj.configs_graph
 
-        my_dpi = 96
-        fig = plt.figure(figsize=(600/my_dpi, 600/my_dpi), dpi=my_dpi)
+        # my_dpi = 96
+        # fig = plt.figure(figsize=(600/my_dpi, 600/my_dpi), dpi=my_dpi)
+        fig = plt.figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot()
         ax.imshow(raw_img, cmap='gray')
@@ -955,14 +956,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        # ax.plot.xticks([])
-        # ax.plot.yticks([])
         ax.set_axis_off()
         canvas.draw()
 
         # size = canvas.size()
-        w, h = int(fig.figbbox.width), int(fig.figbbox.height)
-        img = QtGui.QImage(canvas.buffer_rgba(), w, h, QtGui.QImage.Format.Format_ARGB32)
+        img = canvas.buffer_rgba()
+        h, w, _ = img.shape
+        # w, h = int(fig.figbbox.width), int(fig.figbbox.height)
+        img = QtGui.QImage(img, w, h, QtGui.QImage.Format.Format_ARGB32)
         img_pixmap = QtGui.QPixmap(img)
 
         # rgba = np.asarray(canvas.buffer_rgba())
@@ -973,7 +974,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         w = self.lbl_img.width()
         h = self.lbl_img.height()
         self.lbl_img.setText('')
-        self.lbl_img.setPixmap(img_pixmap)
+        self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
