@@ -8,11 +8,11 @@
 
 import os
 import sys
+import time
 # from qcrop.ui import QCrop
 import numpy as np
 from ypstruct import struct
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
@@ -867,6 +867,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
+
+        self.disable_tasks()
         options_img = struct()
         bin_btn_type = self.btn_grp_binary.checkedButton()
         if bin_btn_type == self.rdo_otsu_threshold:
@@ -942,8 +944,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.graph_obj.add_listener(AnalysisUI.update_progress)
         self.graph_obj.fit()
         self.graph_obj.update_status([0, "Image filtering completed."])
-
         self._btn_show_processed_img_clicked()
+        self.enable_tasks()
 
     def _btn_show_original_img_clicked(self):
         if self.img_path == '':
@@ -986,15 +988,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.graph_obj is None:
             self._btn_apply_filters_clicked()
 
+        self.disable_tasks()
         nx_graph = self.graph_obj.nx_connected_graph
         raw_img = self.graph_obj.img
         opt_gte = self.graph_obj.configs_graph
 
-        # my_dpi = 96
-        # fig = plt.figure(figsize=(600/my_dpi, 600/my_dpi), dpi=my_dpi)
-        fig = plt.figure()
-        canvas = FigureCanvas(fig)
-        ax = fig.add_subplot()
+        fig = plt.Figure()
+        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
+        ax.set_axis_off()
         ax.imshow(raw_img, cmap='gray')
         if opt_gte.is_multigraph:
             for (s, e) in nx_graph.edges():
@@ -1008,15 +1009,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        ax.set_axis_off()
-        canvas.draw()
 
-        img = canvas.buffer_rgba()
-        h, w, _ = img.shape
-        # w, h = int(fig.figbbox.width), int(fig.figbbox.height)
-        img = QtGui.QImage(img, w, h, QtGui.QImage.Format.Format_ARGB32)
-        img_pixmap = QtGui.QPixmap(img)
-        self._load_image(img_pixmap)
+        img = AnalysisUI.plot_to_img(fig)
+        q_img = ImageQt.toqpixmap(img)
+        self._load_image(q_img)
+        self.enable_tasks()
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
@@ -1041,7 +1038,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             return
         if self.graph_obj is None:
             self._btn_apply_filters_clicked()
-
+        self.disable_tasks()
         options_gtc = struct()
         options_gtc.display_heatmaps = 0
         options_gtc.display_degree_histogram = 0
@@ -1103,16 +1100,61 @@ class AnalysisUI(QtWidgets.QMainWindow):
         metrics_obj.update_status([0, "GT calculations completed."])
         self.graph_obj.remove_listener(AnalysisUI.update_progress)
         metrics_obj.remove_listener(AnalysisUI.update_progress)
+        self.enable_tasks()
 
     def _btn_compute_fd_clicked(self):
-        pass
+        self.disable_tasks()
+        self.enable_tasks()
 
     def _btn_chaos_gt_clicked(self):
         pass
 
+    def disable_tasks(self):
+        self.btn_select_img_path.setEnabled(False)
+        self.cbx_multi.setEnabled(False)
+
+        self.btn_apply_filters.setEnabled(False)
+        self.btn_crop.setEnabled(False)
+        self.btn_show_original_img.setEnabled(False)
+        self.btn_show_processed_img.setEnabled(False)
+        self.btn_show_binary_img.setEnabled(False)
+        self.btn_show_graph.setEnabled(False)
+        self.btn_quick_graph_metrics.setEnabled(False)
+        self.btn_save_graph.setEnabled(False)
+        self.btn_gt_metrics.setEnabled(False)
+        self.btn_fd.setEnabled(False)
+        self.btn_chaos_gt.setEnabled(False)
+        time.sleep(2)
+
+    def enable_tasks(self):
+        self.btn_select_img_path.setEnabled(True)
+        self.cbx_multi.setEnabled(True)
+
+        self.btn_apply_filters.setEnabled(True)
+        self.btn_crop.setEnabled(True)
+        self.btn_show_original_img.setEnabled(True)
+        self.btn_show_processed_img.setEnabled(True)
+        self.btn_show_binary_img.setEnabled(True)
+        self.btn_show_graph.setEnabled(True)
+        self.btn_quick_graph_metrics.setEnabled(True)
+        self.btn_save_graph.setEnabled(True)
+        self.btn_gt_metrics.setEnabled(True)
+        self.btn_fd.setEnabled(True)
+        self.btn_chaos_gt.setEnabled(True)
+
     @staticmethod
     def update_progress(x, y):
         print(str(x) + ": " + y)
+
+    @staticmethod
+    def plot_to_img(fig):
+        """Convert a Matplotlib figure to a PIL Image and return it"""
+        import io
+        buf = io.BytesIO()
+        fig.savefig(buf)
+        buf.seek(0)
+        img = Image.open(buf)
+        return img
 
 
 class TreeItem(QtGui.QStandardItem):
