@@ -103,6 +103,10 @@ class GraphMetrics:
         data_dict["x"].append("Connectedness ratio")
         data_dict["y"].append(str(self.g_struct.connectedness_ratio * 100) + "%")
 
+        if graph.number_of_nodes() <= 0:
+            self.update_status([-1, "Problem with graph (change filter and graph options)."])
+            return
+
         # creating degree histogram
         if options.display_degree_histogram == 1:
             self.update_status([3, "Computing graph degree..."])
@@ -114,7 +118,10 @@ class GraphMetrics:
             data_dict["y"].append(deg_val)
 
         if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
-            connected_graph = nx.is_connected(graph)
+            try:
+                connected_graph = nx.is_connected(graph)
+            except nx.exception.NetworkXPointlessConcept:
+                connected_graph = None
         else:
             connected_graph = None
 
@@ -255,6 +262,10 @@ class GraphMetrics:
         graph = self.g_struct.nx_graph
         options = self.configs
         data_dict = {"x": [], "y": []}
+
+        if graph.number_of_nodes() <= 0:
+            self.update_status([-1, "Problem with graph (change filter and graph options)."])
+            return
 
         if options.display_degree_histogram == 1:
             self.update_status([3, "Compute weighted graph degree..."])

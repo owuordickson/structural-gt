@@ -7,6 +7,7 @@
 
 
 import os
+import io
 import sys
 import time
 # from qcrop.ui import QCrop
@@ -940,10 +941,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if item.text() == 'Export as gexf':
             options_gte.export_as_gexf = 1
 
-        self.graph_obj = GraphStruct(self.img_path, self.output_path, options_img, options_gte)
-        self.graph_obj.add_listener(AnalysisUI.update_progress)
-        self.graph_obj.fit()
-        self.graph_obj.update_status([0, "Image filtering completed."])
+        self.graph_obj = AnalysisUI.service_filter_img(self.img_path, self.output_path, options_img, options_gte)
+
         self._btn_show_processed_img_clicked()
         self.enable_tasks()
 
@@ -992,27 +991,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         nx_graph = self.graph_obj.nx_connected_graph
         raw_img = self.graph_obj.img
         opt_gte = self.graph_obj.configs_graph
+        fig = AnalysisUI.draw_gt_network(raw_img, nx_graph, opt_gte)
 
-        fig = plt.Figure()
-        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
-        ax.set_axis_off()
-        ax.imshow(raw_img, cmap='gray')
-        if opt_gte.is_multigraph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax.plot(ge[:, 1], ge[:, 0], 'red')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-
-        img = AnalysisUI.plot_to_img(fig)
-        q_img = ImageQt.toqpixmap(img)
-        self._load_image(q_img)
+        if fig:
+            img = AnalysisUI.plot_to_img(fig)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
         self.enable_tasks()
 
     def _btn_quick_metrics_clicked(self):
@@ -1090,16 +1074,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 if item.text() == 'Wiener Index':
                     options_gtc.compute_wiener_index = 1
 
-        options_gte = self.graph_obj.configs_graph
-        metrics_obj = GraphMetrics(self.graph_obj, options_gtc)
-        metrics_obj.add_listener(AnalysisUI.update_progress)
-        metrics_obj.compute_gt_metrics()
-        if options_gte.weighted_by_diameter:
-            metrics_obj.compute_weighted_gt_metrics()
-        metrics_obj.generate_pdf_output()
-        metrics_obj.update_status([0, "GT calculations completed."])
-        self.graph_obj.remove_listener(AnalysisUI.update_progress)
-        metrics_obj.remove_listener(AnalysisUI.update_progress)
+        AnalysisUI.service_compute_gt(self.graph_obj, options_gtc)
         self.enable_tasks()
 
     def _btn_compute_fd_clicked(self):
@@ -1147,14 +1122,67 @@ class AnalysisUI(QtWidgets.QMainWindow):
         print(str(x) + ": " + y)
 
     @staticmethod
+    def draw_gt_network(raw_img, nx_graph, opt_gte):
+        if nx_graph.number_of_nodes() <= 0:
+            dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
+            dialog.exec()
+            return
+
+        fig = plt.Figure()
+        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
+        ax.set_axis_off()
+        ax.imshow(raw_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        return fig
+
+    @staticmethod
     def plot_to_img(fig):
         """Convert a Matplotlib figure to a PIL Image and return it"""
-        import io
-        buf = io.BytesIO()
-        fig.savefig(buf)
-        buf.seek(0)
-        img = Image.open(buf)
-        return img
+        if fig:
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+            return img
+
+    @staticmethod
+    def service_filter_img(img_path, output_path, options_img, options_gte):
+        graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
+        graph_obj.add_listener(AnalysisUI.update_progress)
+        graph_obj.fit()
+        graph_obj.update_status([0, "Image filtering completed."])
+        graph_obj.remove_listener(AnalysisUI.update_progress)
+        if graph_obj.nx_graph.number_of_nodes() <= 0:
+            return None
+        return graph_obj
+
+    @staticmethod
+    def service_compute_gt(graph_obj, options_gtc):
+        if graph_obj.nx_graph.number_of_nodes() <= 0:
+            dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
+            dialog.exec()
+            return
+
+        options_gte = graph_obj.configs_graph
+        metrics_obj = GraphMetrics(graph_obj, options_gtc)
+        metrics_obj.add_listener(AnalysisUI.update_progress)
+        metrics_obj.compute_gt_metrics()
+        if options_gte.weighted_by_diameter:
+            metrics_obj.compute_weighted_gt_metrics()
+        metrics_obj.generate_pdf_output()
+        metrics_obj.update_status([0, "GT calculations completed."])
+        metrics_obj.remove_listener(AnalysisUI.update_progress)
 
 
 class TreeItem(QtGui.QStandardItem):
