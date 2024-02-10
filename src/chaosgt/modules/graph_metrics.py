@@ -451,22 +451,23 @@ class GraphMetrics:
             plt.close()
 
             # 4. plotting sub-graph network
-            f2b = plt.figure(figsize=(8.5, 11), dpi=400)
-            f2b.add_subplot(1, 1, 1)
-            plt.imshow(raw_img, cmap='gray')
-            color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-            color_cycle = cycle(color_list)
-            for component in self.nx_subgraph_components:
-                sg = nx_graph.subgraph(component)
-                color = next(color_cycle)
-                for (s, e) in sg.edges():
-                    ge = sg[s][e]['pts']
-                    plt.plot(ge[:, 1], ge[:, 0], color)
-            plt.xticks([])
-            plt.yticks([])
-            plt.title("Sub Graphs")
-            pdf.savefig()
-            plt.close()
+            if len(self.nx_subgraph_components) > 0:
+                f2b = plt.figure(figsize=(8.5, 11), dpi=400)
+                f2b.add_subplot(1, 1, 1)
+                plt.imshow(raw_img, cmap='gray')
+                color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+                color_cycle = cycle(color_list)
+                for component in self.nx_subgraph_components:
+                    sg = nx_graph.subgraph(component)
+                    color = next(color_cycle)
+                    for (s, e) in sg.edges():
+                        ge = sg[s][e]['pts']
+                        plt.plot(ge[:, 1], ge[:, 0], color)
+                plt.xticks([])
+                plt.yticks([])
+                plt.title("Sub Graphs")
+                pdf.savefig()
+                plt.close()
 
             # 5. displaying all the GT calculations in Table  on entire page
             f3a = plt.figure(figsize=(8.5, 11), dpi=300)

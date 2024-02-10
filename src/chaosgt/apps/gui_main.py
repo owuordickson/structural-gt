@@ -9,7 +9,9 @@
 import os
 import sys
 # from qcrop.ui import QCrop
+import numpy as np
 from ypstruct import struct
+import matplotlib.pyplot as plt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 from ..modules.graph_struct import GraphStruct
@@ -922,13 +924,52 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.graph_obj.update_status([0, "Image filtering completed."])
 
     def _btn_show_graph_clicked(self):
-        pass
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
+
+        nx_graph = self.graph_obj.nx_connected_graph
+        raw_img = self.graph_obj.img
+        opt_gte = self.graph_obj.configs_graph
+        f2a = plt.figure()
+        ax = f2a.add_subplot()
+        ax.imshow(raw_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        ax.xticks([])
+        ax.yticks([])
+        # plt.title("Final Graph")
+        # pdf.savefig()
+        # plt.close()
 
     def _btn_quick_metrics_clicked(self):
-        pass
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
 
     def _btn_save_graph_clicked(self):
-        pass
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        if self.graph_obj is None:
+            self._btn_apply_filters_clicked()
 
     def _btn_compute_gt_metrics_clicked(self):
         if self.img_path == '':
