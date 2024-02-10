@@ -12,6 +12,9 @@ import sys
 import numpy as np
 from ypstruct import struct
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+# from PIL import Image
+from PIL.ImageQt import ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from ..configs.config_loader import load
 from ..modules.graph_struct import GraphStruct
@@ -934,8 +937,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         nx_graph = self.graph_obj.nx_connected_graph
         raw_img = self.graph_obj.img
         opt_gte = self.graph_obj.configs_graph
-        f2a = plt.figure()
-        ax = f2a.add_subplot()
+
+        my_dpi = 96
+        fig = plt.figure(figsize=(600/my_dpi, 600/my_dpi), dpi=my_dpi)
+        canvas = FigureCanvas(fig)
+        ax = fig.add_subplot()
         ax.imshow(raw_img, cmap='gray')
         if opt_gte.is_multigraph:
             for (s, e) in nx_graph.edges():
@@ -949,11 +955,25 @@ class AnalysisUI(QtWidgets.QMainWindow):
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        ax.xticks([])
-        ax.yticks([])
-        # plt.title("Final Graph")
-        # pdf.savefig()
-        # plt.close()
+        # ax.plot.xticks([])
+        # ax.plot.yticks([])
+        ax.set_axis_off()
+        canvas.draw()
+
+        # size = canvas.size()
+        w, h = int(fig.figbbox.width), int(fig.figbbox.height)
+        img = QtGui.QImage(canvas.buffer_rgba(), w, h, QtGui.QImage.Format.Format_ARGB32)
+        img_pixmap = QtGui.QPixmap(img)
+
+        # rgba = np.asarray(canvas.buffer_rgba())
+        # img = ImageQt(canvas.buffer_rgba())
+        # img_pixmap = QtGui.QPixmap.fromImage(img)
+
+        self.img_scale = 1
+        w = self.lbl_img.width()
+        h = self.lbl_img.height()
+        self.lbl_img.setText('')
+        self.lbl_img.setPixmap(img_pixmap)
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
