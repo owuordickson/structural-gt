@@ -425,16 +425,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.current_img_file_index = 0
         self.img_scale = 1
         self.graph_obj = None
-        # self.work_thread = None
 
-        self.thread = QtCore.QThread()
-        self.worker = Worker(func_id=1, args=(self.img_path, self.output_path))
-        # self.worker.moveToThread(self.thread)
-        # self.thread.started.connect(self.worker.run)
-        # self.worker.finished.connect(self.thread.quit)
-        # self.worker.finished.connect(self.worker.deleteLater)
-        # self.thread.finished.connect(self.thread.deleteLater)
-        # self.worker.progress.connect(self.reportProgress)
+        self.threadpool = QtCore.QThreadPool()
 
         self.re_translate_ui()
         self._init_configs()
@@ -701,12 +693,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _init_img_path_settings(self, options):
 
         self.cbx_multi.setChecked(options.multiImage)
-        if options.multiImage == 1:
-            self.btn_next.setEnabled(True)
-            self.btn_prev.setEnabled(True)
-        else:
-            self.btn_next.setEnabled(False)
-            self.btn_prev.setEnabled(False)
         if self.img_path == '':
             self.lbl_img.setText("Add 'Image Path' using the 'Select' button")
 
@@ -718,6 +704,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_prev.clicked.connect(self._btn_prev_clicked)
         self.btn_zoom_in.clicked.connect(self._btn_zoom_in_clicked)
         self.btn_zoom_out.clicked.connect(self._btn_zoom_out_clicked)
+        self.disable_tasks()
+        self.btn_select_img_path.setEnabled(True)
+        self.cbx_multi.setEnabled(True)
 
     def _init_tools(self):
         # self.btn_crop.clicked.connect(self._btn_crop_clicked)
@@ -777,6 +766,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.current_img_file_index = 0
                 self.img_path = self.file_names[self.current_img_file_index]
                 self._load_image()
+                self._enable_enhance_tools()
 
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
@@ -791,6 +781,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             save_dir, file_name = os.path.split(fd_image_file)
             self.img_path = fd_image_file
             self._load_image()
+            self._enable_enhance_tools()
 
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
@@ -951,23 +942,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if item.text() == 'Export as gexf':
             options_gte.export_as_gexf = 1
 
-        # self.graph_obj = AnalysisUI.service_filter_img(self.img_path, self.output_path, options_img, options_gte)
-        # self.work_thread = WorkThread(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
-        # self.work_thread.dataReady.connect(self._handle_results)
-        # self.work_thread.finished.connect(self._handle_work_completed)
-        # self.work_thread.start()
-
-        self.worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        # self.worker.progress.connect(self.reportProgress)
-        self.thread.start()
-
-        self._btn_show_processed_img_clicked()
-        self.enable_tasks()
+        worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
+        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.finished.connect(self._handle_finished)
+        self.threadpool.start(worker)
 
     def _btn_show_original_img_clicked(self):
         if self.img_path == '':
@@ -982,9 +960,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
-
         img = Image.fromarray(self.graph_obj.img_filtered)
         q_img = ImageQt.toqpixmap(img)
         self._load_image(q_img)
@@ -995,9 +970,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
-
         img = Image.fromarray(self.graph_obj.img_bin)
         q_img = ImageQt.toqpixmap(img)
         self._load_image(q_img)
@@ -1007,44 +979,40 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
 
         self.disable_tasks()
         nx_graph = self.graph_obj.nx_connected_graph
         raw_img = self.graph_obj.img
         opt_gte = self.graph_obj.configs_graph
-        fig = AnalysisUI.draw_gt_network(raw_img, nx_graph, opt_gte)
+        if nx_graph.number_of_nodes() <= 0:
+            dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
+            dialog.exec()
+            self.enable_tasks()
+            return
 
-        if fig:
-            img = AnalysisUI.plot_to_img(fig)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
-        self.enable_tasks()
+        worker = Worker(func_id=3, args=(raw_img, nx_graph, opt_gte))
+        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.finished.connect(self._handle_finished)
+        self.threadpool.start(worker)
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
 
     def _btn_save_graph_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
 
     def _btn_compute_gt_metrics_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        if self.graph_obj is None:
-            self._btn_apply_filters_clicked()
+
         if self.graph_obj.nx_graph.number_of_nodes() <= 0:
             dialog = CustomDialog("Graph Error", "Problem with graph (change/apply different filter and graph options).")
             dialog.exec()
@@ -1102,8 +1070,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 if item.text() == 'Wiener Index':
                     options_gtc.compute_wiener_index = 1
 
-        AnalysisUI.service_compute_gt(self.graph_obj, options_gtc)
-        self.enable_tasks()
+        worker = Worker(func_id=2, args=(self.graph_obj, options_gtc))
+        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.finished.connect(self._handle_finished)
+        self.threadpool.start(worker)
 
     def _btn_compute_fd_clicked(self):
         self.disable_tasks()
@@ -1115,6 +1085,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def disable_tasks(self):
         self.btn_select_img_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
+        self.btn_zoom_in.setEnabled(False)
+        self.btn_zoom_out.setEnabled(False)
+
+        self.spb_contrast.setEnabled(False)
+        self.spb_brightness.setEnabled(False)
 
         self.btn_apply_filters.setEnabled(False)
         self.btn_crop.setEnabled(False)
@@ -1132,6 +1107,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def enable_tasks(self):
         self.btn_select_img_path.setEnabled(True)
         self.cbx_multi.setEnabled(True)
+        self.btn_zoom_in.setEnabled(True)
+        self.btn_zoom_out.setEnabled(True)
+
+        self.spb_contrast.setEnabled(True)
+        self.spb_brightness.setEnabled(True)
 
         self.btn_apply_filters.setEnabled(True)
         self.btn_crop.setEnabled(True)
@@ -1145,41 +1125,32 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_fd.setEnabled(True)
         self.btn_chaos_gt.setEnabled(True)
 
-    # def _handle_work_completed(self):
-    #    del self.work_thread
+    def _enable_enhance_tools(self):
+        self.spb_contrast.setEnabled(True)
+        self.spb_brightness.setEnabled(True)
+        self.btn_apply_filters.setEnabled(True)
+        self.btn_crop.setEnabled(True)
 
-    def _handle_results(self, obj):
-        self.graph_obj = obj
-        print(self.graph_obj.number_of_nodes())
+    def _handle_finished(self, task, obj):
+        if task == 1:
+            self.graph_obj = obj
+            self._btn_show_processed_img_clicked()
+        elif task == 2:
+            metrics_obj = obj
+            metrics_obj.generate_pdf_output()
+            # metrics_obj.update_status([0, "GT calculations completed."])
+            # metrics_obj.remove_listener(self.update_progress)
+            print("GT PDF successfully generated.")
+        elif task == 3:
+            if obj:
+                img = AnalysisUI.plot_to_img(obj)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image(q_img)
+        self.enable_tasks()
 
     @staticmethod
-    def _handle_update_change(value, code, msg):
+    def _handle_progress_update(value, code, msg):
         print(str(value) + ", " + str(code) + ": " + msg)
-
-    @staticmethod
-    def draw_gt_network(raw_img, nx_graph, opt_gte):
-        if nx_graph.number_of_nodes() <= 0:
-            dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
-            dialog.exec()
-            return
-
-        fig = plt.Figure()
-        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
-        ax.set_axis_off()
-        ax.imshow(raw_img, cmap='gray')
-        if opt_gte.is_multigraph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax.plot(ge[:, 1], ge[:, 0], 'red')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        return fig
 
     @staticmethod
     def plot_to_img(fig):
@@ -1190,28 +1161,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             buf.seek(0)
             img = Image.open(buf)
             return img
-
-    @staticmethod
-    def service_filter_img(img_path, output_path, options_img, options_gte):
-        graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
-        # graph_obj.add_listener(AnalysisUI.update_progress)
-        graph_obj.fit()
-        # graph_obj.update_status([0, "Image filtering completed."])
-        # graph_obj.remove_listener(AnalysisUI.update_progress)
-        return graph_obj
-
-    @staticmethod
-    def service_compute_gt(graph_obj, options_gtc):
-        options_gte = graph_obj.configs_graph
-        metrics_obj = GraphMetrics(graph_obj, options_gtc)
-        # metrics_obj.add_listener(AnalysisUI.update_progress)
-        metrics_obj.compute_gt_metrics()
-        if options_gte.weighted_by_diameter:
-            metrics_obj.compute_weighted_gt_metrics()
-        metrics_obj.generate_pdf_output()
-        # metrics_obj.update_status([0, "GT calculations completed."])
-        # metrics_obj.remove_listener(AnalysisUI.update_progress)
-        return metrics_obj
 
 
 class TreeItem(QtGui.QStandardItem):
@@ -1257,72 +1206,29 @@ class CustomDialog(QtWidgets.QDialog):
         self.setLayout(self.layout)
 
 
-"""
-class WorkThread(QtCore.QThread):
-
-    updateData = QtCore.pyqtSignal(int, int, str)
-    # dataReady = QtCore.pyqtSignal(object)
-
-    def __init__(self, func_id, args, parent=None):
-        QtCore.QThread.__init__(self, parent)
-        self.target_id = func_id
-        self.args = args
-        # self.finished.connect(callback)
-
-    def run(self):
-        if self.target_id == 1:
-            self.service_filter_img(*self.args)
-        elif self.target_id == 2:
-            self.service_compute_gt(*self.args)
-
-    def update_progress(self, code, msg):
-        print(msg)
-        self.updateData.emit(70, code, msg)
-
-    def service_filter_img(self, img_path, output_path, options_img, options_gte):
-        graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
-        graph_obj.add_listener(self.update_progress)
-        graph_obj.fit()
-        graph_obj.update_status([0, "Image filtering completed."])
-        graph_obj.remove_listener(self.update_progress)
-        # self.dataReady.emit(graph_obj)
-        print("done!")
-        # return graph_obj
-
-    def service_compute_gt(self, graph_obj, options_gtc):
-        options_gte = graph_obj.configs_graph
-        metrics_obj = GraphMetrics(graph_obj, options_gtc)
-        metrics_obj.add_listener(self.update_progress)
-        metrics_obj.compute_gt_metrics()
-        if options_gte.weighted_by_diameter:
-            metrics_obj.compute_weighted_gt_metrics()
-        metrics_obj.generate_pdf_output()
-        metrics_obj.update_status([0, "GT calculations completed."])
-        metrics_obj.remove_listener(self.update_progress)
-        return metrics_obj
-"""
+class WorkerSignals(QtCore.QObject):
+    progress = QtCore.pyqtSignal(int, int, str)
+    finished = QtCore.pyqtSignal(int, object)
 
 
-class Worker(QtCore.QObject):
-
-    progressData = QtCore.pyqtSignal(int, int, str)
-    finished = QtCore.pyqtSignal(object)
-
+class Worker(QtCore.QRunnable):
     def __init__(self, func_id, args):
         super().__init__()
+        self.signals = WorkerSignals()
         self.target_id = func_id
         self.args = args
 
-    @QtCore.pyqtSlot()
     def run(self):
         if self.target_id == 1:
             self.service_filter_img(*self.args)
         elif self.target_id == 2:
             self.service_compute_gt(*self.args)
+        elif self.target_id == 3:
+            self.service_draw_network(*self.args)
 
     def update_progress(self, code, msg):
-        print(msg)
-        self.progressData.emit(70, code, msg)
+        # print(msg)
+        self.signals.progress.emit(70, code, msg)
 
     def service_filter_img(self, img_path, output_path, options_img=None, options_gte=None):
         graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
@@ -1330,8 +1236,7 @@ class Worker(QtCore.QObject):
         graph_obj.fit()
         graph_obj.update_status([0, "Image filtering completed."])
         graph_obj.remove_listener(self.update_progress)
-        self.finished.emit(graph_obj)
-        # return graph_obj
+        self.signals.finished.emit(1, graph_obj)
 
     def service_compute_gt(self, graph_obj, options_gtc):
         options_gte = graph_obj.configs_graph
@@ -1340,11 +1245,29 @@ class Worker(QtCore.QObject):
         metrics_obj.compute_gt_metrics()
         if options_gte.weighted_by_diameter:
             metrics_obj.compute_weighted_gt_metrics()
-        metrics_obj.generate_pdf_output()
+        # metrics_obj.generate_pdf_output()
         metrics_obj.update_status([0, "GT calculations completed."])
         metrics_obj.remove_listener(self.update_progress)
-        self.finished.emit(metrics_obj)
-        # return metrics_obj
+        self.signals.finished.emit(2, metrics_obj)
+
+    def service_draw_network(self, raw_img, nx_graph, opt_gte):
+        fig = plt.Figure()
+        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
+        ax.set_axis_off()
+        ax.imshow(raw_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        self.signals.finished.emit(3, fig)
 
 
 def pyqt_app():
