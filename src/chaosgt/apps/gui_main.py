@@ -26,21 +26,36 @@ class AnalysisUI(QtWidgets.QMainWindow):
         super().__init__()
         self.setObjectName("window_main")
         self.resize(1047, 860)
+
         font = QtGui.QFont()
         font.setBold(False)
         self.setFont(font)
         self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
-
         self.setCentralWidget(self.wdt_main)
+
         self.menu_bar = QtWidgets.QMenuBar(parent=self)
         self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1038, 22))
         self.menu_bar.setObjectName("menu_bar")
         self.setMenuBar(self.menu_bar)
+
         self.status_bar = QtWidgets.QStatusBar(parent=self)
         self.status_bar.setObjectName("status_bar")
         self.setStatusBar(self.status_bar)
 
+        self.__create_widgets()
+
+        self.img_path = ''
+        self.output_path = ''
+        self.file_names = []
+        self.current_img_file_index = 0
+        self.img_scale = 1
+        self.graph_obj = None
+
+        self.threadpool = QtCore.QThreadPool()
+        self._init_configs()
+
+    def __create_widgets(self):
         self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
         self.grid_layout_main.setObjectName("grid_layout_main")
         self.grp_img = QtWidgets.QGroupBox(parent=self.wdt_main)
@@ -154,9 +169,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
         self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
-        self.btn_save_graph = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_save_graph.setObjectName("btn_save_graph")
-        self.grid_layout_graph.addWidget(self.btn_save_graph, 5, 0, 1, 1)
+        self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_save_files.setObjectName("btn_save_files")
+        self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
         spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                               QtWidgets.QSizePolicy.Policy.Expanding)
@@ -419,17 +434,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_main.setColumnStretch(1, 5)
         self.grid_layout_main.setColumnStretch(2, 1)
 
-        self.img_path = ''
-        self.output_path = ''
-        self.file_names = []
-        self.current_img_file_index = 0
-        self.img_scale = 1
-        self.graph_obj = None
-
-        self.threadpool = QtCore.QThreadPool()
-
         self.re_translate_ui()
-        self._init_configs()
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def re_translate_ui(self):
@@ -451,7 +456,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img.setText(_translate("window_main", "Binary Image"))
         self.btn_show_graph.setText(_translate("window_main", "Show Graph"))
         self.btn_quick_graph_metrics.setText(_translate("window_main", "Quick Metrics"))
-        self.btn_save_graph.setText(_translate("window_main", "Save Graph"))
+        self.btn_save_files.setText(_translate("window_main", "Save Files"))
         self.grp_crop.setTitle(_translate("window_main", "Enhancing Tools"))
         self.btn_crop.setText(_translate("window_main", "Crop"))
         self.lbl_brightness.setText(_translate("window_main", "Brightness"))
@@ -716,7 +721,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img.clicked.connect(self._btn_show_binary_img_clicked)
         self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
-        self.btn_save_graph.clicked.connect(self._btn_save_graph_clicked)
+        self.btn_save_files.clicked.connect(self._btn_save_files_clicked)
         self.btn_gt_metrics.clicked.connect(self._btn_compute_gt_metrics_clicked)
         self.btn_fd.clicked.connect(self._btn_compute_fd_clicked)
         self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
@@ -1001,7 +1006,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-    def _btn_save_graph_clicked(self):
+    def _btn_save_files_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
@@ -1098,7 +1103,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img.setEnabled(False)
         self.btn_show_graph.setEnabled(False)
         self.btn_quick_graph_metrics.setEnabled(False)
-        self.btn_save_graph.setEnabled(False)
+        self.btn_save_files.setEnabled(False)
         self.btn_gt_metrics.setEnabled(False)
         self.btn_fd.setEnabled(False)
         self.btn_chaos_gt.setEnabled(False)
@@ -1120,7 +1125,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img.setEnabled(True)
         self.btn_show_graph.setEnabled(True)
         self.btn_quick_graph_metrics.setEnabled(True)
-        self.btn_save_graph.setEnabled(True)
+        self.btn_save_files.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
         self.btn_fd.setEnabled(True)
         self.btn_chaos_gt.setEnabled(True)
