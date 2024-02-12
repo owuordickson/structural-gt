@@ -56,8 +56,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.graph_obj = None
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
-        self.threadpool = QtCore.QThreadPool()
         self.progress_dialog = None
+        self.error_alert = False
+
+        self.threadpool = QtCore.QThreadPool()
         self._init_configs()
 
     def __create_widgets(self):
@@ -850,6 +852,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.current_img_file_index += 1
             self.img_path = self.file_names[self.current_img_file_index]
             self._load_image()
+            self.graph_obj = None
 
             self.btn_prev.setEnabled(True)
             if self.current_img_file_index == (len(self.file_names) - 1):
@@ -862,6 +865,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.current_img_file_index -= 1
             self.img_path = self.file_names[self.current_img_file_index]
             self._load_image()
+            self.graph_obj = None
 
             self.btn_next.setEnabled(True)
             if self.current_img_file_index == 0:
@@ -895,7 +899,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
     def _rescale_image(self):
-        img_pixmap = QtGui.QPixmap(self.img_path)
+        img_pixmap = self.lbl_img.pixmap()
         size = img_pixmap.size()
         self.lbl_img.setPixmap(img_pixmap.scaled((self.img_scale * size)))
 
@@ -1002,7 +1006,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        self._load_image()
+
+        if self.graph_obj:
+            img = Image.fromarray(self.graph_obj.img_raw)
+            q_img = ImageQt.toqpixmap(img)
+        else:
+            q_img = QtGui.QPixmap(self.img_path)
+        self._load_image(q_img)
 
     def _btn_show_processed_img_clicked(self):
         if self.img_path == '':
@@ -1010,15 +1020,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        img = Image.fromarray(self.graph_obj.img_filtered)
-        q_img = ImageQt.toqpixmap(img)
-        self._load_image(q_img)
-
-        start = time.time()
-        if nx.is_connected(self.graph_obj.nx_graph):
-            self.average_node_connectivity()
-        end = time.time()
-        print("Elapsed time: " + str(end - start))
+        if self.graph_obj:
+            img = Image.fromarray(self.graph_obj.img_filtered)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
 
     def _btn_show_binary_img_clicked(self):
         if self.img_path == '':
@@ -1026,9 +1034,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        img = Image.fromarray(self.graph_obj.img_bin)
-        q_img = ImageQt.toqpixmap(img)
-        self._load_image(q_img)
+        if self.graph_obj:
+            img = Image.fromarray(self.graph_obj.img_bin)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
 
     def _btn_show_graph_clicked(self):
         if self.img_path == '':
@@ -1036,22 +1048,26 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        self.disable_tasks()
-        nx_graph = self.graph_obj.nx_connected_graph
-        raw_img = self.graph_obj.img
-        opt_gte = self.graph_obj.configs_graph
-        if nx_graph.number_of_nodes() <= 0:
-            dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
-            dialog.exec()
-            self.enable_tasks()
-            return
+        if self.graph_obj:
+            self.disable_tasks()
+            nx_graph = self.graph_obj.nx_connected_graph
+            raw_img = self.graph_obj.img
+            opt_gte = self.graph_obj.configs_graph
+            if nx_graph.number_of_nodes() <= 0:
+                dialog = CustomDialog("Graph Error", "Problem with graph (change filter and graph options).")
+                dialog.exec()
+                self.enable_tasks()
+                return
 
-        self.progress_dialog = QtWidgets.QProgressDialog("Drawing network...", "Abort Operation", 0, 100)
-        # self.progress_dialog.setLabelText()
-        worker = Worker(func_id=3, args=(raw_img, nx_graph, opt_gte))
-        worker.signals.progress.connect(self._handle_progress_update)
-        worker.signals.finished.connect(self._handle_finished)
-        self.threadpool.start(worker)
+            self.progress_dialog = QtWidgets.QProgressDialog("Drawing network...", "Abort Operation", 0, 100)
+            # self.progress_dialog.setLabelText()
+            worker = Worker(func_id=3, args=(raw_img, nx_graph, opt_gte))
+            worker.signals.progress.connect(self._handle_progress_update)
+            worker.signals.finished.connect(self._handle_finished)
+            self.threadpool.start(worker)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
 
     def _btn_quick_metrics_clicked(self):
         if self.img_path == '':
@@ -1059,11 +1075,23 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
+        if self.graph_obj:
+            pass
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
     def _btn_save_files_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
+
+        if self.graph_obj:
+            pass
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
 
     def _btn_compute_gt_metrics_clicked(self):
         if self.img_path == '':
@@ -1071,67 +1099,78 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        if self.graph_obj.nx_graph.number_of_nodes() <= 0:
-            dialog = CustomDialog("Graph Error", "Problem with graph (change/apply different filter and graph options).")
+        if self.graph_obj:
+            if self.graph_obj.nx_graph.number_of_nodes() <= 0:
+                dialog = CustomDialog("Graph Error",
+                                      "Problem with graph (change/apply different filter and graph options).")
+                dialog.exec()
+                return
+
+            self.disable_tasks()
+            options_gtc = struct()
+            options_gtc.display_heatmaps = 0
+            options_gtc.display_degree_histogram = 0
+            options_gtc.display_betweenness_histogram = 0
+            options_gtc.display_currentflow_histogram = 0
+            options_gtc.display_closeness_histogram = 0
+            options_gtc.display_eigenvector_histogram = 0
+            options_gtc.compute_nodal_connectivity = 0
+            options_gtc.compute_graph_density = 0
+            options_gtc.compute_graph_conductance = 0
+            options_gtc.compute_global_efficiency = 0
+            options_gtc.compute_clustering_coef = 0
+            options_gtc.compute_assortativity_coef = 0
+            options_gtc.compute_network_diameter = 0
+            options_gtc.compute_wiener_index = 0
+
+            model = self.tree_settings.model()
+            root_index = model.index(1, 0)  # Assuming the root index is at row 0, column 0
+            for i in range(model.rowCount(root_index)):
+                child_index = model.index(i, 0, root_index)
+                item = model.itemFromIndex(child_index)
+                if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                    if item.text() == 'Display Heatmaps':
+                        options_gtc.display_heatmaps = 1
+                    if item.text() == 'Average Degree':
+                        options_gtc.display_degree_histogram = 1
+                    if item.text() == 'Betweenness Centrality':
+                        options_gtc.display_betweenness_histogram = 1
+                    if item.text() == '':
+                        options_gtc.display_currentflow_histogram = 1
+                    if item.text() == 'Closeness Centrality':
+                        options_gtc.display_closeness_histogram = 1
+                    if item.text() == 'Eigenvector Centrality':
+                        options_gtc.display_eigenvector_histogram = 1
+                    if item.text() == 'Average Nodal Connectivity':
+                        options_gtc.compute_nodal_connectivity = 1
+                    if item.text() == 'Graph Density':
+                        options_gtc.compute_graph_density = 1
+                    if item.text() == 'Graph Conductance':
+                        options_gtc.compute_graph_conductance = 1
+                    if item.text() == 'Global Efficiency':
+                        options_gtc.compute_global_efficiency = 1
+                    if item.text() == 'Average Clustering Coefficient':
+                        options_gtc.compute_clustering_coef = 1
+                    if item.text() == 'Assortativity Coefficient':
+                        options_gtc.compute_assortativity_coef = 1
+                    if item.text() == 'Network Diameter':
+                        options_gtc.compute_network_diameter = 1
+                    if item.text() == 'Wiener Index':
+                        options_gtc.compute_wiener_index = 1
+
+            # start = time.time()
+            # if nx.is_connected(self.graph_obj.nx_graph):
+            #    self.average_node_connectivity()
+            # end = time.time()
+            # print("Elapsed time: " + str(end - start))
+
+            worker = Worker(func_id=2, args=(self.graph_obj, options_gtc))
+            worker.signals.progress.connect(self._handle_progress_update)
+            worker.signals.finished.connect(self._handle_finished)
+            self.threadpool.start(worker)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()
-            return
-
-        self.disable_tasks()
-        options_gtc = struct()
-        options_gtc.display_heatmaps = 0
-        options_gtc.display_degree_histogram = 0
-        options_gtc.display_betweenness_histogram = 0
-        options_gtc.display_currentflow_histogram = 0
-        options_gtc.display_closeness_histogram = 0
-        options_gtc.display_eigenvector_histogram = 0
-        options_gtc.compute_nodal_connectivity = 0
-        options_gtc.compute_graph_density = 0
-        options_gtc.compute_graph_conductance = 0
-        options_gtc.compute_global_efficiency = 0
-        options_gtc.compute_clustering_coef = 0
-        options_gtc.compute_assortativity_coef = 0
-        options_gtc.compute_network_diameter = 0
-        options_gtc.compute_wiener_index = 0
-
-        model = self.tree_settings.model()
-        root_index = model.index(1, 0)  # Assuming the root index is at row 0, column 0
-        for i in range(model.rowCount(root_index)):
-            child_index = model.index(i, 0, root_index)
-            item = model.itemFromIndex(child_index)
-            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Display Heatmaps':
-                    options_gtc.display_heatmaps = 1
-                if item.text() == 'Average Degree':
-                    options_gtc.display_degree_histogram = 1
-                if item.text() == 'Betweenness Centrality':
-                    options_gtc.display_betweenness_histogram = 1
-                if item.text() == '':
-                    options_gtc.display_currentflow_histogram = 1
-                if item.text() == 'Closeness Centrality':
-                    options_gtc.display_closeness_histogram = 1
-                if item.text() == 'Eigenvector Centrality':
-                    options_gtc.display_eigenvector_histogram = 1
-                if item.text() == 'Average Nodal Connectivity':
-                    options_gtc.compute_nodal_connectivity = 1
-                if item.text() == 'Graph Density':
-                    options_gtc.compute_graph_density = 1
-                if item.text() == 'Graph Conductance':
-                    options_gtc.compute_graph_conductance = 1
-                if item.text() == 'Global Efficiency':
-                    options_gtc.compute_global_efficiency = 1
-                if item.text() == 'Average Clustering Coefficient':
-                    options_gtc.compute_clustering_coef = 1
-                if item.text() == 'Assortativity Coefficient':
-                    options_gtc.compute_assortativity_coef = 1
-                if item.text() == 'Network Diameter':
-                    options_gtc.compute_network_diameter = 1
-                if item.text() == 'Wiener Index':
-                    options_gtc.compute_wiener_index = 1
-
-        worker = Worker(func_id=2, args=(self.graph_obj, options_gtc))
-        worker.signals.progress.connect(self._handle_progress_update)
-        worker.signals.finished.connect(self._handle_finished)
-        self.threadpool.start(worker)
 
     def _btn_compute_fd_clicked(self):
         self.disable_tasks()
@@ -1151,14 +1190,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.cancel()
             self.progress_dialog = None
 
-        if task == 1:
+        if (task == 1) and (not self.error_alert):
             self.graph_obj = obj
             self._btn_show_processed_img_clicked()
             self.lbl_progress.setText('Apply image filter complete!')
             self.progress_bar_main.setValue(100)
             dialog = CustomDialog("Success!", 'Image filters applied.')
             dialog.exec()
-        elif task == 2:
+        elif (task == 2) and (not self.error_alert):
             metrics_obj = obj
             metrics_obj.generate_pdf_output()
             # metrics_obj.update_status([0, "GT calculations completed."])
@@ -1167,7 +1206,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_bar_main.setValue(100)
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
-        elif task == 3:
+        elif (task == 3) and (not self.error_alert):
             if obj:
                 img = AnalysisUI.plot_to_img(obj)
                 q_img = ImageQt.toqpixmap(img)
@@ -1183,12 +1222,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.enable_tasks()
 
     def _handle_progress_update(self, value, code, msg):
-        print(str(value) + ", " + str(code) + ": " + msg)
+        print(str(value) + "%: " + msg)
         if code > 0:
             self.lbl_progress.setStyleSheet("color: rgb(0, 128, 0)")
             self.lbl_progress.setText(msg)
             self.progress_bar_main.setValue(value)
         else:
+            self.error_alert = True
             self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
             self.lbl_progress.setText("ERROR: " + str(msg))
             dialog = CustomDialog("Error", msg)
@@ -1199,6 +1239,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.setLabelText(msg)
 
     def disable_tasks(self):
+        self.error_alert = False
         self.btn_select_img_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
         self.btn_zoom_in.setEnabled(False)
