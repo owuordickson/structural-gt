@@ -873,15 +873,15 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.img_scale < 1:
             self.img_scale = 1
         else:
-            self.img_scale *= 1.25
-        # self._rescale_image()
+            self.img_scale *= 1.05
+        self._rescale_image()
 
     def _btn_zoom_out_clicked(self):
         if self.img_scale > 1:
             self.img_scale = 1
         else:
-            self.img_scale /= 1.25
-        # self._rescale_image()
+            self.img_scale /= 1.05
+        self._rescale_image()
 
     def _load_image(self, img_pixmap=None):
         self.img_scale = 1
@@ -1148,6 +1148,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _handle_finished(self, task, obj):
         if self.progress_dialog:
+            self.progress_dialog.cancel()
             self.progress_dialog = None
 
         if task == 1:
