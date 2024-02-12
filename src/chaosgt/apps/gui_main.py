@@ -27,11 +27,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setObjectName("window_main")
-        self.resize(1047, 860)
+        self.resize(1075, 881)
 
-        font = QtGui.QFont()
-        font.setBold(False)
-        self.setFont(font)
         self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
         self.setCentralWidget(self.wdt_main)
@@ -44,6 +41,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.status_bar = QtWidgets.QStatusBar(parent=self)
         self.status_bar.setObjectName("status_bar")
         self.setStatusBar(self.status_bar)
+
+        self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
+        self.grid_layout_main.setObjectName("grid_layout_main")
 
         self.__create_widgets()
 
@@ -60,13 +60,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._init_configs()
 
     def __create_widgets(self):
-        self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
-        self.grid_layout_main.setObjectName("grid_layout_main")
+
+        # 1. GROUP IMAGE
         self.grp_img = QtWidgets.QGroupBox(parent=self.wdt_main)
         self.grp_img.setObjectName("grp_img")
         self.grid_layout_img = QtWidgets.QGridLayout(self.grp_img)
         self.grid_layout_img.setObjectName("grid_layout_img")
 
+        # 1a. Image zoom in/out group
         self.grp_img_zoom = QtWidgets.QGroupBox(parent=self.grp_img)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -95,11 +96,27 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_zoom.addItem(spacer_item_2, 0, 3, 1, 1)
         self.grid_layout_img.addWidget(self.grp_img_zoom, 0, 0, 1, 1)
 
+        # 1b. Image group
         self.lbl_img = QtWidgets.QLabel(parent=self.grp_img)
         self.lbl_img.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_img.setObjectName("lbl_img")
         self.grid_layout_img.addWidget(self.lbl_img, 1, 0, 1, 1)
 
+        self.sca_img = QtWidgets.QScrollArea(parent=self.grp_img)
+        self.sca_img.setWidgetResizable(True)
+        self.sca_img.setObjectName("sca_img")
+        self.scroll_area_img = QtWidgets.QWidget()
+        self.scroll_area_img.setObjectName("scroll_area_img")
+        self.grid_layout_img_scroll = QtWidgets.QGridLayout(self.scroll_area_img)
+        self.grid_layout_img_scroll.setObjectName("grid_layout_img_scroll")
+        self.lbl_img = QtWidgets.QLabel(parent=self.scroll_area_img)
+        self.lbl_img.setText("")
+        self.lbl_img.setObjectName("lbl_img")
+        self.grid_layout_img_scroll.addWidget(self.lbl_img, 0, 0, 1, 1)
+        self.sca_img.setWidget(self.scroll_area_img)
+        self.grid_layout_img.addWidget(self.sca_img, 1, 0, 1, 1)
+
+        # 1c. Image navigation group
         self.grp_img_nav = QtWidgets.QGroupBox(parent=self.grp_img)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -123,8 +140,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                             QtWidgets.QSizePolicy.Policy.Minimum)
         self.grid_layout_img_nav.addItem(spacer_item, 0, 1, 1, 1)
         self.grid_layout_img.addWidget(self.grp_img_nav, 2, 0, 1, 1)
-
         self.grid_layout_main.addWidget(self.grp_img, 1, 1, 1, 1)
+
+        # 2. GROUP TASKS
         self.grp_tasks = QtWidgets.QGroupBox(parent=self.wdt_main)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum,
                                             QtWidgets.QSizePolicy.Policy.Preferred)
@@ -140,46 +158,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_tasks.setObjectName("grp_tasks")
         self.grid_layout_tasks = QtWidgets.QGridLayout(self.grp_tasks)
         self.grid_layout_tasks.setObjectName("grid_layout_tasks")
-        self.grp_compute = QtWidgets.QGroupBox(parent=self.grp_tasks)
-        self.grp_compute.setObjectName("grp_compute")
-        self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
-        self.grid_layout_compute.setObjectName("grid_layout_compute")
-        self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_chaos_gt.setObjectName("btn_chaos_gt")
-        self.grid_layout_compute.addWidget(self.btn_chaos_gt, 3, 0, 1, 1)
-        self.btn_fd = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_fd.setObjectName("btn_fd")
-        self.grid_layout_compute.addWidget(self.btn_fd, 2, 0, 1, 1)
-        self.btn_gt_metrics = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_gt_metrics.setObjectName("btn_gt_metrics")
-        self.grid_layout_compute.addWidget(self.btn_gt_metrics, 1, 0, 1, 1)
-        self.grid_layout_tasks.addWidget(self.grp_compute, 10, 0, 1, 2)
-        self.grp_graph = QtWidgets.QGroupBox(parent=self.grp_tasks)
-        self.grp_graph.setObjectName("grp_graph")
-        self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
-        self.grid_layout_graph.setObjectName("grid_layout_graph")
-        self.btn_show_original_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_original_img.setObjectName("btn_show_original_img")
-        self.grid_layout_graph.addWidget(self.btn_show_original_img, 0, 0, 1, 1)
-        self.btn_show_processed_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_processed_img.setObjectName("btn_show_processed_img")
-        self.grid_layout_graph.addWidget(self.btn_show_processed_img, 1, 0, 1, 1)
-        self.btn_show_binary_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_binary_img.setObjectName("btn_show_binary_img")
-        self.grid_layout_graph.addWidget(self.btn_show_binary_img, 2, 0, 1, 1)
-        self.btn_show_graph = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_graph.setObjectName("btn_show_graph")
-        self.grid_layout_graph.addWidget(self.btn_show_graph, 3, 0, 1, 1)
-        self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
-        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
-        self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_save_files.setObjectName("btn_save_files")
-        self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
-        self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
-        spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
-                                              QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_tasks.addItem(spacer_item_1, 7, 0, 1, 1)
+
+        # 2a. Enhancing tools group
         self.grp_crop = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
@@ -211,7 +191,53 @@ class AnalysisUI(QtWidgets.QMainWindow):
         spacer_item_2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                               QtWidgets.QSizePolicy.Policy.Expanding)
         self.grid_layout_tasks.addItem(spacer_item_2, 9, 0, 1, 1)
+
+        # 2b. Visualizations group
+        self.grp_graph = QtWidgets.QGroupBox(parent=self.grp_tasks)
+        self.grp_graph.setObjectName("grp_graph")
+        self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
+        self.grid_layout_graph.setObjectName("grid_layout_graph")
+        self.btn_show_original_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_original_img.setObjectName("btn_show_original_img")
+        self.grid_layout_graph.addWidget(self.btn_show_original_img, 0, 0, 1, 1)
+        self.btn_show_processed_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_processed_img.setObjectName("btn_show_processed_img")
+        self.grid_layout_graph.addWidget(self.btn_show_processed_img, 1, 0, 1, 1)
+        self.btn_show_binary_img = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_binary_img.setObjectName("btn_show_binary_img")
+        self.grid_layout_graph.addWidget(self.btn_show_binary_img, 2, 0, 1, 1)
+        self.btn_show_graph = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_graph.setObjectName("btn_show_graph")
+        self.grid_layout_graph.addWidget(self.btn_show_graph, 3, 0, 1, 1)
+        self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
+        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
+        self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_save_files.setObjectName("btn_save_files")
+        self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
+        self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
+        spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                              QtWidgets.QSizePolicy.Policy.Expanding)
+        self.grid_layout_tasks.addItem(spacer_item_1, 7, 0, 1, 1)
+
+        # 2c. Computation group
+        self.grp_compute = QtWidgets.QGroupBox(parent=self.grp_tasks)
+        self.grp_compute.setObjectName("grp_compute")
+        self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
+        self.grid_layout_compute.setObjectName("grid_layout_compute")
+        self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
+        self.btn_chaos_gt.setObjectName("btn_chaos_gt")
+        self.grid_layout_compute.addWidget(self.btn_chaos_gt, 3, 0, 1, 1)
+        self.btn_fd = QtWidgets.QPushButton(parent=self.grp_compute)
+        self.btn_fd.setObjectName("btn_fd")
+        self.grid_layout_compute.addWidget(self.btn_fd, 2, 0, 1, 1)
+        self.btn_gt_metrics = QtWidgets.QPushButton(parent=self.grp_compute)
+        self.btn_gt_metrics.setObjectName("btn_gt_metrics")
+        self.grid_layout_compute.addWidget(self.btn_gt_metrics, 1, 0, 1, 1)
+        self.grid_layout_tasks.addWidget(self.grp_compute, 10, 0, 1, 2)
         self.grid_layout_main.addWidget(self.grp_tasks, 1, 2, 1, 1)
+
+        # 3. GROUP IMAGE PATH
         self.grp_path = QtWidgets.QGroupBox(parent=self.wdt_main)
         self.grp_path.setTitle("")
         self.grp_path.setObjectName("grp_path")
@@ -236,18 +262,15 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_select_img_path.setObjectName("btn_select_img_path")
         self.grid_layout_path.addWidget(self.btn_select_img_path, 1, 2, 1, 1)
         self.lbl_img_path = QtWidgets.QLabel(parent=self.grp_path)
-        font = QtGui.QFont()
-        font.setBold(True)
         self.lbl_img_path.setFont(font)
         self.lbl_img_path.setObjectName("lbl_img_path")
         self.grid_layout_path.addWidget(self.lbl_img_path, 1, 0, 1, 1)
         self.cbx_multi = QtWidgets.QCheckBox(parent=self.grp_path)
-        font = QtGui.QFont()
-        font.setBold(False)
-        self.cbx_multi.setFont(font)
         self.cbx_multi.setObjectName("cbx_multi")
         self.grid_layout_path.addWidget(self.cbx_multi, 1, 3, 1, 1)
         self.grid_layout_main.addWidget(self.grp_path, 0, 1, 1, 2)
+
+        # 4. GROUP SETTINGS
         self.grp_settings = QtWidgets.QGroupBox(parent=self.wdt_main)
         self.grp_settings.setEnabled(True)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum,
@@ -260,6 +283,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_settings.setObjectName("grp_settings")
         self.grid_layout_settings = QtWidgets.QGridLayout(self.grp_settings)
         self.grid_layout_settings.setObjectName("grid_layout_settings")
+
+        # 4a. Image filters group
         self.grp_img_filters = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_filters.setObjectName("grp_img_filters")
         self.grid_layout_filters = QtWidgets.QGridLayout(self.grp_img_filters)
@@ -368,12 +393,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_filters.setColumnStretch(1, 6)
         self.grid_layout_filters.setColumnStretch(2, 1)
         self.grid_layout_settings.addWidget(self.grp_img_filters, 0, 0, 1, 1)
-        self.lbl_cite = QtWidgets.QLabel(parent=self.grp_settings)
-        self.lbl_cite.setObjectName("lbl_cite")
-        self.grid_layout_settings.addWidget(self.lbl_cite, 3, 0, 1, 1)
-        self.tree_settings = QtWidgets.QTreeView(parent=self.grp_settings)
-        self.tree_settings.setObjectName("tree_settings")
-        self.grid_layout_settings.addWidget(self.tree_settings, 2, 0, 1, 1)
+
+        # 4b. Binary settings group
         self.grp_img_binary = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_binary.setObjectName("grp_img_binary")
         self.grid_layout_binary = QtWidgets.QGridLayout(self.grp_img_binary)
@@ -385,11 +406,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_grp_binary.addButton(self.rdo_otsu_threshold)
         self.grid_layout_binary.addWidget(self.rdo_otsu_threshold, 3, 0, 1, 1)
         self.sld_global_threshold = QtWidgets.QSlider(parent=self.grp_img_binary)
-        font = QtGui.QFont()
-        font.setBold(False)
-        font.setStrikeOut(False)
-        font.setKerning(True)
-        self.sld_global_threshold.setFont(font)
         self.sld_global_threshold.setMinimum(1)
         self.sld_global_threshold.setMaximum(255)
         self.sld_global_threshold.setProperty("value", 127)
@@ -433,7 +449,31 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_binary.setColumnStretch(1, 6)
         self.grid_layout_binary.setColumnStretch(2, 1)
         self.grid_layout_settings.addWidget(self.grp_img_binary, 1, 0, 1, 1)
+
+        # 4c. Settings options group
+        self.tree_settings = QtWidgets.QTreeView(parent=self.grp_settings)
+        self.tree_settings.setObjectName("tree_settings")
+        self.grid_layout_settings.addWidget(self.tree_settings, 2, 0, 1, 1)
+
+        # 4d. Progress group
+        self.lbl_progress = QtWidgets.QLabel(parent=self.grp_settings)
+        self.lbl_progress.setText("")
+        self.lbl_progress.setStyleSheet("color: rgb(0,128,0)")
+        self.lbl_progress.setObjectName("lbl_progress")
+        self.grid_layout_settings.addWidget(self.lbl_progress, 3, 0, 1, 1)
+        self.progress_bar_main = QtWidgets.QProgressBar(parent=self.grp_settings)
+        self.progress_bar_main.setProperty("value", 0)
+        self.progress_bar_main.setTextVisible(False)
+        self.progress_bar_main.setObjectName("progress_bar_main")
+        self.grid_layout_settings.addWidget(self.progress_bar_main, 4, 0, 1, 1)
+
+        # 4e. Citation group
+        self.lbl_cite = QtWidgets.QLabel(parent=self.grp_settings)
+        self.lbl_cite.setObjectName("lbl_cite")
+        self.grid_layout_settings.addWidget(self.lbl_cite, 5, 0, 1, 1)
         self.grid_layout_main.addWidget(self.grp_settings, 0, 0, 2, 1)
+
+        # COLUMN STRETCH
         self.grid_layout_main.setColumnStretch(0, 2)
         self.grid_layout_main.setColumnStretch(1, 5)
         self.grid_layout_main.setColumnStretch(2, 1)
