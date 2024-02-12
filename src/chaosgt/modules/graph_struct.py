@@ -67,12 +67,12 @@ class GraphStruct:
             func(*args)
 
     def fit(self):
-        self.update_status([1, "Processing image..."])
+        self.update_status([10, "Processing image..."])
         self.img_filtered = self.process_img()
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
-        self.update_status([2, "Extracting graph..."])
+        self.update_status([50, "Extracting graph..."])
         self.extract_graph()
-        self.update_status([2, "Finding largest sub-graph..."])
+        self.update_status([75, "Finding largest sub-graph..."])
         self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter and graph options)."])

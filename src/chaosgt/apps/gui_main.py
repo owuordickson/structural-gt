@@ -57,6 +57,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
         self.threadpool = QtCore.QThreadPool()
+        self.progress_dialog = None
         self._init_configs()
 
     def __create_widgets(self):
@@ -478,10 +479,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_main.setColumnStretch(1, 5)
         self.grid_layout_main.setColumnStretch(2, 1)
 
-        self.re_translate_ui()
+        self.__re_translate_ui()
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def re_translate_ui(self):
+    def __re_translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(_translate("window_main", "Chaos GT"))
         self.btn_prev.setText(_translate("window_main", "<< previous"))
@@ -561,100 +562,100 @@ class AnalysisUI(QtWidgets.QMainWindow):
         root_node = tree_model.invisibleRootItem()
 
         # 2. Add Extraction items
-        options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 255))
+        options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
         weighted_item = TreeItem('Weighted by Diameter', 9, set_checkable=True,
-                                 color=QtGui.QColor(0, 0, 255), data=options_gte.weighted_by_diameter)
+                                 color=QtGui.QColor(0, 0, 200), data=options_gte.weighted_by_diameter)
         options_extraction.appendRow(weighted_item)
 
         merge_nearby_item = TreeItem('Merge Nearby Nodes', 9, set_checkable=True,
-                                     color=QtGui.QColor(0, 0, 255), data=options_gte.merge_nearby_nodes)
+                                     color=QtGui.QColor(0, 0, 200), data=options_gte.merge_nearby_nodes)
         options_extraction.appendRow(merge_nearby_item)
 
         prune_dangling_item = TreeItem('Prune Dangling Edges', 9, set_checkable=True,
-                                       color=QtGui.QColor(0, 0, 255), data=options_gte.prune_dangling_edges)
+                                       color=QtGui.QColor(0, 0, 200), data=options_gte.prune_dangling_edges)
         options_extraction.appendRow(prune_dangling_item)
 
         remove_disconnected_item = TreeItem('Remove Disconnected Segments', 9, set_checkable=True,
-                                            color=QtGui.QColor(0, 0, 255),
+                                            color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
         options_extraction.appendRow(remove_disconnected_item)
 
         remove_loops_item = TreeItem('Remove Self Loops (set size)', 9, set_checkable=True,
-                                     color=QtGui.QColor(0, 0, 255), data=options_gte.remove_self_loops)
+                                     color=QtGui.QColor(0, 0, 200), data=options_gte.remove_self_loops)
         options_extraction.appendRow(remove_loops_item)
 
         remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False, set_editable=True,
-                                    color=QtGui.QColor(0, 0, 255))
+                                    color=QtGui.QColor(0, 0, 200))
         remove_loops_item.appendRow(remove_size_item)
 
         is_multigraph_item = TreeItem('Is Multigraph?', 9, set_checkable=True,
-                                      color=QtGui.QColor(0, 0, 255), data=options_gte.is_multigraph)
+                                      color=QtGui.QColor(0, 0, 200), data=options_gte.is_multigraph)
         options_extraction.appendRow(is_multigraph_item)
 
         node_id_item = TreeItem('Display Node ID', 9, set_checkable=True,
-                                color=QtGui.QColor(0, 0, 255), data=options_gte.display_node_id)
+                                color=QtGui.QColor(0, 0, 200), data=options_gte.display_node_id)
         options_extraction.appendRow(node_id_item)
 
         # 3. Add Computation items
-        options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(255, 0, 0))
-        heatmaps_item = TreeItem('Display Heatmaps', 9, set_checkable=True, color=QtGui.QColor(255, 0, 0),
+        options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(128, 0, 0))
+        heatmaps_item = TreeItem('Display Heatmaps', 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                  data=options_gtc.display_heatmaps)
         options_compute.appendRow(heatmaps_item)
 
-        degree_item = TreeItem('Average Degree', 9, set_checkable=True, color=QtGui.QColor(255, 0, 0),
+        degree_item = TreeItem('Average Degree', 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                data=options_gtc.display_degree_histogram)
         options_compute.appendRow(degree_item)
 
         network_diameter_item = TreeItem('Network Diameter', 9, set_checkable=True,
-                                         color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_network_diameter)
+                                         color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_network_diameter)
         options_compute.appendRow(network_diameter_item)
 
         anc_item = TreeItem('Average Nodal Connectivity', 9, set_checkable=True,
-                            color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_nodal_connectivity)
+                            color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_nodal_connectivity)
         options_compute.appendRow(anc_item)
 
         clustering_coef_item = TreeItem('Average Clustering Coefficient', 9, set_checkable=True,
-                                        color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_clustering_coef)
+                                        color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_clustering_coef)
         options_compute.appendRow(clustering_coef_item)
 
         assortativity_coef_item = TreeItem('Assortativity Coefficient', 9, set_checkable=True,
-                                           color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_assortativity_coef)
+                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_assortativity_coef)
         options_compute.appendRow(assortativity_coef_item)
 
         betweenness_centrality_item = TreeItem('Betweenness Centrality', 9, set_checkable=True,
-                                               color=QtGui.QColor(255, 0, 0),
+                                               color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_betweenness_histogram)
         options_compute.appendRow(betweenness_centrality_item)
 
         # current_betweenness_item = TreeItem('Current Flow Betweenness Centrality', 9, set_checkable=True,
-        #                                    color=QtGui.QColor(255, 0, 0),
+        #                                    color=QtGui.QColor(128, 0, 0),
         #                                    data=options_gtc.display_currentflow_histogram)
         # options_compute.appendRow(current_betweenness_item)
 
         closeness_centrality_item = TreeItem('Closeness Centrality', 9, set_checkable=True,
-                                             color=QtGui.QColor(255, 0, 0),
+                                             color=QtGui.QColor(128, 0, 0),
                                              data=options_gtc.display_closeness_histogram)
         options_compute.appendRow(closeness_centrality_item)
 
         eigenvector_centrality_item = TreeItem('Eigenvector Centrality', 9, set_checkable=True,
-                                               color=QtGui.QColor(255, 0, 0),
+                                               color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_eigenvector_histogram)
         options_compute.appendRow(eigenvector_centrality_item)
 
         graph_density_item = TreeItem('Graph Density', 9, set_checkable=True,
-                                      color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_graph_density)
+                                      color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
         options_compute.appendRow(graph_density_item)
 
         graph_conductance_item = TreeItem('Graph Conductance', 9, set_checkable=True,
-                                          color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_graph_conductance)
+                                          color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_conductance)
         options_compute.appendRow(graph_conductance_item)
 
         global_efficiency_item = TreeItem('Global Efficiency', 9, set_checkable=True,
-                                          color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_global_efficiency)
+                                          color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_global_efficiency)
         options_compute.appendRow(global_efficiency_item)
 
         wiener_index_item = TreeItem('Wiener Index', 9, set_checkable=True,
-                                     color=QtGui.QColor(255, 0, 0), data=options_gtc.compute_wiener_index)
+                                     color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_wiener_index)
         options_compute.appendRow(wiener_index_item)
 
         # 4. Add Save items
@@ -992,7 +993,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             options_gte.export_as_gexf = 1
 
         worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
-        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
 
@@ -1045,8 +1046,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.enable_tasks()
             return
 
+        self.progress_dialog = QtWidgets.QProgressDialog("Drawing network...", "Abort Operation", 0, 100)
+        # self.progress_dialog.setLabelText()
         worker = Worker(func_id=3, args=(raw_img, nx_graph, opt_gte))
-        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
 
@@ -1126,7 +1129,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                     options_gtc.compute_wiener_index = 1
 
         worker = Worker(func_id=2, args=(self.graph_obj, options_gtc))
-        worker.signals.progress.connect(AnalysisUI._handle_progress_update)
+        worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
 
@@ -1136,6 +1139,63 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _btn_chaos_gt_clicked(self):
         pass
+
+    def _enable_enhance_tools(self):
+        self.spb_contrast.setEnabled(True)
+        self.spb_brightness.setEnabled(True)
+        self.btn_apply_filters.setEnabled(True)
+        self.btn_crop.setEnabled(True)
+
+    def _handle_finished(self, task, obj):
+        if self.progress_dialog:
+            self.progress_dialog = None
+
+        if task == 1:
+            self.graph_obj = obj
+            self._btn_show_processed_img_clicked()
+            self.lbl_progress.setText('Apply image filter complete!')
+            self.progress_bar_main.setValue(100)
+            dialog = CustomDialog("Success!", 'Image filters applied.')
+            dialog.exec()
+        elif task == 2:
+            metrics_obj = obj
+            metrics_obj.generate_pdf_output()
+            # metrics_obj.update_status([0, "GT calculations completed."])
+            # metrics_obj.remove_listener(self.update_progress)
+            self.lbl_progress.setText('GT calculated and PDF successfully generated!')
+            self.progress_bar_main.setValue(100)
+            dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
+            dialog.exec()
+        elif task == 3:
+            if obj:
+                img = AnalysisUI.plot_to_img(obj)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image(q_img)
+            self.lbl_progress.setText('')
+            self.progress_bar_main.setValue(0)
+        # elif task == 4:
+        #    self.node_conns += int(obj)
+        #    if self.conn_count == 0:  # Null Graph
+        #        self.anc = 0
+        #    self.anc = self.node_conns / self.conn_count
+        #    print(self.anc)
+        self.enable_tasks()
+
+    def _handle_progress_update(self, value, code, msg):
+        print(str(value) + ", " + str(code) + ": " + msg)
+        if code > 0:
+            self.lbl_progress.setStyleSheet("color: rgb(0, 128, 0)")
+            self.lbl_progress.setText(msg)
+            self.progress_bar_main.setValue(value)
+        else:
+            self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
+            self.lbl_progress.setText("ERROR: " + str(msg))
+            dialog = CustomDialog("Error", msg)
+            dialog.exec()
+
+        if self.progress_dialog:
+            self.progress_dialog.setValue(value)
+            self.progress_dialog.setLabelText(msg)
 
     def disable_tasks(self):
         self.btn_select_img_path.setEnabled(False)
@@ -1179,49 +1239,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics.setEnabled(True)
         self.btn_fd.setEnabled(True)
         self.btn_chaos_gt.setEnabled(True)
-
-    def _enable_enhance_tools(self):
-        self.spb_contrast.setEnabled(True)
-        self.spb_brightness.setEnabled(True)
-        self.btn_apply_filters.setEnabled(True)
-        self.btn_crop.setEnabled(True)
-
-    def _handle_finished(self, task, obj):
-        if task == 1:
-            self.graph_obj = obj
-            self._btn_show_processed_img_clicked()
-        elif task == 2:
-            metrics_obj = obj
-            metrics_obj.generate_pdf_output()
-            # metrics_obj.update_status([0, "GT calculations completed."])
-            # metrics_obj.remove_listener(self.update_progress)
-            print("GT PDF successfully generated.")
-        elif task == 3:
-            if obj:
-                img = AnalysisUI.plot_to_img(obj)
-                q_img = ImageQt.toqpixmap(img)
-                self._load_image(q_img)
-        # elif task == 4:
-        #    self.node_conns += int(obj)
-        #    if self.conn_count == 0:  # Null Graph
-        #        self.anc = 0
-        #    self.anc = self.node_conns / self.conn_count
-        #    print(self.anc)
-        self.enable_tasks()
-
-    @staticmethod
-    def _handle_progress_update(value, code, msg):
-        print(str(value) + ", " + str(code) + ": " + msg)
-
-    @staticmethod
-    def plot_to_img(fig):
-        """Convert a Matplotlib figure to a PIL Image and return it"""
-        if fig:
-            buf = io.BytesIO()
-            fig.savefig(buf)
-            buf.seek(0)
-            img = Image.open(buf)
-            return img
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
@@ -1280,6 +1297,16 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # if den == 0:  # Null Graph
         #    return 0
         # return num / den
+
+    @staticmethod
+    def plot_to_img(fig):
+        """Convert a Matplotlib figure to a PIL Image and return it"""
+        if fig:
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+            return img
 
 
 class TreeItem(QtGui.QStandardItem):
@@ -1347,10 +1374,11 @@ class Worker(QtCore.QRunnable):
         # elif self.target_id == 4:
         #    self.service_compute_anc(*self.args)
 
-    def update_progress(self, code, msg):
-        # print(msg)
-        self.signals.progress.emit(70, code, msg)
-
+    def update_progress(self, value, msg):
+        if value > 0:
+            self.signals.progress.emit(value, value, msg)
+        else:
+            self.signals.progress.emit(0, value, msg)
     # def service_compute_anc(self, nx_graph, u, v, kwargs):
     #    n = nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
     #    self.signals.finished.emit(4, n)
@@ -1359,7 +1387,6 @@ class Worker(QtCore.QRunnable):
         graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
         graph_obj.add_listener(self.update_progress)
         graph_obj.fit()
-        graph_obj.update_status([0, "Image filtering completed."])
         graph_obj.remove_listener(self.update_progress)
         self.signals.finished.emit(1, graph_obj)
 
@@ -1371,15 +1398,16 @@ class Worker(QtCore.QRunnable):
         if options_gte.weighted_by_diameter:
             metrics_obj.compute_weighted_gt_metrics()
         # metrics_obj.generate_pdf_output()
-        metrics_obj.update_status([0, "GT calculations completed."])
         metrics_obj.remove_listener(self.update_progress)
         self.signals.finished.emit(2, metrics_obj)
 
     def service_draw_network(self, raw_img, nx_graph, opt_gte):
+        self.signals.progress.emit(10, 10, 'creating graph')
         fig = plt.Figure()
         ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
         ax.set_axis_off()
         ax.imshow(raw_img, cmap='gray')
+        self.signals.progress.emit(36, 36, 'searching for nodes and edges')
         if opt_gte.is_multigraph:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -1389,8 +1417,10 @@ class Worker(QtCore.QRunnable):
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'red')
+        self.signals.progress.emit(50, 50, 'adding nodes')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
+        self.signals.progress.emit(75, 75, 'connecting edges')
         ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
         self.signals.finished.emit(3, fig)
 
