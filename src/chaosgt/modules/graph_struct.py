@@ -24,6 +24,7 @@ class GraphStruct:
 
     def __init__(self, img_path, out_path, options_img, options_gte):
         self.__listeners = []
+        self.terminal_app = True
         self.configs_img = options_img
         self.configs_graph = options_gte
         self.output_path = out_path
@@ -75,7 +76,7 @@ class GraphStruct:
         self.update_status([75, "Finding largest sub-graph..."])
         self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
         if self.nx_graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem generating graph (change filter and graph options)."])
+            self.update_status([-1, "Problem generating graph (change filter options)."])
 
     def create_filenames(self, image_path):
         """
@@ -118,6 +119,10 @@ class GraphStruct:
 
         options = self.configs_img
         filtered_img = self.img.copy()
+
+        brightness_val = ((options.brightness_level / 100) * 510) - 255
+        contrast_val = ((options.contrast_level / 100) * 254) - 127
+        filtered_img = GraphStruct.control_brightness(filtered_img, brightness_val, contrast_val)
 
         if options.gamma != 1.00:
             inv_gamma = 1.00 / options.gamma
@@ -360,3 +365,35 @@ class GraphStruct:
     def load_img_from_file(file):
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
+
+    @staticmethod
+    def control_brightness(img, brightness=0, contrast=0):
+        """
+
+        :param img:
+        :param brightness:
+        :param contrast:
+        :return:
+        """
+        if brightness != 0:
+            if brightness > 0:
+                shadow = brightness
+                max_val = 255
+            else:
+                shadow = 0
+                max_val = 255 + brightness
+            alpha_b = (max_val - shadow) / 255
+            gamma_b = shadow
+            new_img = cv2.addWeighted(img, alpha_b, img, 0, gamma_b)
+        else:
+            new_img = img
+
+        if contrast != 0:
+            alpha_c = float(131 * (contrast + 127)) / (127 * (131 - contrast))
+            gamma_c = 127 * (1 - alpha_c)
+            new_img = cv2.addWeighted(new_img, alpha_c, new_img, 0, gamma_c)
+
+        # text string in the image.
+        # cv2.putText(new_img, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+        # 1, (0, 0, 255), 2)
+        return new_img

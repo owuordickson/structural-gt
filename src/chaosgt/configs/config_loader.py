@@ -58,6 +58,8 @@ def load():
     options_img.apply_gaussian = int(config.get('detection-settings', 'apply_gaussian_blur'))
     options_img.apply_lowpass = int(config.get('detection-settings', 'apply_lowpass_filter'))
     options_img.apply_dark_foreground = int(config.get('detection-settings', 'dark_foreground'))
+    options_img.brightness_level = int(config.get('detection-settings', 'brightness_level'))
+    options_img.contrast_level = int(config.get('detection-settings', 'contrast_level'))
 
     # 3. Graph Extraction Settings
     options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))

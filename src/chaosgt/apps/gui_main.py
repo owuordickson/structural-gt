@@ -52,6 +52,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.file_names = []
         self.current_img_file_index = 0
         self.img_scale = 1
+        self.img_current = None
 
         self.graph_obj = None
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
@@ -701,8 +702,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_sobel.setText(str(options_img.sobel_kernel_size))
 
         self.cbx_scharr.setChecked(options_img.apply_scharr)
-
         self.cbx_median.setChecked(options_img.apply_median)
+
+        # Enhancement
+        self.spb_brightness.setValue(options_img.brightness_level)
+        self.spb_contrast.setValue(options_img.contrast_level)
 
         # Listeners
         self.sld_lut_gamma.valueChanged.connect(
@@ -761,6 +765,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.setEnabled(True)
 
     def _init_tools(self):
+        self.spb_brightness.valueChanged.connect(self._spb_brightness_value_changed)
+        self.spb_contrast.valueChanged.connect(self._spb_contrast_value_changed)
+
         # self.btn_crop.clicked.connect(self._btn_crop_clicked)
         self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
         self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
@@ -798,6 +805,25 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.txt_img_path.setText(self.img_path)
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
+
+    def _spb_brightness_value_changed(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        q_img = self.apply_brightness()
+        self._load_image(q_img)
+        self.graph_obj = None
+
+    def _spb_contrast_value_changed(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        q_img = self.apply_brightness()
+        self._load_image(q_img)
+        self.graph_obj = None
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -893,6 +919,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         h = self.lbl_img.height()
         self.lbl_img.setText('')
         if img_pixmap is None:
+            self.img_current = GraphStruct.load_img_from_file(self.img_path)
+            # img_pixmap = self.apply_brightness()
             img_pixmap = QtGui.QPixmap(self.img_path)
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
         else:
@@ -949,6 +977,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_img.apply_gaussian = int(self.cbx_gaussian_blur.isChecked())
         options_img.apply_lowpass = int(self.cbx_lowpass.isChecked())
         options_img.apply_dark_foreground = int(self.cbx_dark_foreground.isChecked())
+        options_img.brightness_level = int(self.spb_brightness.text())
+        options_img.contrast_level = int(self.spb_contrast.text())
 
         options_gte = struct()
         options_gte.merge_nearby_nodes = 0
@@ -1010,9 +1040,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.graph_obj:
             img = Image.fromarray(self.graph_obj.img_raw)
             q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
         else:
-            q_img = QtGui.QPixmap(self.img_path)
-        self._load_image(q_img)
+            self._spb_brightness_value_changed()
+            # q_img = QtGui.QPixmap(self.img_path)
+        # self._load_image(q_img)
 
     def _btn_show_processed_img_clicked(self):
         if self.img_path == '':
@@ -1102,7 +1134,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if self.graph_obj:
             if self.graph_obj.nx_graph.number_of_nodes() <= 0:
                 dialog = CustomDialog("Graph Error",
-                                      "Problem with graph (change/apply different filter and graph options).")
+                                      "Problem with graph (change/apply different filter and graph options). "
+                                      "Or change brightness/contrast")
                 dialog.exec()
                 return
 
@@ -1192,6 +1225,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         if (task == 1) and (not self.error_alert):
             self.graph_obj = obj
+            self.graph_obj.terminal_app = False
             self._btn_show_processed_img_clicked()
             self.lbl_progress.setText('Apply image filter complete!')
             self.progress_bar_main.setValue(100)
@@ -1279,8 +1313,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics.setEnabled(True)
         self.btn_save_files.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
-        self.btn_fd.setEnabled(True)
-        self.btn_chaos_gt.setEnabled(True)
+        # self.btn_fd.setEnabled(True)
+        # self.btn_chaos_gt.setEnabled(True)
+
+    def apply_brightness(self):
+        val_1 = int(self.spb_brightness.text())
+        val_2 = int(self.spb_contrast.text())
+        brightness_val = ((val_1 / 100) * 510) - 255
+        contrast_val = ((val_2 / 100) * 254) - 127
+
+        img_smooth = GraphStruct.control_brightness(self.img_current, brightness_val, contrast_val)
+        img = Image.fromarray(img_smooth)
+        q_img = ImageQt.toqpixmap(img)
+        return q_img
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
