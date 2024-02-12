@@ -1234,10 +1234,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
         for u, v in iter_func(nx_graph, 2):
             self.conn_count += 1
-            worker = Worker(func_id=4, args=(nx_graph, u, v, kwargs))
-            worker.signals.finished.connect(self._handle_finished)
-            self.threadpool.start(worker)
-
+            # worker = Worker(func_id=4, args=(nx_graph, u, v, kwargs))
+            # worker.signals.finished.connect(self._handle_finished)
+            # self.threadpool.start(worker)
         # for u, v in iter_func(nx_graph, 2):
             # num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
             # den += 1
