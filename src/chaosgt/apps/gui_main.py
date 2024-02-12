@@ -1234,9 +1234,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         Parameters
         ----------
 
-        nx_graph : NetworkX graph
-            Undirected graph
-
         flow_func : function
             A function for computing the maximum flow among a pair of nodes.
             The function has to accept at least three parameters: a Digraph,
