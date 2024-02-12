@@ -139,12 +139,12 @@ class GraphMetrics:
         if options.compute_nodal_connectivity == 1:
             self.update_status([3, "Computing nodal connectivity..."])
             if connected_graph:
-                avg_nodal_con = average_node_connectivity(graph)
-                avg_nodal_con = round(avg_nodal_con, 5)
+                avg_node_con = average_node_connectivity(graph)
+                avg_node_con = round(avg_node_con, 5)
             else:
-                avg_nodal_con = 'NaN'
-            data_dict["x"].append("Average nodal connectivity")
-            data_dict["y"].append(avg_nodal_con)
+                avg_node_con = 'NaN'
+            data_dict["x"].append("Average node connectivity")
+            data_dict["y"].append(avg_node_con)
 
         # calculating graph density
         if options.compute_graph_density == 1:
@@ -284,7 +284,7 @@ class GraphMetrics:
             data_dict["y"].append(w_index)
 
         if options.compute_nodal_connectivity == 1:
-            self.update_status([3, "Compute weighted nodal connectivity..."])
+            self.update_status([3, "Compute weighted node connectivity..."])
             connected_graph = nx.is_connected(graph)
             if connected_graph:
                 max_flow = float(0)

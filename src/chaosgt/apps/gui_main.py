@@ -10,8 +10,10 @@ import os
 import io
 import sys
 import time
+import itertools
 # from qcrop.ui import QCrop
 import numpy as np
+import networkx as nx
 from ypstruct import struct
 import matplotlib.pyplot as plt
 from PIL import Image, ImageQt
@@ -50,7 +52,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.file_names = []
         self.current_img_file_index = 0
         self.img_scale = 1
+
         self.graph_obj = None
+        self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
         self.threadpool = QtCore.QThreadPool()
         self._init_configs()
@@ -969,6 +973,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         q_img = ImageQt.toqpixmap(img)
         self._load_image(q_img)
 
+        start = time.time()
+        if nx.is_connected(self.graph_obj.nx_graph):
+            self.average_node_connectivity()
+        end = time.time()
+        print("Elapsed time: " + str(end - start))
+
     def _btn_show_binary_img_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
@@ -1151,6 +1161,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 img = AnalysisUI.plot_to_img(obj)
                 q_img = ImageQt.toqpixmap(img)
                 self._load_image(q_img)
+        # elif task == 4:
+        #    self.node_conns += int(obj)
+        #    if self.conn_count == 0:  # Null Graph
+        #        self.anc = 0
+        #    self.anc = self.node_conns / self.conn_count
+        #    print(self.anc)
         self.enable_tasks()
 
     @staticmethod
@@ -1166,6 +1182,68 @@ class AnalysisUI(QtWidgets.QMainWindow):
             buf.seek(0)
             img = Image.open(buf)
             return img
+
+    def average_node_connectivity(self, flow_func=None):
+        r"""Returns the average connectivity of a graph G.
+
+        The average connectivity `\bar{\kappa}` of a graph G is the average
+        of local node connectivity over all pairs of nodes of nx_graph.
+
+        https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
+
+        Parameters
+        ----------
+
+        nx_graph : NetworkX graph
+            Undirected graph
+
+        flow_func : function
+            A function for computing the maximum flow among a pair of nodes.
+            The function has to accept at least three parameters: a Digraph,
+            a source node, and a target node. And return a residual network
+            that follows NetworkX conventions (see :meth:`maximum_flow` for
+            details). If flow_func is None, the default maximum flow function
+            (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
+            for details. The choice of the default function may change from
+            version to version and should not be relied on. Default value: None.
+
+        Returns
+        -------
+        K : float
+            Average node connectivity
+
+        References
+        ----------
+        [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
+                connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
+                http://www.sciencedirect.com/science/article/pii/S0012365X01001807
+
+        """
+
+        nx_graph = self.graph_obj.nx_graph
+        if nx_graph.is_directed():
+            iter_func = itertools.permutations
+        else:
+            iter_func = itertools.combinations
+
+        # Reuse the auxiliary digraph and the residual network
+        a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
+        r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
+        kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
+
+        self.anc, self.node_conns, self.conn_count = 0, 0, 0
+        for u, v in iter_func(nx_graph, 2):
+            self.conn_count += 1
+            worker = Worker(func_id=4, args=(nx_graph, u, v, kwargs))
+            worker.signals.finished.connect(self._handle_finished)
+            self.threadpool.start(worker)
+
+        # for u, v in iter_func(nx_graph, 2):
+            # num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
+            # den += 1
+        # if den == 0:  # Null Graph
+        #    return 0
+        # return num / den
 
 
 class TreeItem(QtGui.QStandardItem):
@@ -1230,10 +1308,16 @@ class Worker(QtCore.QRunnable):
             self.service_compute_gt(*self.args)
         elif self.target_id == 3:
             self.service_draw_network(*self.args)
+        # elif self.target_id == 4:
+        #    self.service_compute_anc(*self.args)
 
     def update_progress(self, code, msg):
         # print(msg)
         self.signals.progress.emit(70, code, msg)
+
+    # def service_compute_anc(self, nx_graph, u, v, kwargs):
+    #    n = nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
+    #    self.signals.finished.emit(4, n)
 
     def service_filter_img(self, img_path, output_path, options_img=None, options_gte=None):
         graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
