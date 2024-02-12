@@ -920,8 +920,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_img.setText('')
         if img_pixmap is None:
             self.img_current = GraphStruct.load_img_from_file(self.img_path)
-            # img_pixmap = self.apply_brightness()
-            img_pixmap = QtGui.QPixmap(self.img_path)
+            img_pixmap = self.apply_brightness()
+            # img_pixmap = QtGui.QPixmap(self.img_path)
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
         else:
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
@@ -1037,14 +1037,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
-        if self.graph_obj:
-            img = Image.fromarray(self.graph_obj.img_raw)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
-        else:
-            self._spb_brightness_value_changed()
-            # q_img = QtGui.QPixmap(self.img_path)
-        # self._load_image(q_img)
+        self._spb_brightness_value_changed()
 
     def _btn_show_processed_img_clicked(self):
         if self.img_path == '':
