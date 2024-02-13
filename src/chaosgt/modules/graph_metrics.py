@@ -139,8 +139,8 @@ class GraphMetrics:
         if options.compute_nodal_connectivity == 1:
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                # avg_node_con = average_node_connectivity(graph)
-                avg_node_con = self.average_node_connectivity()
+                avg_node_con = average_node_connectivity(graph)
+                # avg_node_con = self.average_node_connectivity()
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
