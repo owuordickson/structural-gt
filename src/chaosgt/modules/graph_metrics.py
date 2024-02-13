@@ -7,18 +7,18 @@
 Compute graph theory metrics
 """
 
-
 import cv2
 import csv
 import math
 import time
 import datetime
+import itertools
+import multiprocessing
 import pandas as pd
 import numpy as np
 import scipy as sp
 import networkx as nx
 from statistics import stdev, StatisticsError
-from itertools import cycle
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
@@ -137,9 +137,10 @@ class GraphMetrics:
 
         # calculating average nodal connectivity
         if options.compute_nodal_connectivity == 1:
-            self.update_status([15, "Computing nodal connectivity..."])
+            self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                avg_node_con = average_node_connectivity(graph)
+                # avg_node_con = average_node_connectivity(graph)
+                avg_node_con = self.average_node_connectivity()
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -467,7 +468,7 @@ class GraphMetrics:
                 f2b.add_subplot(1, 1, 1)
                 plt.imshow(raw_img, cmap='gray')
                 color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-                color_cycle = cycle(color_list)
+                color_cycle = itertools.cycle(color_list)
                 for component in self.nx_subgraph_components:
                     sg = nx_graph.subgraph(component)
                     color = next(color_cycle)
@@ -1074,6 +1075,75 @@ class GraphMetrics:
         # 3. Invert the resulting matrix
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
+
+    def average_node_connectivity(self, flow_func=None):
+        r"""Returns the average connectivity of a graph G.
+
+        The average connectivity `\bar{\kappa}` of a graph G is the average
+        of local node connectivity over all pairs of nodes of nx_graph.
+
+        https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
+
+        Parameters
+        ----------
+
+        flow_func : function
+            A function for computing the maximum flow among a pair of nodes.
+            The function has to accept at least three parameters: a Digraph,
+            a source node, and a target node. And return a residual network
+            that follows NetworkX conventions (see :meth:`maximum_flow` for
+            details). If flow_func is None, the default maximum flow function
+            (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
+            for details. The choice of the default function may change from
+            version to version and should not be relied on. Default value: None.
+
+        Returns
+        -------
+        K : float
+            Average node connectivity
+
+        References
+        ----------
+        [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
+                connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
+                http://www.sciencedirect.com/science/article/pii/S0012365X01001807
+
+        """
+
+        nx_graph = self.g_struct.nx_graph
+        if nx_graph.is_directed():
+            iter_func = itertools.permutations
+        else:
+            iter_func = itertools.combinations
+
+        # Reuse the auxiliary digraph and the residual network
+        a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
+        r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
+        kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
+
+        # for item in items:
+        #    task(item)
+        # with multiprocessing.Pool() as pool:
+        #    call the function for each item in parallel
+        #    for result in pool.map(task, items):
+        #        print(result)
+        num, den = 0, 0
+        with multiprocessing.Pool() as pool:
+            items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
+            for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
+                num += n
+                den += 1
+        if den == 0:
+            return 0
+        return num / den
+        # cpus = get_num_cores()
+        # num, den = 0, 0
+        # for u, v in iter_func(nx_graph, 2):
+        #   num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
+        #   den += 1
+        # if den == 0:  # Null Graph
+        #    return 0
+        # return num / den
 
     @staticmethod
     def compute_norm_laplacian_matrix(graph):
