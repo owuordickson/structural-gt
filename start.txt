@@ -1,13 +1,1 @@
 kotov_lab\drew_gt\.venv_drew\Scripts\python kotov_lab\drew_gt\src\__main__.py
-
-from PyQt5.QtGui import QPixmap
-from qcrop.ui import QCrop
-
-original_image = QPixmap(...)
-crop_tool = QCrop(original_image)
-status = crop_tool.exec()
-
-if status == Qt.Accepted:
-    cropped_image = crop_tool.image
-# else crop_tool.image == original_image
-
