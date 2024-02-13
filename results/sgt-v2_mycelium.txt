@@ -31,7 +31,7 @@ Results generated for ../examples/mycelium_hyphae.png
 
 
 Run-time: 710.4312155246735 seconds
-Number of cores: 10
+Number of cores: 8
 
 
 Parameters

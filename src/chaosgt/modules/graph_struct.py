@@ -74,6 +74,7 @@ class GraphStruct:
         self.update_status([50, "Extracting graph..."])
         self.extract_graph()
         self.update_status([75, "Finding largest sub-graph..."])
+        sub_graph_largest, sub_graph_smallest, component_count, connected_components = Gra
         self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter options)."])
@@ -360,6 +361,33 @@ class GraphStruct:
         ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
+
+    @staticmethod
+    def graph_components(graph):
+        """
+
+        :param graph:
+        :return:
+        """
+
+        # 1. Identify connected components
+        connected_components = list(nx.connected_components(graph))
+
+        # 2. Find the largest/smallest connected component
+        largest_component = max(connected_components, key=len)
+        smallest_component = min(connected_components, key=len)
+
+        # 3. Create a new graph containing only the largest/smallest connected component
+        sub_graph_largest = graph.subgraph(largest_component)
+        sub_graph_smallest = graph.subgraph(smallest_component)
+
+        component_count = len(connected_components)
+        # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
+        # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
+        # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
+        # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
+
+        return sub_graph_largest, sub_graph_smallest, component_count, connected_components
 
     @staticmethod
     def load_img_from_file(file):

@@ -28,6 +28,7 @@ from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
+from .graph_struct import GraphStruct
 
 
 class GraphMetrics:
@@ -139,8 +140,8 @@ class GraphMetrics:
         if options.compute_nodal_connectivity == 1:
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                avg_node_con = average_node_connectivity(graph)
-                # avg_node_con = self.average_node_connectivity()
+                # avg_node_con = average_node_connectivity(graph)
+                avg_node_con = self.average_node_connectivity()
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -1007,7 +1008,7 @@ class GraphMetrics:
                 return None
             except nx.NetworkXError:
                 # Graph has less than two nodes or is not connected.
-                sub_graph_largest, sub_graph_smallest, size, sub_components = GraphMetrics.graph_components(eig_graph)
+                sub_graph_largest, sub_graph_smallest, size, sub_components = GraphStruct.graph_components(eig_graph)
                 eig_graph = sub_graph_largest
                 data.append({"name": "Subgraph Count", "value": size})
                 data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
@@ -1016,7 +1017,7 @@ class GraphMetrics:
                 data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
         except nx.NetworkXError:
             # Graph has less than two nodes or is not connected.
-            sub_graph_largest, sub_graph_smallest, size, sub_components = GraphMetrics.graph_components(eig_graph)
+            sub_graph_largest, sub_graph_smallest, size, sub_components = GraphStruct.graph_components(eig_graph)
             eig_graph = sub_graph_largest
             data.append({"name": "Subgraph Count", "value": size})
             data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
@@ -1119,7 +1120,7 @@ class GraphMetrics:
         # Reuse the auxiliary digraph and the residual network
         a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
         r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
-        kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
+        # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
 
         # for item in items:
         #    task(item)
@@ -1232,33 +1233,6 @@ class GraphMetrics:
         new_graph = nx.from_numpy_array(adj_mat)
 
         return new_graph
-
-    @staticmethod
-    def graph_components(graph):
-        """
-
-        :param graph:
-        :return:
-        """
-
-        # 1. Identify connected components
-        connected_components = list(nx.connected_components(graph))
-
-        # 2. Find the largest/smallest connected component
-        largest_component = max(connected_components, key=len)
-        smallest_component = min(connected_components, key=len)
-
-        # 3. Create a new graph containing only the largest/smallest connected component
-        sub_graph_largest = graph.subgraph(largest_component)
-        sub_graph_smallest = graph.subgraph(smallest_component)
-
-        component_count = len(connected_components)
-        # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
-        # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
-        # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
-        # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
-
-        return sub_graph_largest, sub_graph_smallest, component_count, connected_components
 
     @staticmethod
     def compute_conductance_range(eig_vals):
