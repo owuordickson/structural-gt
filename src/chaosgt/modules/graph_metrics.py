@@ -380,7 +380,7 @@ class GraphMetrics:
         raw_img = self.g_struct.img
         filtered_img = self.g_struct.img_filtered
         img_bin = self.g_struct.img_bin
-        pdf_file, gexf_file, csv_file = self.g_struct.create_filenames(self.g_struct.img_path)
+        pdf_file, _, _ = self.g_struct.create_filenames(self.g_struct.img_path)
 
         self.update_status([90, "Generating PDF GT Output..."])
         with (PdfPages(pdf_file) as pdf):
@@ -856,58 +856,7 @@ class GraphMetrics:
             pdf.savefig()
             plt.close()
 
-        if opt_gte.export_edge_list == 1:
-            if opt_gte.weighted_by_diameter == 1:
-                fields = ['Source', 'Target', 'Weight', 'Length']
-                el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
-                with open(csv_file, 'w', newline='') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(fields)
-                    for line in el:
-                        line = str(line)
-                        row = line.split(',')
-                        try:
-                            writer.writerow(row)
-                        except csv.Error:
-                            pass
-                csvfile.close()
-            else:
-                fields = ['Source', 'Target']
-                el = nx.generate_edgelist(nx_graph, delimiter=',', data=False)
-                with open(csv_file, 'w', newline='') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(fields)
-                    for line in el:
-                        line = str(line)
-                        row = line.split(',')
-                        try:
-                            writer.writerow(row)
-                        except csv.Error:
-                            pass
-                csvfile.close()
-
-        # exporting as gephi file
-        if opt_gte.export_as_gexf == 1:
-            if opt_gte.is_multigraph:
-                # deleting extraneous info and then exporting the final skeleton
-                for (x) in nx_graph.nodes():
-                    del nx_graph.nodes[x]['pts']
-                    del nx_graph.nodes[x]['o']
-                for (s, e) in nx_graph.edges():
-                    for k in range(int(len(nx_graph[s][e]))):
-                        try:
-                            del nx_graph[s][e][k]['pts']
-                        except KeyError:
-                            pass
-                nx.write_gexf(nx_graph, gexf_file)
-            else:
-                # deleting extraneous info and then exporting the final skeleton
-                for (x) in nx_graph.nodes():
-                    del nx_graph.nodes[x]['pts']
-                    del nx_graph.nodes[x]['o']
-                for (s, e) in nx_graph.edges():
-                    del nx_graph[s][e]['pts']
-                nx.write_gexf(nx_graph, gexf_file)
+        self.g_struct.save_files(opt_gte)
 
     def get_info(self):
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf

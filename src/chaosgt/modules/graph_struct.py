@@ -10,14 +10,16 @@ Processing of images and chaos engineering
 import cv2
 import re
 import os
+import io
 import sknw
 import multiprocessing
 import numpy as np
 import networkx as nx
+# import porespy as ps
+import matplotlib.pyplot as plt
+from PIL import Image
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
-import matplotlib.pyplot as plt
-# import porespy as ps
 from .graph_skeleton import GraphSkeleton
 
 
@@ -33,11 +35,13 @@ class GraphStruct:
         self.img = self.resize_img(512)
         self.img_path = img_path
         self.img_bin = None
-        self.otsu_val = None
+        self.img_net = None
+        self.img_plot = None
         self.img_filtered = None
         self.graph_skeleton = None
         self.nx_graph = None
         self.nx_connected_graph = None
+        self.otsu_val = None
         self.connectedness_ratio = 0
 
     def add_listener(self, func):
@@ -74,10 +78,14 @@ class GraphStruct:
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
         self.update_status([50, "Extracting graph..."])
         self.extract_graph()
-        self.update_status([75, "Finding largest sub-graph..."])
+        self.update_status([75, "Verifying graph network..."])
         self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter options)."])
+        else:
+            # draw graph network
+            self.update_status([90, "Drawing graph network..."])
+            self.img_plot, self.img_net = self.draw_graph_network(self.configs_graph)
 
     def create_filenames(self, image_path):
         """
@@ -366,6 +374,98 @@ class GraphStruct:
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
 
+    def save_files(self, opt_gte):
+        """
+
+        :param opt_gte:
+        :return:
+        """
+
+        nx_graph = self.nx_graph
+        _, gexf_file, csv_file = self.g_struct.create_filenames(self.img_path)
+
+        if opt_gte.export_edge_list == 1:
+            if opt_gte.weighted_by_diameter == 1:
+                fields = ['Source', 'Target', 'Weight', 'Length']
+                el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
+                with open(csv_file, 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(fields)
+                    for line in el:
+                        line = str(line)
+                        row = line.split(',')
+                        try:
+                            writer.writerow(row)
+                        except csv.Error:
+                            pass
+                csvfile.close()
+            else:
+                fields = ['Source', 'Target']
+                el = nx.generate_edgelist(nx_graph, delimiter=',', data=False)
+                with open(csv_file, 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(fields)
+                    for line in el:
+                        line = str(line)
+                        row = line.split(',')
+                        try:
+                            writer.writerow(row)
+                        except csv.Error:
+                            pass
+                csvfile.close()
+
+        # exporting as gephi file
+        if opt_gte.export_as_gexf == 1:
+            if opt_gte.is_multigraph:
+                # deleting extraneous info and then exporting the final skeleton
+                for (x) in nx_graph.nodes():
+                    del nx_graph.nodes[x]['pts']
+                    del nx_graph.nodes[x]['o']
+                for (s, e) in nx_graph.edges():
+                    for k in range(int(len(nx_graph[s][e]))):
+                        try:
+                            del nx_graph[s][e][k]['pts']
+                        except KeyError:
+                            pass
+                nx.write_gexf(nx_graph, gexf_file)
+            else:
+                # deleting extraneous info and then exporting the final skeleton
+                for (x) in nx_graph.nodes():
+                    del nx_graph.nodes[x]['pts']
+                    del nx_graph.nodes[x]['o']
+                for (s, e) in nx_graph.edges():
+                    del nx_graph[s][e]['pts']
+                nx.write_gexf(nx_graph, gexf_file)
+
+    def draw_graph_network(self, opt_gte):
+        """
+
+        :param opt_gte:
+        :return:
+        """
+
+        nx_graph = self.nx_connected_graph
+        raw_img = self.img
+
+        fig = plt.Figure()
+        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
+        ax.set_axis_off()
+        ax.imshow(raw_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+
+        return fig, GraphStruct.plot_to_img(fig)
+
     @staticmethod
     def _task_init_weight(nx_graph, s, e):
         nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
@@ -447,3 +547,13 @@ class GraphStruct:
         # cv2.putText(new_img, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
         # 1, (0, 0, 255), 2)
         return new_img
+
+    @staticmethod
+    def plot_to_img(fig):
+        """Convert a Matplotlib figure to a PIL Image and return it"""
+        if fig:
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+            return img
