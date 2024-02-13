@@ -9,7 +9,6 @@ Compute graph theory metrics
 
 import os
 import cv2
-import csv
 import math
 import time
 import datetime

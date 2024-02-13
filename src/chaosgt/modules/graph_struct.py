@@ -7,6 +7,7 @@
 Processing of images and chaos engineering
 """
 
+import csv
 import cv2
 import re
 import os
@@ -419,8 +420,12 @@ class GraphStruct:
 
         cv2.imwrite(img_file, self.img_filtered)
         cv2.imwrite(bin_file, self.img_bin)
-        # self.img_net.save(net_file)
-        # cv2.imwrite(net_file, self.img_net)
+        if self.img_net.mode == "JPEG":
+            self.img_net.save(net_file, format='JPEG', quality=95)
+        elif self.img_net.mode in ["RGBA", "P"]:
+            self.img_net = self.img_net.convert("RGB")
+            self.img_net.save(net_file, format='JPEG', quality=95)
+
 
         if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:

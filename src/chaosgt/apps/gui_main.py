@@ -1011,6 +1011,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
 
+        self.disable_tasks()
         if self.graph_obj:
 
             options_file = struct()
@@ -1023,19 +1024,23 @@ class AnalysisUI(QtWidgets.QMainWindow):
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
                 if item.text() == 'Export as gexf':
-                    options_gte.export_as_gexf = 1
+                    options_file.export_as_gexf = 1
 
             child_index = model.index(1, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
                 if item.text() == 'Export Edge List':
-                    options_gte.export_edge_list = 1
-
-            self.graph_obj.save_files(options_file)
-
+                    options_file.export_edge_list = 1
+            try:
+                self.graph_obj.save_files(options_file)
+                dialog = CustomDialog("Success", "All files saved in 'Output Dir'")
+                dialog.exec()
+            except Exception as err:
+                print(err)
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()
+        self.enable_tasks()
 
     def _btn_apply_filters_clicked(self):
         if self.img_path == '':
@@ -1382,22 +1387,28 @@ class Worker(QtCore.QRunnable):
             self.signals.progress.emit(0, value, msg)
 
     def service_filter_img(self, img_path, output_path, options_img=None, options_gte=None):
-        graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
-        graph_obj.add_listener(self.update_progress)
-        graph_obj.fit()
-        graph_obj.remove_listener(self.update_progress)
-        self.signals.finished.emit(1, graph_obj)
+        try:
+            graph_obj = GraphStruct(img_path, output_path, options_img, options_gte)
+            graph_obj.add_listener(self.update_progress)
+            graph_obj.fit()
+            graph_obj.remove_listener(self.update_progress)
+            self.signals.finished.emit(1, graph_obj)
+        except Exception as err:
+            print(err)
 
     def service_compute_gt(self, graph_obj, options_gtc):
-        options_gte = graph_obj.configs_graph
-        metrics_obj = GraphMetrics(graph_obj, options_gtc)
-        metrics_obj.add_listener(self.update_progress)
-        metrics_obj.compute_gt_metrics()
-        if options_gte.weighted_by_diameter:
-            metrics_obj.compute_weighted_gt_metrics()
-        # metrics_obj.generate_pdf_output()
-        metrics_obj.remove_listener(self.update_progress)
-        self.signals.finished.emit(2, metrics_obj)
+        try:
+            options_gte = graph_obj.configs_graph
+            metrics_obj = GraphMetrics(graph_obj, options_gtc)
+            metrics_obj.add_listener(self.update_progress)
+            metrics_obj.compute_gt_metrics()
+            if options_gte.weighted_by_diameter:
+                metrics_obj.compute_weighted_gt_metrics()
+            # metrics_obj.generate_pdf_output()
+            metrics_obj.remove_listener(self.update_progress)
+            self.signals.finished.emit(2, metrics_obj)
+        except Exception as err:
+            print(err)
 
 
 def pyqt_app():
