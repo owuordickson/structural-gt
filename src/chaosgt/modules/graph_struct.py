@@ -11,6 +11,7 @@ import cv2
 import re
 import os
 import sknw
+import multiprocessing
 import numpy as np
 import networkx as nx
 from skimage.morphology import disk
@@ -74,7 +75,6 @@ class GraphStruct:
         self.update_status([50, "Extracting graph..."])
         self.extract_graph()
         self.update_status([75, "Finding largest sub-graph..."])
-        sub_graph_largest, sub_graph_smallest, component_count, connected_components = Gra
         self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter options)."])
@@ -288,30 +288,38 @@ class GraphStruct:
 
             # the actual length of the edges we want is stored as weight, so the two are set equal
             # if the weight is 0 the edge length is set to 2
-            for (s, e) in nx_graph.edges():
-                nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-                if nx_graph[s][e]['weight'] == 0:
-                    nx_graph[s][e]['length'] = 2
+            # for (s, e) in nx_graph.edges():
+            #    nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
+            #    if nx_graph[s][e]['weight'] == 0:
+            #        nx_graph[s][e]['length'] = 2
+            with multiprocessing.Pool() as pool:
+                items_1 = [(nx_graph, s, e) for (s, e) in nx_graph.edges()]
+                for graph in pool.starmap(GraphStruct._task_init_weight, items_1):
+                    nx_graph = graph
+
             # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
             # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
-            for (s, e) in nx_graph.edges():
-                if configs.weighted_by_diameter == 1:
-                    ge = nx_graph[s][e]['pts']
-                    pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                    nx_graph[s][e]['pixel width'] = pix_width
-                    nx_graph[s][e]['weight'] = wt
-                else:
-                    del nx_graph[s][e]['weight']
+            # for (s, e) in nx_graph.edges():
+            #    if configs.weighted_by_diameter == 1:
+            #        ge = nx_graph[s][e]['pts']
+            #        pix_width, wt = graph_skel.assign_weights_by_width(ge)
+            #        nx_graph[s][e]['pixel width'] = pix_width
+            #        nx_graph[s][e]['weight'] = wt
+            #    else:
+            #        del nx_graph[s][e]['weight']
+            with multiprocessing.Pool() as pool:
+                items_2 = [(configs, graph_skel, nx_graph, s, e) for (s, e) in nx_graph.edges()]
+                for graph in pool.starmap(GraphStruct._task_assign_weight, items_2):
+                    nx_graph = graph
+
             self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
         if configs.remove_self_loops:
             if configs.is_multigraph:
-                g = self.nx_graph
                 for (s, e) in list(self.nx_graph.edges()):
                     if s == e:
-                        g.remove_edge(s, e)
-                self.nx_graph = g
+                        self.nx_graph.remove_edge(s, e)
             else:
                 for (s, e) in self.nx_graph.edges():
                     if s == e:
@@ -324,21 +332,17 @@ class GraphStruct:
         """
 
         # 1. Identify connected components
-        connected_components = list(nx.connected_components(self.nx_graph))
+        largest, smallest, count, connected_components = GraphStruct.graph_components(self.nx_graph)
 
         if len(connected_components) <= 0:
             return self.nx_graph, 1
         else:
             # 2. Find the largest/smallest connected component
-            largest_component = max(connected_components, key=len)
+            # Create a new graph containing only the largest connected component
+            # Compute proportion
+            ratio = largest.number_of_nodes() / self.nx_graph.number_of_nodes()
 
-            # 3. Create a new graph containing only the largest connected component
-            graph_largest = self.nx_graph.subgraph(largest_component)
-
-            # 4. Compute proportion
-            ratio = graph_largest.number_of_nodes() / self.nx_graph.number_of_nodes()
-
-            return graph_largest, round(ratio, 4)
+            return largest, round(ratio, 4)
 
     def compute_fractal_dimension(self):
         self.update_status([-1, "Computing fractal dimension..."])
@@ -361,6 +365,24 @@ class GraphStruct:
         ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
+
+    @staticmethod
+    def _task_init_weight(nx_graph, s, e):
+        nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
+        if nx_graph[s][e]['weight'] == 0:
+            nx_graph[s][e]['length'] = 2
+        return nx_graph
+
+    @staticmethod
+    def _task_assign_weight(configs, graph_skel, nx_graph, s, e):
+        if configs.weighted_by_diameter == 1:
+            ge = nx_graph[s][e]['pts']
+            pix_width, wt = graph_skel.assign_weights_by_width(ge)
+            nx_graph[s][e]['pixel width'] = pix_width
+            nx_graph[s][e]['weight'] = wt
+        else:
+            del nx_graph[s][e]['weight']
+        return nx_graph
 
     @staticmethod
     def graph_components(graph):
