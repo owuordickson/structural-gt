@@ -1036,8 +1036,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        self._spb_brightness_value_changed()
+        q_img = self.apply_brightness()
+        self._load_image(q_img)
 
     def _btn_show_processed_img_clicked(self):
         if self.img_path == '':
