@@ -852,18 +852,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             fd_image_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                      filter="Image files (*.jpg *.tif *.png *.jpeg)")
-            # split the file location into file name and path
-            save_dir, file_name = os.path.split(fd_image_file)
-            self.img_path = fd_image_file
-            self._load_image()
-            self._enable_enhance_tools()
+            if fd_image_file:
+                # split the file location into file name and path
+                save_dir, file_name = os.path.split(fd_image_file)
+                self.img_path = fd_image_file
+                self._load_image()
+                self._enable_enhance_tools()
 
-            self.btn_next.setEnabled(False)
-            self.btn_prev.setEnabled(False)
-            self.txt_img_path.setText(self.img_path)
-            if self.output_path == '':
-                self.txt_out_path.setText(save_dir)
-                self.output_path = save_dir
+                self.btn_next.setEnabled(False)
+                self.btn_prev.setEnabled(False)
+                self.txt_img_path.setText(self.img_path)
+                if self.output_path == '':
+                    self.txt_out_path.setText(save_dir)
+                    self.output_path = save_dir
 
     def _btn_select_out_path_clicked(self):
         fd_out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
@@ -943,6 +944,99 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
     """
 
+    def _btn_show_original_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        q_img = self.apply_brightness()
+        self._load_image(q_img)
+
+    def _btn_show_processed_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj:
+            img = Image.fromarray(self.graph_obj.img_filtered)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
+    def _btn_show_binary_img_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj:
+            img = Image.fromarray(self.graph_obj.img_bin)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image(q_img)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
+    def _btn_show_graph_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj:
+            q_img = ImageQt.toqpixmap(self.graph_obj.img_net)
+            self._load_image(q_img)
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
+    def _btn_quick_metrics_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj:
+            pass
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
+    def _btn_save_files_clicked(self):
+        if self.img_path == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+
+        if self.graph_obj:
+
+            options_file = struct()
+            options_file.export_edge_list = 0
+            options_file.export_as_gexf = 0
+
+            model = self.tree_settings.model()
+            root_index = model.index(2, 0)
+            child_index = model.index(0, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Export as gexf':
+                    options_gte.export_as_gexf = 1
+
+            child_index = model.index(1, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Export Edge List':
+                    options_gte.export_edge_list = 1
+
+            self.graph_obj.save_files(options_file)
+
+        else:
+            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            dialog.exec()
+
     def _btn_apply_filters_clicked(self):
         if self.img_path == '':
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
@@ -1015,91 +1109,20 @@ class AnalysisUI(QtWidgets.QMainWindow):
         root_index = model.index(2, 0)
         child_index = model.index(0, 0, root_index)
         item = model.itemFromIndex(child_index)
-        if item.text() == 'Export Edge List':
-            options_gte.export_edge_list = 1
+        if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+            if item.text() == 'Export as gexf':
+                options_gte.export_as_gexf = 1
 
         child_index = model.index(1, 0, root_index)
         item = model.itemFromIndex(child_index)
-        if item.text() == 'Export as gexf':
-            options_gte.export_as_gexf = 1
+        if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+            if item.text() == 'Export Edge List':
+                options_gte.export_edge_list = 1
 
         worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
         worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
-
-    def _btn_show_original_img_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-        q_img = self.apply_brightness()
-        self._load_image(q_img)
-
-    def _btn_show_processed_img_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        if self.graph_obj:
-            img = Image.fromarray(self.graph_obj.img_filtered)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
-
-    def _btn_show_binary_img_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        if self.graph_obj:
-            img = Image.fromarray(self.graph_obj.img_bin)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
-
-    def _btn_show_graph_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        if self.graph_obj:
-            q_img = ImageQt.toqpixmap(self.graph_obj.img_net)
-            self._load_image(q_img)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
-
-    def _btn_quick_metrics_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        if self.graph_obj:
-            pass
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
-
-    def _btn_save_files_clicked(self):
-        if self.img_path == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        if self.graph_obj:
-            pass
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
 
     def _btn_compute_gt_metrics_clicked(self):
         if self.img_path == '':

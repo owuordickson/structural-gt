@@ -7,6 +7,7 @@
 Compute graph theory metrics
 """
 
+import os
 import cv2
 import csv
 import math
@@ -380,7 +381,9 @@ class GraphMetrics:
         raw_img = self.g_struct.img
         filtered_img = self.g_struct.img_filtered
         img_bin = self.g_struct.img_bin
-        pdf_file, _, _ = self.g_struct.create_filenames(self.g_struct.img_path)
+        filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
+        pdf_filename = filename + "_SGT_results.pdf"
+        pdf_file = os.path.join(output_location, pdf_filename)
 
         self.update_status([90, "Generating PDF GT Output..."])
         with (PdfPages(pdf_file) as pdf):

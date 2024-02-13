@@ -87,27 +87,6 @@ class GraphStruct:
             self.update_status([90, "Drawing graph network..."])
             self.img_plot, self.img_net = self.draw_graph_network(self.configs_graph)
 
-    def create_filenames(self, image_path):
-        """
-            Making the new filenames
-        :return:
-        """
-        _, filename = os.path.split(image_path)
-        output_location = self.output_path
-
-        filename = re.sub('.png', '', filename)
-        filename = re.sub('.tif', '', filename)
-        filename = re.sub('.jpg', '', filename)
-        filename = re.sub('.jpeg', '', filename)
-        g_filename = filename + "_graph.gexf"
-        el_filename = filename + "_EL.csv"
-        pdf_filename = filename + "_SGT_results.pdf"
-        pdf_file = os.path.join(output_location, pdf_filename)
-        gexf_file = os.path.join(output_location, g_filename)
-        csv_file = os.path.join(output_location, el_filename)
-
-        return pdf_file, gexf_file, csv_file
-
     def resize_img(self, size):
         w, h = self.img_raw.shape
         if h > w:
@@ -374,6 +353,50 @@ class GraphStruct:
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
 
+    def draw_graph_network(self, opt_gte):
+        """
+
+        :param opt_gte:
+        :return:
+        """
+
+        nx_graph = self.nx_connected_graph
+        raw_img = self.img
+
+        fig = plt.Figure()
+        ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
+        ax.set_axis_off()
+        ax.imshow(raw_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+
+        return fig, GraphStruct.plot_to_img(fig)
+
+    def create_filenames(self, image_path):
+        """
+            Making the new filenames
+        :return:
+        """
+        _, filename = os.path.split(image_path)
+        output_location = self.output_path
+
+        filename = re.sub('.png', '', filename)
+        filename = re.sub('.tif', '', filename)
+        filename = re.sub('.jpg', '', filename)
+        filename = re.sub('.jpeg', '', filename)
+
+        return filename, output_location
+
     def save_files(self, opt_gte):
         """
 
@@ -382,7 +405,22 @@ class GraphStruct:
         """
 
         nx_graph = self.nx_graph
-        _, gexf_file, csv_file = self.g_struct.create_filenames(self.img_path)
+        filename, output_location = self.create_filenames(self.img_path)
+        g_filename = filename + "_graph.gexf"
+        el_filename = filename + "_EL.csv"
+        pr_filename = filename + "_processed.jpg"
+        bin_filename = filename + "_binary.jpg"
+        net_filename = filename + "_final.jpg"
+        gexf_file = os.path.join(output_location, g_filename)
+        csv_file = os.path.join(output_location, el_filename)
+        img_file = os.path.join(output_location, pr_filename)
+        bin_file = os.path.join(output_location, bin_filename)
+        net_file = os.path.join(output_location, net_filename)
+
+        cv2.imwrite(img_file, self.img_filtered)
+        cv2.imwrite(bin_file, self.img_bin)
+        # self.img_net.save(net_file)
+        # cv2.imwrite(net_file, self.img_net)
 
         if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:
@@ -414,7 +452,6 @@ class GraphStruct:
                             pass
                 csvfile.close()
 
-        # exporting as gephi file
         if opt_gte.export_as_gexf == 1:
             if opt_gte.is_multigraph:
                 # deleting extraneous info and then exporting the final skeleton
@@ -436,35 +473,6 @@ class GraphStruct:
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
-
-    def draw_graph_network(self, opt_gte):
-        """
-
-        :param opt_gte:
-        :return:
-        """
-
-        nx_graph = self.nx_connected_graph
-        raw_img = self.img
-
-        fig = plt.Figure()
-        ax = fig.add_axes([0, 0, 1, 1])  # span the whole figure
-        ax.set_axis_off()
-        ax.imshow(raw_img, cmap='gray')
-        if opt_gte.is_multigraph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax.plot(ge[:, 1], ge[:, 0], 'red')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-
-        return fig, GraphStruct.plot_to_img(fig)
 
     @staticmethod
     def _task_init_weight(nx_graph, s, e):
