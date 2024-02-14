@@ -492,9 +492,6 @@ class GraphStruct:
                 for (s, e) in nx_graph.edges():
                     ge = nx_graph[s][e]['pts']
                     ax.plot(ge[:, 1], ge[:, 0], 'red')
-            nodes = nx_graph.nodes()
-            gn = np.array([nodes[i]['o'] for i in nodes])
-            ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
         return fig, GraphStruct.plot_to_img(fig)
 

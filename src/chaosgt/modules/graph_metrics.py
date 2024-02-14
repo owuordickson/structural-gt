@@ -223,7 +223,7 @@ class GraphMetrics:
             self.update_status([60, "Computing graph conductance..."])
             # res_items, sg_components = self.g_struct.approx_conductance_by_spectral()
             data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(self.g_struct.connect_ratio * 100) + "%")
+            data_dict["y"].append(str(round(self.g_struct.connect_ratio * 100), 5) + "%")
             for item in self.g_struct.nx_info:
                 data_dict["x"].append(item["name"])
                 data_dict["y"].append(item["value"])
