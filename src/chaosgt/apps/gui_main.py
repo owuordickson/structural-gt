@@ -9,9 +9,7 @@
 import os
 import sys
 import time
-import itertools
 # from qcrop.ui import QCrop
-import numpy as np
 from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -1000,7 +998,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
             return
 
         if self.graph_obj:
-            pass
+            info = ""
+            info += "Number of nodes: " + str(int(self.graph_obj.nx_graph.number_of_nodes())) + "\n"
+            info += "Number of edges: " + str(int(self.graph_obj.nx_graph.number_of_edges())) + "\n"
+            info += "Number of sub-graphs: " + str(len(self.graph_obj.nx_components)) + "\n"
+            info += "Largest-entire graph ratio: " + str(self.graph_obj.connect_ratio * 100) + "%" + "\n"
+
+            dialog = CustomDialog("Graph Network Details", info)
+            dialog.exec()
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()

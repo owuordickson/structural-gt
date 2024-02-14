@@ -82,7 +82,7 @@ class GraphStruct:
         self.update_status([10, "Processing image..."])
         self.img_filtered = self.process_img()
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
-        self.update_status([50, "Extracting graph..."])
+        self.update_status([50, "Making graph skeleton..."])
         self.extract_graph()
         self.update_status([75, "Verifying graph network..."])
         # self.nx_connected_graph, self.connectedness_ratio, self.nx_components = self.find_largest_subgraph()
@@ -256,6 +256,7 @@ class GraphStruct:
         img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
 
+        self.update_status([60, "Creating graph network..."])
         # skeleton analysis object with sknw
         if configs.is_multigraph:
             nx_graph = sknw.build_sknw(img_skel, multi=True)
@@ -519,7 +520,7 @@ class GraphStruct:
         """
 
         nx_graph = self.nx_graph
-        if opt_gte == None:
+        if opt_gte is None:
             opt_gte = self.configs_graph
         filename, output_location = self.create_filenames(self.img_path)
         g_filename = filename + "_graph.gexf"
