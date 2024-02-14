@@ -12,9 +12,12 @@ import cv2
 import re
 import os
 import io
+import math
 import sknw
+import itertools
 import multiprocessing
 import numpy as np
+import scipy as sp
 import networkx as nx
 # import porespy as ps
 import matplotlib.pyplot as plt
@@ -40,10 +43,12 @@ class GraphStruct:
         self.img_plot = None
         self.img_filtered = None
         self.graph_skeleton = None
+        self.nx_info = []
         self.nx_graph = None
+        self.nx_components = []
         self.nx_connected_graph = None
         self.otsu_val = None
-        self.connectedness_ratio = 0
+        self.connect_ratio = 0
 
     def add_listener(self, func):
         """
@@ -80,7 +85,11 @@ class GraphStruct:
         self.update_status([50, "Extracting graph..."])
         self.extract_graph()
         self.update_status([75, "Verifying graph network..."])
-        self.nx_connected_graph, self.connectedness_ratio = self.find_largest_subgraph()
+        # self.nx_connected_graph, self.connectedness_ratio, self.nx_components = self.find_largest_subgraph()
+        if self.configs_graph.weighted_by_diameter == 1:
+            self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral(weighted=True)
+        else:
+            self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter options)."])
         else:
@@ -313,11 +322,8 @@ class GraphStruct:
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
 
+    """
     def find_largest_subgraph(self):
-        """
-
-        :return:
-        """
 
         # 1. Identify connected components
         largest, smallest, count, connected_components = GraphStruct.graph_components(self.nx_graph)
@@ -330,7 +336,99 @@ class GraphStruct:
             # Compute proportion
             ratio = largest.number_of_nodes() / self.nx_graph.number_of_nodes()
 
-            return largest, round(ratio, 4)
+            return largest, round(ratio, 4), connected_components
+    """
+
+    def approx_conductance_by_spectral(self, weighted=False):
+        """
+        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311
+
+        Conductance can closely be approximated via eigenvalue computation,\
+        a fact which has been well-known and well-used in the graph theory community.
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+        while, e.g., traditional spectral clustering is primarily developed for undirected\
+        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+        techniques requiring the symmetry is to turn the original directed graph into an\
+        undirected graph and build the Laplacian matrix for the latter.
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+        The degree of a node is the number of edges incident to that node.\
+        When a node has a degree of zero, it means that there are no edges\
+        connected to that node. In other words, the node is isolated from\
+        the rest of the graph.
+
+        """
+
+        # It is important to notice our graph is (mostly) a directed graph,
+        # meaning that it is: (asymmetric) with self-looping nodes
+
+        graph = self.nx_graph
+        data = []
+        sub_components = []
+
+        # 1. Make a copy of the graph
+        # eig_graph = graph.copy()
+
+        # 2a. Remove self-looping edges
+        eig_graph = GraphStruct.remove_self_loops(graph)
+
+        # 2b. Identify isolated nodes
+        isolated_nodes = list(nx.isolates(eig_graph))
+
+        # 2c. Remove isolated nodes
+        eig_graph.remove_nodes_from(isolated_nodes)
+
+        # 3a. Check connectivity of graph
+        try:
+            # does not work if graphs has disconnected sub-graphs
+            nx.fiedler_vector(eig_graph)
+        except nx.NetworkXNotImplemented:
+            # Graph is directed.
+            non_directed_graph = GraphStruct.make_graph_symmetrical(eig_graph)
+            try:
+                nx.fiedler_vector(non_directed_graph)
+            except nx.NetworkXNotImplemented:
+                print("Graph is directed. Cannot compute conductance")
+                return None
+            except nx.NetworkXError:
+                # Graph has less than two nodes or is not connected.
+                sub_graph_largest, sub_graph_smallest, size, sub_components = GraphStruct.graph_components(eig_graph)
+                eig_graph = sub_graph_largest
+                data.append({"name": "Subgraph Count", "value": size})
+                data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
+                data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
+                data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
+                data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
+        except nx.NetworkXError:
+            # Graph has less than two nodes or is not connected.
+            sub_graph_largest, sub_graph_smallest, size, sub_components = GraphStruct.graph_components(eig_graph)
+            eig_graph = sub_graph_largest
+            data.append({"name": "Subgraph Count", "value": size})
+            data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
+            data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
+            data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
+            data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
+
+        # 4. Compute normalized-laplacian matrix
+        if weighted:
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph, weight='weight').toarray()
+        else:
+            # norm_laplacian_matrix = compute_norm_laplacian_matrix(eig_graph)
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
+
+        # 5. Compute eigenvalues
+        # e_vals, _ = np.linalg.eig(norm_laplacian_matrix)
+        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
+
+        # 6. Approximate conductance using the 2nd smallest eigenvalue
+        eigenvalues = e_vals.real
+        val_max, val_min = GraphStruct.compute_conductance_range(eigenvalues)
+        data.append({"name": "Graph Conductance (max)", "value": val_max})
+        data.append({"name": "Graph Conductance (min)", "value": val_min})
+        ratio = eig_graph.number_of_nodes() / graph.number_of_nodes()
+
+        return data, sub_components, ratio
 
     def compute_fractal_dimension(self):
         self.update_status([-1, "Computing fractal dimension..."])
@@ -358,28 +456,44 @@ class GraphStruct:
         """
 
         :param opt_gte:
+
         :return:
         """
 
-        nx_graph = self.nx_connected_graph
+        nx_graph = self.nx_graph
+        nx_components = self.nx_components
         raw_img = self.img
 
-        fig = plt.Figure()
-        ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        ax.set_axis_off()
-        ax.imshow(raw_img, cmap='gray')
-        if opt_gte.is_multigraph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+        if len(nx_components) > 0:
+            fig = plt.Figure()
+            ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
+            ax.set_axis_off()
+            ax.imshow(raw_img, cmap='gray')
+            color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+            color_cycle = itertools.cycle(color_list)
+            for component in nx_components:
+                sg = nx_graph.subgraph(component)
+                color = next(color_cycle)
+                for (s, e) in sg.edges():
+                    ge = sg[s][e]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], color)
         else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax.plot(ge[:, 1], ge[:, 0], 'red')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+            fig = plt.Figure()
+            ax = fig.add_axes((0, 0, 1, 1))
+            ax.set_axis_off()
+            ax.imshow(raw_img, cmap='gray')
+            if opt_gte.is_multigraph:
+                for (s, e) in nx_graph.edges():
+                    for k in range(int(len(nx_graph[s][e]))):
+                        ge = nx_graph[s][e][k]['pts']
+                        ax.plot(ge[:, 1], ge[:, 0], 'red')
+            else:
+                for (s, e) in nx_graph.edges():
+                    ge = nx_graph[s][e]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+            nodes = nx_graph.nodes()
+            gn = np.array([nodes[i]['o'] for i in nodes])
+            ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
         return fig, GraphStruct.plot_to_img(fig)
 
@@ -398,14 +512,15 @@ class GraphStruct:
 
         return filename, output_location
 
-    def save_files(self, opt_gte):
+    def save_files(self, opt_gte=None):
         """
 
-        :param opt_gte:
         :return:
         """
 
         nx_graph = self.nx_graph
+        if opt_gte == None:
+            opt_gte = self.configs_graph
         filename, output_location = self.create_filenames(self.img_path)
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
@@ -425,7 +540,6 @@ class GraphStruct:
         elif self.img_net.mode in ["RGBA", "P"]:
             self.img_net = self.img_net.convert("RGB")
             self.img_net.save(net_file, format='JPEG', quality=95)
-
 
         if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:
@@ -496,6 +610,118 @@ class GraphStruct:
         else:
             del nx_graph[s][e]['weight']
         return nx_graph
+
+    @staticmethod
+    def compute_norm_laplacian_matrix(graph):
+        """
+        Compute normalized-laplacian-matrix
+
+        :param graph:
+        :return:
+        """
+
+        # 1. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 2. Compute Degree matrix
+        deg_mat = np.diag(np.sum(adj_mat, axis=1))
+
+        # 3. Compute Identity matrix
+        id_mat = np.identity(adj_mat.shape[0])
+
+        # 4. Compute (Degree inverse squared) D^{-1/2} matrix
+        # Check for singular matrices
+        if np.any(np.diag(deg_mat) == 0):
+            # Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.
+            # raise ValueError("Graph has nodes with zero degree. Cannot compute inverse square root of degree matrix.")
+            print("Graph has nodes with zero degree. Cannot compute conductance")
+            return None
+        deg_inv_sqrt = np.linalg.inv(np.sqrt(deg_mat))
+
+        # 5. Compute Laplacian matrix
+        # lpl_mat = deg_mat - adj_mat
+
+        # 6. Compute normalized-Laplacian matrix
+        norm_lpl_mat = id_mat - np.dot(deg_inv_sqrt, np.dot(adj_mat, deg_inv_sqrt))
+        # norm_lpl_mat = np.eye(sp_graph.number_of_nodes()) - np.dot(np.dot(deg_inv_sqrt, adj_mat), deg_inv_sqrt)
+
+        # print(adj_mat)
+        # print(adj_mat.shape)
+        # print(deg_mat)
+        # print(deg_inv_sqrt)
+        # print(id_mat)
+        # print(lpl_mat)
+        # print(norm_lpl_mat)
+        return norm_lpl_mat
+
+    @staticmethod
+    def remove_self_loops(graph):
+        """
+        Remove self-loops from graph, they cause zero values in Degree matrix.
+
+        :param graph:
+        :return:
+        """
+
+        # 1. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 2. Symmetric-ize the Adjacency matrix
+        # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+        # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+        np.fill_diagonal(adj_mat, 0)
+
+        # 4. Create new graph
+        new_graph = nx.from_numpy_array(adj_mat)
+
+        return new_graph
+
+    @staticmethod
+    def make_graph_symmetrical(graph):
+        """
+
+        :param graph:
+        :return:
+        """
+
+        # 1. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 2. Symmetric-ize the Adjacency matrix
+        adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+
+        # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+        np.fill_diagonal(adj_mat, 0)
+
+        # 4. Create new graph
+        new_graph = nx.from_numpy_array(adj_mat)
+
+        return new_graph
+
+    @staticmethod
+    def compute_conductance_range(eig_vals):
+        """
+
+        :param eig_vals:
+        :return:
+        """
+
+        # Sort the eigenvalues in ascending order
+        sorted_vals = np.array(eig_vals)
+        sorted_vals.sort()
+
+        # Sort the eigenvalues in descending order
+        # eigenvalues[::-1].sort()
+
+        # approximate conductance using the 2nd smallest eigenvalue
+        try:
+            conductance_max = math.sqrt((2 * sorted_vals[1]))
+        except ValueError:
+            conductance_max = None
+        conductance_min = sorted_vals[1] / 2
+
+        return conductance_max, conductance_min
 
     @staticmethod
     def graph_components(graph):
