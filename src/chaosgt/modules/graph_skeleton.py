@@ -15,7 +15,8 @@ from skimage.morphology import disk, skeletonize, remove_small_objects
 
 class GraphSkeleton:
 
-    def __init__(self, img_bin, configs):
+    def __init__(self, img_bin, configs, allow_multiprocessing=True):
+        self.allow_mp = allow_multiprocessing
         self.img_bin = img_bin
         self.configs = configs
         # clean_skel, skel_int, Bp_coord_x, Bp_coord_y, Ep_coord_x, Ep_coord_y

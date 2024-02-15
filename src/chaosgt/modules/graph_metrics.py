@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
-from networkx.algorithms import global_efficiency, clustering, average_clustering
+from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
 from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
@@ -30,8 +30,9 @@ from networkx.algorithms.wiener import wiener_index
 
 class GraphMetrics:
 
-    def __init__(self, g_obj, configs):
+    def __init__(self, g_obj, configs, allow_multiprocessing=True):
         self.__listeners = []
+        self.allow_mp = allow_multiprocessing
         self.g_struct = g_obj
         self.configs = configs
         self.output_data = pd.DataFrame([])
@@ -134,8 +135,10 @@ class GraphMetrics:
         if options.compute_nodal_connectivity == 1:
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                # avg_node_con = average_node_connectivity(graph)
-                avg_node_con = self.average_node_connectivity()
+                if self.allow_mp:
+                    avg_node_con = self.average_node_connectivity()
+                else:
+                    avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -388,13 +391,9 @@ class GraphMetrics:
             f1 = plt.figure(figsize=(8.5, 8.5), dpi=400)
             f1.add_subplot(2, 2, 1)
             plt.imshow(raw_img, cmap='gray')
-            plt.xticks([])
-            plt.yticks([])
             plt.title("Original Image")
             f1.add_subplot(2, 2, 2)
             plt.imshow(filtered_img, cmap='gray')
-            plt.xticks([])
-            plt.yticks([])
             plt.title("Processed Image")
             f1.add_subplot(2, 2, 3)
             plt.plot(img_histogram)
@@ -406,14 +405,11 @@ class GraphMetrics:
                 thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
                                        [0, max(img_histogram)]], dtype='object')
                 plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-            plt.yticks([])
             plt.title("Histogram of Processed Image")
             plt.xlabel("Pixel values")
             plt.ylabel("Counts")
             f1.add_subplot(2, 2, 4)
             plt.imshow(img_bin, cmap='gray')
-            plt.xticks([])
-            plt.yticks([])
             plt.title("Binary Image")
 
             pdf.savefig()
@@ -427,8 +423,6 @@ class GraphMetrics:
             plt.imshow(g_skel.skel_int, cmap='gray')
             plt.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
             plt.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
-            plt.xticks([])
-            plt.yticks([])
             plt.title("Skeletal Image")
             f2a.add_subplot(2, 1, 2)
             plt.imshow(raw_img, cmap='gray')
@@ -453,8 +447,6 @@ class GraphMetrics:
                 plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
             else:
                 plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-            plt.xticks([])
-            plt.yticks([])
             plt.title("Final Graph")
             pdf.savefig()
             plt.close()
@@ -472,8 +464,6 @@ class GraphMetrics:
                     for (s, e) in sg.edges():
                         ge = sg[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], color)
-                plt.xticks([])
-                plt.yticks([])
                 plt.title("Sub Graphs")
                 pdf.savefig()
                 plt.close()
@@ -679,8 +669,6 @@ class GraphMetrics:
                         for (s, e) in nx_graph.edges():
                             ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Degree Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -702,8 +690,6 @@ class GraphMetrics:
                         for (s, e) in nx_graph.edges():
                             ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Weighted Degree Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -719,8 +705,6 @@ class GraphMetrics:
                     for (s, e) in nx_graph.edges():
                         ge = nx_graph[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Clustering Coefficient Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -736,8 +720,6 @@ class GraphMetrics:
                     for (s, e) in nx_graph.edges():
                         ge = nx_graph[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Betweenness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -754,8 +736,6 @@ class GraphMetrics:
                     for (s, e) in nx_graph.edges():
                         ge = nx_graph[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Width-Weighted Betweenness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -777,8 +757,6 @@ class GraphMetrics:
                         for (s, e) in nx_graph.edges():
                             ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Closeness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -800,8 +778,6 @@ class GraphMetrics:
                         for (s, e) in nx_graph.edges():
                             ge = nx_graph[s][e]['pts']
                             plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Length-Weighted Closeness Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -817,8 +793,6 @@ class GraphMetrics:
                     for (s, e) in nx_graph.edges():
                         ge = nx_graph[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Eigenvector Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -835,8 +809,6 @@ class GraphMetrics:
                     for (s, e) in nx_graph.edges():
                         ge = nx_graph[s][e]['pts']
                         plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.xticks([])
-                    plt.yticks([])
                     plt.title('Width-Weighted Eigenvector Centrality Heatmap', fontdict=font_1)
                     cbar = plt.colorbar()
                     cbar.set_label('Value')
@@ -847,8 +819,6 @@ class GraphMetrics:
             f8 = plt.figure(figsize=(8.5, 8.5), dpi=300)
             f8.add_subplot(1, 1, 1)
             plt.text(0.5, 0.5, self.get_info(), horizontalalignment='center', verticalalignment='center')
-            plt.xticks([])
-            plt.yticks([])
             pdf.savefig()
             plt.close()
 

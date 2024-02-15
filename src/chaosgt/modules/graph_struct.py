@@ -29,8 +29,9 @@ from .graph_skeleton import GraphSkeleton
 
 class GraphStruct:
 
-    def __init__(self, img_path, out_path, options_img, options_gte):
+    def __init__(self, img_path, out_path, options_img, options_gte, allow_multiprocessing=True):
         self.__listeners = []
+        self.allow_mp = allow_multiprocessing
         self.terminal_app = True
         self.configs_img = options_img
         self.configs_graph = options_gte
@@ -284,31 +285,22 @@ class GraphStruct:
         else:
             nx_graph = sknw.build_sknw(img_skel)
 
-            # the actual length of the edges we want is stored as weight, so the two are set equal
-            # if the weight is 0 the edge length is set to 2
-            # for (s, e) in nx_graph.edges():
-            #    nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-            #    if nx_graph[s][e]['weight'] == 0:
-            #        nx_graph[s][e]['length'] = 2
-            with multiprocessing.Pool() as pool:
-                items_1 = [(nx_graph, s, e) for (s, e) in nx_graph.edges()]
-                for graph in pool.starmap(GraphStruct._task_init_weight, items_1):
-                    nx_graph = graph
+            if self.allow_mp:
+                with multiprocessing.Pool() as pool:
+                    items_1 = [(nx_graph, s, e) for (s, e) in nx_graph.edges()]
+                    for graph in pool.starmap(GraphStruct._task_init_weight, items_1):
+                        nx_graph = graph
 
-            # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
-            # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
-            # for (s, e) in nx_graph.edges():
-            #    if configs.weighted_by_diameter == 1:
-            #        ge = nx_graph[s][e]['pts']
-            #        pix_width, wt = graph_skel.assign_weights_by_width(ge)
-            #        nx_graph[s][e]['pixel width'] = pix_width
-            #        nx_graph[s][e]['weight'] = wt
-            #    else:
-            #        del nx_graph[s][e]['weight']
-            with multiprocessing.Pool() as pool:
-                items_2 = [(configs, graph_skel, nx_graph, s, e) for (s, e) in nx_graph.edges()]
-                for graph in pool.starmap(GraphStruct._task_assign_weight, items_2):
-                    nx_graph = graph
+                with multiprocessing.Pool() as pool:
+                    items_2 = [(configs, graph_skel, nx_graph, s, e) for (s, e) in nx_graph.edges()]
+                    for graph in pool.starmap(GraphStruct._task_assign_weight, items_2):
+                        nx_graph = graph
+            else:
+                for (s, e) in nx_graph.edges():
+                    nx_graph = GraphStruct._task_init_weight(nx_graph, s, e)
+
+                for (s, e) in nx_graph.edges():
+                    nx_graph = GraphStruct._task_assign_weight(configs, graph_skel, nx_graph, s, e)
 
             self.nx_graph = nx_graph
 
@@ -593,6 +585,8 @@ class GraphStruct:
 
     @staticmethod
     def _task_init_weight(nx_graph, s, e):
+        # the actual length of the edges we want is stored as weight, so the two are set equal
+        # if the weight is 0 the edge length is set to 2
         nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
         if nx_graph[s][e]['weight'] == 0:
             nx_graph[s][e]['length'] = 2
@@ -600,6 +594,8 @@ class GraphStruct:
 
     @staticmethod
     def _task_assign_weight(configs, graph_skel, nx_graph, s, e):
+        # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
+        # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
         if configs.weighted_by_diameter == 1:
             ge = nx_graph[s][e]['pts']
             pix_width, wt = graph_skel.assign_weights_by_width(ge)
