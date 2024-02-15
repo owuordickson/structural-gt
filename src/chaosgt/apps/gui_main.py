@@ -1002,7 +1002,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             info += "Number of nodes: " + str(int(self.graph_obj.nx_graph.number_of_nodes())) + "\n"
             info += "Number of edges: " + str(int(self.graph_obj.nx_graph.number_of_edges())) + "\n"
             info += "Number of sub-graphs: " + str(len(self.graph_obj.nx_components)) + "\n"
-            info += "Largest-entire graph ratio: " + str(round(self.graph_obj.connect_ratio * 100), 3) + "%" + "\n"
+            info += "Largest-entire graph ratio: " + str(round((self.graph_obj.connect_ratio * 100), 3)) + "%" + "\n"
 
             dialog = CustomDialog("Graph Network Details", info)
             dialog.exec()

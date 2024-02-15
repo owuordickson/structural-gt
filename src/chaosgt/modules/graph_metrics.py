@@ -347,6 +347,165 @@ class GraphMetrics:
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
+    def generate_pdf_output(self):
+
+        """
+
+        :return:
+        """
+
+        opt_gtc = self.configs
+
+        filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
+        pdf_filename = filename + "_SGT_results.pdf"
+        pdf_file = os.path.join(output_location, pdf_filename)
+
+        self.update_status([90, "Generating PDF GT Output..."])
+        with (PdfPages(pdf_file) as pdf):
+
+            # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+            fig = self.display_images()
+            pdf.savefig(fig)
+
+            # 2. plotting skeletal images
+            fig = self.display_skeletal_images()
+            pdf.savefig(fig)
+
+            # 3. plotting sub-graph network
+            fig_3, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=400)
+            ax.set_axis_off()
+            ax.set_title("Graph Components")
+            # ax.imshow(self.g_struct.img_plot, cmap='gray')
+            pdf.savefig(fig_3)
+
+            # 4. displaying all the GT calculations in Table  on entire page
+            fig, fit_wt = self.display_gt_results()
+            pdf.savefig(fig)
+            if fit_wt:
+                pdf.savefig(fit_wt)
+
+            # 5. displaying histograms
+            self.update_status([92, "Generating histograms..."])
+            figs = self.display_histograms()
+            for fig in figs:
+                pdf.savefig(fig)
+
+            # 6. displaying heatmaps
+            if opt_gtc.display_heatmaps == 1:
+                self.update_status([95, "Generating heatmaps..."])
+                figs = self.display_heatmaps()
+                for fig in figs:
+                    pdf.savefig(fig)
+
+            # 8. displaying run information
+            fig = self.display_info()
+            pdf.savefig(fig)
+        self.g_struct.save_files()
+
+    def compute_betweenness_centrality(self):
+
+        """
+        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
+
+        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
+        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
+
+        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
+        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
+        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
+        sections of the graph. An average is computed after an iteration of x random walks along edges.
+
+        This measure is already implemented in 'networkx' package. Here is the link:\
+        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
+
+        :return:
+        """
+
+        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
+        # (NOT TRUE) Note: only works with fully-connected graphs
+        # So, random betweenness centrality is computed between source node and destination node.
+
+        graph = self.g_struct.nx_graph
+
+        # 1. Compute laplacian matrix L = D - A
+        lpl_mat = nx.laplacian_matrix(graph).toarray()
+        print(lpl_mat)
+
+        # 2. Remove any single row and corresponding column from L
+        # 3. Invert the resulting matrix
+        # 4. Add back the removed row and column to form matrix T
+        # 5. Calculate betweenness from T
+
+    def average_node_connectivity(self, flow_func=None):
+
+        r"""Returns the average connectivity of a graph G.
+
+        The average connectivity `\bar{\kappa}` of a graph G is the average
+        of local node connectivity over all pairs of nodes of nx_graph.
+
+        https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
+
+        Parameters
+        ----------
+
+        flow_func : function
+            A function for computing the maximum flow among a pair of nodes.
+            The function has to accept at least three parameters: a Digraph,
+            a source node, and a target node. And return a residual network
+            that follows NetworkX conventions (see :meth:`maximum_flow` for
+            details). If flow_func is None, the default maximum flow function
+            (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
+            for details. The choice of the default function may change from
+            version to version and should not be relied on. Default value: None.
+
+        Returns
+        -------
+        K : float
+            Average node connectivity
+
+        References
+        ----------
+        [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
+                connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
+                http://www.sciencedirect.com/science/article/pii/S0012365X01001807
+
+        """
+
+        nx_graph = self.g_struct.nx_graph
+        if nx_graph.is_directed():
+            iter_func = itertools.permutations
+        else:
+            iter_func = itertools.combinations
+
+        # Reuse the auxiliary digraph and the residual network
+        a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
+        r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
+        # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
+
+        # for item in items:
+        #    task(item)
+        # with multiprocessing.Pool() as pool:
+        #    call the function for each item in parallel
+        #    for result in pool.map(task, items):
+        #        print(result)
+        num, den = 0, 0
+        with multiprocessing.Pool() as pool:
+            items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
+            for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
+                num += n
+                den += 1
+        if den == 0:
+            return 0
+        return num / den
+        # cpus = get_num_cores()
+        # num, den = 0, 0
+        # for u, v in iter_func(nx_graph, 2):
+        #   num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
+        #   den += 1
+        # if den == 0:  # Null Graph
+        #    return 0
+        # return num / den
+
     def display_images(self):
 
         opt_img = self.g_struct.configs_img
@@ -662,6 +821,59 @@ class GraphMetrics:
             figs.append(fig)
         return figs
 
+    def display_info(self):
+
+        fig, ax = plt.subplots(1, 1, figsize=(8.5, 8.5), dpi=300)
+        ax.set_axis_off()
+        ax.set_title("Unweighted GT parameters")
+
+        # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
+        opt_img = self.g_struct.configs_img
+        opt_gte = self.g_struct.configs_graph
+        _, filename = os.path.split(self.g_struct.img_path)
+        run_info = "Run Info\n"
+        run_info = run_info + filename + "\n"
+        now = datetime.datetime.now()
+        run_info = run_info + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
+        if opt_img.threshold_type == 0:
+            run_info = run_info + "Global Threshold (" + str(opt_img.threshold_global) + ")"
+        elif opt_img.threshold_type == 1:
+            run_info = run_info + " || Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
+        elif opt_img.threshold_type == 2:
+            run_info = run_info + " || OTSU Threshold"
+        if opt_img.gamma != 1:
+            run_info = run_info + "|| Gamma = " + str(opt_img.gamma)
+        if opt_img.apply_median:
+            run_info = run_info + " || Median Filter"
+        if opt_img.apply_gaussian:
+            run_info = run_info + " || Gaussian Blur, " + str(opt_img.blurring_window_size) + " bit kernel"
+        if opt_img.apply_autolevel:
+            run_info = run_info + " || Autolevel"
+        if opt_img.apply_dark_foreground:
+            run_info = run_info + " || Dark Foreground"
+        if opt_img.apply_laplacian:
+            run_info = run_info + " || Laplacian Gradient"
+        if opt_img.apply_scharr:
+            run_info = run_info + " || Scharr Gradient"
+        if opt_img.apply_sobel:
+            run_info = run_info + " || Sobel Gradient"
+        if opt_img.apply_lowpass:
+            run_info = run_info + " || Low-pass filter" + str(opt_img.filter_window_size)
+        run_info = run_info + "\n"
+        if opt_gte.merge_nearby_nodes:
+            run_info = run_info + "Merge Nodes"
+        if opt_gte.prune_dangling_edges:
+            run_info = run_info + " || Prune Dangling Edges"
+        if opt_gte.remove_disconnected_segments:
+            run_info = run_info + " || Remove Objects of Size " + str(opt_gte.remove_object_size)
+        if opt_gte.remove_self_loops:
+            run_info = run_info + " || Remove Self Loops"
+        if opt_gte.is_multigraph:
+            run_info = run_info + " || Multi-graph allowed"
+
+        ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
+        return fig
+
     def plot_histogram(self, distribution, title, size, ax):
         nx_graph = self.g_struct.nx_graph
         img = self.g_struct.img
@@ -692,212 +904,3 @@ class GraphMetrics:
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
         return fig, ax
-
-    def generate_pdf_output(self):
-
-        """
-
-        :return:
-        """
-
-        opt_gtc = self.configs
-
-        filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
-        pdf_filename = filename + "_SGT_results.pdf"
-        pdf_file = os.path.join(output_location, pdf_filename)
-
-        self.update_status([90, "Generating PDF GT Output..."])
-        with (PdfPages(pdf_file) as pdf):
-
-            # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            fig = self.display_images()
-            pdf.savefig(fig)
-
-            # 2. plotting skeletal images
-            fig = self.display_skeletal_images()
-            pdf.savefig(fig)
-
-            # 3. plotting sub-graph network
-            fig_3, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=400)
-            ax.set_axis_off()
-            ax.set_title("Graph Components")
-            # ax.imshow(self.g_struct.img_plot, cmap='gray')
-            pdf.savefig(fig_3)
-
-            # 4. displaying all the GT calculations in Table  on entire page
-            fig, fit_wt = self.display_gt_results()
-            pdf.savefig(fig)
-            if fit_wt:
-                pdf.savefig(fit_wt)
-
-            # 5. displaying histograms
-            self.update_status([92, "Generating histograms..."])
-            figs = self.display_histograms()
-            for fig in figs:
-                pdf.savefig(fig)
-
-            # 6. displaying heatmaps
-            if opt_gtc.display_heatmaps == 1:
-                self.update_status([95, "Generating heatmaps..."])
-                figs = self.display_heatmaps()
-                for fig in figs:
-                    pdf.savefig(fig)
-
-            # 8. displaying run information
-            f8 = plt.figure(figsize=(8.5, 8.5), dpi=300)
-            f8.add_subplot(1, 1, 1)
-            plt.text(0.5, 0.5, self.get_info(), horizontalalignment='center', verticalalignment='center')
-            pdf.savefig()
-            plt.close()
-
-        self.g_struct.save_files()
-
-    def get_info(self):
-
-        # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        opt_img = self.g_struct.configs_img
-        opt_gte = self.g_struct.configs_graph
-        run_info = "Run Info\n"
-        run_info = run_info + self.g_struct.img_path
-        now = datetime.datetime.now()
-        run_info = run_info + " || " + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
-        if opt_img.threshold_type == 0:
-            run_info = run_info + " || Global Threshold (" + str(opt_img.threshold_global) + ")"
-        elif opt_img.threshold_type == 1:
-            run_info = run_info + " || Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
-        elif opt_img.threshold_type == 2:
-            run_info = run_info + " || OTSU Threshold"
-        if opt_img.gamma != 1:
-            run_info = run_info + "|| Gamma = " + str(opt_img.gamma)
-        if opt_img.apply_median:
-            run_info = run_info + " || Median Filter"
-        if opt_img.apply_gaussian:
-            run_info = run_info + " || Gaussian Blur, " + str(opt_img.blurring_window_size) + " bit kernel"
-        if opt_img.apply_autolevel:
-            run_info = run_info + " || Autolevel"
-        if opt_img.apply_dark_foreground:
-            run_info = run_info + " || Dark Foreground"
-        if opt_img.apply_laplacian:
-            run_info = run_info + " || Laplacian Gradient"
-        if opt_img.apply_scharr:
-            run_info = run_info + " || Scharr Gradient"
-        if opt_img.apply_sobel:
-            run_info = run_info + " || Sobel Gradient"
-        if opt_img.apply_lowpass:
-            run_info = run_info + " || Low-pass filter" + str(opt_img.filter_window_size)
-        run_info = run_info + "\n"
-        if opt_gte.merge_nearby_nodes:
-            run_info = run_info + " || Merge Nodes"
-        if opt_gte.prune_dangling_edges:
-            run_info = run_info + " || Prune Dangling Edges"
-        if opt_gte.remove_disconnected_segments:
-            run_info = run_info + " || Remove Objects of Size " + str(opt_gte.remove_object_size)
-        if opt_gte.remove_self_loops:
-            run_info = run_info + " || Remove Self Loops"
-        if opt_gte.is_multigraph:
-            run_info = run_info + " || Multi-graph allowed"
-        return run_info
-
-    def compute_betweenness_centrality(self):
-
-        """
-        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
-
-        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
-        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
-
-        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
-        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
-        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
-        sections of the graph. An average is computed after an iteration of x random walks along edges.
-
-        This measure is already implemented in 'networkx' package. Here is the link:\
-        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
-
-        :return:
-        """
-
-        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
-        # (NOT TRUE) Note: only works with fully-connected graphs
-        # So, random betweenness centrality is computed between source node and destination node.
-
-        graph = self.g_struct.nx_graph
-
-        # 1. Compute laplacian matrix L = D - A
-        lpl_mat = nx.laplacian_matrix(graph).toarray()
-        print(lpl_mat)
-
-        # 2. Remove any single row and corresponding column from L
-        # 3. Invert the resulting matrix
-        # 4. Add back the removed row and column to form matrix T
-        # 5. Calculate betweenness from T
-
-    def average_node_connectivity(self, flow_func=None):
-
-        r"""Returns the average connectivity of a graph G.
-
-        The average connectivity `\bar{\kappa}` of a graph G is the average
-        of local node connectivity over all pairs of nodes of nx_graph.
-
-        https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
-
-        Parameters
-        ----------
-
-        flow_func : function
-            A function for computing the maximum flow among a pair of nodes.
-            The function has to accept at least three parameters: a Digraph,
-            a source node, and a target node. And return a residual network
-            that follows NetworkX conventions (see :meth:`maximum_flow` for
-            details). If flow_func is None, the default maximum flow function
-            (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
-            for details. The choice of the default function may change from
-            version to version and should not be relied on. Default value: None.
-
-        Returns
-        -------
-        K : float
-            Average node connectivity
-
-        References
-        ----------
-        [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
-                connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
-                http://www.sciencedirect.com/science/article/pii/S0012365X01001807
-
-        """
-
-        nx_graph = self.g_struct.nx_graph
-        if nx_graph.is_directed():
-            iter_func = itertools.permutations
-        else:
-            iter_func = itertools.combinations
-
-        # Reuse the auxiliary digraph and the residual network
-        a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
-        r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
-        # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
-
-        # for item in items:
-        #    task(item)
-        # with multiprocessing.Pool() as pool:
-        #    call the function for each item in parallel
-        #    for result in pool.map(task, items):
-        #        print(result)
-        num, den = 0, 0
-        with multiprocessing.Pool() as pool:
-            items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
-            for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
-                num += n
-                den += 1
-        if den == 0:
-            return 0
-        return num / den
-        # cpus = get_num_cores()
-        # num, den = 0, 0
-        # for u, v in iter_func(nx_graph, 2):
-        #   num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
-        #   den += 1
-        # if den == 0:  # Null Graph
-        #    return 0
-        # return num / den
