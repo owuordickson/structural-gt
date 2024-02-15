@@ -9,7 +9,6 @@ Compute graph theory metrics
 
 import os
 import cv2
-import time
 import datetime
 import itertools
 import multiprocessing
@@ -389,8 +388,7 @@ class GraphMetrics:
         opt_gte = self.g_struct.configs_graph
         nx_graph = self.g_struct.nx_graph
         g_skel = self.g_struct.graph_skeleton
-        # raw_img = self.g_struct.img
-        filtered_img = self.g_struct.img_filtered
+        img = self.g_struct.img
 
         fig, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=400)
         for ax in axs.flat:
@@ -402,7 +400,7 @@ class GraphMetrics:
         axs[0].scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
 
         axs[1].set_title("Final Graph")
-        axs[1].imshow(filtered_img, cmap='gray')
+        axs[1].imshow(img, cmap='gray')
         if opt_gte.is_multigraph:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -452,6 +450,7 @@ class GraphMetrics:
         opt_gte = self.g_struct.configs_graph
         opt_gtc = self.configs
         font_1 = {'fontsize': 9}
+        figs = []
 
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
@@ -464,9 +463,9 @@ class GraphMetrics:
         eig_distribution = self.eigenvector_distribution
         w_eig_distribution = self.weighted_eigenvector_distribution
         cf_distribution = self.currentflow_distribution
-        
+
         # Degree and Closeness
-        fig_1, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=300)
+        fig, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=300)
         for ax in axs.flat:
             ax.set_axis_off()
         if opt_gtc.display_degree_histogram == 1:
@@ -491,9 +490,10 @@ class GraphMetrics:
             axs[1].set_axis_on()
             axs[1].set(xlabel='Closeness value', ylabel='Counts')
             axs[1].hist(clo_distribution, bins=bins)
+        figs.append(fig)
 
         # Betweenness, Clustering, Currentflow and Eigenvector
-        fig_2, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
+        fig, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
         for ax in axs.flat:
             ax.set_axis_off()
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
@@ -540,11 +540,11 @@ class GraphMetrics:
             axs[1, 1].set_axis_on()
             axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
             axs[1, 1].hist(eig_distribution, bins=bins)
-        
+        figs.append(fig)
+
         # weighted histograms
-        fig_3 = None
         if opt_gte.weighted_by_diameter == 1:
-            fig_3, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
+            fig, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
             for ax in axs.flat:
                 ax.set_axis_off()
             if opt_gtc.display_degree_histogram == 1:
@@ -592,17 +592,15 @@ class GraphMetrics:
                 axs[1, 1].set_axis_on()
                 axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
                 axs[1, 1].hist(w_eig_distribution, bins=bins)
-                
-        return fig_1, fig_2, fig_3
+            figs.append(fig)
 
-    def generate_pdf_output(self):
-        """
+        return figs
 
-        :return:
-        """
+    def display_heatmaps(self):
 
         opt_gte = self.g_struct.configs_graph
         opt_gtc = self.configs
+        nx_graph = self.g_struct.nx_graph
 
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
@@ -614,10 +612,95 @@ class GraphMetrics:
         w_clo_distribution = self.weighted_closeness_distribution
         eig_distribution = self.eigenvector_distribution
         w_eig_distribution = self.weighted_eigenvector_distribution
-        cf_distribution = self.currentflow_distribution
+        # cf_distribution = self.currentflow_distribution
 
+        sz = 30
+        lw = 1.5
+        figs = []
+        # init_fig, init_ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+        # for i in range(2):
+        #    figs.append(init_fig)
+        #    axs.append(init_ax)
+
+        if opt_gtc.display_degree_histogram == 1:
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(deg_distribution, 'Degree Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(w_deg_distribution, 'Weighted Degree Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(cluster_coefs, 'Clustering Coefficient Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(bet_distribution, 'Betweenness Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
+                (opt_gte.is_multigraph == 0):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        if opt_gtc.display_closeness_histogram == 1:
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(clo_distribution, 'Closeness Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(eig_distribution, 'Eigenvector Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
+                (opt_gte.is_multigraph == 0):
+            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
+            self.plot_histogram(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, ax)
+            figs.append(fig)
+        return figs
+
+    def plot_histogram(self, distribution, title, size, ax):
         nx_graph = self.g_struct.nx_graph
-        raw_img = self.g_struct.img
+        img = self.g_struct.img
+        font_1 = {'fontsize': 9}
+
+        ax.set_title(title, fontdict=font_1)
+
+        ax.imshow(img, cmap='gray')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
+        cbar = plt.colorbar(ax.collections[0], ax=ax, orientation='vertical')  # Corrected line
+        cbar.set_label('Value')
+        return ax
+
+    @staticmethod
+    def plot_histogram_bare(nx_graph, line_width, is_multigraph=False):
+        fig, ax = plt.subplots(1, 1, figsize=(8.5, 8.5), dpi=400)
+        ax.set_axis_off()
+
+        if is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
+        return fig, ax
+
+    def generate_pdf_output(self):
+
+        """
+
+        :return:
+        """
+
+        opt_gtc = self.configs
 
         filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
         pdf_filename = filename + "_SGT_results.pdf"
@@ -625,8 +708,6 @@ class GraphMetrics:
 
         self.update_status([90, "Generating PDF GT Output..."])
         with (PdfPages(pdf_file) as pdf):
-            font_1 = {'fontsize': 12}
-            font_2 = {'fontsize': 9}
 
             # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
             fig = self.display_images()
@@ -650,178 +731,17 @@ class GraphMetrics:
                 pdf.savefig(fit_wt)
 
             # 5. displaying histograms
-            fig, fig_1, fig_wt = self.display_histograms()
-            pdf.savefig(fig)
-            pdf.savefig(fig_1)
-            pdf.savefig(fig_wt)
+            self.update_status([92, "Generating histograms..."])
+            figs = self.display_histograms()
+            for fig in figs:
+                pdf.savefig(fig)
 
-            # 7. displaying heatmaps
+            # 6. displaying heatmaps
             if opt_gtc.display_heatmaps == 1:
                 self.update_status([95, "Generating heatmaps..."])
-                sz = 30
-                lw = 1.5
-                time.sleep(0.5)
-                if opt_gtc.display_degree_histogram == 1:
-                    f6a = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6a.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=deg_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Degree Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-                    f6b = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6b.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_deg_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Weighted Degree Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
-                    f6c = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6c.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=cluster_coefs, cmap='plasma')
-                    for (s, e) in nx_graph.edges():
-                        ge = nx_graph[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Clustering Coefficient Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-                    f6d = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6d.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=bet_distribution, cmap='plasma')
-                    for (s, e) in nx_graph.edges():
-                        ge = nx_graph[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Betweenness Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
-                        (opt_gte.is_multigraph == 0):
-                    f6e = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6e.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_bet_distribution, cmap='plasma')
-                    for (s, e) in nx_graph.edges():
-                        ge = nx_graph[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Width-Weighted Betweenness Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if opt_gtc.display_closeness_histogram == 1:
-                    f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6f.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=clo_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Closeness Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-                    f6f = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6f.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_clo_distribution, cmap='plasma')
-                    if opt_gte.is_multigraph:
-                        for (s, e) in nx_graph.edges():
-                            for k in range(int(len(nx_graph[s][e]))):
-                                ge = nx_graph[s][e][k]['pts']
-                                plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    else:
-                        for (s, e) in nx_graph.edges():
-                            ge = nx_graph[s][e]['pts']
-                            plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Length-Weighted Closeness Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-                    f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6h.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=eig_distribution, cmap='plasma')
-                    for (s, e) in nx_graph.edges():
-                        ge = nx_graph[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Eigenvector Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
-                        (opt_gte.is_multigraph == 0):
-                    f6h = plt.figure(figsize=(8.5, 8.5), dpi=400)
-                    f6h.add_subplot(1, 1, 1)
-                    plt.imshow(raw_img, cmap='gray')
-                    nodes = nx_graph.nodes()
-                    gn = np.array([nodes[i]['o'] for i in nodes])
-                    plt.scatter(gn[:, 1], gn[:, 0], s=sz, c=w_eig_distribution, cmap='plasma')
-                    for (s, e) in nx_graph.edges():
-                        ge = nx_graph[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'black', linewidth=lw)
-                    plt.title('Width-Weighted Eigenvector Centrality Heatmap', fontdict=font_1)
-                    cbar = plt.colorbar()
-                    cbar.set_label('Value')
-                    pdf.savefig()
-                    plt.close()
+                figs = self.display_heatmaps()
+                for fig in figs:
+                    pdf.savefig(fig)
 
             # 8. displaying run information
             f8 = plt.figure(figsize=(8.5, 8.5), dpi=300)
@@ -833,6 +753,7 @@ class GraphMetrics:
         self.g_struct.save_files()
 
     def get_info(self):
+
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
         opt_img = self.g_struct.configs_img
         opt_gte = self.g_struct.configs_graph
@@ -878,6 +799,7 @@ class GraphMetrics:
         return run_info
 
     def compute_betweenness_centrality(self):
+
         """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
 
@@ -911,6 +833,7 @@ class GraphMetrics:
         # 5. Calculate betweenness from T
 
     def average_node_connectivity(self, flow_func=None):
+
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
