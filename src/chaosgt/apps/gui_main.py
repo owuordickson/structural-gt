@@ -1410,7 +1410,6 @@ class Worker(QtCore.QRunnable):
             if options_gte.weighted_by_diameter:
                 metrics_obj.compute_weighted_gt_metrics()
             # metrics_obj.generate_pdf_output()
-            # metrics_obj.g_struct.save_files()
             metrics_obj.remove_listener(self.update_progress)
             self.signals.finished.emit(2, metrics_obj)
         except Exception as err:

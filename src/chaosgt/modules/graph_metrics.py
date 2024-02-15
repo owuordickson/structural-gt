@@ -225,7 +225,7 @@ class GraphMetrics:
             self.update_status([60, "Computing graph conductance..."])
             # res_items, sg_components = self.g_struct.approx_conductance_by_spectral()
             data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round(self.g_struct.connect_ratio * 100), 5) + "%")
+            data_dict["y"].append(str(round((self.g_struct.connect_ratio * 100), 5)) + "%")
             for item in self.g_struct.nx_info:
                 data_dict["x"].append(item["name"])
                 data_dict["y"].append(item["value"])
@@ -515,31 +515,35 @@ class GraphMetrics:
 
         img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
 
-        fig, axs = plt.subplots(2, 2, figsize=(8.5, 8.5), dpi=400)
+        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+        ax_1 = fig.add_subplot(2, 2, 1)
+        ax_2 = fig.add_subplot(2, 2, 2)
+        ax_3 = fig.add_subplot(2, 2, 3)
+        ax_4 = fig.add_subplot(2, 2, 4)
 
-        axs[0, 0].set_title("Original Image")
-        axs[0, 0].imshow(raw_img, cmap='gray')
-        axs[0, 0].set_axis_off()
+        ax_1.set_title("Original Image")
+        ax_1.set_axis_off()
+        ax_1.imshow(raw_img, cmap='gray')
 
-        axs[0, 1].set_title("Processed Image")
-        axs[0, 1].imshow(filtered_img, cmap='gray')
-        axs[0, 1].set_axis_off()
+        ax_2.set_title("Processed Image")
+        ax_2.set_axis_off()
+        ax_2.imshow(filtered_img, cmap='gray')
 
-        axs[1, 0].set_title("Binary Image")
-        axs[1, 0].imshow(img_bin, cmap='gray')
-        axs[1, 0].set_axis_off()
+        ax_3.set_title("Binary Image")
+        ax_3.set_axis_off()
+        ax_3.imshow(img_bin, cmap='gray')
 
-        axs[1, 1].set_title("Histogram of Processed Image")
-        axs[1, 1].set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        axs[1, 1].plot(img_histogram)
+        ax_4.set_title("Histogram of Processed Image")
+        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+        ax_4.plot(img_histogram)
         if opt_img.threshold_type == 0:
             thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
                                    [0, max(img_histogram)]], dtype='object')
-            axs[1, 1].plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         elif opt_img.threshold_type == 2:
             thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
                                    [0, max(img_histogram)]], dtype='object')
-            axs[1, 1].plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
 
     def display_skeletal_images(self):
@@ -549,36 +553,38 @@ class GraphMetrics:
         g_skel = self.g_struct.graph_skeleton
         img = self.g_struct.img
 
-        fig, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=400)
-        for ax in axs.flat:
-            ax.set_axis_off()
+        fig = plt.Figure(figsize=(8.5, 11), dpi=400)
+        ax_1 = fig.add_subplot(2, 1, 1)
+        ax_2 = fig.add_subplot(2, 1, 2)
 
-        axs[0].set_title("Skeletal Image")
-        axs[0].imshow(g_skel.skel_int, cmap='gray')
-        axs[0].scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
-        axs[0].scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
+        ax_1.set_title("Skeletal Image")
+        ax_1.set_axis_off()
+        ax_1.imshow(g_skel.skel_int, cmap='gray')
+        ax_1.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
+        ax_1.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
 
-        axs[1].set_title("Final Graph")
-        axs[1].imshow(img, cmap='gray')
+        ax_2.set_title("Final Graph")
+        ax_2.set_axis_off()
+        ax_2.imshow(img, cmap='gray')
         if opt_gte.is_multigraph:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
                     ge = nx_graph[s][e][k]['pts']
-                    axs[1].plot(ge[:, 1], ge[:, 0], 'red')
+                    ax_2.plot(ge[:, 1], ge[:, 0], 'red')
         else:
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
-                axs[1].plot(ge[:, 1], ge[:, 0], 'red')
+                ax_2.plot(ge[:, 1], ge[:, 0], 'red')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         if opt_gte.display_node_id == 1:
             i = 0
             for x, y in zip(gn[:, 1], gn[:, 0]):
-                axs[1].annotate(str(i), (x, y), fontsize=5)
+                ax_2.annotate(str(i), (x, y), fontsize=5)
                 i += 1
-            axs[1].plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
         else:
-            axs[1].plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
         return fig
 
     def display_gt_results(self):
@@ -587,7 +593,8 @@ class GraphMetrics:
         data = self.output_data
         w_data = self.weighted_output_data
 
-        fig, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=300)
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+        ax = fig.add_subplot(1, 1, 1)
         ax.set_axis_off()
         ax.set_title("Unweighted GT parameters")
         col_width = [2 / 3, 1 / 3]
@@ -595,7 +602,8 @@ class GraphMetrics:
         tab_1.scale(1, 1.5)
 
         if opt_gte.weighted_by_diameter == 1:
-            fig_wt, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=300)
+            fig_wt = plt.Figure(figsize=(8.5, 11), dpi=300)
+            ax = fig_wt.add_subplot(1, 1, 1)
             ax.set_axis_off()
             ax.set_title("Weighted GT parameters")
             tab_2 = ax.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
@@ -624,9 +632,7 @@ class GraphMetrics:
         cf_distribution = self.currentflow_distribution
 
         # Degree and Closeness
-        fig, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=300)
-        for ax in axs.flat:
-            ax.set_axis_off()
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if opt_gtc.display_degree_histogram == 1:
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
             try:
@@ -634,10 +640,10 @@ class GraphMetrics:
             except StatisticsError:
                 deg_val = "N/A"
             deg_title = r'Degree Distribution: $\sigma$=' + str(deg_val)
-            axs[0].set_title(deg_title)
-            axs[0].set_axis_on()
-            axs[0].set(xlabel='Degree', ylabel='Counts')
-            axs[0].hist(deg_distribution, bins=bins)
+            ax_1 = fig.add_subplot(2, 1, 1)
+            ax_1.set_title(deg_title)
+            ax_1.set(xlabel='Degree', ylabel='Counts')
+            ax_1.hist(deg_distribution, bins=bins)
         if opt_gtc.display_closeness_histogram == 1:
             bins = np.linspace(min(clo_distribution), max(clo_distribution), 50)
             try:
@@ -645,16 +651,14 @@ class GraphMetrics:
             except StatisticsError:
                 cc_val = "N/A"
             cc_title = r"Closeness Centrality: $\sigma$=" + str(cc_val)
-            axs[1].set_title(cc_title)
-            axs[1].set_axis_on()
-            axs[1].set(xlabel='Closeness value', ylabel='Counts')
-            axs[1].hist(clo_distribution, bins=bins)
+            ax_2 = fig.add_subplot(2, 1, 2)
+            ax_2.set_title(cc_title)
+            ax_2.set(xlabel='Closeness value', ylabel='Counts')
+            ax_2.hist(clo_distribution, bins=bins)
         figs.append(fig)
 
         # Betweenness, Clustering, Currentflow and Eigenvector
-        fig, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
-        for ax in axs.flat:
-            ax.set_axis_off()
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
             bins = np.linspace(min(bet_distribution), max(bet_distribution), 50)
             try:
@@ -662,10 +666,10 @@ class GraphMetrics:
             except StatisticsError:
                 bt_val = "N/A"
             bc_title = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
-            axs[0, 0].set_title(bc_title)
-            axs[0, 0].set_axis_on()
-            axs[0, 0].set(xlabel='Betweenness value', ylabel='Counts')
-            axs[0, 0].hist(bet_distribution, bins=bins)
+            ax_1 = fig.add_subplot(2, 2, 1)
+            ax_1.set_title(bc_title)
+            ax_1.set(xlabel='Betweenness value', ylabel='Counts')
+            ax_1.hist(bet_distribution, bins=bins)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
             bins = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
             try:
@@ -673,10 +677,10 @@ class GraphMetrics:
             except StatisticsError:
                 t_val = "N/A"
             clu_title = r"Clustering Coefficients: $\sigma$=" + str(t_val)
-            axs[0, 1].set_title(clu_title)
-            axs[0, 1].set_axis_on()
-            axs[0, 1].set(xlabel='Clust. Coeff.', ylabel='Counts')
-            axs[0, 1].hist(cluster_coefs, bins=bins)
+            ax_2 = fig.add_subplot(2, 2, 2)
+            ax_2.set_title(clu_title)
+            ax_2.set(xlabel='Clust. Coeff.', ylabel='Counts')
+            ax_2.hist(cluster_coefs, bins=bins)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
             bins = np.linspace(min(cf_distribution), max(cf_distribution), 50)
             try:
@@ -684,10 +688,10 @@ class GraphMetrics:
             except StatisticsError:
                 cf_val = "N/A"
             cf_title = r"Current-flow betweenness Centrality: $\sigma$=" + str(cf_val)
-            axs[1, 0].set_title(cf_title)
-            axs[1, 0].set_axis_on()
-            axs[1, 0].set(xlabel='Betweenness value', ylabel='Counts')
-            axs[1, 0].hist(cf_distribution, bins=bins)
+            ax_3 = fig.add_subplot(2, 2, 3)
+            ax_3.set_title(cf_title)
+            ax_3.set(xlabel='Betweenness value', ylabel='Counts')
+            ax_3.hist(cf_distribution, bins=bins)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
             bins = np.linspace(min(eig_distribution), max(eig_distribution), 50)
             try:
@@ -695,17 +699,15 @@ class GraphMetrics:
             except StatisticsError:
                 ec_val = "N/A"
             ec_title = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
-            axs[1, 1].set_title(ec_title)
-            axs[1, 1].set_axis_on()
-            axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
-            axs[1, 1].hist(eig_distribution, bins=bins)
+            ax_4 = fig.add_subplot(2, 2, 4)
+            ax_4.set_title(ec_title)
+            ax_4.set(xlabel='Eigenvector value', ylabel='Counts')
+            ax_4.hist(eig_distribution, bins=bins)
         figs.append(fig)
 
         # weighted histograms
         if opt_gte.weighted_by_diameter == 1:
-            fig, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
-            for ax in axs.flat:
-                ax.set_axis_off()
+            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             if opt_gtc.display_degree_histogram == 1:
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                 try:
@@ -713,10 +715,10 @@ class GraphMetrics:
                 except StatisticsError:
                     w_deg_val = "N/A"
                 w_deg_title = r"Weighted Degree: $\sigma$=" + str(w_deg_val)
-                axs[0, 0].set_title(w_deg_title, fontdict=font_1)
-                axs[0, 0].set_axis_on()
-                axs[0, 0].set(xlabel='Degree', ylabel='Counts')
-                axs[0, 0].hist(w_deg_distribution, bins=bins)
+                ax_1 = fig.add_subplot(2, 2, 1)
+                ax_1.set_title(w_deg_title, fontdict=font_1)
+                ax_1.set(xlabel='Degree', ylabel='Counts')
+                ax_1.hist(w_deg_distribution, bins=bins)
 
             if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
                 bins = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
@@ -725,10 +727,10 @@ class GraphMetrics:
                 except StatisticsError:
                     w_bt_val = "N/A"
                 w_bt_title = r"Width-Weighted Betweenness: $\sigma$=" + str(w_bt_val)
-                axs[0, 1].set_title(w_bt_title, fontdict=font_1)
-                axs[0, 1].set_axis_on()
-                axs[0, 1].set(xlabel='Betweenness value', ylabel='Counts')
-                axs[0, 1].hist(w_bet_distribution, bins=bins)
+                ax_2 = fig.add_subplot(2, 2, 2)
+                ax_2.set_title(w_bt_title, fontdict=font_1)
+                ax_2.set(xlabel='Betweenness value', ylabel='Counts')
+                ax_2.hist(w_bet_distribution, bins=bins)
             if opt_gtc.display_closeness_histogram == 1:
                 bins = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
                 try:
@@ -736,10 +738,10 @@ class GraphMetrics:
                 except StatisticsError:
                     w_clo_val = "N/A"
                 w_clo_title = r"Length-Weighted Closeness: $\sigma$=" + str(w_clo_val)
-                axs[1, 0].set_title(w_clo_title, fontdict=font_1)
-                axs[1, 0].set_axis_on()
-                axs[1, 0].set(xlabel='Closeness value', ylabel='Counts')
-                axs[1, 0].hist(w_clo_distribution, bins=bins)
+                ax_3 = fig.add_subplot(2, 2, 3)
+                ax_3.set_title(w_clo_title, fontdict=font_1)
+                ax_3.set(xlabel='Closeness value', ylabel='Counts')
+                ax_3.hist(w_clo_distribution, bins=bins)
             if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
                 bins = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
                 try:
@@ -747,10 +749,10 @@ class GraphMetrics:
                 except StatisticsError:
                     w_ec_val = "N/A"
                 w_ec_title = r"Width-Weighted Eigenvector Cent.: $\sigma$=" + str(w_ec_val)
-                axs[1, 1].set_title(w_ec_title, fontdict=font_1)
-                axs[1, 1].set_axis_on()
-                axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
-                axs[1, 1].hist(w_eig_distribution, bins=bins)
+                ax_4 = fig.add_subplot(2, 2, 4)
+                ax_4.set_title(w_ec_title, fontdict=font_1)
+                ax_4.set(xlabel='Eigenvector value', ylabel='Counts')
+                ax_4.hist(w_eig_distribution, bins=bins)
             figs.append(fig)
 
         return figs
@@ -759,7 +761,6 @@ class GraphMetrics:
 
         opt_gte = self.g_struct.configs_graph
         opt_gtc = self.configs
-        nx_graph = self.g_struct.nx_graph
 
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
@@ -777,61 +778,50 @@ class GraphMetrics:
         lw = 1.5
         figs = []
         # init_fig, init_ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-        # for i in range(2):
-        #    figs.append(init_fig)
-        #    axs.append(init_ax)
 
         if opt_gtc.display_degree_histogram == 1:
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(deg_distribution, 'Degree Heatmap', sz, ax)
+            fig = self.plot_histogram(deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(w_deg_distribution, 'Weighted Degree Heatmap', sz, ax)
+            fig = self.plot_histogram(w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(cluster_coefs, 'Clustering Coefficient Heatmap', sz, ax)
+            fig = self.plot_histogram(cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(bet_distribution, 'Betweenness Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc.display_closeness_histogram == 1:
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(clo_distribution, 'Closeness Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(eig_distribution, 'Eigenvector Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig, ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
-            self.plot_histogram(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, ax)
+            fig = self.plot_histogram(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 
     def display_info(self):
 
-        fig, ax = plt.subplots(1, 1, figsize=(8.5, 8.5), dpi=300)
+        fig = plt.Figure(figsize=(8.5, 8.5), dpi=300)
+        ax = fig.add_subplot(1, 1, 1)
         ax.set_axis_off()
-        ax.set_title("Unweighted GT parameters")
+        ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
         opt_img = self.g_struct.configs_img
         opt_gte = self.g_struct.configs_graph
         _, filename = os.path.split(self.g_struct.img_path)
-        run_info = "Run Info\n"
+        run_info = ""
         run_info = run_info + filename + "\n"
         now = datetime.datetime.now()
         run_info = run_info + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
@@ -874,26 +864,30 @@ class GraphMetrics:
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
 
-    def plot_histogram(self, distribution, title, size, ax):
+    def plot_histogram(self, distribution, title, size, line_width):
+
         nx_graph = self.g_struct.nx_graph
+        opt_gte = self.g_struct.configs_graph
         img = self.g_struct.img
         font_1 = {'fontsize': 9}
 
+        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+        ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title, fontdict=font_1)
 
         ax.imshow(img, cmap='gray')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
-        cbar = plt.colorbar(ax.collections[0], ax=ax, orientation='vertical')  # Corrected line
+        # ax.plot(ax_edges.lines[0].get_xdata(), ax_edges.lines[0].get_ydata())  # Copy the line plot
+        # nx.draw_networkx_edges(nx_graph, pos=nx.spring_layout(nx_graph), ax=ax, edge_color='black', width=line_width)
+        GraphMetrics.plot_graph_edges(nx_graph, ax, line_width, opt_gte.is_multigraph)
+        cbar = plt.colorbar(ax.collections[0], ax=ax, orientation='vertical')
         cbar.set_label('Value')
-        return ax
+        return fig
 
     @staticmethod
-    def plot_histogram_bare(nx_graph, line_width, is_multigraph=False):
-        fig, ax = plt.subplots(1, 1, figsize=(8.5, 8.5), dpi=400)
-        ax.set_axis_off()
-
+    def plot_graph_edges(nx_graph, ax, line_width, is_multigraph=False):
         if is_multigraph:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -903,4 +897,4 @@ class GraphMetrics:
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
-        return fig, ax
+        # return fig, ax
