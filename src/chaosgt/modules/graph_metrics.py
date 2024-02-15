@@ -348,13 +348,259 @@ class GraphMetrics:
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
+    def display_images(self):
+
+        opt_img = self.g_struct.configs_img
+        raw_img = self.g_struct.img
+        filtered_img = self.g_struct.img_filtered
+        img_bin = self.g_struct.img_bin
+
+        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
+
+        fig, axs = plt.subplots(2, 2, figsize=(8.5, 8.5), dpi=400)
+
+        axs[0, 0].set_title("Original Image")
+        axs[0, 0].imshow(raw_img, cmap='gray')
+        axs[0, 0].set_axis_off()
+
+        axs[0, 1].set_title("Processed Image")
+        axs[0, 1].imshow(filtered_img, cmap='gray')
+        axs[0, 1].set_axis_off()
+
+        axs[1, 0].set_title("Binary Image")
+        axs[1, 0].imshow(img_bin, cmap='gray')
+        axs[1, 0].set_axis_off()
+
+        axs[1, 1].set_title("Histogram of Processed Image")
+        axs[1, 1].set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+        axs[1, 1].plot(img_histogram)
+        if opt_img.threshold_type == 0:
+            thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
+                                   [0, max(img_histogram)]], dtype='object')
+            axs[1, 1].plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        elif opt_img.threshold_type == 2:
+            thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
+                                   [0, max(img_histogram)]], dtype='object')
+            axs[1, 1].plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        return fig
+
+    def display_skeletal_images(self):
+
+        opt_gte = self.g_struct.configs_graph
+        nx_graph = self.g_struct.nx_graph
+        g_skel = self.g_struct.graph_skeleton
+        # raw_img = self.g_struct.img
+        filtered_img = self.g_struct.img_filtered
+
+        fig, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=400)
+        for ax in axs.flat:
+            ax.set_axis_off()
+
+        axs[0].set_title("Skeletal Image")
+        axs[0].imshow(g_skel.skel_int, cmap='gray')
+        axs[0].scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
+        axs[0].scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
+
+        axs[1].set_title("Final Graph")
+        axs[1].imshow(filtered_img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    axs[1].plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                axs[1].plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        if opt_gte.display_node_id == 1:
+            i = 0
+            for x, y in zip(gn[:, 1], gn[:, 0]):
+                axs[1].annotate(str(i), (x, y), fontsize=5)
+                i += 1
+            axs[1].plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        else:
+            axs[1].plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        return fig
+
+    def display_gt_results(self):
+
+        opt_gte = self.g_struct.configs_graph
+        data = self.output_data
+        w_data = self.weighted_output_data
+
+        fig, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=300)
+        ax.set_axis_off()
+        ax.set_title("Unweighted GT parameters")
+        col_width = [2 / 3, 1 / 3]
+        tab_1 = ax.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
+        tab_1.scale(1, 1.5)
+
+        if opt_gte.weighted_by_diameter == 1:
+            fig_wt, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=300)
+            ax.set_axis_off()
+            ax.set_title("Weighted GT parameters")
+            tab_2 = ax.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
+            tab_2.scale(1, 1.5)
+        else:
+            fig_wt = None
+        return fig, fig_wt
+
+    def display_histograms(self):
+
+        opt_gte = self.g_struct.configs_graph
+        opt_gtc = self.configs
+        font_1 = {'fontsize': 9}
+
+        deg_distribution = self.degree_distribution
+        w_deg_distribution = self.weighted_degree_distribution
+        cluster_coefs = self.clustering_coefficients
+        # w_cluster_coefs = self.weighted_clustering_coefficients
+        bet_distribution = self.betweenness_distribution
+        w_bet_distribution = self.weighted_betweenness_distribution
+        clo_distribution = self.closeness_distribution
+        w_clo_distribution = self.weighted_closeness_distribution
+        eig_distribution = self.eigenvector_distribution
+        w_eig_distribution = self.weighted_eigenvector_distribution
+        cf_distribution = self.currentflow_distribution
+        
+        # Degree and Closeness
+        fig_1, axs = plt.subplots(2, 1, figsize=(8.5, 11), dpi=300)
+        for ax in axs.flat:
+            ax.set_axis_off()
+        if opt_gtc.display_degree_histogram == 1:
+            bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
+            try:
+                deg_val = str(round(stdev(deg_distribution), 3))
+            except StatisticsError:
+                deg_val = "N/A"
+            deg_title = r'Degree Distribution: $\sigma$=' + str(deg_val)
+            axs[0].set_title(deg_title)
+            axs[0].set_axis_on()
+            axs[0].set(xlabel='Degree', ylabel='Counts')
+            axs[0].hist(deg_distribution, bins=bins)
+        if opt_gtc.display_closeness_histogram == 1:
+            bins = np.linspace(min(clo_distribution), max(clo_distribution), 50)
+            try:
+                cc_val = str(round(stdev(clo_distribution), 3))
+            except StatisticsError:
+                cc_val = "N/A"
+            cc_title = r"Closeness Centrality: $\sigma$=" + str(cc_val)
+            axs[1].set_title(cc_title)
+            axs[1].set_axis_on()
+            axs[1].set(xlabel='Closeness value', ylabel='Counts')
+            axs[1].hist(clo_distribution, bins=bins)
+
+        # Betweenness, Clustering, Currentflow and Eigenvector
+        fig_2, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
+        for ax in axs.flat:
+            ax.set_axis_off()
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
+            bins = np.linspace(min(bet_distribution), max(bet_distribution), 50)
+            try:
+                bt_val = str(round(stdev(bet_distribution), 3))
+            except StatisticsError:
+                bt_val = "N/A"
+            bc_title = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
+            axs[0, 0].set_title(bc_title)
+            axs[0, 0].set_axis_on()
+            axs[0, 0].set(xlabel='Betweenness value', ylabel='Counts')
+            axs[0, 0].hist(bet_distribution, bins=bins)
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
+            bins = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
+            try:
+                t_val = str(round(stdev(cluster_coefs), 3))
+            except StatisticsError:
+                t_val = "N/A"
+            clu_title = r"Clustering Coefficients: $\sigma$=" + str(t_val)
+            axs[0, 1].set_title(clu_title)
+            axs[0, 1].set_axis_on()
+            axs[0, 1].set(xlabel='Clust. Coeff.', ylabel='Counts')
+            axs[0, 1].hist(cluster_coefs, bins=bins)
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
+            bins = np.linspace(min(cf_distribution), max(cf_distribution), 50)
+            try:
+                cf_val = str(round(stdev(cf_distribution), 3))
+            except StatisticsError:
+                cf_val = "N/A"
+            cf_title = r"Current-flow betweenness Centrality: $\sigma$=" + str(cf_val)
+            axs[1, 0].set_title(cf_title)
+            axs[1, 0].set_axis_on()
+            axs[1, 0].set(xlabel='Betweenness value', ylabel='Counts')
+            axs[1, 0].hist(cf_distribution, bins=bins)
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
+            bins = np.linspace(min(eig_distribution), max(eig_distribution), 50)
+            try:
+                ec_val = str(round(stdev(eig_distribution), 3))
+            except StatisticsError:
+                ec_val = "N/A"
+            ec_title = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
+            axs[1, 1].set_title(ec_title)
+            axs[1, 1].set_axis_on()
+            axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
+            axs[1, 1].hist(eig_distribution, bins=bins)
+        
+        # weighted histograms
+        fig_3 = None
+        if opt_gte.weighted_by_diameter == 1:
+            fig_3, axs = plt.subplots(2, 2, figsize=(8.5, 11), dpi=300)
+            for ax in axs.flat:
+                ax.set_axis_off()
+            if opt_gtc.display_degree_histogram == 1:
+                bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
+                try:
+                    w_deg_val = str(round(stdev(w_deg_distribution), 3))
+                except StatisticsError:
+                    w_deg_val = "N/A"
+                w_deg_title = r"Weighted Degree: $\sigma$=" + str(w_deg_val)
+                axs[0, 0].set_title(w_deg_title, fontdict=font_1)
+                axs[0, 0].set_axis_on()
+                axs[0, 0].set(xlabel='Degree', ylabel='Counts')
+                axs[0, 0].hist(w_deg_distribution, bins=bins)
+
+            if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
+                bins = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
+                try:
+                    w_bt_val = str(round(stdev(w_bet_distribution), 3))
+                except StatisticsError:
+                    w_bt_val = "N/A"
+                w_bt_title = r"Width-Weighted Betweenness: $\sigma$=" + str(w_bt_val)
+                axs[0, 1].set_title(w_bt_title, fontdict=font_1)
+                axs[0, 1].set_axis_on()
+                axs[0, 1].set(xlabel='Betweenness value', ylabel='Counts')
+                axs[0, 1].hist(w_bet_distribution, bins=bins)
+            if opt_gtc.display_closeness_histogram == 1:
+                bins = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
+                try:
+                    w_clo_val = str(round(stdev(w_clo_distribution), 3))
+                except StatisticsError:
+                    w_clo_val = "N/A"
+                w_clo_title = r"Length-Weighted Closeness: $\sigma$=" + str(w_clo_val)
+                axs[1, 0].set_title(w_clo_title, fontdict=font_1)
+                axs[1, 0].set_axis_on()
+                axs[1, 0].set(xlabel='Closeness value', ylabel='Counts')
+                axs[1, 0].hist(w_clo_distribution, bins=bins)
+            if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
+                bins = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
+                try:
+                    w_ec_val = str(round(stdev(w_eig_distribution), 3))
+                except StatisticsError:
+                    w_ec_val = "N/A"
+                w_ec_title = r"Width-Weighted Eigenvector Cent.: $\sigma$=" + str(w_ec_val)
+                axs[1, 1].set_title(w_ec_title, fontdict=font_1)
+                axs[1, 1].set_axis_on()
+                axs[1, 1].set(xlabel='Eigenvector value', ylabel='Counts')
+                axs[1, 1].hist(w_eig_distribution, bins=bins)
+                
+        return fig_1, fig_2, fig_3
+
     def generate_pdf_output(self):
         """
 
         :return:
         """
 
-        opt_img = self.g_struct.configs_img
         opt_gte = self.g_struct.configs_graph
         opt_gtc = self.configs
 
@@ -370,13 +616,9 @@ class GraphMetrics:
         w_eig_distribution = self.weighted_eigenvector_distribution
         cf_distribution = self.currentflow_distribution
 
-        data = self.output_data
-        w_data = self.weighted_output_data
         nx_graph = self.g_struct.nx_graph
-
         raw_img = self.g_struct.img
-        filtered_img = self.g_struct.img_filtered
-        img_bin = self.g_struct.img_bin
+
         filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
         pdf_filename = filename + "_SGT_results.pdf"
         pdf_file = os.path.join(output_location, pdf_filename)
@@ -387,265 +629,31 @@ class GraphMetrics:
             font_2 = {'fontsize': 9}
 
             # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
-            f1 = plt.figure(figsize=(8.5, 8.5), dpi=400)
-            f1.add_subplot(2, 2, 1)
-            plt.imshow(raw_img, cmap='gray')
-            plt.title("Original Image")
-            f1.add_subplot(2, 2, 2)
-            plt.imshow(filtered_img, cmap='gray')
-            plt.title("Processed Image")
-            f1.add_subplot(2, 2, 3)
-            plt.plot(img_histogram)
-            if opt_img.threshold_type == 0:
-                thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
-                                       [0, max(img_histogram)]], dtype='object')
-                plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-            elif opt_img.threshold_type == 2:
-                thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
-                                       [0, max(img_histogram)]], dtype='object')
-                plt.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-            plt.title("Histogram of Processed Image")
-            plt.xlabel("Pixel values")
-            plt.ylabel("Counts")
-            f1.add_subplot(2, 2, 4)
-            plt.imshow(img_bin, cmap='gray')
-            plt.title("Binary Image")
-
-            pdf.savefig()
-            plt.close()
+            fig = self.display_images()
+            pdf.savefig(fig)
 
             # 2. plotting skeletal images
-            g_skel = self.g_struct.graph_skeleton
-            f2a = plt.figure(figsize=(8.5, 11), dpi=400)
-            f2a.add_subplot(2, 1, 1)
-            # g_skel.skel_int = -1*(g_skel.skel_int-1)
-            plt.imshow(g_skel.skel_int, cmap='gray')
-            plt.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
-            plt.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
-            plt.title("Skeletal Image")
-            f2a.add_subplot(2, 1, 2)
-            plt.imshow(raw_img, cmap='gray')
-            if opt_gte.is_multigraph:
-                for (s, e) in nx_graph.edges():
-                    for k in range(int(len(nx_graph[s][e]))):
-                        ge = nx_graph[s][e][k]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], 'red')
-            else:
-                for (s, e) in nx_graph.edges():
-                    ge = nx_graph[s][e]['pts']
-                    plt.plot(ge[:, 1], ge[:, 0], 'red')
+            fig = self.display_skeletal_images()
+            pdf.savefig(fig)
 
-            # 3. plotting the final graph with the nodes
-            nodes = nx_graph.nodes()
-            gn = np.array([nodes[i]['o'] for i in nodes])
-            if opt_gte.display_node_id == 1:
-                i = 0
-                for x, y in zip(gn[:, 1], gn[:, 0]):
-                    plt.annotate(str(i), (x, y), fontsize=5)
-                    i += 1
-                plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-            else:
-                plt.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-            plt.title("Final Graph")
-            pdf.savefig()
-            plt.close()
+            # 3. plotting sub-graph network
+            fig_3, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=400)
+            ax.set_axis_off()
+            ax.set_title("Graph Components")
+            # ax.imshow(self.g_struct.img_plot, cmap='gray')
+            pdf.savefig(fig_3)
 
-            # 4. plotting sub-graph network
-            if len(self.g_struct.nx_components) > 0:
-                f2b = plt.figure(figsize=(8.5, 11), dpi=400)
-                f2b.add_subplot(1, 1, 1)
-                plt.imshow(raw_img, cmap='gray')
-                color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-                color_cycle = itertools.cycle(color_list)
-                for component in self.g_struct.nx_components:
-                    sg = nx_graph.subgraph(component)
-                    color = next(color_cycle)
-                    for (s, e) in sg.edges():
-                        ge = sg[s][e]['pts']
-                        plt.plot(ge[:, 1], ge[:, 0], color)
-                plt.title("Sub Graphs")
-                pdf.savefig()
-                plt.close()
+            # 4. displaying all the GT calculations in Table  on entire page
+            fig, fit_wt = self.display_gt_results()
+            pdf.savefig(fig)
+            if fit_wt:
+                pdf.savefig(fit_wt)
 
-            # 5. displaying all the GT calculations in Table  on entire page
-            f3a = plt.figure(figsize=(8.5, 11), dpi=300)
-            f3a.add_subplot(1, 1, 1)
-            f3a.patch.set_visible(False)
-            plt.axis('off')
-            col_width = [2 / 3, 1 / 3]
-            table = plt.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
-            table.scale(1, 1.5)
-            plt.title("Unweighted GT parameters")
-            pdf.savefig()
-            plt.close()
-
-            if opt_gte.weighted_by_diameter == 1:
-                # try:  # generates exception is w_data is None
-                f3b = plt.figure(figsize=(8.5, 11), dpi=300)
-                f3b.add_subplot(1, 1, 1)
-                f3b.patch.set_visible(False)
-                plt.axis('off')
-                col_width = [2 / 3, 1 / 3]
-                tab_2 = plt.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
-                tab_2.scale(1, 1.5)
-                plt.title("Weighted GT Parameters")
-                pdf.savefig()
-                plt.close()
-                # except:
-                #    pass
-
-            # 6. displaying histograms
-            f4a = plt.figure(figsize=(8.5, 11), dpi=300)
-            if opt_gtc.display_degree_histogram == 1:
-                f4a.add_subplot(2, 2, 1)
-                bins_1 = np.arange(0.5, max(deg_distribution) + 1.5, 1)
-                try:
-                    deg_val = str(round(stdev(deg_distribution), 3))
-                except StatisticsError:
-                    deg_val = "N/A"
-                deg_txt = r'Degree Distribution: $\sigma$=' + str(deg_val)
-                plt.hist(deg_distribution, bins=bins_1)
-                plt.title(deg_txt)
-                plt.xlabel("Degree")
-                plt.ylabel("Counts")
-            if opt_gtc.display_closeness_histogram == 1:
-                f4a.add_subplot(2, 2, 2)
-                bins_3 = np.linspace(min(clo_distribution), max(clo_distribution), 50)
-                try:
-                    cc_val = str(round(stdev(clo_distribution), 3))
-                except StatisticsError:
-                    cc_val = "N/A"
-                cc_txt = r"Closeness Centrality: $\sigma$=" + str(cc_val)
-                plt.hist(clo_distribution, bins=bins_3)
-                plt.title(cc_txt)
-                plt.xlabel("Closeness value")
-                plt.ylabel("Counts")
-            pdf.savefig()
-            plt.close()
-
-            f4b = plt.figure(figsize=(8.5, 11), dpi=400)
-            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
-                f4b.add_subplot(2, 2, 1)
-                bins_2 = np.linspace(min(bet_distribution), max(bet_distribution), 50)
-                try:
-                    bt_val = str(round(stdev(bet_distribution), 3))
-                except StatisticsError:
-                    bt_val = "N/A"
-                bc_txt = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
-                plt.hist(bet_distribution, bins=bins_2)
-                plt.title(bc_txt)
-                plt.xlabel("Betweenness value")
-                plt.ylabel("Counts")
-            if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
-                f4b.add_subplot(2, 2, 2)
-                bins_t = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
-                try:
-                    t_val = str(round(stdev(cluster_coefs), 3))
-                except StatisticsError:
-                    t_val = "N/A"
-                t_txt = r"Clustering Coefficients: $\sigma$=" + str(t_val)
-                plt.hist(cluster_coefs, bins=bins_t)
-                plt.title(t_txt)
-                plt.xlabel("Clust. Coeff.")
-                plt.ylabel("Counts")
-            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
-                f4b.add_subplot(2, 2, 3)
-                bins_2 = np.linspace(min(cf_distribution), max(cf_distribution), 50)
-                try:
-                    cf_val = str(round(stdev(cf_distribution), 3))
-                except StatisticsError:
-                    cf_val = "N/A"
-                cf_txt = r"Current-flow betweenness Centrality: $\sigma$=" + str(cf_val)
-                plt.hist(cf_distribution, bins=bins_2)
-                plt.title(cf_txt)
-                plt.xlabel("Betweenness value")
-                plt.ylabel("Counts")
-            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
-                f4b.add_subplot(2, 2, 4)
-                bins4 = np.linspace(min(eig_distribution), max(eig_distribution), 50)
-                try:
-                    ec_val = str(round(stdev(eig_distribution), 3))
-                except StatisticsError:
-                    ec_val = "N/A"
-                ec_txt = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
-                plt.hist(eig_distribution, bins=bins4)
-                plt.title(ec_txt)
-                plt.xlabel("Eigenvector value")
-                plt.ylabel("Counts")
-            pdf.savefig()
-            plt.close()
-
-            if opt_gte.weighted_by_diameter == 1:
-                if opt_gte.is_multigraph == 1:
-                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.display_closeness_histogram
-                else:
-                    g_count_1 = opt_gtc.display_degree_histogram + opt_gtc.compute_clustering_coef + \
-                                opt_gtc.display_betweenness_histogram + opt_gtc.display_closeness_histogram + \
-                                opt_gtc.display_eigenvector_histogram
-                g_count_2 = g_count_1 - opt_gtc.compute_clustering_coef + 1
-                f5 = plt.figure(figsize=(8.5, 11), dpi=400)
-                if g_count_2 > 2:
-                    sy_2 = 2
-                    fnt = font_2
-                else:
-                    sy_2 = 1
-                    fnt = font_1
-                index = 1
-                if opt_gtc.display_degree_histogram == 1:
-                    f5.add_subplot(sy_2, 2, index)
-                    bins4 = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
-                    try:
-                        w_deg_val = str(round(stdev(w_deg_distribution), 3))
-                    except StatisticsError:
-                        w_deg_val = "N/A"
-                    w_deg_txt = r"Weighted Degree: $\sigma$=" + str(w_deg_val)
-                    plt.hist(w_deg_distribution, bins=bins4)
-                    plt.title(w_deg_txt, fontdict=fnt)
-                    plt.xlabel("Degree", fontdict=fnt)
-                    plt.ylabel("Counts", fontdict=fnt)
-                    index += 1
-                if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-                    f5.add_subplot(sy_2, 2, index)
-                    bins_5 = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
-                    plt.hist(w_bet_distribution, bins=bins_5)
-                    try:
-                        w_bt_val = str(round(stdev(w_bet_distribution), 3))
-                    except StatisticsError:
-                        w_bt_val = "N/A"
-                    w_bt_txt = r"Width-Weighted Betweenness: $\sigma$=" + str(w_bt_val)
-                    plt.title(w_bt_txt, fontdict=fnt)
-                    plt.xlabel("Betweenness value", fontdict=fnt)
-                    plt.ylabel("Counts", fontdict=fnt)
-                    index += 1
-                if opt_gtc.display_closeness_histogram == 1:
-                    f5.add_subplot(sy_2, 2, index)
-                    bins_6 = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
-                    try:
-                        w_clo_val = str(round(stdev(w_clo_distribution), 3))
-                    except StatisticsError:
-                        w_clo_val = "N/A"
-                    w_clo_txt = r"Length-Weighted Closeness: $\sigma$=" + str(w_clo_val)
-                    plt.hist(w_clo_distribution, bins=bins_6)
-                    plt.title(w_clo_txt, fontdict=fnt)
-                    plt.xlabel("Closeness value", fontdict=fnt)
-                    plt.xticks(fontsize=8)
-                    plt.ylabel("Counts", fontdict=fnt)
-                    index += 1
-                if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-                    f5.add_subplot(sy_2, 2, index)
-                    bins7 = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
-                    plt.hist(w_eig_distribution, bins=bins7)
-                    try:
-                        w_ec_val = str(round(stdev(w_eig_distribution), 3))
-                    except StatisticsError:
-                        w_ec_val = "N/A"
-                    w_ec_txt = r"Width-Weighted Eigenvector Cent.: $\sigma$=" + str(w_ec_val)
-                    plt.title(w_ec_txt, fontdict=fnt)
-                    plt.xlabel("Eigenvector value", fontdict=fnt)
-                    plt.ylabel("Counts", fontdict=fnt)
-                pdf.savefig()
-                plt.close()
+            # 5. displaying histograms
+            fig, fig_1, fig_wt = self.display_histograms()
+            pdf.savefig(fig)
+            pdf.savefig(fig_1)
+            pdf.savefig(fig_wt)
 
             # 7. displaying heatmaps
             if opt_gtc.display_heatmaps == 1:
