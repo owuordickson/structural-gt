@@ -372,11 +372,9 @@ class GraphMetrics:
             pdf.savefig(fig)
 
             # 3. plotting sub-graph network
-            fig_3, ax = plt.subplots(1, 1, figsize=(8.5, 11), dpi=400)
-            ax.set_axis_off()
-            ax.set_title("Graph Components")
-            # ax.imshow(self.g_struct.img_plot, cmap='gray')
-            pdf.savefig(fig_3)
+            fig, _ = self.g_struct.draw_graph_network(a4_size=True)
+            if fig:
+                pdf.savefig(fig)
 
             # 4. displaying all the GT calculations in Table  on entire page
             fig, fit_wt = self.display_gt_results()

@@ -96,7 +96,7 @@ class GraphStruct:
         else:
             # draw graph network
             self.update_status([90, "Drawing graph network..."])
-            self.img_plot, self.img_net = self.draw_graph_network(self.configs_graph)
+            self.img_plot, self.img_net = self.draw_graph_network()
 
     def resize_img(self, size):
         w, h = self.img_raw.shape
@@ -445,21 +445,27 @@ class GraphStruct:
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
 
-    def draw_graph_network(self, opt_gte):
+    def draw_graph_network(self, a4_size=False):
         """
 
-        :param opt_gte:
+        :param a4_size:
 
         :return:
         """
 
+        opt_gte = self.configs_graph
         nx_graph = self.nx_graph
         nx_components = self.nx_components
         raw_img = self.img
 
         if len(nx_components) > 0:
-            fig = plt.Figure()
-            ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
+            if a4_size:
+                fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+                ax = fig.add_subplot(1, 1, 1)
+                ax.set_title("Graph Sub-networks")
+            else:
+                fig = plt.Figure()
+                ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
             ax.imshow(raw_img, cmap='gray')
             color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
@@ -471,8 +477,11 @@ class GraphStruct:
                     ge = sg[s][e]['pts']
                     ax.plot(ge[:, 1], ge[:, 0], color)
         else:
-            fig = plt.Figure()
-            ax = fig.add_axes((0, 0, 1, 1))
+            if a4_size:
+                return None, None
+            else:
+                fig = plt.Figure()
+                ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
             ax.imshow(raw_img, cmap='gray')
             if opt_gte.is_multigraph:
