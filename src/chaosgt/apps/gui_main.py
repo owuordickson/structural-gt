@@ -1235,8 +1235,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')
             dialog.exec()
         elif (task == 2) and (not self.error_alert):
-            metrics_obj = obj
-            metrics_obj.generate_pdf_output()
+            # metrics_obj = obj
+            # metrics_obj.generate_pdf_output()
+            plot_data = obj
+            for plot in plot_data:
+                print(plot)
             self.lbl_progress.setText('GT calculated and PDF successfully generated!')
             self.progress_bar_main.setValue(100)
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
@@ -1371,13 +1374,16 @@ class WorkerSignals(QtCore.QObject):
 
 
 class Worker(QtCore.QRunnable):
-    def __init__(self, func_id, args):
+    def __init__(self, func_id, args, target=None):
         super().__init__()
         self.signals = WorkerSignals()
+        self.target = target
         self.target_id = func_id
         self.args = args
 
     def run(self):
+        if self.target:
+            self.target(*self.args)
         if self.target_id == 1:
             self.service_filter_img(*self.args)
         elif self.target_id == 2:
@@ -1409,9 +1415,9 @@ class Worker(QtCore.QRunnable):
             metrics_obj.compute_gt_metrics()
             if options_gte.weighted_by_diameter:
                 metrics_obj.compute_weighted_gt_metrics()
-            # metrics_obj.generate_pdf_output()
+            plot_data = metrics_obj.generate_list_output()
             metrics_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(2, metrics_obj)
+            self.signals.finished.emit(2, plot_data)
         except Exception as err:
             print(err)
 

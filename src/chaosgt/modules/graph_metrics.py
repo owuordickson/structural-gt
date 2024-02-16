@@ -369,7 +369,7 @@ class GraphMetrics:
 
             # 2. plotting skeletal images
             fig = self.display_skeletal_images()
-            pdf.savefig(fig)
+            pdf.savefig(fig)  # causes PyQt5 to crash
 
             # 3. plotting sub-graph network
             fig, _ = self.g_struct.draw_graph_network(a4_size=True)
@@ -377,10 +377,10 @@ class GraphMetrics:
                 pdf.savefig(fig)
 
             # 4. displaying all the GT calculations in Table  on entire page
-            fig, fit_wt = self.display_gt_results()
+            fig, fig_wt = self.display_gt_results()
             pdf.savefig(fig)
-            if fit_wt:
-                pdf.savefig(fit_wt)
+            if fig_wt:
+                pdf.savefig(fig_wt)
 
             # 5. displaying histograms
             self.update_status([92, "Generating histograms..."])
@@ -399,6 +399,55 @@ class GraphMetrics:
             fig = self.display_info()
             pdf.savefig(fig)
         self.g_struct.save_files()
+
+    def generate_list_output(self):
+
+        """
+
+        :return:
+        """
+
+        opt_gtc = self.configs
+        lst_fig = []
+        self.update_status([90, "Generating List GT Output..."])
+
+        # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+        fig = self.display_images()
+        lst_fig.append(fig)
+
+        # 2. plotting skeletal images
+        fig = self.display_skeletal_images()
+        lst_fig.append(fig)
+
+        # 3. plotting sub-graph network
+        fig, _ = self.g_struct.draw_graph_network(a4_size=True)
+        if fig:
+            lst_fig.append(fig)
+
+        # 4. displaying all the GT calculations in Table  on entire page
+        fig, fig_wt = self.display_gt_results()
+        lst_fig.append(fig)
+        if fig_wt:
+            lst_fig.append(fig_wt)
+
+        # 5. displaying histograms
+        self.update_status([92, "Generating histograms..."])
+        figs = self.display_histograms()
+        for fig in figs:
+            lst_fig.append(fig)
+
+        # 6. displaying heatmaps
+        if opt_gtc.display_heatmaps == 1:
+            self.update_status([95, "Generating heatmaps..."])
+            figs = self.display_heatmaps()
+            for fig in figs:
+                lst_fig.append(fig)
+
+        # 8. displaying run information
+        fig = self.display_info()
+        lst_fig.append(fig)
+        # self.g_struct.save_files()
+        return lst_fig
 
     def compute_betweenness_centrality(self):
 
