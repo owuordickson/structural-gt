@@ -10,13 +10,13 @@ Terminal interface implementations
 import time
 import os
 import multiprocessing as mp
-from ..configs.config_loader import load
+from ..configs.config_loader import load_configs
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
 
 
 def terminal_app():
-    config, options, options_img, options_gte, options_gtc = load()
+    config, options, options_img, options_gte, options_gtc = load_configs()
     alg = options.algChoice
     num_cores = options.numCores
     is_multi = options.multiImage

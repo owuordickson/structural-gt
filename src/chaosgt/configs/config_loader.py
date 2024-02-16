@@ -14,7 +14,7 @@ from optparse import OptionParser
 from ypstruct import struct
 
 
-def load():
+def load_configs():
     # Load configuration from file
     config = configparser.ConfigParser()
     try:
@@ -136,3 +136,52 @@ def load():
         sys.exit('System will exit')
 
     return config, options, options_img, options_gte, options_gtc
+
+
+def load_gui_configs():
+    # Load configuration from file
+    config = configparser.ConfigParser()
+    try:
+        config_file = os.path.join(os.getcwd(), 'chaosgt/configs/configs_gui.ini')
+        config.read(config_file)
+        title = str(config.get('gui', 'title'))
+    except configparser.NoSectionError:
+        config_file = os.path.join(os.getcwd(), 'src/chaosgt/configs/configs_gui.ini')
+        config.read(config_file)
+        title = str(config.get('gui', 'title'))
+
+    gui_txt = struct()
+    gui_txt.title = title
+
+    # 1. Extraction
+    gui_txt.weighted = str(config.get('gui', 'weighted'))
+    gui_txt.merge = str(config.get('gui', 'merge'))
+    gui_txt.prune = str(config.get('gui', 'prune'))
+    gui_txt.remove_disconnected = str(config.get('gui', 'remove_disconnected'))
+    gui_txt.remove_loops = str(config.get('gui', 'remove_loops'))
+    gui_txt.multigraph = str(config.get('gui', 'multigraph'))
+    gui_txt.node_id = str(config.get('gui', 'node_id'))
+
+    # 2. Computation
+    gui_txt.heatmaps = str(config.get('gui', 'heatmaps'))
+    gui_txt.degree = str(config.get('gui', 'degree'))
+    gui_txt.diameter = str(config.get('gui', 'diameter'))
+    gui_txt.connectivity = str(config.get('gui', 'connectivity'))
+    gui_txt.clustering = str(config.get('gui', 'clustering'))
+    gui_txt.assortativity = str(config.get('gui', 'assortativity'))
+    gui_txt.betweenness = str(config.get('gui', 'betweenness'))
+    gui_txt.current = str(config.get('gui', 'current'))
+    gui_txt.closeness = str(config.get('gui', 'closeness'))
+    gui_txt.eigenvector = str(config.get('gui', 'eigenvector'))
+    gui_txt.density = str(config.get('gui', 'density'))
+    gui_txt.conductance = str(config.get('gui', 'conductance'))
+    gui_txt.efficiency = str(config.get('gui', 'efficiency'))
+    gui_txt.wiener = str(config.get('gui', 'wiener'))
+
+    # 3. Save Files
+    gui_txt.gexf = str(config.get('gui', 'gexf'))
+    gui_txt.edge_list = str(config.get('gui', 'edge_list'))
+    gui_txt.adjacency = str(config.get('gui', 'adjacency'))
+    gui_txt.images = str(config.get('gui', 'images'))
+
+    return gui_txt

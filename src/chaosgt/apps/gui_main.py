@@ -13,7 +13,7 @@ import time
 from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
-from ..configs.config_loader import load
+from ..configs.config_loader import load_configs, load_gui_configs
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
 
@@ -40,6 +40,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_main = QtWidgets.QGridLayout(self.wdt_main)
         self.grid_layout_main.setObjectName("grid_layout_main")
 
+        self.gui_txt = load_gui_configs()
         self.__create_widgets()
 
         self.img_path = ''
@@ -471,7 +472,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def __re_translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("window_main", "Chaos GT"))
+        self.setWindowTitle(_translate("window_main", self.gui_txt.title))
         self.btn_prev.setText(_translate("window_main", "<< previous"))
         self.btn_next.setText(_translate("window_main", "next >>"))
         self.lbl_zoom.setText(_translate("window_main", "Zoom"))
@@ -523,7 +524,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _init_configs(self):
         # 1. Fetch configs
-        config, options, options_img, options_gte, options_gtc = load()
+        config, options, options_img, options_gte, options_gtc = load_configs()
 
         # 2. Initialize Settings
         self._init_tree(options_gte, options_gtc)
@@ -549,19 +550,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         # 2. Add Extraction items
         options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
-        weighted_item = TreeItem('Weighted by Diameter', 9, set_checkable=True,
+        weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.weighted_by_diameter)
         options_extraction.appendRow(weighted_item)
 
-        merge_nearby_item = TreeItem('Merge Nearby Nodes', 9, set_checkable=True,
+        merge_nearby_item = TreeItem(self.gui_txt.merge, 9, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.merge_nearby_nodes)
         options_extraction.appendRow(merge_nearby_item)
 
-        prune_dangling_item = TreeItem('Prune Dangling Edges', 9, set_checkable=True,
+        prune_dangling_item = TreeItem(self.gui_txt.prune, 9, set_checkable=True,
                                        color=QtGui.QColor(0, 0, 200), data=options_gte.prune_dangling_edges)
         options_extraction.appendRow(prune_dangling_item)
 
-        remove_disconnected_item = TreeItem('Remove Disconnected Segments (set size)', 9, set_checkable=True,
+        remove_disconnected_item = TreeItem(self.gui_txt.remove_disconnected, 9, set_checkable=True,
                                             color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
         remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False,
@@ -569,11 +570,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         remove_disconnected_item.appendRow(remove_size_item)
         options_extraction.appendRow(remove_disconnected_item)
 
-        remove_loops_item = TreeItem('Remove Self Loops', 9, set_checkable=True,
+        remove_loops_item = TreeItem(self.gui_txt.remove_loops, 9, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.remove_self_loops)
         options_extraction.appendRow(remove_loops_item)
 
-        is_multigraph_item = TreeItem('Is Multigraph?', 9, set_checkable=True,
+        is_multigraph_item = TreeItem(self.gui_txt.multigraph, 9, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200), data=options_gte.is_multigraph)
         options_extraction.appendRow(is_multigraph_item)
 
@@ -1121,19 +1122,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
             child_index = model.index(i, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Merge Nearby Nodes':
+                if item.text() == self.gui_txt.merge:
                     options_gte.merge_nearby_nodes = 1
-                if item.text() == 'Prune Dangling Edges':
+                if item.text() == self.gui_txt.prune:
                     options_gte.prune_dangling_edges = 1
-                if item.text() == 'Remove Disconnected Segments (set size)':
+                if item.text() == self.gui_txt.remove_disconnected:
                     options_gte.remove_disconnected_segments = 1
                     sub_item = item.child(0)
                     options_gte.remove_object_size = int(sub_item.text())
-                if item.text() == 'Remove Self Loops':
+                if item.text() == self.gui_txt.remove_loops:
                     options_gte.remove_self_loops = 1
-                if item.text() == 'Is Multigraph?':
+                if item.text() == self.gui_txt.multigraph:
                     options_gte.is_multigraph = 1
-                if item.text() == 'Weighted by Diameter':
+                if item.text() == self.gui_txt.weighted:
                     options_gte.weighted_by_diameter = 1
                 if item.text() == 'Display Node ID':
                     options_gte.display_node_id = 1
