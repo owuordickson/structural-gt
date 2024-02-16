@@ -561,18 +561,17 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                        color=QtGui.QColor(0, 0, 200), data=options_gte.prune_dangling_edges)
         options_extraction.appendRow(prune_dangling_item)
 
-        remove_disconnected_item = TreeItem('Remove Disconnected Segments', 9, set_checkable=True,
+        remove_disconnected_item = TreeItem('Remove Disconnected Segments (set size)', 9, set_checkable=True,
                                             color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
+        remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False,
+                                    set_editable=True, color=QtGui.QColor(0, 0, 200))
+        remove_disconnected_item.appendRow(remove_size_item)
         options_extraction.appendRow(remove_disconnected_item)
 
-        remove_loops_item = TreeItem('Remove Self Loops (set size)', 9, set_checkable=True,
+        remove_loops_item = TreeItem('Remove Self Loops', 9, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.remove_self_loops)
         options_extraction.appendRow(remove_loops_item)
-
-        remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False, set_editable=True,
-                                    color=QtGui.QColor(0, 0, 200))
-        remove_loops_item.appendRow(remove_size_item)
 
         is_multigraph_item = TreeItem('Is Multigraph?', 9, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200), data=options_gte.is_multigraph)
@@ -1103,12 +1102,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
                     options_gte.merge_nearby_nodes = 1
                 if item.text() == 'Prune Dangling Edges':
                     options_gte.prune_dangling_edges = 1
-                if item.text() == 'Remove Disconnected Segments':
+                if item.text() == 'Remove Disconnected Segments (set size)':
                     options_gte.remove_disconnected_segments = 1
-                if item.text() == 'Remove Self Loops (set size)':
-                    options_gte.remove_self_loops = 1
                     sub_item = item.child(0)
                     options_gte.remove_object_size = int(sub_item.text())
+                if item.text() == 'Remove Self Loops':
+                    options_gte.remove_self_loops = 1
                 if item.text() == 'Is Multigraph?':
                     options_gte.is_multigraph = 1
                 if item.text() == 'Weighted by Diameter':

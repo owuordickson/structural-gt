@@ -831,12 +831,14 @@ class GraphMetrics:
             run_info = run_info + " || OTSU Threshold"
         if opt_img.gamma != 1:
             run_info = run_info + "|| Gamma = " + str(opt_img.gamma)
+        run_info = run_info + "\n"
         if opt_img.apply_median:
             run_info = run_info + " || Median Filter"
         if opt_img.apply_gaussian:
-            run_info = run_info + " || Gaussian Blur, " + str(opt_img.blurring_window_size) + " bit kernel"
+            run_info = run_info + " || Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel"
         if opt_img.apply_autolevel:
-            run_info = run_info + " || Autolevel"
+            run_info = run_info + " || Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel"
+        run_info = run_info + "\n"
         if opt_img.apply_dark_foreground:
             run_info = run_info + " || Dark Foreground"
         if opt_img.apply_laplacian:
@@ -846,7 +848,7 @@ class GraphMetrics:
         if opt_img.apply_sobel:
             run_info = run_info + " || Sobel Gradient"
         if opt_img.apply_lowpass:
-            run_info = run_info + " || Low-pass filter" + str(opt_img.filter_window_size)
+            run_info = run_info + " || Low-pass filter, " + str(opt_img.lowpass_window_size)
         run_info = run_info + "\n"
         if opt_gte.merge_nearby_nodes:
             run_info = run_info + "Merge Nodes"
