@@ -69,9 +69,11 @@ def load():
     options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
     options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
     options_gte.weighted_by_diameter = int(config.get('extraction-settings', 'weighted_by_diameter'))
+    options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
     options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
     options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
-    options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
+    options_gte.export_adj_mat = int(config.get('extraction-settings', 'export_adj_mat'))
+    options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
 
     # 4. Networkx Calculation Settings
     options_gtc.display_heatmaps = int(config.get('computation-settings', 'display_heatmaps'))

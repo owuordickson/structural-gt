@@ -524,22 +524,29 @@ class GraphStruct:
         filename, output_location = self.create_filenames(self.img_path)
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
+        adj_filename = filename + "_adj.csv"
         pr_filename = filename + "_processed.jpg"
         bin_filename = filename + "_binary.jpg"
         net_filename = filename + "_final.jpg"
         gexf_file = os.path.join(output_location, g_filename)
         csv_file = os.path.join(output_location, el_filename)
+        adj_file = os.path.join(output_location, adj_filename)
         img_file = os.path.join(output_location, pr_filename)
         bin_file = os.path.join(output_location, bin_filename)
         net_file = os.path.join(output_location, net_filename)
 
-        cv2.imwrite(img_file, self.img_filtered)
-        cv2.imwrite(bin_file, self.img_bin)
-        if self.img_net.mode == "JPEG":
-            self.img_net.save(net_file, format='JPEG', quality=95)
-        elif self.img_net.mode in ["RGBA", "P"]:
-            self.img_net = self.img_net.convert("RGB")
-            self.img_net.save(net_file, format='JPEG', quality=95)
+        if opt_gte.save_images == 1:
+            cv2.imwrite(img_file, self.img_filtered)
+            cv2.imwrite(bin_file, self.img_bin)
+            if self.img_net.mode == "JPEG":
+                self.img_net.save(net_file, format='JPEG', quality=95)
+            elif self.img_net.mode in ["RGBA", "P"]:
+                self.img_net = self.img_net.convert("RGB")
+                self.img_net.save(net_file, format='JPEG', quality=95)
+
+        if opt_gte.export_adj_mat == 1:
+            adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
+            np.savetxt(adj_file, adj_mat, delimiter=",")
 
         if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:
@@ -592,16 +599,6 @@ class GraphStruct:
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
-
-    def save_adj_csv(self):
-
-        # 1. Get Adjacency matrix
-        adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
-        filename, output_location = self.create_filenames(self.img_path)
-        adj_filename = filename + "_adj.csv"
-        adj_file = os.path.join(output_location, adj_filename)
-
-        np.savetxt(adj_file, adj_mat, delimiter=",")
 
     @staticmethod
     def _task_init_weight(nx_graph, s, e):

@@ -653,6 +653,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_edge_list)
         options_save.appendRow(export_edge_item)
 
+        export_adj_item = TreeItem('Export Adjacency Matrix', 9, set_checkable=True,
+                                   color=QtGui.QColor(99, 99, 99), data=options_gte.export_adj_mat)
+        options_save.appendRow(export_adj_item)
+
+        save_images_item = TreeItem('Save All Images', 9, set_checkable=True,
+                                    color=QtGui.QColor(99, 99, 99), data=options_gte.save_images)
+        options_save.appendRow(save_images_item)
+
         # 5. Append all data
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
@@ -1034,6 +1042,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
                 if item.text() == 'Export Edge List':
                     options_file.export_edge_list = 1
+
+            child_index = model.index(2, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Export Adjacency Matrix':
+                    options_file.export_adj_mat = 1
+
+            child_index = model.index(3, 0, root_index)
+            item = model.itemFromIndex(child_index)
+            if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+                if item.text() == 'Save All Images':
+                    options_file.save_images = 1
+
             try:
                 self.graph_obj.save_files(options_file)
                 dialog = CustomDialog("Success", "All files saved in 'Output Dir'")
@@ -1091,6 +1112,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_gte.display_node_id = 0
         options_gte.export_edge_list = 0
         options_gte.export_as_gexf = 0
+        options_gte.export_adj_mat = 0
+        options_gte.save_images = 0
 
         model = self.tree_settings.model()
         root_index = model.index(0, 0)  # Assuming the root index is at row 0, column 0
@@ -1127,6 +1150,18 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
             if item.text() == 'Export Edge List':
                 options_gte.export_edge_list = 1
+
+        child_index = model.index(2, 0, root_index)
+        item = model.itemFromIndex(child_index)
+        if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+            if item.text() == 'Export Adjacency Matrix':
+                options_gte.export_adj_mat = 1
+
+        child_index = model.index(3, 0, root_index)
+        item = model.itemFromIndex(child_index)
+        if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
+            if item.text() == 'Save All Images':
+                options_gte.save_images = 1
 
         worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
         worker.signals.progress.connect(self._handle_progress_update)
