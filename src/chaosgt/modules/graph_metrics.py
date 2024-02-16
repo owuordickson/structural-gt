@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
-from networkx.algorithms import average_node_connectivity, global_efficiency, clustering, average_clustering
+from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
 from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
@@ -179,13 +179,12 @@ class GraphMetrics:
         # calculating clustering coefficients
         if (options_gte.is_multigraph == 0) and (options.compute_clustering_coef == 1):
             self.update_status([40, "Computing clustering coefficients..."])
-            avg_coefficients_1 = clustering(graph)
-            avg_coefficients = np.array(list(avg_coefficients_1.values()), dtype=float)
-            clust = average_clustering(graph)
-            clust = round(clust, 5)
-            self.clustering_coefficients = avg_coefficients
+            coefficients_1 = clustering(graph)
+            coefficients = np.array(list(coefficients_1.values()), dtype=float)
+            avg_clust = round(np.average(coefficients), 5)  # average_clustering(graph)
+            self.clustering_coefficients = coefficients
             data_dict["x"].append("Average clustering coefficient")
-            data_dict["y"].append(clust)
+            data_dict["y"].append(avg_clust)
 
         # calculating betweenness centrality histogram
         if (options_gte.is_multigraph == 0) and (options.display_betweenness_histogram == 1):
@@ -400,7 +399,7 @@ class GraphMetrics:
             pdf.savefig(fig)
         self.g_struct.save_files()
 
-    def compute_betweenness_centrality(self):
+    def err_compute_betweenness_centrality(self):
 
         """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
@@ -614,7 +613,6 @@ class GraphMetrics:
 
         opt_gte = self.g_struct.configs_graph
         opt_gtc = self.configs
-        font_1 = {'fontsize': 9}
         figs = []
 
         deg_distribution = self.degree_distribution
@@ -633,74 +631,37 @@ class GraphMetrics:
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if opt_gtc.display_degree_histogram == 1:
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
-            try:
-                deg_val = str(round(stdev(deg_distribution), 3))
-            except StatisticsError:
-                deg_val = "N/A"
-            deg_title = r'Degree Distribution: $\sigma$=' + str(deg_val)
+            deg_title = r'Degree Distribution: $\sigma$='
             ax_1 = fig.add_subplot(2, 1, 1)
-            ax_1.set_title(deg_title)
-            ax_1.set(xlabel='Degree', ylabel='Counts')
-            ax_1.hist(deg_distribution, bins=bins)
+            GraphMetrics.plot_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
+
         if opt_gtc.display_closeness_histogram == 1:
-            bins = np.linspace(min(clo_distribution), max(clo_distribution), 50)
-            try:
-                cc_val = str(round(stdev(clo_distribution), 3))
-            except StatisticsError:
-                cc_val = "N/A"
-            cc_title = r"Closeness Centrality: $\sigma$=" + str(cc_val)
+            cc_title = r"Closeness Centrality: $\sigma$="
             ax_2 = fig.add_subplot(2, 1, 2)
-            ax_2.set_title(cc_title)
-            ax_2.set(xlabel='Closeness value', ylabel='Counts')
-            ax_2.hist(clo_distribution, bins=bins)
+            GraphMetrics.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
         # Betweenness, Clustering, Currentflow and Eigenvector
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
-            bins = np.linspace(min(bet_distribution), max(bet_distribution), 50)
-            try:
-                bt_val = str(round(stdev(bet_distribution), 3))
-            except StatisticsError:
-                bt_val = "N/A"
-            bc_title = r"Betweenness Centrality: $\sigma$=" + str(bt_val)
+            bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            ax_1.set_title(bc_title)
-            ax_1.set(xlabel='Betweenness value', ylabel='Counts')
-            ax_1.hist(bet_distribution, bins=bins)
+            GraphMetrics.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
+
         if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
-            bins = np.linspace(min(cluster_coefs), max(cluster_coefs), 50)
-            try:
-                t_val = str(round(stdev(cluster_coefs), 3))
-            except StatisticsError:
-                t_val = "N/A"
-            clu_title = r"Clustering Coefficients: $\sigma$=" + str(t_val)
+            clu_title = r"Clustering Coefficients: $\sigma$="
             ax_2 = fig.add_subplot(2, 2, 2)
-            ax_2.set_title(clu_title)
-            ax_2.set(xlabel='Clust. Coeff.', ylabel='Counts')
-            ax_2.hist(cluster_coefs, bins=bins)
+            GraphMetrics.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
+
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
-            bins = np.linspace(min(cf_distribution), max(cf_distribution), 50)
-            try:
-                cf_val = str(round(stdev(cf_distribution), 3))
-            except StatisticsError:
-                cf_val = "N/A"
-            cf_title = r"Current-flow betweenness Centrality: $\sigma$=" + str(cf_val)
+            cf_title = r"Current-flow betweenness Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
-            ax_3.set_title(cf_title)
-            ax_3.set(xlabel='Betweenness value', ylabel='Counts')
-            ax_3.hist(cf_distribution, bins=bins)
+            GraphMetrics.plot_histogram(ax_3, cf_title, cf_distribution, 'Betweenness value')
+
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
-            bins = np.linspace(min(eig_distribution), max(eig_distribution), 50)
-            try:
-                ec_val = str(round(stdev(eig_distribution), 3))
-            except StatisticsError:
-                ec_val = "N/A"
-            ec_title = r"Eigenvector Centrality: $\sigma$=" + str(ec_val)
+            ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
-            ax_4.set_title(ec_title)
-            ax_4.set(xlabel='Eigenvector value', ylabel='Counts')
-            ax_4.hist(eig_distribution, bins=bins)
+            GraphMetrics.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
         # weighted histograms
@@ -708,49 +669,24 @@ class GraphMetrics:
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             if opt_gtc.display_degree_histogram == 1:
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
-                try:
-                    w_deg_val = str(round(stdev(w_deg_distribution), 3))
-                except StatisticsError:
-                    w_deg_val = "N/A"
-                w_deg_title = r"Weighted Degree: $\sigma$=" + str(w_deg_val)
+                w_deg_title = r"Weighted Degree: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                ax_1.set_title(w_deg_title, fontdict=font_1)
-                ax_1.set(xlabel='Degree', ylabel='Counts')
-                ax_1.hist(w_deg_distribution, bins=bins)
+                GraphMetrics.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
             if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-                bins = np.linspace(min(w_bet_distribution), max(w_bet_distribution), 50)
-                try:
-                    w_bt_val = str(round(stdev(w_bet_distribution), 3))
-                except StatisticsError:
-                    w_bt_val = "N/A"
-                w_bt_title = r"Width-Weighted Betweenness: $\sigma$=" + str(w_bt_val)
+                w_bt_title = r"Width-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
-                ax_2.set_title(w_bt_title, fontdict=font_1)
-                ax_2.set(xlabel='Betweenness value', ylabel='Counts')
-                ax_2.hist(w_bet_distribution, bins=bins)
+                GraphMetrics.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
+
             if opt_gtc.display_closeness_histogram == 1:
-                bins = np.linspace(min(w_clo_distribution), max(w_clo_distribution), 50)
-                try:
-                    w_clo_val = str(round(stdev(w_clo_distribution), 3))
-                except StatisticsError:
-                    w_clo_val = "N/A"
-                w_clo_title = r"Length-Weighted Closeness: $\sigma$=" + str(w_clo_val)
+                w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
-                ax_3.set_title(w_clo_title, fontdict=font_1)
-                ax_3.set(xlabel='Closeness value', ylabel='Counts')
-                ax_3.hist(w_clo_distribution, bins=bins)
+                GraphMetrics.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
+
             if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-                bins = np.linspace(min(w_eig_distribution), max(w_eig_distribution), 50)
-                try:
-                    w_ec_val = str(round(stdev(w_eig_distribution), 3))
-                except StatisticsError:
-                    w_ec_val = "N/A"
-                w_ec_title = r"Width-Weighted Eigenvector Cent.: $\sigma$=" + str(w_ec_val)
+                w_ec_title = r"Width-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
-                ax_4.set_title(w_ec_title, fontdict=font_1)
-                ax_4.set(xlabel='Eigenvector value', ylabel='Counts')
-                ax_4.hist(w_eig_distribution, bins=bins)
+                GraphMetrics.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
 
         return figs
@@ -775,36 +711,35 @@ class GraphMetrics:
         sz = 30
         lw = 1.5
         figs = []
-        # init_fig, init_ax = GraphMetrics.plot_histogram_bare(nx_graph, lw, opt_gte.is_multigraph)
 
         if opt_gtc.display_degree_histogram == 1:
-            fig = self.plot_histogram(deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = self.plot_heatmap(deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-            fig = self.plot_histogram(w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
-            fig = self.plot_histogram(cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = self.plot_heatmap(cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-            fig = self.plot_histogram(bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_histogram(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc.display_closeness_histogram == 1:
-            fig = self.plot_histogram(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
-            fig = self.plot_histogram(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-            fig = self.plot_histogram(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_histogram(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 
@@ -822,7 +757,7 @@ class GraphMetrics:
         run_info = ""
         run_info = run_info + filename + "\n"
         now = datetime.datetime.now()
-        run_info = run_info + now.strftime("%Y-%m-%d %H:%M:%S") + "\n"
+        run_info = run_info + now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
         if opt_img.threshold_type == 0:
             run_info = run_info + "Global Threshold (" + str(opt_img.threshold_global) + ")"
         elif opt_img.threshold_type == 1:
@@ -864,7 +799,7 @@ class GraphMetrics:
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
 
-    def plot_histogram(self, distribution, title, size, line_width):
+    def plot_heatmap(self, distribution, title, size, line_width):
 
         nx_graph = self.g_struct.nx_graph
         opt_gte = self.g_struct.configs_graph
@@ -885,6 +820,30 @@ class GraphMetrics:
         cbar = plt.colorbar(ax.collections[0], ax=ax, orientation='vertical')
         cbar.set_label('Value')
         return fig
+
+    @staticmethod
+    def plot_histogram(ax: plt.axes, title, distribution, x_label, bins=None, y_label='Counts'):
+        """
+
+        :param ax:
+        :param title:
+        :param distribution:
+        :param x_label:
+        :param bins:
+        :param y_label:
+        :return:
+        """
+        font_1 = {'fontsize': 9}
+        if bins is None:
+            bins = np.linspace(min(distribution), max(distribution), 50)
+        try:
+            std_val = str(round(stdev(distribution), 3))
+        except StatisticsError:
+            std_val = "N/A"
+        hist_title = title + std_val
+        ax.set_title(hist_title, fontdict=font_1)
+        ax.set(xlabel=x_label, ylabel=y_label)
+        ax.hist(distribution, bins=bins)
 
     @staticmethod
     def plot_graph_edges(nx_graph, ax, line_width, is_multigraph=False):
