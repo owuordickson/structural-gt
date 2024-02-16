@@ -399,8 +399,7 @@ class GraphMetrics:
             pdf.savefig(fig)
         self.g_struct.save_files()
 
-    def err_compute_betweenness_centrality(self):
-
+    # def compute_betweenness_centrality(self):
         """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
 
@@ -417,7 +416,7 @@ class GraphMetrics:
 
         :return:
         """
-
+        """
         # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
         # (NOT TRUE) Note: only works with fully-connected graphs
         # So, random betweenness centrality is computed between source node and destination node.
@@ -432,9 +431,9 @@ class GraphMetrics:
         # 3. Invert the resulting matrix
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
+        """
 
     def average_node_connectivity(self, flow_func=None):
-
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
