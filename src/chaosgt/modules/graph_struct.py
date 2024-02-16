@@ -86,14 +86,15 @@ class GraphStruct:
         self.update_status([50, "Making graph skeleton..."])
         self.extract_graph()
         self.update_status([75, "Verifying graph network..."])
-        # self.nx_connected_graph, self.connectedness_ratio, self.nx_components = self.find_largest_subgraph()
-        if self.configs_graph.weighted_by_diameter == 1:
-            self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral(weighted=True)
-        else:
-            self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral()
         if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change filter options)."])
         else:
+            # self.save_adj_csv()
+            if self.configs_graph.weighted_by_diameter == 1:
+                self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral(
+                    weighted=True)
+            else:
+                self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral()
             # draw graph network
             self.update_status([90, "Drawing graph network..."])
             self.img_plot, self.img_net = self.draw_graph_network()
@@ -591,6 +592,16 @@ class GraphStruct:
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
+
+    def save_adj_csv(self):
+
+        # 1. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
+        filename, output_location = self.create_filenames(self.img_path)
+        adj_filename = filename + "_adj.csv"
+        adj_file = os.path.join(output_location, adj_filename)
+
+        np.savetxt(adj_file, adj_mat, delimiter=",")
 
     @staticmethod
     def _task_init_weight(nx_graph, s, e):

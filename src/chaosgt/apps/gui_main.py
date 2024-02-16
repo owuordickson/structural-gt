@@ -49,6 +49,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.img_scale = 1
         self.img_current = None
 
+        self.spb_adaptive_threshold_val = 0
         self.graph_obj = None
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
@@ -293,7 +294,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_filters.addWidget(self.cbx_laplacian, 4, 0, 1, 1)
         self.sld_gaussian = QtWidgets.QSlider(parent=self.grp_img_filters)
         self.sld_gaussian.setMinimum(1)
-        self.sld_gaussian.setSingleStep(2)
+        self.sld_gaussian.setSingleStep(1)
         self.sld_gaussian.setPageStep(10)
         self.sld_gaussian.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.sld_gaussian.setTickPosition(QtWidgets.QSlider.TickPosition.TicksAbove)
@@ -301,16 +302,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_filters.addWidget(self.sld_gaussian, 1, 1, 1, 1)
         self.sld_lut_gamma = QtWidgets.QSlider(parent=self.grp_img_filters)
         self.sld_lut_gamma.setMinimum(1)
-        self.sld_lut_gamma.setMaximum(50)
+        self.sld_lut_gamma.setMaximum(500)
         self.sld_lut_gamma.setSingleStep(1)
-        self.sld_lut_gamma.setPageStep(10)
-        self.sld_lut_gamma.setProperty("value", 1)
-        self.sld_lut_gamma.setSliderPosition(1)
+        self.sld_lut_gamma.setPageStep(100)
         self.sld_lut_gamma.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.sld_lut_gamma.setInvertedAppearance(False)
-        self.sld_lut_gamma.setInvertedControls(False)
         self.sld_lut_gamma.setTickPosition(QtWidgets.QSlider.TickPosition.TicksAbove)
-        self.sld_lut_gamma.setTickInterval(0)
         self.sld_lut_gamma.setObjectName("sld_lut_gamma")
         self.grid_layout_filters.addWidget(self.sld_lut_gamma, 0, 1, 1, 1)
         self.lbl_lut_gamma = QtWidgets.QLabel(parent=self.grp_img_filters)
@@ -384,10 +380,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_lowpass = QtWidgets.QCheckBox(parent=self.grp_img_filters)
         self.cbx_lowpass.setObjectName("cbx_lowpass")
         self.grid_layout_filters.addWidget(self.cbx_lowpass, 6, 0, 1, 1)
-        self.spn_lowpass = QtWidgets.QSpinBox(parent=self.grp_img_filters)
-        self.spn_lowpass.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.spn_lowpass.setObjectName("spn_lowpass")
-        self.grid_layout_filters.addWidget(self.spn_lowpass, 6, 1, 1, 2)
+        self.spb_lowpass = QtWidgets.QSpinBox(parent=self.grp_img_filters)
+        self.spb_lowpass.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.spb_lowpass.setObjectName("spb_lowpass")
+        self.grid_layout_filters.addWidget(self.spb_lowpass, 6, 1, 1, 2)
         self.grid_layout_filters.setColumnStretch(0, 1)
         self.grid_layout_filters.setColumnStretch(1, 6)
         self.grid_layout_filters.setColumnStretch(2, 1)
@@ -432,18 +428,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_dark_foreground = QtWidgets.QCheckBox(parent=self.grp_img_binary)
         self.cbx_dark_foreground.setObjectName("cbx_dark_foreground")
         self.grid_layout_binary.addWidget(self.cbx_dark_foreground, 4, 0, 1, 3)
-        self.sld_adaptive_threshold = QtWidgets.QSlider(parent=self.grp_img_binary)
-        self.sld_adaptive_threshold.setMinimum(1)
-        self.sld_adaptive_threshold.setSingleStep(2)
-        self.sld_adaptive_threshold.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.sld_adaptive_threshold.setTickPosition(QtWidgets.QSlider.TickPosition.TicksAbove)
-        self.sld_adaptive_threshold.setObjectName("sld_adaptive_threshold")
-        self.grid_layout_binary.addWidget(self.sld_adaptive_threshold, 2, 1, 1, 1)
-        self.lbl_adaptive_threshold_value = QtWidgets.QLabel(parent=self.grp_img_binary)
-        self.lbl_adaptive_threshold_value.setFixedWidth(30)
-        self.lbl_adaptive_threshold_value.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.lbl_adaptive_threshold_value.setObjectName("lbl_adaptive_threshold_value")
-        self.grid_layout_binary.addWidget(self.lbl_adaptive_threshold_value, 2, 2, 1, 1)
+        self.spb_adaptive_threshold = QtWidgets.QSpinBox(parent=self.grp_img_binary)
+        self.spb_adaptive_threshold.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.spb_adaptive_threshold.setMaximum(10000)
+        self.spb_adaptive_threshold.setObjectName("spb_adaptive_threshold")
+        self.grid_layout_binary.addWidget(self.spb_adaptive_threshold, 2, 1, 1, 2)
         self.grid_layout_binary.setColumnStretch(0, 1)
         self.grid_layout_binary.setColumnStretch(1, 6)
         self.grid_layout_binary.setColumnStretch(2, 1)
@@ -531,7 +520,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.rdo_global_threshold.setText(_translate("window_main", "Global"))
         self.lbl_global_threshold_value.setText(_translate("window_main", "120"))
         self.cbx_dark_foreground.setText(_translate("window_main", "Apply Dark Foreground"))
-        self.lbl_adaptive_threshold_value.setText(_translate("window_main", "99"))
 
     def _init_configs(self):
         # 1. Fetch configs
@@ -674,7 +662,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _init_img_filter_settings(self, options_img):
         # range between 0.01-5.0
-        self.sld_lut_gamma.setValue(int(options_img.gamma * 10))
+        self.sld_lut_gamma.setValue(int(options_img.gamma * 100))
         self.lbl_lut_gamma.setText(str(options_img.gamma))
 
         # must be odd integer
@@ -686,7 +674,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_autolevel.setText(str(options_img.autolevel_blurring_size))
 
         self.cbx_lowpass.setChecked(options_img.apply_lowpass)
-        self.spn_lowpass.setValue(options_img.lowpass_window_size)
+        self.spb_lowpass.setValue(options_img.lowpass_window_size)
 
         self.cbx_laplacian.setChecked(options_img.apply_laplacian)
         self.sld_laplacian.setValue(options_img.laplacian_kernel_size)
@@ -705,7 +693,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         # Listeners
         self.sld_lut_gamma.valueChanged.connect(
-            lambda: self.lbl_lut_gamma.setText(str(self.sld_lut_gamma.value() / 10)))
+            lambda: self.lbl_lut_gamma.setText(str(self.sld_lut_gamma.value() / 100)))
         self.sld_gaussian.valueChanged.connect(lambda: self.lbl_gaussian.setText(
             str(self.sld_gaussian.value() + 1 if self.sld_gaussian.value() % 2 == 0 else self.sld_gaussian.value())))
         self.sld_autolevel.valueChanged.connect(lambda: self.lbl_autolevel.setText(
@@ -729,17 +717,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_global_threshold_value.setText(str(options_img.threshold_global))
 
         # must be odd integer
-        self.sld_adaptive_threshold.setValue(options_img.threshold_adaptive)
-        self.lbl_adaptive_threshold_value.setText(str(options_img.threshold_adaptive))
-
+        self.spb_adaptive_threshold_val = options_img.threshold_adaptive
+        self.spb_adaptive_threshold.setValue(options_img.threshold_adaptive)
         self.cbx_dark_foreground.setChecked(options_img.apply_dark_foreground)
 
         # Listeners
         self.sld_global_threshold.valueChanged.connect(
             lambda: self.lbl_global_threshold_value.setText(str(self.sld_global_threshold.value())))
-        self.sld_adaptive_threshold.valueChanged.connect(lambda: self.lbl_adaptive_threshold_value.setText(
-            str(self.sld_adaptive_threshold.value() + 1 if self.sld_adaptive_threshold.value() % 2 == 0 else
-                self.sld_adaptive_threshold.value())))
+        # self.spb_adaptive_threshold.valueChanged.connect(self._spb_adaptive_threshold_value_changed)
 
     def _init_img_path_settings(self, options):
 
@@ -800,6 +785,20 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.txt_img_path.setText(self.img_path)
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
+
+    def _spb_adaptive_threshold_value_changed(self):
+        val = self.spb_adaptive_threshold.value()
+        if val % 2 == 0:
+            if val < 1:
+                self.spb_adaptive_threshold.setValue(1)
+            elif val > self.spb_adaptive_threshold_val:
+                self.spb_adaptive_threshold.setValue(val + 1)
+                self.spb_adaptive_threshold_val = (val + 1)
+            else:
+                self.spb_adaptive_threshold.setValue(val - 1)
+                self.spb_adaptive_threshold_val = (val - 1)
+        else:
+            self.spb_adaptive_threshold.setValue(val)
 
     def _spb_brightness_value_changed(self):
         if self.img_path == '':
@@ -1054,6 +1053,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             return
 
         self.disable_tasks()
+        self._spb_adaptive_threshold_value_changed()
         options_img = struct()
         bin_btn_type = self.btn_grp_binary.checkedButton()
         if bin_btn_type == self.rdo_otsu_threshold:
@@ -1063,11 +1063,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             options_img.threshold_type = 0
         options_img.threshold_global = int(self.lbl_global_threshold_value.text())
-        options_img.threshold_adaptive = int(self.lbl_adaptive_threshold_value.text())
+        options_img.threshold_adaptive = int(self.spb_adaptive_threshold.text())
         options_img.gamma = float(self.lbl_lut_gamma.text())
         options_img.gaussian_blurring_size = int(self.lbl_gaussian.text())
         options_img.autolevel_blurring_size = int(self.lbl_autolevel.text())
-        options_img.lowpass_window_size = int(self.spn_lowpass.text())
+        options_img.lowpass_window_size = int(self.spb_lowpass.text())
         options_img.laplacian_kernel_size = int(self.lbl_laplacian.text())
         options_img.sobel_kernel_size = int(self.lbl_sobel.text())
         options_img.apply_autolevel = int(self.cbx_autolevel.isChecked())
