@@ -578,13 +578,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                       color=QtGui.QColor(0, 0, 200), data=options_gte.is_multigraph)
         options_extraction.appendRow(is_multigraph_item)
 
-        node_id_item = TreeItem('Display Node ID', 9, set_checkable=True,
+        node_id_item = TreeItem(self.gui_txt.node_id, 9, set_checkable=True,
                                 color=QtGui.QColor(0, 0, 200), data=options_gte.display_node_id)
         options_extraction.appendRow(node_id_item)
 
         # 3. Add Computation items
         options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(128, 0, 0))
-        heatmaps_item = TreeItem('Display Heatmaps', 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
+        heatmaps_item = TreeItem(self.gui_txt.heatmaps, 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                  data=options_gtc.display_heatmaps)
         options_compute.appendRow(heatmaps_item)
 
@@ -1136,7 +1136,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                     options_gte.is_multigraph = 1
                 if item.text() == self.gui_txt.weighted:
                     options_gte.weighted_by_diameter = 1
-                if item.text() == 'Display Node ID':
+                if item.text() == self.gui_txt.node_id:
                     options_gte.display_node_id = 1
 
         root_index = model.index(2, 0)
@@ -1206,7 +1206,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 child_index = model.index(i, 0, root_index)
                 item = model.itemFromIndex(child_index)
                 if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                    if item.text() == 'Display Heatmaps':
+                    if item.text() == self.gui_txt.heatmaps:
                         options_gtc.display_heatmaps = 1
                     if item.text() == 'Average Degree':
                         options_gtc.display_degree_histogram = 1
