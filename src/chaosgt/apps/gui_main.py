@@ -1270,19 +1270,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')
             dialog.exec()
         elif (task == 2) and (not self.error_alert):
-            # metrics_obj = obj
-            # metrics_obj.generate_pdf_output()  # Create another thread
-            self._handle_progress_update(98, 98, "Writing PDF...")
-
             plot_data = obj
-            filename, output_location = self.graph_obj.create_filenames(self.graph_obj.img_path)
-            pdf_filename = filename + "_SGT_results.pdf"
-            pdf_file = os.path.join(output_location, pdf_filename)
-            with (PdfPages(pdf_file) as pdf):
-                for fig in plot_data:
-                    pdf.savefig(fig)
-            self.graph_obj.save_files()
-
+            self.write_gt_pdf(plot_data)
             self._handle_progress_update(100, 100, "PDF successfully generated!")
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
@@ -1365,6 +1354,21 @@ class AnalysisUI(QtWidgets.QMainWindow):
         img = Image.fromarray(img_smooth)
         q_img = ImageQt.toqpixmap(img)
         return q_img
+
+    def write_gt_pdf(self, plot_figs):
+        """
+
+        :param plot_figs:
+        :return:
+        """
+        self._handle_progress_update(98, 98, "Writing PDF...")
+        filename, output_location = self.graph_obj.create_filenames(self.graph_obj.img_path)
+        pdf_filename = filename + "_SGT_results.pdf"
+        pdf_file = os.path.join(output_location, pdf_filename)
+        with (PdfPages(pdf_file) as pdf):
+            for fig in plot_figs:
+                pdf.savefig(fig)
+        self.graph_obj.save_files()
 
 
 class TreeItem(QtGui.QStandardItem):
