@@ -68,8 +68,8 @@ class QCrop(QDialog):
     def accept(self):
         if self._ui.selector.crop != self._original:
             self.image = self.image.copy(self._ui.selector.crop)
-            print("Yes")
+            print("Accepted")
             super().accept()
         else:
-            print("No")
+            print("Rejected")
             super().reject()
