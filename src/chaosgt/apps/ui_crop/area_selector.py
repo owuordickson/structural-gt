@@ -1,7 +1,7 @@
 import logging as log
 
 from PyQt6.QtWidgets import QWidget, QLabel, QRubberBand
-from PyQt6.QtGui import QPainter, QBrush, QColor, QPalette, QPen, QColor
+from PyQt6.QtGui import QPainter, QBrush, QColor, QPalette, QPen
 from PyQt6.QtCore import QRect, QSize, QPoint, QMargins, pyqtSignal, Qt
 
 
@@ -52,7 +52,7 @@ class AreaSelector(QLabel):
 
         qp = QPainter(self)
         qp.setBrush(QBrush(QColor(0, 0, 0, 200)))
-        qp.setPen(Qt.NoPen)
+        qp.setPen(Qt.PenStyle.NoPen)
 
         for r in exclude(self.geometry().translated(-1, -1), self.crop):
             qp.drawRect(r)
@@ -67,12 +67,12 @@ class Workspace(QWidget):
         self.selector = None
 
         p = QPalette()
-        # p.setColor(QPalette.Active, QPalette.ColorRole.Window, QColor(0, 0, 0))
+        p.setColor(QPalette.ColorRole.Window, QColor(0, 0, 0))  # Set color to black
         self.setPalette(p)
 
     def mousePressEvent(self, event):
         if not self._rubberband:
-            self._rubberband = QRubberBand(QRubberBand.Rectangle, self)
+            self._rubberband = QRubberBand(QRubberBand.Shape.Rectangle, self)
         self._origin = event.pos()
         self.selector.crop = QRect(QPoint(0, 0), self.selector.geometry().size())
         self.repaint()

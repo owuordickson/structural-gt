@@ -937,16 +937,18 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_img.setPixmap(img_pixmap.scaled((self.img_scale * size)))
 
     def _btn_crop_clicked(self):
-        if self.img_path:
-            return
+        # if self.img_path:
+        #    return
         if self.img_path != '':
-            original_image = QtGui.QPixmap(self.img_path)
-            crop_tool = QCrop(original_image)
-            crop_tool.exec()
-            # status = crop_tool.exec()
-            # print(status)
-            # if status == QtCore.Qt.Accepted:
-            #    cropped_image = crop_tool.image
+            q_img = QtGui.QPixmap(self.img_path)
+            # img_small = self.graph_obj.resize(640)
+            # img = Image.fromarray(img_small)
+            # q_img = ImageQt.toqpixmap(img)
+            crop_tool = QCrop(q_img, self)
+            status = crop_tool.exec()
+            if status == crop_tool.DialogCode.Accepted:
+                cropped_image = crop_tool.image
+                print("Ready")
             #    w = self.lbl_img.width()
             #    h = self.lbl_img.height()
             #    self.lbl_img.setText('')
