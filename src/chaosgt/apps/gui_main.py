@@ -773,7 +773,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             # split the file location into file name and path
             img_dir, file_name = os.path.split(self.img_path)
             files = os.listdir(img_dir)
-            files = sorted(files, key=str.lower)
+            files = sorted(files)
             self.file_names = []
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
@@ -832,7 +832,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             fd_image_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
 
             files = os.listdir(fd_image_dir)
-            files = sorted(files, key=str.lower)
+            files = sorted(files)
             self.file_names = []
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
