@@ -588,77 +588,77 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                  data=options_gtc.display_heatmaps)
         options_compute.appendRow(heatmaps_item)
 
-        degree_item = TreeItem('Average Degree', 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
+        degree_item = TreeItem(self.gui_txt.degree, 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                data=options_gtc.display_degree_histogram)
         options_compute.appendRow(degree_item)
 
-        network_diameter_item = TreeItem('Network Diameter', 9, set_checkable=True,
+        network_diameter_item = TreeItem(self.gui_txt.diameter, 9, set_checkable=True,
                                          color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_network_diameter)
         options_compute.appendRow(network_diameter_item)
 
-        anc_item = TreeItem('Average Nodal Connectivity', 9, set_checkable=True,
+        anc_item = TreeItem(self.gui_txt.connectivity, 9, set_checkable=True,
                             color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_nodal_connectivity)
         options_compute.appendRow(anc_item)
 
-        clustering_coef_item = TreeItem('Average Clustering Coefficient', 9, set_checkable=True,
+        clustering_coef_item = TreeItem(self.gui_txt.clustering, 9, set_checkable=True,
                                         color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_clustering_coef)
         options_compute.appendRow(clustering_coef_item)
 
-        assortativity_coef_item = TreeItem('Assortativity Coefficient', 9, set_checkable=True,
+        assortativity_coef_item = TreeItem(self.gui_txt.assortativity, 9, set_checkable=True,
                                            color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_assortativity_coef)
         options_compute.appendRow(assortativity_coef_item)
 
-        betweenness_centrality_item = TreeItem('Betweenness Centrality', 9, set_checkable=True,
+        betweenness_centrality_item = TreeItem(self.gui_txt.betweenness, 9, set_checkable=True,
                                                color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_betweenness_histogram)
         options_compute.appendRow(betweenness_centrality_item)
 
-        # current_betweenness_item = TreeItem('Current Flow Betweenness Centrality', 9, set_checkable=True,
+        # current_betweenness_item = TreeItem(self.gui_txt.current_flow, 9, set_checkable=True,
         #                                    color=QtGui.QColor(128, 0, 0),
         #                                    data=options_gtc.display_currentflow_histogram)
         # options_compute.appendRow(current_betweenness_item)
 
-        closeness_centrality_item = TreeItem('Closeness Centrality', 9, set_checkable=True,
+        closeness_centrality_item = TreeItem(self.gui_txt.closeness, 9, set_checkable=True,
                                              color=QtGui.QColor(128, 0, 0),
                                              data=options_gtc.display_closeness_histogram)
         options_compute.appendRow(closeness_centrality_item)
 
-        eigenvector_centrality_item = TreeItem('Eigenvector Centrality', 9, set_checkable=True,
+        eigenvector_centrality_item = TreeItem(self.gui_txt.eigenvector, 9, set_checkable=True,
                                                color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_eigenvector_histogram)
         options_compute.appendRow(eigenvector_centrality_item)
 
-        graph_density_item = TreeItem('Graph Density', 9, set_checkable=True,
+        graph_density_item = TreeItem(self.gui_txt.density, 9, set_checkable=True,
                                       color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
         options_compute.appendRow(graph_density_item)
 
-        graph_conductance_item = TreeItem('Graph Conductance', 9, set_checkable=True,
+        graph_conductance_item = TreeItem(self.gui_txt.conductance, 9, set_checkable=True,
                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_conductance)
         options_compute.appendRow(graph_conductance_item)
 
-        global_efficiency_item = TreeItem('Global Efficiency', 9, set_checkable=True,
+        global_efficiency_item = TreeItem(self.gui_txt.efficiency, 9, set_checkable=True,
                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_global_efficiency)
         options_compute.appendRow(global_efficiency_item)
 
-        wiener_index_item = TreeItem('Wiener Index', 9, set_checkable=True,
+        wiener_index_item = TreeItem(self.gui_txt.wiener, 9, set_checkable=True,
                                      color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_wiener_index)
         options_compute.appendRow(wiener_index_item)
 
         # 4. Add Save items
         options_save = TreeItem('[Save Files]', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
-        export_gexf_item = TreeItem('Export as gexf', 9, set_checkable=True,
+        export_gexf_item = TreeItem(self.gui_txt.gexf, 9, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_as_gexf)
         options_save.appendRow(export_gexf_item)
 
-        export_edge_item = TreeItem('Export Edge List', 9, set_checkable=True,
+        export_edge_item = TreeItem(self.gui_txt.edge_list, 9, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_edge_list)
         options_save.appendRow(export_edge_item)
 
-        export_adj_item = TreeItem('Export Adjacency Matrix', 9, set_checkable=True,
+        export_adj_item = TreeItem(self.gui_txt.adjacency, 9, set_checkable=True,
                                    color=QtGui.QColor(99, 99, 99), data=options_gte.export_adj_mat)
         options_save.appendRow(export_adj_item)
 
-        save_images_item = TreeItem('Save All Images', 9, set_checkable=True,
+        save_images_item = TreeItem(self.gui_txt.save_images, 9, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.save_images)
         options_save.appendRow(save_images_item)
 
@@ -1035,25 +1035,25 @@ class AnalysisUI(QtWidgets.QMainWindow):
             child_index = model.index(0, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Export as gexf':
+                if item.text() == self.gui_txt.gexf:
                     options_file.export_as_gexf = 1
 
             child_index = model.index(1, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Export Edge List':
+                if item.text() == self.gui_txt.edge_list:
                     options_file.export_edge_list = 1
 
             child_index = model.index(2, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Export Adjacency Matrix':
+                if item.text() == self.gui_txt.adjacency:
                     options_file.export_adj_mat = 1
 
             child_index = model.index(3, 0, root_index)
             item = model.itemFromIndex(child_index)
             if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-                if item.text() == 'Save All Images':
+                if item.text() == self.gui_txt.save_images:
                     options_file.save_images = 1
 
             try:
@@ -1143,25 +1143,25 @@ class AnalysisUI(QtWidgets.QMainWindow):
         child_index = model.index(0, 0, root_index)
         item = model.itemFromIndex(child_index)
         if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-            if item.text() == 'Export as gexf':
+            if item.text() == self.gui_txt.gexf:
                 options_gte.export_as_gexf = 1
 
         child_index = model.index(1, 0, root_index)
         item = model.itemFromIndex(child_index)
         if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-            if item.text() == 'Export Edge List':
+            if item.text() == self.gui_txt.edge_list:
                 options_gte.export_edge_list = 1
 
         child_index = model.index(2, 0, root_index)
         item = model.itemFromIndex(child_index)
         if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-            if item.text() == 'Export Adjacency Matrix':
+            if item.text() == self.gui_txt.adjacency:
                 options_gte.export_adj_mat = 1
 
         child_index = model.index(3, 0, root_index)
         item = model.itemFromIndex(child_index)
         if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
-            if item.text() == 'Save All Images':
+            if item.text() == self.gui_txt.save_images:
                 options_gte.save_images = 1
 
         worker = Worker(func_id=1, args=(self.img_path, self.output_path, options_img, options_gte))
@@ -1208,31 +1208,31 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 if item.isCheckable() and item.checkState() == QtCore.Qt.CheckState.Checked:
                     if item.text() == self.gui_txt.heatmaps:
                         options_gtc.display_heatmaps = 1
-                    if item.text() == 'Average Degree':
+                    if item.text() == self.gui_txt.degree:
                         options_gtc.display_degree_histogram = 1
-                    if item.text() == 'Betweenness Centrality':
+                    if item.text() == self.gui_txt.betweenness:
                         options_gtc.display_betweenness_histogram = 1
                     if item.text() == '':
                         options_gtc.display_currentflow_histogram = 1
-                    if item.text() == 'Closeness Centrality':
+                    if item.text() == self.gui_txt.closeness:
                         options_gtc.display_closeness_histogram = 1
-                    if item.text() == 'Eigenvector Centrality':
+                    if item.text() == self.gui_txt.eigenvector:
                         options_gtc.display_eigenvector_histogram = 1
-                    if item.text() == 'Average Nodal Connectivity':
+                    if item.text() == self.gui_txt.connectivity:
                         options_gtc.compute_nodal_connectivity = 1
-                    if item.text() == 'Graph Density':
+                    if item.text() == self.gui_txt.density:
                         options_gtc.compute_graph_density = 1
-                    if item.text() == 'Graph Conductance':
+                    if item.text() == self.gui_txt.conductance:
                         options_gtc.compute_graph_conductance = 1
-                    if item.text() == 'Global Efficiency':
+                    if item.text() == self.gui_txt.efficiency:
                         options_gtc.compute_global_efficiency = 1
-                    if item.text() == 'Average Clustering Coefficient':
+                    if item.text() == self.gui_txt.clustering:
                         options_gtc.compute_clustering_coef = 1
-                    if item.text() == 'Assortativity Coefficient':
+                    if item.text() == self.gui_txt.assortativity:
                         options_gtc.compute_assortativity_coef = 1
-                    if item.text() == 'Network Diameter':
+                    if item.text() == self.gui_txt.diameter:
                         options_gtc.compute_network_diameter = 1
-                    if item.text() == 'Wiener Index':
+                    if item.text() == self.gui_txt.wiener:
                         options_gtc.compute_wiener_index = 1
 
             worker = Worker(func_id=2, args=(self.graph_obj, options_gtc))

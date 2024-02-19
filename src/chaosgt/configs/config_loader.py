@@ -170,7 +170,7 @@ def load_gui_configs():
     gui_txt.clustering = str(config.get('gui', 'clustering'))
     gui_txt.assortativity = str(config.get('gui', 'assortativity'))
     gui_txt.betweenness = str(config.get('gui', 'betweenness'))
-    gui_txt.current = str(config.get('gui', 'current'))
+    gui_txt.current_flow = str(config.get('gui', 'current_flow'))
     gui_txt.closeness = str(config.get('gui', 'closeness'))
     gui_txt.eigenvector = str(config.get('gui', 'eigenvector'))
     gui_txt.density = str(config.get('gui', 'density'))
@@ -182,6 +182,6 @@ def load_gui_configs():
     gui_txt.gexf = str(config.get('gui', 'gexf'))
     gui_txt.edge_list = str(config.get('gui', 'edge_list'))
     gui_txt.adjacency = str(config.get('gui', 'adjacency'))
-    gui_txt.images = str(config.get('gui', 'images'))
+    gui_txt.save_images = str(config.get('gui', 'save_images'))
 
     return gui_txt
