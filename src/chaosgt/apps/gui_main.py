@@ -949,8 +949,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if status == crop_tool.DialogCode.Accepted:
                 cropped_image = crop_tool.image
                 print("Ready")
-            #    w = self.lbl_img.width()
-            #    h = self.lbl_img.height()
+                w = self.lbl_img.width()
+                h = self.lbl_img.height()
             #    self.lbl_img.setText('')
             #    self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
