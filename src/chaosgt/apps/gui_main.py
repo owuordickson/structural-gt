@@ -13,6 +13,7 @@ import time
 from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
+from matplotlib.backends.backend_pdf import PdfPages
 from ..configs.config_loader import load_configs, load_gui_configs
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
@@ -1265,15 +1266,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.graph_obj = obj
             self.graph_obj.terminal_app = False
             self._btn_show_graph_clicked()
-            self.lbl_progress.setText('Apply image filter complete!')
-            self.progress_bar_main.setValue(100)
+            self._handle_progress_update(100, 100, "Apply image filter complete!")
             dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')
             dialog.exec()
         elif (task == 2) and (not self.error_alert):
-            metrics_obj = obj
-            metrics_obj.generate_pdf_output()  # Create another thread
-            self.lbl_progress.setText('GT calculated and PDF successfully generated!')
-            self.progress_bar_main.setValue(100)
+            # metrics_obj = obj
+            # metrics_obj.generate_pdf_output()  # Create another thread
+            self._handle_progress_update(98, 98, "Writing PDF...")
+
+            plot_data = obj
+            filename, output_location = self.graph_obj.create_filenames(self.graph_obj.img_path)
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+            with (PdfPages(pdf_file) as pdf):
+                for fig in plot_data:
+                    pdf.savefig(fig)
+            self.graph_obj.save_files()
+
+            self._handle_progress_update(100, 100, "PDF successfully generated!")
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
         # elif task == 3:
@@ -1448,8 +1458,9 @@ class Worker(QtCore.QRunnable):
             if options_gte.weighted_by_diameter:
                 metrics_obj.compute_weighted_gt_metrics()
             # metrics_obj.generate_pdf_output()
+            plot_figs = metrics_obj.generate_output()
             metrics_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(2, metrics_obj)
+            self.signals.finished.emit(2, plot_figs)
         except Exception as err:
             print(err)
 

@@ -346,6 +346,89 @@ class GraphMetrics:
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
+    def generate_output(self):
+
+        """
+
+        :return:
+        """
+
+        opt_gtc = self.configs
+        out_figs = []
+
+        self.update_status([90, "Generating PDF GT Output..."])
+
+        # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+        fig = self.display_images()
+        out_figs.append(fig)
+
+        # 2. plotting skeletal images
+        fig = self.display_skeletal_images()
+        out_figs.append(fig)
+
+        # 3. plotting sub-graph network
+        fig, _ = self.g_struct.draw_graph_network(a4_size=True)
+        if fig:
+            out_figs.append(fig)
+
+        # 4. displaying all the GT calculations in Table  on entire page
+        fig, fig_wt = self.display_gt_results()
+        out_figs.append(fig)
+        if fig_wt:
+            pdf.savefig(fig_wt)
+
+        # 5. displaying histograms
+        self.update_status([92, "Generating histograms..."])
+        figs = self.display_histograms()
+        for fig in figs:
+            out_figs.append(fig)
+
+        # 6. displaying heatmaps
+        if opt_gtc.display_heatmaps == 1:
+            self.update_status([95, "Generating heatmaps..."])
+            figs = self.display_heatmaps()
+            for fig in figs:
+                out_figs.append(fig)
+
+        # 8. displaying run information
+        fig = self.display_info()
+        out_figs.append(fig)
+        return out_figs
+
+    # def compute_betweenness_centrality(self):
+        """
+        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
+
+        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
+        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
+
+        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
+        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
+        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
+        sections of the graph. An average is computed after an iteration of x random walks along edges.
+
+        This measure is already implemented in 'networkx' package. Here is the link:\
+        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
+
+        :return:
+        """
+        """
+        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
+        # (NOT TRUE) Note: only works with fully-connected graphs
+        # So, random betweenness centrality is computed between source node and destination node.
+
+        graph = self.g_struct.nx_graph
+
+        # 1. Compute laplacian matrix L = D - A
+        lpl_mat = nx.laplacian_matrix(graph).toarray()
+        print(lpl_mat)
+
+        # 2. Remove any single row and corresponding column from L
+        # 3. Invert the resulting matrix
+        # 4. Add back the removed row and column to form matrix T
+        # 5. Calculate betweenness from T
+        """
+
     def generate_pdf_output(self):
 
         """
@@ -808,16 +891,14 @@ class GraphMetrics:
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title, fontdict=font_1)
+        ax.set_axis_off()
 
         ax.imshow(img, cmap='gray')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
-        ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
-        # ax.plot(ax_edges.lines[0].get_xdata(), ax_edges.lines[0].get_ydata())  # Copy the line plot
-        # nx.draw_networkx_edges(nx_graph, pos=nx.spring_layout(nx_graph), ax=ax, edge_color='black', width=line_width)
+        c_set = ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
         GraphMetrics.plot_graph_edges(nx_graph, ax, line_width, opt_gte.is_multigraph)
-        cbar = plt.colorbar(ax.collections[0], ax=ax, orientation='vertical')
-        cbar.set_label('Value')
+        fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
         return fig
 
     @staticmethod
@@ -855,4 +936,3 @@ class GraphMetrics:
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
-        # return fig, ax
