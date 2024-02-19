@@ -14,6 +14,7 @@ from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
+from .gui_crop import QCrop
 from ..configs.config_loader import load_configs, load_gui_configs
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
@@ -757,7 +758,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.spb_brightness.valueChanged.connect(self._spb_brightness_value_changed)
         self.spb_contrast.valueChanged.connect(self._spb_contrast_value_changed)
 
-        # self.btn_crop.clicked.connect(self._btn_crop_clicked)
+        self.btn_crop.clicked.connect(self._btn_crop_clicked)
         self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
         self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
         self.btn_show_processed_img.clicked.connect(self._btn_show_processed_img_clicked)
@@ -935,20 +936,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
         size = img_pixmap.size()
         self.lbl_img.setPixmap(img_pixmap.scaled((self.img_scale * size)))
 
-    """
     def _btn_crop_clicked(self):
         if self.img_path != '':
             original_image = QtGui.QPixmap(self.img_path)
             crop_tool = QCrop(original_image)
-            status = crop_tool.exec()
-            print(status)
-            if status == Qt.Accepted:
-                cropped_image = crop_tool.image
-                w = self.lbl_img.width()
-                h = self.lbl_img.height()
-                self.lbl_img.setText('')
-                self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
-    """
+            crop_tool.exec()
+            # status = crop_tool.exec()
+            # print(status)
+            # if status == QtCore.Qt.Accepted:
+            #    cropped_image = crop_tool.image
+            #    w = self.lbl_img.width()
+            #    h = self.lbl_img.height()
+                # self.lbl_img.setText('')
+                # self.lbl_img.setPixmap(cropped_image.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
     def _btn_show_original_img_clicked(self):
         if self.img_path == '':
