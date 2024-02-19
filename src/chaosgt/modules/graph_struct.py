@@ -99,6 +99,10 @@ class GraphStruct:
             self.update_status([90, "Drawing graph network..."])
             self.img_plot, self.img_net = self.draw_graph_network()
 
+    def fit_update(self):
+        self.img_filtered = self.process_img()
+        self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
+
     def resize_img(self, size):
         w, h = self.img_raw.shape
         if h > w:

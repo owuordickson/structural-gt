@@ -111,7 +111,6 @@ class Ui_QCrop(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.selector = AreaSelector(parent=self.frame)
-        # self.selector.setStyleSheet("background:url(:/img/grid-pattern.png);")
         self.selector.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.selector.setText("")
         self.selector.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
