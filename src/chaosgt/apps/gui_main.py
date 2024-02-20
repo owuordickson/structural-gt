@@ -1002,7 +1002,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.disable_all_tasks()
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img and g_obj.img_filtered and g_obj.img_bin and g_obj.nx_graph:
+        if g_obj.nx_graph:
             options_file = self._fetch_save_options()
             try:
                 g_obj.save_files(options_file)
