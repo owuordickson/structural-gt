@@ -1052,9 +1052,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 return
 
             self.disable_all_tasks()
+            options_gte = self._fetch_gte_options()
             options_gtc = self._fetch_gtc_options()
 
-            worker = Worker(func_id=2, args=(g_obj, options_gtc))
+            worker = Worker(func_id=2, args=(g_obj, options_gte, options_gtc))
             worker.signals.progress.connect(self._handle_progress_update)
             worker.signals.finished.connect(self._handle_finished)
             self.threadpool.start(worker)
@@ -1289,6 +1290,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_file = struct()
         options_file.export_edge_list = 0
         options_file.export_as_gexf = 0
+        options_file.export_adj_mat = 0
+        options_file.save_images = 0
 
         model = self.tree_settings.model()
         root_index = model.index(2, 0)
@@ -1492,9 +1495,9 @@ class Worker(QtCore.QRunnable):
         except Exception as err:
             print(err)
 
-    def service_compute_gt(self, graph_obj, options_gtc):
+    def service_compute_gt(self, graph_obj, options_gte, options_gtc):
         try:
-            options_gte = graph_obj.configs_graph
+            graph_obj.configs_graph = options_gte
             metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
             metrics_obj.compute_gt_metrics()

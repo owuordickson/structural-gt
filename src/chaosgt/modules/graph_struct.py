@@ -495,7 +495,7 @@ class GraphStruct:
         :return:
         """
 
-        nx_graph = self.nx_graph
+        nx_graph = self.nx_graph.copy()
         if opt_gte is None:
             opt_gte = self.configs_graph
         filename, output_location = self.create_filenames(self.img_path)
@@ -518,8 +518,8 @@ class GraphStruct:
             if self.img_net.mode == "JPEG":
                 self.img_net.save(net_file, format='JPEG', quality=95)
             elif self.img_net.mode in ["RGBA", "P"]:
-                self.img_net = self.img_net.convert("RGB")
-                self.img_net.save(net_file, format='JPEG', quality=95)
+                img_net = self.img_net.convert("RGB")
+                img_net.save(net_file, format='JPEG', quality=95)
 
         if opt_gte.export_adj_mat == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
