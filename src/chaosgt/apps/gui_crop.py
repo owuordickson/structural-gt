@@ -1,4 +1,5 @@
 """
+Modified version of https://gitlab.com/gregseth/qcrop
 
 """
 
