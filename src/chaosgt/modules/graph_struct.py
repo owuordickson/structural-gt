@@ -744,8 +744,14 @@ class GraphStruct:
         return img
 
     @staticmethod
-    def load_img_from_pixmap(img):
-        image_array = np.frombuffer(img.bits(), dtype=np.uint8).reshape(img.height(), img.width(), 4)
+    def load_img_from_pixmap(pix_img):
+        size = pix_img.size()
+        h = size.width()
+        w = size.height()
+
+        img = pix_img.toImage()
+        img_str = img.bits().asstring(w * h * 4)
+        image_array = np.frombuffer(img_str, dtype=np.uint8).reshape(w, h, 4)
         cv2_image = cv2.cvtColor(image_array, cv2.COLOR_RGBA2BGR)
         return cv2_image
 

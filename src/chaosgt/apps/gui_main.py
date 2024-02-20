@@ -922,10 +922,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
         crop_tool = QCrop(q_img, self)
         status = crop_tool.exec()
         if status == crop_tool.DialogCode.Accepted:
-            cropped_image = crop_tool.image
-            image = cropped_image.toImage()
-            # g_obj.img = GraphStruct.load_img_from_pixmap(image)
-            # self._load_image()
+            try:
+                img_crop = GraphStruct.load_img_from_pixmap(crop_tool.image)
+                # img = GraphStruct.resize_img(640, img_crop)
+                g_obj.img = img_crop
+                self._load_image()
+            except Exception as err:
+                print(err)
 
     def _btn_show_original_img_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1449,21 +1452,11 @@ class CustomGroupBox(QtWidgets.QGroupBox):
         super().__init__(parent)
         self.title = title
 
-    # def mousePressEvent(self, event):
-    #    child = self.childAt(event.pos())
-    #    if not child:
-    #        child = self
-    #    self.clicked.emit(self.title, child)
-
-    def childEvent(self, event):
-        # Check if the child event is a value change event
-        # if event.type() == QtCore.QEvent.Type.MouseButtonPress:
-        # Get the child widget that emitted the event
-        child = event.child()
-        # Emit the value change signal with the object name and the child widget
+    def mousePressEvent(self, event):
+        child = self.childAt(event.pos())
+        if not child:
+            child = self
         self.clicked.emit(self.title, child)
-        # Call the base class implementation
-        super().childEvent(event)
 
 
 class CustomDialog(QtWidgets.QDialog):
