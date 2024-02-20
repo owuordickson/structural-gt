@@ -928,6 +928,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 img_crop = GraphStruct.load_img_from_pil(img_pil)
                 img = GraphStruct.resize_img(640, img_crop)
                 g_obj.img = img
+                g_obj.img_filtered, g_obj.img_bin, g_obj.img_net = None, None, None
+                g_obj.nx_graph, g_obj.nx_info = None, []
                 self._load_image()
             except Exception as err:
                 print(err)
