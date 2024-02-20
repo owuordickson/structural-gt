@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtCore import QRect, pyqtSlot
-from .ui_crop.gui_qcrop import Ui_QCrop
+from .ui_crop.gui_qcrop import BaseUiQCrop
 
 MARGIN_H = 48
 MARGIN_V = 120
@@ -11,8 +11,8 @@ class QCrop(QDialog):
     def __init__(self, pixmap, parent=None):
         super().__init__(parent)
 
-        self._ui = Ui_QCrop()
-        self._ui.setupUi(self)
+        self._ui = BaseUiQCrop(self)
+        # self._ui.__createWidgets(self)
 
         self.setWindowTitle('QCrop - v{}'.format('0.0.1'))
 

@@ -14,8 +14,9 @@ from PyQt6.QtCore import QRect, QSize, QPoint, QMargins, pyqtSignal, Qt
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_QCrop(object):
-    def setupUi(self, QCrop):
+class BaseUiQCrop(object):
+
+    def __init__(self, QCrop):
         QCrop.setObjectName("QCrop")
         QCrop.resize(664, 576)
         QCrop.setSizeGripEnabled(True)
@@ -33,7 +34,9 @@ class Ui_QCrop(object):
         self.horizontalLayout.addWidget(self.labelX)
         self.spinBoxX = QtWidgets.QSpinBox(parent=self.toolbar)
         self.spinBoxX.setMinimumSize(QtCore.QSize(72, 0))
-        self.spinBoxX.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.spinBoxX.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTrailing |
+            QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.spinBoxX.setObjectName("spinBoxX")
         self.horizontalLayout.addWidget(self.spinBoxX)
         self.labelY = QtWidgets.QLabel(parent=self.toolbar)
@@ -41,7 +44,9 @@ class Ui_QCrop(object):
         self.horizontalLayout.addWidget(self.labelY)
         self.spinBoxY = QtWidgets.QSpinBox(parent=self.toolbar)
         self.spinBoxY.setMinimumSize(QtCore.QSize(72, 0))
-        self.spinBoxY.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.spinBoxY.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTrailing |
+            QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.spinBoxY.setObjectName("spinBoxY")
         self.horizontalLayout.addWidget(self.spinBoxY)
         self.labelW = QtWidgets.QLabel(parent=self.toolbar)
@@ -49,7 +54,9 @@ class Ui_QCrop(object):
         self.horizontalLayout.addWidget(self.labelW)
         self.spinBoxW = QtWidgets.QSpinBox(parent=self.toolbar)
         self.spinBoxW.setMinimumSize(QtCore.QSize(72, 0))
-        self.spinBoxW.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.spinBoxW.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTrailing |
+            QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.spinBoxW.setObjectName("spinBoxW")
         self.horizontalLayout.addWidget(self.spinBoxW)
         self.labelH = QtWidgets.QLabel(parent=self.toolbar)
@@ -57,11 +64,14 @@ class Ui_QCrop(object):
         self.horizontalLayout.addWidget(self.labelH)
         self.spinBoxH = QtWidgets.QSpinBox(parent=self.toolbar)
         self.spinBoxH.setMinimumSize(QtCore.QSize(72, 0))
-        self.spinBoxH.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.spinBoxH.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTrailing |
+            QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.spinBoxH.setObjectName("spinBoxH")
         self.horizontalLayout.addWidget(self.spinBoxH)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
+        spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
+                                            QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout.addItem(spacer_item)
         self.pushButton = QtWidgets.QPushButton(parent=self.toolbar)
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.pushButton)
@@ -103,10 +113,12 @@ class Ui_QCrop(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName("gridLayout")
-        spacerItem1 = QtWidgets.QSpacerItem(20, 224, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.gridLayout.addItem(spacerItem1, 2, 2, 1, 1)
-        spacerItem2 = QtWidgets.QSpacerItem(304, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.gridLayout.addItem(spacerItem2, 1, 3, 1, 1)
+        spacer_item1 = QtWidgets.QSpacerItem(20, 224, QtWidgets.QSizePolicy.Policy.Minimum,
+                                             QtWidgets.QSizePolicy.Policy.Expanding)
+        self.gridLayout.addItem(spacer_item1, 2, 2, 1, 1)
+        spacer_item2 = QtWidgets.QSpacerItem(304, 20, QtWidgets.QSizePolicy.Policy.Expanding,
+                                             QtWidgets.QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(spacer_item2, 1, 3, 1, 1)
         self.frame = QtWidgets.QFrame(parent=self.workspace)
         self.frame.setFrameShape(QtWidgets.QFrame.Shape.Box)
         self.frame.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
@@ -121,30 +133,33 @@ class Ui_QCrop(object):
         self.selector.setObjectName("selector")
         self.verticalLayout_2.addWidget(self.selector)
         self.gridLayout.addWidget(self.frame, 1, 2, 1, 1)
-        spacerItem3 = QtWidgets.QSpacerItem(305, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.gridLayout.addItem(spacerItem3, 1, 0, 1, 1)
-        spacerItem4 = QtWidgets.QSpacerItem(20, 225, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.gridLayout.addItem(spacerItem4, 0, 2, 1, 1)
+        spacer_item3 = QtWidgets.QSpacerItem(305, 20, QtWidgets.QSizePolicy.Policy.Expanding,
+                                             QtWidgets.QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(spacer_item3, 1, 0, 1, 1)
+        spacer_item4 = QtWidgets.QSpacerItem(20, 225, QtWidgets.QSizePolicy.Policy.Minimum,
+                                             QtWidgets.QSizePolicy.Policy.Expanding)
+        self.gridLayout.addItem(spacer_item4, 0, 2, 1, 1)
         self.scrollArea.setWidget(self.workspace)
         self.verticalLayout.addWidget(self.scrollArea)
         self.buttonBox = QtWidgets.QDialogButtonBox(parent=QCrop)
         self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.retranslateUi(QCrop)
-        self.buttonBox.accepted.connect(QCrop.accept) # type: ignore
-        self.buttonBox.rejected.connect(QCrop.reject) # type: ignore
-        self.selector.area_changed.connect(QCrop.update_crop_values) # type: ignore
-        self.spinBoxX.valueChanged['int'].connect(QCrop.update_crop_area) # type: ignore
-        self.spinBoxY.valueChanged['int'].connect(QCrop.update_crop_area) # type: ignore
-        self.spinBoxW.valueChanged['int'].connect(QCrop.update_crop_area) # type: ignore
-        self.spinBoxH.valueChanged['int'].connect(QCrop.update_crop_area) # type: ignore
-        self.pushButton.clicked.connect(QCrop.reset_crop_values) # type: ignore
+        self.__re_translate_ui(QCrop)
+        self.buttonBox.accepted.connect(QCrop.accept)  # type: ignore
+        self.buttonBox.rejected.connect(QCrop.reject)  # type: ignore
+        self.selector.area_changed.connect(QCrop.update_crop_values)  # type: ignore
+        self.spinBoxX.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
+        self.spinBoxY.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
+        self.spinBoxW.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
+        self.spinBoxH.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
+        self.pushButton.clicked.connect(QCrop.reset_crop_values)  # type: ignore
         QtCore.QMetaObject.connectSlotsByName(QCrop)
 
-    def retranslateUi(self, QCrop):
+    def __re_translate_ui(self, QCrop):
         _translate = QtCore.QCoreApplication.translate
         QCrop.setWindowTitle(_translate("QCrop", "QCrop"))
         self.labelX.setText(_translate("QCrop", "X:"))
