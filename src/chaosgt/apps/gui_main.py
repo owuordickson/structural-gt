@@ -1449,11 +1449,21 @@ class CustomGroupBox(QtWidgets.QGroupBox):
         super().__init__(parent)
         self.title = title
 
-    def mousePressEvent(self, event):
-        child = self.childAt(event.pos())
-        if not child:
-            child = self
+    # def mousePressEvent(self, event):
+    #    child = self.childAt(event.pos())
+    #    if not child:
+    #        child = self
+    #    self.clicked.emit(self.title, child)
+
+    def childEvent(self, event):
+        # Check if the child event is a value change event
+        # if event.type() == QtCore.QEvent.Type.MouseButtonPress:
+        # Get the child widget that emitted the event
+        child = event.child()
+        # Emit the value change signal with the object name and the child widget
         self.clicked.emit(self.title, child)
+        # Call the base class implementation
+        super().childEvent(event)
 
 
 class CustomDialog(QtWidgets.QDialog):
