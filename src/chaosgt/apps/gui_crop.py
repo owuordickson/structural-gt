@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QDialog
-from PyQt6.QtCore import QRect, QSize, QSignalBlocker, pyqtSlot
+from PyQt6.QtCore import QRect, pyqtSlot
 from .ui_crop.gui_qcrop import Ui_QCrop
 
 MARGIN_H = 48
