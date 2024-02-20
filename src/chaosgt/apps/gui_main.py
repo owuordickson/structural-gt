@@ -767,6 +767,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
 
     def _cbx_multi_changed(self):
+        if self.txt_img_path.text() == '':
+            return
+
         if self.cbx_multi.isChecked() and os.path.isfile(self.txt_img_path.text()):
             # split the file location into file name and path
             img_dir, file_name = os.path.split(self.txt_img_path.text())
@@ -788,7 +791,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if len(self.graph_objs) > 1:
                 self.current_obj_index = 0
                 self._load_image()
-                self.txt_img_path.setText(img_dir)
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
         else:
@@ -831,22 +833,22 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
             fd_image_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
-            files = os.listdir(fd_image_dir)
-            files = sorted(files)
-            
-            self.graph_objs = []
-            for a_file in files:
-                if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
-                    file_name = os.path.join(fd_image_dir, a_file)
-                    obj = GraphStruct(file_name, '')
-                    self.graph_objs.append(obj)
-            if len(self.graph_objs) <= 0:
-                dialog = CustomDialog("File Error",
-                                      "No workable images found! Files have to be either .tif, .png, or .jpg")
-                dialog.exec()
+            if fd_image_dir:
+                files = os.listdir(fd_image_dir)
+                files = sorted(files)
+
+                self.graph_objs = []
+                for a_file in files:
+                    if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                        file_name = os.path.join(fd_image_dir, a_file)
+                        obj = GraphStruct(file_name, '')
+                        self.graph_objs.append(obj)
+                if len(self.graph_objs) <= 0:
+                    dialog = CustomDialog("File Error",
+                                          "No workable images found! Files have to be either .tif, .png, or .jpg")
+                    dialog.exec()
         else:
             self.graph_objs = []
-            fd_image_dir = ''
             fd_image_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                      filter="Image files (*.jpg *.tif *.png *.jpeg)")
             if fd_image_file:
@@ -854,14 +856,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 fd_image_dir, _ = os.path.split(fd_image_file)
                 obj = GraphStruct(fd_image_file, '')
                 self.graph_objs.append(obj)
-        
+        # Set and display image
         if len(self.graph_objs) > 0:
             self.current_obj_index = 0
             self._load_image()
             self.enable_img_tasks()
-
-            if self.txt_out_path.text() == '':
-                self.txt_out_path.setText(fd_image_dir)
             
             if len(self.graph_objs) > 1:
                 self.btn_next.setEnabled(True)
@@ -923,8 +922,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if status == crop_tool.DialogCode.Accepted:
             cropped_image = crop_tool.image
             image = cropped_image.toImage()
-            self.graph_objs[self.current_obj_index].img = GraphStruct.load_img_from_pixmap(image)
-            self._load_image()
+            # self.graph_objs[self.current_obj_index].img = GraphStruct.load_img_from_pixmap(image)
+            # self._load_image()
 
     def _btn_show_original_img_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1122,7 +1121,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
             self.txt_img_path.setText(g_obj.img_path)
             if self.txt_out_path.text() == '':
-                img_dir, _ = os.path.split(self.txt_img_path.text())
+                img_dir, _ = os.path.split(g_obj.img_path)
                 self.txt_out_path.setText(img_dir)
         else:
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
@@ -1481,6 +1480,7 @@ class Worker(QtCore.QRunnable):
 
     def service_filter_img(self, graph_obj):
         try:
+            print("started")
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)

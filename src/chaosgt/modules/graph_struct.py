@@ -491,8 +491,11 @@ class GraphStruct:
             Making the new filenames
         :return:
         """
-        _, filename = os.path.split(image_path)
-        output_location = self.output_path
+        img_dir, filename = os.path.split(image_path)
+        if self.output_path == '':
+            output_location = img_dir
+        else:
+            output_location = self.output_path
 
         filename = re.sub('.png', '', filename)
         filename = re.sub('.tif', '', filename)
