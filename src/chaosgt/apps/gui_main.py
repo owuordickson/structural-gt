@@ -1025,11 +1025,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._spb_adaptive_threshold_value_changed()
         
         g_obj = self.graph_objs[self.current_obj_index]
-        g_obj.output_path = self.txt_out_path.text()
-        g_obj.options_img = self._fetch_img_options()
-        g_obj.options_gte = self._fetch_gte_options()
+        output_path = self.txt_out_path.text()
+        options_img = self._fetch_img_options()
+        options_gte = self._fetch_gte_options()
 
-        worker = Worker(func_id=1, args=g_obj)
+        worker = Worker(func_id=1, args=(g_obj, output_path, options_img, options_gte))
         worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
@@ -1084,7 +1084,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self._handle_progress_update(100, 100, "PDF successfully generated!")
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
-        # elif task == 3:
+        elif task == 3:
+            self._handle_progress_update(100, 100, obj)
         #    self.node_conns += int(obj)
         #    if self.conn_count == 0:  # Null Graph
         #        self.anc = 0
@@ -1469,8 +1470,8 @@ class Worker(QtCore.QRunnable):
             self.service_filter_img(*self.args)
         elif self.target_id == 2:
             self.service_compute_gt(*self.args)
-        # elif self.target_id == 3:
-        #    self.service_
+        elif self.target_id == 3:
+            self.signals.finished.emit(3, "Test complete!")
 
     def update_progress(self, value, msg):
         if value > 0:
@@ -1478,9 +1479,11 @@ class Worker(QtCore.QRunnable):
         else:
             self.signals.progress.emit(0, value, msg)
 
-    def service_filter_img(self, graph_obj):
+    def service_filter_img(self, graph_obj, output_path, options_img, options_gte):
         try:
-            print("started")
+            graph_obj.output_path = output_path
+            graph_obj.configs_img = options_img
+            graph_obj.configs_graph = options_gte
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)
