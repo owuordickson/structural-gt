@@ -915,7 +915,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-        # q_img = QtGui.QPixmap(self.txt_img_path.text())
+
         g_obj = self.graph_objs[self.current_obj_index]
         img = Image.fromarray(g_obj.img)
         q_img = ImageQt.toqpixmap(img)
