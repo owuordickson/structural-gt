@@ -915,14 +915,15 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         # q_img = QtGui.QPixmap(self.txt_img_path.text())
-        img = Image.fromarray(self.graph_objs[self.current_obj_index].img)
+        g_obj = self.graph_objs[self.current_obj_index]
+        img = Image.fromarray(g_obj.img)
         q_img = ImageQt.toqpixmap(img)
         crop_tool = QCrop(q_img, self)
         status = crop_tool.exec()
         if status == crop_tool.DialogCode.Accepted:
             cropped_image = crop_tool.image
             image = cropped_image.toImage()
-            # self.graph_objs[self.current_obj_index].img = GraphStruct.load_img_from_pixmap(image)
+            # g_obj.img = GraphStruct.load_img_from_pixmap(image)
             # self._load_image()
 
     def _btn_show_original_img_clicked(self):
@@ -940,7 +941,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_filtered:
+        if g_obj.img_filtered is not None:
             img = Image.fromarray(g_obj.img_filtered)
             q_img = ImageQt.toqpixmap(img)
             self._load_image(q_img)
@@ -1025,11 +1026,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._spb_adaptive_threshold_value_changed()
         
         g_obj = self.graph_objs[self.current_obj_index]
+        img_path = g_obj.img_path
+        img = None  # g_obj.img
         output_path = self.txt_out_path.text()
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
 
-        worker = Worker(func_id=1, args=(g_obj, output_path, options_img, options_gte))
+        worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
         worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
@@ -1479,11 +1482,9 @@ class Worker(QtCore.QRunnable):
         else:
             self.signals.progress.emit(0, value, msg)
 
-    def service_filter_img(self, graph_obj, output_path, options_img, options_gte):
+    def service_filter_img(self, img_path, output_path, options_img, options_gte, img):
         try:
-            graph_obj.output_path = output_path
-            graph_obj.configs_img = options_img
-            graph_obj.configs_graph = options_gte
+            graph_obj = GraphStruct(img_path, output_path, options_img=options_img, options_gte=options_gte, img=img)
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)

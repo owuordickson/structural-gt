@@ -29,18 +29,17 @@ from .graph_skeleton import GraphSkeleton
 
 class GraphStruct:
 
-    def __init__(self, img_path, out_path, options_img=None, options_gte=None, img_raw=None,
-                 allow_multiprocessing=True):
+    def __init__(self, img_path, out_path, options_img=None, options_gte=None, img=None, allow_multiprocessing=True):
         self.__listeners = []
         self.allow_mp = allow_multiprocessing
         self.terminal_app = True
         self.configs_img, self.configs_graph = options_img, options_gte
         self.img_path, self.output_path = img_path, out_path
-        if img_raw is None:
-            self.img_raw = GraphStruct.load_img_from_file(img_path)
+        self.img_raw = GraphStruct.load_img_from_file(img_path)
+        if img is None:
+            self.img = GraphStruct.resize_img(640, self.img_raw.copy())
         else:
-            self.img_raw = img_raw
-        self.img = self.resize_img(640)
+            self.img = img
         self.img_filtered = None
         self.img_bin, self.otsu_val = None, None
         self.img_net, self.img_plot = None, None
@@ -102,18 +101,6 @@ class GraphStruct:
     def fit_update(self):
         self.img_filtered = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
-
-    def resize_img(self, size):
-        w, h = self.img_raw.shape
-        if h > w:
-            scale_factor = size / h
-        else:
-            scale_factor = size / w
-        std_width = int(scale_factor * w)
-        std_height = int(scale_factor * h)
-        std_size = (std_height, std_width)
-        std_img = cv2.resize(self.img_raw, std_size)
-        return std_img
 
     def process_img(self, image):
         """
@@ -793,6 +780,19 @@ class GraphStruct:
         # cv2.putText(new_img, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
         # 1, (0, 0, 255), 2)
         return new_img
+
+    @staticmethod
+    def resize_img(size, image):
+        w, h = image.shape
+        if h > w:
+            scale_factor = size / h
+        else:
+            scale_factor = size / w
+        std_width = int(scale_factor * w)
+        std_height = int(scale_factor * h)
+        std_size = (std_height, std_width)
+        std_img = cv2.resize(image, std_size)
+        return std_img
 
     @staticmethod
     def plot_to_img(fig):

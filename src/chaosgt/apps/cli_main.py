@@ -84,7 +84,7 @@ def terminal_app():
 
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
-    graph_obj = GraphStruct(img_path, out_dir, options_img, options_gte)
+    graph_obj = GraphStruct(img_path, out_dir, options_img=options_img, options_gte=options_gte)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()
     metrics_obj = GraphMetrics(graph_obj, options_gtc)
