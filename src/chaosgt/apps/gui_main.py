@@ -512,7 +512,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_gaussian.setText(_translate("window_main", "10"))
         self.lbl_laplacian.setText(_translate("window_main", "3"))
         self.cbx_lowpass.setText(_translate("window_main", "Lowpass"))
-        self.lbl_cite.setText(_translate("window_main", "Cite our work using ..."))
+        self.lbl_cite.setText(_translate("window_main", "Cite our work..."))
         self.grp_img_binary.setTitle(_translate("window_main", "Image Binary"))
         self.rdo_otsu_threshold.setText(_translate("window_main", "OTSU"))
         self.rdo_adaptive_threshold.setText(_translate("window_main", "Adaptive"))
@@ -1375,9 +1375,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.btn_apply_filters.setEnabled(True)
         self.btn_crop.setEnabled(True)
-        # self.btn_show_original_img.setEnabled(True)
-        # self.btn_show_processed_img.setEnabled(True)
-        # self.btn_show_binary_img.setEnabled(True)
+        self.btn_show_original_img.setEnabled(True)
+        self.btn_show_processed_img.setEnabled(True)
+        self.btn_show_binary_img.setEnabled(True)
 
     def enable_gt_tasks(self):
         self.btn_show_graph.setEnabled(True)
