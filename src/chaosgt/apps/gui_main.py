@@ -955,7 +955,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_bin:
+        if g_obj.img_bin is not None:
             img = Image.fromarray(g_obj.img_bin)
             q_img = ImageQt.toqpixmap(img)
             self._load_image(q_img)
@@ -969,7 +969,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_net:
+        if g_obj.img_net is not None:
             q_img = ImageQt.toqpixmap(g_obj.img_net)
             self._load_image(q_img)
         else:
@@ -982,7 +982,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.nx_graph:
+        if g_obj.nx_graph is not None:
             info = ""
             info += "Number of nodes: " + str(int(g_obj.nx_graph.number_of_nodes())) + "\n"
             info += "Number of edges: " + str(int(g_obj.nx_graph.number_of_edges())) + "\n"
@@ -1003,7 +1003,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.disable_all_tasks()
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.nx_graph:
+        if g_obj.nx_graph is not None:
             options_file = self._fetch_save_options()
             try:
                 g_obj.save_files(options_file)
@@ -1027,7 +1027,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         
         g_obj = self.graph_objs[self.current_obj_index]
         img_path = g_obj.img_path
-        img = None  # g_obj.img
+        img = g_obj.img
         output_path = self.txt_out_path.text()
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
@@ -1043,7 +1043,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.nx_graph:
+        if g_obj.nx_graph is not None:
             if g_obj.nx_graph.number_of_nodes() <= 0:
                 dialog = CustomDialog("Graph Error",
                                       "Problem with graph (change/apply different filter and graph options). "
