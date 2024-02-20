@@ -56,7 +56,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
         self.progress_dialog = None
-        self.error_alert = False
+        self.error_flag = False
+        self.wait_flag = False
 
         self.threadpool = QtCore.QThreadPool()
         self._init_configs()
@@ -1263,14 +1264,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.cancel()
             self.progress_dialog = None
 
-        if (task == 1) and (not self.error_alert):
+        if (task == 1) and (not self.error_flag):
             self.graph_obj = obj
             self.graph_obj.terminal_app = False
             self._btn_show_graph_clicked()
             self._handle_progress_update(100, 100, "Apply image filter complete!")
             dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')
             dialog.exec()
-        elif (task == 2) and (not self.error_alert):
+        elif (task == 2) and (not self.error_flag):
             plot_data = obj
             self.write_gt_pdf(plot_data)
             self._handle_progress_update(100, 100, "PDF successfully generated!")
@@ -1291,7 +1292,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.lbl_progress.setText(msg)
             self.progress_bar_main.setValue(value)
         else:
-            self.error_alert = True
+            self.error_flag = True
             self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
             self.lbl_progress.setText("ERROR: " + str(msg))
             dialog = CustomDialog("Error", msg)
@@ -1302,7 +1303,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.setLabelText(msg)
 
     def disable_tasks(self):
-        self.error_alert = False
+        self.error_flag = False
         self.btn_select_img_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
         self.btn_zoom_in.setEnabled(False)

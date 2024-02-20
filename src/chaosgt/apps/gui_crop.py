@@ -21,7 +21,7 @@ class QCrop(QDialog):
         self._ui = BaseUiQCrop(self)
         # self._ui.__createWidgets(self)
 
-        self.setWindowTitle('QCrop - v{}'.format('0.0.1'))
+        self.setWindowTitle('QCrop - v{}'.format('0.0.2 sgt'))
 
         self.image = pixmap
         self._original = QRect(0, 0, self.image.width(), self.image.height())
