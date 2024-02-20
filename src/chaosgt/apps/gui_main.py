@@ -284,7 +284,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_settings.setObjectName("grid_layout_settings")
 
         # 4a. Image filters group
-        self.grp_img_filters = CustomGroupBox('grp_img_filters', parent=self.grp_settings)
+        self.grp_img_filters = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_filters.setObjectName("grp_img_filters")
         self.grid_layout_filters = QtWidgets.QGridLayout(self.grp_img_filters)
         self.grid_layout_filters.setObjectName("grid_layout_filters")
@@ -389,7 +389,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_settings.addWidget(self.grp_img_filters, 0, 0, 1, 1)
 
         # 4b. Binary settings group
-        self.grp_img_binary = CustomGroupBox('grp_img_binary', parent=self.grp_settings)
+        self.grp_img_binary = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_binary.setObjectName("grp_img_binary")
         self.grid_layout_binary = QtWidgets.QGridLayout(self.grp_img_binary)
         self.grid_layout_binary.setObjectName("grid_layout_binary")
@@ -708,7 +708,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             str(self.sld_laplacian.value() + 1 if self.sld_laplacian.value() % 2 == 0 else self.sld_laplacian.value())))
         self.sld_sobel.valueChanged.connect(lambda: self.lbl_sobel.setText(
             str(self.sld_sobel.value() + 1 if self.sld_sobel.value() % 2 == 0 else self.sld_sobel.value())))
-        self.grp_img_filters.clicked.connect(self._image_filters_changed)
 
     def _init_img_binary_settings(self, options_img):
 
@@ -731,7 +730,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # Listeners
         self.sld_global_threshold.valueChanged.connect(
             lambda: self.lbl_global_threshold_value.setText(str(self.sld_global_threshold.value())))
-        self.grp_img_binary.clicked.connect(self._image_filters_changed)
 
     def _init_img_path_settings(self, options):
 
@@ -1447,20 +1445,6 @@ class TreeItem(QtGui.QStandardItem):
             self.setCheckState(QtCore.Qt.CheckState.Checked)
         elif int(self.data()) == 0:
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
-
-
-class CustomGroupBox(QtWidgets.QGroupBox):
-    clicked = QtCore.pyqtSignal(str, object)
-
-    def __init__(self, title, parent=None):
-        super().__init__(parent)
-        self.title = title
-
-    def mousePressEvent(self, event):
-        child = self.childAt(event.pos())
-        if not child:
-            child = self
-        self.clicked.emit(self.title, child)
 
 
 class CustomDialog(QtWidgets.QDialog):
