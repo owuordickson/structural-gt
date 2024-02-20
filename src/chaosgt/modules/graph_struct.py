@@ -29,7 +29,8 @@ from .graph_skeleton import GraphSkeleton
 
 class GraphStruct:
 
-    def __init__(self, img_path, out_path, options_img, options_gte=None, img_raw=None, allow_multiprocessing=True):
+    def __init__(self, img_path, out_path, options_img=None, options_gte=None, img_raw=None,
+                 allow_multiprocessing=True):
         self.__listeners = []
         self.allow_mp = allow_multiprocessing
         self.terminal_app = True
@@ -39,7 +40,7 @@ class GraphStruct:
             self.img_raw = GraphStruct.load_img_from_file(img_path)
         else:
             self.img_raw = img_raw
-        self.img = self.resize_img(512)
+        self.img = self.resize_img(640)
         self.img_filtered = None
         self.img_bin, self.otsu_val = None, None
         self.img_net, self.img_plot = None, None
@@ -753,6 +754,12 @@ class GraphStruct:
     def load_img_from_file(file):
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
+
+    @staticmethod
+    def load_img_from_pixmap(img):
+        image_array = np.frombuffer(img.bits(), dtype=np.uint8).reshape(img.height(), img.width(), 4)
+        cv2_image = cv2.cvtColor(image_array, cv2.COLOR_RGBA2BGR)
+        return cv2_image
 
     @staticmethod
     def control_brightness(img, brightness=0, contrast=0):
