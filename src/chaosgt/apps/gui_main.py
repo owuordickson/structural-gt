@@ -939,9 +939,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        if self.graph_objs[self.current_obj_index].img_filtered:
-            img = Image.fromarray(self.graph_objs[self.current_obj_index].img_filtered)
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.img_filtered:
+            img = Image.fromarray(g_obj.img_filtered)
             q_img = ImageQt.toqpixmap(img)
             self._load_image(q_img)
         else:
@@ -953,9 +953,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        if self.graph_objs[self.current_obj_index].img_bin:
-            img = Image.fromarray(self.graph_objs[self.current_obj_index].img_bin)
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.img_bin:
+            img = Image.fromarray(g_obj.img_bin)
             q_img = ImageQt.toqpixmap(img)
             self._load_image(q_img)
         else:
@@ -967,9 +967,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        if self.graph_objs[self.current_obj_index].img_net:
-            q_img = ImageQt.toqpixmap(self.graph_objs[self.current_obj_index].img_net)
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.img_net:
+            q_img = ImageQt.toqpixmap(g_obj.img_net)
             self._load_image(q_img)
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
@@ -980,9 +980,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        if self.graph_objs[self.current_obj_index].nx_graph:
-            g_obj = self.graph_objs[self.current_obj_index]
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.nx_graph:
             info = ""
             info += "Number of nodes: " + str(int(g_obj.nx_graph.number_of_nodes())) + "\n"
             info += "Number of edges: " + str(int(g_obj.nx_graph.number_of_edges())) + "\n"
@@ -1002,10 +1001,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
             return
 
         self.disable_all_tasks()
-        if self.graph_objs[self.current_obj_index]:
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.img and g_obj.img_filtered and g_obj.img_bin and g_obj.nx_graph:
             options_file = self._fetch_save_options()
             try:
-                self.graph_objs[self.current_obj_index].save_files(options_file)
+                g_obj.save_files(options_file)
                 dialog = CustomDialog("Success", "All files saved in 'Output Dir'")
                 dialog.exec()
             except Exception as err:
@@ -1039,9 +1039,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
             dialog.exec()
             return
-
-        if self.graph_objs[self.current_obj_index].nx_graph:
-            if self.graph_objs[self.current_obj_index].nx_graph.number_of_nodes() <= 0:
+        g_obj = self.graph_objs[self.current_obj_index]
+        if g_obj.nx_graph:
+            if g_obj.nx_graph.number_of_nodes() <= 0:
                 dialog = CustomDialog("Graph Error",
                                       "Problem with graph (change/apply different filter and graph options). "
                                       "Or change brightness/contrast")
@@ -1051,7 +1051,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.disable_all_tasks()
             options_gtc = self._fetch_gtc_options()
 
-            worker = Worker(func_id=2, args=(self.graph_objs[self.current_obj_index], options_gtc))
+            worker = Worker(func_id=2, args=(g_obj, options_gtc))
             worker.signals.progress.connect(self._handle_progress_update)
             worker.signals.finished.connect(self._handle_finished)
             self.threadpool.start(worker)
@@ -1072,8 +1072,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog = None
 
         if (task == 1) and (not self.error_flag):
+            obj.terminal_app = False
             self.graph_objs[self.current_obj_index] = obj
-            self.graph_objs[self.current_obj_index].terminal_app = False
             self._btn_show_graph_clicked()
             self._handle_progress_update(100, 100, "Apply image filter complete!")
             dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')

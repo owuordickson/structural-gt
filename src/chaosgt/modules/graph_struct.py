@@ -78,7 +78,7 @@ class GraphStruct:
 
     def fit(self):
         self.update_status([10, "Processing image..."])
-        self.img_filtered = self.process_img()
+        self.img_filtered = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
         self.update_status([50, "Making graph skeleton..."])
         success = self.extract_graph()
@@ -100,7 +100,7 @@ class GraphStruct:
                 self.img_plot, self.img_net = self.draw_graph_network()
 
     def fit_update(self):
-        self.img_filtered = self.process_img()
+        self.img_filtered = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
 
     def resize_img(self, size):
@@ -115,18 +115,16 @@ class GraphStruct:
         std_img = cv2.resize(self.img_raw, std_size)
         return std_img
 
-    def process_img(self):
+    def process_img(self, image):
         """
 
         :return:
         """
 
         options = self.configs_img
-        filtered_img = self.img.copy()
-
         brightness_val = ((options.brightness_level / 100) * 510) - 255
         contrast_val = ((options.contrast_level / 100) * 254) - 127
-        filtered_img = GraphStruct.control_brightness(filtered_img, brightness_val, contrast_val)
+        filtered_img = GraphStruct.control_brightness(image, brightness_val, contrast_val)
 
         if options.gamma != 1.00:
             inv_gamma = 1.00 / options.gamma
