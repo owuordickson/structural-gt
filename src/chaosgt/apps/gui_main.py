@@ -979,8 +979,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
             q_img = ImageQt.toqpixmap(g_obj.img_net)
             self._load_image(q_img)
         else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
+            self.disable_all_tasks()
+            options_img = self._fetch_img_options()
+            options_gte = self._fetch_gte_options()
+            worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
+            worker.signals.progress.connect(self._handle_progress_update)
+            worker.signals.finished.connect(self._handle_finished)
+            self.threadpool.start(worker)
 
     def _btn_quick_metrics_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1061,7 +1066,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             options_gte = self._fetch_gte_options()
             options_gtc = self._fetch_gtc_options()
 
-            worker = Worker(func_id=2, args=(g_obj, options_gte, options_gtc))
+            worker = Worker(func_id=3, args=(g_obj, options_gte, options_gtc))
             worker.signals.progress.connect(self._handle_progress_update)
             worker.signals.finished.connect(self._handle_finished)
             self.threadpool.start(worker)
@@ -1076,9 +1081,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _btn_chaos_gt_clicked(self):
         pass
 
-    def _image_filters_changed(self, title, obj):
+    def _image_filters_changed(self):
         print(self.current_obj_index)
-        print(f"Group: {title}; objectName=`{obj.objectName()}`")
 
     def _handle_finished(self, task, obj):
         if self.progress_dialog:
@@ -1088,17 +1092,21 @@ class AnalysisUI(QtWidgets.QMainWindow):
         if (task == 1) and (not self.error_flag):
             obj.terminal_app = False
             self.graph_objs[self.current_obj_index] = obj
-            self._btn_show_graph_clicked()
-            self._handle_progress_update(100, 100, "Apply image filter complete!")
-            dialog = CustomDialog("Success!", 'Image filters applied and, graph network ready.')
-            dialog.exec()
+            self._btn_show_binary_img_clicked()
+            self._handle_progress_update(100, 100, "Image filters applied.")
         elif (task == 2) and (not self.error_flag):
+            self.graph_objs[self.current_obj_index] = obj
+            self._btn_show_graph_clicked()
+            self._handle_progress_update(100, 100, "Drawing graph complete!")
+            dialog = CustomDialog("Success!", 'Graph network ready.')
+            dialog.exec()
+        elif (task == 3) and (not self.error_flag):
             plot_data = obj
             self.write_gt_pdf(plot_data)
             self._handle_progress_update(100, 100, "PDF successfully generated!")
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
-        elif task == 3:
+        elif task == 4:
             self._handle_progress_update(100, 100, obj)
         #    self.node_conns += int(obj)
         #    if self.conn_count == 0:  # Null Graph
@@ -1485,8 +1493,10 @@ class Worker(QtCore.QRunnable):
         if self.target_id == 1:
             self.service_filter_img(*self.args)
         elif self.target_id == 2:
-            self.service_compute_gt(*self.args)
+            self.service_generate_graph(*self.args)
         elif self.target_id == 3:
+            self.service_compute_gt(*self.args)
+        elif self.target_id == 4:
             self.signals.finished.emit(3, "Test complete!")
 
     def update_progress(self, value, msg):
@@ -1499,9 +1509,20 @@ class Worker(QtCore.QRunnable):
         try:
             graph_obj = GraphStruct(img_path, output_path, options_img=options_img, options_gte=options_gte, img=img)
             graph_obj.add_listener(self.update_progress)
-            graph_obj.fit()
+            graph_obj.fit_img()
             graph_obj.remove_listener(self.update_progress)
             self.signals.finished.emit(1, graph_obj)
+        except Exception as err:
+            print(err)
+
+    def service_generate_graph(self, graph_obj, options_img, options_gte):
+        try:
+            graph_obj.configs_img = options_img
+            graph_obj.configs_graph = options_gte
+            graph_obj.add_listener(self.update_progress)
+            graph_obj.fit()
+            graph_obj.remove_listener(self.update_progress)
+            self.signals.finished.emit(2, graph_obj)
         except Exception as err:
             print(err)
 
@@ -1516,7 +1537,7 @@ class Worker(QtCore.QRunnable):
             # metrics_obj.generate_pdf_output()
             plot_figs = metrics_obj.generate_output()
             metrics_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(2, plot_figs)
+            self.signals.finished.emit(3, plot_figs)
         except Exception as err:
             print(err)
 

@@ -76,9 +76,16 @@ class GraphStruct:
             func(*args)
 
     def fit(self):
+        if (self.img_bin is None) or (self.img_filtered is None):
+            self.fit_img()
+        self.fit_graph()
+
+    def fit_img(self):
         self.update_status([10, "Processing image..."])
         self.img_filtered = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
+
+    def fit_graph(self):
         self.update_status([50, "Making graph skeleton..."])
         success = self.extract_graph()
         if not success:
@@ -97,10 +104,6 @@ class GraphStruct:
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
                 self.img_plot, self.img_net = self.draw_graph_network()
-
-    def fit_update(self):
-        self.img_filtered = self.process_img(self.img.copy())
-        self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
 
     def process_img(self, image):
         """
