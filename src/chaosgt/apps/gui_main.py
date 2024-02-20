@@ -923,9 +923,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
         status = crop_tool.exec()
         if status == crop_tool.DialogCode.Accepted:
             try:
-                img_crop = GraphStruct.load_img_from_pixmap(crop_tool.image)
-                # img = GraphStruct.resize_img(640, img_crop)
-                g_obj.img = img_crop
+                q_img = crop_tool.image.toImage()
+                img_pil = ImageQt.fromqimage(q_img)
+                img_crop = GraphStruct.load_img_from_pil(img_pil)
+                img = GraphStruct.resize_img(640, img_crop)
+                g_obj.img = img
                 self._load_image()
             except Exception as err:
                 print(err)
