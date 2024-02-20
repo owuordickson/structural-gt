@@ -11,7 +11,7 @@ class AreaSelector(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.crop = QRect(0, 0, 0, 0)
-        # parent is the QFrame, its parent is the Workspace
+        # parent is the QFrame, its parent is the BaseWorkspace
         parent.parent().selector = self
 
     def paintEvent(self, event):

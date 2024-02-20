@@ -9,7 +9,6 @@
 import os
 import sys
 import time
-# from qcrop.ui import QCrop
 from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets

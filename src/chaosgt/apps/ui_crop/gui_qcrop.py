@@ -16,14 +16,14 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 class BaseUiQCrop(object):
 
-    def __init__(self, QCrop):
-        QCrop.setObjectName("QCrop")
-        QCrop.resize(664, 576)
-        QCrop.setSizeGripEnabled(True)
-        self.verticalLayout = QtWidgets.QVBoxLayout(QCrop)
+    def __init__(self, q_crop):
+        q_crop.setObjectName("QCrop")
+        q_crop.resize(664, 576)
+        q_crop.setSizeGripEnabled(True)
+        self.verticalLayout = QtWidgets.QVBoxLayout(q_crop)
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.toolbar = QtWidgets.QWidget(parent=QCrop)
+        self.toolbar = QtWidgets.QWidget(parent=q_crop)
         self.toolbar.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.toolbar.setObjectName("toolbar")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.toolbar)
@@ -76,17 +76,17 @@ class BaseUiQCrop(object):
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.pushButton)
         self.verticalLayout.addWidget(self.toolbar)
-        self.line = QtWidgets.QFrame(parent=QCrop)
+        self.line = QtWidgets.QFrame(parent=q_crop)
         self.line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.line.setObjectName("line")
         self.verticalLayout.addWidget(self.line)
-        self.scrollArea = QtWidgets.QScrollArea(parent=QCrop)
+        self.scrollArea = QtWidgets.QScrollArea(parent=q_crop)
         self.scrollArea.viewport().setProperty("cursor", QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor))
         self.scrollArea.setAutoFillBackground(True)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
-        self.workspace = Workspace()
+        self.workspace = BaseWorkspace()
         self.workspace.setGeometry(QtCore.QRect(0, 0, 638, 478))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
@@ -126,7 +126,7 @@ class BaseUiQCrop(object):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.frame)
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.selector = AreaSelector(parent=self.frame)
+        self.selector = BaseAreaSelector(parent=self.frame)
         self.selector.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.selector.setText("")
         self.selector.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -141,27 +141,27 @@ class BaseUiQCrop(object):
         self.gridLayout.addItem(spacer_item4, 0, 2, 1, 1)
         self.scrollArea.setWidget(self.workspace)
         self.verticalLayout.addWidget(self.scrollArea)
-        self.buttonBox = QtWidgets.QDialogButtonBox(parent=QCrop)
+        self.buttonBox = QtWidgets.QDialogButtonBox(parent=q_crop)
         self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.buttonBox.setStandardButtons(
             QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
-        self.__re_translate_ui(QCrop)
-        self.buttonBox.accepted.connect(QCrop.accept)  # type: ignore
-        self.buttonBox.rejected.connect(QCrop.reject)  # type: ignore
-        self.selector.area_changed.connect(QCrop.update_crop_values)  # type: ignore
-        self.spinBoxX.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
-        self.spinBoxY.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
-        self.spinBoxW.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
-        self.spinBoxH.valueChanged['int'].connect(QCrop.update_crop_area)  # type: ignore
-        self.pushButton.clicked.connect(QCrop.reset_crop_values)  # type: ignore
-        QtCore.QMetaObject.connectSlotsByName(QCrop)
+        self.__re_translate_ui(q_crop)
+        self.buttonBox.accepted.connect(q_crop.accept)  # type: ignore
+        self.buttonBox.rejected.connect(q_crop.reject)  # type: ignore
+        self.selector.area_changed.connect(q_crop.update_crop_values)  # type: ignore
+        self.spinBoxX.valueChanged['int'].connect(q_crop.update_crop_area)  # type: ignore
+        self.spinBoxY.valueChanged['int'].connect(q_crop.update_crop_area)  # type: ignore
+        self.spinBoxW.valueChanged['int'].connect(q_crop.update_crop_area)  # type: ignore
+        self.spinBoxH.valueChanged['int'].connect(q_crop.update_crop_area)  # type: ignore
+        self.pushButton.clicked.connect(q_crop.reset_crop_values)  # type: ignore
+        QtCore.QMetaObject.connectSlotsByName(q_crop)
 
-    def __re_translate_ui(self, QCrop):
+    def __re_translate_ui(self, q_crop):
         _translate = QtCore.QCoreApplication.translate
-        QCrop.setWindowTitle(_translate("QCrop", "QCrop"))
+        q_crop.setWindowTitle(_translate("QCrop", "QCrop"))
         self.labelX.setText(_translate("QCrop", "X:"))
         self.spinBoxX.setSuffix(_translate("QCrop", "px"))
         self.labelY.setText(_translate("QCrop", "Y:"))
@@ -173,13 +173,13 @@ class BaseUiQCrop(object):
         self.pushButton.setText(_translate("QCrop", "Reset"))
 
 
-class AreaSelector(QLabel):
+class BaseAreaSelector(QLabel):
     area_changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.crop = QRect(0, 0, 0, 0)
-        # parent is the QFrame, its parent is the Workspace
+        # parent is the QFrame, its parent is the BaseWorkspace
         parent.parent().selector = self
 
     def paintEvent(self, event):
@@ -189,7 +189,7 @@ class AreaSelector(QLabel):
         qp.setBrush(QBrush(QColor(0, 0, 0, 200)))
         qp.setPen(Qt.PenStyle.NoPen)
 
-        for r in AreaSelector.exclude(self.geometry().translated(-1, -1), self.crop):
+        for r in BaseAreaSelector.exclude(self.geometry().translated(-1, -1), self.crop):
             qp.drawRect(r)
 
     @staticmethod
@@ -226,7 +226,7 @@ class AreaSelector(QLabel):
         return areas
 
 
-class Workspace(QWidget):
+class BaseWorkspace(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
