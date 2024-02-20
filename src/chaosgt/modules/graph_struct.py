@@ -29,27 +29,23 @@ from .graph_skeleton import GraphSkeleton
 
 class GraphStruct:
 
-    def __init__(self, img_path, out_path, options_img, options_gte, allow_multiprocessing=True):
+    def __init__(self, img_path, out_path, options_img, options_gte=None, img_raw=None, allow_multiprocessing=True):
         self.__listeners = []
         self.allow_mp = allow_multiprocessing
         self.terminal_app = True
-        self.configs_img = options_img
-        self.configs_graph = options_gte
-        self.output_path = out_path
-        self.img_raw = GraphStruct.load_img_from_file(img_path)
+        self.configs_img, self.configs_graph = options_img, options_gte
+        self.img_path, self.output_path = img_path, out_path
+        if img_raw is None:
+            self.img_raw = GraphStruct.load_img_from_file(img_path)
+        else:
+            self.img_raw = img_raw
         self.img = self.resize_img(512)
-        self.img_path = img_path
-        self.img_bin = None
-        self.img_net = None
-        self.img_plot = None
         self.img_filtered = None
+        self.img_bin, self.otsu_val = None, None
+        self.img_net, self.img_plot = None, None
         self.graph_skeleton = None
-        self.nx_info = []
-        self.nx_graph = None
-        self.nx_components = []
-        self.nx_connected_graph = None
-        self.otsu_val = None
-        self.connect_ratio = 0
+        self.nx_graph, self.nx_info = None, []
+        self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
 
     def add_listener(self, func):
         """
@@ -84,20 +80,23 @@ class GraphStruct:
         self.img_filtered = self.process_img()
         self.img_bin, self.otsu_val = self.binarize_img(self.img_filtered.copy())
         self.update_status([50, "Making graph skeleton..."])
-        self.extract_graph()
-        self.update_status([75, "Verifying graph network..."])
-        if self.nx_graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem generating graph (change filter options)."])
+        success = self.extract_graph()
+        if not success:
+            self.update_status([-1, "Problem encountered, provide GT parameters"])
         else:
-            # self.save_adj_csv()
-            if self.configs_graph.weighted_by_diameter == 1:
-                self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral(
-                    weighted=True)
+            self.update_status([75, "Verifying graph network..."])
+            if self.nx_graph.number_of_nodes() <= 0:
+                self.update_status([-1, "Problem generating graph (change filter options)."])
             else:
-                self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral()
-            # draw graph network
-            self.update_status([90, "Drawing graph network..."])
-            self.img_plot, self.img_net = self.draw_graph_network()
+                # self.save_adj_csv()
+                if self.configs_graph.weighted_by_diameter == 1:
+                    self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral(
+                        weighted=True)
+                else:
+                    self.nx_info, self.nx_components, self.connect_ratio = self.approx_conductance_by_spectral()
+                # draw graph network
+                self.update_status([90, "Drawing graph network..."])
+                self.img_plot, self.img_net = self.draw_graph_network()
 
     def fit_update(self):
         self.img_filtered = self.process_img()
@@ -258,6 +257,8 @@ class GraphStruct:
         """
 
         configs = self.configs_graph
+        if configs is None:
+            return False
         graph_skel = GraphSkeleton(self.img_bin, configs)
         img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
@@ -306,7 +307,6 @@ class GraphStruct:
 
                 for (s, e) in nx_graph.edges():
                     nx_graph = GraphStruct._task_assign_weight(configs, graph_skel, nx_graph, s, e)
-
             self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
@@ -319,23 +319,7 @@ class GraphStruct:
                 for (s, e) in self.nx_graph.edges():
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
-
-    """
-    def find_largest_subgraph(self):
-
-        # 1. Identify connected components
-        largest, smallest, count, connected_components = GraphStruct.graph_components(self.nx_graph)
-
-        if len(connected_components) <= 0:
-            return self.nx_graph, 1
-        else:
-            # 2. Find the largest/smallest connected component
-            # Create a new graph containing only the largest connected component
-            # Compute proportion
-            ratio = largest.number_of_nodes() / self.nx_graph.number_of_nodes()
-
-            return largest, round(ratio, 4), connected_components
-    """
+        return True
 
     def approx_conductance_by_spectral(self, weighted=False):
         """
