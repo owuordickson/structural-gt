@@ -375,7 +375,7 @@ class GraphMetrics:
         fig, fig_wt = self.display_gt_results()
         out_figs.append(fig)
         if fig_wt:
-            pdf.savefig(fig_wt)
+            out_figs.append(fig_wt)
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])
@@ -396,7 +396,7 @@ class GraphMetrics:
         return out_figs
 
     # def compute_betweenness_centrality(self):
-        """
+    """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
 
         Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
@@ -411,8 +411,8 @@ class GraphMetrics:
         https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
 
         :return:
-        """
-        """
+    """
+    """
         # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
         # (NOT TRUE) Note: only works with fully-connected graphs
         # So, random betweenness centrality is computed between source node and destination node.
@@ -427,7 +427,7 @@ class GraphMetrics:
         # 3. Invert the resulting matrix
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
-        """
+    """
 
     def generate_pdf_output(self):
 
