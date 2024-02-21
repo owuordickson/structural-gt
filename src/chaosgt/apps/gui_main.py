@@ -171,12 +171,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_crop.addWidget(self.btn_crop, 1, 0, 1, 2)
         self.spb_brightness = QtWidgets.QSpinBox(parent=self.grp_crop)
         self.spb_brightness.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.spb_brightness.setMinimum(-100)
         self.spb_brightness.setMaximum(100)
         self.spb_brightness.setProperty("value", 0)
         self.spb_brightness.setObjectName("spb_brightness")
         self.grid_layout_crop.addWidget(self.spb_brightness, 2, 1, 1, 1)
         self.spb_contrast = QtWidgets.QSpinBox(parent=self.grp_crop)
         self.spb_contrast.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.spb_contrast.setMinimum(-100)
         self.spb_contrast.setMaximum(100)
         self.spb_contrast.setObjectName("spb_contrast")
         self.grid_layout_crop.addWidget(self.spb_contrast, 3, 1, 1, 1)
@@ -938,7 +940,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        q_img = self.apply_brightness(g_obj.img)
+        img = Image.fromarray(g_obj.img)
+        q_img = ImageQt.toqpixmap(img)
         self._load_image(q_img)
 
     def _btn_show_processed_img_clicked(self):
@@ -1420,11 +1423,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_save_files.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
 
-    def apply_brightness(self, img):
-        val_1 = int(self.spb_brightness.text())
-        val_2 = int(self.spb_contrast.text())
-        brightness_val = ((val_1 / 100) * 510) - 255
-        contrast_val = ((val_2 / 100) * 254) - 127
+    def apply_brightness(self, img_raw):
+        img = img_raw.copy()
+        brightness_val = int(self.spb_brightness.text())
+        contrast_val = int(self.spb_contrast.text())
 
         img_smooth = GraphStruct.control_brightness(img, brightness_val, contrast_val)
         img = Image.fromarray(img_smooth)

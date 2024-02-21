@@ -112,9 +112,7 @@ class GraphStruct:
         """
 
         options = self.configs_img
-        brightness_val = ((options.brightness_level / 100) * 510) - 255
-        contrast_val = ((options.contrast_level / 100) * 254) - 127
-        filtered_img = GraphStruct.control_brightness(image, brightness_val, contrast_val)
+        filtered_img = GraphStruct.control_brightness(image, options.brightness_level, options.contrast_level)
 
         if options.gamma != 1.00:
             inv_gamma = 1.00 / options.gamma
@@ -753,14 +751,23 @@ class GraphStruct:
         return cv2_image
 
     @staticmethod
-    def control_brightness(img, brightness=0, contrast=0):
+    def control_brightness(img, brightness_val=0, contrast_val=0):
         """
 
+        :param contrast_val:
+        :param brightness_val:
         :param img:
-        :param brightness:
-        :param contrast:
         :return:
         """
+
+        brightness = ((brightness_val / 100) * 127)
+        contrast = ((contrast_val / 100) * 127)
+
+        # img = np.int16(img)
+        # img = img * (contrast / 127 + 1) - contrast + brightness
+        # img = np.clip(img, 0, 255)
+        # img = np.uint8(img)
+
         if brightness != 0:
             if brightness > 0:
                 shadow = brightness
@@ -770,19 +777,17 @@ class GraphStruct:
                 max_val = 255 + brightness
             alpha_b = (max_val - shadow) / 255
             gamma_b = shadow
-            new_img = cv2.addWeighted(img, alpha_b, img, 0, gamma_b)
-        else:
-            new_img = img
+            img = cv2.addWeighted(img, alpha_b, img, 0, gamma_b)
 
         if contrast != 0:
             alpha_c = float(131 * (contrast + 127)) / (127 * (131 - contrast))
             gamma_c = 127 * (1 - alpha_c)
-            new_img = cv2.addWeighted(new_img, alpha_c, new_img, 0, gamma_c)
+            img = cv2.addWeighted(img, alpha_c, img, 0, gamma_c)
 
         # text string in the image.
         # cv2.putText(new_img, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
         # 1, (0, 0, 255), 2)
-        return new_img
+        return img
 
     @staticmethod
     def resize_img(size, image):
