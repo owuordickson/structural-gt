@@ -18,11 +18,11 @@ def load_configs():
     # Load configuration from file
     config = configparser.ConfigParser()
     try:
-        config_file = os.path.join(os.getcwd(), 'chaosgt/configs/configs.ini')
+        config_file = os.path.join(os.getcwd(), 'StructuralGTb/configs/configs.ini')
         config.read(config_file)
         cpus = int(config.get('computation', 'cpu_cores'))
     except configparser.NoSectionError:
-        config_file = os.path.join(os.getcwd(), 'src/chaosgt/configs/configs.ini')
+        config_file = os.path.join(os.getcwd(), 'src/StructuralGTb/configs/configs.ini')
         config.read(config_file)
         cpus = int(config.get('computation', 'cpu_cores'))
     # print(config_file)
@@ -132,7 +132,7 @@ def load_configs():
     (options, args) = opt_parser.parse_args()
 
     if options.filePath is None:
-        print("Usage: bin/chaosgt-cli -f examples/Cont-SR_NPs.tif -o results/    ")
+        print("Usage: bin/StructuralGTb-cli -f examples/Cont-SR_NPs.tif -o results/    ")
         sys.exit('System will exit')
 
     return config, options, options_img, options_gte, options_gtc
@@ -142,11 +142,11 @@ def load_gui_configs():
     # Load configuration from file
     config = configparser.ConfigParser()
     try:
-        config_file = os.path.join(os.getcwd(), 'chaosgt/configs/configs_gui.ini')
+        config_file = os.path.join(os.getcwd(), 'StructuralGTb/configs/configs_gui.ini')
         config.read(config_file)
         title = str(config.get('gui', 'title'))
     except configparser.NoSectionError:
-        config_file = os.path.join(os.getcwd(), 'src/chaosgt/configs/configs_gui.ini')
+        config_file = os.path.join(os.getcwd(), 'src/StructuralGTb/configs/configs_gui.ini')
         config.read(config_file)
         title = str(config.get('gui', 'title'))
 

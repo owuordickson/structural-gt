@@ -3,17 +3,19 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "chaos-gt"
+name = "StructuralGTb"
 dynamic = ["version"]
 dependencies = [
   "numpy",
   "pandas",
+  "scipy",
+  "ypstruct",
+  "matplotlib",
   "networkx",
   "sknw",
-  "matplotlib",
   "scikit-image",
-  "scikit-learn",
-  "opencv-python"
+  "opencv-python",
+  "pillow"
 ]
 requires-python = ">=3.11"
 authors = [
@@ -23,10 +25,10 @@ authors = [
 maintainers = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"}
 ]
-description = "A software tool that implements chaos engineering in nano-structures."
+description = "A software tool that implements structural graph theory and chaos engineering for nano-structures."
 readme =  "README.md"
 license = {file = "LICENSE"}
-keywords = ["nano-particles", "nano-structures", "chaos-theory"]
+keywords = ["nano-particles", "nano-structures", "graph-theory", "chaos-engineering"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python :: 3.11",
@@ -39,12 +41,8 @@ classifiers = [
 # docs = []
 
 [project.optional-dependencies]
-gui = ["pyqt6", "pillow", "qcrop"]
+gui = ["pyqt6"]
 cli = []
-# cli = [
-#  "rich",
-#  "click",
-# ]
 
 [project.urls]
 Homepage = "https://github.com/owuordickson/chaos-gt"
@@ -54,17 +52,17 @@ Repository = "https://github.com/owuordickson/chaos-gt.git"
 Changelog = "https://github.com/owuordickson/chaos-gt/blob/master/CHANGELOG.md"
 
 [project.scripts]
-chaosgt-cli = "chaosgt:main_cli"
+StructuralGTb-cli = "StructuralGTb:main_cli"
 
 [project.gui-scripts]
-chaosgt-gui = "chaosgt:main_gui"
+StructuralGTb = "StructuralGTb:main_gui"
 
 [tool.setuptools.dynamic]
-version = {attr = "chaosgt.__version__"}
+version = {attr = "StructuralGTb.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
-include = ["chaosgt*"]  # package names should match these glob patterns (["*"] by default)
-exclude = ["chaosgt.tests*"]  # exclude packages matching these glob patterns (empty by default)
+include = ["StructuralGTb*"]  # package names should match these glob patterns (["*"] by default)
+exclude = ["StructuralGTb.tests*"]  # exclude packages matching these glob patterns (empty by default)
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 

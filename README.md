@@ -1,3 +1,3 @@
-# Chaos GT
+# Structural GTb
 
-Chaos engineering for nano-particles
+A software tool that implements structural graph theory and chaos engineering for nano-structures.
