@@ -4,10 +4,10 @@ A software tool that implements structural graph theory and chaos engineering fo
 
 ## Installation
 
-This specified version is not currently available for download. Therefore, please follow the manual installation instructions provided below:
+This specified version is not currently available for download via GitHub. Therefore, please follow the manual installation instructions provided below:
 
 * Install Python version 3.11 on your computer.
-* Get the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
+* Download the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
 * Navigate to the location where you saved the **'structural-gt'** folder using the terminal. 
 * Execute the following commands:
