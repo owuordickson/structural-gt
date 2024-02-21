@@ -36,5 +36,5 @@ SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
 . pip install -r requirements.txt
 . pip install .
 . deactivate
-. .venv_chaos/bin/chaosgt-cli -f examples/Cont-SR_NPs.tif -o results/
-. .venv_chaos/bin/chaosgt-gui
+. .venv_chaos/bin/StructuralGTb-cli -f examples/Cont-SR_NPs.tif -o results/
+. .venv_chaos/bin/StructuralGTb
