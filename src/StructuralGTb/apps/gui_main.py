@@ -926,7 +926,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 q_img = crop_tool.image.toImage()
                 img_pil = ImageQt.fromqimage(q_img)
                 img_crop = GraphStruct.load_img_from_pil(img_pil)
-                img = GraphStruct.resize_img(640, img_crop)
+                img = GraphStruct.resize_img(512, img_crop)
                 g_obj.img = img
                 g_obj.img_filtered, g_obj.img_bin, g_obj.img_net = None, None, None
                 g_obj.nx_graph, g_obj.nx_info = None, []
