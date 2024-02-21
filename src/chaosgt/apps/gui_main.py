@@ -1054,6 +1054,16 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
+        self.disable_all_tasks()
+        options_img = self._fetch_img_options()
+        options_gte = self._fetch_gte_options()
+        options_gtc = self._fetch_gtc_options()
+
+        worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
+        worker.signals.progress.connect(self._handle_progress_update)
+        worker.signals.finished.connect(self._handle_finished)
+        self.threadpool.start(worker)
+        """
         if g_obj.nx_graph is not None:
             if g_obj.nx_graph.number_of_nodes() <= 0:
                 dialog = CustomDialog("Graph Error",
@@ -1073,6 +1083,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()
+        """
 
     def _btn_compute_fd_clicked(self):
         self.disable_all_tasks()
@@ -1090,29 +1101,35 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog = None
 
         if (task == 1) and (not self.error_flag):
-            obj.terminal_app = False
-            self.graph_objs[self.current_obj_index] = obj
-            self._btn_show_binary_img_clicked()
+            try:
+                obj.terminal_app = False
+                self.graph_objs[self.current_obj_index] = obj
+                img = Image.fromarray(obj.img_bin)
+                self._load_image(ImageQt.toqpixmap(img))
+            except Exception as err:
+                print(err)
             self._handle_progress_update(100, 100, "Image filters applied.")
         elif (task == 2) and (not self.error_flag):
-            self.graph_objs[self.current_obj_index] = obj
-            self._btn_show_graph_clicked()
+            try:
+                self.graph_objs[self.current_obj_index] = obj
+                img = Image.fromarray(obj.img_net)
+                self._load_image(ImageQt.toqpixmap(img))
+            except Exception as err:
+                print(err)
             self._handle_progress_update(100, 100, "Drawing graph complete!")
-            dialog = CustomDialog("Success!", 'Graph network ready.')
-            dialog.exec()
+            # dialog = CustomDialog("Success!", 'Graph network ready.')
+            # dialog.exec()
         elif (task == 3) and (not self.error_flag):
-            plot_data = obj
-            self.write_gt_pdf(plot_data)
-            self._handle_progress_update(100, 100, "PDF successfully generated!")
+            try:
+                plot_data = obj
+                self.write_gt_pdf(plot_data)
+            except Exception as err:
+                print(err)
+            self._handle_progress_update(100, 100, "GT PDF successfully generated!")
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
             dialog.exec()
         elif task == 4:
             self._handle_progress_update(100, 100, obj)
-        #    self.node_conns += int(obj)
-        #    if self.conn_count == 0:  # Null Graph
-        #        self.anc = 0
-        #    self.anc = self.node_conns / self.conn_count
-        #    print(self.anc)
         self.enable_all_tasks()
 
     def _handle_progress_update(self, value, code, msg):
@@ -1526,8 +1543,19 @@ class Worker(QtCore.QRunnable):
         except Exception as err:
             print(err)
 
-    def service_compute_gt(self, graph_obj, options_gte, options_gtc):
+    def service_compute_gt(self, graph_obj, options_img, options_gte, options_gtc):
         try:
+            if graph_obj.nx_graph is None:
+                graph_obj.configs_img = options_img
+                graph_obj.configs_graph = options_gte
+                graph_obj.add_listener(self.update_progress)
+                graph_obj.fit()
+                graph_obj.remove_listener(self.update_progress)
+            else:
+                if graph_obj.nx_graph.number_of_nodes() <= 0:
+                    self.update_progress(-1, "Graph Error: Problem with graph (change/apply different filter and "
+                                             "graph options). Or change brightness/contrast")
+                    return
             graph_obj.configs_graph = options_gte
             metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
