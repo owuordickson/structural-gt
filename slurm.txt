@@ -29,12 +29,12 @@ SETTING UP PYTHON ENVIRONMENT FOR SLURM JOBS
 4. module load python/3.11.5
 
 
-. cd structural-gt
-. python3 -m venv .venv_sgt
-. source .venv_sgt/bin/activate
-. pip install --upgrade pip
-. pip install -r requirements.txt
-. pip install .
-. deactivate
-. .venv_sgt/bin/StructuralGTb-cli -f examples/Cont-SR_NPs.tif -o results/
-. .venv_sgt/bin/StructuralGTb
+cd structural-gt
+python3 -m venv .venv_sgt
+source .venv_sgt/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install .
+deactivate
+.venv_sgt/bin/StructuralGTb-cli -f examples/Cont-SR_NPs.tif -o results/
+.venv_sgt/bin/StructuralGTb
