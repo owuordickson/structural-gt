@@ -109,7 +109,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_img_scroll = QtWidgets.QGridLayout(self.scroll_area_img)
         self.grid_layout_img_scroll.setObjectName("grid_layout_img_scroll")
         self.lbl_img = QtWidgets.QLabel(parent=self.scroll_area_img)
-        self.lbl_img.setText("")
         self.lbl_img.setObjectName("lbl_img")
         self.grid_layout_img_scroll.addWidget(self.lbl_img, 0, 0, 1, 1)
         self.sca_img.setWidget(self.scroll_area_img)
@@ -226,16 +225,21 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grp_compute.setObjectName("grp_compute")
         self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
         self.grid_layout_compute.setObjectName("grid_layout_compute")
-        self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_chaos_gt.setObjectName("btn_chaos_gt")
-        self.grid_layout_compute.addWidget(self.btn_chaos_gt, 3, 0, 1, 1)
-        self.btn_fd = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_fd.setObjectName("btn_fd")
-        self.grid_layout_compute.addWidget(self.btn_fd, 2, 0, 1, 1)
+        # self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
+        # self.btn_chaos_gt.setObjectName("btn_chaos_gt")
+        # self.grid_layout_compute.addWidget(self.btn_chaos_gt, 3, 0, 1, 1)
+        self.btn_gt_metrics_all = QtWidgets.QPushButton(parent=self.grp_compute)
+        self.btn_gt_metrics_all.setObjectName("btn_gt_metrics_all")
+        self.grid_layout_compute.addWidget(self.btn_gt_metrics_all, 2, 0, 1, 1)
         self.btn_gt_metrics = QtWidgets.QPushButton(parent=self.grp_compute)
         self.btn_gt_metrics.setObjectName("btn_gt_metrics")
         self.grid_layout_compute.addWidget(self.btn_gt_metrics, 1, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_compute, 10, 0, 1, 2)
+
+        # 2d. About Button
+        self.btn_about = QtWidgets.QPushButton(parent=self.grp_tasks)
+        self.btn_about.setObjectName("btn_about")
+        self.grid_layout_tasks.addWidget(self.btn_about, 11, 0, 1, 2)
         self.grid_layout_main.addWidget(self.grp_tasks, 1, 2, 1, 1)
 
         # 3. GROUP IMAGE PATH
@@ -445,21 +449,28 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.grid_layout_settings.addWidget(self.tree_settings, 2, 0, 1, 1)
 
         # 4d. Progress group
-        self.lbl_progress = QtWidgets.QLabel(parent=self.grp_settings)
-        self.lbl_progress.setText("")
+        self.grp_progress = QtWidgets.QGroupBox(parent=self.grp_settings)
+        self.grp_progress.setTitle("")
+        self.grp_progress.setFlat(True)
+        self.grp_progress.setObjectName("grp_progress")
+        self.grid_layout_progress = QtWidgets.QGridLayout(self.grp_progress)
+        self.grid_layout_progress.setObjectName("grid_layout_progress")
+        self.lbl_progress = QtWidgets.QLabel(parent=self.grp_progress)
         self.lbl_progress.setStyleSheet("color: rgb(0,128,0)")
         self.lbl_progress.setObjectName("lbl_progress")
-        self.grid_layout_settings.addWidget(self.lbl_progress, 3, 0, 1, 1)
-        self.progress_bar_main = QtWidgets.QProgressBar(parent=self.grp_settings)
+        self.grid_layout_progress.addWidget(self.lbl_progress, 0, 0, 1, 2)
+        self.progress_bar_main = QtWidgets.QProgressBar(parent=self.grp_progress)
         self.progress_bar_main.setProperty("value", 0)
         self.progress_bar_main.setTextVisible(False)
         self.progress_bar_main.setObjectName("progress_bar_main")
-        self.grid_layout_settings.addWidget(self.progress_bar_main, 4, 0, 1, 1)
-
-        # 4e. Citation group
-        self.lbl_cite = QtWidgets.QLabel(parent=self.grp_settings)
-        self.lbl_cite.setObjectName("lbl_cite")
-        self.grid_layout_settings.addWidget(self.lbl_cite, 5, 0, 1, 1)
+        self.grid_layout_progress.addWidget(self.progress_bar_main, 1, 0, 1, 2)
+        self.lbl_info = QtWidgets.QLabel(parent=self.grp_progress)
+        self.lbl_info.setObjectName("lbl_info")
+        self.grid_layout_progress.addWidget(self.lbl_info, 2, 0, 1, 1)
+        self.btn_cancel = QtWidgets.QPushButton(parent=self.grp_progress)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.grid_layout_progress.addWidget(self.btn_cancel, 2, 1, 1, 1)
+        self.grid_layout_settings.addWidget(self.grp_progress, 3, 0, 1, 1)
         self.grid_layout_main.addWidget(self.grp_settings, 0, 0, 2, 1)
 
         # COLUMN STRETCH
@@ -478,10 +489,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_zoom.setText(_translate("window_main", "Zoom"))
         self.btn_zoom_out.setText(_translate("window_main", "-"))
         self.btn_zoom_in.setText(_translate("window_main", "+"))
+        self.lbl_img.setText(_translate("window_main", ""))
         self.grp_compute.setTitle(_translate("window_main", "Computations"))
-        self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
-        self.btn_fd.setText(_translate("window_main", " Fractal Dimension "))
+        # self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
         self.btn_gt_metrics.setText(_translate("window_main", "GT Metrics"))
+        self.btn_gt_metrics_all.setText(_translate("window_main", " GT Metrics (multi) "))
+        self.btn_about.setText(_translate("window_main", "About StructuralGT"))
         self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
         self.btn_apply_filters.setText(_translate("window_main", "Apply Filters"))
         self.btn_show_original_img.setText(_translate("window_main", "Original Image"))
@@ -514,7 +527,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_gaussian.setText(_translate("window_main", "10"))
         self.lbl_laplacian.setText(_translate("window_main", "3"))
         self.cbx_lowpass.setText(_translate("window_main", "Lowpass"))
-        self.lbl_cite.setText(_translate("window_main", "Cite our work..."))
+        self.lbl_progress.setText(_translate("window_main", ""))
+        self.lbl_info.setText(_translate("window_main", "Add Image"))
+        self.btn_cancel.setText(_translate("window_main", "Cancel"))
         self.grp_img_binary.setTitle(_translate("window_main", "Image Binary"))
         self.rdo_otsu_threshold.setText(_translate("window_main", "OTSU"))
         self.rdo_adaptive_threshold.setText(_translate("window_main", "Adaptive"))
@@ -764,8 +779,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
         self.btn_save_files.clicked.connect(self._btn_save_files_clicked)
         self.btn_gt_metrics.clicked.connect(self._btn_compute_gt_metrics_clicked)
-        self.btn_fd.clicked.connect(self._btn_compute_fd_clicked)
-        self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
+        self.btn_gt_metrics_all.clicked.connect(self._btn_compute_gt_metrics_all_clicked)
+        # self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
 
     def _cbx_multi_changed(self):
         if self.txt_img_path.text() == '':
@@ -1067,12 +1082,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
 
-    def _btn_compute_fd_clicked(self):
+    def _btn_compute_gt_metrics_all_clicked(self):
         self.disable_all_tasks()
         self.enable_all_tasks()
 
-    def _btn_chaos_gt_clicked(self):
-        pass
+    # def _btn_chaos_gt_clicked(self):
+    #    pass
 
     def _image_filters_changed(self):
         print(self.current_obj_index)
@@ -1356,8 +1371,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics.setEnabled(False)
         self.btn_save_files.setEnabled(False)
         self.btn_gt_metrics.setEnabled(False)
-        self.btn_fd.setEnabled(False)
-        self.btn_chaos_gt.setEnabled(False)
+        self.btn_gt_metrics_all.setEnabled(False)
+        # self.btn_chaos_gt.setEnabled(False)
         time.sleep(2)
 
     def enable_all_tasks(self):
@@ -1378,7 +1393,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_quick_graph_metrics.setEnabled(True)
         self.btn_save_files.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
-        # self.btn_fd.setEnabled(True)
+        if self.cbx_multi.isChecked():
+            self.btn_gt_metrics_all.setEnabled(True)
         # self.btn_chaos_gt.setEnabled(True)
 
     def enable_img_tasks(self):
