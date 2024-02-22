@@ -866,13 +866,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         return
 
     def _btn_cancel_clicked(self):
-        # Clear the thread pool to stop any ongoing tasks
-        # self.threadpool.clear()
-        # self.thread.quit()
+        # Quit the thread to stop any ongoing tasks
+
         if self.worker.isRunning():
-            self.worker.quit()
-        self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
-        self.lbl_progress.setText("Aborted by user!")
+            self.worker.send_abort_message()
+            self.progress_bar_main.setValue(0)
+            self.lbl_progress.setText("Aborted by user.")
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -1407,6 +1406,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def disable_all_tasks(self):
         self.error_flag = False
+        self.btn_cancel.setEnabled(True)  # Opposite of others
+
         self.btn_select_img_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
         self.btn_zoom_in.setEnabled(False)
@@ -1426,9 +1427,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics.setEnabled(False)
         self.btn_gt_metrics_all.setEnabled(False)
         # self.btn_chaos_gt.setEnabled(False)
-        time.sleep(2)
 
     def enable_all_tasks(self):
+        self.btn_cancel.setEnabled(False)  # Opposite of others
+
         self.btn_select_img_path.setEnabled(True)
         self.cbx_multi.setEnabled(True)
         self.btn_zoom_in.setEnabled(True)
@@ -1451,6 +1453,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # self.btn_chaos_gt.setEnabled(True)
 
     def enable_img_tasks(self):
+        self.btn_cancel.setEnabled(False)  # Opposite of others
+
         self.btn_select_img_path.setEnabled(True)
         self.cbx_multi.setEnabled(True)
         self.btn_zoom_in.setEnabled(True)
@@ -1466,6 +1470,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img.setEnabled(True)
 
     def enable_gt_tasks(self):
+        self.btn_cancel.setEnabled(False)  # Opposite of others
+
         self.btn_show_graph.setEnabled(True)
         self.btn_quick_graph_metrics.setEnabled(True)
         self.btn_save_files.setEnabled(True)
@@ -1549,11 +1555,40 @@ class WorkerSignals(QtCore.QObject):
 class Worker(QtCore.QThread):
     def __init__(self, func_id, args, target=None):
         super().__init__()
+        self.__listeners = []
         self.signals = WorkerSignals()
         self.target = target
         self.target_id = func_id
         self.args = args
         self.abort = False
+
+    def add_thread_listener(self, func):
+        """
+        Add functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func in self.__listeners:
+            return
+        self.__listeners.append(func)
+
+    def remove_thread_listener(self, func):
+        """
+        Remove functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func not in self.__listeners:
+            return
+        self.__listeners.remove(func)
+
+    # Trigger events.
+    def send_abort_message(self, args=None):
+        # Run all the functions that are saved.
+        if args is None:
+            args = []
+        for func in self.__listeners:
+            func(*args)
 
     def run(self):
         if self.target:
@@ -1590,6 +1625,7 @@ class Worker(QtCore.QThread):
             graph_obj.configs_img = options_img
             graph_obj.configs_graph = options_gte
             graph_obj.add_listener(self.update_progress)
+            self.add_thread_listener(graph_obj.abort_tasks)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)
             self.signals.finished.emit(2, 0, graph_obj)

@@ -31,6 +31,7 @@ class GraphMetrics:
 
     def __init__(self, g_obj, configs, allow_multiprocessing=True):
         self.__listeners = []
+        self.__abort = False
         self.allow_mp = allow_multiprocessing
         self.g_struct = g_obj
         self.configs = configs
@@ -48,6 +49,9 @@ class GraphMetrics:
         self.currentflow_distribution = [0]
         self.weighted_closeness_distribution = [0]
         self.weighted_eigenvector_distribution = [0]
+
+    def abort_tasks(self):
+        self.__abort = True
 
     def add_listener(self, func):
         """
@@ -132,6 +136,9 @@ class GraphMetrics:
 
         # calculating average nodal connectivity
         if options.compute_nodal_connectivity == 1:
+            if self.__abort:
+                self.update_status([-1, "Task aborted."])
+                return
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
                 if self.allow_mp:
@@ -154,6 +161,9 @@ class GraphMetrics:
 
         # calculating global efficiency
         if options.compute_global_efficiency == 1:
+            if self.__abort:
+                self.update_status([-1, "Task aborted."])
+                return
             self.update_status([25, "Computing global efficiency..."])
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
@@ -573,6 +583,9 @@ class GraphMetrics:
             for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
                 num += n
                 den += 1
+                if self.__abort:
+                    self.update_status([-1, "Task aborted."])
+                    return 0
         if den == 0:
             return 0
         return num / den

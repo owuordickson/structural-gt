@@ -30,6 +30,7 @@ class GraphStruct:
 
     def __init__(self, img_path, out_path, options_img=None, options_gte=None, img=None, allow_multiprocessing=True):
         self.__listeners = []
+        self.__abort = False
         self.allow_mp = allow_multiprocessing
         self.terminal_app = True
         self.configs_img, self.configs_graph = options_img, options_gte
@@ -45,6 +46,9 @@ class GraphStruct:
         self.graph_skeleton = None
         self.nx_graph, self.nx_info = None, []
         self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
+
+    def abort_tasks(self):
+        self.__abort = True
 
     def add_listener(self, func):
         """
@@ -89,6 +93,8 @@ class GraphStruct:
         success = self.extract_graph()
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
+        elif self.__abort:
+            self.update_status([-1, "Task aborted."])
         else:
             self.update_status([75, "Verifying graph network..."])
             if self.nx_graph.number_of_nodes() <= 0:
