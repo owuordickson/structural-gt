@@ -152,6 +152,7 @@ def load_gui_configs():
 
     gui_txt = struct()
     gui_txt.title = title
+    gui_txt.about = str(config.get('gui', 'about'))
 
     # 1. Extraction
     gui_txt.weighted = str(config.get('gui', 'weighted'))

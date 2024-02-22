@@ -55,7 +55,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.error_flag = False
         self.wait_flag = False
 
-        self.threadpool = QtCore.QThreadPool()
+        # self.threadpool = QtCore.QThreadPool()
+        self.worker = Worker(0, None)
         self._init_configs()
 
     def __create_widgets(self):
@@ -767,9 +768,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.setEnabled(True)
 
     def _init_tools(self):
+        self.btn_cancel.setEnabled(False)
+
         self.spb_brightness.valueChanged.connect(self._spb_brightness_value_changed)
         self.spb_contrast.valueChanged.connect(self._spb_contrast_value_changed)
 
+        self.btn_about.clicked.connect(AnalysisUI._btn_about_clicked)
+        self.btn_cancel.clicked.connect(self._btn_cancel_clicked)
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
         self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
         self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
@@ -845,6 +850,27 @@ class AnalysisUI(QtWidgets.QMainWindow):
         g_obj = self.graph_objs[self.current_obj_index]
         q_img = self.apply_brightness(g_obj.img)
         self._load_image(q_img)
+
+    @staticmethod
+    def _btn_about_clicked():
+        about = ("\n"
+                 "A software tool that allows graph theory analysis \n"
+                 "of nano-structures. This is a modified version of \n"
+                 "StructuralGT initially proposed by Drew A. Vecchio.\n"
+                 "DOI: 10.1021/acsnano.1c04711"
+                 "\n\n")
+        dialog = CustomDialog("About StructuralGT", about)
+        dialog.exec()
+        return
+
+    def _btn_cancel_clicked(self):
+        # Clear the thread pool to stop any ongoing tasks
+        # self.threadpool.clear()
+        # self.thread.quit()
+        if self.worker.isRunning():
+            self.worker.quit()
+        self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
+        self.lbl_progress.setText("Aborted by user!")
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -1000,10 +1026,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.disable_all_tasks()
             options_img = self._fetch_img_options()
             options_gte = self._fetch_gte_options()
-            worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
-            worker.signals.progress.connect(self._handle_progress_update)
-            worker.signals.finished.connect(self._handle_finished)
-            self.threadpool.start(worker)
+
+            self.worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
+            self.worker.signals.progress.connect(self._handle_progress_update)
+            self.worker.signals.finished.connect(self._handle_finished)
+            self.worker.start()
 
     def _btn_quick_metrics_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1061,10 +1088,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
 
-        worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
-        worker.signals.progress.connect(self._handle_progress_update)
-        worker.signals.finished.connect(self._handle_finished)
-        self.threadpool.start(worker)
+        # worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
+        # worker.signals.progress.connect(self._handle_progress_update)
+        # worker.signals.finished.connect(self._handle_finished)
+        # self.threadpool.start(worker)
+        self.worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
+        self.worker.signals.progress.connect(self._handle_progress_update)
+        self.worker.signals.finished.connect(self._handle_finished)
+        self.worker.start()
 
     def _btn_compute_gt_metrics_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1077,10 +1108,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_gte = self._fetch_gte_options()
         options_gtc = self._fetch_gtc_options()
 
-        worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
-        worker.signals.progress.connect(self._handle_progress_update)
-        worker.signals.finished.connect(self._handle_finished)
-        self.threadpool.start(worker)
+        self.worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
+        self.worker.signals.progress.connect(self._handle_progress_update)
+        self.worker.signals.finished.connect(self._handle_finished)
+        self.worker.start()
 
     def _btn_compute_gt_metrics_all_clicked(self):
         self.disable_all_tasks()
@@ -1493,13 +1524,14 @@ class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal(int, object)
 
 
-class Worker(QtCore.QRunnable):
+class Worker(QtCore.QThread):
     def __init__(self, func_id, args, target=None):
         super().__init__()
         self.signals = WorkerSignals()
         self.target = target
         self.target_id = func_id
         self.args = args
+        self.abort = False
 
     def run(self):
         if self.target:
