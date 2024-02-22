@@ -2,7 +2,7 @@
 **StructuralGTb**
 
 A software package for performing Graph Theory on microscopic TEM images. This software is a \
-modified version of StructuralGT by Drew Vecchio: https://github.com/drewvecchio/StructuralGT.
+modified version of StructuralGT by Drew A. Vecchio: https://github.com/drewvecchio/StructuralGT.
 
     Copyright (C) 2024, the Regents of the University of Michigan".
 
