@@ -529,7 +529,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.lbl_laplacian.setText(_translate("window_main", "3"))
         self.cbx_lowpass.setText(_translate("window_main", "Lowpass"))
         self.lbl_progress.setText(_translate("window_main", ""))
-        self.lbl_info.setText(_translate("window_main", "Add Image"))
+        self.lbl_info.setText(_translate("window_main", "add image..."))
         self.btn_cancel.setText(_translate("window_main", "Cancel"))
         self.grp_img_binary.setTitle(_translate("window_main", "Image Binary"))
         self.rdo_otsu_threshold.setText(_translate("window_main", "OTSU"))
@@ -814,6 +814,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self._load_image()
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
+                if self.btn_gt_metrics.isEnabled():
+                    self.btn_gt_metrics_all.setEnabled(True)
         else:
             self._load_image()
             self.btn_next.setEnabled(False)
@@ -1114,8 +1116,20 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.worker.start()
 
     def _btn_compute_gt_metrics_all_clicked(self):
+        if self.txt_img_path.text() == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
         self.disable_all_tasks()
-        self.enable_all_tasks()
+        options_img = self._fetch_img_options()
+        options_gte = self._fetch_gte_options()
+        options_gtc = self._fetch_gtc_options()
+
+        self.worker = Worker(func_id=4, args=(self.graph_objs, options_img, options_gte, options_gtc))
+        self.worker.signals.progress.connect(self._handle_progress_update)
+        self.worker.signals.finished.connect(self._handle_finished)
+        self.worker.start()
+        self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
 
     # def _btn_chaos_gt_clicked(self):
     #    pass
@@ -1123,7 +1137,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _image_filters_changed(self):
         print(self.current_obj_index)
 
-    def _handle_finished(self, task, obj):
+    def _handle_finished(self, task, show_dialog, obj):
         if self.progress_dialog:
             self.progress_dialog.cancel()
             self.progress_dialog = None
@@ -1154,9 +1168,16 @@ class AnalysisUI(QtWidgets.QMainWindow):
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "GT PDF successfully generated!")
-            dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
-            dialog.exec()
+            if show_dialog == 1:
+                dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
+                dialog.exec()
+            else:
+                self.current_obj_index += 1
+                self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
         elif task == 4:
+            dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDFs in 'Output Dir'")
+            dialog.exec()
+        elif task == 5:
             self._handle_progress_update(100, 100, obj)
         self.enable_all_tasks()
 
@@ -1182,6 +1203,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         w = self.lbl_img.width()
         h = self.lbl_img.height()
         self.lbl_img.setText('')
+        self.lbl_info.setText(f"image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
         if img_pixmap is None:
             g_obj = self.graph_objs[self.current_obj_index]
             img_pixmap = self.apply_brightness(g_obj.img)
@@ -1521,7 +1543,7 @@ class CustomDialog(QtWidgets.QDialog):
 
 class WorkerSignals(QtCore.QObject):
     progress = QtCore.pyqtSignal(int, int, str)
-    finished = QtCore.pyqtSignal(int, object)
+    finished = QtCore.pyqtSignal(int, int, object)
 
 
 class Worker(QtCore.QThread):
@@ -1543,7 +1565,9 @@ class Worker(QtCore.QThread):
         elif self.target_id == 3:
             self.service_compute_gt(*self.args)
         elif self.target_id == 4:
-            self.signals.finished.emit(3, "Test complete!")
+            self.service_compute_gt_all(*self.args)
+        elif self.target_id == 5:
+            self.signals.finished.emit(3, 1, "Test complete!")
 
     def update_progress(self, value, msg):
         if value > 0:
@@ -1557,7 +1581,7 @@ class Worker(QtCore.QThread):
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit_img()
             graph_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(1, graph_obj)
+            self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
 
@@ -1568,7 +1592,7 @@ class Worker(QtCore.QThread):
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(2, graph_obj)
+            self.signals.finished.emit(2, 0, graph_obj)
         except Exception as err:
             print(err)
 
@@ -1594,9 +1618,36 @@ class Worker(QtCore.QThread):
             # metrics_obj.generate_pdf_output()
             plot_figs = metrics_obj.generate_output()
             metrics_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(3, plot_figs)
+            self.signals.finished.emit(3, 1, plot_figs)
         except Exception as err:
             print(err)
+
+    def service_compute_gt_all(self, graph_objs, options_img, options_gte, options_gtc):
+        for graph_obj in graph_objs:
+            try:
+                if graph_obj.nx_graph is None:
+                    graph_obj.configs_img = options_img
+                    graph_obj.configs_graph = options_gte
+                    graph_obj.add_listener(self.update_progress)
+                    graph_obj.fit()
+                    graph_obj.remove_listener(self.update_progress)
+                else:
+                    if graph_obj.nx_graph.number_of_nodes() <= 0:
+                        self.update_progress(-1, "Graph Error: Problem with graph (change/apply different filter and "
+                                                 "graph options). Or change brightness/contrast")
+                        return
+                graph_obj.configs_graph = options_gte
+                metrics_obj = GraphMetrics(graph_obj, options_gtc)
+                metrics_obj.add_listener(self.update_progress)
+                metrics_obj.compute_gt_metrics()
+                if options_gte.weighted_by_diameter:
+                    metrics_obj.compute_weighted_gt_metrics()
+                # metrics_obj.generate_pdf_output()
+                plot_figs = metrics_obj.generate_output()
+                metrics_obj.remove_listener(self.update_progress)
+                self.signals.finished.emit(3, 0, plot_figs)
+            except Exception as err:
+                print(err)
 
 
 def pyqt_app():
