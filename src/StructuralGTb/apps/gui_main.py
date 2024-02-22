@@ -814,12 +814,16 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self._load_image()
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
-                if self.btn_gt_metrics.isEnabled():
-                    self.btn_gt_metrics_all.setEnabled(True)
+                self.btn_gt_metrics_all.setEnabled(True)
+            else:
+                self.btn_next.setEnabled(False)
+                self.btn_prev.setEnabled(False)
+                self.btn_gt_metrics_all.setEnabled(False)
         else:
             self._load_image()
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
+            self.btn_gt_metrics_all.setEnabled(False)
 
     def _spb_adaptive_threshold_value_changed(self):
         val = self.spb_adaptive_threshold.value()
@@ -858,20 +862,18 @@ class AnalysisUI(QtWidgets.QMainWindow):
         about = ("\n"
                  "A software tool that allows graph theory analysis \n"
                  "of nano-structures. This is a modified version of \n"
-                 "StructuralGT initially proposed by Drew A. Vecchio.\n"
+                 "StructuralGT initially proposed by Drew A. Vecchio.\n\n"
                  "DOI: 10.1021/acsnano.1c04711"
-                 "\n\n")
+                 "\n")
         dialog = CustomDialog("About StructuralGT", about)
         dialog.exec()
         return
 
     def _btn_cancel_clicked(self):
         # Quit the thread to stop any ongoing tasks
-
         if self.worker.isRunning():
             self.worker.send_abort_message()
-            self.progress_bar_main.setValue(0)
-            self.lbl_progress.setText("Aborted by user.")
+            self.lbl_progress.setText("Please wait, aborting...")
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -1150,6 +1152,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "Image filters applied.")
+            self.enable_all_tasks()
         elif (task == 2) and (not self.error_flag):
             try:
                 self.graph_objs[self.current_obj_index] = obj
@@ -1158,8 +1161,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "Drawing graph complete!")
-            # dialog = CustomDialog("Success!", 'Graph network ready.')
-            # dialog.exec()
+            self.enable_all_tasks()
+            if show_dialog == 1:
+                dialog = CustomDialog("Success!", 'Graph network ready.')
+                dialog.exec()
         elif (task == 3) and (not self.error_flag):
             try:
                 plot_data = obj
@@ -1168,17 +1173,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 print(err)
             self._handle_progress_update(100, 100, "GT PDF successfully generated!")
             if show_dialog == 1:
+                self.enable_all_tasks()
                 dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
                 dialog.exec()
             else:
                 self.current_obj_index += 1
                 self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
-        elif task == 4:
+        elif task == 4 and (not self.error_flag):
+            self.enable_all_tasks()
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDFs in 'Output Dir'")
             dialog.exec()
-        elif task == 5:
+        elif task == 5 and (not self.error_flag):
             self._handle_progress_update(100, 100, obj)
-        self.enable_all_tasks()
+            self.enable_all_tasks()
+
+        if self.error_flag:
+            self.enable_img_tasks()
+        # else:
+        #    self.enable_all_tasks()
 
     def _handle_progress_update(self, value, code, msg):
         print(str(value) + "%: " + msg)
@@ -1190,6 +1202,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.error_flag = True
             self.lbl_progress.setStyleSheet("color: rgb(255, 0, 0)")
             self.lbl_progress.setText("ERROR: " + str(msg))
+            self.progress_bar_main.setValue(0)
             dialog = CustomDialog("Error", msg)
             dialog.exec()
 
@@ -1584,7 +1597,7 @@ class Worker(QtCore.QThread):
 
     # Trigger events.
     def send_abort_message(self, args=None):
-        # Run all the functions that are saved.
+        self.abort = True
         if args is None:
             args = []
         for func in self.__listeners:
@@ -1622,68 +1635,108 @@ class Worker(QtCore.QThread):
 
     def service_generate_graph(self, graph_obj, options_img, options_gte):
         try:
+            graph_obj.abort = False
             graph_obj.configs_img = options_img
             graph_obj.configs_graph = options_gte
             graph_obj.add_listener(self.update_progress)
             self.add_thread_listener(graph_obj.abort_tasks)
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)
+            self.add_thread_listener(graph_obj.abort_tasks)
             self.signals.finished.emit(2, 0, graph_obj)
         except Exception as err:
             print(err)
 
     def service_compute_gt(self, graph_obj, options_img, options_gte, options_gtc):
         try:
+            graph_obj.abort = False
             if graph_obj.nx_graph is None:
                 graph_obj.configs_img = options_img
                 graph_obj.configs_graph = options_gte
                 graph_obj.add_listener(self.update_progress)
+                self.add_thread_listener(graph_obj.abort_tasks)
                 graph_obj.fit()
                 graph_obj.remove_listener(self.update_progress)
+                self.add_thread_listener(graph_obj.abort_tasks)
             else:
                 if graph_obj.nx_graph.number_of_nodes() <= 0:
                     self.update_progress(-1, "Graph Error: Problem with graph (change/apply different filter and "
                                              "graph options). Or change brightness/contrast")
                     return
+            if self.abort:
+                self.update_progress(-1, "Task aborted.")
+                self.signals.finished.emit(3, 1, [])
+                return
             graph_obj.configs_graph = options_gte
             metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
+            self.add_thread_listener(metrics_obj.abort_tasks)
             metrics_obj.compute_gt_metrics()
             if options_gte.weighted_by_diameter:
+                if self.abort:
+                    self.update_progress(-1, "Task aborted.")
+                    self.signals.finished.emit(3, 1, [])
+                    return
                 metrics_obj.compute_weighted_gt_metrics()
             # metrics_obj.generate_pdf_output()
+            if self.abort:
+                self.update_progress(-1, "Task aborted.")
+                self.signals.finished.emit(3, 1, [])
+                return
             plot_figs = metrics_obj.generate_output()
             metrics_obj.remove_listener(self.update_progress)
+            self.remove_thread_listener(metrics_obj.abort_tasks)
             self.signals.finished.emit(3, 1, plot_figs)
         except Exception as err:
             print(err)
 
     def service_compute_gt_all(self, graph_objs, options_img, options_gte, options_gtc):
         for graph_obj in graph_objs:
+            if self.abort:
+                self.update_progress(-1, "Task aborted.")
+                self.signals.finished.emit(4, 0, [])
+                return
             try:
+                graph_obj.abort = False
                 if graph_obj.nx_graph is None:
                     graph_obj.configs_img = options_img
                     graph_obj.configs_graph = options_gte
                     graph_obj.add_listener(self.update_progress)
                     graph_obj.fit()
                     graph_obj.remove_listener(self.update_progress)
+                    self.add_thread_listener(graph_obj.abort_tasks)
                 else:
                     if graph_obj.nx_graph.number_of_nodes() <= 0:
                         self.update_progress(-1, "Graph Error: Problem with graph (change/apply different filter and "
                                                  "graph options). Or change brightness/contrast")
                         return
+                if self.abort:
+                    self.update_progress(-1, "Task aborted.")
+                    self.signals.finished.emit(4, 0, [])
+                    return
                 graph_obj.configs_graph = options_gte
                 metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
+                self.add_thread_listener(metrics_obj.abort_tasks)
                 metrics_obj.compute_gt_metrics()
                 if options_gte.weighted_by_diameter:
+                    if self.abort:
+                        self.update_progress(-1, "Task aborted.")
+                        self.signals.finished.emit(4, 0, [])
+                        return
                     metrics_obj.compute_weighted_gt_metrics()
+                if self.abort:
+                    self.update_progress(-1, "Task aborted.")
+                    self.signals.finished.emit(4, 0, [])
+                    return
                 # metrics_obj.generate_pdf_output()
                 plot_figs = metrics_obj.generate_output()
                 metrics_obj.remove_listener(self.update_progress)
+                self.add_thread_listener(metrics_obj.abort_tasks)
                 self.signals.finished.emit(3, 0, plot_figs)
             except Exception as err:
                 print(err)
+        self.signals.finished.emit(4, 1, [])
 
 
 def pyqt_app():

@@ -31,7 +31,7 @@ class GraphMetrics:
 
     def __init__(self, g_obj, configs, allow_multiprocessing=True):
         self.__listeners = []
-        self.__abort = False
+        self.abort = False
         self.allow_mp = allow_multiprocessing
         self.g_struct = g_obj
         self.configs = configs
@@ -51,7 +51,7 @@ class GraphMetrics:
         self.weighted_eigenvector_distribution = [0]
 
     def abort_tasks(self):
-        self.__abort = True
+        self.abort = True
 
     def add_listener(self, func):
         """
@@ -136,7 +136,7 @@ class GraphMetrics:
 
         # calculating average nodal connectivity
         if options.compute_nodal_connectivity == 1:
-            if self.__abort:
+            if self.abort:
                 self.update_status([-1, "Task aborted."])
                 return
             self.update_status([15, "Computing node connectivity..."])
@@ -161,7 +161,7 @@ class GraphMetrics:
 
         # calculating global efficiency
         if options.compute_global_efficiency == 1:
-            if self.__abort:
+            if self.abort:
                 self.update_status([-1, "Task aborted."])
                 return
             self.update_status([25, "Computing global efficiency..."])
@@ -335,6 +335,9 @@ class GraphMetrics:
             data_dict["y"].append(c_val)
 
         if options.display_eigenvector_histogram == 1:
+            if self.abort:
+                self.update_status([-1, "Task aborted."])
+                return
             self.update_status([84, "Compute weighted eigenvector centrality..."])
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
@@ -583,7 +586,7 @@ class GraphMetrics:
             for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
                 num += n
                 den += 1
-                if self.__abort:
+                if self.abort:
                     self.update_status([-1, "Task aborted."])
                     return 0
         if den == 0:
