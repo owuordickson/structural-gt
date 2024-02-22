@@ -1,6 +1,6 @@
 # Structural GTb
 
-A software tool that implements structural graph theory and chaos engineering for nano-structures.
+A software tool that allows graph theory analysis of nano-structures. This is a modified version of **StructuralGT** initially proposed by Drew A. Vecchio, DOI: [10.1021/acsnano.1c04711](https://pubs.acs.org/doi/10.1021/acsnano.1c04711?ref=pdf).
 
 ## Installation
 
@@ -15,15 +15,12 @@ This specified version is not currently available for download via GitHub. There
 
 ```bash
 cd structural-gt
-python3 -m venv venv_sgt
-source venv_sgt/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install .
-deactivate
 ```
 
-## Executing 
+## Executing program
 
 To execute the program, please follow these steps:
 
@@ -32,5 +29,10 @@ To execute the program, please follow these steps:
 * Once inside the folder, execute the following command:
 
 ```bash
-structural-gt/venv_sgt/bin/StructuralGTb
+StructuralGTb
 ```
+
+
+## References
+* Drew A. Vecchio, Samuel H. Mahler, Mark D. Hammig, and Nicholas A. Kotov
+ACS Nano 2021 15 (8), 12847-12859. DOI: [10.1021/acsnano.1c04711](https://pubs.acs.org/doi/10.1021/acsnano.1c04711?ref=pdf).

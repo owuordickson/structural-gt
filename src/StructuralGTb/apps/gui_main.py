@@ -1066,27 +1066,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         worker.signals.progress.connect(self._handle_progress_update)
         worker.signals.finished.connect(self._handle_finished)
         self.threadpool.start(worker)
-        """
-        if g_obj.nx_graph is not None:
-            if g_obj.nx_graph.number_of_nodes() <= 0:
-                dialog = CustomDialog("Graph Error",
-                                      "Problem with graph (change/apply different filter and graph options). "
-                                      "Or change brightness/contrast")
-                dialog.exec()
-                return
-
-            self.disable_all_tasks()
-            options_gte = self._fetch_gte_options()
-            options_gtc = self._fetch_gtc_options()
-
-            worker = Worker(func_id=3, args=(g_obj, options_gte, options_gtc))
-            worker.signals.progress.connect(self._handle_progress_update)
-            worker.signals.finished.connect(self._handle_finished)
-            self.threadpool.start(worker)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
-            dialog.exec()
-        """
 
     def _btn_compute_fd_clicked(self):
         self.disable_all_tasks()

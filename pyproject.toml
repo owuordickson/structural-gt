@@ -25,10 +25,10 @@ authors = [
 maintainers = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"}
 ]
-description = "A software tool that implements structural graph theory and chaos engineering for nano-structures."
+description = "A software tool that allows graph theory analysis of nano-structures."
 readme =  "README.md"
 license = {file = "LICENSE"}
-keywords = ["nano-particles", "nano-structures", "graph-theory", "chaos-engineering"]
+keywords = ["nano-particles", "nano-structures", "graph-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python :: 3.11",

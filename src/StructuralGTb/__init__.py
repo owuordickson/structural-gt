@@ -1,10 +1,10 @@
 """
 **StructuralGTb**
 
-A software package for performing Graph Theory and Chaos analysis on microscopic TEM images. This software is a \
+A software package for performing Graph Theory on microscopic TEM images. This software is a \
 modified version of StructuralGT by Drew Vecchio: https://github.com/drewvecchio/StructuralGT.
 
-    Copyright (C) 2024, The University of Michigan.
+    Copyright (C) 2024, the Regents of the University of Michigan".
 
         This program is free software: you can redistribute it and/or modify \
 it under the terms of the GNU General Public License as published by \
@@ -32,8 +32,7 @@ from .entrypoints import main_gui
 # Project version
 __version__ = "1.0.2"
 __author__ = "Dickson Owuor"
-# __credits__ = "The Regents of the University of Michigan"
-__credits__ = "Chemical Engineering Department, University of Michigan"
+__credits__ = "The Regents of the University of Michigan"
 
 
 # Packages available in 'from StructuralGTb import *'
