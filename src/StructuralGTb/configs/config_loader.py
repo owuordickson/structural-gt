@@ -10,6 +10,7 @@ Loads default configurations from 'configs.ini' file
 import os
 import sys
 import configparser
+import multiprocessing as mp
 from optparse import OptionParser
 from ypstruct import struct
 
@@ -186,3 +187,56 @@ def load_gui_configs():
     gui_txt.save_images = str(config.get('gui', 'save_images'))
 
     return gui_txt
+
+
+def get_num_cores():
+    """
+    Finds the count of CPU cores in a computer or a SLURM super-computer.
+    :return: number of cpu cores (int)
+    """
+    num_cores = __get_slurm_cores__()
+    if not num_cores:
+        num_cores = mp.cpu_count()
+    return num_cores
+
+
+def __get_slurm_cores__():
+    """
+    Test computer to see if it is a SLURM environment, then gets number of CPU cores.
+    :return: count of CPUs (int) or False
+    """
+    try:
+        cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+        return cores
+    except ValueError:
+        try:
+            str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+            temp = str_cores.split('(', 1)
+            cpus = int(temp[0])
+            str_nodes = temp[1]
+            temp = str_nodes.split('x', 1)
+            str_temp = str(temp[1]).split(')', 1)
+            nodes = int(str_temp[0])
+            cores = cpus * nodes
+            return cores
+        except ValueError:
+            return False
+    except KeyError:
+        return False
+
+
+def write_file(data, path, wr=True):
+    """Description
+
+    Writes data into a file
+    :param data: information to be written
+    :param path: name of file and storage path
+    :param wr: writes data into file if True
+    :return:
+    """
+    if wr:
+        with open(path, 'w') as f:
+            f.write(data)
+            f.close()
+    else:
+        pass

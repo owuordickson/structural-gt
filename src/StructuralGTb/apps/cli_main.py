@@ -10,7 +10,7 @@ Terminal interface implementations
 import time
 import os
 import multiprocessing as mp
-from ..configs.config_loader import load_configs
+from ..configs.config_loader import load_configs, get_num_cores
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
 
@@ -36,7 +36,7 @@ def terminal_app():
             # Process multiple images in one folder
             # getting the file names and directory
             files = os.listdir(img_path)
-            files = sorted(files, key=str.lower)
+            files = sorted(files)
             out_path = img_path
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
@@ -99,39 +99,3 @@ def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
 
 def print_progress(x, y):
     print(str(x) + ": " + y)
-
-
-def get_num_cores():
-    """
-    Finds the count of CPU cores in a computer or a SLURM super-computer.
-    :return: number of cpu cores (int)
-    """
-    num_cores = __get_slurm_cores__()
-    if not num_cores:
-        num_cores = mp.cpu_count()
-    return num_cores
-
-
-def __get_slurm_cores__():
-    """
-    Test computer to see if it is a SLURM environment, then gets number of CPU cores.
-    :return: count of CPUs (int) or False
-    """
-    try:
-        cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-        return cores
-    except ValueError:
-        try:
-            str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-            temp = str_cores.split('(', 1)
-            cpus = int(temp[0])
-            str_nodes = temp[1]
-            temp = str_nodes.split('x', 1)
-            str_temp = str(temp[1]).split(')', 1)
-            nodes = int(str_temp[0])
-            cores = cpus * nodes
-            return cores
-        except ValueError:
-            return False
-    except KeyError:
-        return False

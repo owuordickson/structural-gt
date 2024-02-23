@@ -14,7 +14,7 @@ from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
-from ..configs.config_loader import load_configs, load_gui_configs
+from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
 from ..modules.graph_struct import GraphStruct
 from ..modules.graph_metrics import GraphMetrics
 
@@ -1195,7 +1195,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _handle_progress_update(self, value, code, msg):
         print(str(value) + "%: " + msg)
-        if code > 0:
+        if (code > 0) and (not self.error_flag):
             self.lbl_progress.setStyleSheet("color: rgb(0, 128, 0)")
             self.lbl_progress.setText(msg)
             self.progress_bar_main.setValue(value)
@@ -1692,7 +1692,10 @@ class Worker(QtCore.QThread):
             print(err)
 
     def service_compute_gt_all(self, graph_objs, options_img, options_gte, options_gtc):
+        i = 0
         for graph_obj in graph_objs:
+            start = time.time()
+
             if self.abort:
                 self.update_progress(-1, "Task aborted.")
                 self.signals.finished.emit(4, 0, [])
@@ -1735,6 +1738,20 @@ class Worker(QtCore.QThread):
                 metrics_obj.remove_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 self.signals.finished.emit(3, 0, plot_figs)
+
+                end = time.time()
+                num_cores = get_num_cores()
+                i += 1
+                output = "Analyzing Image:" + str(i) + "/" + str(len(graph_objs)) + "\n"
+                output += "Run-time: " + str(end - start) + " seconds" + "\n"
+                output += "Number of cores: " + str(num_cores) + "\n"
+                output += "Results generated for: " + graph_obj.img_path + "\n"
+                output += "Node Count: " + str(graph_obj.nx_graph.number_of_nodes()) + "\n"
+                output += "Edge Count: " + str(graph_obj.nx_graph.number_of_edges()) + "\n"
+                filename, out_dir = graph_obj.create_filenames(graph_obj.img_path)
+                out_file = os.path.join(out_dir, filename + '-v2_results.txt')
+                write_file(output, out_file)
+                print(output)
             except Exception as err:
                 print(err)
         self.signals.finished.emit(4, 1, [])
