@@ -220,7 +220,7 @@ def run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist
 
     data = pd.DataFrame(data_dict)
 
-    return data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents
+    return [nnum, enum], data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents
 
 
 def run_weighted_GT_calcs(G, just_data, Do_kdist, Do_BCdist, Do_CCdist, Do_ECdist, Do_ANC, Do_Ast, Do_WI, multigraph):

@@ -42,6 +42,8 @@ import sknw
 import csv
 import datetime
 
+import multiprocessing as mp
+
 
 def progress(currentValue):
     # setting the progressbar
@@ -138,7 +140,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
     global just_data
     # running GT calcs
     just_data = []
-    data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents= \
+    my_count, data, just_data, klist, Tlist, BCdist, CCdist, ECdist, SGcomponents= \
         GT_Params_multi.run_GT_calcs(G, just_data, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, Do_Eff, \
                                      Do_clust, Do_ANC, Do_Ast, Do_WI, Do_cond, multigraph)
     progress(80)
@@ -807,6 +809,7 @@ def save_data(src, Thresh_method, gamma, md_filter, g_blur, autolvl, fg_color, a
             nx.write_gexf(G, file1)
 
     label_count.set("Done")
+    return my_count
 
 
 def get_checks():
@@ -1102,6 +1105,8 @@ def Proceed_button(sources, filenames, saveloc):
     global filename_index
     global just_data
     while (i < len(filenames)):
+        start = time.time()
+
         filename = filenames[i]
         filename_index = i + 1
         src = sources[i]
@@ -1124,7 +1129,7 @@ def Proceed_button(sources, filenames, saveloc):
         progress(5)
 
         # save_data calls everything else and saves the GT Output
-        save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
+        n_count = save_data(src, Thresh_method, Gamma, md_filter, g_blur, autolvl, fg_color, asize, bsize, wsize, thresh, \
                   laplacian, scharr, sobel, lowpass, merge_nodes, prune, clean, Exp_EL, Do_gexf, r_size, weighted, \
                   display_nodeID, no_self_loops, multigraph, Do_kdist, Do_dia, Do_BCdist, Do_CCdist, Do_ECdist, Do_GD, \
                   Do_Eff, Do_clust, Do_ANC, Do_Ast, Do_cond, heatmap)
@@ -1134,8 +1139,21 @@ def Proceed_button(sources, filenames, saveloc):
         for data_point in just_data:
             compiled_data[j][filename_index] = data_point
             j += 1
-
         progress(100)
+
+        end = time.time()
+        num_cores = get_num_cores()
+        i += 1
+        output = "Analyzing Image:" + str(i) + "/" + str(len(filenames)) + "\n"
+        output += "Run-time: " + str(end - start) + " seconds" + "\n"
+        output += "Number of cores: " + str(num_cores) + "\n"
+        output += "Results generated for: " + old_filename + "\n"
+        output += "Node Count: " + str(n_count[0]) + "\n"
+        output += "Edge Count: " + str(n_count[1]) + "\n"
+
+        out_file = os.path.join(saveloc, old_filename + '-v1_results.txt')
+        write_file(output, out_file)
+        print(output)
 
         # updating the images completed
         print("Results generated for " + filename)
@@ -1402,3 +1420,56 @@ def make_settings(root, sources, saveloc, filenames):
 
     # keeping the window alive
     settings.mainloop()
+
+
+def get_num_cores():
+    """
+    Finds the count of CPU cores in a computer or a SLURM super-computer.
+    :return: number of cpu cores (int)
+    """
+    num_cores = __get_slurm_cores__()
+    if not num_cores:
+        num_cores = mp.cpu_count()
+    return num_cores
+
+
+def __get_slurm_cores__():
+    """
+    Test computer to see if it is a SLURM environment, then gets number of CPU cores.
+    :return: count of CPUs (int) or False
+    """
+    try:
+        cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+        return cores
+    except ValueError:
+        try:
+            str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+            temp = str_cores.split('(', 1)
+            cpus = int(temp[0])
+            str_nodes = temp[1]
+            temp = str_nodes.split('x', 1)
+            str_temp = str(temp[1]).split(')', 1)
+            nodes = int(str_temp[0])
+            cores = cpus * nodes
+            return cores
+        except ValueError:
+            return False
+    except KeyError:
+        return False
+
+
+def write_file(data, path, wr=True):
+    """Description
+
+    Writes data into a file
+    :param data: information to be written
+    :param path: name of file and storage path
+    :param wr: writes data into file if True
+    :return:
+    """
+    if wr:
+        with open(path, 'w') as f:
+            f.write(data)
+            f.close()
+    else:
+        pass
