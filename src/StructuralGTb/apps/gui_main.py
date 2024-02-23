@@ -873,6 +873,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         # Quit the thread to stop any ongoing tasks
         if self.worker.isRunning():
             self.worker.send_abort_message()
+            self.error_flag = True
             self.lbl_progress.setText("Please wait, aborting...")
 
     def _btn_select_img_path_clicked(self):
