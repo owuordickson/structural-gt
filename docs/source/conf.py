@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Chaos Engineering Tool"
+project = "Structural GT"
 copyright = "2024, Michigan University"
 author = "Dickson Owuor"
 
