@@ -1426,6 +1426,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.setEnabled(False)
         self.btn_zoom_in.setEnabled(False)
         self.btn_zoom_out.setEnabled(False)
+        self.btn_next.setEnabled(False)
+        self.btn_prev.setEnabled(False)
 
         self.spb_contrast.setEnabled(False)
         self.spb_brightness.setEnabled(False)
@@ -1464,6 +1466,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics.setEnabled(True)
         if self.cbx_multi.isChecked():
             self.btn_gt_metrics_all.setEnabled(True)
+            self.btn_next.setEnabled(True)
+            self.btn_prev.setEnabled(True)
         # self.btn_chaos_gt.setEnabled(True)
 
     def enable_img_tasks(self):
@@ -1473,6 +1477,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_multi.setEnabled(True)
         self.btn_zoom_in.setEnabled(True)
         self.btn_zoom_out.setEnabled(True)
+        if self.cbx_multi.isChecked():
+            self.btn_next.setEnabled(True)
+            self.btn_prev.setEnabled(True)
 
         self.spb_contrast.setEnabled(True)
         self.spb_brightness.setEnabled(True)
