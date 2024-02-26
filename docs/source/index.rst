@@ -1,4 +1,4 @@
-Chaos GT
+Structural GT
 --------
 
-Chaos engineering for nano-particles
+A software tool for graph theory analysis of nano-scale structures.
