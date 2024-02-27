@@ -16,6 +16,13 @@ download mingw-get-setup.exe installer
 run setup As Administrator
 install only 'mingw32-gcc-g++'
 Add path 'C:\MinGW\bin' to Environment Variables
-tesr 'gcc --version'
+test 'gcc --version'
 
-3. SETUP PYCHARM or VS CODE
+3. INSTALL CMAKE
+Linux/MacOS: use 'brew install cmake' 
+Windows:
+download and install CMAKE from https://cmake.org/
+Add CMAKE path to Environment Variables
+test 'cmake --version'
+
+4. SETUP PYCHARM or VS CODE
