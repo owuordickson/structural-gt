@@ -26,6 +26,7 @@ Add CMAKE path to Environment Variables
 test 'cmake --version'
 
 IGRAPH
+https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
 cmake -G "MinGW Makefiles" ..
 
 4. SETUP PYCHARM or VS CODE
