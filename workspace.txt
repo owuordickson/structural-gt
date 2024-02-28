@@ -33,5 +33,6 @@ cmake --install .
 
 3b. COMPILING in WINDOWS
 gcc .\igraph_test.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -o .\igraph_test
+gcc .\sgt_module.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -lpthread -o .\sgt_module
 
 4. SETUP PYCHARM or VS CODE
