@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <igraph.h>
+#include <time.h>
 
-#define MAX_THREADS 16
+#define MAX_THREADS 8
 
 
 // Structure to hold thread arguments
@@ -128,10 +129,15 @@ float compute_anc(int mp) {
 // Main function - entrypoint
 int main() {
     printf("Started...\n");
-    
+    clock_t start = clock();
+
     float anc = compute_anc(1);
     printf("Average Node Connectivity: %f\n", anc);
 
+    clock_t end = clock();
+    double duration = ((double)(end - start)) / CLOCKS_PER_SEC;
     printf("Ended ...\n");
+    printf("Time: %.2f seconds\n", duration);
+
     return 0;
 }
