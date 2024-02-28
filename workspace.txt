@@ -14,7 +14,7 @@ Linux/MacOS: use 'brew install gcc'
 Windows: 
 download mingw-get-setup.exe installer
 run setup As Administrator
-install only 'mingw32-gcc-g++' and 'mingw32-make'
+install only 'mingw32-gcc-g++' and 'mingw32-make' and 'mingw32-pthreads-w32'
 Add path 'C:\MinGW\bin' to Environment Variables
 test 'gcc --version'
 
