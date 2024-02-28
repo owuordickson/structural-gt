@@ -25,8 +25,13 @@ download and install CMAKE from https://cmake.org/
 Add CMAKE path to Environment Variables
 test 'cmake --version'
 
-IGRAPH
+3a. IGRAPH
 https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
 cmake -G "MinGW Makefiles" ..
+cmake --build . --target check
+cmake --install .
+
+3b. COMPILING in WINDOWS
+gcc .\igraph_test.c -I./igraph/include/igraph -L./igraph/lib -ligraph -o .\igraph_test
 
 4. SETUP PYCHARM or VS CODE
