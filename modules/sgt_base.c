@@ -126,6 +126,26 @@ float compute_anc(int mp) {
 }
 
 
+// Function to convert string representation of adjacency matrix to 2D matrix
+int** str_to_matrix(char* str_adj_mat, int num_vertices) {
+    // Allocate memory for 2D matrix
+    int** matrix = (int**)malloc(num_vertices * sizeof(int*));
+    for (int i = 0; i < num_vertices; i++) {
+        matrix[i] = (int*)malloc(num_vertices * sizeof(int));
+    }
+
+    // Parse string and populate matrix
+    char* token = strtok(str_adj_mat, " ");
+    for (int i = 0; i < num_vertices; i++) {
+        for (int j = 0; j < num_vertices; j++) {
+            matrix[i][j] = atoi(token);
+            token = strtok(NULL, " ");
+        }
+    }
+
+    return matrix;
+}
+
 // Main function - entrypoint
 int main() {
     printf("Started...\n");

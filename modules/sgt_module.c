@@ -14,16 +14,20 @@ compute_anc(PyObject *self, PyObject *args)
     PyObject *result;
     int *num_cpus;
     int *allow_mp;
+	int *length;
     char *str_adj_mat;
 	igraph_t graph;
+	int size;
 
-    if (!PyArg_ParseTuple(args, "sii:compute_anc", &str_adj_mat, &num_cpus, &allow_mp))
+    if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
         return NULL;
 	
 	if ( num_cpus <= 0 || allow_mp < 0){
     	PyErr_SetString( ErrorObject, "Invalid CPU parameters.");
     	return NULL;
   	}
+
+	size = (int)sqrt((double)(*length));
 
 	igraph_adjacency(
 		&graph, adj_mat, 
