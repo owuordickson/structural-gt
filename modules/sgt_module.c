@@ -19,7 +19,7 @@ compute_anc(PyObject *self, PyObject *args)
     char *str_adj_mat;
 	igraph_t graph;
 	int size;
-	int** adj_mat
+	int** adj_mat;
 
     if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
         return NULL;
