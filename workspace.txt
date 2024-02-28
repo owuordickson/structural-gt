@@ -32,6 +32,6 @@ cmake --build . --target check
 cmake --install .
 
 3b. COMPILING in WINDOWS
-gcc .\igraph_test.c -I./igraph/include/igraph -L./igraph/lib -ligraph -o .\igraph_test
+gcc .\igraph_test.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -o .\igraph_test
 
 4. SETUP PYCHARM or VS CODE
