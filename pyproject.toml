@@ -60,6 +60,14 @@ StructuralGTb = "StructuralGTb:main_gui"
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTb.__version__"}
 
+# Define the extension modules
+[tool.setuptools.extension]
+name = "sgt_module"
+sources = ["modules/sgt_base.c", "modules/sgt_modules.c"]
+libraries = ["igraph", "pthread"]
+library_dirs = ["modules/igraph_lib/lib"]
+include_dirs = ["modules/igraph_lib/include/igraph"]
+
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
 include = ["StructuralGTb*"]  # package names should match these glob patterns (["*"] by default)
