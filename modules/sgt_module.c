@@ -150,10 +150,10 @@ init_metric(void)
 	PyObject *m, *d;
 
 	/* Create the module and add the functions */
-	m = Py_InitModule("sgt_module", metric_methods);
+	m = Py_InitModule("sgt_igraph", metric_methods);
 
 	/* Add some symbolic constants to the module */
 	d = PyModule_GetDict(m);
-	ErrorObject = PyErr_NewException("sgt_module.error", NULL, NULL);
+	ErrorObject = PyErr_NewException("sgt_igraph.error", NULL, NULL);
 	PyDict_SetItemString(d, "error", ErrorObject);
 }
