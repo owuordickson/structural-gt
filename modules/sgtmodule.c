@@ -28,7 +28,7 @@ compute_anc(PyObject *self, PyObject *args)
 
     // Declare required variables
     const int MAX_THREADS = num_cpus;
-	int size;
+	igraph_integer_t size;
 	igraph_matrix_t adj_mat;
 
 	igraph_t graph;
@@ -44,13 +44,13 @@ compute_anc(PyObject *self, PyObject *args)
     adj_mat = str_to_matrix(str_adj_mat, size);
 
     // Build igraph
-	/*igraph_adjacency(
+	igraph_adjacency(
 		&graph, &adj_mat,
 		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
 	);
 
 	num_nodes = igraph_vcount(&graph);
-	if (allow_mp == 0){
+	/*if (allow_mp == 0){
         //printf("Using single processing\n");
         igraph_integer_t lnc;
         for (igraph_integer_t i=0; i<num_nodes; i++) {
