@@ -50,8 +50,8 @@ compute_anc(PyObject *self, PyObject *args)
 	);
 
 	num_nodes = igraph_vcount(&graph);
-	/*if (allow_mp == 0){
-        //printf("Using single processing\n");
+	if (allow_mp == 0){
+        printf("Using single processing\n");
         igraph_integer_t lnc;
         for (igraph_integer_t i=0; i<num_nodes; i++) {
             for (igraph_integer_t j=i+1; j<num_nodes; j++){
@@ -64,7 +64,7 @@ compute_anc(PyObject *self, PyObject *args)
 
     }
     else {
-        //printf("Using multiprocessing\n");
+        printf("Using multiprocessing\n");
         // Initialize mutex
         pthread_mutex_t mutex;
         pthread_mutex_init(&mutex, NULL);
@@ -109,15 +109,15 @@ compute_anc(PyObject *self, PyObject *args)
 
     // Compute ANC
     anc = (float) sum_nc / count_nc;
-    */
+
 	// Print the matrix
-    printf("Adjacency Matrix:\n");
+    /*printf("Adjacency Matrix:\n");
     for (igraph_integer_t i = 0; i < size; i++) {
         for (igraph_integer_t j = 0; j < size; j++) {
             printf("%f ", MATRIX(adj_mat, i, j));
         }
         printf("\n");
-    }
+    }*/
 
     // Destroy graph
     igraph_matrix_destroy(&adj_mat);
