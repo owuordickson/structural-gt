@@ -36,7 +36,7 @@ compute_anc(PyObject *self, PyObject *args)
     igraph_integer_t sum_nc = 0;
     igraph_real_t anc = 0;
 
-	// Get size of adjascency matrix
+	// Get size of adjacency matrix
 	size = (int)sqrt((double)(*length));
 
 	// Convert string to matrix
@@ -138,11 +138,47 @@ static char compute_anc_doc[] =
 "\n";
 
 
-/* List of functions defined in the module */
-static PyMethodDef metric_methods[] = {
-    {"compute_anc",    compute_anc,     METH_VARARGS, compute_anc_doc },
-	{NULL,		NULL}		/* sentinel */
+static char sgt_doc[] =
+"A C module that uses iGraph library to compute GT metrics.\n"
+"\n";
+
+/* Method Table: ist of functions defined in the module */
+static PyMethodDef sgt_methods[] = {
+    {"compute_anc", compute_anc, METH_VARARGS, compute_anc_doc },
+    {"compute_lnc", compute_lnc, METH_VARARGS, "Compute local node connectivity." },
+	{NULL, NULL, 0, NULL}        /* Sentinel */
 };
+
+/* Create module */
+static struct PyModuleDef sgtmodule = {
+    PyModuleDef_HEAD_INIT,
+    "sgt",   /* name of module */
+    sgt_doc, /* module documentation, may be NULL */
+    -1,       /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    sgt_methods
+};
+
+/* Initialization function for the module */
+PyMODINIT_FUNC
+PyInit_sgt(void)
+{
+    PyObject *m;
+
+    m = PyModule_Create(&sgtmodule);
+    if (m == NULL)
+        return NULL;
+
+    ErrorObject = PyErr_NewException("sgt.error", NULL, NULL);
+    Py_XINCREF(ErrorObject);
+    if (PyModule_AddObject(m, "error", ErrorObject) < 0) {
+        Py_XDECREF(ErrorObject);
+        Py_CLEAR(ErrorObject);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    return m;
+}
 
 /* Initialization function for the module */
 /*DL_EXPORT(void)
@@ -151,10 +187,11 @@ init_metric(void)
 	PyObject *m, *d;
 
 	// Create the module and add the functions
-	m = Py_InitModule("sgt_igraph", metric_methods);
+	m = Py_InitModule("sgt", sgt_methods);
 
 	//Add some symbolic constants to the module
 	d = PyModule_GetDict(m);
-	ErrorObject = PyErr_NewException("sgt_igraph.error", NULL, NULL);
+
+	ErrorObject = PyErr_NewException("sgt.error", NULL, NULL);
 	PyDict_SetItemString(d, "error", ErrorObject);
 }*/

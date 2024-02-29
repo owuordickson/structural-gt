@@ -10,7 +10,9 @@ git fetch origin cppy
 git pull origin cppy
 
 2. INSTALL gcc/g++ (C/C++ COMPILER)
-Linux/MacOS: use 'brew install gcc' 
+Linux/MacOS:
+use 'brew install gcc'
+brew install igraph
 Windows: 
 download mingw-get-setup.exe installer
 run setup As Administrator
