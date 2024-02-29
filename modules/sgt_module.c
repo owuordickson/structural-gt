@@ -26,6 +26,7 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
+    const int MAX_THREADS = num_cpus;
 	int size;
 	int** adj_mat;
 
@@ -43,7 +44,7 @@ compute_anc(PyObject *self, PyObject *args)
 
     // Build igraph
 	igraph_adjacency(
-		&graph, adj_mat, 
+		&graph, &adj_mat,
 		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
 	);
 
@@ -144,16 +145,16 @@ static PyMethodDef metric_methods[] = {
 };
 
 /* Initialization function for the module */
-DL_EXPORT(void)
+/*DL_EXPORT(void)
 init_metric(void)
 {
 	PyObject *m, *d;
 
-	/* Create the module and add the functions */
+	// Create the module and add the functions
 	m = Py_InitModule("sgt_igraph", metric_methods);
 
-	/* Add some symbolic constants to the module */
+	//Add some symbolic constants to the module
 	d = PyModule_GetDict(m);
 	ErrorObject = PyErr_NewException("sgt_igraph.error", NULL, NULL);
 	PyDict_SetItemString(d, "error", ErrorObject);
-}
+}*/
