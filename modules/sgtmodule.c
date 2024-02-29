@@ -130,12 +130,16 @@ compute_anc(PyObject *self, PyObject *args)
     return PyFloat_FromDouble((double) anc);
 }
 static char compute_anc_doc[] =
-"\n"
+"A C method that uses iGraph library to compute average node connectivity of a graph.\n"
 "\n"
 "Arguments:\n"
+"   A       string      adjacency matrix of graph\n"
+"   l       int      number of values/items in the variable A\n"
+"   cpus       int      number of available CPUs\n"
+"   mp       int      allow multi-processing (0: No, 1: Yes)\n"
 "\n"
-"\n"
-"\n";
+"The length of the graph should be a squared(N) since an adjacency matrix is NxN in size.\n"
+"Returns the Average Node Connectivity as a float value.\n";
 
 
 static char sgt_doc[] =
