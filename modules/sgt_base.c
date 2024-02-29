@@ -137,7 +137,7 @@ int** str_to_matrix(char* str_adj_mat, int num_vertices) {
 }
 
 // Main function - entrypoint
-int main() {
+/*int main() {
     printf("Started...\n");
     clock_t start = clock();
 
@@ -150,4 +150,4 @@ int main() {
     printf("Time: %.2f seconds\n", duration);
 
     return 0;
-}
+}*/
