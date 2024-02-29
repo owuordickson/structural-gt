@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <igraph.h>
+#include <stdarg.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -12,9 +13,9 @@ static PyObject *ErrorObject;
 static PyObject *
 compute_anc(PyObject *self, PyObject *args)
 {
-    int *num_cpus;
-    int *allow_mp;
-	int *length;
+    int num_cpus;
+    int allow_mp;
+	int length;
     char *str_adj_mat;
 
     if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
@@ -26,9 +27,9 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
-    const int* MAX_THREADS = num_cpus;
-	/*int size;
-	int** adj_mat;
+    const int MAX_THREADS = num_cpus;
+	int size;
+	igraph_matrix_t adj_mat;
 
 	igraph_t graph;
 	igraph_integer_t num_nodes;
@@ -37,10 +38,10 @@ compute_anc(PyObject *self, PyObject *args)
     igraph_real_t anc = 0;
 
 	// Get size of adjacency matrix
-	size = (int)sqrt((double)(*length));
+	size = (int)sqrt((double)(length));
 
 	// Convert string to matrix
-    adj_mat = str_to_matrix(str_adj_mat, size);*/
+    adj_mat = str_to_matrix(str_adj_mat, size);
 
     // Build igraph
 	/*igraph_adjacency(
@@ -110,33 +111,28 @@ compute_anc(PyObject *self, PyObject *args)
     anc = (float) sum_nc / count_nc;
     */
 	// Print the matrix
-    /*printf("Adjacency Matrix:\n");
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            printf("%d ", adj_mat[i][j]);
+    printf("Adjacency Matrix:\n");
+    for (igraph_integer_t i = 0; i < size; i++) {
+        for (igraph_integer_t j = 0; j < size; j++) {
+            printf("%f ", MATRIX(adj_mat, i, j));
         }
         printf("\n");
-    }*/
-
-    // Free allocated memory
-    /*for (int i = 0; i < size; i++) {
-        free(adj_mat[i]);
     }
-    free(adj_mat);
 
     // Destroy graph
-    igraph_destroy(&graph);*/
+    igraph_matrix_destroy(&adj_mat);
+    igraph_destroy(&graph);
 
-    return PyFloat_FromDouble((double) *MAX_THREADS);
+    return PyFloat_FromDouble((double) anc);
 }
 static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
 "\n"
 "Arguments:\n"
 "   A       string      adjacency matrix of graph\n"
-"   l       int      number of values/items in the variable A\n"
-"   cpus       int      number of available CPUs\n"
-"   mp       int      allow multi-processing (0: No, 1: Yes)\n"
+"   l       int         number of values/items in the variable A\n"
+"   cpus    int         number of available CPUs\n"
+"   mp      int         allow multi-processing (0: No, 1: Yes)\n"
 "\n"
 "The length of the graph should be a squared(N) since an adjacency matrix is NxN in size.\n"
 "Returns the Average Node Connectivity as a float value.\n";

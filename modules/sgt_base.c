@@ -2,6 +2,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <igraph.h>
+#include <stdarg.h>
 #include <time.h>
 #include "sgt_base.h"
 
@@ -117,23 +118,20 @@ float compute_anc(int mp) {
 
 
 // Function to convert string representation of adjacency matrix to 2D matrix
-int** str_to_matrix(char* str_adj_mat, int num_vertices) {
-    // Allocate memory for 2D matrix
-    int** matrix = (int**)malloc(num_vertices * sizeof(int*));
-    for (int i = 0; i < num_vertices; i++) {
-        matrix[i] = (int*)malloc(num_vertices * sizeof(int));
-    }
+igraph_matrix_t str_to_matrix(char* str_adj_mat, int num_vertices) {
+    igraph_matrix_t mat;
+    igraph_matrix_init(&mat, num_vertices, num_vertices);
 
     // Parse string and populate matrix
     char* token = strtok(str_adj_mat, " ");
     for (int i = 0; i < num_vertices; i++) {
         for (int j = 0; j < num_vertices; j++) {
-            matrix[i][j] = atoi(token);
+            MATRIX(mat, i, j) = atoi(token);
             token = strtok(NULL, " ");
         }
     }
 
-    return matrix;
+    return mat;
 }
 
 // Main function - entrypoint
