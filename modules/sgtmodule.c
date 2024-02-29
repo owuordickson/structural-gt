@@ -26,8 +26,8 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
-    const int MAX_THREADS = *num_cpus;
-	int size;
+    const int* MAX_THREADS = num_cpus;
+	/*int size;
 	int** adj_mat;
 
 	igraph_t graph;
@@ -40,7 +40,7 @@ compute_anc(PyObject *self, PyObject *args)
 	size = (int)sqrt((double)(*length));
 
 	// Convert string to matrix
-    //adj_mat = str_to_matrix(str_adj_mat, size);
+    adj_mat = str_to_matrix(str_adj_mat, size);*/
 
     // Build igraph
 	/*igraph_adjacency(
@@ -127,7 +127,7 @@ compute_anc(PyObject *self, PyObject *args)
     // Destroy graph
     igraph_destroy(&graph);*/
 
-    return PyFloat_FromDouble((double) anc);
+    return PyFloat_FromDouble((double) *MAX_THREADS);
 }
 static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
@@ -184,18 +184,3 @@ PyInit_sgt(void)
     return m;
 }
 
-/* Initialization function for the module */
-/*DL_EXPORT(void)
-init_metric(void)
-{
-	PyObject *m, *d;
-
-	// Create the module and add the functions
-	m = Py_InitModule("sgt", sgt_methods);
-
-	//Add some symbolic constants to the module
-	d = PyModule_GetDict(m);
-
-	ErrorObject = PyErr_NewException("sgt.error", NULL, NULL);
-	PyDict_SetItemString(d, "error", ErrorObject);
-}*/

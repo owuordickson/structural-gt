@@ -8,7 +8,7 @@
 #define MAX_THREADS 8
 
 // Function to compute Local Node Connectivity
-void compute_lnc(void *arg) {
+void* compute_lnc(void *arg) {
     ThreadArgsLNC *args = (ThreadArgsLNC*)arg;
     igraph_integer_t lnc;
 
@@ -91,7 +91,7 @@ float compute_anc(int mp) {
                 }
                 args[thread_count % MAX_THREADS].i = i;
                 args[thread_count % MAX_THREADS].j = j;
-                pthread_create(&threads[thread_count % MAX_THREADS], NULL, *compute_lnc, &args[thread_count % MAX_THREADS]);
+                pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
                 thread_count++;
                 printf("thread %d running...\n", (thread_count % MAX_THREADS));
             }
