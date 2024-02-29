@@ -92,7 +92,7 @@ compute_anc(PyObject *self, PyObject *args)
                 }
                 args[thread_count % MAX_THREADS].i = i;
                 args[thread_count % MAX_THREADS].j = j;
-                pthread_create(&threads[thread_count % MAX_THREADS], NULL, &compute_lnc, &args[thread_count % MAX_THREADS]);
+                pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
                 thread_count++;
                 //printf("thread %d running...\n", (thread_count % MAX_THREADS));
             }
