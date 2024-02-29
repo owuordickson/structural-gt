@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0", "wheel", "cython"]
+requires = ["setuptools >= 61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -58,12 +58,12 @@ StructuralGTb-cli = "StructuralGTb:main_cli"
 StructuralGTb = "StructuralGTb:main_gui"
 
 # Define the extension modules
-[setuptools.extension]
-name = "sgt_module"
-sources = ["modules/sgt_base.c", "modules/sgt_modules.c"]
-libraries = ["igraph", "pthread"]
-library_dirs = ["modules/igraph_lib/lib"]
-include_dirs = ["modules/igraph_lib/include/igraph"]
+#[setuptools.Extension]
+#name = "sgt_module"
+#sources = ["modules/sgt_base.c", "modules/sgt_modules.c"]
+#libraries = ["igraph", "pthread"]
+#library_dirs = ["modules/igraph_lib/lib"]
+#include_dirs = ["modules/igraph_lib/include/igraph"]
 
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTb.__version__"}
