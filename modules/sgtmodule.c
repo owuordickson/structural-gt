@@ -26,7 +26,7 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
-    const int MAX_THREADS = num_cpus;
+    const int MAX_THREADS = *num_cpus;
 	int size;
 	int** adj_mat;
 
@@ -40,17 +40,17 @@ compute_anc(PyObject *self, PyObject *args)
 	size = (int)sqrt((double)(*length));
 
 	// Convert string to matrix
-    adj_mat = str_to_matrix(str_adj_mat, size);
+    //adj_mat = str_to_matrix(str_adj_mat, size);
 
     // Build igraph
-	igraph_adjacency(
+	/*igraph_adjacency(
 		&graph, &adj_mat,
 		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
 	);
 
 	num_nodes = igraph_vcount(&graph);
 	if (allow_mp == 0){
-        printf("Using single processing\n");
+        //printf("Using single processing\n");
         igraph_integer_t lnc;
         for (igraph_integer_t i=0; i<num_nodes; i++) {
             for (igraph_integer_t j=i+1; j<num_nodes; j++){
@@ -63,7 +63,7 @@ compute_anc(PyObject *self, PyObject *args)
 
     }
     else {
-        printf("Using multiprocessing\n");
+        //printf("Using multiprocessing\n");
         // Initialize mutex
         pthread_mutex_t mutex;
         pthread_mutex_init(&mutex, NULL);
@@ -91,7 +91,7 @@ compute_anc(PyObject *self, PyObject *args)
                 }
                 args[thread_count % MAX_THREADS].i = i;
                 args[thread_count % MAX_THREADS].j = j;
-                pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
+                pthread_create(&threads[thread_count % MAX_THREADS], NULL, &compute_lnc, &args[thread_count % MAX_THREADS]);
                 thread_count++;
                 //printf("thread %d running...\n", (thread_count % MAX_THREADS));
             }
@@ -108,24 +108,24 @@ compute_anc(PyObject *self, PyObject *args)
 
     // Compute ANC
     anc = (float) sum_nc / count_nc;
-
+    */
 	// Print the matrix
-    printf("Adjacency Matrix:\n");
+    /*printf("Adjacency Matrix:\n");
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             printf("%d ", adj_mat[i][j]);
         }
         printf("\n");
-    }
+    }*/
 
     // Free allocated memory
-    for (int i = 0; i < size; i++) {
+    /*for (int i = 0; i < size; i++) {
         free(adj_mat[i]);
     }
     free(adj_mat);
 
     // Destroy graph
-    igraph_destroy(&graph);
+    igraph_destroy(&graph);*/
 
     return PyFloat_FromDouble((double) anc);
 }
@@ -145,7 +145,7 @@ static char sgt_doc[] =
 /* Method Table: ist of functions defined in the module */
 static PyMethodDef sgt_methods[] = {
     {"compute_anc", compute_anc, METH_VARARGS, compute_anc_doc },
-    {"compute_lnc", compute_lnc, METH_VARARGS, "Compute local node connectivity." },
+    //{"compute_lnc", compute_lnc, METH_VARARGS, "Compute local node connectivity." },
 	{NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

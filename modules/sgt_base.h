@@ -16,5 +16,5 @@ typedef struct {
 
 #endif /* THREAD_ARGS_H */
 
-void* compute_lnc(void *arg);
+void compute_lnc(void *arg);
 int** str_to_matrix(char* str_adj_mat, int num_vertices);
