@@ -94,7 +94,7 @@ compute_anc(PyObject *self, PyObject *args)
                 args[thread_count % MAX_THREADS].j = j;
                 pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
                 thread_count++;
-                //printf("thread %d running...\n", (thread_count % MAX_THREADS));
+                printf("thread %d running...\n", (thread_count % MAX_THREADS));
             }
         }
 
@@ -139,8 +139,8 @@ static char compute_anc_doc[] =
 
 
 static char sgt_doc[] =
-"A C module that uses iGraph library to compute GT metrics.\n"
-"\n";
+"A C language module leveraging the iGraph library to compute Graph Theory (GT) metrics,"
+"enhanced with multi-threading capabilities for accelerated computation.\n";
 
 /* Method Table: ist of functions defined in the module */
 static PyMethodDef sgt_methods[] = {
