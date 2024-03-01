@@ -8,7 +8,7 @@ try:
     adj_mat = nx.to_numpy_array(nx_g)
     size = np.size(adj_mat)
     flat_mat = np.ravel(adj_mat, order='C')
-    str_mat = np.array2string(flat_mat, precision=2, separator=' ', suppress_small=True)
+    str_mat = np.array2string(flat_mat, precision=2, separator=',', suppress_small=True)
     str_mat = str_mat.replace('[', '').replace(']', '')
 
     # str_mat = "0 1 0 0 1 1 0 0 0 0 0 0 1 0 1 0 0 0 0 1 1 0 1 1 0"

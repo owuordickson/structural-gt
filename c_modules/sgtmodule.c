@@ -16,15 +16,33 @@ compute_anc(PyObject *self, PyObject *args)
     int num_cpus;
     int allow_mp;
 	int length;
+	PyObject *bytes_obj;
     char *str_adj_mat;
 
-    if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
+    if (!PyArg_ParseTuple(args, "Oiii:compute_anc", &bytes_obj, &length, &num_cpus, &allow_mp))
         return NULL;
 	
 	if ( num_cpus <= 0 || allow_mp < 0){
-    	PyErr_SetString( ErrorObject, "Invalid CPU parameters.");
+    	PyErr_SetString(ErrorObject, "Invalid CPU parameters.");
     	return NULL;
   	}
+
+  	// Check if the object is a bytes or bytearray object
+    if (!PyBytes_Check(bytes_obj) && !PyByteArray_Check(bytes_obj)) {
+        PyErr_SetString(ErrorObject, "Argument must be a bytes or bytearray object");
+        return NULL;
+    }
+
+    // Extract the string data from the bytes or bytearray object
+    //Py_ssize_t size;
+    //char *str;
+    if (PyBytes_Check(bytes_obj)) {
+        str_adj_mat = PyBytes_AsString(bytes_obj);
+        //size = PyBytes_Size(bytes_obj);
+    } else {  // bytearray object
+        str_adj_mat = PyByteArray_AsString(bytes_obj);
+        //size = PyByteArray_Size(bytes_obj);
+    }
 
     // Declare required variables
     const int MAX_THREADS = num_cpus;

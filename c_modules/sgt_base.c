@@ -28,18 +28,26 @@ void* compute_lnc(void *arg) {
 // Function to convert string representation of adjacency matrix to 2D matrix
 igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices) {
     // Allocate memory for the matrix
-    igraph_matrix_t* mat = malloc(sizeof(igraph_matrix_t));
+    igraph_matrix_t* mat = (igraph_matrix_t*)malloc(sizeof(igraph_matrix_t));
+    if (!mat) {
+        fprintf(stderr, "Failed to allocate memory for matrix structure\n");
+        exit(EXIT_FAILURE);
+    }
     igraph_matrix_init(mat, num_vertices, num_vertices);
+    printf("Memory allocated\n");
 
     // Parse string and populate matrix
-    char* token = strtok(str_adj_mat, " ");
+    char* token = strtok(str_adj_mat, ",");
+    printf("Token gotten\n");
     for (igraph_integer_t i = 0; i < num_vertices; i++) {
         for (igraph_integer_t j = 0; j < num_vertices; j++) {
+            printf("%s\n", token);
             MATRIX(*mat, i, j) = atoi(token);
-            token = strtok(NULL, " ");
+            token = strtok(NULL, ",");
         }
     }
 
+    printf("Matrix built\n");
     return mat;
 }
 

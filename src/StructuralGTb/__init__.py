@@ -21,9 +21,9 @@ of the GNU General Public License along with this program.  If not, see <https:/
 """
 
 # MODULES
-from .modules.graph_metrics import GraphMetrics
-from .modules.graph_skeleton import GraphSkeleton
-from .modules.graph_struct import GraphStruct
+from .py_modules.graph_metrics import GraphMetrics
+from .py_modules.graph_skeleton import GraphSkeleton
+from .py_modules.graph_struct import GraphStruct
 
 # APPs
 from .entrypoints import main_cli

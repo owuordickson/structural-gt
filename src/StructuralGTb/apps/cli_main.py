@@ -11,8 +11,8 @@ import time
 import os
 import multiprocessing as mp
 from ..configs.config_loader import load_configs, get_num_cores
-from ..modules.graph_struct import GraphStruct
-from ..modules.graph_metrics import GraphMetrics
+from ..py_modules.graph_struct import GraphStruct
+from ..py_modules.graph_metrics import GraphMetrics
 
 
 def terminal_app():
