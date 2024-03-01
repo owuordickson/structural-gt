@@ -17,5 +17,5 @@ typedef struct {
 #endif /* THREAD_ARGS_H */
 
 void* compute_lnc(void *arg);
-igraph_matrix_t str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices);
+igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices);
 

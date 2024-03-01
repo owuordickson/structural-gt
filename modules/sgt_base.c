@@ -26,15 +26,16 @@ void* compute_lnc(void *arg) {
 }
 
 // Function to convert string representation of adjacency matrix to 2D matrix
-igraph_matrix_t str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices) {
-    igraph_matrix_t mat;
-    igraph_matrix_init(&mat, num_vertices, num_vertices);
+igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices) {
+    // Allocate memory for the matrix
+    igraph_matrix_t* mat = malloc(sizeof(igraph_matrix_t));
+    igraph_matrix_init(mat, num_vertices, num_vertices);
 
     // Parse string and populate matrix
     char* token = strtok(str_adj_mat, " ");
     for (igraph_integer_t i = 0; i < num_vertices; i++) {
         for (igraph_integer_t j = 0; j < num_vertices; j++) {
-            MATRIX(mat, i, j) = atoi(token);
+            MATRIX(*mat, i, j) = atoi(token);
             token = strtok(NULL, " ");
         }
     }

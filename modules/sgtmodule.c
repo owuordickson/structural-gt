@@ -29,7 +29,7 @@ compute_anc(PyObject *self, PyObject *args)
     // Declare required variables
     const int MAX_THREADS = num_cpus;
 	igraph_integer_t size;
-	igraph_matrix_t adj_mat;
+	igraph_matrix_t* adj_mat;
 
 	igraph_t graph;
 	igraph_integer_t num_nodes;
@@ -39,13 +39,15 @@ compute_anc(PyObject *self, PyObject *args)
 
 	// Get size of adjacency matrix
 	size = (int)sqrt((double)(length));
+	printf("Converting to Adj-Mat\n");
 
 	// Convert string to matrix
     adj_mat = str_to_matrix(str_adj_mat, size);
 
+    printf("Building iGraph\n");
     // Build igraph
 	igraph_adjacency(
-		&graph, &adj_mat,
+		&graph, adj_mat,
 		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
 	);
 
@@ -120,7 +122,7 @@ compute_anc(PyObject *self, PyObject *args)
     }*/
 
     // Destroy graph
-    igraph_matrix_destroy(&adj_mat);
+    igraph_matrix_destroy(adj_mat);
     igraph_destroy(&graph);
 
     return PyFloat_FromDouble((double) anc);

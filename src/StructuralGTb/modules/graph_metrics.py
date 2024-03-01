@@ -26,6 +26,9 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
+import sgt
+from ..configs.config_loader import get_num_cores
+
 
 class GraphMetrics:
 
@@ -141,10 +144,11 @@ class GraphMetrics:
                 return
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                if self.allow_mp:
-                    avg_node_con = self.average_node_connectivity()
-                else:
-                    avg_node_con = average_node_connectivity(graph)
+                # if self.allow_mp:
+                #    avg_node_con = self.average_node_connectivity()
+                # else:
+                #    avg_node_con = average_node_connectivity(graph)
+                avg_node_con = self.average_node_connectivity_c()
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -600,6 +604,34 @@ class GraphMetrics:
         # if den == 0:  # Null Graph
         #    return 0
         # return num / den
+
+    def average_node_connectivity_c(self):
+        r"""Returns the average connectivity of a graph G.
+
+        The average connectivity `\bar{\kappa}` of a graph G is the average
+        of local node connectivity over all pairs of nodes of nx_graph.
+        """
+
+        nx_graph = self.g_struct.nx_graph
+        cpu_count = get_num_cores()
+        anc = 0
+
+        try:
+            # mat = np.array([[0, 1, 0, 0, 1], [1, 0, 0, 0, 0], [0, 0, 1, 0, 1], [0, 0, 0, 0, 1], [1, 0, 1, 1, 0]])
+            # nx_g = nx.from_numpy_array(mat)
+            adj_mat = nx.to_numpy_array(nx_graph)
+            size = np.size(adj_mat)
+            flat_mat = np.ravel(adj_mat, order='C')
+            str_mat = np.array2string(flat_mat, precision=2, separator=' ')
+            str_mat = str_mat.replace('[', '').replace(']', '')
+
+            anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
+            # print(size)
+            # print(str_mat)
+            # anc = sgt.compute_anc(str_mat, size, 8, 0)
+        except Exception as err:
+            print(err)
+        return anc
 
     def display_images(self):
 
