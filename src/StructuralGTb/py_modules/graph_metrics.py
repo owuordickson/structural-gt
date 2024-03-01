@@ -76,8 +76,8 @@ class GraphMetrics:
             return
         self.__listeners.remove(func)
 
-    # Trigger events.
     def update_status(self, args=None):
+        # Trigger events.
         # Run all the functions that are saved.
         if args is None:
             args = []
@@ -412,8 +412,8 @@ class GraphMetrics:
         out_figs.append(fig)
         return out_figs
 
-    # def compute_betweenness_centrality(self):
-    """
+    def compute_betweenness_centrality(self):
+        """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
 
         Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
@@ -427,9 +427,9 @@ class GraphMetrics:
         This measure is already implemented in 'networkx' package. Here is the link:\
         https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
 
-        :return:
-    """
-    """
+            :return:
+        """
+
         # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
         # (NOT TRUE) Note: only works with fully-connected graphs
         # So, random betweenness centrality is computed between source node and destination node.
@@ -444,7 +444,6 @@ class GraphMetrics:
         # 3. Invert the resulting matrix
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
-    """
 
     def generate_pdf_output(self):
 
@@ -608,8 +607,8 @@ class GraphMetrics:
     def average_node_connectivity_c(self):
         r"""Returns the average connectivity of a graph G.
 
-        The average connectivity `\bar{\kappa}` of a graph G is the average
-        of local node connectivity over all pairs of nodes of nx_graph.
+        The average connectivity of a graph G is the average
+        of local node connectivity over all pairs of nodes of G.
         """
 
         nx_graph = self.g_struct.nx_graph

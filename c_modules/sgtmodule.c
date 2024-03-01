@@ -27,21 +27,6 @@ compute_anc(PyObject *self, PyObject *args)
     	return NULL;
   	}
 
-  	// Check if the object is a bytes or bytearray object
-    /*if (!PyBytes_Check(bytes_obj) && !PyByteArray_Check(bytes_obj)) {
-        PyErr_SetString(ErrorObject, "Argument must be a bytes or bytearray object");
-        return NULL;
-    }
-    // Extract the string data from the bytes or bytearray object
-    //Py_ssize_t size;
-    //char *str;
-    if (PyBytes_Check(bytes_obj)) {
-        str_adj_mat = PyBytes_AsString(bytes_obj);
-    } else {  // bytearray object
-        str_adj_mat = PyByteArray_AsString(bytes_obj);
-    }
-    printf("%s\n", str_adj_mat);*/
-
     // Declare required variables
     const int MAX_THREADS = num_cpus;
 	igraph_integer_t size;
