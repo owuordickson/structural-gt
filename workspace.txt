@@ -12,12 +12,16 @@ git pull origin cppy
 2. INSTALL gcc/g++ (C/C++ COMPILER)
 Linux/MacOS:
 use 'brew install gcc'
-brew install igraph
-Windows: 
+Windows:
+download and install 'Microsoft C++ Build Tools' (install Desktop development with C++)
+
+-- DELETE --
 download mingw-get-setup.exe installer
 run setup As Administrator
 install only 'mingw32-gcc-g++' and 'mingw32-make' and 'mingw32-pthreads-w32'
-Add path 'C:\MinGW\bin' to Environment Variables
+Add path 'C:\MinGW\bin' to Environment Variables (C:\MinGW\bin), (C:\MinGW\msys\1.0\bin)
+-- DELETE --
+
 test 'gcc --version'
 
 3. INSTALL CMAKE
@@ -27,14 +31,17 @@ download and install CMAKE from https://cmake.org/
 Add CMAKE path to Environment Variables
 test 'cmake --version'
 
-3a. IGRAPH
+4a. IGRAPH
+Linux/MacOS:
+brew install igraph
+Windows:
 https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
-cmake -G "MinGW Makefiles" ..
+cmake -G ..
 cmake --build . --target check
 cmake --install .
 
-3b. COMPILING in WINDOWS
+4b. COMPILING in WINDOWS
 gcc .\igraph_test.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -o .\igraph_test
-gcc .\sgt_module.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -lpthread -o .\sgt_module
+gcc .\sgt_test.c -I./igraph_lib/include/igraph -L./igraph_lib/lib -ligraph -lpthread -o .\sgt_test
 
-4. SETUP PYCHARM or VS CODE
+5. SETUP PYCHARM or VS CODE
