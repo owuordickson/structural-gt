@@ -34,20 +34,16 @@ igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices)
         exit(EXIT_FAILURE);
     }
     igraph_matrix_init(mat, num_vertices, num_vertices);
-    printf("Memory allocated\n");
 
     // Parse string and populate matrix
     char* token = strtok(str_adj_mat, ",");
-    printf("Token gotten\n");
     for (igraph_integer_t i = 0; i < num_vertices; i++) {
         for (igraph_integer_t j = 0; j < num_vertices; j++) {
-            printf("%s\n", token);
             MATRIX(*mat, i, j) = atoi(token);
             token = strtok(NULL, ",");
         }
     }
 
-    printf("Matrix built\n");
     return mat;
 }
 

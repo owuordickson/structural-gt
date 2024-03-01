@@ -27,7 +27,7 @@ from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
 import sgt
-from ..configs.config_loader import get_num_cores, write_file
+from ..configs.config_loader import get_num_cores
 
 
 class GraphMetrics:
@@ -617,18 +617,14 @@ class GraphMetrics:
         anc = 0
 
         try:
-            # mat = np.array([[0, 1, 0, 0, 1], [1, 0, 0, 0, 0], [0, 0, 1, 0, 1], [0, 0, 0, 0, 1], [1, 0, 1, 1, 0]])
-            # nx_g = nx.from_numpy_array(mat)
             adj_mat = nx.to_numpy_array(nx_graph)
             size = np.size(adj_mat)
             flat_mat = np.ravel(adj_mat, order='C')
-            str_mat = np.array2string(flat_mat, precision=2, separator=',')
-            str_mat = str_mat.replace('[', '').replace(']', '')
-
-            # write_file(str_mat.encode(), 'temp.txt')
-            anc = sgt.compute_anc(str_mat.encode(), size, cpu_count, self.allow_mp)
+            str_mat = str(flat_mat.tolist()).replace('[', '').replace(']', '')
             # print(size)
             # print(str_mat)
+
+            anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
             # anc = sgt.compute_anc(str_mat, size, 8, 0)
         except Exception as err:
             print(err)
