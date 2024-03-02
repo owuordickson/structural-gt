@@ -57,6 +57,9 @@ StructuralGTb-cli = "StructuralGTb:main_cli"
 [project.gui-scripts]
 StructuralGTb = "StructuralGTb:main_gui"
 
+[tool.setuptools]
+include-package-data = true
+
 # Define the extension c_modules
 #[setuptools.Extension]
 #name = "sgt_igraph"
