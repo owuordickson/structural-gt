@@ -16,18 +16,6 @@ from ypstruct import struct
 
 
 def load_configs():
-    # Load configuration from file
-    config = configparser.ConfigParser()
-    try:
-        config_file = os.path.join(os.getcwd(), 'StructuralGTb/configs/configs.ini')
-        config.read(config_file)
-        cpus = int(config.get('computation', 'cpu_cores'))
-    except configparser.NoSectionError:
-        config_file = os.path.join(os.getcwd(), 'src/StructuralGTb/configs/configs.ini')
-        config.read(config_file)
-        cpus = int(config.get('computation', 'cpu_cores'))
-    # print(config_file)
-    # print(config.sections())
 
     options_path = struct()
     options_img = struct()
@@ -35,10 +23,104 @@ def load_configs():
     options_gtc = struct()
 
     # 1. Image Path
+    options_path.is_multi_image = 0
+    options_path.image_path = ""
+    options_path.output_path = ""
+
+    # 2. Image Detection settings
+    options_img.threshold_type = 1
+    options_img.threshold_global = 3
+    options_img.threshold_adaptive = 3
+    options_img.gamma = float(1)
+    options_img.gaussian_blurring_size = 3
+    options_img.autolevel_blurring_size = 3
+    options_img.lowpass_window_size = 2
+    options_img.laplacian_kernel_size = 3
+    options_img.sobel_kernel_size = 3
+    options_img.apply_autolevel = 0
+    options_img.apply_laplacian = 0
+    options_img.apply_scharr = 0
+    options_img.apply_sobel = 0
+    options_img.apply_median = 0
+    options_img.apply_gaussian = 0
+    options_img.apply_lowpass = 0
+    options_img.apply_dark_foreground = 0
+    options_img.brightness_level = 0
+    options_img.contrast_level = 0
+
+    # 3. Graph Extraction Settings
+    options_gte.merge_nearby_nodes = 0
+    options_gte.prune_dangling_edges = 0
+    options_gte.remove_disconnected_segments = 0
+    options_gte.remove_self_loops = 0
+    options_gte.remove_object_size = 500
+    options_gte.is_multigraph = 0
+    options_gte.weighted_by_diameter = 0
+    options_gte.display_node_id = 0
+    options_gte.export_edge_list = 0
+    options_gte.export_as_gexf = 0
+    options_gte.export_adj_mat = 0
+    options_gte.save_images = 0
+
+    # 4. Networkx Calculation Settings
+    options_gtc.display_heatmaps = 0
+    options_gtc.display_degree_histogram = 0
+    options_gtc.display_betweenness_histogram = 0
+    options_gtc.display_currentflow_histogram = 0
+    options_gtc.display_closeness_histogram = 0
+    options_gtc.display_eigenvector_histogram = 0
+    options_gtc.compute_nodal_connectivity = 0
+    options_gtc.compute_graph_density = 0
+    options_gtc.compute_graph_conductance = 0
+    options_gtc.compute_global_efficiency = 0
+    options_gtc.compute_clustering_coef = 0
+    options_gtc.compute_assortativity_coef = 0
+    options_gtc.compute_network_diameter = 0
+    options_gtc.compute_wiener_index = 0
+
+    opt_parser = OptionParser()
+    opt_parser.add_option('-f', '--inputImage',
+                          dest='filePath',
+                          help='path to image file/folder containing images',
+                          default="",
+                          type='string')
+    opt_parser.add_option('-o', '--outputFolder',
+                          dest='outputDir',
+                          help='directory path for saving GT output',
+                          default="",
+                          type='string')
+    opt_parser.add_option('-a', '--algorithmChoice',
+                          dest='algChoice',
+                          help='select GT algorithm',
+                          default=0,
+                          type='int')
+    opt_parser.add_option('-m', '--isMultiImage',
+                          dest='multiImage',
+                          help='is it a multi-image (multiple images in a folder) analysis?',
+                          default=0,
+                          type='int')
+    opt_parser.add_option('-c', '--cores',
+                          dest='numCores',
+                          help='number of cores',
+                          default=1,
+                          type='int')
+    (options, args) = opt_parser.parse_args()
+
+    # Load configuration from file
+    config = configparser.ConfigParser()
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs.ini'
+        config_file = os.path.join(script_dir, config_path)
+        config.read(config_file)
+        cpus = int(config.get('computation', 'cpu_cores'))
+    except configparser.NoSectionError:
+        return config, options, options_img, options_gte, options_gtc
+
+    # 1. Image Path
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
     options_path.image_path = config.get('image-dir', 'image_path')
-    # options_path.single_imagepath = config.get('image-dir', 'single_image_path')
-    # options_path.multi_imagepath = config.get('image-dir', 'multi_image_path')
     options_path.output_path = config.get('image-dir', 'gt_output_path')
 
     # 2. Image Detection settings
@@ -132,24 +214,23 @@ def load_configs():
                           type='int')
     (options, args) = opt_parser.parse_args()
 
-    if options.filePath is None:
-        print("Usage: bin/StructuralGTb-cli -f examples/Cont-SR_NPs.tif -o results/    ")
-        sys.exit('System will exit')
-
     return config, options, options_img, options_gte, options_gtc
 
 
 def load_gui_configs():
+    gui_txt = struct()
+
     # Load configuration from file
     config = configparser.ConfigParser()
     try:
-        config_file = os.path.join(os.getcwd(), 'StructuralGTb/configs/configs_gui.ini')
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs_gui.ini'
+        config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
         title = str(config.get('gui', 'title'))
     except configparser.NoSectionError:
-        config_file = os.path.join(os.getcwd(), 'src/StructuralGTb/configs/configs_gui.ini')
-        config.read(config_file)
-        title = str(config.get('gui', 'title'))
+        raise Exception("Unable to build UI! Add file config_gui.ini.")
 
     gui_txt = struct()
     gui_txt.title = title

@@ -6,18 +6,55 @@ cd structural-gt/
 git init
 git remote add origin https://github.com/owuordickson/structural-gt.git
 git fetch origin
-git fetch origin drew
-git pull origin main
-git worktree add ../drew_gt origin/drew
+git fetch origin cppy
+git pull origin cppy
 
-2. SETUP PYCHARM
-create new Project call it "structural-gt"
-create another Project "drew_gt" and attach it to the previous one
-create different pyenv environments for each
+2. INSTALL gcc/g++ (C/C++ COMPILER)
+Linux/MacOS:
+use 'brew install gcc'
+Windows:
+-- DELETE --
+download and install 'Microsoft C++ Build Tools' (install Desktop development with C++)
+* Use 'Launch' and command where.exe to find: clang/cl and cmake and nmake
+-- DELETE --
+download mingw-get-setup.exe installer
+run setup As Administrator
+install only 'mingw32-gcc-g++' and 'mingw32-make' and 'mingw32-pthreads-w32'
+Add path 'C:\MinGW\bin' and 'C:\MinGW\msys\1.0\bin' to Environment Variables
+test 'gcc --version'
 
-3. SETUP Qt DESIGNER
-https://www.youtube.com/watch?v=S3qftloOO4U&list=PLScxCGLsaFgpiHgPEScWFiENtpSyx4YNP
-pip install pyqt6
-pip install pyqt6-tools
-open qt-designer (.venv_sgt\Lib\site-packages\qt6_applications\Qt\bin\designer.exe) "Run as administrator"
-convert .ui to .py using terminal (pyuic6 -o gui_main_qt.py -x gui.ui)
+3. INSTALL CMAKE
+Linux/MacOS: use 'brew install cmake'
+Windows:
+-- DELETE --
+use 'Microsoft C++ Build Tools' to install
+-- DELETE --
+download and install CMAKE from https://cmake.org/
+Add CMAKE path to Environment Variables
+test 'cmake --version'
+
+4. C LIBRARIES
+4a . PTHREADS library
+use MinGW to install 'mingw32-pthreads-w32'
+The header files and library files will be stored in 'C:/MinGW/include' and 'C:/MinGW/bin'
+
+4b. IGRAPH library
+Linux/MacOS:
+brew install igraph
+Windows:
+https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
+mkdir build && cd build
+cmake -G ..
+cmake --build . --target check
+cmake --install .
+Copy (include) header files and static libigraph.a to MinGW folder
+
+5. COMPILING in WINDOWS
+clang .\test.c -o .\test.exe
+gcc .\test.c -o .\test
+
+Windows:
+gcc .\igraph_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include -LC:/MinGW/lib -ligraph -lpthread -o .\igraph_test
+gcc .\sgt_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include -LC:/MinGW/lib -ligraph -lpthread -o .\sgt_test
+
+6. SETUP PYCHARM or VS CODE

@@ -75,6 +75,7 @@ class GraphMetrics:
 
     # Trigger events.
     def update_status(self, args=None):
+        # Trigger events.
         # Run all the functions that are saved.
         if args is None:
             args = []

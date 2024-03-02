@@ -15,8 +15,8 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
-from ..modules.graph_struct import GraphStruct
-from ..modules.graph_metrics import GraphMetrics
+from ..py_modules.graph_struct import GraphStruct
+from ..py_modules.graph_metrics import GraphMetrics
 
 
 class AnalysisUI(QtWidgets.QMainWindow):

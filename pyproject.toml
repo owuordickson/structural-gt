@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools >= 61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -57,12 +57,23 @@ StructuralGTb-cli = "StructuralGTb:main_cli"
 [project.gui-scripts]
 StructuralGTb = "StructuralGTb:main_gui"
 
+[tool.setuptools]
+include-package-data = true
+
+# Define the extension c_modules
+#[setuptools.Extension]
+#name = "sgt_igraph"
+#sources = ["c_modules/sgt_base.c", "c_modules/sgt_modules.c"]
+#libraries = ["igraph", "pthread"]
+#library_dirs = ["c_modules/igraph_lib/lib"]
+#include_dirs = ["c_modules/igraph_lib/include/igraph"]
+
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTb.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
-include = ["StructuralGTb*"]  # package names should match these glob patterns (["*"] by default)
-exclude = ["StructuralGTb.tests*"]  # exclude packages matching these glob patterns (empty by default)
+include = ["*"]  # package names should match these glob patterns (["*"] by default)
+exclude = ["tests*"]  # exclude packages matching these glob patterns (empty by default)
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
