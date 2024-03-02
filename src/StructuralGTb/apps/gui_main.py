@@ -1157,8 +1157,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         elif (task == 2) and (not self.error_flag):
             try:
                 self.graph_objs[self.current_obj_index] = obj
-                img = Image.fromarray(obj.img_net)
-                self._load_image(ImageQt.toqpixmap(img))
+                q_img = ImageQt.toqpixmap(obj.img_net)
+                self._load_image(q_img)
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "Drawing graph complete!")
