@@ -29,12 +29,12 @@ def load_configs():
 
     # 2. Image Detection settings
     options_img.threshold_type = 1
-    options_img.threshold_global = 3
-    options_img.threshold_adaptive = 3
+    options_img.threshold_global = 127
+    options_img.threshold_adaptive = 11
     options_img.gamma = float(1)
     options_img.gaussian_blurring_size = 3
     options_img.autolevel_blurring_size = 3
-    options_img.lowpass_window_size = 2
+    options_img.lowpass_window_size = 10
     options_img.laplacian_kernel_size = 3
     options_img.sobel_kernel_size = 3
     options_img.apply_autolevel = 0
@@ -49,10 +49,10 @@ def load_configs():
     options_img.contrast_level = 0
 
     # 3. Graph Extraction Settings
-    options_gte.merge_nearby_nodes = 0
-    options_gte.prune_dangling_edges = 0
-    options_gte.remove_disconnected_segments = 0
-    options_gte.remove_self_loops = 0
+    options_gte.merge_nearby_nodes = 1
+    options_gte.prune_dangling_edges = 1
+    options_gte.remove_disconnected_segments = 1
+    options_gte.remove_self_loops = 1
     options_gte.remove_object_size = 500
     options_gte.is_multigraph = 0
     options_gte.weighted_by_diameter = 0
@@ -63,20 +63,20 @@ def load_configs():
     options_gte.save_images = 0
 
     # 4. Networkx Calculation Settings
-    options_gtc.display_heatmaps = 0
-    options_gtc.display_degree_histogram = 0
-    options_gtc.display_betweenness_histogram = 0
-    options_gtc.display_currentflow_histogram = 0
-    options_gtc.display_closeness_histogram = 0
-    options_gtc.display_eigenvector_histogram = 0
-    options_gtc.compute_nodal_connectivity = 0
-    options_gtc.compute_graph_density = 0
+    options_gtc.display_heatmaps = 1
+    options_gtc.display_degree_histogram = 1
+    options_gtc.display_betweenness_histogram = 1
+    options_gtc.display_currentflow_histogram = 1
+    options_gtc.display_closeness_histogram = 1
+    options_gtc.display_eigenvector_histogram = 1
+    options_gtc.compute_nodal_connectivity = 1
+    options_gtc.compute_graph_density = 1
     options_gtc.compute_graph_conductance = 0
-    options_gtc.compute_global_efficiency = 0
-    options_gtc.compute_clustering_coef = 0
-    options_gtc.compute_assortativity_coef = 0
-    options_gtc.compute_network_diameter = 0
-    options_gtc.compute_wiener_index = 0
+    options_gtc.compute_global_efficiency = 1
+    options_gtc.compute_clustering_coef = 1
+    options_gtc.compute_assortativity_coef = 1
+    options_gtc.compute_network_diameter = 1
+    options_gtc.compute_wiener_index = 1
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -220,6 +220,40 @@ def load_configs():
 def load_gui_configs():
     gui_txt = struct()
 
+    gui_txt.title = "Structural GT"
+    gui_txt.about = "about Structural GT"
+
+    # 1. Extraction
+    gui_txt.weighted = "Weight by Diameter"
+    gui_txt.merge = "Merge Nearby Nodes"
+    gui_txt.prune = "Prune Dangling Edges"
+    gui_txt.remove_disconnected = "Remove Disconnected Segments (set size)"
+    gui_txt.remove_loops = "Remove Self Loops"
+    gui_txt.multigraph = "Is Multigraph?"
+    gui_txt.node_id = "Display Node ID"
+
+    # 2. Computation
+    gui_txt.heatmaps = "Display Heatmaps"
+    gui_txt.degree = "Average Degree"
+    gui_txt.diameter = "Network Diameter"
+    gui_txt.connectivity = "Average Node Connectivity"
+    gui_txt.clustering = "Average Clustering Coefficient"
+    gui_txt.assortativity = "Assortativity Coefficient"
+    gui_txt.betweenness = "Betweenness Centrality"
+    gui_txt.current_flow = "Current Flow Betweenness Centrality"
+    gui_txt.closeness = "Closeness Centrality"
+    gui_txt.eigenvector = "Eigenvector Centrality"
+    gui_txt.density = "Graph Density"
+    gui_txt.conductance = "Graph Conductance"
+    gui_txt.efficiency = "Global Efficiency"
+    gui_txt.wiener = "Wiener Index"
+
+    # 3. Save Files
+    gui_txt.gexf = "Export as gexf"
+    gui_txt.edge_list = "Export Edge List"
+    gui_txt.adjacency = "Export Adjacency Matrix"
+    gui_txt.save_images = "Save All Images"
+
     # Load configuration from file
     config = configparser.ConfigParser()
     try:
@@ -230,9 +264,8 @@ def load_gui_configs():
         config.read(config_file)
         title = str(config.get('gui', 'title'))
     except configparser.NoSectionError:
-        raise Exception("Unable to build UI! Add file config_gui.ini.")
+        return gui_txt
 
-    gui_txt = struct()
     gui_txt.title = title
     gui_txt.about = str(config.get('gui', 'about'))
 
