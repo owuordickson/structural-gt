@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-//#include <pthread.h>
+#include <pthread.h>
 //#include <igraph.h>
 #include <stdarg.h>
 

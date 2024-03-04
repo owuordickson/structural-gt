@@ -13,10 +13,9 @@ git pull origin cppy
 Linux/MacOS:
 use 'brew install gcc'
 Windows:
--- DELETE --
 download and install 'Microsoft C++ Build Tools' (install Desktop development with C++)
 * Use 'Launch' and command where.exe to find: clang/cl and cmake and nmake
--- DELETE --
+--
 download mingw-get-setup.exe installer
 run setup As Administrator
 install only 'mingw32-gcc-g++' and 'mingw32-make' and 'mingw32-pthreads-w32'
@@ -26,9 +25,8 @@ test 'gcc --version'
 3. INSTALL CMAKE
 Linux/MacOS: use 'brew install cmake' 
 Windows:
--- DELETE --
 use 'Microsoft C++ Build Tools' to install
--- DELETE --
+--
 download and install CMAKE from https://cmake.org/
 Add CMAKE path to Environment Variables
 test 'cmake --version'
