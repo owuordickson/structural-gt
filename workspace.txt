@@ -33,26 +33,33 @@ test 'cmake --version'
 
 4. C LIBRARIES
 4a . PTHREADS library
-use MinGW to install 'mingw32-pthreads-w32'
-The header files and library files will be stored in 'C:/MinGW/include' and 'C:/MinGW/bin'
+Linux/macOS:
+Already installed
+Windows:
+Install Microsoft Build Tools
+We create the library files using 'nmake all install' through 'Developer Command Prompt'
+Copy header files and .dll files to MinGW folder
 
 4b. IGRAPH library
-Linux/MacOS:
+Linux/macOS:
 brew install igraph
 Windows:
+Install Microsoft Build Tools
 https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
-mkdir build && cd build
-cmake -G ..
-cmake --build . --target check
-cmake --install .
-Copy (include) header files and static libigraph.a to MinGW folder
+Use the 'Developer Command Prompt' to run the following commands:
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+cmake --build . --target check --config Release
+Copy (include) header files and igraph.lib files to MinGW folder
 
 5. COMPILING in WINDOWS
 clang .\test.c -o .\test.exe
 gcc .\test.c -o .\test
 
 Windows:
-gcc .\igraph_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include -LC:/MinGW/lib -ligraph -lpthread -o .\igraph_test
-gcc .\sgt_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include -LC:/MinGW/lib -ligraph -lpthread -o .\sgt_test
+gcc .\igraph_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include/pthread -LC:/MinGW/lib/igraph -LC:/MinGW/lib/igraph -ligraph -lpthread -o .\igraph_test
+gcc .\sgt_test.c -I../c_modules -IC:/MinGW/include/igraph -IC:/MinGW/include/pthread -LC:/MinGW/lib/igraph -LC:/MinGW/lib/igraph -ligraph -lpthread -o .\sgt_test
 
 6. SETUP PYCHARM or VS CODE
