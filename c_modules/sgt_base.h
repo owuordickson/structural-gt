@@ -7,7 +7,7 @@
 // Structure to hold thread arguments
 typedef struct {
     igraph_t *graph;
-    igraph_real_t i;
+    igraph_integer_t i;
     igraph_integer_t j;
     igraph_integer_t *total_nc;      // Pointer to store the result
     igraph_integer_t *total_count;   // Pointer to store the result
