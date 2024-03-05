@@ -26,9 +26,7 @@ compute_anc(PyObject *self, PyObject *args)
     	return NULL;
   	}
 
-    /*
     // Declare required variables
-    const int MAX_THREADS = num_cpus;
 	igraph_integer_t size;
 	igraph_matrix_t* adj_mat;
 
@@ -73,12 +71,23 @@ compute_anc(PyObject *self, PyObject *args)
         pthread_mutex_init(&mutex, NULL);
 
         // Create thread pool
-        pthread_t threads[MAX_THREADS];
-        ThreadArgsLNC args[MAX_THREADS];
-        int thread_count = 0;
+        const int MAX_THREAD_COUNT = num_cpus;
+        /*pthread_t threads[MAX_THREAD_COUNT];
+        ThreadArgsLNC args[MAX_THREAD_COUNT];*/
+        // Allocate memory for threads and args arrays
+        pthread_t *threads = (pthread_t *)malloc(MAX_THREAD_COUNT * sizeof(pthread_t));
+        ThreadArgsLNC *args = (ThreadArgsLNC *)malloc(MAX_THREAD_COUNT * sizeof(ThreadArgsLNC));
+
+
+        if (threads == NULL || args == NULL) {
+            //fprintf(stderr, "Memory allocation failed\n");
+            //exit(EXIT_FAILURE);
+            PyErr_SetString(ErrorObject, "Memory allocation failed\n");
+    	    return NULL;
+        }
 
         // Initialize thread pool
-        for (int i = 0; i < MAX_THREADS; i++) {
+        for (int i = 0; i < MAX_THREAD_COUNT; i++) {
             args[i].graph = &graph;
             args[i].mutex = &mutex;
             args[i].total_nc = &sum_nc;
@@ -86,33 +95,39 @@ compute_anc(PyObject *self, PyObject *args)
         }
 
         // Create threads for computing LNC
+        int idx = 0;
+        int thread_count = 0;
         for (igraph_integer_t i = 0; i < num_nodes; i++) {
             for (igraph_integer_t j = i + 1; j < num_nodes; j++) {
-                if (thread_count >= MAX_THREADS) {
+                idx = (int)(thread_count % MAX_THREAD_COUNT);
+                if (thread_count >= MAX_THREAD_COUNT) {
                     // Wait for a thread to finish before starting a new one
-                    pthread_join(threads[thread_count % MAX_THREADS], NULL);
+                    pthread_join(threads[idx], NULL);
                     thread_count++;
                 }
-                args[thread_count % MAX_THREADS].i = i;
-                args[thread_count % MAX_THREADS].j = j;
-                pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
+                args[idx].i = (int)i;
+                args[idx].j = (int)j;
+                pthread_create(&threads[idx], NULL, compute_lnc, &args[idx]);
                 thread_count++;
-                //printf("thread %d running...\n", (thread_count % MAX_THREADS));
+                // printf("thread %d running...\n", (idx));
             }
         }
 
         // Join threads
-        for (int i = 0; i < MAX_THREADS && i < thread_count; i++) {
+        for (int i = 0; i < MAX_THREAD_COUNT && i < thread_count; i++) {
             pthread_join(threads[i], NULL);
         }
 
         // Destroy mutex
         pthread_mutex_destroy(&mutex);
+        // Free dynamically allocated memory
+        free(threads);
+        free(args);
     }
 
     // Compute ANC
     anc = (float) sum_nc / count_nc;
-    */
+
 	// Print the matrix
     /*printf("Adjacency Matrix:\n");
     for (igraph_integer_t i = 0; i < size; i++) {
@@ -122,14 +137,12 @@ compute_anc(PyObject *self, PyObject *args)
         printf("\n");
     }*/
 
-    /*
     // Destroy graph
     igraph_matrix_destroy(adj_mat);
     igraph_destroy(&graph);
 
     return PyFloat_FromDouble((double) anc);
-    */
-    return PyFloat_FromDouble(4.36);
+
 }
 static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"

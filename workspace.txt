@@ -38,7 +38,7 @@ Already installed
 Windows:
 Install Microsoft Build Tools
 We create the library files using 'nmake all install' through 'Developer Command Prompt'
-Copy header files and .dll files to MinGW folder
+Copy header files and .dll and .lib files to MinGW folder
 
 4b. IGRAPH library
 Linux/macOS:
