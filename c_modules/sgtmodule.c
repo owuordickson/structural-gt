@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
-//#include <igraph.h>
+#include <igraph.h>
 #include <stdarg.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-//#include "sgt_base.h"
+#include "sgt_base.h"
 
 
 static PyObject *ErrorObject;

@@ -65,7 +65,7 @@ include-package-data = true
 #name = "sgt_igraph"
 #sources = ["c_modules/sgt_base.c", "c_modules/sgt_modules.c"]
 #libraries = ["igraph", "pthread"]
-#library_dirs = ["c_modules/igraph_lib/Libs"]
+#library_dirs = ["c_modules/igraph_lib/libs"]
 #include_dirs = ["c_modules/igraph_lib/include/igraph"]
 
 [tool.setuptools.dynamic]
