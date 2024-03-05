@@ -1,12 +1,14 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
-#include <igraph.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
+//#include <pthread.h>
+#include <igraph.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-//#include "sgt_base.h"
+
+igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices);
 
 
 static PyObject *ErrorObject;
@@ -26,7 +28,7 @@ compute_anc(PyObject *self, PyObject *args)
     	return NULL;
   	}
 
-    /*
+
     // Declare required variables
     const int MAX_THREADS = num_cpus;
 	igraph_integer_t size;
@@ -53,66 +55,20 @@ compute_anc(PyObject *self, PyObject *args)
 	);
 
 	num_nodes = igraph_vcount(&graph);
-	if (allow_mp == 0){
-        printf("Using single processing\n");
-        igraph_integer_t lnc;
-        for (igraph_integer_t i=0; i<num_nodes; i++) {
-            for (igraph_integer_t j=i+1; j<num_nodes; j++){
-                igraph_st_vertex_connectivity(&graph, &lnc, i, j, (igraph_vconn_nei_t)IGRAPH_VCONN_NEI_NEGATIVE);
-                if (lnc == -1) { continue; }
-                sum_nc += lnc;
-                count_nc += 1;
-            }
+    printf("Using test processing\n");
+    igraph_integer_t lnc;
+    for (igraph_integer_t i=0; i<num_nodes; i++) {
+        for (igraph_integer_t j=i+1; j<num_nodes; j++){
+            igraph_st_vertex_connectivity(&graph, &lnc, i, j, (igraph_vconn_nei_t)IGRAPH_VCONN_NEI_NEGATIVE);
+            if (lnc == -1) { continue; }
+            sum_nc += lnc;
+            count_nc += 1;
         }
-
-    }
-    else {
-        printf("Using multiprocessing\n");
-        // Initialize mutex
-        pthread_mutex_t mutex;
-        pthread_mutex_init(&mutex, NULL);
-
-        // Create thread pool
-        pthread_t threads[MAX_THREADS];
-        ThreadArgsLNC args[MAX_THREADS];
-        int thread_count = 0;
-
-        // Initialize thread pool
-        for (int i = 0; i < MAX_THREADS; i++) {
-            args[i].graph = &graph;
-            args[i].mutex = &mutex;
-            args[i].total_nc = &sum_nc;
-            args[i].total_count = &count_nc;
-        }
-
-        // Create threads for computing LNC
-        for (igraph_integer_t i = 0; i < num_nodes; i++) {
-            for (igraph_integer_t j = i + 1; j < num_nodes; j++) {
-                if (thread_count >= MAX_THREADS) {
-                    // Wait for a thread to finish before starting a new one
-                    pthread_join(threads[thread_count % MAX_THREADS], NULL);
-                    thread_count++;
-                }
-                args[thread_count % MAX_THREADS].i = i;
-                args[thread_count % MAX_THREADS].j = j;
-                pthread_create(&threads[thread_count % MAX_THREADS], NULL, compute_lnc, &args[thread_count % MAX_THREADS]);
-                thread_count++;
-                //printf("thread %d running...\n", (thread_count % MAX_THREADS));
-            }
-        }
-
-        // Join threads
-        for (int i = 0; i < MAX_THREADS && i < thread_count; i++) {
-            pthread_join(threads[i], NULL);
-        }
-
-        // Destroy mutex
-        pthread_mutex_destroy(&mutex);
     }
 
     // Compute ANC
     anc = (float) sum_nc / count_nc;
-    */
+
 	// Print the matrix
     /*printf("Adjacency Matrix:\n");
     for (igraph_integer_t i = 0; i < size; i++) {
@@ -122,14 +78,13 @@ compute_anc(PyObject *self, PyObject *args)
         printf("\n");
     }*/
 
-    /*
+
     // Destroy graph
     igraph_matrix_destroy(adj_mat);
     igraph_destroy(&graph);
 
     return PyFloat_FromDouble((double) anc);
-    */
-    return PyFloat_FromDouble(4.36);
+    //return PyFloat_FromDouble(4.36);
 }
 static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
@@ -143,6 +98,36 @@ static char compute_anc_doc[] =
 "The length of the graph should be a squared(N) since an adjacency matrix is NxN in size.\n"
 "Returns the Average Node Connectivity as a float value.\n";
 
+
+// Function to convert string representation of adjacency matrix to 2D matrix
+igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices) {
+    // Allocate memory for the matrix
+    igraph_matrix_t* mat = (igraph_matrix_t*)malloc(sizeof(igraph_matrix_t));
+    if (!mat) {
+        fprintf(stderr, "Failed to allocate memory for matrix structure\n");
+        exit(EXIT_FAILURE);
+    }
+    igraph_matrix_init(mat, num_vertices, num_vertices);
+
+    // Parse string and populate matrix
+    char* token;
+    char* nextToken;
+    const char delimiters[] = ",";
+
+    // Get the first token
+    token = strtok_s(str_adj_mat, delimiters, &nextToken);
+
+    // Iterate through the remaining tokens
+    for (igraph_integer_t i = 0; i < num_vertices; i++) {
+        for (igraph_integer_t j = 0; j < num_vertices; j++) {
+            MATRIX(*mat, i, j) = atoi(token);
+            // Get the next token
+            token = strtok_s(NULL, delimiters, &nextToken);
+        }
+    }
+
+    return mat;
+}
 
 static char sgt_doc[] =
 "A C language module leveraging the iGraph library to compute Graph Theory (GT) metrics,"
