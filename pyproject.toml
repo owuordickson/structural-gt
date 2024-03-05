@@ -77,3 +77,5 @@ include = ["*"]  # package names should match these glob patterns (["*"] by defa
 exclude = ["tests*"]  # exclude packages matching these glob patterns (empty by default)
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
+# [tool.setuptools.package-data]
+# StructuralGTb = ["c_libs/*w64.dll"]

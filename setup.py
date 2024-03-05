@@ -1,6 +1,7 @@
 from setuptools import Extension, setup
 
 setup(
+    # package_data={"StructuralGTb": ["c_modules/lib_pthreads/bin/*w64.dll"]},
     ext_modules=[
         Extension(
             name="sgt",
@@ -12,7 +13,8 @@ setup(
             libraries=["igraph", "pthreadVC3-w64"],  # Windows
             include_dirs=["C:/MinGW/include/igraph", "C:/MinGW/include/pthread"],  # Windows
             library_dirs=["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"],  # Windows
+            # extra_objects=["c_modules/lib_pthreads/pthread.obj"]
         )
-    ],
-    data_files=[("", ["C:/MinGW/bin/pthread/pthreadVC3-w64.dll"])]
+    ]
+    # data_files=[("", ["C:/MinGW/bin/pthread/pthreadVC3-w64.dll"])]
 )
