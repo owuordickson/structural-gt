@@ -12,8 +12,7 @@ setup(
             libraries=["igraph", "pthreadVC3-w64"],  # Windows
             include_dirs=["C:/MinGW/include/igraph", "C:/MinGW/include/pthread"],  # Windows
             library_dirs=["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"],  # Windows
-            # extra_link_args=['-lpthreadVC3'],  # Windows - pthreadVC3.dll
-            # extra_compile_args=["-std=c99", "-fdeclspec"]  # Add the compiler flag here
-        ),
-    ]
+        )
+    ],
+    data_files=[("", ["C:/MinGW/bin/pthread/pthreadVC3-w64.dll"])]
 )

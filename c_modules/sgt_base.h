@@ -10,7 +10,7 @@ typedef struct {
     igraph_integer_t i;
     igraph_integer_t j;
     igraph_integer_t *total_nc;      // Pointer to store the result
-    igraph_integer_t *total_count;   // Pointer to store the result
+    igraph_integer_t *total_count;
     pthread_mutex_t *mutex;          // Pointer to mutex
 } ThreadArgsLNC;
 
