@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -12,7 +12,7 @@ int main()
 
     printf("Hello World!\n");
 
-    printf("Using multiprocessing\n");
+    /*printf("Using multiprocessing\n");
         // Initialize mutex
         pthread_mutex_t mutex;
         pthread_mutex_init(&mutex, NULL);
@@ -40,7 +40,7 @@ int main()
         }
 
         // Destroy mutex
-        pthread_mutex_destroy(&mutex);
+        pthread_mutex_destroy(&mutex);*/
 
     return 0;
 }
