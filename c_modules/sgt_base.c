@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
-#include <igraph.h>
+//#include <pthread.h>
+//#include <igraph.h>
 #include <stdarg.h>
 #include "sgt_base.h"
 

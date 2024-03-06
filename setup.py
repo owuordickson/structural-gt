@@ -10,9 +10,10 @@ setup(
             # libraries=["igraph"],  # macOS and Linux
             # include_dirs=["/opt/homebrew/Cellar/igraph/0.10.10/include/igraph"],  # macOS and Linux
             # library_dirs=["/opt/homebrew/Cellar/igraph/0.10.10/lib"],  # macOS and Linux
-            libraries=["igraph", "pthreadVC3-w64"],  # Windows
+            libraries=["igraph", "libpthreadVC3"],  # Windows
             include_dirs=["C:/MinGW/include/igraph", "C:/MinGW/include/pthread"],  # Windows
             library_dirs=["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"],  # Windows
+            extra_link_args=["/VERBOSE:LIB"],
             # extra_objects=["c_modules/lib_pthreads/pthread.obj"]
         )
     ]
