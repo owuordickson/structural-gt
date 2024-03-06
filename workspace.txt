@@ -37,7 +37,7 @@ Linux/macOS:
 Already installed
 Windows:
 Install Microsoft Build Tools
-We create the library files using 'nmake all install' through 'Developer Command Prompt'
+We create the library files using 'nmake clean VC-small-static' through 'Developer Command Prompt' (choose x86/x64)
 Copy header files and .dll and .lib files to MinGW folder
 
 4b. IGRAPH library
@@ -46,7 +46,7 @@ brew install igraph
 Windows:
 Install Microsoft Build Tools
 https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
-Use the 'Developer Command Prompt' to run the following commands:
+Use the 'Developer Command Prompt' to run the following commands (choose x86/x64):
 mkdir build
 cd build
 cmake ..
