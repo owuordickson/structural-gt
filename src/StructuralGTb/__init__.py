@@ -4,7 +4,7 @@
 A software package for performing Graph Theory on microscopic TEM images. This software is a \
 modified version of StructuralGT by Drew A. Vecchio: https://github.com/drewvecchio/StructuralGT.
 
-    Copyright (C) 2024, the Regents of the University of Michigan".
+    Copyright (C) 2024, the Regents of the University of Michigan.
 
         This program is free software: you can redistribute it and/or modify \
 it under the terms of the GNU General Public License as published by \
@@ -16,7 +16,9 @@ See the GNU General Public License for more details. You should have received a 
 of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         Development Lead: Dickson Owuor
+
         Contributors: Nicholas A. Kotov
+
         Contact email: owuordickson@gmail.com
 """
 
