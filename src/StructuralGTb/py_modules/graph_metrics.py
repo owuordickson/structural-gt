@@ -32,7 +32,7 @@ from ..configs.config_loader import get_num_cores
 
 class GraphMetrics:
 
-    def __init__(self, g_obj, configs, allow_multiprocessing=False):
+    def __init__(self, g_obj, configs, allow_multiprocessing=True):
         self.__listeners = []
         self.abort = False
         self.allow_mp = allow_multiprocessing
@@ -624,9 +624,9 @@ class GraphMetrics:
             # print(str_mat)
             # anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
 
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            graph_path = 'graph.txt'
-            graph_file = os.path.join(script_dir, graph_path)
+            filename, output_location = self.create_filenames(self.img_path)
+            g_filename = filename + "_graph.txt"
+            graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
             anc = sgt.compute_anc(graph_file, size, cpu_count, self.allow_mp)
 
