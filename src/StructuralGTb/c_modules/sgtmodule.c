@@ -16,11 +16,19 @@ compute_anc(PyObject *self, PyObject *args)
     int num_cpus;
     int allow_mp;
 	int length;
-    char *str_adj_mat;
+    //char *str_adj_mat;
+    char *f_name;
 
-    if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
+    /*if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
+        return NULL;*/
+    if (!PyArg_ParseTuple(args, "siii:compute_anc", &f_name, &length, &num_cpus, &allow_mp))
         return NULL;
-	
+
+	/*if ( f_name == ''){
+    	PyErr_SetString(ErrorObject, "Unable to retrieve graph.");
+    	return NULL;
+  	}*/
+
 	if ( num_cpus <= 0 || allow_mp < 0){
     	PyErr_SetString(ErrorObject, "Invalid CPU parameters.");
     	return NULL;
@@ -28,9 +36,10 @@ compute_anc(PyObject *self, PyObject *args)
 
     // Declare required variables
 	igraph_integer_t size;
-	igraph_matrix_t* adj_mat;
+	//igraph_matrix_t* adj_mat;
+  	FILE *file;
 
-	igraph_t graph;
+  	igraph_t graph;
 	igraph_integer_t num_nodes;
     igraph_integer_t count_nc = 0;
     igraph_integer_t sum_nc = 0;
@@ -39,6 +48,13 @@ compute_anc(PyObject *self, PyObject *args)
 	// Get size of adjacency matrix
 	size = (int)sqrt((double)(length));
 
+    // Open the file containing the serialized graph
+    file = fopen(f_name, "r");
+    // Read the graph from the file
+    igraph_read_graph_edgelist(&graph, file, 0, IGRAPH_UNDIRECTED);
+    fclose(file);
+
+    /*
 	// Convert string to matrix
 	// printf("Converting to Adj-Mat\n");
     adj_mat = str_to_matrix(str_adj_mat, size);
@@ -48,7 +64,10 @@ compute_anc(PyObject *self, PyObject *args)
 	igraph_adjacency(
 		&graph, adj_mat,
 		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
-	);
+	);*/
+
+    // Print the average degree
+    printf("Nodes: %d\nEdges: %d\n", (int)igraph_vcount(&graph), (int)igraph_ecount(&graph));
 
 	num_nodes = igraph_vcount(&graph);
 	if (allow_mp == 0){
@@ -56,8 +75,8 @@ compute_anc(PyObject *self, PyObject *args)
         igraph_integer_t lnc;
         for (igraph_integer_t i=0; i<num_nodes; i++) {
             for (igraph_integer_t j=i+1; j<num_nodes; j++){
-                igraph_st_vertex_connectivity(&graph, &lnc, i, j, (igraph_vconn_nei_t)IGRAPH_VCONN_NEI_NEGATIVE);
-                if (lnc == -1) { continue; }
+                igraph_st_vertex_connectivity(&graph, &lnc, i, j, IGRAPH_VCONN_NEI_NUMBER_OF_NODES);
+                // if (lnc < 0) { continue; }
                 sum_nc += lnc;
                 count_nc += 1;
             }
@@ -138,7 +157,7 @@ compute_anc(PyObject *self, PyObject *args)
     }*/
 
     // Destroy graph
-    igraph_matrix_destroy(adj_mat);
+    //igraph_matrix_destroy(adj_mat);
     igraph_destroy(&graph);
 
     return PyFloat_FromDouble((double) anc);

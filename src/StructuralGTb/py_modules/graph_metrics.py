@@ -32,7 +32,7 @@ from ..configs.config_loader import get_num_cores
 
 class GraphMetrics:
 
-    def __init__(self, g_obj, configs, allow_multiprocessing=True):
+    def __init__(self, g_obj, configs, allow_multiprocessing=False):
         self.__listeners = []
         self.abort = False
         self.allow_mp = allow_multiprocessing
@@ -616,15 +616,20 @@ class GraphMetrics:
         anc = 0
 
         try:
-            adj_mat = nx.to_numpy_array(nx_graph)
+            adj_mat = nx.adjacency_matrix(nx_graph).todense()
             size = np.size(adj_mat)
-            flat_mat = np.ravel(adj_mat, order='C')
-            str_mat = str(flat_mat.tolist()).replace('[', '').replace(']', '')
+            # flat_mat = np.ravel(adj_mat, order='C')
+            # str_mat = str(flat_mat.tolist()).replace('[', '').replace(']', '')
             # print(size)
             # print(str_mat)
+            # anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
 
-            anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
-            # anc = sgt.compute_anc(str_mat, size, 8, 0)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            graph_path = 'graph.txt'
+            graph_file = os.path.join(script_dir, graph_path)
+            nx.write_edgelist(nx_graph, graph_file, data=False)
+            anc = sgt.compute_anc(graph_file, size, cpu_count, self.allow_mp)
+
         except Exception as err:
             print(err)
         return anc
