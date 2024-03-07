@@ -624,7 +624,7 @@ class GraphMetrics:
             # print(str_mat)
             # anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
 
-            filename, output_location = self.create_filenames(self.img_path)
+            filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
