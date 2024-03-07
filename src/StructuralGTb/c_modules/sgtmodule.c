@@ -91,15 +91,13 @@ compute_anc(PyObject *self, PyObject *args)
 
         // Create thread pool
         const int MAX_THREAD_COUNT = num_cpus;
-        /*pthread_t threads[MAX_THREAD_COUNT];
-        ThreadArgsLNC args[MAX_THREAD_COUNT];*/
+
         // Allocate memory for threads and args arrays
         pthread_t *threads = (pthread_t *)malloc(MAX_THREAD_COUNT * sizeof(pthread_t));
         ThreadArgsLNC *args = (ThreadArgsLNC *)malloc(MAX_THREAD_COUNT * sizeof(ThreadArgsLNC));
 
 
         if (threads == NULL || args == NULL) {
-            //fprintf(stderr, "Memory allocation failed\n");
             //exit(EXIT_FAILURE);
             PyErr_SetString(ErrorObject, "Memory allocation failed\n");
     	    return NULL;
