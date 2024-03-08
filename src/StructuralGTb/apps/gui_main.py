@@ -1207,7 +1207,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             else:
                 self._load_image('O')
 
-    def _load_image(self, current_img='O', img_pixmap=None):
+    def _load_image(self, current_img, img_pixmap=None):
         self.img_scale = 1
         self.current_img = current_img
         self.lbl_img.setText('')
@@ -1217,8 +1217,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         h = self.lbl_img.height()
         if img_pixmap is None:
             g_obj = self.graph_objs[self.current_obj_index]
-            img_pixmap = self.apply_brightness(g_obj.imp.img)
-            # img_pixmap = QtGui.QPixmap(self.txt_img_path.text())
+            img_pixmap = self.apply_brightness(g_obj.imp.img_mod)
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
             self.txt_img_path.setText(g_obj.imp.img_path)
             if self.txt_out_path.text() == '':
