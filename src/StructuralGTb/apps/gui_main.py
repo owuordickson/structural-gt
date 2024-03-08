@@ -15,6 +15,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
+from ..py_modules.image_processor import ImageProcessor
 from ..py_modules.graph_converter import GraphConverter
 from ..py_modules.graph_metrics import GraphMetrics
 
@@ -46,10 +47,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         self.graph_objs = []
         self.current_obj_index = 0
+        self.current_img = '0'
         self.img_scale = 1
 
         self.spb_adaptive_threshold_val = 0
-        self.anc, self.node_conns, self.conn_count = 0, 0, 0
 
         self.progress_dialog = None
         self.error_flag = False
@@ -727,6 +728,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_sobel.valueChanged.connect(lambda: self.lbl_sobel.setText(
             str(self.sld_sobel.value() + 1 if self.sld_sobel.value() % 2 == 0 else self.sld_sobel.value())))
 
+        # Filter Listeners
+        self.spb_brightness.valueChanged.connect(self._image_filters_changed)
+        self.spb_contrast.valueChanged.connect(self._image_filters_changed)
+
+        # self.lbl_lut_gamma.
+        self.cbx_gaussian_blur.stateChanged.connect(self._image_filters_changed)
+        self.cbx_autolevel.stateChanged.connect(self._image_filters_changed)
+        # self.lbl_gaussian.
+        # self.lbl_autolevel.
+        self.cbx_lowpass.stateChanged.connect(self._image_filters_changed)
+        self.spb_lowpass.valueChanged.connect(self._image_filters_changed)
+        self.cbx_laplacian.stateChanged.connect(self._image_filters_changed)
+        # self.lbl_laplacian.
+        self.cbx_sobel.stateChanged.connect(self._image_filters_changed)
+        # self.lbl_sobel.
+        self.cbx_scharr.stateChanged.connect(self._image_filters_changed)
+        self.cbx_median.stateChanged.connect(self._image_filters_changed)
+
     def _init_img_binary_settings(self, options_img):
 
         if options_img.threshold_type == 2:
@@ -749,6 +768,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_global_threshold.valueChanged.connect(
             lambda: self.lbl_global_threshold_value.setText(str(self.sld_global_threshold.value())))
 
+        # Filter Listeners
+        self.rdo_otsu_threshold.toggled.connect(self._image_filters_changed)
+        self.rdo_adaptive_threshold.toggled.connect(self._image_filters_changed)
+        self.rdo_global_threshold.toggled.connect(self._image_filters_changed)
+        # self.lbl_global_threshold_value.textChanged.connect()
+        self.spb_adaptive_threshold.valueChanged.connect(self._image_filters_changed)
+        self.cbx_dark_foreground.stateChanged.connect(self._image_filters_changed)
+
     def _init_img_path_settings(self, options):
 
         self.cbx_multi.setChecked(options.multiImage)
@@ -769,9 +796,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
     def _init_tools(self):
         self.btn_cancel.setEnabled(False)
-
-        self.spb_brightness.valueChanged.connect(self._spb_brightness_value_changed)
-        self.spb_contrast.valueChanged.connect(self._spb_contrast_value_changed)
 
         self.btn_about.clicked.connect(AnalysisUI._btn_about_clicked)
         self.btn_cancel.clicked.connect(self._btn_cancel_clicked)
@@ -802,7 +826,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     file_name = os.path.join(img_dir, a_file)
-                    obj = GraphConverter(file_name, '')
+                    im_obj = ImageProcessor(file_name, '')
+                    obj = GraphConverter(im_obj)
                     self.graph_objs.append(obj)
             if len(self.graph_objs) <= 0:
                 dialog = CustomDialog("File Error",
@@ -811,7 +836,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
             if len(self.graph_objs) > 1:
                 self.current_obj_index = 0
-                self._load_image()
+                self._load_image('O')
                 self.btn_next.setEnabled(True)
                 self.btn_prev.setEnabled(False)
                 self.btn_gt_metrics_all.setEnabled(True)
@@ -820,7 +845,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.btn_prev.setEnabled(False)
                 self.btn_gt_metrics_all.setEnabled(False)
         else:
-            self._load_image()
+            self._load_image('O')
             self.btn_next.setEnabled(False)
             self.btn_prev.setEnabled(False)
             self.btn_gt_metrics_all.setEnabled(False)
@@ -838,24 +863,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.spb_adaptive_threshold_val = (val - 1)
         else:
             self.spb_adaptive_threshold.setValue(val)
-
-    def _spb_brightness_value_changed(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-        g_obj = self.graph_objs[self.current_obj_index]
-        q_img = self.apply_brightness(g_obj.img)
-        self._load_image(q_img)
-
-    def _spb_contrast_value_changed(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-        g_obj = self.graph_objs[self.current_obj_index]
-        q_img = self.apply_brightness(g_obj.img)
-        self._load_image(q_img)
 
     @staticmethod
     def _btn_about_clicked():
@@ -887,7 +894,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 for a_file in files:
                     if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                         file_name = os.path.join(fd_image_dir, a_file)
-                        obj = GraphConverter(file_name, '')
+                        im_obj = ImageProcessor(file_name, '')
+                        obj = GraphConverter(im_obj)
                         self.graph_objs.append(obj)
                 if len(self.graph_objs) <= 0:
                     dialog = CustomDialog("File Error",
@@ -900,12 +908,13 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if fd_image_file:
                 # split the file location into path and file name
                 fd_image_dir, _ = os.path.split(fd_image_file)
-                obj = GraphConverter(fd_image_file, '')
+                im_obj = ImageProcessor(fd_image_file, '')
+                obj = GraphConverter(im_obj)
                 self.graph_objs.append(obj)
         # Set and display image
         if len(self.graph_objs) > 0:
             self.current_obj_index = 0
-            self._load_image()
+            self._load_image('O')
             self.enable_img_tasks()
 
             if len(self.graph_objs) > 1:
@@ -914,6 +923,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             else:
                 self.btn_next.setEnabled(False)
                 self.btn_prev.setEnabled(False)
+        else:
+            self.disable_all_tasks()
 
     def _btn_select_out_path_clicked(self):
         fd_out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
@@ -922,7 +933,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _btn_next_clicked(self):
         if self.current_obj_index < (len(self.graph_objs) - 1):
             self.current_obj_index += 1
-            self._load_image()
+            self._load_image('O')
 
             self.btn_prev.setEnabled(True)
             if self.current_obj_index == (len(self.graph_objs) - 1):
@@ -933,7 +944,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
     def _btn_prev_clicked(self):
         if self.current_obj_index > 0:
             self.current_obj_index -= 1
-            self._load_image()
+            self._load_image('O')
 
             self.btn_next.setEnabled(True)
             if self.current_obj_index == 0:
@@ -956,13 +967,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._rescale_pixmap()
 
     def _btn_crop_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
         g_obj = self.graph_objs[self.current_obj_index]
-        img = Image.fromarray(g_obj.img)
+        img = Image.fromarray(g_obj.imp.img)
         q_img = ImageQt.toqpixmap(img)
         crop_tool = QCrop(q_img, self)
         status = crop_tool.exec()
@@ -970,62 +976,45 @@ class AnalysisUI(QtWidgets.QMainWindow):
             try:
                 q_img = crop_tool.image.toImage()
                 img_pil = ImageQt.fromqimage(q_img)
-                img_crop = GraphConverter.load_img_from_pil(img_pil)
-                img = GraphConverter.resize_img(512, img_crop)
-                g_obj.img = img
-                g_obj.img_filtered, g_obj.img_bin, g_obj.graph_img = None, None, None
-                g_obj.nx_graph, g_obj.nx_info = None, []
-                self._load_image()
+                img_crop = ImageProcessor.load_img_from_pil(img_pil)
+                img = ImageProcessor.resize_img(512, img_crop)
+                g_obj.imp.img = img
+                g_obj.reset()
+                self._load_image('O')
             except Exception as err:
                 print(err)
 
     def _btn_show_original_img_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
-        img = Image.fromarray(g_obj.img)
+        img = Image.fromarray(g_obj.imp.img)
         q_img = ImageQt.toqpixmap(img)
-        self._load_image(q_img)
+        self._load_image('O', q_img)
 
     def _btn_show_processed_img_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_filtered is not None:
-            img = Image.fromarray(g_obj.img_filtered)
+        if g_obj.imp.img_mod is not None:
+            img = Image.fromarray(g_obj.imp.img_mod)
             q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
+            self._load_image('M', q_img)
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()
 
     def _btn_show_binary_img_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_bin is not None:
-            img = Image.fromarray(g_obj.img_bin)
+        if g_obj.imp.img_bin is not None:
+            img = Image.fromarray(g_obj.imp.img_bin)
             q_img = ImageQt.toqpixmap(img)
-            self._load_image(q_img)
+            self._load_image('B', q_img)
         else:
             dialog = CustomDialog("Image Error", "'Apply Filters'...")
             dialog.exec()
 
     def _btn_show_graph_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.graph_img is not None:
-            q_img = ImageQt.toqpixmap(g_obj.graph_img)
-            self._load_image(q_img)
+        if g_obj.imp.img_net is not None:
+            q_img = ImageQt.toqpixmap(g_obj.imp.img_net)
+            self._load_image('G', q_img)
         else:
             self.disable_all_tasks()
             options_img = self._fetch_img_options()
@@ -1037,10 +1026,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.worker.start()
 
     def _btn_quick_metrics_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
         if g_obj.nx_graph is not None:
             info = ""
@@ -1056,11 +1041,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
 
     def _btn_save_files_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
         self.disable_all_tasks()
         g_obj = self.graph_objs[self.current_obj_index]
         if g_obj.nx_graph is not None:
@@ -1086,28 +1066,24 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._spb_adaptive_threshold_value_changed()
 
         g_obj = self.graph_objs[self.current_obj_index]
-        img_path = g_obj.img_path
-        img = g_obj.img
+        img_path = g_obj.imp.img_path
+        img = g_obj.imp.img
         output_path = self.txt_out_path.text()
         options_img = self._fetch_img_options()
-        options_gte = self._fetch_gte_options()
+        # options_gte = self._fetch_gte_options()
 
         # worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
         # worker.signals.progress.connect(self._handle_progress_update)
         # worker.signals.finished.connect(self._handle_finished)
         # self.threadpool.start(worker)
-        self.worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
+        self.worker = Worker(func_id=1, args=(img_path, output_path, options_img, img))
         self.worker.signals.progress.connect(self._handle_progress_update)
         self.worker.signals.finished.connect(self._handle_finished)
         self.worker.start()
 
     def _btn_compute_gt_metrics_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         g_obj = self.graph_objs[self.current_obj_index]
-        g_obj.output_path = self.txt_out_path.text()
+        g_obj.imp.output_path = self.txt_out_path.text()
         self.disable_all_tasks()
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
@@ -1119,10 +1095,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.worker.start()
 
     def _btn_compute_gt_metrics_all_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
         self.disable_all_tasks()
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
@@ -1138,9 +1110,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
     # def _btn_chaos_gt_clicked(self):
     #    pass
 
-    def _image_filters_changed(self):
-        print(self.current_obj_index)
-
     def _handle_finished(self, task, show_dialog, obj):
         if self.progress_dialog:
             self.progress_dialog.cancel()
@@ -1148,10 +1117,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         if (task == 1) and (not self.error_flag):
             try:
-                obj.terminal_app = False
-                self.graph_objs[self.current_obj_index] = obj
+                self.graph_objs[self.current_obj_index].imp = obj
                 img = Image.fromarray(obj.img_bin)
-                self._load_image(ImageQt.toqpixmap(img))
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image('B', q_img)
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "Image filters applied.")
@@ -1159,8 +1128,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
         elif (task == 2) and (not self.error_flag):
             try:
                 self.graph_objs[self.current_obj_index] = obj
-                q_img = ImageQt.toqpixmap(obj.graph_img)
-                self._load_image(q_img)
+                q_img = ImageQt.toqpixmap(obj.imp.img_net)
+                self._load_image('G', q_img)
             except Exception as err:
                 print(err)
             self._handle_progress_update(100, 100, "Drawing graph complete!")
@@ -1193,8 +1162,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
 
         if self.error_flag:
             self.enable_img_tasks()
-        # else:
-        #    self.enable_all_tasks()
 
     def _handle_progress_update(self, value, code, msg):
         print(str(value) + "%: " + msg)
@@ -1214,20 +1181,48 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.setValue(value)
             self.progress_dialog.setLabelText(msg)
 
-    def _load_image(self, img_pixmap=None):
+    def _image_filters_changed(self):
+        if len(self.graph_objs) > 0:
+            # self.disable_all_tasks()
+            self._spb_adaptive_threshold_value_changed()
+
+            im_obj = self.graph_objs[self.current_obj_index].imp
+            im_obj.output_path = self.txt_out_path.text()
+            im_obj.configs_img = self._fetch_img_options()
+            im_obj.apply_filters()
+            im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
+
+            if self.current_img == 'B':
+                im_obj.img_bin, im_obj.otsu_val = im_obj.binarize_img(im_obj.img_mod.copy())
+                img = Image.fromarray(im_obj.img_bin)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image('B', q_img)
+            elif self.current_img == 'M':
+                img = Image.fromarray(im_obj.img_mod)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image('M', q_img)
+            elif (self.current_img == 'G') and (im_obj.img_net is not None):
+                q_img = ImageQt.toqpixmap(im_obj.img_net)
+                self._load_image('G', q_img)
+            else:
+                self._load_image('O')
+
+    def _load_image(self, current_img='O', img_pixmap=None):
         self.img_scale = 1
-        w = self.lbl_img.width()
-        h = self.lbl_img.height()
+        self.current_img = current_img
         self.lbl_img.setText('')
         self.lbl_info.setText(f"image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
+
+        w = self.lbl_img.width()
+        h = self.lbl_img.height()
         if img_pixmap is None:
             g_obj = self.graph_objs[self.current_obj_index]
-            img_pixmap = self.apply_brightness(g_obj.img)
+            img_pixmap = self.apply_brightness(g_obj.imp.img)
             # img_pixmap = QtGui.QPixmap(self.txt_img_path.text())
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
-            self.txt_img_path.setText(g_obj.img_path)
+            self.txt_img_path.setText(g_obj.imp.img_path)
             if self.txt_out_path.text() == '':
-                img_dir, _ = os.path.split(g_obj.img_path)
+                img_dir, _ = os.path.split(g_obj.imp.img_path)
                 self.txt_out_path.setText(img_dir)
         else:
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
@@ -1506,7 +1501,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         brightness_val = int(self.spb_brightness.text())
         contrast_val = int(self.spb_contrast.text())
 
-        img_smooth = GraphConverter.control_brightness(img, brightness_val, contrast_val)
+        img_smooth = ImageProcessor.control_brightness(img, brightness_val, contrast_val)
         img = Image.fromarray(img_smooth)
         q_img = ImageQt.toqpixmap(img)
         return q_img
@@ -1519,7 +1514,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         """
         self._handle_progress_update(98, 98, "Writing PDF...")
         g_obj = self.graph_objs[self.current_obj_index]
-        filename, output_location = g_obj.create_filenames(g_obj.img_path)
+        filename, output_location = g_obj.imp.create_filenames()
         pdf_filename = filename + "_SGT_results.pdf"
         pdf_file = os.path.join(output_location, pdf_filename)
         with (PdfPages(pdf_file) as pdf):
@@ -1634,20 +1629,25 @@ class Worker(QtCore.QThread):
         else:
             self.signals.progress.emit(0, value, msg)
 
-    def service_filter_img(self, img_path, output_path, options_img, options_gte, img):
+    def service_filter_img(self, img_path, output_path, options_img, img):
         try:
-            graph_obj = GraphConverter(img_path, output_path, options_img=options_img, options_gte=options_gte, img=img)
-            graph_obj.add_listener(self.update_progress)
-            graph_obj.fit_img()
-            graph_obj.remove_listener(self.update_progress)
-            self.signals.finished.emit(1, 0, graph_obj)
+            self.update_progress(10, "applying filters...")
+            im_obj = ImageProcessor(img_path, output_path, options_img=options_img, img=img)
+            im_obj.apply_filters()
+            self.update_progress(100, '')
+            self.signals.finished.emit(1, 0, im_obj)
+            # graph_obj = GraphConverter(im_obj, options_gte=options_gte)
+            # graph_obj.add_listener(self.update_progress)
+            # graph_obj.fit_img()
+            # graph_obj.remove_listener(self.update_progress)
+            # self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
 
     def service_generate_graph(self, graph_obj, options_img, options_gte):
         try:
             graph_obj.abort = False
-            graph_obj.configs_img = options_img
+            graph_obj.imp.configs_img = options_img
             graph_obj.configs_graph = options_gte
             graph_obj.add_listener(self.update_progress)
             self.add_thread_listener(graph_obj.abort_tasks)
@@ -1662,7 +1662,7 @@ class Worker(QtCore.QThread):
         try:
             graph_obj.abort = False
             if graph_obj.nx_graph is None:
-                graph_obj.configs_img = options_img
+                graph_obj.imp.configs_img = options_img
                 graph_obj.configs_graph = options_gte
                 graph_obj.add_listener(self.update_progress)
                 self.add_thread_listener(graph_obj.abort_tasks)
@@ -1713,7 +1713,7 @@ class Worker(QtCore.QThread):
             try:
                 graph_obj.abort = False
                 if graph_obj.nx_graph is None:
-                    graph_obj.configs_img = options_img
+                    graph_obj.imp.configs_img = options_img
                     graph_obj.configs_graph = options_gte
                     graph_obj.add_listener(self.update_progress)
                     graph_obj.fit()
