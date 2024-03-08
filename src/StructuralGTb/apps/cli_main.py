@@ -9,9 +9,10 @@ Terminal interface implementations
 
 import time
 import os
-import multiprocessing as mp
+# import multiprocessing as mp
 from ..configs.config_loader import load_configs, get_num_cores
-from ..py_modules.graph_struct import GraphStruct
+from ..py_modules.image_processor import ImageProcessor
+from ..py_modules.graph_converter import GraphConverter
 from ..py_modules.graph_metrics import GraphMetrics
 
 
@@ -84,7 +85,8 @@ def terminal_app():
 
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
-    graph_obj = GraphStruct(img_path, out_dir, options_img=options_img, options_gte=options_gte)
+    imp_obj = ImageProcessor(img_path, out_dir, options_img=options_img)
+    graph_obj = GraphConverter(imp_obj, options_gte=options_gte)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()
     metrics_obj = GraphMetrics(graph_obj, options_gtc)

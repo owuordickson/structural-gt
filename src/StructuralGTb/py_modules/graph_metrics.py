@@ -33,7 +33,7 @@ class GraphMetrics:
         self.__listeners = []
         self.abort = False
         self.allow_mp = allow_multiprocessing
-        self.g_struct = g_obj
+        self.gc = g_obj
         self.configs = configs
         self.output_data = pd.DataFrame([])
         self.degree_distribution = [0]
@@ -88,9 +88,9 @@ class GraphMetrics:
         """
         self.update_status([1, "Performing un-weighted analysis..."])
 
-        graph = self.g_struct.nx_graph
+        graph = self.gc.nx_graph
         options = self.configs
-        options_gte = self.g_struct.configs_graph
+        options_gte = self.gc.configs_graph
         data_dict = {"x": [], "y": []}
 
         node_count = int(nx.number_of_nodes(graph))
@@ -232,10 +232,10 @@ class GraphMetrics:
         # calculating graph conductance
         if options.compute_graph_conductance == 1:
             self.update_status([60, "Computing graph conductance..."])
-            # res_items, sg_components = self.g_struct.approx_conductance_by_spectral()
+            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
             data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round((self.g_struct.connect_ratio * 100), 5)) + "%")
-            for item in self.g_struct.nx_info:
+            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
+            for item in self.gc.nx_info:
                 data_dict["x"].append(item["name"])
                 data_dict["y"].append(item["value"])
 
@@ -243,7 +243,7 @@ class GraphMetrics:
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
-            gph = self.g_struct.nx_connected_graph
+            gph = self.gc.nx_connected_graph
             all_nodes = list(gph.nodes())
             # source_nodes = random.sample(all_nodes, k=5)
             # rem_nodes = list(set(source_nodes) - set(source_nodes))
@@ -267,7 +267,7 @@ class GraphMetrics:
     def compute_weighted_gt_metrics(self):
         self.update_status([70, "Performing weighted analysis..."])
 
-        graph = self.g_struct.nx_graph
+        graph = self.gc.nx_graph
         options = self.configs
         data_dict = {"x": [], "y": []}
 
@@ -352,8 +352,8 @@ class GraphMetrics:
         # calculating graph conductance
         if options.compute_graph_conductance == 1:
             self.update_status([86, "Computing graph conductance..."])
-            # res_items, sg_components = self.g_struct.approx_conductance_by_spectral(weighted=True)
-            for item in self.g_struct.nx_info:
+            # res_items, sg_components = self.gc.approx_conductance_by_spectral(weighted=True)
+            for item in self.gc.nx_info:
                 data_dict["x"].append((str("Weighted ") + str(item["name"])))
                 data_dict["y"].append((str("Weighted ") + str(item["value"])))
 
@@ -380,7 +380,7 @@ class GraphMetrics:
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig, _ = self.g_struct.draw_graph_network(a4_size=True)
+        fig, _ = self.gc.draw_graph_network(a4_size=True)
         if fig:
             out_figs.append(fig)
 
@@ -430,7 +430,7 @@ class GraphMetrics:
         # (NOT TRUE) Note: only works with fully-connected graphs
         # So, random betweenness centrality is computed between source node and destination node.
 
-        graph = self.g_struct.nx_graph
+        graph = self.gc.nx_graph
 
         # 1. Compute laplacian matrix L = D - A
         lpl_mat = nx.laplacian_matrix(graph).toarray()
@@ -450,7 +450,7 @@ class GraphMetrics:
 
         opt_gtc = self.configs
 
-        filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
+        filename, output_location = self.gc.imp.create_filenames()
         pdf_filename = filename + "_SGT_results.pdf"
         pdf_file = os.path.join(output_location, pdf_filename)
 
@@ -466,7 +466,7 @@ class GraphMetrics:
             pdf.savefig(fig)  # causes PyQt5 to crash
 
             # 3. plotting sub-graph network
-            fig, _ = self.g_struct.draw_graph_network(a4_size=True)
+            fig, _ = self.gc.draw_graph_network(a4_size=True)
             if fig:
                 pdf.savefig(fig)
 
@@ -492,7 +492,7 @@ class GraphMetrics:
             # 8. displaying run information
             fig = self.display_info()
             pdf.savefig(fig)
-        self.g_struct.save_files()
+        self.gc.save_files()
 
     # def compute_betweenness_centrality(self):
         """
@@ -516,7 +516,7 @@ class GraphMetrics:
         # (NOT TRUE) Note: only works with fully-connected graphs
         # So, random betweenness centrality is computed between source node and destination node.
 
-        graph = self.g_struct.nx_graph
+        graph = self.gc.nx_graph
 
         # 1. Compute laplacian matrix L = D - A
         lpl_mat = nx.laplacian_matrix(graph).toarray()
@@ -562,7 +562,7 @@ class GraphMetrics:
 
         """
 
-        nx_graph = self.g_struct.nx_graph
+        nx_graph = self.gc.nx_graph
         if nx_graph.is_directed():
             iter_func = itertools.permutations
         else:
@@ -602,10 +602,10 @@ class GraphMetrics:
 
     def display_images(self):
 
-        opt_img = self.g_struct.configs_img
-        raw_img = self.g_struct.img
-        filtered_img = self.g_struct.img_filtered
-        img_bin = self.g_struct.img_bin
+        opt_img = self.gc.imp.configs_img
+        raw_img = self.gc.imp.img
+        filtered_img = self.gc.imp.img_mod
+        img_bin = self.gc.imp.img_bin
 
         img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
 
@@ -635,17 +635,17 @@ class GraphMetrics:
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         elif opt_img.threshold_type == 2:
-            thresh_arr = np.array([[self.g_struct.otsu_val, self.g_struct.otsu_val],
+            thresh_arr = np.array([[self.gc.imp.otsu_val, self.gc.imp.otsu_val],
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
 
     def display_skeletal_images(self):
 
-        opt_gte = self.g_struct.configs_graph
-        nx_graph = self.g_struct.nx_graph
-        g_skel = self.g_struct.graph_skeleton
-        img = self.g_struct.img
+        opt_gte = self.gc.configs_graph
+        nx_graph = self.gc.nx_graph
+        g_skel = self.gc.graph_skeleton
+        img = self.gc.imp.img
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
         ax_1 = fig.add_subplot(2, 1, 1)
@@ -683,7 +683,7 @@ class GraphMetrics:
 
     def display_gt_results(self):
 
-        opt_gte = self.g_struct.configs_graph
+        opt_gte = self.gc.configs_graph
         data = self.output_data
         w_data = self.weighted_output_data
 
@@ -708,7 +708,7 @@ class GraphMetrics:
 
     def display_histograms(self):
 
-        opt_gte = self.g_struct.configs_graph
+        opt_gte = self.gc.configs_graph
         opt_gtc = self.configs
         figs = []
 
@@ -790,7 +790,7 @@ class GraphMetrics:
 
     def display_heatmaps(self):
 
-        opt_gte = self.g_struct.configs_graph
+        opt_gte = self.gc.configs_graph
         opt_gtc = self.configs
 
         deg_distribution = self.degree_distribution
@@ -848,9 +848,9 @@ class GraphMetrics:
         ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        opt_img = self.g_struct.configs_img
-        opt_gte = self.g_struct.configs_graph
-        _, filename = os.path.split(self.g_struct.img_path)
+        opt_img = self.gc.imp.configs_img
+        opt_gte = self.gc.configs_graph
+        _, filename = os.path.split(self.gc.imp.img_path)
         run_info = ""
         run_info = run_info + filename + "\n"
         now = datetime.datetime.now()
@@ -898,9 +898,9 @@ class GraphMetrics:
 
     def plot_heatmap(self, distribution, title, size, line_width):
 
-        nx_graph = self.g_struct.nx_graph
-        opt_gte = self.g_struct.configs_graph
-        img = self.g_struct.img
+        nx_graph = self.gc.nx_graph
+        opt_gte = self.gc.configs_graph
+        img = self.gc.imp.img
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)

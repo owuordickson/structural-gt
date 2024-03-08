@@ -15,7 +15,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
-from ..py_modules.graph_struct import GraphStruct
+from ..py_modules.graph_converter import GraphConverter
 from ..py_modules.graph_metrics import GraphMetrics
 
 
@@ -802,7 +802,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     file_name = os.path.join(img_dir, a_file)
-                    obj = GraphStruct(file_name, '')
+                    obj = GraphConverter(file_name, '')
                     self.graph_objs.append(obj)
             if len(self.graph_objs) <= 0:
                 dialog = CustomDialog("File Error",
@@ -887,7 +887,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 for a_file in files:
                     if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                         file_name = os.path.join(fd_image_dir, a_file)
-                        obj = GraphStruct(file_name, '')
+                        obj = GraphConverter(file_name, '')
                         self.graph_objs.append(obj)
                 if len(self.graph_objs) <= 0:
                     dialog = CustomDialog("File Error",
@@ -900,7 +900,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             if fd_image_file:
                 # split the file location into path and file name
                 fd_image_dir, _ = os.path.split(fd_image_file)
-                obj = GraphStruct(fd_image_file, '')
+                obj = GraphConverter(fd_image_file, '')
                 self.graph_objs.append(obj)
         # Set and display image
         if len(self.graph_objs) > 0:
@@ -970,10 +970,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
             try:
                 q_img = crop_tool.image.toImage()
                 img_pil = ImageQt.fromqimage(q_img)
-                img_crop = GraphStruct.load_img_from_pil(img_pil)
-                img = GraphStruct.resize_img(512, img_crop)
+                img_crop = GraphConverter.load_img_from_pil(img_pil)
+                img = GraphConverter.resize_img(512, img_crop)
                 g_obj.img = img
-                g_obj.img_filtered, g_obj.img_bin, g_obj.img_net = None, None, None
+                g_obj.img_filtered, g_obj.img_bin, g_obj.graph_img = None, None, None
                 g_obj.nx_graph, g_obj.nx_info = None, []
                 self._load_image()
             except Exception as err:
@@ -1023,8 +1023,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.img_net is not None:
-            q_img = ImageQt.toqpixmap(g_obj.img_net)
+        if g_obj.graph_img is not None:
+            q_img = ImageQt.toqpixmap(g_obj.graph_img)
             self._load_image(q_img)
         else:
             self.disable_all_tasks()
@@ -1159,7 +1159,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         elif (task == 2) and (not self.error_flag):
             try:
                 self.graph_objs[self.current_obj_index] = obj
-                q_img = ImageQt.toqpixmap(obj.img_net)
+                q_img = ImageQt.toqpixmap(obj.graph_img)
                 self._load_image(q_img)
             except Exception as err:
                 print(err)
@@ -1506,7 +1506,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         brightness_val = int(self.spb_brightness.text())
         contrast_val = int(self.spb_contrast.text())
 
-        img_smooth = GraphStruct.control_brightness(img, brightness_val, contrast_val)
+        img_smooth = GraphConverter.control_brightness(img, brightness_val, contrast_val)
         img = Image.fromarray(img_smooth)
         q_img = ImageQt.toqpixmap(img)
         return q_img
@@ -1636,7 +1636,7 @@ class Worker(QtCore.QThread):
 
     def service_filter_img(self, img_path, output_path, options_img, options_gte, img):
         try:
-            graph_obj = GraphStruct(img_path, output_path, options_img=options_img, options_gte=options_gte, img=img)
+            graph_obj = GraphConverter(img_path, output_path, options_img=options_img, options_gte=options_gte, img=img)
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit_img()
             graph_obj.remove_listener(self.update_progress)
