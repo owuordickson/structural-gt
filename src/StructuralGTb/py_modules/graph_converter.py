@@ -355,8 +355,8 @@ class GraphConverter:
 
         if opt_gte.save_images == 1:
             graph_img = self.imp.img_net
-            cv2.imwrite(img_file, self.imp.img_mod)
-            cv2.imwrite(bin_file, self.imp.img_bin)
+            cv2.imwrite(str(img_file), self.imp.img_mod)
+            cv2.imwrite(str(bin_file), self.imp.img_bin)
             if graph_img.mode == "JPEG":
                 graph_img.save(net_file, format='JPEG', quality=95)
             elif graph_img.mode in ["RGBA", "P"]:
@@ -365,7 +365,7 @@ class GraphConverter:
 
         if opt_gte.export_adj_mat == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
-            np.savetxt(adj_file, adj_mat, delimiter=",")
+            np.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte.export_edge_list == 1:
             if opt_gte.weighted_by_diameter == 1:
