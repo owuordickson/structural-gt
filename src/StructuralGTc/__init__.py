@@ -25,7 +25,7 @@ of the GNU General Public License along with this program.  If not, see <https:/
 # MODULES
 from .py_modules.graph_metrics import GraphMetrics
 from .py_modules.graph_skeleton import GraphSkeleton
-from .py_modules.graph_struct import GraphStruct
+from .py_modules.graph_converter import GraphConverter
 
 # APPs
 from .entrypoints import main_cli
@@ -38,4 +38,4 @@ __credits__ = "The Regents of the University of Michigan"
 
 
 # Packages available in 'from StructuralGTc import *'
-__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphStruct']
+__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter']

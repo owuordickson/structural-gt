@@ -68,9 +68,8 @@ class GraphConverter:
             func(*args)
 
     def fit(self):
-        if (self.imp.img_bin is None) or (self.imp.img_mod is None):
-            self.update_status([10, "Processing image..."])
-            self.imp.apply_filters()
+        self.update_status([10, "Processing image..."])
+        self.imp.apply_filters()
         self.fit_graph()
 
     def fit_graph(self):
@@ -94,6 +93,10 @@ class GraphConverter:
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
                 self.graph_plt, self.imp.img_net = self.draw_graph_network()
+
+    def reset(self):
+        self.imp.img_mod, self.imp.img_bin, self.imp.img_net = None, None, None
+        self.nx_graph, self.nx_info = None, []
 
     def extract_graph(self):
         """
