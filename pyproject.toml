@@ -3,7 +3,7 @@ requires = ["setuptools >= 61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "StructuralGTb"
+name = "StructuralGTc"
 dynamic = ["version"]
 dependencies = [
   "numpy",
@@ -52,10 +52,10 @@ Repository = "https://github.com/owuordickson/structural-gt.git"
 Changelog = "https://github.com/owuordickson/structural-gt/blob/main/CHANGELOG.md"
 
 [project.scripts]
-StructuralGTb-cli = "StructuralGTb:main_cli"
+StructuralGTc-cli = "StructuralGTc:main_cli"
 
 [project.gui-scripts]
-StructuralGTb = "StructuralGTb:main_gui"
+StructuralGTc = "StructuralGTc:main_gui"
 
 [tool.setuptools]
 include-package-data = true
@@ -69,7 +69,7 @@ include-package-data = true
 #include_dirs = ["c_modules/igraph_lib/include/igraph"]
 
 [tool.setuptools.dynamic]
-version = {attr = "StructuralGTb.__version__"}
+version = {attr = "StructuralGTc.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
@@ -78,4 +78,4 @@ exclude = ["tests*"]  # exclude packages matching these glob patterns (empty by 
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
 # [tool.setuptools.package-data]
-# StructuralGTb = ["c_libs/*w64.dll"]
+# StructuralGTc = ["c_libs/*w64.dll"]

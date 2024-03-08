@@ -1,5 +1,5 @@
 """
-**StructuralGTb**
+**StructuralGTc**
 
 A software package for performing Graph Theory on microscopic TEM images. This software is a \
 modified version of StructuralGT by Drew A. Vecchio: https://github.com/drewvecchio/StructuralGT.
@@ -37,5 +37,5 @@ __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
 
 
-# Packages available in 'from StructuralGTb import *'
+# Packages available in 'from StructuralGTc import *'
 __all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphStruct']
