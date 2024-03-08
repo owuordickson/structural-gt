@@ -1107,6 +1107,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         g_obj = self.graph_objs[self.current_obj_index]
+        g_obj.output_path = self.txt_out_path.text()
         self.disable_all_tasks()
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
@@ -1126,8 +1127,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
         options_img = self._fetch_img_options()
         options_gte = self._fetch_gte_options()
         options_gtc = self._fetch_gtc_options()
+        out_path = self.txt_out_path.text()
 
-        self.worker = Worker(func_id=4, args=(self.graph_objs, options_img, options_gte, options_gtc))
+        self.worker = Worker(func_id=4, args=(self.graph_objs, out_path, options_img, options_gte, options_gtc))
         self.worker.signals.progress.connect(self._handle_progress_update)
         self.worker.signals.finished.connect(self._handle_finished)
         self.worker.start()
@@ -1178,8 +1180,9 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
                 dialog.exec()
             else:
-                self.current_obj_index += 1
-                self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
+                if (self.current_obj_index + 1) < len(self.graph_objs):
+                    self.current_obj_index += 1
+                    self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
         elif task == 4 and (not self.error_flag):
             self.enable_all_tasks()
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDFs in 'Output Dir'")
@@ -1698,7 +1701,7 @@ class Worker(QtCore.QThread):
         except Exception as err:
             print(err)
 
-    def service_compute_gt_all(self, graph_objs, options_img, options_gte, options_gtc):
+    def service_compute_gt_all(self, graph_objs, out_path, options_img, options_gte, options_gtc):
         i = 0
         for graph_obj in graph_objs:
             start = time.time()
@@ -1726,6 +1729,7 @@ class Worker(QtCore.QThread):
                     self.signals.finished.emit(4, 0, [])
                     return
                 graph_obj.configs_graph = options_gte
+                graph_obj.output_path = out_path
                 metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
