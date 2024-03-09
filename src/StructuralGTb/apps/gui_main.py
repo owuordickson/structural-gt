@@ -316,7 +316,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_lut_gamma.setTickPosition(QtWidgets.QSlider.TickPosition.TicksAbove)
         self.sld_lut_gamma.setObjectName("sld_lut_gamma")
         self.grid_layout_filters.addWidget(self.sld_lut_gamma, 0, 1, 1, 1)
-        self.lbl_lut_gamma = QtWidgets.QLabel(parent=self.grp_img_filters)
+        self.lbl_lut_gamma = CustomQLabel(parent=self.grp_img_filters)
         self.lbl_lut_gamma.setFixedWidth(30)
         self.lbl_lut_gamma.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_lut_gamma.setObjectName("lbl_lut_gamma")
@@ -343,12 +343,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.sld_autolevel.setTickPosition(QtWidgets.QSlider.TickPosition.TicksAbove)
         self.sld_autolevel.setObjectName("sld_autolevel")
         self.grid_layout_filters.addWidget(self.sld_autolevel, 2, 1, 1, 1)
-        self.lbl_autolevel = QtWidgets.QLabel(parent=self.grp_img_filters)
+        self.lbl_autolevel = CustomQLabel(parent=self.grp_img_filters)
         self.lbl_autolevel.setFixedWidth(30)
         self.lbl_autolevel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_autolevel.setObjectName("lbl_autolevel")
         self.grid_layout_filters.addWidget(self.lbl_autolevel, 2, 2, 1, 1)
-        self.lbl_sobel = QtWidgets.QLabel(parent=self.grp_img_filters)
+        self.lbl_sobel = CustomQLabel(parent=self.grp_img_filters)
         self.lbl_sobel.setFixedWidth(30)
         self.lbl_sobel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_sobel.setObjectName("lbl_sobel")
@@ -374,12 +374,12 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.cbx_sobel = QtWidgets.QCheckBox(parent=self.grp_img_filters)
         self.cbx_sobel.setObjectName("cbx_sobel")
         self.grid_layout_filters.addWidget(self.cbx_sobel, 5, 0, 1, 1)
-        self.lbl_gaussian = QtWidgets.QLabel(parent=self.grp_img_filters)
+        self.lbl_gaussian = CustomQLabel(parent=self.grp_img_filters)
         self.lbl_gaussian.setFixedWidth(30)
         self.lbl_gaussian.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_gaussian.setObjectName("lbl_gaussian")
         self.grid_layout_filters.addWidget(self.lbl_gaussian, 1, 2, 1, 1)
-        self.lbl_laplacian = QtWidgets.QLabel(parent=self.grp_img_filters)
+        self.lbl_laplacian = CustomQLabel(parent=self.grp_img_filters)
         self.lbl_laplacian.setFixedWidth(30)
         self.lbl_laplacian.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_laplacian.setObjectName("lbl_laplacian")
@@ -427,7 +427,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.rdo_global_threshold.setObjectName("rdo_global_threshold")
         self.btn_grp_binary.addButton(self.rdo_global_threshold)
         self.grid_layout_binary.addWidget(self.rdo_global_threshold, 1, 0, 1, 1)
-        self.lbl_global_threshold_value = QtWidgets.QLabel(parent=self.grp_img_binary)
+        self.lbl_global_threshold_value = CustomQLabel(parent=self.grp_img_binary)
         self.lbl_global_threshold_value.setFixedWidth(30)
         self.lbl_global_threshold_value.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_global_threshold_value.setObjectName("lbl_global_threshold_value")
@@ -732,17 +732,17 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.spb_brightness.valueChanged.connect(self._image_filters_changed)
         self.spb_contrast.valueChanged.connect(self._image_filters_changed)
 
-        # self.lbl_lut_gamma.
+        self.lbl_lut_gamma.textChanged.connect(self._image_filters_changed)
         self.cbx_gaussian_blur.stateChanged.connect(self._image_filters_changed)
         self.cbx_autolevel.stateChanged.connect(self._image_filters_changed)
-        # self.lbl_gaussian.
-        # self.lbl_autolevel.
+        self.lbl_gaussian.textChanged.connect(self._image_filters_changed)
+        self.lbl_autolevel.textChanged.connect(self._image_filters_changed)
         self.cbx_lowpass.stateChanged.connect(self._image_filters_changed)
         self.spb_lowpass.valueChanged.connect(self._image_filters_changed)
         self.cbx_laplacian.stateChanged.connect(self._image_filters_changed)
-        # self.lbl_laplacian.
+        self.lbl_laplacian.textChanged.connect(self._image_filters_changed)
         self.cbx_sobel.stateChanged.connect(self._image_filters_changed)
-        # self.lbl_sobel.
+        self.lbl_sobel.textChanged.connect(self._image_filters_changed)
         self.cbx_scharr.stateChanged.connect(self._image_filters_changed)
         self.cbx_median.stateChanged.connect(self._image_filters_changed)
 
@@ -772,7 +772,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.rdo_otsu_threshold.toggled.connect(self._image_filters_changed)
         self.rdo_adaptive_threshold.toggled.connect(self._image_filters_changed)
         self.rdo_global_threshold.toggled.connect(self._image_filters_changed)
-        # self.lbl_global_threshold_value.textChanged.connect()
+        self.lbl_global_threshold_value.textChanged.connect(self._image_filters_changed)
         self.spb_adaptive_threshold.valueChanged.connect(self._image_filters_changed)
         self.cbx_dark_foreground.stateChanged.connect(self._image_filters_changed)
 
@@ -790,9 +790,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_prev.clicked.connect(self._btn_prev_clicked)
         self.btn_zoom_in.clicked.connect(self._btn_zoom_in_clicked)
         self.btn_zoom_out.clicked.connect(self._btn_zoom_out_clicked)
-        self.disable_all_tasks()
-        self.btn_select_img_path.setEnabled(True)
-        self.cbx_multi.setEnabled(True)
+        self.enable_path_only()
 
     def _init_tools(self):
         self.btn_cancel.setEnabled(False)
@@ -810,6 +808,39 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics.clicked.connect(self._btn_compute_gt_metrics_clicked)
         self.btn_gt_metrics_all.clicked.connect(self._btn_compute_gt_metrics_all_clicked)
         # self.btn_chaos_gt.clicked.connect(self._btn_chaos_gt_clicked)
+
+    @staticmethod
+    def _btn_about_clicked():
+        about = ("\n"
+                 "A software tool that allows graph theory analysis \n"
+                 "of nano-structures. This is a modified version of \n"
+                 "StructuralGT initially proposed by Drew A. Vecchio.\n\n"
+                 "DOI: 10.1021/acsnano.1c04711"
+                 "\n")
+        dialog = CustomDialog("About StructuralGT", about)
+        dialog.exec()
+        return
+
+    def _spb_adaptive_threshold_value_changed(self):
+        val = self.spb_adaptive_threshold.value()
+        if val % 2 == 0:
+            if val < 1:
+                self.spb_adaptive_threshold.setValue(1)
+            elif val > self.spb_adaptive_threshold_val:
+                self.spb_adaptive_threshold.setValue(val + 1)
+                self.spb_adaptive_threshold_val = (val + 1)
+            else:
+                self.spb_adaptive_threshold.setValue(val - 1)
+                self.spb_adaptive_threshold_val = (val - 1)
+        else:
+            self.spb_adaptive_threshold.setValue(val)
+
+    def _btn_cancel_clicked(self):
+        # Quit the thread to stop any ongoing tasks
+        if self.worker.isRunning():
+            self.worker.send_abort_message()
+            self.error_flag = True
+            self.lbl_progress.setText("Please wait, aborting...")
 
     def _cbx_multi_changed(self):
         if self.txt_img_path.text() == '':
@@ -850,39 +881,6 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.btn_prev.setEnabled(False)
             self.btn_gt_metrics_all.setEnabled(False)
 
-    def _spb_adaptive_threshold_value_changed(self):
-        val = self.spb_adaptive_threshold.value()
-        if val % 2 == 0:
-            if val < 1:
-                self.spb_adaptive_threshold.setValue(1)
-            elif val > self.spb_adaptive_threshold_val:
-                self.spb_adaptive_threshold.setValue(val + 1)
-                self.spb_adaptive_threshold_val = (val + 1)
-            else:
-                self.spb_adaptive_threshold.setValue(val - 1)
-                self.spb_adaptive_threshold_val = (val - 1)
-        else:
-            self.spb_adaptive_threshold.setValue(val)
-
-    @staticmethod
-    def _btn_about_clicked():
-        about = ("\n"
-                 "A software tool that allows graph theory analysis \n"
-                 "of nano-structures. This is a modified version of \n"
-                 "StructuralGT initially proposed by Drew A. Vecchio.\n\n"
-                 "DOI: 10.1021/acsnano.1c04711"
-                 "\n")
-        dialog = CustomDialog("About StructuralGT", about)
-        dialog.exec()
-        return
-
-    def _btn_cancel_clicked(self):
-        # Quit the thread to stop any ongoing tasks
-        if self.worker.isRunning():
-            self.worker.send_abort_message()
-            self.error_flag = True
-            self.lbl_progress.setText("Please wait, aborting...")
-
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
             fd_image_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
@@ -902,10 +900,10 @@ class AnalysisUI(QtWidgets.QMainWindow):
                                           "No workable images found! Files have to be either .tif, .png, or .jpg")
                     dialog.exec()
         else:
-            self.graph_objs = []
             fd_image_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file',
                                                                      filter="Image files (*.jpg *.tif *.png *.jpeg)")
             if fd_image_file:
+                self.graph_objs = []
                 # split the file location into path and file name
                 fd_image_dir, _ = os.path.split(fd_image_file)
                 im_obj = ImageProcessor(fd_image_file, '')
@@ -924,7 +922,8 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 self.btn_next.setEnabled(False)
                 self.btn_prev.setEnabled(False)
         else:
-            self.disable_all_tasks()
+            self._load_image('O')
+            self.enable_path_only()
 
     def _btn_select_out_path_clicked(self):
         fd_out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
@@ -967,94 +966,121 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._rescale_pixmap()
 
     def _btn_crop_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        img = Image.fromarray(g_obj.imp.img)
-        q_img = ImageQt.toqpixmap(img)
-        crop_tool = QCrop(q_img, self)
-        status = crop_tool.exec()
-        if status == crop_tool.DialogCode.Accepted:
-            try:
-                q_img = crop_tool.image.toImage()
-                img_pil = ImageQt.fromqimage(q_img)
-                img_crop = ImageProcessor.load_img_from_pil(img_pil)
-                img = ImageProcessor.resize_img(512, img_crop)
-                g_obj.imp.img = img
-                g_obj.reset()
-                self._load_image('O')
-            except Exception as err:
-                print(err)
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            img = Image.fromarray(g_obj.imp.img)
+            q_img = ImageQt.toqpixmap(img)
+            crop_tool = QCrop(q_img, self)
+            status = crop_tool.exec()
+            if status == crop_tool.DialogCode.Accepted:
+                try:
+                    q_img = crop_tool.image.toImage()
+                    img_pil = ImageQt.fromqimage(q_img)
+                    img_crop = ImageProcessor.load_img_from_pil(img_pil)
+                    img = ImageProcessor.resize_img(512, img_crop)
+                    g_obj.imp.img = img
+                    g_obj.reset()
+                    self._load_image('O')
+                except Exception as err:
+                    print(err)
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
+            dialog.exec()
 
     def _btn_show_original_img_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        img = Image.fromarray(g_obj.imp.img)
-        q_img = ImageQt.toqpixmap(img)
-        self._load_image('O', q_img)
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            img = Image.fromarray(g_obj.imp.img)
+            q_img = ImageQt.toqpixmap(img)
+            self._load_image('O', q_img)
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
+            dialog.exec()
 
     def _btn_show_processed_img_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.imp.img_mod is not None:
-            img = Image.fromarray(g_obj.imp.img_mod)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image('M', q_img)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            if g_obj.imp.img_mod is not None:
+                img = Image.fromarray(g_obj.imp.img_mod)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image('M', q_img)
+            else:
+                self._image_filters_changed()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
 
     def _btn_show_binary_img_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.imp.img_bin is not None:
-            img = Image.fromarray(g_obj.imp.img_bin)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image('B', q_img)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            if g_obj.imp.img_bin is not None:
+                img = Image.fromarray(g_obj.imp.img_bin)
+                q_img = ImageQt.toqpixmap(img)
+                self._load_image('B', q_img)
+            else:
+                self.current_img = 'B'
+                self._image_filters_changed()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
 
     def _btn_show_graph_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.imp.img_net is not None:
-            q_img = ImageQt.toqpixmap(g_obj.imp.img_net)
-            self._load_image('G', q_img)
-        else:
-            self.disable_all_tasks()
-            options_img = self._fetch_img_options()
-            options_gte = self._fetch_gte_options()
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            if g_obj.imp.img_net is not None:
+                q_img = ImageQt.toqpixmap(g_obj.imp.img_net)
+                self._load_image('G', q_img)
+            else:
+                self.disable_all_tasks()
+                options_img = self._fetch_img_options()
+                options_gte = self._fetch_gte_options()
 
-            self.worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
-            self.worker.signals.progress.connect(self._handle_progress_update)
-            self.worker.signals.finished.connect(self._handle_finished)
-            self.worker.start()
+                self.worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
+                self.worker.signals.progress.connect(self._handle_progress_update)
+                self.worker.signals.finished.connect(self._handle_finished)
+                self.worker.start()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
+            dialog.exec()
 
     def _btn_quick_metrics_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.nx_graph is not None:
-            info = ""
-            info += "Number of nodes: " + str(int(g_obj.nx_graph.number_of_nodes())) + "\n"
-            info += "Number of edges: " + str(int(g_obj.nx_graph.number_of_edges())) + "\n"
-            info += "Number of sub-graphs: " + str(len(g_obj.nx_components)) + "\n"
-            info += "Largest-entire graph ratio: " + str(round((g_obj.connect_ratio * 100), 3)) + "%" + "\n"
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            if g_obj.nx_graph is not None:
+                info = ""
+                info += "Number of nodes: " + str(int(g_obj.nx_graph.number_of_nodes())) + "\n"
+                info += "Number of edges: " + str(int(g_obj.nx_graph.number_of_edges())) + "\n"
+                info += "Number of sub-graphs: " + str(len(g_obj.nx_components)) + "\n"
+                info += "Largest-entire graph ratio: " + str(round((g_obj.connect_ratio * 100), 3)) + "%" + "\n"
 
-            dialog = CustomDialog("Graph Network Details", info)
-            dialog.exec()
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+                dialog = CustomDialog("Graph Network Details", info)
+                dialog.exec()
+            else:
+                dialog = CustomDialog("Graph Error", "First click on 'Show Graph'...")
+                dialog.exec()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
 
     def _btn_save_files_clicked(self):
-        self.disable_all_tasks()
-        g_obj = self.graph_objs[self.current_obj_index]
-        if g_obj.nx_graph is not None:
-            options_file = self._fetch_save_options()
-            try:
-                g_obj.save_files(options_file)
-                dialog = CustomDialog("Success", "All files saved in 'Output Dir'")
+        try:
+            self.disable_all_tasks()
+            g_obj = self.graph_objs[self.current_obj_index]
+            if g_obj.nx_graph is not None:
+                options_file = self._fetch_save_options()
+                try:
+                    g_obj.save_files(options_file)
+                    dialog = CustomDialog("Success", "All files saved in 'Output Dir'")
+                    dialog.exec()
+                except Exception as err:
+                    print(err)
+            else:
+                dialog = CustomDialog("Graph Error", "First click on 'Show Graph'...")
                 dialog.exec()
-            except Exception as err:
-                print(err)
-        else:
-            dialog = CustomDialog("Image Error", "'Apply Filters'...")
+            self.enable_all_tasks()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
-        self.enable_all_tasks()
 
     def _btn_apply_filters_clicked(self):
         if self.txt_img_path.text() == '':
@@ -1066,6 +1092,7 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self._spb_adaptive_threshold_value_changed()
 
         g_obj = self.graph_objs[self.current_obj_index]
+        g_obj.reset()
         img_path = g_obj.imp.img_path
         img = g_obj.imp.img
         output_path = self.txt_out_path.text()
@@ -1082,17 +1109,21 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.worker.start()
 
     def _btn_compute_gt_metrics_clicked(self):
-        g_obj = self.graph_objs[self.current_obj_index]
-        g_obj.imp.output_path = self.txt_out_path.text()
-        self.disable_all_tasks()
-        options_img = self._fetch_img_options()
-        options_gte = self._fetch_gte_options()
-        options_gtc = self._fetch_gtc_options()
+        try:
+            g_obj = self.graph_objs[self.current_obj_index]
+            g_obj.imp.output_path = self.txt_out_path.text()
+            self.disable_all_tasks()
+            options_img = self._fetch_img_options()
+            options_gte = self._fetch_gte_options()
+            options_gtc = self._fetch_gtc_options()
 
-        self.worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
-        self.worker.signals.progress.connect(self._handle_progress_update)
-        self.worker.signals.finished.connect(self._handle_finished)
-        self.worker.start()
+            self.worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
+            self.worker.signals.progress.connect(self._handle_progress_update)
+            self.worker.signals.finished.connect(self._handle_finished)
+            self.worker.start()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
+            dialog.exec()
 
     def _btn_compute_gt_metrics_all_clicked(self):
         self.disable_all_tasks()
@@ -1182,14 +1213,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.progress_dialog.setLabelText(msg)
 
     def _image_filters_changed(self):
-        if len(self.graph_objs) > 0:
+        try:
             # self.disable_all_tasks()
             self._spb_adaptive_threshold_value_changed()
 
+            self.graph_objs[self.current_obj_index].reset()
             im_obj = self.graph_objs[self.current_obj_index].imp
             im_obj.output_path = self.txt_out_path.text()
             im_obj.configs_img = self._fetch_img_options()
-            im_obj.apply_filters()
             im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
 
             if self.current_img == 'B':
@@ -1197,15 +1228,14 @@ class AnalysisUI(QtWidgets.QMainWindow):
                 img = Image.fromarray(im_obj.img_bin)
                 q_img = ImageQt.toqpixmap(img)
                 self._load_image('B', q_img)
-            elif self.current_img == 'M':
+            else:
                 img = Image.fromarray(im_obj.img_mod)
                 q_img = ImageQt.toqpixmap(img)
                 self._load_image('M', q_img)
-            elif (self.current_img == 'G') and (im_obj.img_net is not None):
-                q_img = ImageQt.toqpixmap(im_obj.img_net)
-                self._load_image('G', q_img)
-            else:
-                self._load_image('O')
+            self.enable_all_tasks()
+        except IndexError:
+            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
+            dialog.exec()
 
     def _load_image(self, current_img, img_pixmap=None):
         self.img_scale = 1
@@ -1216,13 +1246,19 @@ class AnalysisUI(QtWidgets.QMainWindow):
         w = self.lbl_img.width()
         h = self.lbl_img.height()
         if img_pixmap is None:
-            g_obj = self.graph_objs[self.current_obj_index]
-            img_pixmap = self.apply_brightness(g_obj.imp.img_mod)
-            self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
-            self.txt_img_path.setText(g_obj.imp.img_path)
-            if self.txt_out_path.text() == '':
-                img_dir, _ = os.path.split(g_obj.imp.img_path)
-                self.txt_out_path.setText(img_dir)
+            try:
+                g_obj = self.graph_objs[self.current_obj_index]
+                self._btn_show_original_img_clicked()
+
+                self.txt_img_path.setText(g_obj.imp.img_path)
+                if self.txt_out_path.text() == '':
+                    img_dir, _ = os.path.split(g_obj.imp.img_path)
+                    self.txt_out_path.setText(img_dir)
+            except IndexError:
+                self.txt_img_path.setText('')
+                self.txt_out_path.setText('')
+                self.lbl_img.setPixmap(QtGui.QPixmap())
+                # print(err)
         else:
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
@@ -1467,6 +1503,11 @@ class AnalysisUI(QtWidgets.QMainWindow):
             self.btn_prev.setEnabled(True)
         # self.btn_chaos_gt.setEnabled(True)
 
+    def enable_path_only(self):
+        self.disable_all_tasks()
+        self.btn_select_img_path.setEnabled(True)
+        self.cbx_multi.setEnabled(True)
+
     def enable_img_tasks(self):
         self.btn_cancel.setEnabled(False)  # Opposite of others
 
@@ -1495,31 +1536,25 @@ class AnalysisUI(QtWidgets.QMainWindow):
         self.btn_save_files.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
 
-    def apply_brightness(self, img_raw):
-        img = img_raw.copy()
-        brightness_val = int(self.spb_brightness.text())
-        contrast_val = int(self.spb_contrast.text())
-
-        img_smooth = ImageProcessor.control_brightness(img, brightness_val, contrast_val)
-        img = Image.fromarray(img_smooth)
-        q_img = ImageQt.toqpixmap(img)
-        return q_img
-
     def write_gt_pdf(self, plot_figs):
         """
 
         :param plot_figs:
         :return:
         """
-        self._handle_progress_update(98, 98, "Writing PDF...")
-        g_obj = self.graph_objs[self.current_obj_index]
-        filename, output_location = g_obj.imp.create_filenames()
-        pdf_filename = filename + "_SGT_results.pdf"
-        pdf_file = os.path.join(output_location, pdf_filename)
-        with (PdfPages(pdf_file) as pdf):
-            for fig in plot_figs:
-                pdf.savefig(fig)
-        self.graph_objs[self.current_obj_index].save_files()
+        try:
+            self._handle_progress_update(98, 98, "Writing PDF...")
+            g_obj = self.graph_objs[self.current_obj_index]
+            filename, output_location = g_obj.imp.create_filenames()
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+            with (PdfPages(pdf_file) as pdf):
+                for fig in plot_figs:
+                    pdf.savefig(fig)
+            self.graph_objs[self.current_obj_index].save_files()
+        except IndexError:
+            dialog = CustomDialog("Write Error", "Unable to write PDF results. Try again.")
+            dialog.exec()
 
 
 class TreeItem(QtGui.QStandardItem):
@@ -1544,6 +1579,14 @@ class TreeItem(QtGui.QStandardItem):
             self.setCheckState(QtCore.Qt.CheckState.Checked)
         elif int(self.data()) == 0:
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+
+class CustomQLabel(QtWidgets.QLabel):
+    textChanged = QtCore.pyqtSignal(str)
+
+    def setText(self, text):
+        super().setText(text)
+        self.textChanged.emit(text)
 
 
 class CustomDialog(QtWidgets.QDialog):
