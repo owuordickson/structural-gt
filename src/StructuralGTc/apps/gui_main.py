@@ -1767,7 +1767,7 @@ class Worker(QtCore.QThread):
                     self.signals.finished.emit(3, 0, [])
                     return
                 graph_obj.configs_graph = options_gte
-                graph_obj.output_path = out_path
+                graph_obj.imp.output_path = out_path
                 metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
@@ -1794,10 +1794,10 @@ class Worker(QtCore.QThread):
                 output = "Analyzing Image:" + str(i) + "/" + str(len(graph_objs)) + "\n"
                 output += "Run-time: " + str(end - start) + " seconds" + "\n"
                 output += "Number of cores: " + str(num_cores) + "\n"
-                output += "Results generated for: " + graph_obj.img_path + "\n"
+                output += "Results generated for: " + graph_obj.imp.img_path + "\n"
                 output += "Node Count: " + str(graph_obj.nx_graph.number_of_nodes()) + "\n"
                 output += "Edge Count: " + str(graph_obj.nx_graph.number_of_edges()) + "\n"
-                filename, out_dir = graph_obj.create_filenames(graph_obj.img_path)
+                filename, out_dir = graph_obj.imp.create_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
                 write_file(output, out_file)
                 print(output)
