@@ -163,9 +163,9 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
         self.grid_layout_crop.setObjectName("grid_layout_crop")
-        self.btn_apply_filters = QtWidgets.QPushButton(parent=self.grp_crop)
-        self.btn_apply_filters.setObjectName("btn_apply_filters")
-        self.grid_layout_crop.addWidget(self.btn_apply_filters, 0, 0, 1, 2)
+        self.btn_reset_filters = QtWidgets.QPushButton(parent=self.grp_crop)
+        self.btn_reset_filters.setObjectName("btn_reset_filters")
+        self.grid_layout_crop.addWidget(self.btn_reset_filters, 0, 0, 1, 2)
         self.btn_crop = QtWidgets.QPushButton(parent=self.grp_crop)
         self.btn_crop.setObjectName("btn_crop")
         self.grid_layout_crop.addWidget(self.btn_crop, 1, 0, 1, 2)
@@ -497,7 +497,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics_all.setText(_translate("window_main", " GT Metrics (multi) "))
         self.btn_about.setText(_translate("window_main", "About StructuralGT"))
         self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
-        self.btn_apply_filters.setText(_translate("window_main", "Apply Filters"))
+        self.btn_reset_filters.setText(_translate("window_main", "Reset to Default"))
         self.btn_show_original_img.setText(_translate("window_main", "Original Image"))
         self.btn_show_processed_img.setText(_translate("window_main", "Processed Image"))
         self.btn_show_binary_img.setText(_translate("window_main", "Binary Image"))
@@ -797,7 +797,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_about.clicked.connect(MainUI._btn_about_clicked)
         self.btn_cancel.clicked.connect(self._btn_cancel_clicked)
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
-        self.btn_apply_filters.clicked.connect(self._btn_apply_filters_clicked)
+        self.btn_reset_filters.clicked.connect(self._btn_reset_filters_clicked)
         self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
         self.btn_show_processed_img.clicked.connect(self._btn_show_processed_img_clicked)
         self.btn_show_binary_img.clicked.connect(self._btn_show_binary_img_clicked)
@@ -841,6 +841,18 @@ class MainUI(QtWidgets.QMainWindow):
             self.error_flag = True
             self.lbl_progress.setText("Please wait, aborting...")
 
+    def _btn_reset_filters_clicked(self):
+        if self.txt_img_path.text() == '':
+            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
+            dialog.exec()
+            return
+        else:
+            config, options, options_img, options_gte, options_gtc = load_configs()
+            self._init_tree(options_gte, options_gtc)
+            self._init_img_filter_settings(options_img)
+            self._init_img_binary_settings(options_img)
+            # self._reload_ui()
+
     def _cbx_multi_changed(self):
         if self.txt_img_path.text() == '':
             return
@@ -863,30 +875,10 @@ class MainUI(QtWidgets.QMainWindow):
                 dialog = CustomDialog("File Error",
                                       "No workable images found! Files have to be either .tif, .png, or .jpg")
                 dialog.exec()
-                self.enable_path_only()
-                self._load_image('O')
-            # else:
-
-            if len(self.graph_objs) > 1:
-                self.current_obj_index = 0
-                self._load_image('O')
-                self.btn_next.setEnabled(True)
-                self.btn_prev.setEnabled(False)
-                if self.btn_gt_metrics.isEnabled():
-                    self.btn_gt_metrics_all.setEnabled(True)
-                else:
-                    self.btn_gt_metrics_all.setEnabled(False)
-            else:
-                self.btn_next.setEnabled(False)
-                self.btn_prev.setEnabled(False)
-                self.btn_gt_metrics_all.setEnabled(False)
+            self._reload_ui()
         else:
-            self.btn_next.setEnabled(False)
-            self.btn_prev.setEnabled(False)
-            self.btn_gt_metrics_all.setEnabled(False)
-            self.current_obj_index = 0
             self.graph_objs = [self.graph_objs[0]]
-            self._load_image('O')
+            self._reload_ui()
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -917,20 +909,7 @@ class MainUI(QtWidgets.QMainWindow):
                 obj = GraphConverter(im_obj)
                 self.graph_objs.append(obj)
         # Set and display image
-        if len(self.graph_objs) > 0:
-            self.current_obj_index = 0
-            self._load_image('O')
-            self.enable_all_tasks()
-
-            if len(self.graph_objs) > 1:
-                self.btn_next.setEnabled(True)
-                self.btn_prev.setEnabled(False)
-            else:
-                self.btn_next.setEnabled(False)
-                self.btn_prev.setEnabled(False)
-        else:
-            self._load_image('O')
-            self.enable_path_only()
+        self._reload_ui()
 
     def _btn_select_out_path_clicked(self):
         fd_out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
@@ -1043,7 +1022,7 @@ class MainUI(QtWidgets.QMainWindow):
                 options_img = self._fetch_img_options()
                 options_gte = self._fetch_gte_options()
 
-                self.worker = Worker(func_id=2, args=(g_obj, options_img, options_gte))
+                self.worker = Worker(func_id=1, args=(g_obj, options_img, options_gte))
                 self.worker.signals.progress.connect(self._handle_progress_update)
                 self.worker.signals.finished.connect(self._handle_finished)
                 self.worker.start()
@@ -1098,33 +1077,6 @@ class MainUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
 
-    def _btn_apply_filters_clicked(self):
-        if self.txt_img_path.text() == '':
-            dialog = CustomDialog("File Error", "Add 'Image Path' using the 'Select' button")
-            dialog.exec()
-            return
-
-        self.wait_flag = True
-        self.disable_all_tasks()
-        self._spb_adaptive_threshold_value_changed()
-
-        g_obj = self.graph_objs[self.current_obj_index]
-        g_obj.reset()
-        img_path = g_obj.imp.img_path
-        img = g_obj.imp.img
-        output_path = self.txt_out_path.text()
-        options_img = self._fetch_img_options()
-        # options_gte = self._fetch_gte_options()
-
-        # worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
-        # worker.signals.progress.connect(self._handle_progress_update)
-        # worker.signals.finished.connect(self._handle_finished)
-        # self.threadpool.start(worker)
-        self.worker = Worker(func_id=1, args=(img_path, output_path, options_img, img))
-        self.worker.signals.progress.connect(self._handle_progress_update)
-        self.worker.signals.finished.connect(self._handle_finished)
-        self.worker.start()
-
     def _btn_compute_gt_metrics_clicked(self):
         try:
             self.wait_flag = True
@@ -1135,7 +1087,12 @@ class MainUI(QtWidgets.QMainWindow):
             options_gte = self._fetch_gte_options()
             options_gtc = self._fetch_gtc_options()
 
-            self.worker = Worker(func_id=3, args=(g_obj, options_img, options_gte, options_gtc))
+            # worker = Worker(func_id=1, args=(img_path, output_path, options_img, options_gte, img))
+            # worker.signals.progress.connect(self._handle_progress_update)
+            # worker.signals.finished.connect(self._handle_finished)
+            # self.threadpool.start(worker)
+
+            self.worker = Worker(func_id=2, args=(g_obj, options_img, options_gte, options_gtc))
             self.worker.signals.progress.connect(self._handle_progress_update)
             self.worker.signals.finished.connect(self._handle_finished)
             self.worker.start()
@@ -1154,10 +1111,13 @@ class MainUI(QtWidgets.QMainWindow):
         options_gtc = self._fetch_gtc_options()
         out_path = self.txt_out_path.text()
 
-        self.worker = Worker(func_id=4, args=(self.graph_objs, out_path, options_img, options_gte, options_gtc))
+        self.worker = Worker(func_id=3, args=(self.graph_objs, out_path, options_img, options_gte, options_gtc))
         self.worker.signals.progress.connect(self._handle_progress_update)
         self.worker.signals.finished.connect(self._handle_finished)
         self.worker.start()
+
+        self.current_obj_index = 0
+        self._load_image('O')
         self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
 
     # def _btn_chaos_gt_clicked(self):
@@ -1165,50 +1125,54 @@ class MainUI(QtWidgets.QMainWindow):
 
     def _handle_finished(self, task, show_dialog, obj):
 
+        # if (task == 0) and (not self.error_flag):
+        #    try:
+        #        self.graph_objs[self.current_obj_index].imp = obj
+        #        img = Image.fromarray(obj.img_bin)
+        #        q_img = ImageQt.toqpixmap(img)
+        #        self._load_image('B', q_img)
+        #    except Exception as err:
+        #        print(err)
+        #    self._handle_progress_update(100, 100, "Image filters applied.")
         if (task == 1) and (not self.error_flag):
-            try:
-                self.graph_objs[self.current_obj_index].imp = obj
-                img = Image.fromarray(obj.img_bin)
-                q_img = ImageQt.toqpixmap(img)
-                self._load_image('B', q_img)
-            except Exception as err:
-                print(err)
-            self._handle_progress_update(100, 100, "Image filters applied.")
-        elif (task == 2) and (not self.error_flag):
             try:
                 self.graph_objs[self.current_obj_index] = obj
                 q_img = ImageQt.toqpixmap(obj.imp.img_net)
                 self._load_image('G', q_img)
+                self._handle_progress_update(100, 100, "Drawing graph complete!")
+                if show_dialog == 1:
+                    dialog = CustomDialog("Success!", 'Graph network ready.')
+                    dialog.exec()
             except Exception as err:
                 print(err)
-            self._handle_progress_update(100, 100, "Drawing graph complete!")
-            if show_dialog == 1:
-                dialog = CustomDialog("Success!", 'Graph network ready.')
-                dialog.exec()
-        elif (task == 3) and (not self.error_flag):
+                self.error_flag = True
+        elif (task == 2) and (not self.error_flag):
             try:
                 plot_data = obj
                 self.write_gt_pdf(plot_data)
+                self._handle_progress_update(100, 100, "GT PDF successfully generated!")
+                if show_dialog == 1:
+                    self.wait_flag = False
+                    self.enable_all_tasks()
+                    dialog = CustomDialog("Success!",
+                                          "GT calculations completed. Check out generated PDF in 'Output Dir'")
+                    dialog.exec()
+                else:
+                    if (self.current_obj_index + 1) < len(self.graph_objs):
+                        self.current_obj_index += 1
+                        self.lbl_info.setText(
+                            f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
+                        self._load_image('O')
             except Exception as err:
                 print(err)
-            self._handle_progress_update(100, 100, "GT PDF successfully generated!")
-            if show_dialog == 1:
-                self.wait_flag = False
-                self.enable_all_tasks()
-                dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDF in 'Output Dir'")
-                dialog.exec()
-            else:
-                if (self.current_obj_index + 1) < len(self.graph_objs):
-                    self.current_obj_index += 1
-                    self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
-                    self._load_image('O')
-        elif task == 4 and (not self.error_flag):
+                self.error_flag = True
+        elif task == 3 and (not self.error_flag):
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDFs in 'Output Dir'")
             dialog.exec()
-        elif task == 5 and (not self.error_flag):
+        elif task == 4 and (not self.error_flag):
             self._handle_progress_update(100, 100, obj)
 
-        if (task != 3) or self.error_flag:
+        if (task != 2) or self.error_flag:
             self.wait_flag = False
             self.enable_all_tasks()
 
@@ -1256,6 +1220,28 @@ class MainUI(QtWidgets.QMainWindow):
                 self.enable_all_tasks()
                 dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
                 dialog.exec()
+
+    def _reload_ui(self):
+        # Set and display image
+        if len(self.graph_objs) > 0:
+            self.current_obj_index = 0
+            self._load_image('O')
+            self.enable_all_tasks()
+
+            if len(self.graph_objs) > 1:
+                self.btn_next.setEnabled(True)
+                self.btn_prev.setEnabled(False)
+                if self.btn_gt_metrics.isEnabled():
+                    self.btn_gt_metrics_all.setEnabled(True)
+                else:
+                    self.btn_gt_metrics_all.setEnabled(False)
+            else:
+                self.btn_next.setEnabled(False)
+                self.btn_prev.setEnabled(False)
+                self.btn_gt_metrics_all.setEnabled(False)
+        else:
+            self._load_image('O')
+            self.enable_path_only()
 
     def _load_image(self, current_img, img_pixmap=None):
         self.img_scale = 1
@@ -1485,7 +1471,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.spb_contrast.setEnabled(False)
         self.spb_brightness.setEnabled(False)
 
-        self.btn_apply_filters.setEnabled(False)
+        self.btn_reset_filters.setEnabled(False)
         self.btn_crop.setEnabled(False)
         self.btn_show_original_img.setEnabled(False)
         self.btn_show_processed_img.setEnabled(False)
@@ -1526,7 +1512,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.spb_contrast.setEnabled(True)
         self.spb_brightness.setEnabled(True)
 
-        self.btn_apply_filters.setEnabled(True)
+        self.btn_reset_filters.setEnabled(True)
         self.btn_crop.setEnabled(True)
 
         self.btn_show_original_img.setEnabled(True)
@@ -1664,15 +1650,15 @@ class Worker(QtCore.QThread):
     def run(self):
         if self.target:
             self.target(*self.args)
-        if self.target_id == 1:
+        if self.target_id == 0:
             self.service_filter_img(*self.args)
-        elif self.target_id == 2:
+        elif self.target_id == 1:
             self.service_generate_graph(*self.args)
-        elif self.target_id == 3:
+        elif self.target_id == 2:
             self.service_compute_gt(*self.args)
-        elif self.target_id == 4:
+        elif self.target_id == 3:
             self.service_compute_gt_all(*self.args)
-        elif self.target_id == 5:
+        elif self.target_id == 4:
             self.signals.finished.emit(3, 1, "Test complete!")
 
     def update_progress(self, value, msg):
@@ -1687,7 +1673,7 @@ class Worker(QtCore.QThread):
             im_obj = ImageProcessor(img_path, output_path, options_img=options_img, img=img)
             im_obj.apply_filters()
             self.update_progress(100, '')
-            self.signals.finished.emit(1, 0, im_obj)
+            self.signals.finished.emit(0, 0, im_obj)
             # graph_obj = GraphConverter(im_obj, options_gte=options_gte)
             # graph_obj.add_listener(self.update_progress)
             # graph_obj.fit_img()
@@ -1706,7 +1692,7 @@ class Worker(QtCore.QThread):
             graph_obj.fit()
             graph_obj.remove_listener(self.update_progress)
             self.add_thread_listener(graph_obj.abort_tasks)
-            self.signals.finished.emit(2, 0, graph_obj)
+            self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
 
@@ -1728,7 +1714,7 @@ class Worker(QtCore.QThread):
                     return
             if self.abort:
                 self.update_progress(-1, "Task aborted.")
-                self.signals.finished.emit(3, 1, [])
+                self.signals.finished.emit(2, 1, [])
                 return
             graph_obj.configs_graph = options_gte
             metrics_obj = GraphMetrics(graph_obj, options_gtc)
@@ -1738,18 +1724,18 @@ class Worker(QtCore.QThread):
             if options_gte.weighted_by_diameter:
                 if self.abort:
                     self.update_progress(-1, "Task aborted.")
-                    self.signals.finished.emit(3, 1, [])
+                    self.signals.finished.emit(2, 1, [])
                     return
                 metrics_obj.compute_weighted_gt_metrics()
             # metrics_obj.generate_pdf_output()
             if self.abort:
                 self.update_progress(-1, "Task aborted.")
-                self.signals.finished.emit(3, 1, [])
+                self.signals.finished.emit(2, 1, [])
                 return
             plot_figs = metrics_obj.generate_output()
             metrics_obj.remove_listener(self.update_progress)
             self.remove_thread_listener(metrics_obj.abort_tasks)
-            self.signals.finished.emit(3, 1, plot_figs)
+            self.signals.finished.emit(2, 1, plot_figs)
         except Exception as err:
             print(err)
 
@@ -1760,7 +1746,7 @@ class Worker(QtCore.QThread):
 
             if self.abort:
                 self.update_progress(-1, "Task aborted.")
-                self.signals.finished.emit(4, 0, [])
+                self.signals.finished.emit(3, 0, [])
                 return
             try:
                 graph_obj.abort = False
@@ -1778,7 +1764,7 @@ class Worker(QtCore.QThread):
                         return
                 if self.abort:
                     self.update_progress(-1, "Task aborted.")
-                    self.signals.finished.emit(4, 0, [])
+                    self.signals.finished.emit(3, 0, [])
                     return
                 graph_obj.configs_graph = options_gte
                 graph_obj.output_path = out_path
@@ -1789,18 +1775,18 @@ class Worker(QtCore.QThread):
                 if options_gte.weighted_by_diameter:
                     if self.abort:
                         self.update_progress(-1, "Task aborted.")
-                        self.signals.finished.emit(4, 0, [])
+                        self.signals.finished.emit(3, 0, [])
                         return
                     metrics_obj.compute_weighted_gt_metrics()
                 if self.abort:
                     self.update_progress(-1, "Task aborted.")
-                    self.signals.finished.emit(4, 0, [])
+                    self.signals.finished.emit(3, 0, [])
                     return
                 # metrics_obj.generate_pdf_output()
                 plot_figs = metrics_obj.generate_output()
                 metrics_obj.remove_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
-                self.signals.finished.emit(3, 0, plot_figs)
+                self.signals.finished.emit(2, 0, plot_figs)
 
                 end = time.time()
                 num_cores = get_num_cores()
@@ -1817,7 +1803,7 @@ class Worker(QtCore.QThread):
                 print(output)
             except Exception as err:
                 print(err)
-        self.signals.finished.emit(4, 1, [])
+        self.signals.finished.emit(3, 1, [])
 
 
 def pyqt_app():
