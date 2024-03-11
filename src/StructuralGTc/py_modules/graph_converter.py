@@ -4,7 +4,7 @@
 # repository for complete details.
 
 """
-Processing of images and chaos engineering
+Build a graph network from nano-scale microscopy images.
 """
 
 import csv
