@@ -4,7 +4,7 @@
 # repository for complete details.
 
 """
-Processing of an image by applying filters to it and converting it to binary version.
+Processes of an image by applying filters to it and converting it to binary version.
 """
 
 import re
