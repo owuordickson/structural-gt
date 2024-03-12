@@ -11,13 +11,52 @@ import re
 import os
 import cv2
 import numpy as np
+from cv2.typing import MatLike
+from ypstruct import struct
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
 
 class ImageProcessor:
 
-    def __init__(self, img_path, out_path, options_img=None, img=None):
+    def __init__(self, img_path, out_path, options_img=None, img: MatLike = None):
+        """
+        A class for processing and preparing microscopy images for graph theory analysis.
+
+        Args:
+            img_path (str): input image path.
+            out_path (str): directory path for storing results.
+            options_img (struct): image processing parameters and options.
+            img (MatLike): processed image.
+
+        >>> from ypstruct import struct
+        >>> opt_img = struct()
+        >>> opt_img.threshold_type = 1
+        >>> opt_img.threshold_global = 127
+        >>> opt_img.threshold_adaptive = 11
+        >>> opt_img.gamma = float(1)
+        >>> opt_img.gaussian_blurring_size = 3
+        >>> opt_img.autolevel_blurring_size = 3
+        >>> opt_img.lowpass_window_size = 10
+        >>> opt_img.laplacian_kernel_size = 3
+        >>> opt_img.sobel_kernel_size = 3
+        >>> opt_img.apply_autolevel = 0
+        >>> opt_img.apply_laplacian = 0
+        >>> opt_img.apply_scharr = 0
+        >>> opt_img.apply_sobel = 0
+        >>> opt_img.apply_median = 0
+        >>> opt_img.apply_gaussian = 0
+        >>> opt_img.apply_lowpass = 0
+        >>> opt_img.apply_dark_foreground = 0
+        >>> opt_img.brightness_level = 0
+        >>> opt_img.contrast_level = 0
+        >>>
+        >>> i_path = "path/to/image"
+        >>> o_dir = ""
+        >>>
+        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
+        >>> imp_obj.apply_filters()
+        """
         self.configs_img = options_img
         self.img_path = img_path
         self.output_path = out_path
@@ -32,13 +71,20 @@ class ImageProcessor:
         self.otsu_val = None
 
     def apply_filters(self):
+        """
+        Executes function for processing image filters and converting the resulting image into a binary.
+
+        :return: None
+        """
         self.img_mod = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_mod.copy())
 
-    def process_img(self, image):
+    def process_img(self, image: MatLike):
         """
+        Apply filters to image.
 
-        :return:
+        :param image: OpenCV image.
+        :return: None
         """
 
         options = self.configs_img
@@ -124,12 +170,14 @@ class ImageProcessor:
 
         return filtered_img
 
-    def binarize_img(self, image):
+    def binarize_img(self, image: MatLike):
+        """
+        Convert image to binary.
+
+        :param image:
+        :return: None
         """
 
-        :return:
-        """
-        # image = self.img_filtered.copy()
         img_bin = None
         options = self.configs_img
         # only needed for OTSU threshold
@@ -167,45 +215,63 @@ class ImageProcessor:
 
         return img_bin, otsu_res
 
-    def create_filenames(self, image_path=None):
+    def create_filenames(self, image_path: str = None):
         """
-            Making the new filenames
-        :return:
+        Splits image path into file name and image directory.
+
+        :param image_path: image directory path.
+
+        Returns:
+            filename (str): image file name., output_dir (str): image directory path.
         """
+
         if image_path is None:
             img_dir, filename = os.path.split(self.img_path)
         else:
             img_dir, filename = os.path.split(image_path)
         if self.output_path == '':
-            output_location = img_dir
+            output_dir = img_dir
         else:
-            output_location = self.output_path
+            output_dir = self.output_path
 
         filename = re.sub('.png', '', filename)
         filename = re.sub('.tif', '', filename)
         filename = re.sub('.jpg', '', filename)
         filename = re.sub('.jpeg', '', filename)
 
-        return filename, output_location
+        return filename, output_dir
 
     @staticmethod
-    def load_img_from_file(file):
+    def load_img_from_file(file: str):
+        """
+        Read image and save it as an OpenCV object.
+
+        :param file:
+        :return:
+        """
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
 
     @staticmethod
-    def load_img_from_pil(img_pil):
+    def load_img_from_pil(img_pil: MatLike):
+        """
+        Read image from PIL.
+
+        :param img_pil:
+        :return:
+        """
         img_arr = np.array(img_pil)
         cv2_image = cv2.cvtColor(img_arr, cv2.COLOR_RGB2GRAY)
         return cv2_image
 
     @staticmethod
-    def control_brightness(img, brightness_val=0, contrast_val=0):
+    def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
         """
+        Apply contrast and brightness filters to image.
 
-        :param contrast_val:
-        :param brightness_val:
-        :param img:
+        :param img: OpenCV image.
+        :param brightness_val: brightness value.
+        :param contrast_val: contrast value.
         :return:
         """
 
@@ -239,7 +305,14 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def resize_img(size, image):
+    def resize_img(size: int, image: MatLike):
+        """
+        Resizes image to specified size.
+
+        :param size: new image pixel size.
+        :param image: OpenCV image.
+        :return: resized image
+        """
         w, h = image.shape
         if h > w:
             scale_factor = size / h

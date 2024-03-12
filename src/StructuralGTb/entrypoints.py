@@ -12,8 +12,16 @@ from .apps.cli_main import terminal_app
 
 
 def main_gui():
+    """
+    Start graphical user interface application.
+    :return:
+    """
     pyqt_app()
 
 
 def main_cli():
+    """
+    Start terminal/CMD application.
+    :return:
+    """
     terminal_app()

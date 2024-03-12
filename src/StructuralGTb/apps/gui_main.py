@@ -60,6 +60,10 @@ class MainUI(QtWidgets.QMainWindow):
         self._init_configs()
 
     def __create_widgets(self):
+        """
+        Create PyQT6 widgets.
+        :return:
+        """
 
         # 1. GROUP IMAGE
         self.grp_img = QtWidgets.QGroupBox(parent=self.wdt_main)
@@ -539,6 +543,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.cbx_dark_foreground.setText(_translate("window_main", "Apply Dark Foreground"))
 
     def _init_configs(self):
+        """
+        Initialize all UI configurations.
+
+        :return:
+        """
         # 1. Fetch configs
         config, options, options_img, options_gte, options_gtc = load_configs()
 
@@ -558,6 +567,12 @@ class MainUI(QtWidgets.QMainWindow):
         self._init_img_path_settings(options)
 
     def _init_tree(self, options_gte, options_gtc):
+        """
+        Initialize drop-down tree items.
+        :param options_gte:
+        :param options_gtc:
+        :return:
+        """
 
         # 1. Init treeview
         self.tree_settings.setHeaderHidden(True)
@@ -1123,8 +1138,15 @@ class MainUI(QtWidgets.QMainWindow):
     # def _btn_chaos_gt_clicked(self):
     #    pass
 
-    def _handle_finished(self, task, show_dialog, obj):
+    def _handle_finished(self, task: int, show_dialog: int, obj):
+        """
+        Listen and handle control when worker threads complete execution.
 
+        :param task:
+        :param show_dialog:
+        :param obj:
+        :return:
+        """
         # if (task == 0) and (not self.error_flag):
         #    try:
         #        self.graph_objs[self.current_obj_index].imp = obj
@@ -1176,7 +1198,15 @@ class MainUI(QtWidgets.QMainWindow):
             self.wait_flag = False
             self.enable_all_tasks()
 
-    def _handle_progress_update(self, value, code, msg):
+    def _handle_progress_update(self, value: int, code: int, msg: str):
+        """
+        Update progress of worker thread.
+
+        :param value:
+        :param code:
+        :param msg:
+        :return:
+        """
         print(str(value) + "%: " + msg)
         if (code > 0) and (not self.error_flag):
             self.lbl_progress.setStyleSheet("color: rgb(0, 128, 0)")
@@ -1191,6 +1221,11 @@ class MainUI(QtWidgets.QMainWindow):
             dialog.exec()
 
     def _image_filters_changed(self):
+        """
+        Apply filters selected by user to image.
+
+        :return:
+        """
         if self.wait_flag:
             dialog = CustomDialog("Please wait...", "Another task is running.")
             dialog.exec()
@@ -1222,6 +1257,11 @@ class MainUI(QtWidgets.QMainWindow):
                 dialog.exec()
 
     def _reload_ui(self):
+        """
+        Reload image UI when user resets.
+
+        :return:
+        """
         # Set and display image
         if len(self.graph_objs) > 0:
             self.current_obj_index = 0
@@ -1244,6 +1284,13 @@ class MainUI(QtWidgets.QMainWindow):
             self.enable_path_only()
 
     def _load_image(self, current_img, img_pixmap=None):
+        """
+        Load and display image on UI.
+
+        :param current_img:
+        :param img_pixmap:
+        :return:
+        """
         self.img_scale = 1
         self.current_img = current_img
         self.lbl_img.setText('')
@@ -1269,12 +1316,21 @@ class MainUI(QtWidgets.QMainWindow):
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
     def _rescale_pixmap(self):
+        """
+        Apply zoom scales to image.
+
+        :return:
+        """
         img_pixmap = self.lbl_img.pixmap()
         size = img_pixmap.size()
         self.lbl_img.setPixmap(img_pixmap.scaled((self.img_scale * size)))
 
     def _fetch_img_options(self):
+        """
+        Load image filter options and parameters.
 
+        :return:
+        """
         options_img = struct()
         bin_btn_type = self.btn_grp_binary.checkedButton()
         if bin_btn_type == self.rdo_otsu_threshold:
@@ -1304,7 +1360,11 @@ class MainUI(QtWidgets.QMainWindow):
         return options_img
 
     def _fetch_gte_options(self):
+        """
+        Load graph extraction options and parameters.
 
+        :return:
+        """
         options_gte = struct()
         options_gte.merge_nearby_nodes = 0
         options_gte.prune_dangling_edges = 0
@@ -1369,7 +1429,10 @@ class MainUI(QtWidgets.QMainWindow):
         return options_gte
 
     def _fetch_gtc_options(self):
-
+        """
+        Load GT computation options and parameters.
+        :return:
+        """
         options_gtc = struct()
         options_gtc.display_heatmaps = 0
         options_gtc.display_degree_histogram = 0
@@ -1423,7 +1486,10 @@ class MainUI(QtWidgets.QMainWindow):
         return options_gtc
 
     def _fetch_save_options(self):
-
+        """
+        Load file save options.
+        :return:
+        """
         options_file = struct()
         options_file.export_edge_list = 0
         options_file.export_as_gexf = 0
@@ -1458,6 +1524,11 @@ class MainUI(QtWidgets.QMainWindow):
         return options_file
 
     def disable_all_tasks(self):
+        """
+        Disable all buttons and controls.
+
+        :return:
+        """
         self.error_flag = False
         self.btn_cancel.setEnabled(True)  # Opposite of others
 
@@ -1484,6 +1555,11 @@ class MainUI(QtWidgets.QMainWindow):
         # self.btn_chaos_gt.setEnabled(False)
 
     def enable_all_tasks(self):
+        """
+        Enable all buttons and controls.
+
+        :return:
+        """
         if not self.wait_flag:
             self.btn_select_img_path.setEnabled(True)
             self.cbx_multi.setEnabled(True)
@@ -1494,6 +1570,10 @@ class MainUI(QtWidgets.QMainWindow):
                     self.enable_gt_tasks()
 
     def enable_path_only(self):
+        """
+        Enable only path select buttons.
+        :return:
+        """
         self.disable_all_tasks()
         self.btn_cancel.setEnabled(False)  # Opposite of others
 
@@ -1501,6 +1581,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.cbx_multi.setEnabled(True)
 
     def enable_img_tasks(self):
+        """
+        Enable image controls and buttons.
+        :return:
+        """
+
         self.btn_cancel.setEnabled(False)
 
         self.btn_zoom_in.setEnabled(True)
@@ -1523,6 +1608,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_save_files.setEnabled(True)
 
     def enable_gt_tasks(self):
+        """
+        Enable GT controls and buttons.
+
+        :return:
+        """
         self.btn_cancel.setEnabled(False)
 
         self.btn_gt_metrics.setEnabled(True)
@@ -1534,6 +1624,7 @@ class MainUI(QtWidgets.QMainWindow):
 
     def write_gt_pdf(self, plot_figs):
         """
+        Write results to PDF file.
 
         :param plot_figs:
         :return:
@@ -1807,6 +1898,11 @@ class Worker(QtCore.QThread):
 
 
 def pyqt_app():
+    """
+    Initialize and start StructuralGT graphical application.
+
+    :return: None
+    """
     app = QtWidgets.QApplication(sys.argv)
     sgt_ui = MainUI()
     sgt_ui.show()

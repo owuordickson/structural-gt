@@ -9,6 +9,7 @@ Terminal interface implementations
 
 import time
 import os
+from ypstruct import struct
 # import multiprocessing as mp
 from ..configs.config_loader import load_configs, get_num_cores
 from ..py_modules.image_processor import ImageProcessor
@@ -17,6 +18,10 @@ from ..py_modules.graph_metrics import GraphMetrics
 
 
 def terminal_app():
+    """
+    Initializes and executes StructuralGT functions.
+    :return:
+    """
     config, options, options_img, options_gte, options_gtc = load_configs()
     alg = options.algChoice
     num_cores = options.numCores
@@ -85,6 +90,18 @@ def terminal_app():
 
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
+    """
+    Executes StructuralGT functions that compute all the user selected metrics.
+
+    Args:
+        img_path (str): input image path.
+        out_dir (str): directory path for storing results.
+        options_img (struct): image processing parameters and options.
+        options_gte (struct): graph extraction parameters and options.
+        options_gtc (struct): GT computation parameters and options.
+    Returns:
+        None:
+    """
     imp_obj = ImageProcessor(img_path, out_dir, options_img=options_img)
     graph_obj = GraphConverter(imp_obj, options_gte=options_gte)
     graph_obj.add_listener(print_progress)
@@ -100,4 +117,13 @@ def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
 
 
 def print_progress(x, y):
+    """
+    Simple method to display progress updates.
+
+    Args:
+        x (int): progress value.
+        y (str): progress message.
+    Returns:
+         None:
+    """
     print(str(x) + ": " + y)

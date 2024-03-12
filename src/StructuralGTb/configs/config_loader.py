@@ -16,6 +16,10 @@ from ypstruct import struct
 
 
 def load_configs():
+    """
+    Load default parameter options for image processing, graph extraction, and GT computations.
+    :return:
+    """
 
     options_path = struct()
     options_img = struct()
@@ -218,6 +222,11 @@ def load_configs():
 
 
 def load_gui_configs():
+    """
+    Load texts and labels for building the GUI.
+    :return:
+    """
+
     gui_txt = struct()
 
     gui_txt.title = "Structural GT"
@@ -341,7 +350,6 @@ def __get_slurm_cores__():
 
 def write_file(data, path, wr=True):
     """Description
-
     Writes data into a file
     :param data: information to be written
     :param path: name of file and storage path
