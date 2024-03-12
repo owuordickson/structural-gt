@@ -4,7 +4,7 @@
 # repository for complete details.
 
 """
-Build a graph network from nano-scale microscopy images.
+Builds a graph network from nano-scale microscopy images.
 """
 
 import csv
