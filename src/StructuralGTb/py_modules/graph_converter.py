@@ -19,13 +19,71 @@ import scipy as sp
 import networkx as nx
 # import porespy as ps
 import matplotlib.pyplot as plt
+from ypstruct import struct
 from PIL import Image
+
 from .graph_skeleton import GraphSkeleton
+from .image_processor import ImageProcessor
 
 
 class GraphConverter:
+    """
+    A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
-    def __init__(self, img_obj, options_gte=None):
+    :param img_obj: ImageProcessor object.
+    :param options_gte: graph extraction parameters and options.
+    """
+
+    def __init__(self, img_obj: ImageProcessor, options_gte: struct = None):
+        """
+        A class for builds a graph network from microscopy images and stores is as a NetworkX object.
+
+        :param img_obj: ImageProcessor object.
+        :param options_gte: graph extraction parameters and options.
+
+        >>> from ypstruct import struct
+        >>> opt_img = struct()
+        >>> opt_img.threshold_type = 1
+        >>> opt_img.threshold_global = 127
+        >>> opt_img.threshold_adaptive = 11
+        >>> opt_img.gamma = float(1)
+        >>> opt_img.gaussian_blurring_size = 3
+        >>> opt_img.autolevel_blurring_size = 3
+        >>> opt_img.lowpass_window_size = 10
+        >>> opt_img.laplacian_kernel_size = 3
+        >>> opt_img.sobel_kernel_size = 3
+        >>> opt_img.apply_autolevel = 0
+        >>> opt_img.apply_laplacian = 0
+        >>> opt_img.apply_scharr = 0
+        >>> opt_img.apply_sobel = 0
+        >>> opt_img.apply_median = 0
+        >>> opt_img.apply_gaussian = 0
+        >>> opt_img.apply_lowpass = 0
+        >>> opt_img.apply_dark_foreground = 0
+        >>> opt_img.brightness_level = 0
+        >>> opt_img.contrast_level = 0
+        >>>
+        >>> opt_gte = struct()
+        >>> opt_gte.merge_nearby_nodes = 1
+        >>> opt_gte.prune_dangling_edges = 1
+        >>> opt_gte.remove_disconnected_segments = 1
+        >>> opt_gte.remove_self_loops = 1
+        >>> opt_gte.remove_object_size = 500
+        >>> opt_gte.is_multigraph = 0
+        >>> opt_gte.weighted_by_diameter = 0
+        >>> opt_gte.display_node_id = 0
+        >>> opt_gte.export_edge_list = 0
+        >>> opt_gte.export_as_gexf = 0
+        >>> opt_gte.export_adj_mat = 0
+        >>> opt_gte.save_images = 0
+        >>>
+        >>> i_path = "path/to/image"
+        >>> o_dir = ""
+        >>>
+        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
+        >>> graph_obj = GraphConverter(imp_obj, options_gte=opt_gte)
+        >>> graph_obj.fit()
+        """
         self.__listeners = []
         self.abort = False
         self.terminal_app = True
@@ -37,9 +95,13 @@ class GraphConverter:
         self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
 
     def abort_tasks(self):
+        """
+        Set abort flag.
+        :return:
+        """
         self.abort = True
 
-    def add_listener(self, func):
+    def add_listener(self, func: ()):
         """
         Add functions from the list of listeners.
         :param func:
@@ -59,20 +121,35 @@ class GraphConverter:
             return
         self.__listeners.remove(func)
 
-    # Trigger events.
     def update_status(self, args=None):
-        # Run all the functions that are saved.
+        """
+        Run all the functions that are saved as listeners.
+
+        :param args:
+        :return:
+        """
+        # Trigger events.
         if args is None:
             args = []
         for func in self.__listeners:
             func(*args)
 
     def fit(self):
+        """
+        Execute functions that process image and builds a NetworkX graph from the image.
+
+        :return:
+        """
         self.update_status([10, "Processing image..."])
         self.imp.apply_filters()
         self.fit_graph()
 
     def fit_graph(self):
+        """
+        Execute a function that builds a NetworkX graph from the image.
+
+        :return:
+        """
         self.update_status([50, "Making graph skeleton..."])
         success = self.extract_graph()
         if not success:
@@ -95,11 +172,16 @@ class GraphConverter:
                 self.graph_plt, self.imp.img_net = self.draw_graph_network()
 
     def reset(self):
+        """
+        Erase the existing data stored in the object.
+        :return:
+        """
         self.imp.img_mod, self.imp.img_bin, self.imp.img_net = None, None, None
         self.nx_graph, self.nx_info = None, []
 
     def extract_graph(self):
         """
+        Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
         :return:
         """
@@ -169,7 +251,7 @@ class GraphConverter:
                         self.nx_graph.remove_edge(s, e)
         return True
 
-    def approx_conductance_by_spectral(self, weighted=False):
+    def approx_conductance_by_spectral(self, weighted: bool = False):
         """
         Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311
 
@@ -187,6 +269,8 @@ class GraphConverter:
         When a node has a degree of zero, it means that there are no edges\
         connected to that node. In other words, the node is isolated from\
         the rest of the graph.
+
+        :param weighted: is graph a weighted graph?
 
         """
 
@@ -261,6 +345,11 @@ class GraphConverter:
         return data, sub_components, ratio
 
     def compute_fractal_dimension(self):
+        """
+        Compute the fractal dimension of the processed image.
+
+        :return:
+        """
         self.update_status([-1, "Computing fractal dimension..."])
         # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
         fd_metrics = ps.metrics.boxcount(self.imp.img)
@@ -282,10 +371,11 @@ class GraphConverter:
         ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
         plt.show()
 
-    def draw_graph_network(self, a4_size=False):
+    def draw_graph_network(self, a4_size: bool = False):
         """
+        Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
-        :param a4_size:
+        :param a4_size: decision if to create an A4 size plot figure.
 
         :return:
         """
@@ -333,9 +423,11 @@ class GraphConverter:
 
         return fig, GraphConverter.plot_to_img(fig)
 
-    def save_files(self, opt_gte=None):
+    def save_files(self, opt_gte: struct = None):
         """
+        Save graph data into files.
 
+        :param opt_gte:
         :return:
         """
 
@@ -423,7 +515,7 @@ class GraphConverter:
                 nx.write_gexf(nx_graph, gexf_file)
 
     @staticmethod
-    def compute_norm_laplacian_matrix(graph):
+    def compute_norm_laplacian_matrix(graph: nx.Graph):
         """
         Compute normalized-laplacian-matrix
 
@@ -466,7 +558,7 @@ class GraphConverter:
         return norm_lpl_mat
 
     @staticmethod
-    def remove_self_loops(graph):
+    def remove_self_loops(graph: nx.Graph):
         """
         Remove self-loops from graph, they cause zero values in Degree matrix.
 
@@ -489,8 +581,9 @@ class GraphConverter:
         return new_graph
 
     @staticmethod
-    def make_graph_symmetrical(graph):
+    def make_graph_symmetrical(graph: nx.Graph):
         """
+        Deletes diagonal items to make the adjacency matrix of a graph symmetrical. It removes self-loops.
 
         :param graph:
         :return:
@@ -511,8 +604,9 @@ class GraphConverter:
         return new_graph
 
     @staticmethod
-    def compute_conductance_range(eig_vals):
+    def compute_conductance_range(eig_vals: np.ndarray):
         """
+        Computes the minimum and maximum values of graph conductance.
 
         :param eig_vals:
         :return:
@@ -535,8 +629,9 @@ class GraphConverter:
         return conductance_max, conductance_min
 
     @staticmethod
-    def graph_components(graph):
+    def graph_components(graph: nx.Graph):
         """
+        Retrieves the subcomponents that make up the entire NetworkX graph.
 
         :param graph:
         :return:
@@ -562,8 +657,12 @@ class GraphConverter:
         return sub_graph_largest, sub_graph_smallest, component_count, connected_components
 
     @staticmethod
-    def plot_to_img(fig):
-        """Convert a Matplotlib figure to a PIL Image and return it"""
+    def plot_to_img(fig: plt.Figure):
+        """
+        Convert a Matplotlib figure to a PIL Image and return it
+
+        :param fig: Matplotlib figure.
+        """
         if fig:
             buf = io.BytesIO()
             fig.savefig(buf)

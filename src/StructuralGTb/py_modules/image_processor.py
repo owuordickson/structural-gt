@@ -18,6 +18,15 @@ from skimage.filters.rank import autolevel, median
 
 
 class ImageProcessor:
+    """
+    A class for processing and preparing microscopy images for graph theory analysis.
+
+    Args:
+        img_path (str): input image path.
+        out_path (str): directory path for storing results.
+        options_img (struct): image processing parameters and options.
+        img (MatLike): processed image.
+    """
 
     def __init__(self, img_path, out_path, options_img=None, img: MatLike = None):
         """
