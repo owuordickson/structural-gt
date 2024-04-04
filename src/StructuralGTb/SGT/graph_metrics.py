@@ -109,7 +109,7 @@ class GraphMetrics:
         >>> graph_obj.fit()
         >>> metrics_obj = GraphMetrics(graph_obj, opt_gtc)
         >>> metrics_obj.compute_gt_metrics()
-        >>> if options_gte.weighted_by_diameter:
+        >>> if opt_gte.weighted_by_diameter:
         >>>     metrics_obj.compute_weighted_gt_metrics()
         >>> metrics_obj.generate_pdf_output()
 

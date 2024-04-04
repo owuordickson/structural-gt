@@ -9,10 +9,14 @@ Processes of an image by applying filters to it and converting it to binary vers
 
 import re
 import os
+import io
 import cv2
 import numpy as np
-from cv2.typing import MatLike
+# import porespy as ps
+import matplotlib.pyplot as plt
 from ypstruct import struct
+from PIL import Image
+from cv2.typing import MatLike
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
@@ -78,6 +82,7 @@ class ImageProcessor:
         self.img_mod = None
         self.img_net = None
         self.otsu_val = None
+        # self.pixel_length = 0
 
     def apply_filters(self):
         """
@@ -224,6 +229,49 @@ class ImageProcessor:
 
         return img_bin, otsu_res
 
+    def compute_pixel_length(self, img_path: str, img_path_w_bar: str = None, img_length: float = None):
+        """
+        Compute the length of a single pixel in meters.
+
+        :param img_path: directory path to image including the scale bar.
+        :param img_path_w_bar: directory path to cropped image of scale bar.
+        :param img_length: length of the image in nano meters.
+        :return: None
+        """
+
+        # img_orig = ImageProcessor.load_img_from_file('img_path_w_bar')
+        # scale_bar_length = 0  # or Use image length in meters
+        # scale_bar_pixel_count = 0
+        # img_orig_length_pixel_count = 0
+        # self.pixel_length = 0
+        pass
+
+    def compute_fractal_dimension(self):
+        """
+        Compute the fractal dimension of the processed image.
+
+        :return:
+        """
+        # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
+        fd_metrics = ps.metrics.boxcount(self.img)
+        print(fd_metrics.slope)
+        x = np.log(np.array(fd_metrics.size))
+        y = np.log(np.array(fd_metrics.count))
+        fractal_dimension = np.polyfit(x, y, 1)[0]  # fractal_dimension = lim r -> 0 log(Nr)/log(1/r)
+        print(fractal_dimension)
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+        ax1.set_yscale('log')
+        ax1.set_xscale('log')
+        ax1.set_xlabel('box size')
+        ax1.set_ylabel('box count')
+        ax2.set_xlabel('box size')
+        ax2.set_ylabel('slope')
+        ax2.set_xscale('log')
+        ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
+        ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
+        plt.show()
+
     def create_filenames(self, image_path: str = None):
         """
         Splits image path into file name and image directory.
@@ -249,29 +297,6 @@ class ImageProcessor:
         filename = re.sub('.jpeg', '', filename)
 
         return filename, output_dir
-
-    @staticmethod
-    def load_img_from_file(file: str):
-        """
-        Read image and save it as an OpenCV object.
-
-        :param file:
-        :return:
-        """
-        img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-        return img
-
-    @staticmethod
-    def load_img_from_pil(img_pil: MatLike):
-        """
-        Read image from PIL.
-
-        :param img_pil:
-        :return:
-        """
-        img_arr = np.array(img_pil)
-        cv2_image = cv2.cvtColor(img_arr, cv2.COLOR_RGB2GRAY)
-        return cv2_image
 
     @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
@@ -314,13 +339,50 @@ class ImageProcessor:
         return img
 
     @staticmethod
+    def load_img_from_file(file: str):
+        """
+        Read image and save it as an OpenCV object.
+
+        :param file:
+        :return:
+        """
+        img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+        return img
+
+    @staticmethod
+    def load_img_from_pil(img_pil: MatLike):
+        """
+        Read image from PIL.
+
+        :param img_pil:
+        :return:
+        """
+        img_arr = np.array(img_pil)
+        cv2_image = cv2.cvtColor(img_arr, cv2.COLOR_RGB2GRAY)
+        return cv2_image
+
+    @staticmethod
+    def plot_to_img(fig: plt.Figure):
+        """
+        Convert a Matplotlib figure to a PIL Image and return it
+
+        :param fig: Matplotlib figure.
+        """
+        if fig:
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+            return img
+
+    @staticmethod
     def resize_img(size: int, image: MatLike):
         """
         Resizes image to specified size.
 
         :param size: new image pixel size.
         :param image: OpenCV image.
-        :return: resized image
+        :return: rescaled image
         """
         w, h = image.shape
         if h > w:
@@ -332,3 +394,15 @@ class ImageProcessor:
         std_size = (std_height, std_width)
         std_img = cv2.resize(image, std_size)
         return std_img
+
+    @staticmethod
+    def rescale_to_square(image: MatLike):
+        """
+        Rescales image so that it is equal in length and width.
+
+        :param image: OpenCV image.
+        :return: rescaled image.
+        """
+        w, h = image.shape
+        length = h if h > w else w
+        return cv2.resize(image, (length, length))
