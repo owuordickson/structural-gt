@@ -15,8 +15,9 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 import networkx as nx
-from statistics import stdev, StatisticsError
 import matplotlib.pyplot as plt
+from ypstruct import struct
+from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
@@ -26,13 +27,93 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-import sgt
-from ..configs.config_loader import get_num_cores
+from graph_converter import GraphConverter
+from image_processor import ImageProcessor
 
 
 class GraphMetrics:
+    """
+    A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
-    def __init__(self, g_obj, configs, allow_multiprocessing=True):
+    Args:
+        g_obj: graph converter object.
+        configs: graph theory computation parameters and options.
+        allow_multiprocessing: a decision to allow multiprocessing computing.
+    """
+
+    def __init__(self, g_obj: GraphConverter, configs: struct, allow_multiprocessing: bool = True):
+        """
+        A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
+
+        :param g_obj: graph converter object.
+        :param configs: graph theory computation parameters and options.
+        :param allow_multiprocessing: allow multiprocessing computing.
+
+        >>> from ypstruct import struct
+        >>> opt_img = struct()
+        >>> opt_img.threshold_type = 1
+        >>> opt_img.threshold_global = 127
+        >>> opt_img.threshold_adaptive = 11
+        >>> opt_img.gamma = float(1)
+        >>> opt_img.gaussian_blurring_size = 3
+        >>> opt_img.autolevel_blurring_size = 3
+        >>> opt_img.lowpass_window_size = 10
+        >>> opt_img.laplacian_kernel_size = 3
+        >>> opt_img.sobel_kernel_size = 3
+        >>> opt_img.apply_autolevel = 0
+        >>> opt_img.apply_laplacian = 0
+        >>> opt_img.apply_scharr = 0
+        >>> opt_img.apply_sobel = 0
+        >>> opt_img.apply_median = 0
+        >>> opt_img.apply_gaussian = 0
+        >>> opt_img.apply_lowpass = 0
+        >>> opt_img.apply_dark_foreground = 0
+        >>> opt_img.brightness_level = 0
+        >>> opt_img.contrast_level = 0
+        >>>
+        >>> opt_gte = struct()
+        >>> opt_gte.merge_nearby_nodes = 1
+        >>> opt_gte.prune_dangling_edges = 1
+        >>> opt_gte.remove_disconnected_segments = 1
+        >>> opt_gte.remove_self_loops = 1
+        >>> opt_gte.remove_object_size = 500
+        >>> opt_gte.is_multigraph = 0
+        >>> opt_gte.weighted_by_diameter = 0
+        >>> opt_gte.display_node_id = 0
+        >>> opt_gte.export_edge_list = 0
+        >>> opt_gte.export_as_gexf = 0
+        >>> opt_gte.export_adj_mat = 0
+        >>> opt_gte.save_images = 0
+        >>>
+        >>> opt_gtc = struct()
+        >>> opt_gtc.display_heatmaps = 1
+        >>> opt_gtc.display_degree_histogram = 1
+        >>> opt_gtc.display_betweenness_histogram = 1
+        >>> opt_gtc.display_currentflow_histogram = 1
+        >>> opt_gtc.display_closeness_histogram = 1
+        >>> opt_gtc.display_eigenvector_histogram = 1
+        >>> opt_gtc.compute_nodal_connectivity = 1
+        >>> opt_gtc.compute_graph_density = 1
+        >>> opt_gtc.compute_graph_conductance = 0
+        >>> opt_gtc.compute_global_efficiency = 1
+        >>> opt_gtc.compute_clustering_coef = 1
+        >>> opt_gtc.compute_assortativity_coef = 1
+        >>> opt_gtc.compute_network_diameter = 1
+        >>> opt_gtc.compute_wiener_index = 1
+        >>>
+        >>> i_path = "path/to/image"
+        >>> o_dir = ""
+        >>>
+        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
+        >>> graph_obj = GraphConverter(imp_obj, options_gte=opt_gte)
+        >>> graph_obj.fit()
+        >>> metrics_obj = GraphMetrics(graph_obj, opt_gtc)
+        >>> metrics_obj.compute_gt_metrics()
+        >>> if opt_gte.weighted_by_diameter:
+        >>>     metrics_obj.compute_weighted_gt_metrics()
+        >>> metrics_obj.generate_pdf_output()
+
+        """
         self.__listeners = []
         self.abort = False
         self.allow_mp = allow_multiprocessing
@@ -54,9 +135,13 @@ class GraphMetrics:
         self.weighted_eigenvector_distribution = [0]
 
     def abort_tasks(self):
+        """
+        Set abort flag.
+        :return:
+        """
         self.abort = True
 
-    def add_listener(self, func):
+    def add_listener(self, func: ()):
         """
         Add functions from the list of listeners.
         :param func:
@@ -77,8 +162,13 @@ class GraphMetrics:
         self.__listeners.remove(func)
 
     def update_status(self, args=None):
+        """
+        Run all the functions that are saved as listeners.
+
+        :param args:
+        :return:
+        """
         # Trigger events.
-        # Run all the functions that are saved.
         if args is None:
             args = []
         for func in self.__listeners:
@@ -86,6 +176,7 @@ class GraphMetrics:
 
     def compute_gt_metrics(self):
         """
+        Compute un-weighted graph theory metrics.
 
         :return:
         """
@@ -144,12 +235,10 @@ class GraphMetrics:
                 return
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                # if self.allow_mp:
-                #    avg_node_con = self.average_node_connectivity()
-                # else:
-                #    avg_node_con = average_node_connectivity(graph)
-                avg_node_con = self.average_node_connectivity_c()
-                # avg_node_con = self.average_node_connectivity()
+                if self.allow_mp:
+                    avg_node_con = self.average_node_connectivity()
+                else:
+                    avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -270,6 +359,11 @@ class GraphMetrics:
         self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
+        """
+        Compute weighted graph theory metrics.
+
+        :return:
+        """
         self.update_status([70, "Performing weighted analysis..."])
 
         graph = self.gc.nx_graph
@@ -365,10 +459,9 @@ class GraphMetrics:
         self.weighted_output_data = pd.DataFrame(data_dict)
 
     def generate_output(self):
-
         """
-
-        :return:
+        Generate results as graphs and plots.
+        :return: list of results.
         """
 
         opt_gtc = self.configs
@@ -447,8 +540,8 @@ class GraphMetrics:
         # 5. Calculate betweenness from T
 
     def generate_pdf_output(self):
-
         """
+        Generate results and write them to a PDF file.
 
         :return:
         """
@@ -605,30 +698,12 @@ class GraphMetrics:
         #    return 0
         # return num / den
 
-    def average_node_connectivity_c(self):
-        r"""Returns the average connectivity of a graph G.
-
-        The average connectivity of a graph G is the average
-        of local node connectivity over all pairs of nodes of G.
-        """
-
-        nx_graph = self.gc.nx_graph
-        cpu_count = get_num_cores()
-        anc = 0
-
-        try:
-            filename, output_location = self.gc.imp.create_filenames()
-            g_filename = filename + "_graph.txt"
-            graph_file = os.path.join(output_location, g_filename)
-            nx.write_edgelist(nx_graph, graph_file, data=False)
-            anc = sgt.compute_anc(graph_file, cpu_count, self.allow_mp)
-
-        except Exception as err:
-            print(err)
-        return anc
-
     def display_images(self):
+        """
+        Create plot figures of original, processed, and binary image.
 
+        :return:
+        """
         opt_img = self.gc.imp.configs_img
         raw_img = self.gc.imp.img
         filtered_img = self.gc.imp.img_mod
@@ -668,6 +743,11 @@ class GraphMetrics:
         return fig
 
     def display_skeletal_images(self):
+        """
+        Create plot figures of skeletal image and graph network image.
+
+        :return:
+        """
 
         opt_gte = self.gc.configs_graph
         nx_graph = self.gc.nx_graph
@@ -709,6 +789,11 @@ class GraphMetrics:
         return fig
 
     def display_gt_results(self):
+        """
+        Create a table of weighted and un-weighted graph theory results.
+
+        :return:
+        """
 
         opt_gte = self.gc.configs_graph
         data = self.output_data
@@ -734,6 +819,11 @@ class GraphMetrics:
         return fig, fig_wt
 
     def display_histograms(self):
+        """
+        Create plot figures of graph theory histograms selected by the user.
+
+        :return:
+        """
 
         opt_gte = self.gc.configs_graph
         opt_gtc = self.configs
@@ -816,6 +906,11 @@ class GraphMetrics:
         return figs
 
     def display_heatmaps(self):
+        """
+        Create plot figures of graph theory heatmaps.
+
+        :return:
+        """
 
         opt_gte = self.gc.configs_graph
         opt_gtc = self.configs
@@ -868,6 +963,10 @@ class GraphMetrics:
         return figs
 
     def display_info(self):
+        """
+        Create a page (as a figure) that show the user selected parameters and options.
+        :return:
+        """
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=300)
         ax = fig.add_subplot(1, 1, 1)
@@ -923,8 +1022,16 @@ class GraphMetrics:
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
 
-    def plot_heatmap(self, distribution, title, size, line_width):
+    def plot_heatmap(self, distribution: list, title: str, size: float, line_width: float):
+        """
+        Create a heatmap from a distribution.
 
+        :param distribution: dataset to be plotted.
+        :param title: title of the plot figure.
+        :param size: size of the scatter items.
+        :param line_width: size of the plot line-width.
+        :return: histogram plot figure.
+        """
         nx_graph = self.gc.nx_graph
         opt_gte = self.gc.configs_graph
         img = self.gc.imp.img
@@ -944,15 +1051,17 @@ class GraphMetrics:
         return fig
 
     @staticmethod
-    def plot_histogram(ax: plt.axes, title, distribution, x_label, bins=None, y_label='Counts'):
+    def plot_histogram(ax: plt.axes, title: str, distribution: list, x_label: str, bins: np.ndarray = None,
+                       y_label: str = 'Counts'):
         """
+        Create a histogram from a distribution dataset.
 
-        :param ax:
-        :param title:
-        :param distribution:
-        :param x_label:
-        :param bins:
-        :param y_label:
+        :param ax: plot axis.
+        :param title: title text.
+        :param distribution: dataset to be plotted.
+        :param x_label: x-label title text.
+        :param bins: bins dataset.
+        :param y_label: y-label title text.
         :return:
         """
         font_1 = {'fontsize': 9}
@@ -968,7 +1077,16 @@ class GraphMetrics:
         ax.hist(distribution, bins=bins)
 
     @staticmethod
-    def plot_graph_edges(nx_graph, ax, line_width, is_multigraph=False):
+    def plot_graph_edges(nx_graph: nx.Graph, ax: plt.axes, line_width: float, is_multigraph: bool = False):
+        """
+        Create a plot of graph edges and nodes.
+
+        :param nx_graph: networkx graph.
+        :param ax: plot axis.
+        :param line_width: axis line-width parameter.
+        :param is_multigraph: type of graph.
+        :return:
+        """
         if is_multigraph:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):

@@ -9,14 +9,34 @@ Create a graph skeleton from an image binary
 
 import numpy as np
 from scipy import ndimage
+from ypstruct import struct
+from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
 
 class GraphSkeleton:
 
-    def __init__(self, img_bin, configs, allow_multiprocessing=True):
-        self.allow_mp = allow_multiprocessing
+    def __init__(self, img_bin: MatLike, configs: struct):
+        """
+        A class that builds a skeleton graph from an image.
+
+        :param img_bin: OpenCV image in binary format.
+        :param configs: options and parameters.
+
+        >>> import cv2
+        >>> import numpy
+        >>> from ypstruct import struct
+        >>> opt_gte = struct()
+        >>> opt_gte.merge_nearby_nodes = 1
+        >>> opt_gte.remove_disconnected_segments = 1
+        >>> opt_gte.remove_object_size = 500
+        >>> opt_gte.prune_dangling_edges = 1
+        >>> dummy_image = 127 * numpy.ones((40, 40), dtype = np.uint8)
+        >>> img = cv2.threshold(dummy_image, 127, 255, cv2.THRESH_BINARY)[1]
+        >>> graph_skel = GraphSkeleton(img, opt_gte)
+
+        """
         self.img_bin = img_bin
         self.configs = configs
         # clean_skel, skel_int, Bp_coord_x, Bp_coord_y, Ep_coord_x, Ep_coord_y
@@ -30,6 +50,7 @@ class GraphSkeleton:
 
     def make_skeleton(self):
         """
+        Creates a graph skeleton of the image.
 
         :return:
         """
