@@ -23,7 +23,7 @@ Add path 'C:\MinGW\bin' and 'C:\MinGW\msys\1.0\bin' to Environment Variables
 test 'gcc --version'
 
 3. INSTALL CMAKE
-Linux/MacOS: use 'brew install cmake' 
+Linux/MacOS: use 'brew install cmake'
 Windows:
 use 'Microsoft C++ Build Tools' to install
 --
