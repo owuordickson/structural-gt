@@ -5,7 +5,7 @@ setup(
         Extension(
             name="sgt",
             # sources=["src/StructuralGTc/SGT-c/testmodule.c"],
-            sources=["src/StructuralGTc/SGT-c/sgtmodule.c", "src/StructuralGTc/SGT-c/sgt_base.c"],
+            sources=["src/StructuralGTb/SGT-c/sgtmodule.c", "src/StructuralGTb/SGT-c/sgt_base.c"],
             libraries=["igraph"],  # macOS and Linux
             include_dirs=["/opt/homebrew/Cellar/igraph/0.10.11/include/igraph"],  # macOS and Linux
             library_dirs=["/opt/homebrew/Cellar/igraph/0.10.11/lib"],  # macOS and Linux

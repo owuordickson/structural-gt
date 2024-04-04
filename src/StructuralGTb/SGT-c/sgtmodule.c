@@ -46,7 +46,7 @@ compute_anc(PyObject *self, PyObject *args)
     fclose(file);
 
     // Print the average degree
-    printf("Nodes: %d\nEdges: %d\n", (int)igraph_vcount(&graph), (int)igraph_ecount(&graph));
+    // printf("Nodes: %d\nEdges: %d\n", (int)igraph_vcount(&graph), (int)igraph_ecount(&graph));
 
 	num_nodes = igraph_vcount(&graph);
 	if (allow_mp == 0){
