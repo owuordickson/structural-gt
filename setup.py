@@ -1,7 +1,6 @@
 from setuptools import Extension, setup
 
 setup(
-    # package_data={"StructuralGTc": ["SGT-c/lib_pthreads/bin/*w64.dll"]},
     ext_modules=[
         Extension(
             name="sgt",
@@ -16,5 +15,4 @@ setup(
             extra_link_args=["/VERBOSE:LIB"],  # Windows
         )
     ]
-    # data_files=[("", ["C:/MinGW/bin/pthread/pthreadVC3-w64.dll"])]
 )

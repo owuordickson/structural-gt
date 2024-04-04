@@ -75,8 +75,8 @@ compute_anc(PyObject *self, PyObject *args)
         igraph_integer_t lnc;
         for (igraph_integer_t i=0; i<num_nodes; i++) {
             for (igraph_integer_t j=i+1; j<num_nodes; j++){
-                igraph_st_vertex_connectivity(&graph, &lnc, i, j, IGRAPH_VCONN_NEI_NUMBER_OF_NODES);
-                // if (lnc < 0) { continue; }
+                igraph_st_vertex_connectivity(&graph, &lnc, i, j, IGRAPH_VCONN_NEI_NEGATIVE);
+                if (lnc < 0) { continue; }
                 sum_nc += lnc;
                 count_nc += 1;
             }
