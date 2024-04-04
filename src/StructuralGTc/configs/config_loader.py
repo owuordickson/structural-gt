@@ -67,6 +67,7 @@ def load_configs():
     options_gte.save_images = 0
 
     # 4. Networkx Calculation Settings
+    options_gtc.compute_lang = 'py'
     options_gtc.display_heatmaps = 1
     options_gtc.display_degree_histogram = 1
     options_gtc.display_betweenness_histogram = 1
@@ -163,6 +164,7 @@ def load_configs():
     options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
 
     # 4. Networkx Calculation Settings
+    options_gtc.compute_lang = str(config.get('computation-settings', 'computation_language'))
     options_gtc.display_heatmaps = int(config.get('computation-settings', 'display_heatmaps'))
     options_gtc.display_degree_histogram = int(config.get('computation-settings', 'display_degree_histogram'))
     options_gtc.display_betweenness_histogram = int(config.get('computation-settings',

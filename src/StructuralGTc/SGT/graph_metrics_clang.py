@@ -116,7 +116,7 @@ class GraphMetricsClang(GraphMetrics):
 
         :return:
         """
-        self.update_status([1, "Performing un-weighted analysis..."])
+        self.update_status([1, "Using iGraph to perform un-weighted analysis..."])
 
         graph = self.gc.nx_graph
         options = self.configs

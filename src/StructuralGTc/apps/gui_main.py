@@ -17,6 +17,7 @@ from .gui_crop import QCrop
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
+from ..SGT.graph_metrics import GraphMetrics
 from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
@@ -230,15 +231,18 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_compute.setObjectName("grp_compute")
         self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
         self.grid_layout_compute.setObjectName("grid_layout_compute")
-        # self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
-        # self.btn_chaos_gt.setObjectName("btn_chaos_gt")
-        # self.grid_layout_compute.addWidget(self.btn_chaos_gt, 3, 0, 1, 1)
-        self.btn_gt_metrics_all = QtWidgets.QPushButton(parent=self.grp_compute)
-        self.btn_gt_metrics_all.setObjectName("btn_gt_metrics_all")
-        self.grid_layout_compute.addWidget(self.btn_gt_metrics_all, 2, 0, 1, 1)
+        self.cbx_igraph = QtWidgets.QCheckBox(parent=self.grp_compute)
+        self.cbx_igraph.setObjectName("cbx_igraph")
+        self.grid_layout_compute.addWidget(self.cbx_igraph, 1, 0, 1, 1)
         self.btn_gt_metrics = QtWidgets.QPushButton(parent=self.grp_compute)
         self.btn_gt_metrics.setObjectName("btn_gt_metrics")
-        self.grid_layout_compute.addWidget(self.btn_gt_metrics, 1, 0, 1, 1)
+        self.grid_layout_compute.addWidget(self.btn_gt_metrics, 2, 0, 1, 1)
+        self.btn_gt_metrics_all = QtWidgets.QPushButton(parent=self.grp_compute)
+        self.btn_gt_metrics_all.setObjectName("btn_gt_metrics_all")
+        self.grid_layout_compute.addWidget(self.btn_gt_metrics_all, 3, 0, 1, 1)
+        # self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
+        # self.btn_chaos_gt.setObjectName("btn_chaos_gt")
+        # self.grid_layout_compute.addWidget(self.btn_chaos_gt, 4, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_compute, 10, 0, 1, 2)
 
         # 2d. About Button
@@ -496,9 +500,10 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_zoom_in.setText(_translate("window_main", "+"))
         self.lbl_img.setText(_translate("window_main", ""))
         self.grp_compute.setTitle(_translate("window_main", "Computations"))
-        # self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
+        self.cbx_igraph.setText(_translate("window_main", "use iGraph with C"))
         self.btn_gt_metrics.setText(_translate("window_main", "GT Metrics"))
         self.btn_gt_metrics_all.setText(_translate("window_main", " GT Metrics (multi) "))
+        # self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
         self.btn_about.setText(_translate("window_main", "About StructuralGT"))
         self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
         self.btn_reset_filters.setText(_translate("window_main", "Reset to Default"))
@@ -573,6 +578,11 @@ class MainUI(QtWidgets.QMainWindow):
         :param options_gtc:
         :return:
         """
+
+        if options_gtc.compute_lang == 'C':
+            self.cbx_igraph.setChecked(True)
+        else:
+            self.cbx_igraph.setChecked(False)
 
         # 1. Init treeview
         self.tree_settings.setHeaderHidden(True)
@@ -1449,6 +1459,11 @@ class MainUI(QtWidgets.QMainWindow):
         options_gtc.compute_network_diameter = 0
         options_gtc.compute_wiener_index = 0
 
+        if self.cbx_igraph.isChecked():
+            options_gtc.compute_lang = 'C'
+        else:
+            options_gtc.compute_lang = 'Py'
+
         model = self.tree_settings.model()
         root_index = model.index(1, 0)  # Assuming the root index is at row 0, column 0
         for i in range(model.rowCount(root_index)):
@@ -1550,6 +1565,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_show_graph.setEnabled(False)
         self.btn_quick_graph_metrics.setEnabled(False)
         self.btn_save_files.setEnabled(False)
+        self.cbx_igraph.setEnabled(False)
         self.btn_gt_metrics.setEnabled(False)
         self.btn_gt_metrics_all.setEnabled(False)
         # self.btn_chaos_gt.setEnabled(False)
@@ -1615,6 +1631,7 @@ class MainUI(QtWidgets.QMainWindow):
         """
         self.btn_cancel.setEnabled(False)
 
+        self.cbx_igraph.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
         if self.cbx_multi.isChecked():
             self.btn_gt_metrics_all.setEnabled(True)
@@ -1808,7 +1825,10 @@ class Worker(QtCore.QThread):
                 self.signals.finished.emit(2, 1, [])
                 return
             graph_obj.configs_graph = options_gte
-            metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
+            if options_gtc.compute_lang == 'C':
+                metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
+            else:
+                metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
             self.add_thread_listener(metrics_obj.abort_tasks)
             metrics_obj.compute_gt_metrics()
@@ -1859,7 +1879,10 @@ class Worker(QtCore.QThread):
                     return
                 graph_obj.configs_graph = options_gte
                 graph_obj.imp.output_path = out_path
-                metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
+                if options_gtc.compute_lang == 'C':
+                    metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
+                else:
+                    metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 metrics_obj.compute_gt_metrics()

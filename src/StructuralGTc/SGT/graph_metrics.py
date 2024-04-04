@@ -180,7 +180,7 @@ class GraphMetrics:
 
         :return:
         """
-        self.update_status([1, "Performing un-weighted analysis..."])
+        self.update_status([1, "Using NetworkX to perform un-weighted analysis..."])
 
         graph = self.gc.nx_graph
         options = self.configs
