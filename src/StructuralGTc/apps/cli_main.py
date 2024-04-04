@@ -14,7 +14,7 @@ from ypstruct import struct
 from ..configs.config_loader import load_configs, get_num_cores
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
-from ..SGT.graph_metrics import GraphMetrics
+from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
 def terminal_app():
@@ -106,7 +106,7 @@ def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
     graph_obj = GraphConverter(imp_obj, options_gte=options_gte)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()
-    metrics_obj = GraphMetrics(graph_obj, options_gtc)
+    metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
     metrics_obj.add_listener(print_progress)
     metrics_obj.compute_gt_metrics()
     if options_gte.weighted_by_diameter:

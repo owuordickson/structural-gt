@@ -8,22 +8,13 @@ Compute graph theory metrics using iGraph library implemented in C language.
 """
 
 import os
-import cv2
-import datetime
-import itertools
-import multiprocessing
 import pandas as pd
 import numpy as np
 import networkx as nx
-from statistics import stdev, StatisticsError
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-# from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
-from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
+from networkx.algorithms import global_efficiency, clustering
 from networkx.algorithms import degree_assortativity_coefficient
-from networkx.algorithms.flow import maximum_flow
-from networkx.algorithms.distance_measures import diameter, periphery
+from networkx.algorithms.distance_measures import diameter
 from networkx.algorithms.wiener import wiener_index
 
 from graph_metrics import GraphMetrics
@@ -300,7 +291,7 @@ class GraphMetricsClang(GraphMetrics):
 
         self.output_data = pd.DataFrame(data_dict)
 
-    def average_node_connectivity(self):
+    def average_node_connectivity(self, **kwargs):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
@@ -321,4 +312,3 @@ class GraphMetricsClang(GraphMetrics):
         except Exception as err:
             print(err)
         return anc
-
