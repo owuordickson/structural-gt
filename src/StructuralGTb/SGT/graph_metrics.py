@@ -27,8 +27,8 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-from graph_converter import GraphConverter
-from image_processor import ImageProcessor
+from .graph_converter import GraphConverter
+from .image_processor import ImageProcessor
 
 
 class GraphMetrics:
@@ -180,7 +180,7 @@ class GraphMetrics:
 
         :return:
         """
-        self.update_status([1, "Performing un-weighted analysis..."])
+        self.update_status([1, "Using NetworkX to perform un-weighted analysis..."])
 
         graph = self.gc.nx_graph
         options = self.configs
