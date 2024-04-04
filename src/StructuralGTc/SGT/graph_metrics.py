@@ -149,6 +149,7 @@ class GraphMetrics:
                 # else:
                 #    avg_node_con = average_node_connectivity(graph)
                 avg_node_con = self.average_node_connectivity_c()
+                # avg_node_con = self.average_node_connectivity()
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'

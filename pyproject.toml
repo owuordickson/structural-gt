@@ -57,9 +57,6 @@ StructuralGTc-cli = "StructuralGTc:main_cli"
 [project.gui-scripts]
 StructuralGTc = "StructuralGTc:main_gui"
 
-[tool.setuptools]
-include-package-data = true
-
 # Define the extension SGT-c
 #[setuptools.Extension]
 #name = "sgt"
@@ -70,6 +67,9 @@ include-package-data = true
 
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTc.__version__"}
+
+#[tool.setuptools]
+#include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
