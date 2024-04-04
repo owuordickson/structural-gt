@@ -1,7 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-//#include <pthread.h>
-//#include <igraph.h>
 #include <stdarg.h>
 
 #define PY_SSIZE_T_CLEAN
@@ -15,13 +13,11 @@ compute_anc(PyObject *self, PyObject *args)
 {
     int num_cpus;
     int allow_mp;
-	int length;
-    //char *str_adj_mat;
     char *f_name;
 
     /*if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
         return NULL;*/
-    if (!PyArg_ParseTuple(args, "siii:compute_anc", &f_name, &length, &num_cpus, &allow_mp))
+    if (!PyArg_ParseTuple(args, "sii:compute_anc", &f_name, &num_cpus, &allow_mp))
         return NULL;
 
 	/*if ( f_name == ''){
@@ -35,7 +31,6 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
-	// igraph_integer_t size;
   	FILE *file;
 
   	igraph_t graph;
@@ -43,9 +38,6 @@ compute_anc(PyObject *self, PyObject *args)
     igraph_integer_t count_nc = 0;
     igraph_integer_t sum_nc = 0;
     igraph_real_t anc = 0;
-
-	// Get size of adjacency matrix
-	// size = (int)sqrt((double)(length));
 
     // Open the file containing the serialized graph
     file = fopen(f_name, "r");
@@ -142,13 +134,12 @@ static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
 "\n"
 "Arguments:\n"
-"   file    string      CSV file with edge list of graph A\n"
-"   l       int         number of values/items in the graph A\n"
-"   cpus    int         number of available CPUs\n"
-"   mp      int         allow multi-processing (0: No, 1: Yes)\n"
+"   file (string): CSV file with edge list of graph A.\n"
+"   cpus (int): number of available CPUs.\n"
+"   mp (int): allow multi-processing (0: No, 1: Yes).\n"
 "\n"
-"The length of the graph should be a squared(N) since an adjacency matrix is NxN in size.\n"
-"Returns the Average Node Connectivity as a float value.\n";
+"Returns:\n"
+"   ANC (float): Average Node Connectivity as a float value.\n";
 
 
 static char sgt_doc[] =
