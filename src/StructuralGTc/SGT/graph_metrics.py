@@ -27,8 +27,8 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-from graph_converter import GraphConverter
-from image_processor import ImageProcessor
+from .graph_converter import GraphConverter
+from .image_processor import ImageProcessor
 
 
 class GraphMetrics:

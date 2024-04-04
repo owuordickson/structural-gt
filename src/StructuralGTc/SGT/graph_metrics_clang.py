@@ -17,9 +17,9 @@ from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.distance_measures import diameter
 from networkx.algorithms.wiener import wiener_index
 
-from graph_metrics import GraphMetrics
-from graph_converter import GraphConverter
-from image_processor import ImageProcessor
+from .graph_metrics import GraphMetrics
+from .graph_converter import GraphConverter
+from .image_processor import ImageProcessor
 
 import sgt
 from ..configs.config_loader import get_num_cores
@@ -109,7 +109,7 @@ class GraphMetricsClang(GraphMetrics):
         >>> metrics_obj.generate_pdf_output()
 
         """
-        super(GraphMetrics, self).__init__(*args)
+        super(GraphMetricsClang, self).__init__(*args)
 
     def compute_gt_metrics(self):
         """
