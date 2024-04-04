@@ -1,12 +1,12 @@
 from setuptools import Extension, setup
 
 setup(
-    # package_data={"StructuralGTc": ["c_modules/lib_pthreads/bin/*w64.dll"]},
+    # package_data={"StructuralGTc": ["SGT-c/lib_pthreads/bin/*w64.dll"]},
     ext_modules=[
         Extension(
             name="sgt",
-            # sources=["src/StructuralGTc/c_modules/testmodule.c"],
-            sources=["src/StructuralGTc/c_modules/sgtmodule.c", "src/StructuralGTc/c_modules/sgt_base.c"],
+            # sources=["src/StructuralGTc/SGT-c/testmodule.c"],
+            sources=["src/StructuralGTc/SGT-c/sgtmodule.c", "src/StructuralGTc/SGT-c/sgt_base.c"],
             # libraries=["igraph"],  # macOS and Linux
             # include_dirs=["/opt/homebrew/Cellar/igraph/0.10.10/include/igraph"],  # macOS and Linux
             # library_dirs=["/opt/homebrew/Cellar/igraph/0.10.10/lib"],  # macOS and Linux

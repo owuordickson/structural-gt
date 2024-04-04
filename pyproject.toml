@@ -60,13 +60,13 @@ StructuralGTc = "StructuralGTc:main_gui"
 [tool.setuptools]
 include-package-data = true
 
-# Define the extension c_modules
+# Define the extension SGT-c
 #[setuptools.Extension]
-#name = "sgt_igraph"
-#sources = ["c_modules/sgt_base.c", "c_modules/sgt_modules.c"]
+#name = "sgt"
+#sources = ["SGT-c/sgt_base.c", "SGT-c/sgt_modules.c"]
 #libraries = ["igraph", "pthread"]
-#library_dirs = ["c_modules/igraph_lib/libs"]
-#include_dirs = ["c_modules/igraph_lib/include/igraph"]
+#library_dirs = ["SGT-c/igraph_lib/libs"]
+#include_dirs = ["SGT-c/igraph_lib/include/igraph"]
 
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTc.__version__"}

@@ -11,9 +11,9 @@ import time
 import os
 # import multiprocessing as mp
 from ..configs.config_loader import load_configs, get_num_cores
-from ..py_modules.image_processor import ImageProcessor
-from ..py_modules.graph_converter import GraphConverter
-from ..py_modules.graph_metrics import GraphMetrics
+from ..SGT.image_processor import ImageProcessor
+from ..SGT.graph_converter import GraphConverter
+from ..SGT.graph_metrics import GraphMetrics
 
 
 def terminal_app():
