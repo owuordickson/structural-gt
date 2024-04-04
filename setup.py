@@ -13,7 +13,7 @@ setup(
             libraries=["igraph-x64", "libpthreadVC3-x64"],  # Windows
             include_dirs=["C:/MinGW/include/igraph", "C:/MinGW/include/pthread"],  # Windows
             library_dirs=["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"],  # Windows
-            extra_link_args=["/VERBOSE:LIB"],
+            extra_link_args=["/VERBOSE:LIB"],  # Windows
         )
     ]
     # data_files=[("", ["C:/MinGW/bin/pthread/pthreadVC3-w64.dll"])]
