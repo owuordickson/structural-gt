@@ -612,7 +612,7 @@ class GraphMetrics:
         of local node connectivity over all pairs of nodes of G.
         """
 
-        nx_graph = self.g_struct.nx_graph
+        nx_graph = self.gc.nx_graph
         cpu_count = get_num_cores()
         anc = 0
 
@@ -625,7 +625,7 @@ class GraphMetrics:
             # print(str_mat)
             # anc = sgt.compute_anc(str_mat, size, cpu_count, self.allow_mp)
 
-            filename, output_location = self.g_struct.create_filenames(self.g_struct.img_path)
+            filename, output_location = self.gc.imp.create_filenames()
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)

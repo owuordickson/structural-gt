@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0", "wheel"]
+requires = ["setuptools >= 69.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -62,8 +62,8 @@ StructuralGTc = "StructuralGTc:main_gui"
 #name = "sgt"
 #sources = ["SGT-c/sgt_base.c", "SGT-c/sgt_modules.c"]
 #libraries = ["igraph-x64", "libpthreadVC3-x64"]
-#library_dirs = ["SGT-c/libraries/static-libs/igraph", "SGT-c/libraries/static-libs/pthread"]
 #include_dirs = ["SGT-c/libraries/include/igraph", "SGT-c/libraries/include/pthread"]
+#library_dirs = ["SGT-c/libraries/static-libs/igraph", "SGT-c/libraries/static-libs/pthread"]
 
 [tool.setuptools.dynamic]
 version = {attr = "StructuralGTc.__version__"}
@@ -76,6 +76,3 @@ where = ["src"]  # list of folders that contain the packages (["."] by default)
 include = ["*"]  # package names should match these glob patterns (["*"] by default)
 exclude = ["tests*"]  # exclude packages matching these glob patterns (empty by default)
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
-
-# [tool.setuptools.package-data]
-# StructuralGTc = ["c_libs/*w64.dll"]

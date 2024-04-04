@@ -35,8 +35,7 @@ compute_anc(PyObject *self, PyObject *args)
   	}
 
     // Declare required variables
-	igraph_integer_t size;
-	//igraph_matrix_t* adj_mat;
+	// igraph_integer_t size;
   	FILE *file;
 
   	igraph_t graph;
@@ -46,25 +45,13 @@ compute_anc(PyObject *self, PyObject *args)
     igraph_real_t anc = 0;
 
 	// Get size of adjacency matrix
-	size = (int)sqrt((double)(length));
+	// size = (int)sqrt((double)(length));
 
     // Open the file containing the serialized graph
     file = fopen(f_name, "r");
     // Read the graph from the file
     igraph_read_graph_edgelist(&graph, file, 0, IGRAPH_UNDIRECTED);
     fclose(file);
-
-    /*
-	// Convert string to matrix
-	// printf("Converting to Adj-Mat\n");
-    adj_mat = str_to_matrix(str_adj_mat, size);
-
-    // Build igraph
-    // printf("Building iGraph\n");
-	igraph_adjacency(
-		&graph, adj_mat,
-		IGRAPH_ADJ_UNDIRECTED, IGRAPH_NO_LOOPS
-	);*/
 
     // Print the average degree
     printf("Nodes: %d\nEdges: %d\n", (int)igraph_vcount(&graph), (int)igraph_ecount(&graph));
@@ -76,7 +63,7 @@ compute_anc(PyObject *self, PyObject *args)
         for (igraph_integer_t i=0; i<num_nodes; i++) {
             for (igraph_integer_t j=i+1; j<num_nodes; j++){
                 igraph_st_vertex_connectivity(&graph, &lnc, i, j, IGRAPH_VCONN_NEI_NEGATIVE);
-                if (lnc < 0) { continue; }
+                if (lnc == -1) { continue; }
                 sum_nc += lnc;
                 count_nc += 1;
             }
@@ -145,17 +132,7 @@ compute_anc(PyObject *self, PyObject *args)
     // Compute ANC
     anc = (float) sum_nc / count_nc;
 
-	// Print the matrix
-    /*printf("Adjacency Matrix:\n");
-    for (igraph_integer_t i = 0; i < size; i++) {
-        for (igraph_integer_t j = 0; j < size; j++) {
-            printf("%f ", MATRIX(adj_mat, i, j));
-        }
-        printf("\n");
-    }*/
-
     // Destroy graph
-    //igraph_matrix_destroy(adj_mat);
     igraph_destroy(&graph);
 
     return PyFloat_FromDouble((double) anc);
@@ -165,8 +142,8 @@ static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
 "\n"
 "Arguments:\n"
-"   A       string      adjacency matrix of graph\n"
-"   l       int         number of values/items in the variable A\n"
+"   file    string      CSV file with edge list of graph A\n"
+"   l       int         number of values/items in the graph A\n"
 "   cpus    int         number of available CPUs\n"
 "   mp      int         allow multi-processing (0: No, 1: Yes)\n"
 "\n"

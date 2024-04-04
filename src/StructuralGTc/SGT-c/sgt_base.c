@@ -10,16 +10,16 @@ void* compute_lnc(void *arg) {
     ThreadArgsLNC *args = (ThreadArgsLNC*)arg;
     igraph_integer_t lnc;
 
-    igraph_st_vertex_connectivity(args->graph, &lnc, args->i, args->j, IGRAPH_VCONN_NEI_NUMBER_OF_NODES);
+    igraph_st_vertex_connectivity(args->graph, &lnc, args->i, args->j, IGRAPH_VCONN_NEI_NEGATIVE);
 
     // Update shared data under mutex lock
     pthread_mutex_lock(args->mutex);
-    //if (lnc != -1){
-    *(args->total_nc) += lnc;
-    *(args->total_count) += 1;
+    if (lnc != -1){
+        *(args->total_nc) += lnc;
+        *(args->total_count) += 1;
         //printf("got %d\n", lnc);
         //printf("NC:%d Count:%d \n", *(args->total_nc), *(args->total_count));
-    //}
+    }
     pthread_mutex_unlock(args->mutex);
     
     pthread_exit(NULL);
