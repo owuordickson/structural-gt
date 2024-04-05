@@ -8,7 +8,6 @@ Loads default configurations from 'configs.ini' file
 """
 
 import os
-import sys
 import configparser
 import multiprocessing as mp
 from optparse import OptionParser
@@ -16,15 +15,12 @@ from ypstruct import struct
 
 
 def load_configs():
-    """
-    Load default parameter options for image processing, graph extraction, and GT computations.
-    :return:
-    """
 
     options_path = struct()
     options_img = struct()
     options_gte = struct()
     options_gtc = struct()
+    options_fic = struct()
 
     # 1. Image Path
     options_path.is_multi_image = 0
@@ -32,6 +28,9 @@ def load_configs():
     options_path.output_path = ""
 
     # 2. Image Detection settings
+    options_img.scale_value = 1
+    options_img.scalebar_px_count = 0
+    options_img.resistivity = 1
     options_img.threshold_type = 1
     options_img.threshold_global = 127
     options_img.threshold_adaptive = 11
@@ -59,7 +58,8 @@ def load_configs():
     options_gte.remove_self_loops = 1
     options_gte.remove_object_size = 500
     options_gte.is_multigraph = 0
-    options_gte.weighted_by_diameter = 0
+    options_gte.has_weights = 0
+    options_gte.weight_type = 'DIA'
     options_gte.display_node_id = 0
     options_gte.export_edge_list = 0
     options_gte.export_as_gexf = 0
@@ -67,7 +67,6 @@ def load_configs():
     options_gte.save_images = 0
 
     # 4. Networkx Calculation Settings
-    options_gtc.compute_lang = 'py'
     options_gtc.display_heatmaps = 1
     options_gtc.display_degree_histogram = 1
     options_gtc.display_betweenness_histogram = 1
@@ -82,6 +81,13 @@ def load_configs():
     options_gtc.compute_assortativity_coef = 1
     options_gtc.compute_network_diameter = 1
     options_gtc.compute_wiener_index = 1
+    
+    # 5. Graph Network Chaos Theory Settings
+    options_fic.down_sampling_factor = 4
+    options_fic.domain_block_size = 8
+    options_fic.range_block_size = 4
+    options_fic.block_step_size = 8
+    options_fic.decompress_iteration_count = 8
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -109,7 +115,7 @@ def load_configs():
                           help='number of cores',
                           default=1,
                           type='int')
-    (options, args) = opt_parser.parse_args()
+    (options_main, args) = opt_parser.parse_args()
 
     # Load configuration from file
     config = configparser.ConfigParser()
@@ -121,7 +127,14 @@ def load_configs():
         config.read(config_file)
         cpus = int(config.get('computation', 'cpu_cores'))
     except configparser.NoSectionError:
-        return config, options, options_img, options_gte, options_gtc
+        configs_data = {
+            "main_options": options_main,
+            "filter_options": options_img,
+            "extraction_options": options_gte,
+            "sgt_options": options_gtc,
+            "fic_options": options_fic
+        }
+        return configs_data
 
     # 1. Image Path
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
@@ -129,25 +142,28 @@ def load_configs():
     options_path.output_path = config.get('image-dir', 'gt_output_path')
 
     # 2. Image Detection settings
-    options_img.threshold_type = int(config.get('detection-settings', 'threshold'))
-    options_img.threshold_global = int(config.get('detection-settings', 'global_threshold_value'))
-    options_img.threshold_adaptive = int(config.get('detection-settings', 'adaptive_local_threshold_value'))
-    options_img.gamma = float(config.get('detection-settings', 'adjust_gamma'))
-    options_img.gaussian_blurring_size = int(config.get('detection-settings', 'blurring_window_size'))
-    options_img.autolevel_blurring_size = int(config.get('detection-settings', 'blurring_window_size'))
-    options_img.lowpass_window_size = int(config.get('detection-settings', 'filter_window_size'))
+    options_img.scale_value = int(config.get('image-dir', 'scale_value_nanometers'))
+    options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
+    options_img.resistivity = int(config.get('image-dir', 'resistivity'))
+    options_img.threshold_type = int(config.get('filter-settings', 'threshold'))
+    options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
+    options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
+    options_img.gamma = float(config.get('filter-settings', 'adjust_gamma'))
+    options_img.gaussian_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
+    options_img.autolevel_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
+    options_img.lowpass_window_size = int(config.get('filter-settings', 'filter_window_size'))
     options_img.laplacian_kernel_size = 3
     options_img.sobel_kernel_size = 3
-    options_img.apply_autolevel = int(config.get('detection-settings', 'use_autolevel'))
-    options_img.apply_laplacian = int(config.get('detection-settings', 'use_laplacian_gradient'))
-    options_img.apply_scharr = int(config.get('detection-settings', 'use_scharr_gradient'))
-    options_img.apply_sobel = int(config.get('detection-settings', 'use_sobel_gradient'))
-    options_img.apply_median = int(config.get('detection-settings', 'apply_median_filter'))
-    options_img.apply_gaussian = int(config.get('detection-settings', 'apply_gaussian_blur'))
-    options_img.apply_lowpass = int(config.get('detection-settings', 'apply_lowpass_filter'))
-    options_img.apply_dark_foreground = int(config.get('detection-settings', 'dark_foreground'))
-    options_img.brightness_level = int(config.get('detection-settings', 'brightness_level'))
-    options_img.contrast_level = int(config.get('detection-settings', 'contrast_level'))
+    options_img.apply_autolevel = int(config.get('filter-settings', 'use_autolevel'))
+    options_img.apply_laplacian = int(config.get('filter-settings', 'use_laplacian_gradient'))
+    options_img.apply_scharr = int(config.get('filter-settings', 'use_scharr_gradient'))
+    options_img.apply_sobel = int(config.get('filter-settings', 'use_sobel_gradient'))
+    options_img.apply_median = int(config.get('filter-settings', 'apply_median_filter'))
+    options_img.apply_gaussian = int(config.get('filter-settings', 'apply_gaussian_blur'))
+    options_img.apply_lowpass = int(config.get('filter-settings', 'apply_lowpass_filter'))
+    options_img.apply_dark_foreground = int(config.get('filter-settings', 'dark_foreground'))
+    options_img.brightness_level = int(config.get('filter-settings', 'brightness_level'))
+    options_img.contrast_level = int(config.get('filter-settings', 'contrast_level'))
 
     # 3. Graph Extraction Settings
     options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))
@@ -156,7 +172,8 @@ def load_configs():
     options_gte.remove_self_loops = int(config.get('extraction-settings', 'remove_self_loops'))
     options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
     options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
-    options_gte.weighted_by_diameter = int(config.get('extraction-settings', 'weighted_by_diameter'))
+    options_gte.has_weights = int(config.get('extraction-settings', 'add_weights'))
+    options_gte.weight_type = str(config.get('extraction-settings', 'weight_type'))
     options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
     options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
     options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
@@ -164,33 +181,32 @@ def load_configs():
     options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
 
     # 4. Networkx Calculation Settings
-    options_gtc.compute_lang = str(config.get('computation-settings', 'computation_language'))
-    options_gtc.display_heatmaps = int(config.get('computation-settings', 'display_heatmaps'))
-    options_gtc.display_degree_histogram = int(config.get('computation-settings', 'display_degree_histogram'))
-    options_gtc.display_betweenness_histogram = int(config.get('computation-settings',
+    options_gtc.display_heatmaps = int(config.get('sgt-settings', 'display_heatmaps'))
+    options_gtc.display_degree_histogram = int(config.get('sgt-settings', 'display_degree_histogram'))
+    options_gtc.display_betweenness_histogram = int(config.get('sgt-settings',
                                                                'display_betweenness_centrality_histogram'))
-    options_gtc.display_currentflow_histogram = int(config.get('computation-settings',
+    options_gtc.display_currentflow_histogram = int(config.get('sgt-settings',
                                                                'display_current_flow_betweenness_centrality_histogram'))
-    options_gtc.display_closeness_histogram = int(config.get('computation-settings',
+    options_gtc.display_closeness_histogram = int(config.get('sgt-settings',
                                                              'display_closeness_centrality_histogram'))
-    options_gtc.display_eigenvector_histogram = int(config.get('computation-settings',
+    options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
                                                                'display_eigenvector_centrality_histogram'))
-    options_gtc.compute_nodal_connectivity = int(config.get('computation-settings',
+    options_gtc.compute_nodal_connectivity = int(config.get('sgt-settings',
                                                             'compute_avg_nodal_connectivity'))
-    options_gtc.compute_graph_density = int(config.get('computation-settings',
-                                                       'compute_graph_density'))
-    options_gtc.compute_graph_conductance = int(config.get('computation-settings',
-                                                           'compute_graph_conductance'))
-    options_gtc.compute_global_efficiency = int(config.get('computation-settings',
-                                                           'compute_global_efficiency'))
-    options_gtc.compute_clustering_coef = int(config.get('computation-settings',
-                                                         'compute_avg_clustering_coef'))
-    options_gtc.compute_assortativity_coef = int(config.get('computation-settings',
-                                                            'compute_assortativity_coef'))
-    options_gtc.compute_network_diameter = int(config.get('computation-settings',
-                                                          'compute_network_diameter'))
-    options_gtc.compute_wiener_index = int(config.get('computation-settings',
-                                                      'compute_wiener_index'))
+    options_gtc.compute_graph_density = int(config.get('sgt-settings', 'compute_graph_density'))
+    options_gtc.compute_graph_conductance = int(config.get('sgt-settings', 'compute_graph_conductance'))
+    options_gtc.compute_global_efficiency = int(config.get('sgt-settings', 'compute_global_efficiency'))
+    options_gtc.compute_clustering_coef = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
+    options_gtc.compute_assortativity_coef = int(config.get('sgt-settings', 'compute_assortativity_coef'))
+    options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
+    options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
+
+    # 5. Graph Network Chaos Theory Settings
+    options_fic.down_sampling_factor = int(config.get('fic-settings', 'down_sampling_factor'))
+    options_fic.domain_block_size = int(config.get('fic-settings', 'domain_block_size'))
+    options_fic.range_block_size = int(config.get('fic-settings', 'range_block_size'))
+    options_fic.block_step_size = int(config.get('fic-settings', 'block_step_size'))
+    options_fic.decompress_iteration_count = int(config.get('fic-settings', 'decompress_iteration_count'))
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -218,17 +234,19 @@ def load_configs():
                           help='number of cores',
                           default=cpus,
                           type='int')
-    (options, args) = opt_parser.parse_args()
+    (options_main, args) = opt_parser.parse_args()
 
-    return config, options, options_img, options_gte, options_gtc
+    configs_data = {
+        "main_options": options_main,
+        "filter_options": options_img,
+        "extraction_options": options_gte,
+        "sgt_options": options_gtc,
+        "fic_options": options_fic
+    }
+    return configs_data
 
 
 def load_gui_configs():
-    """
-    Load texts and labels for building the GUI.
-    :return:
-    """
-
     gui_txt = struct()
 
     gui_txt.title = "Structural GT"
@@ -352,6 +370,7 @@ def __get_slurm_cores__():
 
 def write_file(data, path, wr=True):
     """Description
+
     Writes data into a file
     :param data: information to be written
     :param path: name of file and storage path

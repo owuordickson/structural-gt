@@ -8,6 +8,7 @@ Create a graph skeleton from an image binary
 """
 
 import numpy as np
+import math
 from scipy import ndimage
 from ypstruct import struct
 from cv2.typing import MatLike
@@ -87,17 +88,87 @@ class GraphSkeleton:
         self.ep_coord_x = ep_coord_x
         self.ep_coord_y = ep_coord_y
 
+    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, pixel_dim: float = 1, rho_dim: float = 1):
+        """
+        Compute and assign weights to a line edge between 2 nodes.
+
+        :param edge_pts: a list of pts that trace along a graph edge.
+        :param weight_type: basis of computation for the weight (i.e., length, width, resistance, conductance etc.)
+        :param pixel_dim: physical size of width of a single pixel in nanometers.
+        :param rho_dim: the resistivity value of the material.
+        :return: width pixel count of edge, computed weight.
+        """
+
+        # Idea copied from 'sknw' library
+        pix_length = np.linalg.norm(edge_pts[1:]-edge_pts[:-1], axis=1).sum()
+
+        # Initialize parameters
+        pixel_dim = pixel_dim * (10**6)  # Convert to micrometers
+        wt = 1 * (10 ** -9)  # Smallest possible
+        weight_options = {
+            'DIA':      'Width',
+            'AREA':     'SurfaceArea',
+            'LEN':      'Length',
+            'INV_LEN':  'InverseLength',
+            'VAR_CON':  'VariableWidthConductance',
+            'FIX_CON':  'FixedWidthConductance',
+            'RES':      'Resistance',
+            # '': ''
+        }
+
+        if len(edge_pts) < 2:
+            # check to see if ge is an empty or unity list, if so, set pixel count to 0
+            # Assume only 1/2 pixel exists between edge points
+            pix_width = 0
+        else:
+            # if ge exists, find the midpoint of the trace, and orthogonal unit vector
+            end_index = len(edge_pts) - 1
+            mid_index = int(len(edge_pts) / 2)
+            pt1 = edge_pts[0]
+            pt2 = edge_pts[end_index]
+            m = edge_pts[mid_index]
+            mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
+            m[0] = int(m[0])
+            m[1] = int(m[1])
+            pix_width = self.estimate_edge_width(m, ortho)
+
+        if weight_type is None:
+            wt = pix_width / 10
+        elif weight_options.get(weight_type) == weight_options.get('DIA'):
+            wt = pix_width * pixel_dim
+        elif weight_options.get(weight_type) == weight_options.get('AREA'):
+            wt = math.pi * (pix_width*pixel_dim)**2
+        elif weight_options.get(weight_type) == weight_options.get('LEN'):
+            wt = pix_length * pixel_dim
+        elif weight_options.get(weight_type) == weight_options.get('INV_LEN'):
+            wt = (pix_length * pixel_dim)**-1
+        elif weight_options.get(weight_type) == weight_options.get('VAR_CON'):
+            if pix_width > 0:
+                wt = ((pix_length * pixel_dim * rho_dim)/(math.pi * (pix_width * pixel_dim)**2))**-1
+        elif weight_options.get(weight_type) == weight_options.get('FIX_CON'):
+            if pix_width > 0:
+                wt = ((pix_length * pixel_dim * rho_dim) / (math.pi * (1 * pixel_dim)**2))**-1
+        elif weight_options.get(weight_type) == weight_options.get('RES'):
+            if pix_width > 0:
+                wt = ((pix_length * pixel_dim * rho_dim) / (math.pi * (pix_width * pixel_dim)**2))
+        else:
+            raise TypeError('Invalid weight type')
+
+        # returns the width in pixels; the weight which is the width normalized by 10
+        return pix_width, wt
+
     def assign_weights_by_width(self, ge):
         # Inputs:
         # ge: a list of pts that trace along a graph edge
         # img_bin: the binary image that the graph is derived from
 
-        # check to see if ge is an empty or unity list, if so, set wt to 1
         if len(ge) < 2:
-            pix_width = 10
-            wt = 1
-        # if ge exists, find the midpoint of the trace, and orthogonal unit vector
+            # check to see if ge is an empty or unity list, if so, set pixel count to 0
+            # Assume only 1/2 pixel exists between edge points
+            pix_width = 0
+            wt = 0.0001  # Smallest possible
         else:
+            # if ge exists, find the midpoint of the trace, and orthogonal unit vector
             end_index = len(ge) - 1
             mid_index = int(len(ge) / 2)
             pt1 = ge[0]
@@ -106,13 +177,13 @@ class GraphSkeleton:
             mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
             m[0] = int(m[0])
             m[1] = int(m[1])
-            pix_width = int(self.length_to_edge(m, ortho))
-            wt = self.length_to_edge(m, ortho) / 10
+            pix_width = self.estimate_edge_width(m, ortho)
+            wt = pix_width / 10
 
         # returns the width in pixels; the weight which is the width normalized by 10
         return pix_width, wt
 
-    def length_to_edge(self, m, ortho):
+    def estimate_edge_width(self, m, ortho):
         # Inputs:
         # m: the midpoint of a trace of an edge
         # ortho: an orthogonal unit vector

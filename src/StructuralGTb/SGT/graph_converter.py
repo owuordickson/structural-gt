@@ -66,7 +66,7 @@ class GraphConverter:
         >>> opt_gte.remove_self_loops = 1
         >>> opt_gte.remove_object_size = 500
         >>> opt_gte.is_multigraph = 0
-        >>> opt_gte.weighted_by_diameter = 0
+        >>> opt_gte.has_weights = 0
         >>> opt_gte.display_node_id = 0
         >>> opt_gte.export_edge_list = 0
         >>> opt_gte.export_as_gexf = 0
@@ -158,7 +158,7 @@ class GraphConverter:
                 self.update_status([-1, "Problem generating graph (change filter options)."])
             else:
                 # self.save_adj_csv()
-                if self.configs_graph.weighted_by_diameter == 1:
+                if self.configs_graph.has_weights == 1:
                     self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
                         self.nx_graph, weighted=True)
                 else:
@@ -202,7 +202,7 @@ class GraphConverter:
             # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
             # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
             for (s, e) in nx_graph.edges():
-                if configs.weighted_by_diameter == 1:
+                if configs.has_weights == 1:
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
                         pix_width, wt = graph_skel.assign_weights_by_width(ge)
@@ -216,23 +216,26 @@ class GraphConverter:
                             pass
         else:
             nx_graph = sknw.build_sknw(img_skel)
-
-            # the actual length of the edges we want is stored as weight, so the two are set equal
-            # if the weight is 0 the edge length is set to 2
             for (s, e) in nx_graph.edges():
-                nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-                if nx_graph[s][e]['weight'] == 0:
-                    nx_graph[s][e]['length'] = 2
+                # 'sknw' library stores length of edge and calls it weight, we reverse this
+                # we create a new attribute 'length', later delete/modify 'weight'
+                nx_graph[s][e]['pixel length'] = nx_graph[s][e]['weight']
+                #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
+                #        nx_graph[s][e]['length'] = 2
 
-            # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
-            # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
-            for (s, e) in nx_graph.edges():
-                if configs.weighted_by_diameter == 1:
+                if configs.has_weights == 1:
+                    # We modify 'weight'
+                    wt_type = configs.weight_type
+                    px_size = self.imp.pixel_width
+                    rho_val = self.imp.configs_img.resistivity
+
                     ge = nx_graph[s][e]['pts']
-                    pix_width, wt = graph_skel.assign_weights_by_width(ge)
+                    # pix_width, wt = graph_skel.assign_weights_by_width(ge)
+                    pix_width, wt = graph_skel.assign_weights(ge, wt_type, pixel_dim=px_size, rho_dim=rho_val)
                     nx_graph[s][e]['pixel width'] = pix_width
                     nx_graph[s][e]['weight'] = wt
                 else:
+                    # delete 'weight'
                     del nx_graph[s][e]['weight']
         self.nx_graph = nx_graph
 
@@ -360,7 +363,7 @@ class GraphConverter:
             np.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte.export_edge_list == 1:
-            if opt_gte.weighted_by_diameter == 1:
+            if opt_gte.has_weights == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
                 el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
                 with open(csv_file, 'w', newline='') as csvfile:

@@ -75,14 +75,14 @@ class ImageProcessor:
         self.output_path = out_path
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
         if img is None:
-            self.img = ImageProcessor.resize_img(512, self.img_raw.copy())
+            self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         else:
             self.img = img
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
         self.otsu_val = None
-        # self.pixel_length = 0
+        self.pixel_width = 0
 
     def apply_filters(self):
         """
@@ -92,6 +92,14 @@ class ImageProcessor:
         """
         self.img_mod = self.process_img(self.img.copy())
         self.img_bin, self.otsu_val = self.binarize_img(self.img_mod.copy())
+
+        # Compute pixel dimension in nanometers
+        configs = self.configs_img
+        if (configs.scale_value > 0) and (configs.scalebar_px_count > 0):
+            px_width = ImageProcessor.compute_pixel_width(configs.scale_value, configs.scalebar_px_count)
+            self.pixel_width = px_width/self.scale_factor
+        else:
+            self.pixel_width = 1 * (10**-6)  # 1 micrometer
 
     def process_img(self, image: MatLike):
         """
@@ -235,11 +243,11 @@ class ImageProcessor:
 
         :param img_path: directory path to image including the scale bar.
         :param img_path_w_bar: directory path to cropped image of scale bar.
-        :param img_length: length of the image in nano meters.
+        :param img_length: length of the image in nanometers.
         :return: None
         """
 
-        # img_orig = ImageProcessor.load_img_from_file('img_path_w_bar')
+        # img_orig = ImageProcessor.load_img_from_file(img_path_w_bar)
         # scale_bar_length = 0  # or Use image length in meters
         # scale_bar_pixel_count = 0
         # img_orig_length_pixel_count = 0
@@ -393,7 +401,7 @@ class ImageProcessor:
         std_height = int(scale_factor * h)
         std_size = (std_height, std_width)
         std_img = cv2.resize(image, std_size)
-        return std_img
+        return std_img, scale_factor
 
     @staticmethod
     def rescale_to_square(image: MatLike):
@@ -406,3 +414,17 @@ class ImageProcessor:
         w, h = image.shape
         length = h if h > w else w
         return cv2.resize(image, (length, length))
+
+    @staticmethod
+    def compute_pixel_width(scale_val: int, scalebar_px_count: int):
+        """
+        Compute the width of a single pixel in nanometers.
+
+        :param scale_val: unit value of the scale in nanometers.
+        :param scalebar_px_count: pixel count of the width of the scalebar.
+        :return: width of a single pixel in nanometers.
+        """
+
+        val_in_meters = scale_val * (10**-9)
+        pixel_width = val_in_meters/scalebar_px_count
+        return pixel_width

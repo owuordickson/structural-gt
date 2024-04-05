@@ -23,7 +23,12 @@ def terminal_app():
     Initializes and executes StructuralGT functions.
     :return:
     """
-    config, options, options_img, options_gte, options_gtc = load_configs()
+    configs_data = load_configs()
+    options = configs_data['main_options']
+    options_img = configs_data['filter_options']
+    options_gte = configs_data['extraction_options']
+    options_gtc = configs_data['sgt_options']
+
     alg = options.algChoice
     num_cores = options.numCores
     is_multi = options.multiImage

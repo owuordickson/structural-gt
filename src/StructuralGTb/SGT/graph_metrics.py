@@ -78,7 +78,7 @@ class GraphMetrics:
         >>> opt_gte.remove_self_loops = 1
         >>> opt_gte.remove_object_size = 500
         >>> opt_gte.is_multigraph = 0
-        >>> opt_gte.weighted_by_diameter = 0
+        >>> opt_gte.has_weights = 0
         >>> opt_gte.display_node_id = 0
         >>> opt_gte.export_edge_list = 0
         >>> opt_gte.export_as_gexf = 0
@@ -109,7 +109,7 @@ class GraphMetrics:
         >>> graph_obj.fit()
         >>> metrics_obj = GraphMetrics(graph_obj, opt_gtc)
         >>> metrics_obj.compute_gt_metrics()
-        >>> if opt_gte.weighted_by_diameter:
+        >>> if opt_gte.has_weights:
         >>>     metrics_obj.compute_weighted_gt_metrics()
         >>> metrics_obj.generate_pdf_output()
 
@@ -807,7 +807,7 @@ class GraphMetrics:
         tab_1 = ax.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
         tab_1.scale(1, 1.5)
 
-        if opt_gte.weighted_by_diameter == 1:
+        if opt_gte.has_weights == 1:
             fig_wt = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = fig_wt.add_subplot(1, 1, 1)
             ax.set_axis_off()
@@ -879,7 +879,7 @@ class GraphMetrics:
         figs.append(fig)
 
         # weighted histograms
-        if opt_gte.weighted_by_diameter == 1:
+        if opt_gte.has_weights == 1:
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             if opt_gtc.display_degree_histogram == 1:
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
@@ -934,7 +934,7 @@ class GraphMetrics:
         if opt_gtc.display_degree_histogram == 1:
             fig = self.plot_heatmap(deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc.display_degree_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
+        if (opt_gtc.display_degree_histogram == 1) and (opt_gte.has_weights == 1):
             fig = self.plot_heatmap(w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.compute_clustering_coef == 1) and (opt_gte.is_multigraph == 0):
@@ -943,20 +943,20 @@ class GraphMetrics:
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
+        if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc.display_closeness_histogram == 1:
             fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.weighted_by_diameter == 1):
+        if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.has_weights == 1):
             fig = self.plot_heatmap(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.weighted_by_diameter == 1) and \
+        if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
