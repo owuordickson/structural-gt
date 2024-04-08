@@ -595,10 +595,29 @@ class MainUI(QtWidgets.QMainWindow):
         root_node = tree_model.invisibleRootItem()
 
         # 2. Add Extraction items
+        # options_extraction_1 = QtWidgets.QTreeWidgetItem
+
         options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
+
+        # --- start ---
         weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.has_weights)
+
+        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, color=QtGui.QColor(0, 0, 200), data=1)
+        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, color=QtGui.QColor(0, 0, 200), data=0)
+        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, color=QtGui.QColor(0, 0, 200))
+        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, color=QtGui.QColor(0, 0, 200))
+        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, color=QtGui.QColor(0, 0, 200))
+        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, color=QtGui.QColor(0, 0, 200))
+
+        weighted_item.appendRow(by_diameter_item)
+        weighted_item.appendRow(by_area_item)
+        weighted_item.appendRow(by_length_item)
+        weighted_item.appendRow(by_inv_length_item)
+        weighted_item.appendRow(by_conductance_item)
+        weighted_item.appendRow(by_resistance_item)
         options_extraction.appendRow(weighted_item)
+        # --- end ---
 
         merge_nearby_item = TreeItem(self.gui_txt.merge, 9, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.merge_nearby_nodes)
@@ -608,6 +627,7 @@ class MainUI(QtWidgets.QMainWindow):
                                        color=QtGui.QColor(0, 0, 200), data=options_gte.prune_dangling_edges)
         options_extraction.appendRow(prune_dangling_item)
 
+        # --- start ---
         remove_disconnected_item = TreeItem(self.gui_txt.remove_disconnected, 9, set_checkable=True,
                                             color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
@@ -615,6 +635,7 @@ class MainUI(QtWidgets.QMainWindow):
                                     set_editable=True, color=QtGui.QColor(0, 0, 200))
         remove_disconnected_item.appendRow(remove_size_item)
         options_extraction.appendRow(remove_disconnected_item)
+        # --- end ---
 
         remove_loops_item = TreeItem(self.gui_txt.remove_loops, 9, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.remove_self_loops)
@@ -712,7 +733,9 @@ class MainUI(QtWidgets.QMainWindow):
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
         root_node.appendRow(options_save)
+        delegate = TreeRadioItemDelegate()
         self.tree_settings.setModel(tree_model)
+        self.tree_settings.setItemDelegateForColumn(0, delegate)
 
     def _init_img_filter_settings(self, options_img):
         # range between 0.01-5.0
@@ -1658,7 +1681,7 @@ class MainUI(QtWidgets.QMainWindow):
 class TreeItem(QtGui.QStandardItem):
 
     def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, set_editable=False,
-                 color=QtGui.QColor(0, 0, 0), data=-1):
+                 color=QtGui.QColor(0, 0, 0), data=0):
         super().__init__()
 
         font = QtGui.QFont()
@@ -1677,6 +1700,44 @@ class TreeItem(QtGui.QStandardItem):
             self.setCheckState(QtCore.Qt.CheckState.Checked)
         elif int(self.data()) == 0:
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+
+class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
+
+    def createEditor(self, parent, option, index):
+        if index.column() == 0:  # Assuming the radio buttons are in the second column
+            editor = QtWidgets.QRadioButton(parent)
+            return editor
+        else:
+            return super().createEditor(parent, option, index)
+
+    def setEditorData(self, editor, index):
+        value = index.model().data(index, QtCore.ItemDataRole.DisplayRole)
+        editor.setChecked(value)
+
+    def setModelData(self, editor, model, index):
+        if index.column() == 0:
+            model.setData(index, editor.isChecked(), QtCore.Qt.ItemDataRole.EditRole)
+        else:
+            super().setModelData(editor, model, index)
+
+    def editorEvent(self, event, model, option, index):
+        if index.column() == 0:
+            if (event.type() == QtCore.QEvent.Type.MouseButtonRelease and
+                    event.button() == QtCore.Qt.MouseButton.LeftButton):
+                editor = self.sender()
+                if editor:
+                    editor.setChecked(True)
+                    model.setData(index, editor.isChecked(), QtCore.Qt.ItemDataRole.EditRole)
+                    for sibling_index in index.model().match(
+                            index.model().index(0, index.column(), index.parent()),
+                            QtCore.Qt.ItemDataRole.DisplayRole,
+                            "*", -1, QtCore.Qt.MatchFlag.MatchWildcard | QtCore.Qt.MatchFlag.MatchRecursive,
+                    ):
+                        if sibling_index != index:
+                            sibling_index.model().setData(sibling_index, False, QtCore.Qt.ItemDataRole.EditRole)
+                    return True
+        return super().editorEvent(event, model, option, index)
 
 
 class CustomQLabel(QtWidgets.QLabel):

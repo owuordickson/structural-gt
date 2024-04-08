@@ -253,7 +253,13 @@ def load_gui_configs():
     gui_txt.about = "about Structural GT"
 
     # 1. Extraction
-    gui_txt.weighted = "Weight by Diameter"
+    gui_txt.weighted = "Add Weights"
+    gui_txt.weight_by_dia = 'Diameter'
+    gui_txt.weight_by_area = 'Area'
+    gui_txt.weight_by_len = 'Length'
+    gui_txt.weight_by_inv_len = 'Inverse Length'
+    gui_txt.weight_by_var_con = 'Conductance'
+    gui_txt.weight_by_res = 'Resistance'
     gui_txt.merge = "Merge Nearby Nodes"
     gui_txt.prune = "Prune Dangling Edges"
     gui_txt.remove_disconnected = "Remove Disconnected Segments (set size)"
@@ -300,6 +306,12 @@ def load_gui_configs():
 
     # 1. Extraction
     gui_txt.weighted = str(config.get('gui', 'weighted'))
+    gui_txt.weight_by_dia = str(config.get('gui', 'weight_by_dia'))
+    gui_txt.weight_by_area = str(config.get('gui', 'weight_by_area'))
+    gui_txt.weight_by_len = str(config.get('gui', 'weight_by_len'))
+    gui_txt.weight_by_inv_len = str(config.get('gui', 'weight_by_inv_len'))
+    gui_txt.weight_by_var_con = str(config.get('gui', 'weight_by_var_con'))
+    gui_txt.weight_by_res = str(config.get('gui', 'weight_by_res'))
     gui_txt.merge = str(config.get('gui', 'merge'))
     gui_txt.prune = str(config.get('gui', 'prune'))
     gui_txt.remove_disconnected = str(config.get('gui', 'remove_disconnected'))
