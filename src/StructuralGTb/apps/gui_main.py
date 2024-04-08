@@ -602,12 +602,13 @@ class MainUI(QtWidgets.QMainWindow):
         weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.has_weights)
 
-        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, color=QtGui.QColor(0, 0, 200), data=1)
-        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, color=QtGui.QColor(0, 0, 200), data=0)
-        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, color=QtGui.QColor(0, 0, 200))
-        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, color=QtGui.QColor(0, 0, 200))
-        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, color=QtGui.QColor(0, 0, 200))
-        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, color=QtGui.QColor(0, 0, 200))
+        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200), data=1)
+        by_diameter_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200), data=0)
+        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
+        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
+        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
+        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
         weighted_item.appendRow(by_diameter_item)
         weighted_item.appendRow(by_area_item)
         weighted_item.appendRow(by_length_item)
@@ -738,8 +739,8 @@ class MainUI(QtWidgets.QMainWindow):
         root_node.appendRow(options_save)
         self.tree_settings.setModel(tree_model)
         # Assign the custom delegate to the second column
-        #delegate = TreeRadioItemDelegate()
-        #self.tree_settings.setItemDelegateForColumn(0, delegate)
+        delegate = TreeRadioItemDelegate()
+        self.tree_settings.setItemDelegate(delegate)
 
     def _init_img_filter_settings(self, options_img):
         # range between 0.01-5.0
@@ -1721,24 +1722,19 @@ class TreeTextItem(QtGui.QStandardItem):
 
 class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def paint(self, painter, option, index):
+        if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Grp1":
+            widget = option.widget
+            style = widget.style() if widget else QtWidgets.QApplication.style()
+            opt = QtWidgets.QStyleOptionButton()
+            opt.rect = option.rect
+            opt.text = index.data()
+            opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
+                QtWidgets.QStyle.StateFlag.State_Off)
 
-    def createEditor(self, parent, option, index):
-        editor = QWidget(parent)
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        radio1 = QRadioButton("Option 1")
-        radio2 = QRadioButton("Option 2")
-        radio3 = QRadioButton("Option 3")
-
-        layout.addWidget(radio1)
-        layout.addWidget(radio2)
-        layout.addWidget(radio3)
-
-        editor.setLayout(layout)
-        return editor
+            style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
+        else:
+            QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
 
     def setEditorData(self, editor, index):
         pass  # Implement if you need to initialize the editor with data
