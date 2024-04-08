@@ -602,22 +602,22 @@ class MainUI(QtWidgets.QMainWindow):
         weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.has_weights)
 
-        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, set_checkable=True,
+        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 7, set_checkable=True,
                                     color=QtGui.QColor(0, 0, 200), data=1)
         by_diameter_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, set_checkable=True,
+        by_area_item = TreeItem(self.gui_txt.weight_by_area, 7, set_checkable=True,
                                 color=QtGui.QColor(0, 0, 200), data=0)
         by_area_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, set_checkable=True,
+        by_length_item = TreeItem(self.gui_txt.weight_by_len, 7, set_checkable=True,
                                   color=QtGui.QColor(0, 0, 200))
         by_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, set_checkable=True,
+        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 7, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
         by_inv_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, set_checkable=True,
+        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 7, set_checkable=True,
                                        color=QtGui.QColor(0, 0, 200))
         by_conductance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, set_checkable=True,
+        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 7, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
         by_resistance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
         weighted_item.appendRow(by_diameter_item)
@@ -1737,16 +1737,24 @@ class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Grp1":
+            # painter.save()
             widget = option.widget
             style = widget.style() if widget else QtWidgets.QApplication.style()
             opt = QtWidgets.QStyleOptionButton()
             opt.rect = option.rect
-            # opt.palette.setColor(QtGui.QPalette.ColorRole.ButtonText, QtGui.QColor(0, 0, 200))
             opt.text = index.data()
             opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
                 QtWidgets.QStyle.StateFlag.State_Off)
 
+            # Set font color
+            # palette = QtGui.QPalette()
+            # palette.setColor(QtGui.QPalette.ColorGroup.All, QtGui.QPalette.ColorRole.ButtonText,
+            #                 QtGui.QColor(0, 0, 200))
+            # opt.palette = palette
+            painter.setPen(QtGui.QColor(0, 0, 200))
+
             style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
+            # painter.restore()
         else:
             QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
 
