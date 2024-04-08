@@ -595,9 +595,8 @@ class MainUI(QtWidgets.QMainWindow):
         root_node = tree_model.invisibleRootItem()
 
         # 2. Add Extraction items
-        # options_extraction_1 = QtWidgets.QTreeWidgetItem
-
-        options_extraction = TreeItem('[Extraction Settings]', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
+        options_extraction = TreeTextItem('Extraction Settings', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
+        # tree_model.setItem(0, 0, options_extraction)  # row, col, item
 
         # --- start ---
         weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
@@ -609,13 +608,13 @@ class MainUI(QtWidgets.QMainWindow):
         by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, color=QtGui.QColor(0, 0, 200))
         by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, color=QtGui.QColor(0, 0, 200))
         by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, color=QtGui.QColor(0, 0, 200))
-
         weighted_item.appendRow(by_diameter_item)
         weighted_item.appendRow(by_area_item)
         weighted_item.appendRow(by_length_item)
         weighted_item.appendRow(by_inv_length_item)
         weighted_item.appendRow(by_conductance_item)
         weighted_item.appendRow(by_resistance_item)
+
         options_extraction.appendRow(weighted_item)
         # --- end ---
 
@@ -631,8 +630,8 @@ class MainUI(QtWidgets.QMainWindow):
         remove_disconnected_item = TreeItem(self.gui_txt.remove_disconnected, 9, set_checkable=True,
                                             color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
-        remove_size_item = TreeItem(str(options_gte.remove_object_size), 9, set_checkable=False,
-                                    set_editable=True, color=QtGui.QColor(0, 0, 200))
+        remove_size_item = TreeTextItem(str(options_gte.remove_object_size), 9, set_editable=True,
+                                        color=QtGui.QColor(0, 0, 200))
         remove_disconnected_item.appendRow(remove_size_item)
         options_extraction.appendRow(remove_disconnected_item)
         # --- end ---
@@ -650,7 +649,9 @@ class MainUI(QtWidgets.QMainWindow):
         options_extraction.appendRow(node_id_item)
 
         # 3. Add Computation items
-        options_compute = TreeItem('[Computation Settings]', 11, set_bold=True, color=QtGui.QColor(128, 0, 0))
+        options_compute = TreeTextItem('Computation Settings', 11, set_bold=True, color=QtGui.QColor(128, 0, 0))
+        # tree_model.setItem(1, 0, options_compute)  # row, col, item
+
         heatmaps_item = TreeItem(self.gui_txt.heatmaps, 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                  data=options_gtc.display_heatmaps)
         options_compute.appendRow(heatmaps_item)
@@ -712,7 +713,9 @@ class MainUI(QtWidgets.QMainWindow):
         options_compute.appendRow(wiener_index_item)
 
         # 4. Add Save items
-        options_save = TreeItem('[Save Files]', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
+        options_save = TreeTextItem('Save Files', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
+        # tree_model.setItem(2, 0, options_save)  # row, col, item
+
         export_gexf_item = TreeItem(self.gui_txt.gexf, 9, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_as_gexf)
         options_save.appendRow(export_gexf_item)
@@ -733,9 +736,10 @@ class MainUI(QtWidgets.QMainWindow):
         root_node.appendRow(options_extraction)
         root_node.appendRow(options_compute)
         root_node.appendRow(options_save)
-        delegate = TreeRadioItemDelegate()
         self.tree_settings.setModel(tree_model)
-        self.tree_settings.setItemDelegateForColumn(0, delegate)
+        # Assign the custom delegate to the second column
+        #delegate = TreeRadioItemDelegate()
+        #self.tree_settings.setItemDelegateForColumn(0, delegate)
 
     def _init_img_filter_settings(self, options_img):
         # range between 0.01-5.0
@@ -1680,8 +1684,7 @@ class MainUI(QtWidgets.QMainWindow):
 
 class TreeItem(QtGui.QStandardItem):
 
-    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, set_editable=False,
-                 color=QtGui.QColor(0, 0, 0), data=0):
+    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, color=QtGui.QColor(0, 0, 0), data=0):
         super().__init__()
 
         font = QtGui.QFont()
@@ -1693,7 +1696,6 @@ class TreeItem(QtGui.QStandardItem):
         self.setFont(font)
         self.setText(text)
         self.setCheckable(set_checkable)
-        self.setEditable(set_editable)
         self.setData(data)
 
         if int(self.data()) == 1:
@@ -1702,42 +1704,44 @@ class TreeItem(QtGui.QStandardItem):
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
 
+class TreeTextItem(QtGui.QStandardItem):
+
+    def __init__(self, text='', font_size=11, set_bold=False, set_editable=False, color=QtGui.QColor(0, 0, 0)):
+        super().__init__()
+
+        font = QtGui.QFont()
+        font.setPointSize(font_size)
+        font.setBold(set_bold)
+
+        self.setEditable(set_editable)
+        self.setForeground(color)
+        self.setFont(font)
+        self.setText(text)
+
+
 class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
     def createEditor(self, parent, option, index):
-        if index.column() == 0:  # Assuming the radio buttons are in the second column
-            editor = QtWidgets.QRadioButton(parent)
-            return editor
-        else:
-            return super().createEditor(parent, option, index)
+        editor = QWidget(parent)
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        radio1 = QRadioButton("Option 1")
+        radio2 = QRadioButton("Option 2")
+        radio3 = QRadioButton("Option 3")
+
+        layout.addWidget(radio1)
+        layout.addWidget(radio2)
+        layout.addWidget(radio3)
+
+        editor.setLayout(layout)
+        return editor
 
     def setEditorData(self, editor, index):
-        value = index.model().data(index, QtCore.ItemDataRole.DisplayRole)
-        editor.setChecked(value)
-
-    def setModelData(self, editor, model, index):
-        if index.column() == 0:
-            model.setData(index, editor.isChecked(), QtCore.Qt.ItemDataRole.EditRole)
-        else:
-            super().setModelData(editor, model, index)
-
-    def editorEvent(self, event, model, option, index):
-        if index.column() == 0:
-            if (event.type() == QtCore.QEvent.Type.MouseButtonRelease and
-                    event.button() == QtCore.Qt.MouseButton.LeftButton):
-                editor = self.sender()
-                if editor:
-                    editor.setChecked(True)
-                    model.setData(index, editor.isChecked(), QtCore.Qt.ItemDataRole.EditRole)
-                    for sibling_index in index.model().match(
-                            index.model().index(0, index.column(), index.parent()),
-                            QtCore.Qt.ItemDataRole.DisplayRole,
-                            "*", -1, QtCore.Qt.MatchFlag.MatchWildcard | QtCore.Qt.MatchFlag.MatchRecursive,
-                    ):
-                        if sibling_index != index:
-                            sibling_index.model().setData(sibling_index, False, QtCore.Qt.ItemDataRole.EditRole)
-                    return True
-        return super().editorEvent(event, model, option, index)
+        pass  # Implement if you need to initialize the editor with data
 
 
 class CustomQLabel(QtWidgets.QLabel):
