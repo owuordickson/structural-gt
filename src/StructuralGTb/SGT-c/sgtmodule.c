@@ -133,7 +133,7 @@ compute_anc(PyObject *self, PyObject *args)
 static char compute_anc_doc[] =
 "A C method that uses iGraph library to compute average node connectivity of a graph.\n"
 "\n"
-"Arguments:\n"
+"Args:\n"
 "   file (string): CSV file with edge list of graph A.\n"
 "   cpus (int): number of available CPUs.\n"
 "   mp (int): allow multi-processing (0: No, 1: Yes).\n"

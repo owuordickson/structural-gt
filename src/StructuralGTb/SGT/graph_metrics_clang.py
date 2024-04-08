@@ -113,6 +113,7 @@ class GraphMetricsClang(GraphMetrics):
 
     def compute_gt_metrics(self):
         """
+        Compute un-weighted graph theory metrics using iGraph and NetworkX libraries.
 
         :return:
         """
