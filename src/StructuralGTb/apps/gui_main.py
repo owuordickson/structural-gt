@@ -602,13 +602,24 @@ class MainUI(QtWidgets.QMainWindow):
         weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.has_weights)
 
-        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200), data=1)
+        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 9, set_checkable=True,
+                                    color=QtGui.QColor(0, 0, 200), data=1)
         by_diameter_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
-        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200), data=0)
-        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
-        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
-        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
-        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, set_checkable=True, color=QtGui.QColor(0, 0, 200))
+        by_area_item = TreeItem(self.gui_txt.weight_by_area, 9, set_checkable=True,
+                                color=QtGui.QColor(0, 0, 200), data=0)
+        by_area_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_length_item = TreeItem(self.gui_txt.weight_by_len, 9, set_checkable=True,
+                                  color=QtGui.QColor(0, 0, 200))
+        by_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 9, set_checkable=True,
+                                      color=QtGui.QColor(0, 0, 200))
+        by_inv_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 9, set_checkable=True,
+                                       color=QtGui.QColor(0, 0, 200))
+        by_conductance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 9, set_checkable=True,
+                                      color=QtGui.QColor(0, 0, 200))
+        by_resistance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
         weighted_item.appendRow(by_diameter_item)
         weighted_item.appendRow(by_area_item)
         weighted_item.appendRow(by_length_item)
@@ -1701,8 +1712,10 @@ class TreeItem(QtGui.QStandardItem):
 
         if int(self.data()) == 1:
             self.setCheckState(QtCore.Qt.CheckState.Checked)
+            # self.setData(QtCore.Qt.CheckState.Checked, QtCore.Qt.ItemDataRole.CheckStateRole)
         elif int(self.data()) == 0:
             self.setCheckState(QtCore.Qt.CheckState.Unchecked)
+            # self.setData(QtCore.Qt.CheckState.Unchecked, QtCore.Qt.ItemDataRole.CheckStateRole)
 
 
 class TreeTextItem(QtGui.QStandardItem):
@@ -1728,6 +1741,7 @@ class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
             style = widget.style() if widget else QtWidgets.QApplication.style()
             opt = QtWidgets.QStyleOptionButton()
             opt.rect = option.rect
+            # opt.palette.setColor(QtGui.QPalette.ColorRole.ButtonText, QtGui.QColor(0, 0, 200))
             opt.text = index.data()
             opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
                 QtWidgets.QStyle.StateFlag.State_Off)
@@ -1736,8 +1750,17 @@ class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
         else:
             QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
 
-    def setEditorData(self, editor, index):
-        pass  # Implement if you need to initialize the editor with data
+    def editorEvent(self, event, model, option, index):
+        value = QtWidgets.QStyledItemDelegate.editorEvent(self, event, model, option, index)
+        if value and (index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Grp1"):
+            if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
+                if index.data(QtCore.Qt.ItemDataRole.CheckStateRole):
+                    parent = index.parent()
+                    for i in range(model.rowCount(parent)):
+                        if i != index.row():
+                            ix = index.sibling(i, 0)
+                            model.setData(ix, False, QtCore.Qt.ItemDataRole.CheckStateRole)
+        return value
 
 
 class CustomQLabel(QtWidgets.QLabel):
