@@ -103,7 +103,7 @@ class GraphSkeleton:
         pix_length = np.linalg.norm(edge_pts[1:]-edge_pts[:-1], axis=1).sum()
 
         # Initialize parameters
-        pixel_dim = pixel_dim * (10**6)  # Convert to micrometers
+        pixel_dim = pixel_dim * (10**9)  # Convert to nanometers
         wt = 1 * (10 ** -9)  # Smallest possible
         weight_options = {
             'DIA':      'Width',
@@ -137,20 +137,28 @@ class GraphSkeleton:
         elif weight_options.get(weight_type) == weight_options.get('DIA'):
             wt = pix_width * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('AREA'):
-            wt = math.pi * (pix_width*pixel_dim)**2
+            wt = math.pi * (pix_width*pixel_dim*0.5)**2
         elif weight_options.get(weight_type) == weight_options.get('LEN'):
             wt = pix_length * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('INV_LEN'):
             wt = (pix_length * pixel_dim)**-1
         elif weight_options.get(weight_type) == weight_options.get('VAR_CON'):
+            # Varies with width
             if pix_width > 0:
-                wt = ((pix_length * pixel_dim * rho_dim)/(math.pi * (pix_width * pixel_dim)**2))**-1
+                length = pix_length * pixel_dim
+                area = math.pi * (pix_width * pixel_dim*0.5)**2
+                wt = ((length * rho_dim)/area)**-1  # Conductance is inverse of resistance
         elif weight_options.get(weight_type) == weight_options.get('FIX_CON'):
-            if pix_width > 0:
-                wt = ((pix_length * pixel_dim * rho_dim) / (math.pi * (1 * pixel_dim)**2))**-1
+            # Fixed width
+            if pix_length > 0:
+                length = pix_length * pixel_dim
+                area = math.pi * (1 * pixel_dim) ** 2
+                wt = ((length * rho_dim) / area) ** -1
         elif weight_options.get(weight_type) == weight_options.get('RES'):
             if pix_width > 0:
-                wt = ((pix_length * pixel_dim * rho_dim) / (math.pi * (pix_width * pixel_dim)**2))
+                length = pix_length * pixel_dim
+                area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+                wt = ((length * rho_dim) / area)
         else:
             raise TypeError('Invalid weight type')
 
