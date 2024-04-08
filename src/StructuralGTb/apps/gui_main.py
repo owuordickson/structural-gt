@@ -85,21 +85,28 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_img_zoom.setObjectName("grp_img_zoom")
         self.grid_layout_zoom = QtWidgets.QGridLayout(self.grp_img_zoom)
         self.grid_layout_zoom.setObjectName("grid_layout_zoom")
-        self.lbl_zoom = QtWidgets.QLabel(parent=self.grp_img_zoom)
-        self.lbl_zoom.setObjectName("lbl_zoom")
-        self.grid_layout_zoom.addWidget(self.lbl_zoom, 0, 2, 1, 1)
+
         self.btn_zoom_out = QtWidgets.QPushButton(parent=self.grp_img_zoom)
         self.btn_zoom_out.setObjectName("btn_zoom_out")
         self.grid_layout_zoom.addWidget(self.btn_zoom_out, 0, 0, 1, 1)
-        self.btn_zoom_in = QtWidgets.QPushButton(parent=self.grp_img_zoom)
-        self.btn_zoom_in.setObjectName("btn_zoom_in")
-        self.grid_layout_zoom.addWidget(self.btn_zoom_in, 0, 4, 1, 1)
+
+        # Spacer
         spacer_item_1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
                                               QtWidgets.QSizePolicy.Policy.Minimum)
         self.grid_layout_zoom.addItem(spacer_item_1, 0, 1, 1, 1)
+
+        self.lbl_zoom = QtWidgets.QLabel(parent=self.grp_img_zoom)
+        self.lbl_zoom.setObjectName("lbl_zoom")
+        self.grid_layout_zoom.addWidget(self.lbl_zoom, 0, 2, 1, 1)
+
+        # Spacer
         spacer_item_2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding,
                                               QtWidgets.QSizePolicy.Policy.Minimum)
         self.grid_layout_zoom.addItem(spacer_item_2, 0, 3, 1, 1)
+
+        self.btn_zoom_in = QtWidgets.QPushButton(parent=self.grp_img_zoom)
+        self.btn_zoom_in.setObjectName("btn_zoom_in")
+        self.grid_layout_zoom.addWidget(self.btn_zoom_in, 0, 4, 1, 1)
         self.grid_layout_img.addWidget(self.grp_img_zoom, 0, 0, 1, 1)
 
         # 1b. Image group
@@ -164,7 +171,39 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_tasks = QtWidgets.QGridLayout(self.grp_tasks)
         self.grid_layout_tasks.setObjectName("grid_layout_tasks")
 
-        # 2a. Enhancing tools group
+        # 2a. Image Properties
+        self.grp_properties = QtWidgets.QGroupBox(parent=self.grp_tasks)
+        self.grp_properties.setObjectName("grp_properties")
+        self.grid_layout_properties = QtWidgets.QGridLayout(self.grp_properties)
+        self.grid_layout_properties.setObjectName("grid_layout_properties")
+
+        self.lbl_scalebar_value = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_scalebar_value.setObjectName("lbl_scalebar_value")
+        self.grid_layout_properties.addWidget(self.lbl_scalebar_value, 0, 0, 1, 1)
+        self.txt_scalebar_val = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_scalebar_val.setObjectName("txt_scalebar_val")
+        self.grid_layout_properties.addWidget(self.txt_scalebar_val, 0, 1, 1, 1)
+
+        self.lbl_scalebar_pixels = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_scalebar_pixels.setObjectName("lbl_scalebar_pixels")
+        self.grid_layout_properties.addWidget(self.lbl_scalebar_pixels, 1, 0, 1, 1)
+        self.txt_scalebar_px = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_scalebar_px.setObjectName("txt_scalebar_px")
+        self.grid_layout_properties.addWidget(self.txt_scalebar_px, 1, 1, 1, 1)
+        self.lbl_resistivity = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_resistivity.setObjectName("lbl_resistivity")
+        self.grid_layout_properties.addWidget(self.lbl_resistivity, 2, 0, 1, 1)
+        self.txt_resistivity = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_resistivity.setObjectName("txt_resistivity")
+        self.grid_layout_properties.addWidget(self.txt_resistivity, 2, 1, 1, 1)
+        self.grid_layout_tasks.addWidget(self.grp_properties, 0, 0, 1, 2)
+
+        # 2b. Spacer
+        spacer_item_2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                              QtWidgets.QSizePolicy.Policy.Expanding)
+        self.grid_layout_tasks.addItem(spacer_item_2, 1, 0, 1, 1)
+
+        # 2c. Enhancing tools group
         self.grp_crop = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
@@ -194,12 +233,14 @@ class MainUI(QtWidgets.QMainWindow):
         self.lbl_contrast = QtWidgets.QLabel(parent=self.grp_crop)
         self.lbl_contrast.setObjectName("lbl_contrast")
         self.grid_layout_crop.addWidget(self.lbl_contrast, 3, 0, 1, 1)
-        self.grid_layout_tasks.addWidget(self.grp_crop, 6, 0, 1, 2)
+        self.grid_layout_tasks.addWidget(self.grp_crop, 2, 0, 1, 2)
+
+        # 2d. Spacer
         spacer_item_2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                               QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_tasks.addItem(spacer_item_2, 9, 0, 1, 1)
+        self.grid_layout_tasks.addItem(spacer_item_2, 3, 0, 1, 1)
 
-        # 2b. Visualizations group
+        # 2e. Visualizations group
         self.grp_graph = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_graph.setObjectName("grp_graph")
         self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
@@ -222,12 +263,14 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_save_files.setObjectName("btn_save_files")
         self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
-        self.grid_layout_tasks.addWidget(self.grp_graph, 8, 0, 1, 2)
-        spacer_item_1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
-                                              QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_tasks.addItem(spacer_item_1, 7, 0, 1, 1)
+        self.grid_layout_tasks.addWidget(self.grp_graph, 4, 0, 1, 2)
 
-        # 2c. Computation group
+        # 2f. Spacer
+        spacer_item_2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                              QtWidgets.QSizePolicy.Policy.Expanding)
+        self.grid_layout_tasks.addItem(spacer_item_2, 5, 0, 1, 1)
+
+        # 2g. Computation group
         self.grp_compute = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_compute.setObjectName("grp_compute")
         self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
@@ -244,12 +287,12 @@ class MainUI(QtWidgets.QMainWindow):
         # self.btn_chaos_gt = QtWidgets.QPushButton(parent=self.grp_compute)
         # self.btn_chaos_gt.setObjectName("btn_chaos_gt")
         # self.grid_layout_compute.addWidget(self.btn_chaos_gt, 4, 0, 1, 1)
-        self.grid_layout_tasks.addWidget(self.grp_compute, 10, 0, 1, 2)
+        self.grid_layout_tasks.addWidget(self.grp_compute, 6, 0, 1, 2)
 
-        # 2d. About Button
+        # 2h. About Button
         self.btn_about = QtWidgets.QPushButton(parent=self.grp_tasks)
         self.btn_about.setObjectName("btn_about")
-        self.grid_layout_tasks.addWidget(self.btn_about, 11, 0, 1, 2)
+        self.grid_layout_tasks.addWidget(self.btn_about, 7, 0, 1, 2)
         self.grid_layout_main.addWidget(self.grp_tasks, 1, 2, 1, 1)
 
         # 3. GROUP IMAGE PATH
@@ -514,6 +557,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_show_graph.setText(_translate("window_main", "Show Graph"))
         self.btn_quick_graph_metrics.setText(_translate("window_main", "Quick Metrics"))
         self.btn_save_files.setText(_translate("window_main", "Save Files"))
+        self.grp_properties.setTitle(_translate("window_main", "Image Properties"))
+        self.lbl_scalebar_value.setText(_translate("window_main", "Scalebar"))
+        self.lbl_scalebar_pixels.setText(_translate("window_main", "Scalebar Pixels"))
+        self.lbl_resistivity.setText(_translate("window_main", "Resistivity"))
+
         self.grp_crop.setTitle(_translate("window_main", "Enhancing Tools"))
         self.btn_crop.setText(_translate("window_main", "Crop"))
         self.lbl_brightness.setText(_translate("window_main", "Brightness"))
