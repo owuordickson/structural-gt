@@ -142,9 +142,9 @@ def load_configs():
     options_path.output_path = config.get('image-dir', 'gt_output_path')
 
     # 2. Image Detection settings
-    options_img.scale_value = int(config.get('image-dir', 'scale_value_nanometers'))
+    options_img.scale_value = float(config.get('image-dir', 'scale_value_nanometers'))
     options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
-    options_img.resistivity = int(config.get('image-dir', 'resistivity'))
+    options_img.resistivity = float(config.get('image-dir', 'resistivity'))
     options_img.threshold_type = int(config.get('filter-settings', 'threshold'))
     options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
     options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))

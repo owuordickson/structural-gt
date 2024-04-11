@@ -88,12 +88,14 @@ class GraphSkeleton:
         self.ep_coord_x = ep_coord_x
         self.ep_coord_y = ep_coord_y
 
-    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, pixel_dim: float = 1, rho_dim: float = 1):
+    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = {},
+                       pixel_dim: float = 1, rho_dim: float = 1):
         """
         Compute and assign weights to a line edge between 2 nodes.
 
         :param edge_pts: a list of pts that trace along a graph edge.
         :param weight_type: basis of computation for the weight (i.e., length, width, resistance, conductance etc.)
+        :param weight_options: weight types to be used in computation of weights.
         :param pixel_dim: physical size of width of a single pixel in nanometers.
         :param rho_dim: the resistivity value of the material.
         :return: width pixel count of edge, computed weight.
@@ -105,16 +107,6 @@ class GraphSkeleton:
         # Initialize parameters
         pixel_dim = pixel_dim * (10**9)  # Convert to nanometers
         wt = 1 * (10 ** -9)  # Smallest possible
-        weight_options = {
-            'DIA':      'Width',
-            'AREA':     'SurfaceArea',
-            'LEN':      'Length',
-            'INV_LEN':  'InverseLength',
-            'VAR_CON':  'VariableWidthConductance',
-            'FIX_CON':  'FixedWidthConductance',
-            'RES':      'Resistance',
-            # '': ''
-        }
 
         if len(edge_pts) < 2:
             # check to see if ge is an empty or unity list, if so, set pixel count to 0

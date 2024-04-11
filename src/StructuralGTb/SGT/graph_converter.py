@@ -228,10 +228,12 @@ class GraphConverter:
                     wt_type = configs.weight_type
                     px_size = self.imp.pixel_width
                     rho_val = self.imp.configs_img.resistivity
+                    weight_options = GraphConverter.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']
                     # pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                    pix_width, wt = graph_skel.assign_weights(ge, wt_type, pixel_dim=px_size, rho_dim=rho_val)
+                    pix_width, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
+                                                              pixel_dim=px_size, rho_dim=rho_val)
                     nx_graph[s][e]['pixel width'] = pix_width
                     nx_graph[s][e]['weight'] = wt
                 else:
@@ -422,6 +424,25 @@ class GraphConverter:
 
     def compute_edge_angle(self):
         pass
+
+    @staticmethod
+    def get_weight_options():
+        """
+        Returns the weight options for building the graph edges.
+
+        :return:
+        """
+        weight_options = {
+            'DIA': 'Width',
+            'AREA': 'Area',  # surface area of edge
+            'LEN': 'Length',
+            'INV_LEN': 'InverseLength',
+            'VAR_CON': 'Conductance',  # with variable width
+            'FIX_CON': 'FixedWidthConductance',
+            'RES': 'Resistance',
+            # '': ''
+        }
+        return weight_options
 
 
 class GraphComponents:

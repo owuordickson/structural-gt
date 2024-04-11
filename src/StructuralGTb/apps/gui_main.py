@@ -560,7 +560,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_properties.setTitle(_translate("window_main", "Microscopy Properties"))
         self.lbl_scalebar_value.setText(_translate("window_main", "Scalebar (nm)"))
         self.lbl_scalebar_pixels.setText(_translate("window_main", "Pixel Count\n(scalebar)"))
-        self.lbl_resistivity.setText(_translate("window_main", r"Resistivity ($\omega$m)"))
+        self.lbl_resistivity.setText(_translate("window_main", "Resistivity (<html>&Omega;</html>m)"))
 
         self.grp_crop.setTitle(_translate("window_main", "Enhancing Tools"))
         self.btn_crop.setText(_translate("window_main", "Crop"))
@@ -1452,9 +1452,9 @@ class MainUI(QtWidgets.QMainWindow):
             options_img.scale_value = float(self.txt_scalebar_val.text())
             options_img.scalebar_px_count = int(self.txt_scalebar_px.text())
             options_img.resistivity = float(self.txt_resistivity.text())
-            print(f"scale: {options_img.scale_value}, pixels: {options_img.scalebar_px_count}, res: {options_img.resistivity}")
         except ValueError:
-            dialog = CustomDialog("Input Error!", 'Please enter only numbers.')
+            dialog = CustomDialog("Input Error!",
+                                  "Please enter only numbers in the 'Microscopy Properties' section.")
             dialog.exec()
 
         options_img.threshold_global = int(self.lbl_global_threshold_value.text())
@@ -1493,8 +1493,19 @@ class MainUI(QtWidgets.QMainWindow):
         options_gte.remove_self_loops = 0
         options_gte.is_multigraph = 0
         options_gte.has_weights = 0
-        # options_gte.weight_type = 'DIA'
+        options_gte.weight_type = 'DIA'
         options_gte.display_node_id = 0
+
+        weight_options = {
+            self.gui_txt.weight_by_dia: 'DIA',
+            self.gui_txt.weight_by_area: 'AREA',
+            self.gui_txt.weight_by_len: 'LEN',
+            self.gui_txt.weight_by_inv_len: 'INV_LEN',
+            self.gui_txt.weight_by_var_con: 'VAR_CON',
+            # self.gui_txt.weight_by_fix_con: 'FIX_CON',
+            self.gui_txt.weight_by_res: 'RES',
+            # '': ''
+        }
 
         model = self.tree_settings.model()
         root_index = model.index(0, 0)  # Assuming the root index is at row 0, column 0
@@ -1517,6 +1528,19 @@ class MainUI(QtWidgets.QMainWindow):
                 if item.text() == self.gui_txt.weighted:
                     options_gte.has_weights = 1
                     # sub_items = item.
+                    if item.child(0).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(0).text())
+                    elif item.child(1).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(1).text())
+                    elif item.child(2).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(2).text())
+                    elif item.child(3).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(3).text())
+                    elif item.child(4).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(4).text())
+                    elif item.child(5).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(5).text())
+                    # print(f"weight type: {options_gte.weight_type}")
                 if item.text() == self.gui_txt.node_id:
                     options_gte.display_node_id = 1
 

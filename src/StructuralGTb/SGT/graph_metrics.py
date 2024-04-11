@@ -368,6 +368,7 @@ class GraphMetrics:
 
         graph = self.gc.nx_graph
         options = self.configs
+        weight_type = GraphConverter.get_weight_options().get(self.gc.configs_graph.weight_type)
         data_dict = {"x": [], "y": []}
 
         if graph.number_of_nodes() <= 0:
@@ -387,7 +388,7 @@ class GraphMetrics:
             self.update_status([74, "Compute weighted wiener index..."])
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
-            data_dict["x"].append("Length-weighted Wiener Index")
+            data_dict["x"].append(f"{weight_type}-weighted Wiener Index")
             data_dict["y"].append(w_index)
 
         if options.compute_nodal_connectivity == 1:
@@ -421,7 +422,7 @@ class GraphMetrics:
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             b_val = round(np.average(b_distribution), 5)
             self.weighted_betweenness_distribution = b_distribution
-            data_dict["x"].append("Width-weighted average betweenness centrality")
+            data_dict["x"].append(f"{weight_type}-weighted average betweenness centrality")
             data_dict["y"].append(b_val)
 
         if options.display_closeness_histogram == 1:
@@ -430,7 +431,7 @@ class GraphMetrics:
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             c_val = round(np.average(close_distribution), 5)
             self.weighted_closeness_distribution = close_distribution
-            data_dict["x"].append("Length-weighted average closeness centrality")
+            data_dict["x"].append(f"{weight_type}-weighted average closeness centrality")
             data_dict["y"].append(c_val)
 
         if options.display_eigenvector_histogram == 1:
@@ -445,7 +446,7 @@ class GraphMetrics:
             e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
             e_val = round(np.average(e_vecs), 5)
             self.weighted_eigenvector_distribution = e_vecs
-            data_dict["x"].append("Width-weighted average eigenvector centrality")
+            data_dict["x"].append(f"{weight_type}-weighted average eigenvector centrality")
             data_dict["y"].append(e_val)
 
         # calculating graph conductance
@@ -829,6 +830,7 @@ class GraphMetrics:
         opt_gtc = self.configs
         figs = []
 
+        weight_type = GraphConverter.get_weight_options().get(opt_gte.weight_type)
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
         cluster_coefs = self.clustering_coefficients
@@ -888,17 +890,17 @@ class GraphMetrics:
                 GraphMetrics.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
             if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
-                w_bt_title = r"Width-Weighted Betweenness: $\sigma$="
+                w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
                 GraphMetrics.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc.display_closeness_histogram == 1:
-                w_clo_title = r"Length-Weighted Closeness: $\sigma$="
+                w_clo_title = weight_type + r"-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
                 GraphMetrics.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
             if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
-                w_ec_title = r"Width-Weighted Eigenvector Cent.: $\sigma$="
+                w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
                 GraphMetrics.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
@@ -915,6 +917,7 @@ class GraphMetrics:
         opt_gte = self.gc.configs_graph
         opt_gtc = self.configs
 
+        weight_type = GraphConverter.get_weight_options().get(opt_gte.weight_type)
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
         cluster_coefs = self.clustering_coefficients
@@ -945,20 +948,20 @@ class GraphMetrics:
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_heatmap(w_bet_distribution, 'Width-Weighted Betweenness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_bet_distribution, f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc.display_closeness_histogram == 1:
             fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.has_weights == 1):
-            fig = self.plot_heatmap(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_clo_distribution, f'{weight_type}-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_heatmap(w_eig_distribution, 'Width-Weighted Eigenvector Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_eig_distribution, f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 
