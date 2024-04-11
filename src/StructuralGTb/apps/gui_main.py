@@ -802,6 +802,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.tree_settings.setItemDelegate(delegate)
 
     def _init_img_filter_settings(self, options_img):
+        # Microscopy properties
+        self.txt_scalebar_val.setText(str(options_img.scale_value))
+        self.txt_scalebar_px.setText(str(options_img.scalebar_px_count))
+        self.txt_resistivity.setText(str(options_img.resistivity))
+
         # range between 0.01-5.0
         self.sld_lut_gamma.setValue(int(options_img.gamma * 100))
         self.lbl_lut_gamma.setText(str(options_img.gamma))
