@@ -559,8 +559,8 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_save_files.setText(_translate("window_main", "Save Files"))
         self.grp_properties.setTitle(_translate("window_main", "Microscopy Properties"))
         self.lbl_scalebar_value.setText(_translate("window_main", "Scalebar (nm)"))
-        self.lbl_scalebar_pixels.setText(_translate("window_main", "Scalebar Pixels"))
-        self.lbl_resistivity.setText(_translate("window_main", "Resistivity"))
+        self.lbl_scalebar_pixels.setText(_translate("window_main", "Pixel Count\n(scalebar)"))
+        self.lbl_resistivity.setText(_translate("window_main", r"Resistivity ($\omega$m)"))
 
         self.grp_crop.setTitle(_translate("window_main", "Enhancing Tools"))
         self.btn_crop.setText(_translate("window_main", "Crop"))
@@ -652,22 +652,22 @@ class MainUI(QtWidgets.QMainWindow):
 
         by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 7, set_checkable=True,
                                     color=QtGui.QColor(0, 0, 200), data=1)
-        by_diameter_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_diameter_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_area_item = TreeItem(self.gui_txt.weight_by_area, 7, set_checkable=True,
                                 color=QtGui.QColor(0, 0, 200), data=0)
-        by_area_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_area_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_length_item = TreeItem(self.gui_txt.weight_by_len, 7, set_checkable=True,
                                   color=QtGui.QColor(0, 0, 200))
-        by_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 7, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
-        by_inv_length_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_inv_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 7, set_checkable=True,
                                        color=QtGui.QColor(0, 0, 200))
-        by_conductance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_conductance_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 7, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
-        by_resistance_item.setData('RdoItem_Grp1', QtCore.Qt.ItemDataRole.UserRole)
+        by_resistance_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         weighted_item.appendRow(by_diameter_item)
         weighted_item.appendRow(by_area_item)
         weighted_item.appendRow(by_length_item)
@@ -1448,9 +1448,14 @@ class MainUI(QtWidgets.QMainWindow):
         else:
             options_img.threshold_type = 0
 
-        # options_img.scale_value = 0
-        # options_img.scalebar_px_count = 0
-        # options_img.resistivity = 1
+        try:
+            options_img.scale_value = float(self.txt_scalebar_val.text())
+            options_img.scalebar_px_count = int(self.txt_scalebar_px.text())
+            options_img.resistivity = float(self.txt_resistivity.text())
+            print(f"scale: {options_img.scale_value}, pixels: {options_img.scalebar_px_count}, res: {options_img.resistivity}")
+        except ValueError:
+            dialog = CustomDialog("Input Error!", 'Please enter only numbers.')
+            dialog.exec()
 
         options_img.threshold_global = int(self.lbl_global_threshold_value.text())
         options_img.threshold_adaptive = int(self.spb_adaptive_threshold.text())
@@ -1511,6 +1516,7 @@ class MainUI(QtWidgets.QMainWindow):
                     options_gte.is_multigraph = 1
                 if item.text() == self.gui_txt.weighted:
                     options_gte.has_weights = 1
+                    # sub_items = item.
                 if item.text() == self.gui_txt.node_id:
                     options_gte.display_node_id = 1
 
@@ -1809,7 +1815,7 @@ class TreeTextItem(QtGui.QStandardItem):
 class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(self, painter, option, index):
-        if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Grp1":
+        if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Wt":
             # painter.save()
             widget = option.widget
             style = widget.style() if widget else QtWidgets.QApplication.style()
@@ -1833,7 +1839,7 @@ class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def editorEvent(self, event, model, option, index):
         value = QtWidgets.QStyledItemDelegate.editorEvent(self, event, model, option, index)
-        if value and (index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Grp1"):
+        if value and (index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Wt"):
             if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
                 if index.data(QtCore.Qt.ItemDataRole.CheckStateRole):
                     parent = index.parent()
