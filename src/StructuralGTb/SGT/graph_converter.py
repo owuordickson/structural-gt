@@ -206,7 +206,7 @@ class GraphConverter:
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
                         pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                        nx_graph[s][e][k]['pixel width'] = pix_width
+                        nx_graph[s][e][k]['width'] = pix_width
                         nx_graph[s][e][k]['weight'] = wt
                 else:
                     for k in range(int(len(nx_graph[s][e]))):
@@ -219,7 +219,7 @@ class GraphConverter:
             for (s, e) in nx_graph.edges():
                 # 'sknw' library stores length of edge and calls it weight, we reverse this
                 # we create a new attribute 'length', later delete/modify 'weight'
-                nx_graph[s][e]['pixel length'] = nx_graph[s][e]['weight']
+                nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
                 #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
                 #        nx_graph[s][e]['length'] = 2
 
@@ -234,7 +234,7 @@ class GraphConverter:
                     # pix_width, wt = graph_skel.assign_weights_by_width(ge)
                     pix_width, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                               pixel_dim=px_size, rho_dim=rho_val)
-                    nx_graph[s][e]['pixel width'] = pix_width
+                    nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['weight'] = wt
                 else:
                     # delete 'weight'

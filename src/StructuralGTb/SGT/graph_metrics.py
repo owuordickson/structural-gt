@@ -381,14 +381,14 @@ class GraphMetrics:
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             deg_val = round(np.average(deg_distribution), 5)
             self.weighted_degree_distribution = deg_distribution
-            data_dict["x"].append("Weighted average degree")
+            data_dict["x"].append(f"{weight_type}-weighted average degree")
             data_dict["y"].append(deg_val)
 
         if options.compute_wiener_index == 1:
             self.update_status([74, "Compute weighted wiener index..."])
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
-            data_dict["x"].append(f"{weight_type}-weighted Wiener Index")
+            data_dict["x"].append("Length-weighted Wiener Index")
             data_dict["y"].append(w_index)
 
         if options.compute_nodal_connectivity == 1:
@@ -411,9 +411,9 @@ class GraphMetrics:
 
         if options.compute_assortativity_coef == 1:
             self.update_status([78, "Compute weighted assortativity..."])
-            a_coef = degree_assortativity_coefficient(graph, weight='pixel width')
+            a_coef = degree_assortativity_coefficient(graph, weight='width')
             a_coef = round(a_coef, 5)
-            data_dict["x"].append("Weighted assortativity coefficient")
+            data_dict["x"].append("Width-weighted assortativity coefficient")
             data_dict["y"].append(a_coef)
 
         if options.display_betweenness_histogram == 1:
@@ -431,7 +431,7 @@ class GraphMetrics:
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             c_val = round(np.average(close_distribution), 5)
             self.weighted_closeness_distribution = close_distribution
-            data_dict["x"].append(f"{weight_type}-weighted average closeness centrality")
+            data_dict["x"].append("Length-weighted average closeness centrality")
             data_dict["y"].append(c_val)
 
         if options.display_eigenvector_histogram == 1:
@@ -895,7 +895,7 @@ class GraphMetrics:
                 GraphMetrics.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc.display_closeness_histogram == 1:
-                w_clo_title = weight_type + r"-Weighted Closeness: $\sigma$="
+                w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
                 GraphMetrics.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
@@ -954,7 +954,7 @@ class GraphMetrics:
             fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_closeness_histogram == 1) and (opt_gte.has_weights == 1):
-            fig = self.plot_heatmap(w_clo_distribution, f'{weight_type}-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
@@ -987,40 +987,45 @@ class GraphMetrics:
         if opt_img.threshold_type == 0:
             run_info = run_info + "Global Threshold (" + str(opt_img.threshold_global) + ")"
         elif opt_img.threshold_type == 1:
-            run_info = run_info + " || Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
+            run_info = run_info + "Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
         elif opt_img.threshold_type == 2:
-            run_info = run_info + " || OTSU Threshold"
+            run_info = run_info + "OTSU Threshold"
         if opt_img.gamma != 1:
-            run_info = run_info + "|| Gamma = " + str(opt_img.gamma)
-        run_info = run_info + "\n"
+            run_info = run_info + f"Gamma = {opt_img.gamma} || "
+        run_info = run_info + "\n "
         if opt_img.apply_median:
-            run_info = run_info + " || Median Filter"
+            run_info = run_info + "Median Filter || "
         if opt_img.apply_gaussian:
-            run_info = run_info + " || Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel"
+            run_info = run_info + "Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel || "
         if opt_img.apply_autolevel:
-            run_info = run_info + " || Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel"
-        run_info = run_info + "\n"
+            run_info = run_info + "Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel || "
+        run_info = run_info + "\n "
         if opt_img.apply_dark_foreground:
-            run_info = run_info + " || Dark Foreground"
+            run_info = run_info + "Dark Foreground || "
         if opt_img.apply_laplacian:
-            run_info = run_info + " || Laplacian Gradient"
+            run_info = run_info + "Laplacian Gradient || "
         if opt_img.apply_scharr:
-            run_info = run_info + " || Scharr Gradient"
+            run_info = run_info + "Scharr Gradient || "
         if opt_img.apply_sobel:
-            run_info = run_info + " || Sobel Gradient"
+            run_info = run_info + "Sobel Gradient || "
         if opt_img.apply_lowpass:
-            run_info = run_info + " || Low-pass filter, " + str(opt_img.lowpass_window_size)
-        run_info = run_info + "\n"
+            run_info = run_info + "Low-pass filter, " + str(opt_img.lowpass_window_size) + " window size || "
+        run_info = run_info + f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} "
+        run_info = run_info + "\n "
         if opt_gte.merge_nearby_nodes:
             run_info = run_info + "Merge Nodes"
         if opt_gte.prune_dangling_edges:
             run_info = run_info + " || Prune Dangling Edges"
         if opt_gte.remove_disconnected_segments:
-            run_info = run_info + " || Remove Objects of Size " + str(opt_gte.remove_object_size)
+            run_info = run_info + " || Remove Objects of Size = " + str(opt_gte.remove_object_size)
         if opt_gte.remove_self_loops:
             run_info = run_info + " || Remove Self Loops"
         if opt_gte.is_multigraph:
             run_info = run_info + " || Multi-graph allowed"
+        run_info = run_info + "\n\n "
+        run_info = run_info + f"Scalebar Value = {opt_img.scale_value} nm"
+        run_info = run_info + f" || Scalebar Pixel Count = {opt_img.scalebar_px_count}\n"
+        run_info = run_info + f"Resistivity = {opt_img.scalebar_px_count}" + r"$\Omega$m"
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
