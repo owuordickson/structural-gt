@@ -1480,7 +1480,16 @@ class MainUI(QtWidgets.QMainWindow):
         """
 
         options_gte = self.configs_data['extraction_options']
+
+        # Reset all parameter options
+        options_gte.merge_nearby_nodes = 0
+        options_gte.prune_dangling_edges = 0
+        options_gte.remove_disconnected_segments = 0
+        options_gte.remove_self_loops = 0
+        options_gte.is_multigraph = 0
+        options_gte.has_weights = 0
         # options_gte.weight_type = 'DIA'
+        options_gte.display_node_id = 0
 
         model = self.tree_settings.model()
         root_index = model.index(0, 0)  # Assuming the root index is at row 0, column 0
@@ -1537,6 +1546,22 @@ class MainUI(QtWidgets.QMainWindow):
         :return:
         """
         options_gtc = self.configs_data['sgt_options']
+
+        # Reset all parameter options
+        options_gtc.display_heatmaps = 0
+        options_gtc.display_degree_histogram = 0
+        options_gtc.display_betweenness_histogram = 0
+        options_gtc.display_currentflow_histogram = 0
+        options_gtc.display_closeness_histogram = 0
+        options_gtc.display_eigenvector_histogram = 0
+        options_gtc.compute_nodal_connectivity = 0
+        options_gtc.compute_graph_density = 0
+        options_gtc.compute_graph_conductance = 0
+        options_gtc.compute_global_efficiency = 0
+        options_gtc.compute_clustering_coef = 0
+        options_gtc.compute_assortativity_coef = 0
+        options_gtc.compute_network_diameter = 0
+        options_gtc.compute_wiener_index = 0
 
         if self.cbx_igraph.isChecked():
             options_gtc.compute_lang = 'C'

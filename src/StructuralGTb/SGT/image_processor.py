@@ -99,7 +99,7 @@ class ImageProcessor:
             px_width = ImageProcessor.compute_pixel_width(configs.scale_value, configs.scalebar_px_count)
             self.pixel_width = px_width/self.scale_factor
         else:
-            self.pixel_width = 1 * (10**-6)  # 1 micrometer
+            self.pixel_width = 1 * (10**-9)  # 1 nanometer
 
     def process_img(self, image: MatLike):
         """
