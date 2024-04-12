@@ -1095,6 +1095,8 @@ class MainUI(QtWidgets.QMainWindow):
                     self._load_image('O')
                 except Exception as err:
                     print(err)
+                    dialog = CustomDialog("Cropping Error", "Unable to crop image! Try again.")
+                    dialog.exec()
         except IndexError:
             dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
@@ -1191,6 +1193,8 @@ class MainUI(QtWidgets.QMainWindow):
                     dialog.exec()
                 except Exception as err:
                     print(err)
+                    dialog = CustomDialog("File Save Error", "Unable to save files! Try again.")
+                    dialog.exec()
             else:
                 dialog = CustomDialog("Graph Error", "First click on 'Show Graph'...")
                 dialog.exec()
@@ -1982,6 +1986,9 @@ class Worker(QtCore.QThread):
             # self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
+            self.abort = True
+            self.update_progress(-1, "Error encountered! Try again")
+            self.signals.finished.emit(0, 1, [])
 
     def service_generate_graph(self, graph_obj, options_img, options_gte):
         try:
@@ -1996,6 +2003,9 @@ class Worker(QtCore.QThread):
             self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
+            self.abort = True
+            self.update_progress(-1, "Error encountered! Try again")
+            self.signals.finished.emit(1, 1, [])
 
     def service_compute_gt(self, graph_obj, options_img, options_gte, options_gtc):
         try:
@@ -2042,6 +2052,9 @@ class Worker(QtCore.QThread):
             self.signals.finished.emit(2, 1, plot_figs)
         except Exception as err:
             print(err)
+            self.abort = True
+            self.update_progress(-1, "Error encountered! Try again")
+            self.signals.finished.emit(2, 1, [])
 
     def service_compute_gt_all(self, graph_objs, out_path, options_img, options_gte, options_gtc):
         i = 0
@@ -2110,6 +2123,9 @@ class Worker(QtCore.QThread):
                 print(output)
             except Exception as err:
                 print(err)
+                self.abort = True
+                self.update_progress(-1, "Error encountered! Try again")
+                self.signals.finished.emit(3, 0, [])
         self.signals.finished.emit(3, 1, [])
 
 
