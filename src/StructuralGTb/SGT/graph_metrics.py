@@ -27,11 +27,12 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
+from .progress_update import ProgressUpdate
 from .graph_converter import GraphConverter
 from .image_processor import ImageProcessor
 
 
-class GraphMetrics:
+class GraphMetrics(ProgressUpdate):
     """
     A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
@@ -114,8 +115,7 @@ class GraphMetrics:
         >>> metrics_obj.generate_pdf_output()
 
         """
-        self.__listeners = []
-        self.abort = False
+        super(GraphMetrics, self).__init__()
         self.allow_mp = allow_multiprocessing
         self.gc = g_obj
         self.configs = configs
@@ -133,46 +133,6 @@ class GraphMetrics:
         self.currentflow_distribution = [0]
         self.weighted_closeness_distribution = [0]
         self.weighted_eigenvector_distribution = [0]
-
-    def abort_tasks(self):
-        """
-        Set abort flag.
-        :return:
-        """
-        self.abort = True
-
-    def add_listener(self, func: ()):
-        """
-        Add functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func in self.__listeners:
-            return
-        self.__listeners.append(func)
-
-    def remove_listener(self, func):
-        """
-        Remove functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func not in self.__listeners:
-            return
-        self.__listeners.remove(func)
-
-    def update_status(self, args=None):
-        """
-        Run all the functions that are saved as listeners.
-
-        :param args:
-        :return:
-        """
-        # Trigger events.
-        if args is None:
-            args = []
-        for func in self.__listeners:
-            func(*args)
 
     def compute_gt_metrics(self):
         """
@@ -948,7 +908,8 @@ class GraphMetrics:
             figs.append(fig)
         if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_heatmap(w_bet_distribution, f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_bet_distribution,
+                                    f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc.display_closeness_histogram == 1:
             fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
@@ -961,7 +922,8 @@ class GraphMetrics:
             figs.append(fig)
         if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.has_weights == 1) and \
                 (opt_gte.is_multigraph == 0):
-            fig = self.plot_heatmap(w_eig_distribution, f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(w_eig_distribution,
+                                    f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 

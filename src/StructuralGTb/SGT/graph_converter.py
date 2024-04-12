@@ -18,11 +18,12 @@ import scipy as sp
 import networkx as nx
 from ypstruct import struct
 import matplotlib.pyplot as plt
+from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
 from .image_processor import ImageProcessor
 
 
-class GraphConverter:
+class GraphConverter(ProgressUpdate):
     """
     A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
@@ -80,8 +81,7 @@ class GraphConverter:
         >>> graph_obj = GraphConverter(imp_obj, options_gte=opt_gte)
         >>> graph_obj.fit()
         """
-        self.__listeners = []
-        self.abort = False
+        super(GraphConverter, self).__init__()
         self.terminal_app = True
         self.configs_graph = options_gte
         self.imp = img_obj
@@ -89,46 +89,6 @@ class GraphConverter:
         self.graph_plt = None
         self.nx_graph, self.nx_info = None, []
         self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
-
-    def abort_tasks(self):
-        """
-        Set abort flag.
-        :return:
-        """
-        self.abort = True
-
-    def add_listener(self, func: ()):
-        """
-        Add functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func in self.__listeners:
-            return
-        self.__listeners.append(func)
-
-    def remove_listener(self, func):
-        """
-        Remove functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func not in self.__listeners:
-            return
-        self.__listeners.remove(func)
-
-    def update_status(self, args=None):
-        """
-        Run all the functions that are saved as listeners.
-
-        :param args:
-        :return:
-        """
-        # Trigger events.
-        if args is None:
-            args = []
-        for func in self.__listeners:
-            func(*args)
 
     def fit(self):
         """
