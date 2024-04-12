@@ -217,6 +217,10 @@ class ImageProcessor:
 
         # adaptive threshold generation
         elif options.threshold_type == 1:
+            if self.configs_img.threshold_adaptive <= 1:
+                # Bug fix (crushes app)
+                self.configs_img.threshold_adaptive = 3
+
             if options.apply_dark_foreground == 1:
                 img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                                 cv2.THRESH_BINARY_INV, options.threshold_adaptive, 2)
