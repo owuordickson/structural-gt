@@ -1090,8 +1090,7 @@ class MainUI(QtWidgets.QMainWindow):
                     q_img = crop_tool.image.toImage()
                     img_pil = ImageQt.fromqimage(q_img)
                     img_crop = ImageProcessor.load_img_from_pil(img_pil)
-                    img = ImageProcessor.resize_img(512, img_crop)
-                    g_obj.imp.img = img
+                    g_obj.imp.img, g_obj.imp.scale_factor = ImageProcessor.resize_img(512, img_crop)
                     g_obj.reset()
                     self._load_image('O')
                 except Exception as err:
