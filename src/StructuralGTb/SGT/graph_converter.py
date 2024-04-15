@@ -86,7 +86,6 @@ class GraphConverter(ProgressUpdate):
         self.configs_graph = options_gte
         self.imp = img_obj
         self.graph_skeleton = None
-        self.graph_plt = None
         self.nx_graph, self.nx_info = None, []
         self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
 
@@ -126,7 +125,8 @@ class GraphConverter(ProgressUpdate):
                                                                             self.nx_graph)
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
-                self.graph_plt, self.imp.img_net = self.draw_graph_network()
+                graph_plt = self.draw_graph_network()
+                self.imp.img_net = ImageProcessor.plot_to_img(graph_plt)
 
     def reset(self):
         """
@@ -249,7 +249,7 @@ class GraphConverter(ProgressUpdate):
 
         if len(nx_components) > 0:
             if a4_size:
-                fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+                fig = plt.Figure(figsize=(8.5, 11), dpi=400)
                 ax = fig.add_subplot(1, 1, 1)
                 ax.set_title("Graph Sub-networks")
             else:
@@ -283,7 +283,7 @@ class GraphConverter(ProgressUpdate):
                     ge = nx_graph[s][e]['pts']
                     ax.plot(ge[:, 1], ge[:, 0], 'red')
 
-        return fig, ImageProcessor.plot_to_img(fig)
+        return fig
 
     def save_files(self, opt_gte: struct = None):
         """

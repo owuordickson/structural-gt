@@ -316,6 +316,19 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Average current-flow betweenness centrality")
             data_dict["y"].append(cf_val)
 
+        # calculate cross-sectional area of edges
+        if self.gc.configs_graph.weight_type == 'AREA':
+            self.update_status([68, "Computing average (edge) cross-sectional area..."])
+            temp_distribution = []
+            for (s, e) in graph.edges():
+                temp_distribution.append(graph[s][e]['weight'])
+            a_distribution = np.array(temp_distribution, dtype=float)
+            ae_val = np.average(a_distribution)
+            ae_val = round(ae_val, 5)
+            data_dict["x"].append("Average edge cross-sectional area (nm)")
+            data_dict["y"].append(ae_val)
+            print(ae_val)
+
         self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
@@ -439,7 +452,7 @@ class GraphMetrics(ProgressUpdate):
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig, _ = self.gc.draw_graph_network(a4_size=True)
+        fig = self.gc.draw_graph_network(a4_size=True)
         if fig:
             out_figs.append(fig)
 
@@ -525,7 +538,7 @@ class GraphMetrics(ProgressUpdate):
             pdf.savefig(fig)  # causes PyQt5 to crash
 
             # 3. plotting sub-graph network
-            fig, _ = self.gc.draw_graph_network(a4_size=True)
+            fig = self.gc.draw_graph_network(a4_size=True)
             if fig:
                 pdf.savefig(fig)
 
@@ -987,7 +1000,7 @@ class GraphMetrics(ProgressUpdate):
         run_info = run_info + "\n\n "
         run_info = run_info + f"Scalebar Value = {opt_img.scale_value} nm"
         run_info = run_info + f" || Scalebar Pixel Count = {opt_img.scalebar_px_count}\n"
-        run_info = run_info + f"Resistivity = {opt_img.scalebar_px_count}" + r"$\Omega$m"
+        run_info = run_info + f"Resistivity = {opt_img.resistivity}" + r"$\Omega$m"
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
