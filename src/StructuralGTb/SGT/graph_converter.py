@@ -267,7 +267,7 @@ class GraphConverter(ProgressUpdate):
                     ax.plot(ge[:, 1], ge[:, 0], color)
         else:
             if a4_size:
-                return None, None
+                return None
             else:
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure

@@ -316,18 +316,6 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Average current-flow betweenness centrality")
             data_dict["y"].append(cf_val)
 
-        # calculate cross-sectional area of edges
-        if self.gc.configs_graph.weight_type == 'AREA':
-            self.update_status([68, "Computing average (edge) cross-sectional area..."])
-            temp_distribution = []
-            for (s, e) in graph.edges():
-                temp_distribution.append(graph[s][e]['weight'])
-            a_distribution = np.array(temp_distribution, dtype=float)
-            ae_val = np.average(a_distribution)
-            ae_val = round(ae_val, 5)
-            data_dict["x"].append("Average edge cross-sectional area (nm)")
-            data_dict["y"].append(ae_val)
-
         self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
@@ -428,6 +416,18 @@ class GraphMetrics(ProgressUpdate):
             for item in self.gc.nx_info:
                 data_dict["x"].append((str("Weighted ") + str(item["name"])))
                 data_dict["y"].append((str("Weighted ") + str(item["value"])))
+
+        # calculate cross-sectional area of edges
+        if self.gc.configs_graph.weight_type == 'AREA':
+            self.update_status([68, "Computing average (edge) cross-sectional area..."])
+            temp_distribution = []
+            for (s, e) in graph.edges():
+                temp_distribution.append(graph[s][e]['weight'])
+            a_distribution = np.array(temp_distribution, dtype=float)
+            ae_val = np.average(a_distribution)
+            ae_val = round(ae_val, 5)
+            data_dict["x"].append("Average edge cross-sectional area (nm)")
+            data_dict["y"].append(ae_val)
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
@@ -565,7 +565,7 @@ class GraphMetrics(ProgressUpdate):
             pdf.savefig(fig)
         self.gc.save_files()
 
-    # def compute_betweenness_centrality(self):
+        # def compute_betweenness_centrality(self):
         """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
 
@@ -965,15 +965,15 @@ class GraphMetrics(ProgressUpdate):
         elif opt_img.threshold_type == 2:
             run_info = run_info + "OTSU Threshold"
         if opt_img.gamma != 1:
-            run_info = run_info + f"Gamma = {opt_img.gamma} || "
-        run_info = run_info + "\n "
+            run_info = run_info + f"|| Gamma = {opt_img.gamma}"
+        run_info = run_info + "\n"
         if opt_img.apply_median:
             run_info = run_info + "Median Filter || "
         if opt_img.apply_gaussian:
             run_info = run_info + "Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel || "
         if opt_img.apply_autolevel:
             run_info = run_info + "Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel || "
-        run_info = run_info + "\n "
+        run_info = run_info + "\n"
         if opt_img.apply_dark_foreground:
             run_info = run_info + "Dark Foreground || "
         if opt_img.apply_laplacian:
@@ -985,7 +985,7 @@ class GraphMetrics(ProgressUpdate):
         if opt_img.apply_lowpass:
             run_info = run_info + "Low-pass filter, " + str(opt_img.lowpass_window_size) + " window size || "
         run_info = run_info + f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} "
-        run_info = run_info + "\n "
+        run_info = run_info + "\n\n"
         if opt_gte.merge_nearby_nodes:
             run_info = run_info + "Merge Nodes"
         if opt_gte.prune_dangling_edges:
@@ -996,7 +996,7 @@ class GraphMetrics(ProgressUpdate):
             run_info = run_info + " || Remove Self Loops"
         if opt_gte.is_multigraph:
             run_info = run_info + " || Multi-graph allowed"
-        run_info = run_info + "\n\n "
+        run_info = run_info + "\n\n"
         run_info = run_info + f"Scalebar Value = {opt_img.scale_value} nm"
         run_info = run_info + f" || Scalebar Pixel Count = {opt_img.scalebar_px_count}\n"
         run_info = run_info + f"Resistivity = {opt_img.resistivity}" + r"$\Omega$m"
