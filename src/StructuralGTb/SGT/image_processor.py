@@ -109,6 +109,9 @@ class ImageProcessor:
         :return: None
         """
 
+        if image is None:
+            return None
+
         options = self.configs_img
         filtered_img = ImageProcessor.control_brightness(image, options.brightness_level, options.contrast_level)
 
@@ -206,7 +209,7 @@ class ImageProcessor:
         otsu_res = 0
 
         if image is None:
-            return None
+            return None, None
 
         # applying universal threshold, checking if it should be inverted (dark foreground)
         if options.threshold_type == 0:

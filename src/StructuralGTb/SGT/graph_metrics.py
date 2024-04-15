@@ -327,7 +327,6 @@ class GraphMetrics(ProgressUpdate):
             ae_val = round(ae_val, 5)
             data_dict["x"].append("Average edge cross-sectional area (nm)")
             data_dict["y"].append(ae_val)
-            print(ae_val)
 
         self.output_data = pd.DataFrame(data_dict)
 
