@@ -426,7 +426,7 @@ class GraphMetrics(ProgressUpdate):
             a_distribution = np.array(temp_distribution, dtype=float)
             ae_val = np.average(a_distribution)
             ae_val = round(ae_val, 5)
-            data_dict["x"].append("Average edge cross-sectional area (nm)")
+            data_dict["x"].append(f"Average edge cross-sectional area (nm\u00b2)")
             data_dict["y"].append(ae_val)
 
         self.weighted_output_data = pd.DataFrame(data_dict)
