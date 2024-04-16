@@ -431,54 +431,6 @@ class GraphMetrics(ProgressUpdate):
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
-    def generate_output(self):
-        """
-        Generate results as graphs and plots.
-        :return: list of results.
-        """
-
-        opt_gtc = self.configs
-        out_figs = []
-
-        self.update_status([90, "Generating PDF GT Output..."])
-
-        # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        fig = self.display_images()
-        out_figs.append(fig)
-
-        # 2. plotting skeletal images
-        fig = self.display_skeletal_images()
-        out_figs.append(fig)
-
-        # 3. plotting sub-graph network
-        fig = self.gc.draw_graph_network(a4_size=True)
-        if fig:
-            out_figs.append(fig)
-
-        # 4. displaying all the GT calculations in Table  on entire page
-        fig, fig_wt = self.display_gt_results()
-        out_figs.append(fig)
-        if fig_wt:
-            out_figs.append(fig_wt)
-
-        # 5. displaying histograms
-        self.update_status([92, "Generating histograms..."])
-        figs = self.display_histograms()
-        for fig in figs:
-            out_figs.append(fig)
-
-        # 6. displaying heatmaps
-        if opt_gtc.display_heatmaps == 1:
-            self.update_status([95, "Generating heatmaps..."])
-            figs = self.display_heatmaps()
-            for fig in figs:
-                out_figs.append(fig)
-
-        # 8. displaying run information
-        fig = self.display_info()
-        out_figs.append(fig)
-        return out_figs
-
     def compute_betweenness_centrality(self):
         """
         Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
@@ -511,93 +463,6 @@ class GraphMetrics(ProgressUpdate):
         # 3. Invert the resulting matrix
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
-
-    def generate_pdf_output(self):
-        """
-        Generate results and write them to a PDF file.
-
-        :return:
-        """
-
-        opt_gtc = self.configs
-
-        filename, output_location = self.gc.imp.create_filenames()
-        pdf_filename = filename + "_SGT_results.pdf"
-        pdf_file = os.path.join(output_location, pdf_filename)
-
-        self.update_status([90, "Generating PDF GT Output..."])
-        with (PdfPages(pdf_file) as pdf):
-
-            # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            fig = self.display_images()
-            pdf.savefig(fig)
-
-            # 2. plotting skeletal images
-            fig = self.display_skeletal_images()
-            pdf.savefig(fig)  # causes PyQt5 to crash
-
-            # 3. plotting sub-graph network
-            fig = self.gc.draw_graph_network(a4_size=True)
-            if fig:
-                pdf.savefig(fig)
-
-            # 4. displaying all the GT calculations in Table  on entire page
-            fig, fig_wt = self.display_gt_results()
-            pdf.savefig(fig)
-            if fig_wt:
-                pdf.savefig(fig_wt)
-
-            # 5. displaying histograms
-            self.update_status([92, "Generating histograms..."])
-            figs = self.display_histograms()
-            for fig in figs:
-                pdf.savefig(fig)
-
-            # 6. displaying heatmaps
-            if opt_gtc.display_heatmaps == 1:
-                self.update_status([95, "Generating heatmaps..."])
-                figs = self.display_heatmaps()
-                for fig in figs:
-                    pdf.savefig(fig)
-
-            # 8. displaying run information
-            fig = self.display_info()
-            pdf.savefig(fig)
-        self.gc.save_files()
-
-        # def compute_betweenness_centrality(self):
-        """
-        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
-
-        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
-        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
-
-        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
-        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
-        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
-        sections of the graph. An average is computed after an iteration of x random walks along edges.
-
-        This measure is already implemented in 'networkx' package. Here is the link:\
-        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
-
-        :return:
-        """
-        """
-        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
-        # (NOT TRUE) Note: only works with fully-connected graphs
-        # So, random betweenness centrality is computed between source node and destination node.
-
-        graph = self.gc.nx_graph
-
-        # 1. Compute laplacian matrix L = D - A
-        lpl_mat = nx.laplacian_matrix(graph).toarray()
-        print(lpl_mat)
-
-        # 2. Remove any single row and corresponding column from L
-        # 3. Invert the resulting matrix
-        # 4. Add back the removed row and column to form matrix T
-        # 5. Calculate betweenness from T
-        """
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
@@ -670,6 +535,154 @@ class GraphMetrics(ProgressUpdate):
         # if den == 0:  # Null Graph
         #    return 0
         # return num / den
+
+        # def compute_betweenness_centrality(self):
+        """
+        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
+
+        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
+        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
+
+        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
+        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
+        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
+        sections of the graph. An average is computed after an iteration of x random walks along edges.
+
+        This measure is already implemented in 'networkx' package. Here is the link:\
+        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
+
+        :return:
+        """
+        """
+        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
+        # (NOT TRUE) Note: only works with fully-connected graphs
+        # So, random betweenness centrality is computed between source node and destination node.
+
+        graph = self.gc.nx_graph
+
+        # 1. Compute laplacian matrix L = D - A
+        lpl_mat = nx.laplacian_matrix(graph).toarray()
+        print(lpl_mat)
+
+        # 2. Remove any single row and corresponding column from L
+        # 3. Invert the resulting matrix
+        # 4. Add back the removed row and column to form matrix T
+        # 5. Calculate betweenness from T
+        """
+
+    def generate_pdf_output(self, gui_app: bool = False):
+        """
+        Generate and display results in a PDF file or list of Figures.
+
+        :param gui_app: is it Graphical User Interface/Terminal app?
+        :return:
+        """
+
+        if gui_app:
+            return self.generate_output()
+        else:
+            self.generate_pdf()
+
+    def generate_output(self):
+        """
+        Generate results as graphs and plots.
+        :return: list of results.
+        """
+
+        opt_gtc = self.configs
+        out_figs = []
+
+        self.update_status([90, "Generating PDF GT Output..."])
+
+        # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+        fig = self.display_images()
+        out_figs.append(fig)
+
+        # 2. plotting skeletal images
+        fig = self.display_skeletal_images()
+        out_figs.append(fig)
+
+        # 3. plotting sub-graph network
+        fig = self.gc.draw_graph_network(a4_size=True)
+        if fig:
+            out_figs.append(fig)
+
+        # 4. displaying all the GT calculations in Table  on entire page
+        fig, fig_wt = self.display_gt_results()
+        out_figs.append(fig)
+        if fig_wt:
+            out_figs.append(fig_wt)
+
+        # 5. displaying histograms
+        self.update_status([92, "Generating histograms..."])
+        figs = self.display_histograms()
+        for fig in figs:
+            out_figs.append(fig)
+
+        # 6. displaying heatmaps
+        if opt_gtc.display_heatmaps == 1:
+            self.update_status([95, "Generating heatmaps..."])
+            figs = self.display_heatmaps()
+            for fig in figs:
+                out_figs.append(fig)
+
+        # 8. displaying run information
+        fig = self.display_info()
+        out_figs.append(fig)
+        return out_figs
+
+    def generate_pdf(self):
+        """
+        Generate results and write them to a PDF file.
+
+        :return:
+        """
+
+        opt_gtc = self.configs
+
+        filename, output_location = self.gc.imp.create_filenames()
+        pdf_filename = filename + "_SGT_results.pdf"
+        pdf_file = os.path.join(output_location, pdf_filename)
+
+        self.update_status([90, "Generating PDF GT Output..."])
+        with (PdfPages(pdf_file) as pdf):
+
+            # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+            fig = self.display_images()
+            pdf.savefig(fig)
+
+            # 2. plotting skeletal images
+            fig = self.display_skeletal_images()
+            pdf.savefig(fig)  # causes PyQt5 to crash
+
+            # 3. plotting sub-graph network
+            fig = self.gc.draw_graph_network(a4_size=True)
+            if fig:
+                pdf.savefig(fig)
+
+            # 4. displaying all the GT calculations in Table  on entire page
+            fig, fig_wt = self.display_gt_results()
+            pdf.savefig(fig)
+            if fig_wt:
+                pdf.savefig(fig_wt)
+
+            # 5. displaying histograms
+            self.update_status([92, "Generating histograms..."])
+            figs = self.display_histograms()
+            for fig in figs:
+                pdf.savefig(fig)
+
+            # 6. displaying heatmaps
+            if opt_gtc.display_heatmaps == 1:
+                self.update_status([95, "Generating heatmaps..."])
+                figs = self.display_heatmaps()
+                for fig in figs:
+                    pdf.savefig(fig)
+
+            # 8. displaying run information
+            fig = self.display_info()
+            pdf.savefig(fig)
+        self.gc.save_files()
 
     def display_images(self):
         """

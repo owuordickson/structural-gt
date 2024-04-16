@@ -2046,7 +2046,7 @@ class Worker(QtCore.QThread):
                 self.update_progress(-1, "Task aborted.")
                 self.signals.finished.emit(2, 1, [])
                 return
-            plot_figs = metrics_obj.generate_output()
+            plot_figs = metrics_obj.generate_pdf_output(gui_app=True)
             metrics_obj.remove_listener(self.update_progress)
             self.remove_thread_listener(metrics_obj.abort_tasks)
             self.signals.finished.emit(2, 1, plot_figs)
@@ -2103,7 +2103,7 @@ class Worker(QtCore.QThread):
                     self.signals.finished.emit(3, 0, [])
                     return
                 # metrics_obj.generate_pdf_output()
-                plot_figs = metrics_obj.generate_output()
+                plot_figs = metrics_obj.generate_pdf_output(gui_app=True)
                 metrics_obj.remove_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 self.signals.finished.emit(2, 0, plot_figs)
