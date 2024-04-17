@@ -359,6 +359,50 @@ class ImageProcessor:
 
         return run_info
 
+    def display_images(self):
+        """
+        Create plot figures of original, processed, and binary image.
+
+        :return:
+        """
+        opt_img = self.configs_img
+        raw_img = self.img
+        filtered_img = self.img_mod
+        img_bin = self.img_bin
+
+        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
+
+        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+        ax_1 = fig.add_subplot(2, 2, 1)
+        ax_2 = fig.add_subplot(2, 2, 2)
+        ax_3 = fig.add_subplot(2, 2, 3)
+        ax_4 = fig.add_subplot(2, 2, 4)
+
+        ax_1.set_title("Original Image")
+        ax_1.set_axis_off()
+        ax_1.imshow(raw_img, cmap='gray')
+
+        ax_2.set_title("Processed Image")
+        ax_2.set_axis_off()
+        ax_2.imshow(filtered_img, cmap='gray')
+
+        ax_3.set_title("Binary Image")
+        ax_3.set_axis_off()
+        ax_3.imshow(img_bin, cmap='gray')
+
+        ax_4.set_title("Histogram of Processed Image")
+        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+        ax_4.plot(img_histogram)
+        if opt_img.threshold_type == 0:
+            thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
+                                   [0, max(img_histogram)]], dtype='object')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        elif opt_img.threshold_type == 2:
+            thresh_arr = np.array([[self.otsu_val, self.otsu_val],
+                                   [0, max(img_histogram)]], dtype='object')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        return fig
+
     @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
         """

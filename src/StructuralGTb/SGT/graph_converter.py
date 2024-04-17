@@ -285,6 +285,79 @@ class GraphConverter(ProgressUpdate):
 
         return fig
 
+    def display_skeletal_images(self):
+        """
+        Create plot figures of skeletal image and graph network image.
+
+        :return:
+        """
+
+        opt_gte = self.configs_graph
+        nx_graph = self.nx_graph
+        g_skel = self.graph_skeleton
+        img = self.imp.img
+
+        fig = plt.Figure(figsize=(8.5, 11), dpi=400)
+        ax_1 = fig.add_subplot(2, 1, 1)
+        ax_2 = fig.add_subplot(2, 1, 2)
+
+        ax_1.set_title("Skeletal Image")
+        ax_1.set_axis_off()
+        ax_1.imshow(g_skel.skel_int, cmap='gray')
+        ax_1.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
+        ax_1.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
+
+        ax_2.set_title("Final Graph")
+        ax_2.set_axis_off()
+        ax_2.imshow(img, cmap='gray')
+        if opt_gte.is_multigraph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    ax_2.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                ax_2.plot(ge[:, 1], ge[:, 0], 'red')
+        nodes = nx_graph.nodes()
+        gn = np.array([nodes[i]['o'] for i in nodes])
+        if opt_gte.display_node_id == 1:
+            i = 0
+            for x, y in zip(gn[:, 1], gn[:, 0]):
+                ax_2.annotate(str(i), (x, y), fontsize=5)
+                i += 1
+            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        else:
+            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
+        return fig
+
+    def get_config_info(self):
+        """
+        Get the user selected parameters and options information.
+        :return:
+        """
+
+        opt_gte = self.configs_graph
+
+        run_info = "***Graph Extraction Configurations***\n"
+        if opt_gte.has_weights:
+            run_info += f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} || "
+        if opt_gte.merge_nearby_nodes:
+            run_info += "Merge Nodes || "
+        if opt_gte.prune_dangling_edges:
+            run_info += "Prune Dangling Edges || "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+        run_info += "\n"
+        if opt_gte.remove_disconnected_segments:
+            run_info += f"Remove Objects of Size = {opt_gte.remove_object_size} || "
+        if opt_gte.remove_self_loops:
+            run_info += "Remove Self Loops || "
+        if opt_gte.is_multigraph:
+            run_info += "Multi-graph allowed "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+
+        return run_info
+
     def save_files(self, opt_gte: struct = None):
         """
         Save graph data into files.
@@ -375,33 +448,6 @@ class GraphConverter(ProgressUpdate):
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
-
-    def get_config_info(self):
-        """
-        Get the user selected parameters and options information.
-        :return:
-        """
-
-        opt_gte = self.configs_graph
-        
-        run_info = "***Graph Extraction Configurations***\n"
-        if opt_gte.has_weights:
-            run_info += f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} || "
-        if opt_gte.merge_nearby_nodes:
-            run_info += "Merge Nodes || "
-        if opt_gte.prune_dangling_edges:
-            run_info += "Prune Dangling Edges || "
-        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
-        run_info += "\n"
-        if opt_gte.remove_disconnected_segments:
-            run_info += f"Remove Objects of Size = {opt_gte.remove_object_size} || "
-        if opt_gte.remove_self_loops:
-            run_info += "Remove Self Loops || "
-        if opt_gte.is_multigraph:
-            run_info += "Multi-graph allowed "
-        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
-
-        return run_info
 
     def compute_edge_length(self):
         pass

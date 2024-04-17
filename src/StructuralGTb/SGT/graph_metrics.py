@@ -8,7 +8,6 @@ Compute graph theory metrics
 """
 
 import os
-import cv2
 import datetime
 import itertools
 import multiprocessing
@@ -527,48 +526,6 @@ class GraphMetrics(ProgressUpdate):
         if den == 0:
             return 0
         return num / den
-        # cpus = get_num_cores()
-        # num, den = 0, 0
-        # for u, v in iter_func(nx_graph, 2):
-        #   num += nx.algorithms.connectivity.local_node_connectivity(nx_graph, u, v, **kwargs)
-        #   den += 1
-        # if den == 0:  # Null Graph
-        #    return 0
-        # return num / den
-
-        # def compute_betweenness_centrality(self):
-        """
-        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
-
-        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
-        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
-
-        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
-        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
-        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
-        sections of the graph. An average is computed after an iteration of x random walks along edges.
-
-        This measure is already implemented in 'networkx' package. Here is the link:\
-        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
-
-        :return:
-        """
-        """
-        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
-        # (NOT TRUE) Note: only works with fully-connected graphs
-        # So, random betweenness centrality is computed between source node and destination node.
-
-        graph = self.gc.nx_graph
-
-        # 1. Compute laplacian matrix L = D - A
-        lpl_mat = nx.laplacian_matrix(graph).toarray()
-        print(lpl_mat)
-
-        # 2. Remove any single row and corresponding column from L
-        # 3. Invert the resulting matrix
-        # 4. Add back the removed row and column to form matrix T
-        # 5. Calculate betweenness from T
-        """
 
     def generate_pdf_output(self, gui_app: bool = False):
         """
@@ -595,11 +552,11 @@ class GraphMetrics(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        fig = self.display_images()
+        fig = self.gc.imp.display_images()
         out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = self.display_skeletal_images()
+        fig = self.gc.display_skeletal_images()
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
@@ -648,11 +605,11 @@ class GraphMetrics(ProgressUpdate):
         with (PdfPages(pdf_file) as pdf):
 
             # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            fig = self.display_images()
+            fig = self.gc.imp.display_images()
             pdf.savefig(fig)
 
             # 2. plotting skeletal images
-            fig = self.display_skeletal_images()
+            fig = self.gc.display_skeletal_images()
             pdf.savefig(fig)  # causes PyQt5 to crash
 
             # 3. plotting sub-graph network
@@ -683,96 +640,6 @@ class GraphMetrics(ProgressUpdate):
             fig = self.display_info()
             pdf.savefig(fig)
         self.gc.save_files()
-
-    def display_images(self):
-        """
-        Create plot figures of original, processed, and binary image.
-
-        :return:
-        """
-        opt_img = self.gc.imp.configs_img
-        raw_img = self.gc.imp.img
-        filtered_img = self.gc.imp.img_mod
-        img_bin = self.gc.imp.img_bin
-
-        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
-
-        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
-        ax_1 = fig.add_subplot(2, 2, 1)
-        ax_2 = fig.add_subplot(2, 2, 2)
-        ax_3 = fig.add_subplot(2, 2, 3)
-        ax_4 = fig.add_subplot(2, 2, 4)
-
-        ax_1.set_title("Original Image")
-        ax_1.set_axis_off()
-        ax_1.imshow(raw_img, cmap='gray')
-
-        ax_2.set_title("Processed Image")
-        ax_2.set_axis_off()
-        ax_2.imshow(filtered_img, cmap='gray')
-
-        ax_3.set_title("Binary Image")
-        ax_3.set_axis_off()
-        ax_3.imshow(img_bin, cmap='gray')
-
-        ax_4.set_title("Histogram of Processed Image")
-        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        ax_4.plot(img_histogram)
-        if opt_img.threshold_type == 0:
-            thresh_arr = np.array([[opt_img.threshold_global, opt_img.threshold_global],
-                                   [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        elif opt_img.threshold_type == 2:
-            thresh_arr = np.array([[self.gc.imp.otsu_val, self.gc.imp.otsu_val],
-                                   [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        return fig
-
-    def display_skeletal_images(self):
-        """
-        Create plot figures of skeletal image and graph network image.
-
-        :return:
-        """
-
-        opt_gte = self.gc.configs_graph
-        nx_graph = self.gc.nx_graph
-        g_skel = self.gc.graph_skeleton
-        img = self.gc.imp.img
-
-        fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-        ax_1 = fig.add_subplot(2, 1, 1)
-        ax_2 = fig.add_subplot(2, 1, 2)
-
-        ax_1.set_title("Skeletal Image")
-        ax_1.set_axis_off()
-        ax_1.imshow(g_skel.skel_int, cmap='gray')
-        ax_1.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
-        ax_1.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
-
-        ax_2.set_title("Final Graph")
-        ax_2.set_axis_off()
-        ax_2.imshow(img, cmap='gray')
-        if opt_gte.is_multigraph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax_2.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax_2.plot(ge[:, 1], ge[:, 0], 'red')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        if opt_gte.display_node_id == 1:
-            i = 0
-            for x, y in zip(gn[:, 1], gn[:, 0]):
-                ax_2.annotate(str(i), (x, y), fontsize=5)
-                i += 1
-            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        else:
-            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        return fig
 
     def display_gt_results(self):
         """
