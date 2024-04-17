@@ -21,6 +21,7 @@ def load_configs():
     options_gte = struct()
     options_gtc = struct()
     options_fic = struct()
+    options_gnct = struct()
 
     # 1. Image Path
     options_path.is_multi_image = 0
@@ -82,12 +83,15 @@ def load_configs():
     options_gtc.compute_network_diameter = 1
     options_gtc.compute_wiener_index = 1
     
-    # 5. Graph Network Chaos Theory Settings
+    # 5. Fractal Image Compression Settings
     options_fic.down_sampling_factor = 4
     options_fic.domain_block_size = 8
     options_fic.range_block_size = 4
     options_fic.block_step_size = 8
     options_fic.decompress_iteration_count = 8
+
+    # 6. Graph Network Chaos Theory Settings
+    options_gnct.ml_model = 'MLP'
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -132,7 +136,8 @@ def load_configs():
             "filter_options": options_img,
             "extraction_options": options_gte,
             "sgt_options": options_gtc,
-            "fic_options": options_fic
+            "fic_options": options_fic,
+            "gnct_options": options_gnct
         }
         return configs_data
 
@@ -201,12 +206,15 @@ def load_configs():
     options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
     options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
 
-    # 5. Graph Network Chaos Theory Settings
+    # 5. Fractal Image Compression Settings
     options_fic.down_sampling_factor = int(config.get('fic-settings', 'down_sampling_factor'))
     options_fic.domain_block_size = int(config.get('fic-settings', 'domain_block_size'))
     options_fic.range_block_size = int(config.get('fic-settings', 'range_block_size'))
     options_fic.block_step_size = int(config.get('fic-settings', 'block_step_size'))
     options_fic.decompress_iteration_count = int(config.get('fic-settings', 'decompress_iteration_count'))
+
+    # 6. Graph Network Chaos Theory Settings
+    options_gnct.ml_model = str(config.get('gnct-settings', 'ml_model'))
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -241,7 +249,8 @@ def load_configs():
         "filter_options": options_img,
         "extraction_options": options_gte,
         "sgt_options": options_gtc,
-        "fic_options": options_fic
+        "fic_options": options_fic,
+        "gnct_options": options_gnct
     }
     return configs_data
 
