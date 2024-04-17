@@ -376,6 +376,33 @@ class GraphConverter(ProgressUpdate):
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
 
+    def get_config_info(self):
+        """
+        Get the user selected parameters and options information.
+        :return:
+        """
+
+        opt_gte = self.configs_graph
+        
+        run_info = "***Graph Extraction Configurations***\n"
+        if opt_gte.has_weights:
+            run_info += f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} || "
+        if opt_gte.merge_nearby_nodes:
+            run_info += "Merge Nodes || "
+        if opt_gte.prune_dangling_edges:
+            run_info += "Prune Dangling Edges || "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+        run_info += "\n"
+        if opt_gte.remove_disconnected_segments:
+            run_info += f"Remove Objects of Size = {opt_gte.remove_object_size} || "
+        if opt_gte.remove_self_loops:
+            run_info += "Remove Self Loops || "
+        if opt_gte.is_multigraph:
+            run_info += "Multi-graph allowed "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+
+        return run_info
+
     def compute_edge_length(self):
         pass
 

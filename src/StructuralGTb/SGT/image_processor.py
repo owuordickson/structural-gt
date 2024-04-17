@@ -313,6 +313,52 @@ class ImageProcessor:
 
         return filename, output_dir
 
+    def get_config_info(self):
+        """
+        Get the user selected parameters and options information.
+        :return:
+        """
+
+        opt_img = self.configs_img
+        
+        run_info = "***Image Filter Configurations***\n"
+        if opt_img.threshold_type == 0:
+            run_info += "Global Threshold (" + str(opt_img.threshold_global) + ")"
+        elif opt_img.threshold_type == 1:
+            run_info += "Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
+        elif opt_img.threshold_type == 2:
+            run_info += "OTSU Threshold"
+        if opt_img.gamma != 1:
+            run_info += f" || Gamma = {opt_img.gamma}"
+        run_info += "\n"
+        if opt_img.apply_median:
+            run_info += "Median Filter ||"
+        if opt_img.apply_gaussian:
+            run_info += "Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel || "
+        if opt_img.apply_autolevel:
+            run_info += "Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel || "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+        run_info += "\n"
+        if opt_img.apply_dark_foreground:
+            run_info += "Dark Foreground || "
+        if opt_img.apply_laplacian:
+            run_info += "Laplacian Gradient || "
+        if opt_img.apply_scharr:
+            run_info += "Scharr Gradient || "
+        if opt_img.apply_sobel:
+            run_info += "Sobel Gradient || "
+        if opt_img.apply_lowpass:
+            run_info += "Low-pass filter, " + str(opt_img.lowpass_window_size) + " window size || "
+        run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+        run_info += "\n\n"
+        
+        run_info += "***Microscopy Parameters***\n"
+        run_info += f"Scalebar Value = {opt_img.scale_value} nm"
+        run_info += f" || Scalebar Pixel Count = {opt_img.scalebar_px_count}\n"
+        run_info += f"Resistivity = {opt_img.resistivity}" + r"$\Omega$m"
+
+        return run_info
+
     @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
         """

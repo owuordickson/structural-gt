@@ -964,55 +964,20 @@ class GraphMetrics(ProgressUpdate):
         ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        opt_img = self.gc.imp.configs_img
-        opt_gte = self.gc.configs_graph
         _, filename = os.path.split(self.gc.imp.img_path)
-        run_info = ""
-        run_info = run_info + filename + "\n"
         now = datetime.datetime.now()
-        run_info = run_info + now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
-        if opt_img.threshold_type == 0:
-            run_info = run_info + "Global Threshold (" + str(opt_img.threshold_global) + ")"
-        elif opt_img.threshold_type == 1:
-            run_info = run_info + "Adaptive Threshold, " + str(opt_img.threshold_adaptive) + " bit kernel"
-        elif opt_img.threshold_type == 2:
-            run_info = run_info + "OTSU Threshold"
-        if opt_img.gamma != 1:
-            run_info = run_info + f"|| Gamma = {opt_img.gamma}"
-        run_info = run_info + "\n"
-        if opt_img.apply_median:
-            run_info = run_info + "Median Filter || "
-        if opt_img.apply_gaussian:
-            run_info = run_info + "Gaussian Blur, " + str(opt_img.gaussian_blurring_size) + " bit kernel || "
-        if opt_img.apply_autolevel:
-            run_info = run_info + "Autolevel, " + str(opt_img.autolevel_blurring_size) + " bit kernel || "
-        run_info = run_info + "\n"
-        if opt_img.apply_dark_foreground:
-            run_info = run_info + "Dark Foreground || "
-        if opt_img.apply_laplacian:
-            run_info = run_info + "Laplacian Gradient || "
-        if opt_img.apply_scharr:
-            run_info = run_info + "Scharr Gradient || "
-        if opt_img.apply_sobel:
-            run_info = run_info + "Sobel Gradient || "
-        if opt_img.apply_lowpass:
-            run_info = run_info + "Low-pass filter, " + str(opt_img.lowpass_window_size) + " window size || "
-        run_info = run_info + f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} "
-        run_info = run_info + "\n\n"
-        if opt_gte.merge_nearby_nodes:
-            run_info = run_info + "Merge Nodes"
-        if opt_gte.prune_dangling_edges:
-            run_info = run_info + " || Prune Dangling Edges"
-        if opt_gte.remove_disconnected_segments:
-            run_info = run_info + " || Remove Objects of Size = " + str(opt_gte.remove_object_size)
-        if opt_gte.remove_self_loops:
-            run_info = run_info + " || Remove Self Loops"
-        if opt_gte.is_multigraph:
-            run_info = run_info + " || Multi-graph allowed"
-        run_info = run_info + "\n\n"
-        run_info = run_info + f"Scalebar Value = {opt_img.scale_value} nm"
-        run_info = run_info + f" || Scalebar Pixel Count = {opt_img.scalebar_px_count}\n"
-        run_info = run_info + f"Resistivity = {opt_img.resistivity}" + r"$\Omega$m"
+
+        run_info = ""
+        run_info += filename + "\n"
+        run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
+
+        # Image Configs
+        run_info += self.gc.imp.get_config_info()
+        run_info += "\n\n"
+
+        # Graph Configs
+        run_info += self.gc.get_config_info()
+        run_info += "\n\n"
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
