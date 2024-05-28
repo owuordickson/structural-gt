@@ -9,6 +9,7 @@
 import os
 import sys
 import time
+import logging
 from ypstruct import struct
 from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -1095,6 +1096,7 @@ class MainUI(QtWidgets.QMainWindow):
                     self._load_image('O')
                 except Exception as err:
                     print(err)
+                    logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
                     dialog = CustomDialog("Cropping Error", "Unable to crop image! Try again.")
                     dialog.exec()
         except IndexError:
@@ -1193,6 +1195,7 @@ class MainUI(QtWidgets.QMainWindow):
                     dialog.exec()
                 except Exception as err:
                     print(err)
+                    logging.exception("Save Files Error: %s", err, extra={'user': 'SGT Logs'})
                     dialog = CustomDialog("File Save Error", "Unable to save files! Try again.")
                     dialog.exec()
             else:
@@ -1270,6 +1273,7 @@ class MainUI(QtWidgets.QMainWindow):
         #        self._load_image('B', q_img)
         #    except Exception as err:
         #        print(err)
+        #        logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
         #    self._handle_progress_update(100, 100, "Image filters applied.")
         if (task == 1) and (not self.error_flag):
             try:
@@ -1282,6 +1286,7 @@ class MainUI(QtWidgets.QMainWindow):
                     dialog.exec()
             except Exception as err:
                 print(err)
+                logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
                 self.error_flag = True
         elif (task == 2) and (not self.error_flag):
             try:
@@ -1302,6 +1307,7 @@ class MainUI(QtWidgets.QMainWindow):
                         self._load_image('O')
             except Exception as err:
                 print(err)
+                logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
                 self.error_flag = True
         elif task == 3 and (not self.error_flag):
             dialog = CustomDialog("Success!", "GT calculations completed. Check out generated PDFs in 'Output Dir'")
@@ -1323,6 +1329,7 @@ class MainUI(QtWidgets.QMainWindow):
         :return:
         """
         print(str(value) + "%: " + msg)
+        logging.info(str(value) + "%: " + msg, extra={'user': 'SGT Logs'})
         if (code > 0) and (not self.error_flag):
             self.lbl_progress.setStyleSheet("color: rgb(0, 128, 0)")
             self.lbl_progress.setText(msg)
@@ -1422,11 +1429,12 @@ class MainUI(QtWidgets.QMainWindow):
                 if self.txt_out_path.text() == '':
                     img_dir, _ = os.path.split(g_obj.imp.img_path)
                     self.txt_out_path.setText(img_dir)
-            except IndexError:
+            except IndexError as err:
                 self.txt_img_path.setText('')
                 self.txt_out_path.setText('')
                 self.lbl_img.setPixmap(QtGui.QPixmap())
                 # print(err)
+                logging.exception("Index Error: %s", err, extra={'user': 'SGT Logs'})
         else:
             self.lbl_img.setPixmap(img_pixmap.scaled(w, h, QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
@@ -1986,6 +1994,7 @@ class Worker(QtCore.QThread):
             # self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.abort = True
             self.update_progress(-1, "Error encountered! Try again")
             self.signals.finished.emit(0, 1, [])
@@ -2003,6 +2012,7 @@ class Worker(QtCore.QThread):
             self.signals.finished.emit(1, 0, graph_obj)
         except Exception as err:
             print(err)
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.abort = True
             self.update_progress(-1, "Error encountered! Try again")
             self.signals.finished.emit(1, 1, [])
@@ -2052,6 +2062,7 @@ class Worker(QtCore.QThread):
             self.signals.finished.emit(2, 1, plot_figs)
         except Exception as err:
             print(err)
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.abort = True
             self.update_progress(-1, "Error encountered! Try again")
             self.signals.finished.emit(2, 1, [])
@@ -2121,8 +2132,10 @@ class Worker(QtCore.QThread):
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
                 write_file(output, out_file)
                 print(output)
+                logging.info(output, extra={'user': 'SGT Logs'})
             except Exception as err:
                 print(err)
+                logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
                 self.abort = True
                 self.update_progress(-1, "Error encountered! Try again")
                 self.signals.finished.emit(3, 0, [])

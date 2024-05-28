@@ -53,6 +53,7 @@ def terminal_app():
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     print(a_file)
+                    logging.info(a_file, extra={'user': 'SGT Logs'})
                     filenames.append(os.path.join(out_path, a_file))
             if len(filenames) <= 0:
                 raise Exception("No workable images found! Files have to be either .tif, .png, or .jpg")
@@ -78,6 +79,7 @@ def terminal_app():
             file_count = len(filenames)
             for i in range(file_count):
                 print(f'Analyzing Image: {i+1}/{len(filenames)}')
+                logging.info(f'Analyzing Image: {i+1}/{len(filenames)}', extra={'user': 'SGT Logs'})
                 im_path = filenames[i]
                 produce_metrics(im_path, out_dir, options_img, options_gte, options_gtc)
 
@@ -91,8 +93,10 @@ def terminal_app():
         out_line = "Run-time: " + str(duration) + " seconds\n"
         out_line += "Number of cores: " + str(num_cores) + '\n'
         print(out_line)
+        logging.info(out_line, extra={'user': 'SGT Logs'})
     except PermissionError as error:
         print(error)
+        logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
 
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
@@ -135,4 +139,5 @@ def print_progress(x, y):
     Returns:
          None:
     """
-    print(str(x) + ": " + y)
+    print(str(x) + "%: " + y)
+    logging.info(str(x) + "%: " + y, extra={'user': 'SGT Logs'})
