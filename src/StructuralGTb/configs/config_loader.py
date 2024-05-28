@@ -82,6 +82,7 @@ def load_configs():
     options_gtc.compute_assortativity_coef = 1
     options_gtc.compute_network_diameter = 1
     options_gtc.compute_wiener_index = 1
+    options_gtc.compute_lang = 'Py'
     
     # 5. Fractal Image Compression Settings
     options_fic.down_sampling_factor = 4
@@ -205,6 +206,7 @@ def load_configs():
     options_gtc.compute_assortativity_coef = int(config.get('sgt-settings', 'compute_assortativity_coef'))
     options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
     options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
+    options_gtc.compute_lang = str(config.get('sgt-settings', 'compute_lang'))
 
     # 5. Fractal Image Compression Settings
     options_fic.down_sampling_factor = int(config.get('fic-settings', 'down_sampling_factor'))

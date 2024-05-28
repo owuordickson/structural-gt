@@ -1775,7 +1775,7 @@ class MainUI(QtWidgets.QMainWindow):
         """
         self.btn_cancel.setEnabled(False)
 
-        self.cbx_igraph.setEnabled(True)
+        # self.cbx_igraph.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
         if self.cbx_multi.isChecked():
             self.btn_gt_metrics_all.setEnabled(True)
