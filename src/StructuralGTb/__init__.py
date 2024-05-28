@@ -38,4 +38,4 @@ __credits__ = "The Regents of the University of Michigan"
 
 
 # Packages available in 'from StructuralGTb import *'
-__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter']
+__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter', 'main_cli', 'main_gui']
