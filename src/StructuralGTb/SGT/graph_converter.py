@@ -510,7 +510,7 @@ class GraphComponents:
         # meaning that it is: (asymmetric) with self-looping nodes
 
         data = []
-        sub_components = []
+        # sub_components = []
 
         # 1. Make a copy of the graph
         # eig_graph = graph.copy()
@@ -525,32 +525,11 @@ class GraphComponents:
         eig_graph.remove_nodes_from(isolated_nodes)
 
         # 3a. Check connectivity of graph
-        try:
-            # does not work if graphs has disconnected sub-graphs
-            nx.fiedler_vector(eig_graph)
-        except nx.NetworkXNotImplemented:
-            # Graph is directed.
-            non_directed_graph = GraphComponents.make_graph_symmetrical(eig_graph)
-            try:
-                nx.fiedler_vector(non_directed_graph)
-            except nx.NetworkXNotImplemented:
-                print("Graph is directed. Cannot compute conductance")
-                return [], None, 0
-            except nx.NetworkXError:
-                # Graph has less than two nodes or is not connected.
-                sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(
-                    eig_graph)
-                eig_graph = sub_graph_largest
-                data.append({"name": "Subgraph Count", "value": size})
-                data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
-                data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
-                data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
-                data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
-        except nx.NetworkXError:
-            # Graph has less than two nodes or is not connected.
-            sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(
+        # It has less than two nodes or is not connected.
+        sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(
                 eig_graph)
-            eig_graph = sub_graph_largest
+        eig_graph = sub_graph_largest
+        if size > 1:
             data.append({"name": "Subgraph Count", "value": size})
             data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
             data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
