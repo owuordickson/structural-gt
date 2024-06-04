@@ -8,7 +8,7 @@ A launcher for executing the application as a Window app or a Terminal app.
 """
 
 
-from StructuralGTb import main_cli, main_gui
+from StructuralGTb.entrypoints import main_cli, main_gui
 
 if __name__ == "__main__":
     main_gui()

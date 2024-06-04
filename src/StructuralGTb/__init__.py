@@ -27,15 +27,13 @@ from .SGT.graph_metrics import GraphMetrics
 from .SGT.graph_skeleton import GraphSkeleton
 from .SGT.graph_converter import GraphConverter
 
-# APPs
-from .entrypoints import main_cli
-from .entrypoints import main_gui
 
-# Project details
-__version__ = "1.3.0"
+# Project Details
+__version__ = "1.3.2"
+__title__ = f"StructuralGT (v{__version__}b)"
 __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
 
 
 # Packages available in 'from StructuralGTb import *'
-__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter', 'main_cli', 'main_gui']
+__all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter']

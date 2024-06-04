@@ -15,7 +15,7 @@ from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
-from ..configs import __title__ as sgt_title
+from .. import __title__ as sgt_title
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter

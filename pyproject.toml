@@ -52,10 +52,10 @@ Repository = "https://github.com/owuordickson/structural-gt.git"
 Changelog = "https://github.com/owuordickson/structural-gt/blob/main/CHANGELOG.md"
 
 [project.scripts]
-StructuralGTb-cli = "StructuralGTb:main_cli"
+StructuralGTb-cli = "StructuralGTb.entrypoints:main_cli"
 
 [project.gui-scripts]
-StructuralGTb = "StructuralGTb:main_gui"
+StructuralGTb = "StructuralGTb.entrypoints:main_gui"
 
 [tool.setuptools]
 include-package-data = true
