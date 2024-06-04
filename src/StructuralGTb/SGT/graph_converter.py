@@ -117,12 +117,12 @@ class GraphConverter(ProgressUpdate):
                 self.update_status([-1, "Problem generating graph (change filter options)."])
             else:
                 # self.save_adj_csv()
-                if self.configs_graph.has_weights == 1:
-                    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
-                        self.nx_graph, weighted=True)
-                else:
-                    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
-                                                                            self.nx_graph)
+                # if self.configs_graph.has_weights == 1:
+                #    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
+                #        self.nx_graph, weighted=True)
+                # else:
+                self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(self.nx_graph)
+
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
                 graph_plt = self.draw_graph_network()
@@ -535,7 +535,7 @@ class GraphComponents:
                 nx.fiedler_vector(non_directed_graph)
             except nx.NetworkXNotImplemented:
                 print("Graph is directed. Cannot compute conductance")
-                return None
+                return [], None, 0
             except nx.NetworkXError:
                 # Graph has less than two nodes or is not connected.
                 sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(

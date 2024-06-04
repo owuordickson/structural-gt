@@ -15,11 +15,12 @@ from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
+from ..configs import __title__ as sgt_title
 from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
-# from ..SGT.graph_metrics_clang import GraphMetricsClang
+# from .SGT.graph_metrics_clang import GraphMetricsClang
 
 
 class MainUI(QtWidgets.QMainWindow):
@@ -537,7 +538,7 @@ class MainUI(QtWidgets.QMainWindow):
 
     def __re_translate_ui(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("window_main", self.gui_txt.title))
+        self.setWindowTitle(_translate("window_main", sgt_title))
         self.btn_prev.setText(_translate("window_main", "<< previous"))
         self.btn_next.setText(_translate("window_main", "next >>"))
         self.lbl_zoom.setText(_translate("window_main", "Zoom"))

@@ -31,8 +31,8 @@ from .SGT.graph_converter import GraphConverter
 from .entrypoints import main_cli
 from .entrypoints import main_gui
 
-# Project version
-__version__ = "1.2.8"
+# Project details
+__version__ = "1.2.9"
 __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
 
