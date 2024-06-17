@@ -9,6 +9,7 @@ Terminal interface implementations
 
 import time
 import os
+import logging
 from ypstruct import struct
 # import multiprocessing as mp
 from ..configs.config_loader import load_configs, get_num_cores
@@ -96,7 +97,7 @@ def terminal_app():
         logging.info(out_line, extra={'user': 'SGT Logs'})
     except PermissionError as error:
         print(error)
-        logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+        logging.exception("Error: %s", error, extra={'user': 'SGT Logs'})
 
 
 def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):

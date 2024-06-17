@@ -92,7 +92,7 @@ class GraphMetrics(ProgressUpdate):
         >>> opt_gtc.display_currentflow_histogram = 1
         >>> opt_gtc.display_closeness_histogram = 1
         >>> opt_gtc.display_eigenvector_histogram = 1
-        >>> opt_gtc.compute_nodal_connectivity = 1
+        >>> opt_gtc.compute_node_connectivity = 1
         >>> opt_gtc.compute_graph_density = 1
         >>> opt_gtc.compute_graph_conductance = 0
         >>> opt_gtc.compute_global_efficiency = 1
@@ -169,7 +169,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Average degree")
             data_dict["y"].append(deg_val)
 
-        if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
+        if (options.compute_network_diameter == 1) or (options.compute_node_connectivity == 1):
             try:
                 connected_graph = nx.is_connected(graph)
             except nx.exception.NetworkXPointlessConcept:
@@ -188,7 +188,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["y"].append(dia)
 
         # calculating average nodal connectivity
-        if options.compute_nodal_connectivity == 1:
+        if options.compute_node_connectivity == 1:
             if self.abort:
                 self.update_status([-1, "Task aborted."])
                 return
@@ -359,7 +359,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Length-weighted Wiener Index")
             data_dict["y"].append(w_index)
 
-        if options.compute_nodal_connectivity == 1:
+        if options.compute_node_connectivity == 1:
             self.update_status([76, "Compute weighted node connectivity..."])
             connected_graph = nx.is_connected(graph)
             if connected_graph:

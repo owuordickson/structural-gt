@@ -20,6 +20,8 @@ from ..configs.config_loader import load_configs, load_gui_configs, get_num_core
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
+
+
 # from .SGT.graph_metrics_clang import GraphMetricsClang
 
 
@@ -727,7 +729,7 @@ class MainUI(QtWidgets.QMainWindow):
         options_compute.appendRow(network_diameter_item)
 
         anc_item = TreeItem(self.gui_txt.connectivity, 9, set_checkable=True,
-                            color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_nodal_connectivity)
+                            color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_node_connectivity)
         options_compute.appendRow(anc_item)
 
         clustering_coef_item = TreeItem(self.gui_txt.clustering, 9, set_checkable=True,
@@ -757,6 +759,11 @@ class MainUI(QtWidgets.QMainWindow):
                                                color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_eigenvector_histogram)
         options_compute.appendRow(eigenvector_centrality_item)
+
+        ohms_centrality_item = TreeItem(self.gui_txt.ohms, 9, set_checkable=True,
+                                        color=QtGui.QColor(128, 0, 0),
+                                        data=options_gtc.display_ohms_histogram)
+        options_compute.appendRow(ohms_centrality_item)
 
         graph_density_item = TreeItem(self.gui_txt.density, 9, set_checkable=True,
                                       color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
@@ -1601,7 +1608,8 @@ class MainUI(QtWidgets.QMainWindow):
         options_gtc.display_currentflow_histogram = 0
         options_gtc.display_closeness_histogram = 0
         options_gtc.display_eigenvector_histogram = 0
-        options_gtc.compute_nodal_connectivity = 0
+        options_gtc.display_ohms_histogram = 0
+        options_gtc.compute_node_connectivity = 0
         options_gtc.compute_graph_density = 0
         options_gtc.compute_graph_conductance = 0
         options_gtc.compute_global_efficiency = 0
@@ -1633,8 +1641,10 @@ class MainUI(QtWidgets.QMainWindow):
                     options_gtc.display_closeness_histogram = 1
                 if item.text() == self.gui_txt.eigenvector:
                     options_gtc.display_eigenvector_histogram = 1
+                if item.text() == self.gui_txt.ohms:
+                    options_gtc.display_ohms_histogram = 1
                 if item.text() == self.gui_txt.connectivity:
-                    options_gtc.compute_nodal_connectivity = 1
+                    options_gtc.compute_node_connectivity = 1
                 if item.text() == self.gui_txt.density:
                     options_gtc.compute_graph_density = 1
                 if item.text() == self.gui_txt.conductance:
