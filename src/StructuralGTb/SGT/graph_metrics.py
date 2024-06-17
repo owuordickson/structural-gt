@@ -445,10 +445,23 @@ class GraphMetrics(ProgressUpdate):
 
     def compute_ohms_centrality(self):
         r""""""
-        ohm_list = []
-        graph = self.gc.nx_graph
+        ohm_dict = {}
+        nx_graph = self.gc.nx_graph
+        lst_nodes = list(nx_graph.nodes())
 
-        return ohm_list
+        if len(self.betweenness_distribution) > 1:
+            b_distribution = self.betweenness_distribution
+        else:
+            b_dict = betweenness_centrality(nx_graph)
+            b_distribution = np.array(list(b_dict.values()), dtype=float)
+
+        print(b_distribution)
+        for n in lst_nodes:
+            # compute Ohm centrality value
+            ohms_val = None
+            # ohm_dict.append(ohms_val)
+
+        return ohm_dict
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
