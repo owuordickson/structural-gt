@@ -124,6 +124,7 @@ class GraphMetrics(ProgressUpdate):
         self.betweenness_distribution = [0]
         self.closeness_distribution = [0]
         self.eigenvector_distribution = [0]
+        self.ohms_distribution = [0]
         # self.nx_subgraph_components = []
         self.weighted_output_data = pd.DataFrame([])
         self.weighted_degree_distribution = [0]
@@ -295,10 +296,13 @@ class GraphMetrics(ProgressUpdate):
         # calculating Ohms centrality
         if options.display_ohms_histogram == 1:
             self.update_status([62, "Computing Ohms centrality..."])
+            ohms_distribution_1 = self.compute_ohms_centrality()
+            ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
+            ohms_val = round(np.average(ohms_distribution), 5)
+            self.ohms_distribution = ohms_distribution
 
-            ohm_val = None
             data_dict["x"].append("Ohms centrality")
-            data_dict["y"].append(ohm_val)
+            data_dict["y"].append(ohms_val)
             # error bars
 
         # calculating current-flow betweenness
@@ -439,10 +443,12 @@ class GraphMetrics(ProgressUpdate):
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
-    def compute_ohm_centrality(self):
+    def compute_ohms_centrality(self):
         r""""""
-
+        ohm_list = []
         graph = self.gc.nx_graph
+
+        return ohm_list
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
@@ -675,6 +681,7 @@ class GraphMetrics(ProgressUpdate):
         eig_distribution = self.eigenvector_distribution
         w_eig_distribution = self.weighted_eigenvector_distribution
         cf_distribution = self.currentflow_distribution
+        ohm_distribution = self.ohms_distribution
 
         # Degree and Closeness
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
@@ -690,7 +697,7 @@ class GraphMetrics(ProgressUpdate):
             GraphMetrics.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
-        # Betweenness, Clustering, Currentflow and Eigenvector
+        # Betweenness, Clustering, Currentflow, Eigenvector and Ohm
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
             bc_title = r"Betweenness Centrality: $\sigma$="
@@ -711,6 +718,13 @@ class GraphMetrics(ProgressUpdate):
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
             GraphMetrics.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
+        figs.append(fig)
+
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+        if opt_gtc.display_ohms_histogram == 1:
+            oh_title = r"Ohm Centrality: $\sigma$="
+            ax_1 = fig.add_subplot(2, 2, 1)
+            GraphMetrics.plot_histogram(ax_1, oh_title, ohm_distribution, 'Ohm value')
         figs.append(fig)
 
         # weighted histograms
@@ -762,6 +776,7 @@ class GraphMetrics(ProgressUpdate):
         eig_distribution = self.eigenvector_distribution
         w_eig_distribution = self.weighted_eigenvector_distribution
         # cf_distribution = self.currentflow_distribution
+        ohm_distribution = self.ohms_distribution
 
         sz = 30
         lw = 1.5
@@ -797,6 +812,9 @@ class GraphMetrics(ProgressUpdate):
                 (opt_gte.is_multigraph == 0):
             fig = self.plot_heatmap(w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
+            figs.append(fig)
+        if opt_gtc.display_ohms_histogram == 1:
+            fig = self.plot_heatmap(ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 
