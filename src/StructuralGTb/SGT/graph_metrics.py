@@ -292,6 +292,15 @@ class GraphMetrics(ProgressUpdate):
                 data_dict["x"].append(item["name"])
                 data_dict["y"].append(item["value"])
 
+        # calculating Ohms centrality
+        if options.display_ohms_histogram == 1:
+            self.update_status([62, "Computing Ohms centrality..."])
+
+            ohm_val = None
+            data_dict["x"].append("Ohms centrality")
+            data_dict["y"].append(ohm_val)
+            # error bars
+
         # calculating current-flow betweenness
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
@@ -430,38 +439,10 @@ class GraphMetrics(ProgressUpdate):
 
         self.weighted_output_data = pd.DataFrame(data_dict)
 
-    def compute_betweenness_centrality(self):
-        """
-        Implements ideas proposed in: https://doi.org/10.1016/j.socnet.2004.11.009
-
-        Computes betweenness centrality by also considering the edges that all paths (and not just the shortest path)\
-        that passes through a vertex. The proposed idea is referred to as: 'random walk betweenness'.
-
-        Random walk betweenness centrality is computed from a fully connected parts of the graph, because each \
-        iteration of a random walk must move from source node to destination without disruption. Therefore, if a graph\
-        is composed of isolated sub-graphs then betweenness centrality will be limited to only the fully connected\
-        sections of the graph. An average is computed after an iteration of x random walks along edges.
-
-        This measure is already implemented in 'networkx' package. Here is the link:\
-        https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.current_flow_betweenness_centrality_subset.html
-
-            :return:
-        """
-
-        # (NOT TRUE) Important Note: the graph CANNOT have isolated nodes or isolated sub-graphs
-        # (NOT TRUE) Note: only works with fully-connected graphs
-        # So, random betweenness centrality is computed between source node and destination node.
+    def compute_ohm_centrality(self):
+        r""""""
 
         graph = self.gc.nx_graph
-
-        # 1. Compute laplacian matrix L = D - A
-        lpl_mat = nx.laplacian_matrix(graph).toarray()
-        print(lpl_mat)
-
-        # 2. Remove any single row and corresponding column from L
-        # 3. Invert the resulting matrix
-        # 4. Add back the removed row and column to form matrix T
-        # 5. Calculate betweenness from T
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
