@@ -111,7 +111,7 @@ class GraphSkeleton:
         if len(edge_pts) < 2:
             # check to see if ge is an empty or unity list, if so, set pixel count to 0
             # Assume only 1/2 pixel exists between edge points
-            pix_width = 0
+            pix_width = 0.5
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
             end_index = len(edge_pts) - 1
@@ -122,7 +122,7 @@ class GraphSkeleton:
             mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
             m[0] = int(m[0])
             m[1] = int(m[1])
-            pix_width = self.estimate_edge_width(m, ortho)
+            pix_width = self.estimate_edge_width(m, ortho) + 0.5  # to make it larger than empty widths
 
         if weight_type is None:
             wt = pix_width / 10
