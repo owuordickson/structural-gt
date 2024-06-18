@@ -102,10 +102,10 @@ class GraphSkeleton:
         """
 
         # Idea copied from 'sknw' library
-        pix_length = np.linalg.norm(edge_pts[1:]-edge_pts[:-1], axis=1).sum()
+        pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
 
         # Initialize parameters
-        pixel_dim = pixel_dim * (10**9)  # Convert to nanometers
+        pixel_dim = pixel_dim * (10 ** 9)  # Convert to nanometers
         wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
@@ -122,35 +122,36 @@ class GraphSkeleton:
             mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
             m[0] = int(m[0])
             m[1] = int(m[1])
-            pix_width = self.estimate_edge_width(m, ortho) + 0.5  # to make it larger than empty widths
+            pix_width = self.estimate_edge_width(m, ortho)
+            pix_width += 0.5  # (normalization) to make it larger than empty widths
 
         if weight_type is None:
             wt = pix_width / 10
         elif weight_options.get(weight_type) == weight_options.get('DIA'):
             wt = pix_width * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('AREA'):
-            wt = math.pi * (pix_width*pixel_dim*0.5)**2
+            wt = math.pi * (pix_width * pixel_dim * 0.5) ** 2
         elif weight_options.get(weight_type) == weight_options.get('LEN'):
             wt = pix_length * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('INV_LEN'):
-            wt = (pix_length * pixel_dim)**-1
+            wt = (pix_length * pixel_dim) ** -1
         elif weight_options.get(weight_type) == weight_options.get('VAR_CON'):
             # Varies with width
-            if pix_width > 0:
-                length = pix_length * pixel_dim
-                area = math.pi * (pix_width * pixel_dim*0.5)**2
-                wt = ((length * rho_dim)/area)**-1  # Conductance is inverse of resistance
+            # if pix_width > 0:
+            length = pix_length * pixel_dim
+            area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+            wt = ((length * rho_dim) / area) ** -1  # Conductance is inverse of resistance
         elif weight_options.get(weight_type) == weight_options.get('FIX_CON'):
             # Fixed width
-            if pix_length > 0:
-                length = pix_length * pixel_dim
-                area = math.pi * (1 * pixel_dim) ** 2
-                wt = ((length * rho_dim) / area) ** -1
+            # if pix_length > 0:
+            length = pix_length * pixel_dim
+            area = math.pi * (1 * pixel_dim) ** 2
+            wt = ((length * rho_dim) / area) ** -1
         elif weight_options.get(weight_type) == weight_options.get('RES'):
-            if pix_width > 0:
-                length = pix_length * pixel_dim
-                area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
-                wt = ((length * rho_dim) / area)
+            # if pix_width > 0:
+            length = pix_length * pixel_dim
+            area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+            wt = ((length * rho_dim) / area)
         else:
             raise TypeError('Invalid weight type')
 
