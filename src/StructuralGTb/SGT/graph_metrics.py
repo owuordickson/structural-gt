@@ -300,11 +300,13 @@ class GraphMetrics(ProgressUpdate):
             ohms_distribution_1 = self.compute_ohms_centrality()
             ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
             ohms_val = round(np.average(ohms_distribution), 5)
+            ohms_std = round(np.std(ohms_distribution), 5)
             self.ohms_distribution = ohms_distribution
 
             data_dict["x"].append("Ohms centrality")
             data_dict["y"].append(ohms_val)
-            # error bars
+            data_dict["x"].append("Ohms centrality (St.D.")  # for error bars
+            data_dict["y"].append(ohms_std)
 
         # calculating current-flow betweenness
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
