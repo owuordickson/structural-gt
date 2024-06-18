@@ -88,7 +88,7 @@ class GraphSkeleton:
         self.ep_coord_x = ep_coord_x
         self.ep_coord_y = ep_coord_y
 
-    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = {},
+    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
         """
         Compute and assign weights to a line edge between 2 nodes.

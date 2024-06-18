@@ -197,6 +197,12 @@ class GraphConverter(ProgressUpdate):
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['weight'] = wt
                 else:
+                    ge = nx_graph[s][e]['pts']
+                    # pix_width, wt = graph_skel.assign_weights_by_width(ge)
+                    pix_width, wt = graph_skel.assign_weights(ge, None)
+                    nx_graph[s][e]['width'] = pix_width
+                    nx_graph[s][e]['weight'] = wt
+
                     # delete 'weight'
                     del nx_graph[s][e]['weight']
         self.nx_graph = nx_graph

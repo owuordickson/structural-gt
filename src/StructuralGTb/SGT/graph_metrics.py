@@ -300,13 +300,10 @@ class GraphMetrics(ProgressUpdate):
             ohms_distribution_1 = self.compute_ohms_centrality()
             ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
             ohms_val = round(np.average(ohms_distribution), 5)
-            ohms_std = round(np.std(ohms_distribution), 5)
+            # ohms_std = round(np.std(ohms_distribution), 5)
             self.ohms_distribution = ohms_distribution
-
-            data_dict["x"].append("Ohms centrality")
+            data_dict["x"].append("Average Ohms centrality")
             data_dict["y"].append(ohms_val)
-            data_dict["x"].append("Ohms centrality (St.D.")  # for error bars
-            data_dict["y"].append(ohms_std)
 
         # calculating current-flow betweenness
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
@@ -448,11 +445,11 @@ class GraphMetrics(ProgressUpdate):
 
     def compute_ohms_centrality(self):
         r"""
-        Computes Ohm centrality value for each node.
+        Computes Ohms centrality value for each node.
 
-        Returns: Ohm centrality distribution
+        Returns: Ohms centrality distribution
         """
-        ohm_dict = {}
+        ohms_dict = {}
         nx_graph = self.gc.nx_graph
         px_size = self.gc.imp.pixel_width
         rho_dim = self.gc.imp.configs_img.resistivity
@@ -461,7 +458,7 @@ class GraphMetrics(ProgressUpdate):
         b_dict = betweenness_centrality(nx_graph)
         lst_nodes = list(nx_graph.nodes())
         for n in lst_nodes:
-            # compute Ohm centrality value for each node
+            # compute Ohms centrality value for each node
             # print(n)
             b_val = float(b_dict[n])
             if b_val == 0:
@@ -488,8 +485,8 @@ class GraphMetrics(ProgressUpdate):
             #    print(f"Betweenness val: {b_val}")
             #    print(f"Ohms val: {ohms_val}")
             #    print("\n")
-            ohm_dict[n] = ohms_val
-        return ohm_dict
+            ohms_dict[n] = ohms_val
+        return ohms_dict
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
@@ -750,10 +747,10 @@ class GraphMetrics(ProgressUpdate):
             ax_2 = fig.add_subplot(2, 2, 2)
             GraphMetrics.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
 
-        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
-            cf_title = r"Current-flow betweenness Centrality: $\sigma$="
+        if opt_gtc.display_ohms_histogram == 1:
+            oh_title = r"Ohms Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
-            GraphMetrics.plot_histogram(ax_3, cf_title, cf_distribution, 'Betweenness value')
+            GraphMetrics.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
             ec_title = r"Eigenvector Centrality: $\sigma$="
@@ -761,12 +758,12 @@ class GraphMetrics(ProgressUpdate):
             GraphMetrics.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
-        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-        if opt_gtc.display_ohms_histogram == 1:
-            oh_title = r"Ohm Centrality: $\sigma$="
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
+            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+            cf_title = r"Current-flow betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphMetrics.plot_histogram(ax_1, oh_title, ohm_distribution, 'Ohm value')
-        figs.append(fig)
+            GraphMetrics.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
+            figs.append(fig)
 
         # weighted histograms
         if opt_gte.has_weights == 1:
