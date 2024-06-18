@@ -8,6 +8,7 @@ Compute graph theory metrics
 """
 
 import os
+import math
 import datetime
 import itertools
 import multiprocessing
@@ -444,23 +445,48 @@ class GraphMetrics(ProgressUpdate):
         self.weighted_output_data = pd.DataFrame(data_dict)
 
     def compute_ohms_centrality(self):
-        r""""""
+        r"""
+        Computes Ohm centrality value for each node.
+
+        Returns: Ohm centrality distribution
+        """
         ohm_dict = {}
         nx_graph = self.gc.nx_graph
+        px_size = self.gc.imp.pixel_width
+        rho_dim = self.gc.imp.configs_img.resistivity
+        pixel_dim = px_size * (10 ** 9)  # Convert to nanometers
+
+        b_dict = betweenness_centrality(nx_graph)
         lst_nodes = list(nx_graph.nodes())
-
-        if len(self.betweenness_distribution) > 1:
-            b_distribution = self.betweenness_distribution
-        else:
-            b_dict = betweenness_centrality(nx_graph)
-            b_distribution = np.array(list(b_dict.values()), dtype=float)
-
-        print(b_distribution)
         for n in lst_nodes:
-            # compute Ohm centrality value
-            ohms_val = None
-            # ohm_dict.append(ohms_val)
+            # compute Ohm centrality value for each node
+            # print(n)
+            b_val = float(b_dict[n])
+            if b_val == 0:
+                ohms_val = 0
+            else:
+                connected_nodes = dict(nx_graph[n])  # all nodes connected to node n
+                arr_len = []
+                arr_dia = []
+                for idx, val in connected_nodes.items():
+                    # print(f"{idx} -- {val['length']}")
+                    arr_len.append(val['length'])
+                    arr_dia.append(val['width'])
+                arr_len = np.array(arr_len, dtype=float)
+                arr_dia = np.array(arr_dia, dtype=float)
+                # print(f"{n} -> {len(connected_nodes)}")
+                # print(f"Lengths: {arr_len}; Diameters: {arr_dia}")
 
+                pix_width = np.average(arr_dia)
+                pix_length = np.sum(arr_len)
+                length = pix_length * pixel_dim
+                area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+                ohms_val = ((b_val * length * rho_dim) / area)
+                # if n < 5:
+            #    print(f"Betweenness val: {b_val}")
+            #    print(f"Ohms val: {ohms_val}")
+            #    print("\n")
+            ohm_dict[n] = ohms_val
         return ohm_dict
 
     def average_node_connectivity(self, flow_func=None):
