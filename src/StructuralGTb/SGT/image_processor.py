@@ -99,7 +99,7 @@ class ImageProcessor:
             px_width = ImageProcessor.compute_pixel_width(configs.scale_value, configs.scalebar_px_count)
             self.pixel_width = px_width/self.scale_factor
         else:
-            self.pixel_width = 1 * (10**-9)  # 1 nanometer
+            self.pixel_width = 1  # * (10**-9)  # 1 nanometer
 
     def process_img(self, image: MatLike):
         """
@@ -522,6 +522,6 @@ class ImageProcessor:
         :return: width of a single pixel in nanometers.
         """
 
-        val_in_meters = scale_val * (10**-9)
+        val_in_meters = scale_val / 1e9
         pixel_width = val_in_meters/scalebar_px_count
         return pixel_width

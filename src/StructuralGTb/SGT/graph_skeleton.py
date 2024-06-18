@@ -105,7 +105,7 @@ class GraphSkeleton:
         pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
 
         # Initialize parameters
-        pixel_dim = pixel_dim * (10 ** 9)  # Convert to nanometers
+        pixel_dim = pixel_dim  # * (10 ** 9)  # Convert to nanometers
         wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:

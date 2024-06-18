@@ -453,7 +453,7 @@ class GraphMetrics(ProgressUpdate):
         nx_graph = self.gc.nx_graph
         px_size = self.gc.imp.pixel_width
         rho_dim = self.gc.imp.configs_img.resistivity
-        pixel_dim = px_size * (10 ** 9)  # Convert to nanometers
+        pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
 
         b_dict = betweenness_centrality(nx_graph)
         lst_nodes = list(nx_graph.nodes())

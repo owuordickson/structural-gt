@@ -31,3 +31,9 @@ def compute_betweenness_centrality(self):
         # 4. Add back the removed row and column to form matrix T
         # 5. Calculate betweenness from T
         """
+
+
+x = (10**-9)
+y = 1e-9
+
+print(x == y)
