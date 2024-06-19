@@ -307,7 +307,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Ohms centrality (avg. area)")
             data_dict["y"].append(f"{res['avg area']} m")
             data_dict["x"].append("Ohms centrality (avg. length)")
-            data_dict["y"].append(f"{res['avg length']} m")
+            data_dict["y"].append(f"{res['avg length']} " + r"$m^2$")
 
         # calculating current-flow betweenness
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
