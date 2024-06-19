@@ -297,13 +297,17 @@ class GraphMetrics(ProgressUpdate):
         # calculating Ohms centrality
         if options.display_ohms_histogram == 1:
             self.update_status([62, "Computing Ohms centrality..."])
-            ohms_distribution_1 = self.compute_ohms_centrality()
+            ohms_distribution_1, res = self.compute_ohms_centrality()
             ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
             ohms_val = round(np.average(ohms_distribution), 5)
             # ohms_std = round(np.std(ohms_distribution), 5)
             self.ohms_distribution = ohms_distribution
             data_dict["x"].append("Average Ohms centrality")
             data_dict["y"].append(ohms_val)
+            data_dict["x"].append("Ohms centrality (avg. area)")
+            data_dict["y"].append(f"{res['avg area']} m")
+            data_dict["x"].append("Ohms centrality (avg. length)")
+            data_dict["y"].append(f"{res['avg length']} m")
 
         # calculating current-flow betweenness
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
@@ -450,6 +454,8 @@ class GraphMetrics(ProgressUpdate):
         Returns: Ohms centrality distribution
         """
         ohms_dict = {}
+        lst_area = []
+        lst_len = []
         nx_graph = self.gc.nx_graph
         px_size = self.gc.imp.pixel_width
         rho_dim = self.gc.imp.configs_img.resistivity
@@ -481,12 +487,17 @@ class GraphMetrics(ProgressUpdate):
                 length = pix_length * pixel_dim
                 area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
                 ohms_val = ((b_val * length * rho_dim) / area)
+                lst_len.append(length)
+                lst_area.append(area)
                 # if n < 5:
             #    print(f"Betweenness val: {b_val}")
             #    print(f"Ohms val: {ohms_val}")
             #    print("\n")
             ohms_dict[n] = ohms_val
-        return ohms_dict
+        avg_area = np.average(np.array(lst_area, dtype=float))
+        avg_len = np.average(np.array(lst_len, dtype=float))
+        res = {'avg area': avg_area, 'avg length': avg_len}
+        return ohms_dict, res
 
     def average_node_connectivity(self, flow_func=None):
         r"""Returns the average connectivity of a graph G.
