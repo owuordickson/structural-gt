@@ -48,6 +48,14 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_main.setObjectName("grid_layout_main")
 
         self.gui_txt = load_gui_configs()
+
+        self.font = QtGui.QFont()
+        self.font.setPointSize(8)
+
+        self.bold_font = QtGui.QFont()
+        self.bold_font.setPointSize(8)
+        self.bold_font.setBold(True)
+
         self.__create_widgets()
 
         self.graph_objs = []
@@ -182,22 +190,28 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_properties.setObjectName("grid_layout_properties")
 
         self.lbl_scalebar_value = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_scalebar_value.setFont(self.font)
         self.lbl_scalebar_value.setObjectName("lbl_scalebar_value")
         self.grid_layout_properties.addWidget(self.lbl_scalebar_value, 0, 0, 1, 1)
         self.txt_scalebar_val = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_scalebar_val.setFont(self.font)
         self.txt_scalebar_val.setObjectName("txt_scalebar_val")
         self.grid_layout_properties.addWidget(self.txt_scalebar_val, 0, 1, 1, 1)
 
         self.lbl_scalebar_pixels = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_scalebar_pixels.setFont(self.font)
         self.lbl_scalebar_pixels.setObjectName("lbl_scalebar_pixels")
         self.grid_layout_properties.addWidget(self.lbl_scalebar_pixels, 1, 0, 1, 1)
         self.txt_scalebar_px = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_scalebar_px.setFont(self.font)
         self.txt_scalebar_px.setObjectName("txt_scalebar_px")
         self.grid_layout_properties.addWidget(self.txt_scalebar_px, 1, 1, 1, 1)
         self.lbl_resistivity = QtWidgets.QLabel(parent=self.grp_properties)
+        self.lbl_resistivity.setFont(self.font)
         self.lbl_resistivity.setObjectName("lbl_resistivity")
         self.grid_layout_properties.addWidget(self.lbl_resistivity, 2, 0, 1, 1)
         self.txt_resistivity = QtWidgets.QLineEdit(parent=self.grp_properties)
+        self.txt_resistivity.setFont(self.font)
         self.txt_resistivity.setObjectName("txt_resistivity")
         self.grid_layout_properties.addWidget(self.txt_resistivity, 2, 1, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_properties, 0, 0, 1, 2)
@@ -212,31 +226,36 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_crop.setObjectName("grp_crop")
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
         self.grid_layout_crop.setObjectName("grid_layout_crop")
-        self.btn_reset_filters = QtWidgets.QPushButton(parent=self.grp_crop)
-        self.btn_reset_filters.setObjectName("btn_reset_filters")
-        self.grid_layout_crop.addWidget(self.btn_reset_filters, 0, 0, 1, 2)
+        # self.btn_reset_filters = QtWidgets.QPushButton(parent=self.grp_crop)
+        # self.btn_reset_filters.setObjectName("btn_reset_filters")
+        # self.grid_layout_crop.addWidget(self.btn_reset_filters, 0, 0, 1, 2)
         self.btn_crop = QtWidgets.QPushButton(parent=self.grp_crop)
+        self.btn_crop.setFont(self.font)
         self.btn_crop.setObjectName("btn_crop")
-        self.grid_layout_crop.addWidget(self.btn_crop, 1, 0, 1, 2)
+        self.grid_layout_crop.addWidget(self.btn_crop, 0, 0, 1, 2)
         self.spb_brightness = QtWidgets.QSpinBox(parent=self.grp_crop)
+        self.spb_brightness.setFont(self.font)
         self.spb_brightness.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.spb_brightness.setMinimum(-100)
         self.spb_brightness.setMaximum(100)
         self.spb_brightness.setProperty("value", 0)
         self.spb_brightness.setObjectName("spb_brightness")
-        self.grid_layout_crop.addWidget(self.spb_brightness, 2, 1, 1, 1)
+        self.grid_layout_crop.addWidget(self.spb_brightness, 1, 1, 1, 1)
         self.spb_contrast = QtWidgets.QSpinBox(parent=self.grp_crop)
+        self.spb_contrast.setFont(self.font)
         self.spb_contrast.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.spb_contrast.setMinimum(-100)
         self.spb_contrast.setMaximum(100)
         self.spb_contrast.setObjectName("spb_contrast")
-        self.grid_layout_crop.addWidget(self.spb_contrast, 3, 1, 1, 1)
+        self.grid_layout_crop.addWidget(self.spb_contrast, 2, 1, 1, 1)
         self.lbl_brightness = QtWidgets.QLabel(parent=self.grp_crop)
+        self.lbl_brightness.setFont(self.font)
         self.lbl_brightness.setObjectName("lbl_brightness")
-        self.grid_layout_crop.addWidget(self.lbl_brightness, 2, 0, 1, 1)
+        self.grid_layout_crop.addWidget(self.lbl_brightness, 1, 0, 1, 1)
         self.lbl_contrast = QtWidgets.QLabel(parent=self.grp_crop)
+        self.lbl_contrast.setFont(self.font)
         self.lbl_contrast.setObjectName("lbl_contrast")
-        self.grid_layout_crop.addWidget(self.lbl_contrast, 3, 0, 1, 1)
+        self.grid_layout_crop.addWidget(self.lbl_contrast, 2, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_crop, 2, 0, 1, 2)
 
         # 2d. Spacer
@@ -258,13 +277,18 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_show_binary_img = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_show_binary_img.setObjectName("btn_show_binary_img")
         self.grid_layout_graph.addWidget(self.btn_show_binary_img, 2, 0, 1, 1)
+
+
         self.btn_show_graph = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_show_graph.setFont(self.font)
         self.btn_show_graph.setObjectName("btn_show_graph")
         self.grid_layout_graph.addWidget(self.btn_show_graph, 3, 0, 1, 1)
         self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_quick_graph_metrics.setFont(self.font)
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
         self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
         self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
+        self.btn_save_files.setFont(self.font)
         self.btn_save_files.setObjectName("btn_save_files")
         self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_graph, 4, 0, 1, 2)
@@ -280,6 +304,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
         self.grid_layout_compute.setObjectName("grid_layout_compute")
         self.cbx_igraph = QtWidgets.QCheckBox(parent=self.grp_compute)
+        self.cbx_igraph.setFont(self.font)
         self.cbx_igraph.setObjectName("cbx_igraph")
         self.grid_layout_compute.addWidget(self.cbx_igraph, 1, 0, 1, 1)
         self.btn_gt_metrics = QtWidgets.QPushButton(parent=self.grp_compute)
@@ -296,6 +321,7 @@ class MainUI(QtWidgets.QMainWindow):
         # 2h. About Button
         self.btn_about = QtWidgets.QPushButton(parent=self.grp_tasks)
         self.btn_about.setObjectName("btn_about")
+        self.btn_about.setFont(self.font)
         self.grid_layout_tasks.addWidget(self.btn_about, 7, 0, 1, 2)
         self.grid_layout_main.addWidget(self.grp_tasks, 1, 2, 1, 1)
 
@@ -309,9 +335,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.txt_img_path.setObjectName("txt_img_path")
         self.grid_layout_path.addWidget(self.txt_img_path, 1, 1, 1, 1)
         self.lbl_out_path = QtWidgets.QLabel(parent=self.grp_path)
-        font = QtGui.QFont()
-        font.setBold(True)
-        self.lbl_out_path.setFont(font)
+        self.lbl_out_path.setFont(self.bold_font)
         self.lbl_out_path.setObjectName("lbl_out_path")
         self.grid_layout_path.addWidget(self.lbl_out_path, 2, 0, 1, 1)
         self.btn_select_out_path = QtWidgets.QPushButton(parent=self.grp_path)
@@ -324,7 +348,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_select_img_path.setObjectName("btn_select_img_path")
         self.grid_layout_path.addWidget(self.btn_select_img_path, 1, 2, 1, 1)
         self.lbl_img_path = QtWidgets.QLabel(parent=self.grp_path)
-        self.lbl_img_path.setFont(font)
+        self.lbl_img_path.setFont(self.bold_font)
         self.lbl_img_path.setObjectName("lbl_img_path")
         self.grid_layout_path.addWidget(self.lbl_img_path, 1, 0, 1, 1)
         self.cbx_multi = QtWidgets.QCheckBox(parent=self.grp_path)
@@ -522,9 +546,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.progress_bar_main.setObjectName("progress_bar_main")
         self.grid_layout_progress.addWidget(self.progress_bar_main, 1, 0, 1, 2)
         self.lbl_info = QtWidgets.QLabel(parent=self.grp_progress)
+        self.lbl_info.setFont(self.font)
         self.lbl_info.setObjectName("lbl_info")
         self.grid_layout_progress.addWidget(self.lbl_info, 2, 0, 1, 1)
         self.btn_cancel = QtWidgets.QPushButton(parent=self.grp_progress)
+        self.btn_cancel.setFont(self.font)
         self.btn_cancel.setObjectName("btn_cancel")
         self.grid_layout_progress.addWidget(self.btn_cancel, 2, 1, 1, 1)
         self.grid_layout_settings.addWidget(self.grp_progress, 3, 0, 1, 1)
@@ -554,7 +580,7 @@ class MainUI(QtWidgets.QMainWindow):
         # self.btn_chaos_gt.setText(_translate("window_main", "Chaos GT"))
         self.btn_about.setText(_translate("window_main", "About StructuralGT"))
         self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
-        self.btn_reset_filters.setText(_translate("window_main", "Reset to Default"))
+        # self.btn_reset_filters.setText(_translate("window_main", "Reset to Default"))
         self.btn_show_original_img.setText(_translate("window_main", "Original Image"))
         self.btn_show_processed_img.setText(_translate("window_main", "Processed Image"))
         self.btn_show_binary_img.setText(_translate("window_main", "Binary Image"))
@@ -647,29 +673,29 @@ class MainUI(QtWidgets.QMainWindow):
         root_node = tree_model.invisibleRootItem()
 
         # 2. Add Extraction items
-        options_extraction = TreeTextItem('Extraction Settings', 11, set_bold=True, color=QtGui.QColor(0, 0, 200))
+        options_extraction = TreeTextItem('Extraction Settings', 9, set_bold=True, color=QtGui.QColor(0, 0, 200))
         # tree_model.setItem(0, 0, options_extraction)  # row, col, item
 
         # --- start ---
-        weighted_item = TreeItem(self.gui_txt.weighted, 9, set_checkable=True,
+        weighted_item = TreeItem(self.gui_txt.weighted, 8, set_checkable=True,
                                  color=QtGui.QColor(0, 0, 200), data=options_gte.has_weights)
 
-        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 7, set_checkable=True,
+        by_diameter_item = TreeItem(self.gui_txt.weight_by_dia, 6, set_checkable=True,
                                     color=QtGui.QColor(0, 0, 200), data=1)
         by_diameter_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
-        by_area_item = TreeItem(self.gui_txt.weight_by_area, 7, set_checkable=True,
+        by_area_item = TreeItem(self.gui_txt.weight_by_area, 6, set_checkable=True,
                                 color=QtGui.QColor(0, 0, 200), data=0)
         by_area_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
-        by_length_item = TreeItem(self.gui_txt.weight_by_len, 7, set_checkable=True,
+        by_length_item = TreeItem(self.gui_txt.weight_by_len, 6, set_checkable=True,
                                   color=QtGui.QColor(0, 0, 200))
         by_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
-        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 7, set_checkable=True,
+        by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 6, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
         by_inv_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
-        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 7, set_checkable=True,
+        by_conductance_item = TreeItem(self.gui_txt.weight_by_var_con, 6, set_checkable=True,
                                        color=QtGui.QColor(0, 0, 200))
         by_conductance_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
-        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 7, set_checkable=True,
+        by_resistance_item = TreeItem(self.gui_txt.weight_by_res, 6, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
         by_resistance_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         weighted_item.appendRow(by_diameter_item)
@@ -682,122 +708,122 @@ class MainUI(QtWidgets.QMainWindow):
         options_extraction.appendRow(weighted_item)
         # --- end ---
 
-        merge_nearby_item = TreeItem(self.gui_txt.merge, 9, set_checkable=True,
+        merge_nearby_item = TreeItem(self.gui_txt.merge, 8, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.merge_nearby_nodes)
         options_extraction.appendRow(merge_nearby_item)
 
-        prune_dangling_item = TreeItem(self.gui_txt.prune, 9, set_checkable=True,
+        prune_dangling_item = TreeItem(self.gui_txt.prune, 8, set_checkable=True,
                                        color=QtGui.QColor(0, 0, 200), data=options_gte.prune_dangling_edges)
         options_extraction.appendRow(prune_dangling_item)
 
         # --- start ---
-        remove_disconnected_item = TreeItem(self.gui_txt.remove_disconnected, 9, set_checkable=True,
+        remove_disconnected_item = TreeItem(self.gui_txt.remove_disconnected, 8, set_checkable=True,
                                             color=QtGui.QColor(0, 0, 200),
                                             data=options_gte.remove_disconnected_segments)
-        remove_size_item = TreeTextItem(str(options_gte.remove_object_size), 9, set_editable=True,
+        remove_size_item = TreeTextItem(str(options_gte.remove_object_size), 8, set_editable=True,
                                         color=QtGui.QColor(0, 0, 200))
         remove_disconnected_item.appendRow(remove_size_item)
         options_extraction.appendRow(remove_disconnected_item)
         # --- end ---
 
-        remove_loops_item = TreeItem(self.gui_txt.remove_loops, 9, set_checkable=True,
+        remove_loops_item = TreeItem(self.gui_txt.remove_loops, 8, set_checkable=True,
                                      color=QtGui.QColor(0, 0, 200), data=options_gte.remove_self_loops)
         options_extraction.appendRow(remove_loops_item)
 
-        is_multigraph_item = TreeItem(self.gui_txt.multigraph, 9, set_checkable=True,
+        is_multigraph_item = TreeItem(self.gui_txt.multigraph, 8, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200), data=options_gte.is_multigraph)
         options_extraction.appendRow(is_multigraph_item)
 
-        node_id_item = TreeItem(self.gui_txt.node_id, 9, set_checkable=True,
+        node_id_item = TreeItem(self.gui_txt.node_id, 8, set_checkable=True,
                                 color=QtGui.QColor(0, 0, 200), data=options_gte.display_node_id)
         options_extraction.appendRow(node_id_item)
 
         # 3. Add Computation items
-        options_compute = TreeTextItem('Computation Settings', 11, set_bold=True, color=QtGui.QColor(128, 0, 0))
+        options_compute = TreeTextItem('Computation Settings', 9, set_bold=True, color=QtGui.QColor(128, 0, 0))
         # tree_model.setItem(1, 0, options_compute)  # row, col, item
 
-        heatmaps_item = TreeItem(self.gui_txt.heatmaps, 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
+        heatmaps_item = TreeItem(self.gui_txt.heatmaps, 8, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                  data=options_gtc.display_heatmaps)
         options_compute.appendRow(heatmaps_item)
 
-        degree_item = TreeItem(self.gui_txt.degree, 9, set_checkable=True, color=QtGui.QColor(128, 0, 0),
+        degree_item = TreeItem(self.gui_txt.degree, 8, set_checkable=True, color=QtGui.QColor(128, 0, 0),
                                data=options_gtc.display_degree_histogram)
         options_compute.appendRow(degree_item)
 
-        network_diameter_item = TreeItem(self.gui_txt.diameter, 9, set_checkable=True,
+        network_diameter_item = TreeItem(self.gui_txt.diameter, 8, set_checkable=True,
                                          color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_network_diameter)
         options_compute.appendRow(network_diameter_item)
 
-        anc_item = TreeItem(self.gui_txt.connectivity, 9, set_checkable=True,
+        anc_item = TreeItem(self.gui_txt.connectivity, 8, set_checkable=True,
                             color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_node_connectivity)
         options_compute.appendRow(anc_item)
 
-        clustering_coef_item = TreeItem(self.gui_txt.clustering, 9, set_checkable=True,
+        clustering_coef_item = TreeItem(self.gui_txt.clustering, 8, set_checkable=True,
                                         color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_clustering_coef)
         options_compute.appendRow(clustering_coef_item)
 
-        assortativity_coef_item = TreeItem(self.gui_txt.assortativity, 9, set_checkable=True,
+        assortativity_coef_item = TreeItem(self.gui_txt.assortativity, 8, set_checkable=True,
                                            color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_assortativity_coef)
         options_compute.appendRow(assortativity_coef_item)
 
-        betweenness_centrality_item = TreeItem(self.gui_txt.betweenness, 9, set_checkable=True,
+        betweenness_centrality_item = TreeItem(self.gui_txt.betweenness, 8, set_checkable=True,
                                                color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_betweenness_histogram)
         options_compute.appendRow(betweenness_centrality_item)
 
-        # current_betweenness_item = TreeItem(self.gui_txt.current_flow, 9, set_checkable=True,
+        # current_betweenness_item = TreeItem(self.gui_txt.current_flow, 8, set_checkable=True,
         #                                    color=QtGui.QColor(128, 0, 0),
         #                                    data=options_gtc.display_currentflow_histogram)
         # options_compute.appendRow(current_betweenness_item)
 
-        closeness_centrality_item = TreeItem(self.gui_txt.closeness, 9, set_checkable=True,
+        closeness_centrality_item = TreeItem(self.gui_txt.closeness, 8, set_checkable=True,
                                              color=QtGui.QColor(128, 0, 0),
                                              data=options_gtc.display_closeness_histogram)
         options_compute.appendRow(closeness_centrality_item)
 
-        eigenvector_centrality_item = TreeItem(self.gui_txt.eigenvector, 9, set_checkable=True,
+        eigenvector_centrality_item = TreeItem(self.gui_txt.eigenvector, 8, set_checkable=True,
                                                color=QtGui.QColor(128, 0, 0),
                                                data=options_gtc.display_eigenvector_histogram)
         options_compute.appendRow(eigenvector_centrality_item)
 
-        ohms_centrality_item = TreeItem(self.gui_txt.ohms, 9, set_checkable=True,
+        ohms_centrality_item = TreeItem(self.gui_txt.ohms, 8, set_checkable=True,
                                         color=QtGui.QColor(128, 0, 0),
                                         data=options_gtc.display_ohms_histogram)
         options_compute.appendRow(ohms_centrality_item)
 
-        graph_density_item = TreeItem(self.gui_txt.density, 9, set_checkable=True,
+        graph_density_item = TreeItem(self.gui_txt.density, 8, set_checkable=True,
                                       color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
         options_compute.appendRow(graph_density_item)
 
-        graph_conductance_item = TreeItem(self.gui_txt.conductance, 9, set_checkable=True,
+        graph_conductance_item = TreeItem(self.gui_txt.conductance, 8, set_checkable=True,
                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_conductance)
         options_compute.appendRow(graph_conductance_item)
 
-        global_efficiency_item = TreeItem(self.gui_txt.efficiency, 9, set_checkable=True,
+        global_efficiency_item = TreeItem(self.gui_txt.efficiency, 8, set_checkable=True,
                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_global_efficiency)
         options_compute.appendRow(global_efficiency_item)
 
-        wiener_index_item = TreeItem(self.gui_txt.wiener, 9, set_checkable=True,
+        wiener_index_item = TreeItem(self.gui_txt.wiener, 8, set_checkable=True,
                                      color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_wiener_index)
         options_compute.appendRow(wiener_index_item)
 
         # 4. Add Save items
-        options_save = TreeTextItem('Save Files', 11, set_bold=True, color=QtGui.QColor(99, 99, 99))
+        options_save = TreeTextItem('Save Files', 9, set_bold=True, color=QtGui.QColor(99, 99, 99))
         # tree_model.setItem(2, 0, options_save)  # row, col, item
 
-        export_gexf_item = TreeItem(self.gui_txt.gexf, 9, set_checkable=True,
+        export_gexf_item = TreeItem(self.gui_txt.gexf, 8, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_as_gexf)
         options_save.appendRow(export_gexf_item)
 
-        export_edge_item = TreeItem(self.gui_txt.edge_list, 9, set_checkable=True,
+        export_edge_item = TreeItem(self.gui_txt.edge_list, 8, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.export_edge_list)
         options_save.appendRow(export_edge_item)
 
-        export_adj_item = TreeItem(self.gui_txt.adjacency, 9, set_checkable=True,
+        export_adj_item = TreeItem(self.gui_txt.adjacency, 8, set_checkable=True,
                                    color=QtGui.QColor(99, 99, 99), data=options_gte.export_adj_mat)
         options_save.appendRow(export_adj_item)
 
-        save_images_item = TreeItem(self.gui_txt.save_images, 9, set_checkable=True,
+        save_images_item = TreeItem(self.gui_txt.save_images, 8, set_checkable=True,
                                     color=QtGui.QColor(99, 99, 99), data=options_gte.save_images)
         options_save.appendRow(save_images_item)
 
@@ -928,7 +954,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_about.clicked.connect(MainUI._btn_about_clicked)
         self.btn_cancel.clicked.connect(self._btn_cancel_clicked)
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
-        self.btn_reset_filters.clicked.connect(self._btn_reset_filters_clicked)
+        # self.btn_reset_filters.clicked.connect(self._btn_reset_filters_clicked)
         self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
         self.btn_show_processed_img.clicked.connect(self._btn_show_processed_img_clicked)
         self.btn_show_binary_img.clicked.connect(self._btn_show_binary_img_clicked)
@@ -1720,7 +1746,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.spb_contrast.setEnabled(False)
         self.spb_brightness.setEnabled(False)
 
-        self.btn_reset_filters.setEnabled(False)
+        # self.btn_reset_filters.setEnabled(False)
         self.btn_crop.setEnabled(False)
         self.btn_show_original_img.setEnabled(False)
         self.btn_show_processed_img.setEnabled(False)
@@ -1776,7 +1802,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.spb_contrast.setEnabled(True)
         self.spb_brightness.setEnabled(True)
 
-        self.btn_reset_filters.setEnabled(True)
+        # self.btn_reset_filters.setEnabled(True)
         self.btn_crop.setEnabled(True)
 
         self.btn_show_original_img.setEnabled(True)
@@ -1826,7 +1852,7 @@ class MainUI(QtWidgets.QMainWindow):
 
 class TreeItem(QtGui.QStandardItem):
 
-    def __init__(self, text='', font_size=12, set_bold=False, set_checkable=False, color=QtGui.QColor(0, 0, 0), data=0):
+    def __init__(self, text='', font_size=11, set_bold=False, set_checkable=False, color=QtGui.QColor(0, 0, 0), data=0):
         super().__init__()
 
         font = QtGui.QFont()
@@ -1850,7 +1876,7 @@ class TreeItem(QtGui.QStandardItem):
 
 class TreeTextItem(QtGui.QStandardItem):
 
-    def __init__(self, text='', font_size=11, set_bold=False, set_editable=False, color=QtGui.QColor(0, 0, 0)):
+    def __init__(self, text='', font_size=9, set_bold=False, set_editable=False, color=QtGui.QColor(0, 0, 0)):
         super().__init__()
 
         font = QtGui.QFont()
