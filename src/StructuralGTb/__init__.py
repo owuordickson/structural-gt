@@ -29,7 +29,7 @@ from .SGT.graph_converter import GraphConverter
 
 
 # Project Details
-__version__ = "1.3.8"
+__version__ = "1.3.9"
 __title__ = f"StructuralGT (v{__version__}b)"
 __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
