@@ -29,7 +29,7 @@ class MainUI(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setObjectName("window_main")
-        self.resize(1075, 881)
+        self.resize(1075, 720)
 
         self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
@@ -268,29 +268,24 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_graph.setObjectName("grp_graph")
         self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
         self.grid_layout_graph.setObjectName("grid_layout_graph")
-        self.btn_show_original_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_original_img.setObjectName("btn_show_original_img")
-        self.grid_layout_graph.addWidget(self.btn_show_original_img, 0, 0, 1, 1)
-        self.btn_show_processed_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_processed_img.setObjectName("btn_show_processed_img")
-        self.grid_layout_graph.addWidget(self.btn_show_processed_img, 1, 0, 1, 1)
-        self.btn_show_binary_img = QtWidgets.QPushButton(parent=self.grp_graph)
-        self.btn_show_binary_img.setObjectName("btn_show_binary_img")
-        self.grid_layout_graph.addWidget(self.btn_show_binary_img, 2, 0, 1, 1)
-
-
+        self.cb_show_img = QtWidgets.QComboBox(parent=self.grp_graph)
+        self.cb_show_img.setFont(self.font)
+        self.cb_show_img.setObjectName("cb_show_img")
+        self.cb_show_img.addItems(['Original Image', 'Processed Image', 'Binary Image'])
+        self.cb_show_img.setCurrentIndex(0)
+        self.grid_layout_graph.addWidget(self.cb_show_img, 0, 0, 1, 1)
         self.btn_show_graph = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_show_graph.setFont(self.font)
         self.btn_show_graph.setObjectName("btn_show_graph")
-        self.grid_layout_graph.addWidget(self.btn_show_graph, 3, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_show_graph, 1, 0, 1, 1)
         self.btn_quick_graph_metrics = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_quick_graph_metrics.setFont(self.font)
         self.btn_quick_graph_metrics.setObjectName("btn_quick_graph_metrics")
-        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 4, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_quick_graph_metrics, 2, 0, 1, 1)
         self.btn_save_files = QtWidgets.QPushButton(parent=self.grp_graph)
         self.btn_save_files.setFont(self.font)
         self.btn_save_files.setObjectName("btn_save_files")
-        self.grid_layout_graph.addWidget(self.btn_save_files, 5, 0, 1, 1)
+        self.grid_layout_graph.addWidget(self.btn_save_files, 3, 0, 1, 1)
         self.grid_layout_tasks.addWidget(self.grp_graph, 4, 0, 1, 2)
 
         # 2f. Spacer
@@ -581,9 +576,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_about.setText(_translate("window_main", "About StructuralGT"))
         self.grp_graph.setTitle(_translate("window_main", "Visualizations"))
         # self.btn_reset_filters.setText(_translate("window_main", "Reset to Default"))
-        self.btn_show_original_img.setText(_translate("window_main", "Original Image"))
-        self.btn_show_processed_img.setText(_translate("window_main", "Processed Image"))
-        self.btn_show_binary_img.setText(_translate("window_main", "Binary Image"))
         self.btn_show_graph.setText(_translate("window_main", "Show Graph"))
         self.btn_quick_graph_metrics.setText(_translate("window_main", "Quick Metrics"))
         self.btn_save_files.setText(_translate("window_main", "Save Files"))
@@ -955,9 +947,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_cancel.clicked.connect(self._btn_cancel_clicked)
         self.btn_crop.clicked.connect(self._btn_crop_clicked)
         # self.btn_reset_filters.clicked.connect(self._btn_reset_filters_clicked)
-        self.btn_show_original_img.clicked.connect(self._btn_show_original_img_clicked)
-        self.btn_show_processed_img.clicked.connect(self._btn_show_processed_img_clicked)
-        self.btn_show_binary_img.clicked.connect(self._btn_show_binary_img_clicked)
+        self.cb_show_img.currentIndexChanged.connect(self._cb_show_img_changed)
         self.btn_show_graph.clicked.connect(self._btn_show_graph_clicked)
         self.btn_quick_graph_metrics.clicked.connect(self._btn_quick_metrics_clicked)
         self.btn_save_files.clicked.connect(self._btn_save_files_clicked)
@@ -1137,39 +1127,31 @@ class MainUI(QtWidgets.QMainWindow):
             dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
 
-    def _btn_show_original_img_clicked(self):
+    def _cb_show_img_changed(self):
         try:
-            g_obj = self.graph_objs[self.current_obj_index]
-            img = Image.fromarray(g_obj.imp.img)
-            q_img = ImageQt.toqpixmap(img)
-            self._load_image('O', q_img)
-        except IndexError:
-            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
-            dialog.exec()
-
-    def _btn_show_processed_img_clicked(self):
-        try:
-            g_obj = self.graph_objs[self.current_obj_index]
-            if g_obj.imp.img_mod is not None:
-                img = Image.fromarray(g_obj.imp.img_mod)
+            img_idx = self.cb_show_img.currentIndex()
+            if img_idx == 0:
+                g_obj = self.graph_objs[self.current_obj_index]
+                img = Image.fromarray(g_obj.imp.img)
                 q_img = ImageQt.toqpixmap(img)
-                self._load_image('M', q_img)
-            else:
-                self._image_filters_changed()
-        except IndexError:
-            dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
-            dialog.exec()
-
-    def _btn_show_binary_img_clicked(self):
-        try:
-            g_obj = self.graph_objs[self.current_obj_index]
-            if g_obj.imp.img_bin is not None:
-                img = Image.fromarray(g_obj.imp.img_bin)
-                q_img = ImageQt.toqpixmap(img)
-                self._load_image('B', q_img)
-            else:
-                self.current_img = 'B'
-                self._image_filters_changed()
+                self._load_image('O', q_img)
+            elif img_idx == 1:
+                g_obj = self.graph_objs[self.current_obj_index]
+                if g_obj.imp.img_mod is not None:
+                    img = Image.fromarray(g_obj.imp.img_mod)
+                    q_img = ImageQt.toqpixmap(img)
+                    self._load_image('M', q_img)
+                else:
+                    self._image_filters_changed()
+            elif img_idx == 2:
+                g_obj = self.graph_objs[self.current_obj_index]
+                if g_obj.imp.img_bin is not None:
+                    img = Image.fromarray(g_obj.imp.img_bin)
+                    q_img = ImageQt.toqpixmap(img)
+                    self._load_image('B', q_img)
+                else:
+                    self.current_img = 'B'
+                    self._image_filters_changed()
         except IndexError:
             dialog = CustomDialog("File Error", "Add new 'Image Path' using the 'Select' button")
             dialog.exec()
@@ -1457,7 +1439,7 @@ class MainUI(QtWidgets.QMainWindow):
         if img_pixmap is None:
             try:
                 g_obj = self.graph_objs[self.current_obj_index]
-                self._btn_show_original_img_clicked()
+                self._cb_show_img_changed()
 
                 self.txt_img_path.setText(g_obj.imp.img_path)
                 if self.txt_out_path.text() == '':
@@ -1748,9 +1730,7 @@ class MainUI(QtWidgets.QMainWindow):
 
         # self.btn_reset_filters.setEnabled(False)
         self.btn_crop.setEnabled(False)
-        self.btn_show_original_img.setEnabled(False)
-        self.btn_show_processed_img.setEnabled(False)
-        self.btn_show_binary_img.setEnabled(False)
+        self.cb_show_img.setEnabled(False)
         self.btn_show_graph.setEnabled(False)
         self.btn_quick_graph_metrics.setEnabled(False)
         self.btn_save_files.setEnabled(False)
@@ -1805,9 +1785,7 @@ class MainUI(QtWidgets.QMainWindow):
         # self.btn_reset_filters.setEnabled(True)
         self.btn_crop.setEnabled(True)
 
-        self.btn_show_original_img.setEnabled(True)
-        self.btn_show_processed_img.setEnabled(True)
-        self.btn_show_binary_img.setEnabled(True)
+        self.cb_show_img.setEnabled(True)
         self.btn_show_graph.setEnabled(True)
         self.btn_quick_graph_metrics.setEnabled(True)
         self.btn_save_files.setEnabled(True)
