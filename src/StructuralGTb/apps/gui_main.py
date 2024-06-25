@@ -29,7 +29,7 @@ class MainUI(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setObjectName("window_main")
-        self.resize(1075, 720)
+        # self.resize(1024, 360)
 
         self.wdt_main = QtWidgets.QWidget(parent=self)
         self.wdt_main.setObjectName("wdt_main")
