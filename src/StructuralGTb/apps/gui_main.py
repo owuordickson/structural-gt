@@ -187,6 +187,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_properties = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_properties.setObjectName("grp_properties")
         self.grp_properties.setStyleSheet("QGroupBox#grp_properties {border: 1px solid rgb(224,224,224);}")
+        self.grp_properties.setFont(self.bold_font)
         self.grid_layout_properties = QtWidgets.QGridLayout(self.grp_properties)
         self.grid_layout_properties.setObjectName("grid_layout_properties")
 
@@ -226,6 +227,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_crop = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_crop.setObjectName("grp_crop")
         self.grp_crop.setStyleSheet("QGroupBox#grp_crop {border: 1px solid rgb(224,224,224);}")
+        self.grp_crop.setFont(self.bold_font)
         self.grid_layout_crop = QtWidgets.QGridLayout(self.grp_crop)
         self.grid_layout_crop.setObjectName("grid_layout_crop")
         # self.btn_reset_filters = QtWidgets.QPushButton(parent=self.grp_crop)
@@ -269,6 +271,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_graph = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_graph.setObjectName("grp_graph")
         self.grp_graph.setStyleSheet("QGroupBox#grp_graph {border: 1px solid rgb(224,224,224);}")
+        self.grp_graph.setFont(self.bold_font)
         self.grid_layout_graph = QtWidgets.QGridLayout(self.grp_graph)
         self.grid_layout_graph.setObjectName("grid_layout_graph")
         self.cb_show_img = QtWidgets.QComboBox(parent=self.grp_graph)
@@ -300,6 +303,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_compute = QtWidgets.QGroupBox(parent=self.grp_tasks)
         self.grp_compute.setObjectName("grp_compute")
         self.grp_compute.setStyleSheet("QGroupBox#grp_compute {border: 1px solid rgb(224,224,224);}")
+        self.grp_compute.setFont(self.bold_font)
         self.grid_layout_compute = QtWidgets.QGridLayout(self.grp_compute)
         self.grid_layout_compute.setObjectName("grid_layout_compute")
         self.cbx_igraph = QtWidgets.QCheckBox(parent=self.grp_compute)
@@ -375,6 +379,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_img_filters = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_filters.setObjectName("grp_img_filters")
         self.grp_img_filters.setStyleSheet("QGroupBox#grp_img_filters {border: 1px solid rgb(224,224,224);}")
+        self.grp_img_filters.setFont(self.bold_font)
         self.grid_layout_filters = QtWidgets.QGridLayout(self.grp_img_filters)
         self.grid_layout_filters.setObjectName("grid_layout_filters")
         self.cbx_laplacian = QtWidgets.QCheckBox(parent=self.grp_img_filters)
@@ -481,6 +486,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grp_img_binary = QtWidgets.QGroupBox(parent=self.grp_settings)
         self.grp_img_binary.setObjectName("grp_img_binary")
         self.grp_img_binary.setStyleSheet("QGroupBox#grp_img_binary {border: 1px solid rgb(224,224,224);}")
+        self.grp_img_binary.setFont(self.bold_font)
         self.grid_layout_binary = QtWidgets.QGridLayout(self.grp_img_binary)
         self.grid_layout_binary.setObjectName("grid_layout_binary")
         self.rdo_otsu_threshold = QtWidgets.QRadioButton(parent=self.grp_img_binary)
@@ -619,9 +625,9 @@ class MainUI(QtWidgets.QMainWindow):
         self.lbl_laplacian.setText(_translate("window_main", "3"))
         self.cbx_lowpass.setText(_translate("window_main", "Lowpass"))
         self.lbl_progress.setText(_translate("window_main", ""))
-        self.lbl_info.setText(_translate("window_main", "add image..."))
+        self.lbl_info.setText(_translate("window_main", "welcome..."))
         self.btn_cancel.setText(_translate("window_main", "Cancel"))
-        self.grp_img_binary.setTitle(_translate("window_main", "Image Binary"))
+        self.grp_img_binary.setTitle(_translate("window_main", "Binary Filters"))
         self.rdo_otsu_threshold.setText(_translate("window_main", "OTSU"))
         self.rdo_adaptive_threshold.setText(_translate("window_main", "Adaptive"))
         self.rdo_global_threshold.setText(_translate("window_main", "Global"))
@@ -675,7 +681,7 @@ class MainUI(QtWidgets.QMainWindow):
         root_node = tree_model.invisibleRootItem()
 
         # 2. Add Extraction items
-        options_extraction = TreeTextItem('Extraction Settings', 9, set_bold=True, color=QtGui.QColor(0, 0, 200))
+        options_extraction = TreeTextItem('Extraction Options', 9, set_bold=True, color=QtGui.QColor(0, 0, 200))
         # tree_model.setItem(0, 0, options_extraction)  # row, col, item
 
         # --- start ---
@@ -741,7 +747,7 @@ class MainUI(QtWidgets.QMainWindow):
         options_extraction.appendRow(node_id_item)
 
         # 3. Add Computation items
-        options_compute = TreeTextItem('Computation Settings', 9, set_bold=True, color=QtGui.QColor(128, 0, 0))
+        options_compute = TreeTextItem('Computation Options', 9, set_bold=True, color=QtGui.QColor(128, 0, 0))
         # tree_model.setItem(1, 0, options_compute)  # row, col, item
 
         heatmaps_item = TreeItem(self.gui_txt.heatmaps, 8, set_checkable=True, color=QtGui.QColor(128, 0, 0),
@@ -1873,35 +1879,28 @@ class TreeTextItem(QtGui.QStandardItem):
 
         self.setEditable(set_editable)
         self.setForeground(color)
+        # self.setData(color, QtCore.Qt.ItemDataRole.ForegroundRole)
         self.setFont(font)
         self.setText(text)
 
 
 class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
+    # Apply Radio Button behavior
+    # def paint(self, painter, option, index):
+    #    if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Wt":
+    #        widget = option.widget
+    #        style = widget.style() if widget else QtWidgets.QApplication.style()
+    #        opt = QtWidgets.QStyleOptionButton()
+    #        opt.rect = option.rect
+    #        opt.text = index.data()
+    #        opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
+    #            QtWidgets.QStyle.StateFlag.State_Off)
 
-    def paint(self, painter, option, index):
-        if index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Wt":
-            # painter.save()
-            widget = option.widget
-            style = widget.style() if widget else QtWidgets.QApplication.style()
-            opt = QtWidgets.QStyleOptionButton()
-            opt.rect = option.rect
-            opt.text = index.data()
-            opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
-                QtWidgets.QStyle.StateFlag.State_Off)
+     #       style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
+     #   else:
+     #       QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
 
-            # Set font color
-            # palette = QtGui.QPalette()
-            # palette.setColor(QtGui.QPalette.ColorGroup.All, QtGui.QPalette.ColorRole.ButtonText,
-            #                 QtGui.QColor(0, 0, 200))
-            # opt.palette = palette
-            painter.setPen(QtGui.QColor(0, 0, 200))
-
-            style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
-            # painter.restore()
-        else:
-            QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
-
+    # Apply Radio Button behavior
     def editorEvent(self, event, model, option, index):
         value = QtWidgets.QStyledItemDelegate.editorEvent(self, event, model, option, index)
         if value and (index.data(QtCore.Qt.ItemDataRole.UserRole) == "RdoItem_Wt"):
