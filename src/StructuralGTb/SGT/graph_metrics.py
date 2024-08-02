@@ -20,7 +20,8 @@ from ypstruct import struct
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
 # from sklearn.cluster import spectral_clustering
-from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
+from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
+from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
 from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
@@ -126,6 +127,7 @@ class GraphMetrics(ProgressUpdate):
         self.closeness_distribution = [0]
         self.eigenvector_distribution = [0]
         self.ohms_distribution = [0]
+        self.percolation_distribution = []
         # self.nx_subgraph_components = []
         self.weighted_output_data = pd.DataFrame([])
         self.weighted_degree_distribution = [0]
@@ -134,6 +136,7 @@ class GraphMetrics(ProgressUpdate):
         self.currentflow_distribution = [0]
         self.weighted_closeness_distribution = [0]
         self.weighted_eigenvector_distribution = [0]
+        self.weighted_percolation_distribution = [0]
 
     def compute_gt_metrics(self):
         """
@@ -284,19 +287,9 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Average closeness centrality")
             data_dict["y"].append(c_val)
 
-        # calculating graph conductance
-        if options.compute_graph_conductance == 1:
-            self.update_status([60, "Computing graph conductance..."])
-            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
-            data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
-            for item in self.gc.nx_info:
-                data_dict["x"].append(item["name"])
-                data_dict["y"].append(item["value"])
-
         # calculating Ohms centrality
         if options.display_ohms_histogram == 1:
-            self.update_status([62, "Computing Ohms centrality..."])
+            self.update_status([60, "Computing Ohms centrality..."])
             ohms_distribution_1, res = self.compute_ohms_centrality()
             ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
             ohms_val = round(np.average(ohms_distribution), 5)
@@ -309,7 +302,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Ohms centrality (avg. length)")
             data_dict["y"].append(f"{res['avg length']} " + r"$m^2$")
 
-        # calculating current-flow betweenness
+        # calculating current-flow betweenness centrality
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
@@ -323,7 +316,7 @@ class GraphMetrics(ProgressUpdate):
             source_nodes = sorted_nodes[:5]
             target_nodes = sorted_nodes[-5:]
 
-            self.update_status([65, "Computing current-flow betweenness centrality..."])
+            self.update_status([62, "Computing current-flow betweenness centrality..."])
             cf_distribution_1 = nx.current_flow_betweenness_centrality_subset(gph, source_nodes, target_nodes)
             cf_distribution = np.array(list(cf_distribution_1.values()), dtype=float)
             cf_val = np.average(cf_distribution)
@@ -331,6 +324,26 @@ class GraphMetrics(ProgressUpdate):
             self.currentflow_distribution = cf_distribution
             data_dict["x"].append("Average current-flow betweenness centrality")
             data_dict["y"].append(cf_val)
+
+        # calculating percolation centrality
+        if (options_gte.is_multigraph == 0) and (options.display_percolation_histogram == 1):
+            self.update_status([65, "Computing percolation centrality..."])
+            p_distribution_1 = percolation_centrality(graph)
+            p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
+            p_val = round(np.average(p_distribution), 5)
+            self.percolation_distribution = p_distribution
+            data_dict["x"].append("Average percolation centrality")
+            data_dict["y"].append(p_val)
+
+        # calculating graph conductance
+        if options.compute_graph_conductance == 1:
+            self.update_status([66, "Computing graph conductance..."])
+            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
+            data_dict["x"].append("Largest-Entire graph ratio")
+            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
+            for item in self.gc.nx_info:
+                data_dict["x"].append(item["name"])
+                data_dict["y"].append(item["value"])
 
         self.output_data = pd.DataFrame(data_dict)
 
@@ -425,13 +438,22 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append(f"{weight_type}-weighted average eigenvector centrality")
             data_dict["y"].append(e_val)
 
+        if options.display_percolation_histogram == 1:
+            self.update_status([86, "Compute weighted percolation centrality..."])
+            p_distribution_1 = percolation_centrality(graph, weight='weight')
+            p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
+            p_val = round(np.average(p_distribution), 5)
+            self.weighted_percolation_distribution = p_distribution
+            data_dict["x"].append(f"{weight_type}-weighted average percolation centrality")
+            data_dict["y"].append(p_val)
+
         # calculating graph conductance
         if options.compute_graph_conductance == 1:
-            self.update_status([86, "Computing graph conductance..."])
+            self.update_status([87, "Computing graph conductance..."])
             # res_items, sg_components = self.gc.approx_conductance_by_spectral(weighted=True)
             for item in self.gc.nx_info:
-                data_dict["x"].append((str("Weighted ") + str(item["name"])))
-                data_dict["y"].append((str("Weighted ") + str(item["value"])))
+                data_dict["x"].append((str(item["name"])))
+                data_dict["y"].append((str(item["value"])))
 
         # calculate cross-sectional area of edges
         if self.gc.configs_graph.weight_type == 'AREA':
@@ -731,6 +753,8 @@ class GraphMetrics(ProgressUpdate):
         w_eig_distribution = self.weighted_eigenvector_distribution
         cf_distribution = self.currentflow_distribution
         ohm_distribution = self.ohms_distribution
+        per_distribution = self.percolation_distribution
+        w_per_distribution = self.weighted_percolation_distribution
 
         # Degree and Closeness
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
@@ -746,7 +770,7 @@ class GraphMetrics(ProgressUpdate):
             GraphMetrics.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
-        # Betweenness, Clustering, Currentflow, Eigenvector and Ohm
+        # Betweenness, Clustering, Eigenvector and Ohms
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
             bc_title = r"Betweenness Centrality: $\sigma$="
@@ -769,6 +793,7 @@ class GraphMetrics(ProgressUpdate):
             GraphMetrics.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
+        # Currentflow
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_currentflow_histogram == 1):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             cf_title = r"Current-flow betweenness Centrality: $\sigma$="
@@ -776,8 +801,18 @@ class GraphMetrics(ProgressUpdate):
             GraphMetrics.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
             figs.append(fig)
 
+        # percolation
+        if (opt_gte.is_multigraph == 0) and (opt_gtc.display_percolation_histogram == 1):
+            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+            pc_title = r"Percolation Centrality: $\sigma$="
+            ax_1 = fig.add_subplot(2, 2, 1)
+            GraphMetrics.plot_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
+            figs.append(fig)
+
         # weighted histograms
         if opt_gte.has_weights == 1:
+
+            # degree, betweenness, closeness and eigenvector
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             if opt_gtc.display_degree_histogram == 1:
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
@@ -800,6 +835,14 @@ class GraphMetrics(ProgressUpdate):
                 ax_4 = fig.add_subplot(2, 2, 4)
                 GraphMetrics.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
+
+            # percolation
+            if (opt_gte.is_multigraph == 0) and (opt_gtc.display_percolation_histogram == 1):
+                fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+                w_pc_title = weight_type + r"-Weighted Percolation Cent.: $\sigma$="
+                ax_1 = fig.add_subplot(2, 2, 1)
+                GraphMetrics.plot_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
+                figs.append(fig)
 
         return figs
 
@@ -826,6 +869,8 @@ class GraphMetrics(ProgressUpdate):
         w_eig_distribution = self.weighted_eigenvector_distribution
         # cf_distribution = self.currentflow_distribution
         ohm_distribution = self.ohms_distribution
+        per_distribution = self.percolation_distribution
+        w_per_distribution = self.weighted_percolation_distribution
 
         sz = 30
         lw = 1.5
@@ -864,6 +909,15 @@ class GraphMetrics(ProgressUpdate):
             figs.append(fig)
         if opt_gtc.display_ohms_histogram == 1:
             fig = self.plot_heatmap(ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            figs.append(fig)
+
+        if (opt_gtc.display_percolation_histogram == 1) and (opt_gte.is_multigraph == 0):
+            fig = self.plot_heatmap(per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            figs.append(fig)
+        if (opt_gtc.display_percolation_histogram == 1) and (opt_gte.has_weights == 1) and \
+                (opt_gte.is_multigraph == 0):
+            fig = self.plot_heatmap(w_per_distribution,
+                                    f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 

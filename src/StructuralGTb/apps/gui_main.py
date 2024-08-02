@@ -799,6 +799,11 @@ class MainUI(QtWidgets.QMainWindow):
                                         data=options_gtc.display_ohms_histogram)
         options_compute.appendRow(ohms_centrality_item)
 
+        percolation_centrality_item = TreeItem(self.gui_txt.percolation, 8, set_checkable=True,
+                                               color=QtGui.QColor(128, 0, 0),
+                                               data=options_gtc.display_percolation_histogram)
+        options_compute.appendRow(percolation_centrality_item)
+
         graph_density_item = TreeItem(self.gui_txt.density, 8, set_checkable=True,
                                       color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
         options_compute.appendRow(graph_density_item)
@@ -1633,6 +1638,7 @@ class MainUI(QtWidgets.QMainWindow):
         options_gtc.display_closeness_histogram = 0
         options_gtc.display_eigenvector_histogram = 0
         options_gtc.display_ohms_histogram = 0
+        options_gtc.display_percolation_histogram = 0
         options_gtc.compute_node_connectivity = 0
         options_gtc.compute_graph_density = 0
         options_gtc.compute_graph_conductance = 0
@@ -1667,6 +1673,8 @@ class MainUI(QtWidgets.QMainWindow):
                     options_gtc.display_eigenvector_histogram = 1
                 if item.text() == self.gui_txt.ohms:
                     options_gtc.display_ohms_histogram = 1
+                if item.text() == self.gui_txt.percolation:
+                    options_gtc.display_percolation_histogram = 1
                 if item.text() == self.gui_txt.connectivity:
                     options_gtc.compute_node_connectivity = 1
                 if item.text() == self.gui_txt.density:
@@ -1893,12 +1901,12 @@ class TreeRadioItemDelegate(QtWidgets.QStyledItemDelegate):
     #        opt = QtWidgets.QStyleOptionButton()
     #        opt.rect = option.rect
     #        opt.text = index.data()
-    #        opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole) else (
+    #        opt.state |= QtWidgets.QStyle.StateFlag.State_On if index.data(QtCore.Qt.ItemDataRole.CheckStateRole)else(
     #            QtWidgets.QStyle.StateFlag.State_Off)
 
-     #       style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
-     #   else:
-     #       QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
+    #       style.drawControl(QtWidgets.QStyle.ControlElement.CE_RadioButton, opt, painter, widget)
+    #   else:
+    #       QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)
 
     # Apply Radio Button behavior
     def editorEvent(self, event, model, option, index):

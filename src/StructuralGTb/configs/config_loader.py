@@ -74,6 +74,7 @@ def load_configs():
     options_gtc.display_closeness_histogram = 1
     options_gtc.display_eigenvector_histogram = 1
     options_gtc.display_ohms_histogram = 0
+    options_gtc.display_percolation_histogram = 0
     options_gtc.compute_node_connectivity = 1
     options_gtc.compute_graph_density = 1
     options_gtc.compute_graph_conductance = 0
@@ -197,7 +198,8 @@ def load_configs():
                                                              'display_closeness_centrality_histogram'))
     options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
                                                                'display_eigenvector_centrality_histogram'))
-    options_gtc.display_ohms_histogram = int(config.get('sgt-settings','display_ohms_histogram'))
+    options_gtc.display_ohms_histogram = int(config.get('sgt-settings', 'display_ohms_histogram'))
+    options_gtc.display_percolation_histogram = int(config.get('sgt-settings', 'display_percolation_histogram'))
     options_gtc.compute_node_connectivity = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
     options_gtc.compute_graph_density = int(config.get('sgt-settings', 'compute_graph_density'))
     options_gtc.compute_graph_conductance = int(config.get('sgt-settings', 'compute_graph_conductance'))
@@ -290,6 +292,7 @@ def load_gui_configs():
     gui_txt.closeness = "Closeness Centrality"
     gui_txt.eigenvector = "Eigenvector Centrality"
     gui_txt.ohms = "Ohms Centrality"
+    gui_txt.percolation = "Percolation Centrality"
     gui_txt.density = "Graph Density"
     gui_txt.conductance = "Graph Conductance"
     gui_txt.efficiency = "Global Efficiency"
@@ -343,6 +346,7 @@ def load_gui_configs():
     gui_txt.closeness = str(config.get('gui', 'closeness'))
     gui_txt.eigenvector = str(config.get('gui', 'eigenvector'))
     gui_txt.ohms = str(config.get('gui', 'ohms'))
+    gui_txt.percolation = str(config.get('gui', 'percolation'))
     gui_txt.density = str(config.get('gui', 'density'))
     gui_txt.conductance = str(config.get('gui', 'conductance'))
     gui_txt.efficiency = str(config.get('gui', 'efficiency'))
