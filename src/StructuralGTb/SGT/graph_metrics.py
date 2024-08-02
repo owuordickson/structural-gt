@@ -328,7 +328,7 @@ class GraphMetrics(ProgressUpdate):
         # calculating percolation centrality
         if (options_gte.is_multigraph == 0) and (options.display_percolation_histogram == 1):
             self.update_status([65, "Computing percolation centrality..."])
-            p_distribution_1 = percolation_centrality(graph)
+            p_distribution_1 = percolation_centrality(graph, states=None)
             p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
             p_val = round(np.average(p_distribution), 5)
             self.percolation_distribution = p_distribution
@@ -440,7 +440,7 @@ class GraphMetrics(ProgressUpdate):
 
         if options.display_percolation_histogram == 1:
             self.update_status([86, "Compute weighted percolation centrality..."])
-            p_distribution_1 = percolation_centrality(graph, weight='weight')
+            p_distribution_1 = percolation_centrality(graph, states=None, weight='weight')
             p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
             p_val = round(np.average(p_distribution), 5)
             self.weighted_percolation_distribution = p_distribution
