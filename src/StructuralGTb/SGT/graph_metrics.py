@@ -308,7 +308,7 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Ohms centrality (conductivity)")
             data_dict["y"].append(f"{res['conductivity']} S/m")
 
-        # calculating current-flow betweenness centrality
+            # calculating current-flow betweenness centrality
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
@@ -531,7 +531,8 @@ class GraphMetrics(ProgressUpdate):
         avg_len = np.average(np.array(lst_len, dtype=float))
         avg_width = np.average(np.array(lst_width, dtype=float))
         res = {'avg area': avg_area, 'avg length': avg_len, 'avg width': avg_width,
-               'g shape': g_shape, 'conductivity': (1/rho_dim)}
+               'g shape': g_shape, 'conductivity': round((1/rho_dim), 2)}
+
         return ohms_dict, res
 
     def average_node_connectivity(self, flow_func=None):
