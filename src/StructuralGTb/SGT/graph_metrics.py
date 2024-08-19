@@ -298,9 +298,9 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Average Ohms centrality")
             data_dict["y"].append(ohms_val)
             data_dict["x"].append("Ohms centrality (avg. area)")
-            data_dict["y"].append(f"{res['avg area']} m")
+            data_dict["y"].append(f"{res['avg area']} " + r"$m^2$")
             data_dict["x"].append("Ohms centrality (avg. length)")
-            data_dict["y"].append(f"{res['avg length']} " + r"$m^2$")
+            data_dict["y"].append(f"{res['avg length']} m")
 
         # calculating current-flow betweenness centrality
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
@@ -507,7 +507,7 @@ class GraphMetrics(ProgressUpdate):
                 pix_width = np.average(arr_dia)
                 pix_length = np.sum(arr_len)
                 length = pix_length * pixel_dim
-                area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+                area = math.pi * 89.6 * (pix_width * pixel_dim * 0.5) ** 2
                 ohms_val = ((b_val * length * rho_dim) / area)
                 lst_len.append(length)
                 lst_area.append(area)
