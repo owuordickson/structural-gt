@@ -125,6 +125,12 @@ class GraphSkeleton:
             pix_width = self.estimate_edge_width(m, ortho)
             pix_width += 0.5  # (normalization) to make it larger than empty widths
 
+            # Delta X and Y: Compute the  difference in x and y coordinates:
+            #       dx = G.nodes[v]['pos'][0] - G.nodes[u]['pos'][0] and
+            #       dy = G.nodes[v]['pos'][1] - G.nodes[u]['pos'][1]
+            # Angle Calculation: Use the arctangent function to get the angle in radians:
+            #       math.atan2(dy, dx)
+
         if weight_type is None:
             wt = pix_width / 10
         elif weight_options.get(weight_type) == weight_options.get('DIA'):
