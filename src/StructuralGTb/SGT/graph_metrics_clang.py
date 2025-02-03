@@ -11,7 +11,8 @@ import os
 import pandas as pd
 import numpy as np
 import networkx as nx
-from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
+from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
+from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
 from networkx.algorithms import global_efficiency, clustering
 from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.distance_measures import diameter
@@ -147,7 +148,7 @@ class GraphMetricsClang(GraphMetrics):
             data_dict["x"].append("Average degree")
             data_dict["y"].append(deg_val)
 
-        if (options.compute_network_diameter == 1) or (options.compute_nodal_connectivity == 1):
+        if (options.compute_network_diameter == 1) or (options.compute_node_connectivity == 1):
             try:
                 connected_graph = nx.is_connected(graph)
             except nx.exception.NetworkXPointlessConcept:
@@ -166,7 +167,7 @@ class GraphMetricsClang(GraphMetrics):
             data_dict["y"].append(dia)
 
         # calculating average nodal connectivity
-        if options.compute_nodal_connectivity == 1:
+        if options.compute_node_connectivity == 1:
             if self.abort:
                 self.update_status([-1, "Task aborted."])
                 return
@@ -257,17 +258,28 @@ class GraphMetricsClang(GraphMetrics):
             data_dict["x"].append("Average closeness centrality")
             data_dict["y"].append(c_val)
 
-        # calculating graph conductance
-        if options.compute_graph_conductance == 1:
-            self.update_status([60, "Computing graph conductance..."])
-            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
-            data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
-            for item in self.gc.nx_info:
-                data_dict["x"].append(item["name"])
-                data_dict["y"].append(item["value"])
+        # calculating Ohms centrality
+        if options.display_ohms_histogram == 1:
+            self.update_status([60, "Computing Ohms centrality..."])
+            ohms_distribution_1, res = self.compute_ohms_centrality()
+            ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
+            ohms_val = round(np.average(ohms_distribution), 5)
+            # ohms_std = round(np.std(ohms_distribution), 5)
+            self.ohms_distribution = ohms_distribution
+            data_dict["x"].append("Average Ohms centrality")
+            data_dict["y"].append(ohms_val)
+            data_dict["x"].append("Ohms centrality (avg. area)")
+            data_dict["y"].append(f"{res['avg area']} " + r"$m^2$")
+            data_dict["x"].append("Ohms centrality (avg. length)")
+            data_dict["y"].append(f"{res['avg length']} m")
+            data_dict["x"].append("Ohms centrality (avg. width)")
+            data_dict["y"].append(f"{res['avg width']} m")
+            data_dict["x"].append("Ohms centrality (g shape coeff.)")
+            data_dict["y"].append(f"{res['g shape']}")
+            data_dict["x"].append("Ohms centrality (conductivity)")
+            data_dict["y"].append(f"{res['conductivity']} S/m")
 
-        # calculating current-flow betweenness
+            # calculating current-flow betweenness centrality
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
@@ -281,7 +293,7 @@ class GraphMetricsClang(GraphMetrics):
             source_nodes = sorted_nodes[:5]
             target_nodes = sorted_nodes[-5:]
 
-            self.update_status([65, "Computing current-flow betweenness centrality..."])
+            self.update_status([62, "Computing current-flow betweenness centrality..."])
             cf_distribution_1 = nx.current_flow_betweenness_centrality_subset(gph, source_nodes, target_nodes)
             cf_distribution = np.array(list(cf_distribution_1.values()), dtype=float)
             cf_val = np.average(cf_distribution)
@@ -289,6 +301,26 @@ class GraphMetricsClang(GraphMetrics):
             self.currentflow_distribution = cf_distribution
             data_dict["x"].append("Average current-flow betweenness centrality")
             data_dict["y"].append(cf_val)
+
+        # calculating percolation centrality
+        if (options_gte.is_multigraph == 0) and (options.display_percolation_histogram == 1):
+            self.update_status([65, "Computing percolation centrality..."])
+            p_distribution_1 = percolation_centrality(graph, states=None)
+            p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
+            p_val = round(np.average(p_distribution), 5)
+            self.percolation_distribution = p_distribution
+            data_dict["x"].append("Average percolation centrality")
+            data_dict["y"].append(p_val)
+
+        # calculating graph conductance
+        if options.compute_graph_conductance == 1:
+            self.update_status([66, "Computing graph conductance..."])
+            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
+            data_dict["x"].append("Largest-Entire graph ratio")
+            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
+            for item in self.gc.nx_info:
+                data_dict["x"].append(item["name"])
+                data_dict["y"].append(item["value"])
 
         self.output_data = pd.DataFrame(data_dict)
 

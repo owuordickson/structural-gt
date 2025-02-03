@@ -12,6 +12,7 @@ BUILD & DISTRIBUTE PRE-COMPILED WHEEL
 3. Compile the C extension
     python setup.py build_ext --inplace  # MacOS/Linux
     python setup.py build_ext --compiler=mingw32 --inplace  # Windows
+    python -c "import sgt_c_module"
 
 4. Create a wheel (.whl)
     python setup.py bdist_wheel

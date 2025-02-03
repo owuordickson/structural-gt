@@ -1,5 +1,3 @@
-import os
-import sys
 import platform
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -37,8 +35,8 @@ ext_modules = [
         name="sgt_c_module",
         sources=["src/StructuralGTb/SGT-c/sgtmodule.c", "src/StructuralGTb/SGT-c/sgt_base.c"],
         libraries=["igraph"],  # macOS/Linux
-        include_dirs=["/opt/homebrew/Cellar/igraph/0.10.11/include/igraph"],  # macOS/Linux
-        library_dirs=["/opt/homebrew/Cellar/igraph/0.10.11/lib"],  # macOS/Linux
+        include_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph"],  # macOS/Linux
+        library_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"],  # macOS/Linux
     )
 ]
 

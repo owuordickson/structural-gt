@@ -154,9 +154,9 @@ static PyMethodDef sgt_methods[] = {
 };
 
 /* Create module */
-static struct PyModuleDef sgtmodule = {
+static struct PyModuleDef sgt_c_module = {
     PyModuleDef_HEAD_INIT,
-    "sgt",   /* name of module */
+    "sgt_c_module",   /* name of module */
     sgt_doc, /* module documentation, may be NULL */
     -1,       /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     sgt_methods
@@ -164,15 +164,15 @@ static struct PyModuleDef sgtmodule = {
 
 /* Initialization function for the module */
 PyMODINIT_FUNC
-PyInit_sgt(void)
+PyInit_sgt_c_module(void)
 {
     PyObject *m;
 
-    m = PyModule_Create(&sgtmodule);
+    m = PyModule_Create(&sgt_c_module);
     if (m == NULL)
         return NULL;
 
-    ErrorObject = PyErr_NewException("sgt.error", NULL, NULL);
+    ErrorObject = PyErr_NewException("sgt_c_module.error", NULL, NULL);
     Py_XINCREF(ErrorObject);
     if (PyModule_AddObject(m, "error", ErrorObject) < 0) {
         Py_XDECREF(ErrorObject);

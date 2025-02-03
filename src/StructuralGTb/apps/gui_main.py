@@ -20,9 +20,7 @@ from ..configs.config_loader import load_configs, load_gui_configs, get_num_core
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
-
-
-# from .SGT.graph_metrics_clang import GraphMetricsClang
+from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
 class MainUI(QtWidgets.QMainWindow):
@@ -1822,7 +1820,7 @@ class MainUI(QtWidgets.QMainWindow):
         """
         self.btn_cancel.setEnabled(False)
 
-        # self.cbx_igraph.setEnabled(True)
+        self.cbx_igraph.setEnabled(True)
         self.btn_gt_metrics.setEnabled(True)
         if self.cbx_multi.isChecked():
             self.btn_gt_metrics_all.setEnabled(True)
