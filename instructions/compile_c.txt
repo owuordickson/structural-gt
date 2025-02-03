@@ -22,7 +22,7 @@ install only 'mingw32-gcc-g++' and 'mingw32-make' and 'mingw32-pthreads-w32'
 Add path 'C:\MinGW\bin' and 'C:\MinGW\msys\1.0\bin' to Environment Variables
 test 'gcc --version'
 
-3. INSTALL CMAKE
+3. INSTALL CMAKE (for Windows, ignore for MacOS)
 Linux/MacOS: use 'brew install cmake'
 Windows:
 use 'Microsoft C++ Build Tools' to install

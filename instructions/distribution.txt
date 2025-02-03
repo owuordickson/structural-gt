@@ -1,0 +1,22 @@
+BUILD & DISTRIBUTE PRE-COMPILED WHEEL
+-------------------------------------
+
+1. Install MinGW and ensure gcc is in your PATH.
+    MacOS: brew install gcc
+    Windows: download mingw-get-setup.exe installer
+
+2. Ensure you have the required dependencies
+    brew install igraph  # macOS (Homebrew)
+    sudo apt install libigraph-dev  # Linux (Debian-based)
+
+3. Compile the C extension
+    python setup.py build_ext --inplace  # MacOS/Linux
+    python setup.py build_ext --compiler=mingw32 --inplace  # Windows
+
+4. Create a wheel (.whl)
+    python setup.py bdist_wheel
+
+5. Install the wheel without needing compilation
+    pip install dist/sgt-1.4.5-cp39-cp39-macosx_10_9_x86_64.whl
+    or
+    pip install sgt-1.4.5-cp39-cp39-win_amd64.whl

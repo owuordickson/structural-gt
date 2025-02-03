@@ -21,7 +21,7 @@ from .graph_metrics import GraphMetrics
 from .graph_converter import GraphConverter
 from .image_processor import ImageProcessor
 
-import sgt
+import sgt_c_module as sgt
 from ..configs.config_loader import get_num_cores
 
 
