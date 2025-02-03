@@ -6,7 +6,9 @@ A software tool that allows graph theory analysis of nano-structures. This is a 
 
 This specified version is not currently available for download via GitHub. Therefore, please follow the manual installation instructions provided below:
 
-* Install Python version 3.11 on your computer.
+### a) Install via source code
+
+* Install Python version 3.13 on your computer.
 * Download link https://drive.google.com/file/d/1jhr5w0KhCAbMS9kxbOlean0X2q2HrZy9/view?usp=drive_link
 * Download, extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
@@ -20,6 +22,18 @@ pip uninstall pyqt6-tools
 pip uninstall pyqt6-plugins
 pip install -r requirements.txt
 pip install .
+```
+
+### b) Install as executable
+
+* Install Python version 3.13 on your computer.
+* Download link (to be provided)
+* Open a terminal application such as CMD. 
+* Navigate to the location where you saved the **'.whl'** file using the terminal. 
+* Execute the following commands:
+
+```bash
+pip install structuralgtb-1.4.5-win_amd64.whl
 ```
 
 ## Executing program

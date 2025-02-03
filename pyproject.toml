@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0", "wheel"]
+requires = ["setuptools >= 75.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -31,7 +31,7 @@ license = {file = "LICENSE"}
 keywords = ["nano-particles", "nano-structures", "graph-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: GNU General Public License v3 License",
   "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",

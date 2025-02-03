@@ -8,7 +8,6 @@ Compute graph theory metrics
 """
 
 import os
-import math
 import datetime
 import itertools
 import multiprocessing
@@ -19,7 +18,6 @@ import matplotlib.pyplot as plt
 from ypstruct import struct
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
-# from sklearn.cluster import spectral_clustering
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
 from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
