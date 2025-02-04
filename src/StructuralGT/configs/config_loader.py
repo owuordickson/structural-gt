@@ -20,6 +20,7 @@ def load_configs():
     options_gnct = struct()
 
     # 1. Image Path
+    options_path.image_dimensions = 2
     options_path.is_multi_image = 0
     options_path.image_path = ""
     options_path.output_path = ""
@@ -141,6 +142,7 @@ def load_configs():
         return configs_data
 
     # 1. Image Path
+    options_path.image_dimensions = int(config.get('image-dir', 'image_dim'))
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
     options_path.image_path = config.get('image-dir', 'image_path')
     options_path.output_path = config.get('image-dir', 'gt_output_path')
@@ -149,7 +151,7 @@ def load_configs():
     options_img.scale_value = float(config.get('image-dir', 'scale_value_nanometers'))
     options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
     options_img.resistivity = float(config.get('image-dir', 'resistivity'))
-    options_img.threshold_type = int(config.get('filter-settings', 'threshold'))
+    options_img.threshold_type = int(config.get('filter-settings', 'threshold_type'))
     options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
     options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
     options_img.gamma = float(config.get('filter-settings', 'adjust_gamma'))
@@ -237,6 +239,11 @@ def load_configs():
                           dest='multiImage',
                           help='is it a multi-image (multiple images in a folder) analysis?',
                           default=options_path.is_multi_image,
+                          type='int')
+    opt_parser.add_option('-d', '--imageDim',
+                          dest='imageDim',
+                          help='is it a 2D or 3D image?',
+                          default=options_path.image_dimensions,
                           type='int')
     opt_parser.add_option('-c', '--cores',
                           dest='numCores',

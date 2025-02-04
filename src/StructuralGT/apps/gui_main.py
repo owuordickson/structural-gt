@@ -334,20 +334,17 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_path = QtWidgets.QGridLayout(self.grp_path)
         self.grid_layout_path.setObjectName("grid_layout_path")
 
-        """self.btn_grp_img = QtWidgets.QButtonGroup(self)
+        self.btn_grp_img = QtWidgets.QButtonGroup(self)
         self.btn_grp_img.setObjectName("btn_grp_img")
         self.rdo_2d_img = QtWidgets.QRadioButton(parent=self.grp_path)
         self.rdo_2d_img.setObjectName("rdo_2d_img")
+        self.rdo_2d_img.setChecked(True)
         self.btn_grp_img.addButton(self.rdo_2d_img)
-        self.grid_layout_path.addWidget(self.rdo_2d_img, 0, 1, 1, 1)
+        self.grid_layout_path.addWidget(self.rdo_2d_img, 0, 4, 1, 1)
         self.rdo_3d_img = QtWidgets.QRadioButton(parent=self.grp_path)
         self.rdo_3d_img.setObjectName("rdo_3d_img")
         self.btn_grp_img.addButton(self.rdo_3d_img)
-        self.grid_layout_path.addWidget(self.rdo_2d_img, 0, 2, 1, 1)
-
-        spacer_item_3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
-                                              QtWidgets.QSizePolicy.Policy.Expanding)
-        self.grid_layout_path.addItem(spacer_item_3, 0, 0, 1, 1)"""
+        self.grid_layout_path.addWidget(self.rdo_3d_img, 0, 5, 1, 1)
 
         self.lbl_img_path = QtWidgets.QLabel(parent=self.grp_path)
         self.lbl_img_path.setFont(self.bold_font)
@@ -355,13 +352,13 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_path.addWidget(self.lbl_img_path, 1, 0, 1, 1)
         self.txt_img_path = QtWidgets.QLineEdit(parent=self.grp_path)
         self.txt_img_path.setObjectName("txt_img_path")
-        self.grid_layout_path.addWidget(self.txt_img_path, 1, 1, 1, 2)
+        self.grid_layout_path.addWidget(self.txt_img_path, 1, 1, 1, 1)
         self.btn_select_img_path = QtWidgets.QPushButton(parent=self.grp_path)
         self.btn_select_img_path.setObjectName("btn_select_img_path")
         self.grid_layout_path.addWidget(self.btn_select_img_path, 1, 3, 1, 1)
         self.cbx_multi = QtWidgets.QCheckBox(parent=self.grp_path)
         self.cbx_multi.setObjectName("cbx_multi")
-        self.grid_layout_path.addWidget(self.cbx_multi, 1, 4, 1, 1)
+        self.grid_layout_path.addWidget(self.cbx_multi, 1, 4, 1, 2)
 
         self.lbl_out_path = QtWidgets.QLabel(parent=self.grp_path)
         self.lbl_out_path.setFont(self.bold_font)
@@ -369,7 +366,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.grid_layout_path.addWidget(self.lbl_out_path, 2, 0, 1, 1)
         self.txt_out_path = QtWidgets.QLineEdit(parent=self.grp_path)
         self.txt_out_path.setObjectName("txt_out_path")
-        self.grid_layout_path.addWidget(self.txt_out_path, 2, 1, 1, 2)
+        self.grid_layout_path.addWidget(self.txt_out_path, 2, 1, 1, 1)
         self.btn_select_out_path = QtWidgets.QPushButton(parent=self.grp_path)
         self.btn_select_out_path.setObjectName("btn_select_out_path")
         self.grid_layout_path.addWidget(self.btn_select_out_path, 2, 3, 1, 1)
@@ -620,6 +617,8 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_crop.setText(_translate("window_main", "Crop"))
         self.lbl_brightness.setText(_translate("window_main", "Brightness"))
         self.lbl_contrast.setText(_translate("window_main", "Contrast"))
+        self.rdo_2d_img.setText(_translate("window_main", "2D"))
+        self.rdo_3d_img.setText(_translate("window_main", "3D"))
         self.lbl_out_path.setText(_translate("window_main", "Output Dir"))
         self.btn_select_out_path.setText(_translate("window_main", "Select"))
         self.btn_select_img_path.setText(_translate("window_main", "Select"))
@@ -963,11 +962,18 @@ class MainUI(QtWidgets.QMainWindow):
 
     def _init_img_path_settings(self, options):
 
+        if options.imageDim == 3:
+            self.rdo_3d_img.setChecked(True)
+        else:
+            self.rdo_2d_img.setChecked(True)
+
         self.cbx_multi.setChecked(options.multiImage)
         if self.txt_img_path.text() == '':
             self.lbl_img.setText("Add 'Image Path' using the 'Select' button")
 
         # Listeners
+        self.rdo_2d_img.toggled.connect(self._rdo_image_dimensions_changed)
+        self.rdo_3d_img.toggled.connect(self._rdo_image_dimensions_changed)
         self.btn_select_img_path.clicked.connect(self._btn_select_img_path_clicked)
         self.btn_select_out_path.clicked.connect(self._btn_select_out_path_clicked)
         self.cbx_multi.stateChanged.connect(self._cbx_multi_changed)
@@ -1068,6 +1074,15 @@ class MainUI(QtWidgets.QMainWindow):
         else:
             self.graph_objs = [self.graph_objs[0]]
             self._reload_ui()
+
+    def _rdo_image_dimensions_changed(self):
+        options = self.configs_data['main_options']
+        img_dim_type = self.btn_grp_img.checkedButton()
+        if img_dim_type == self.rdo_2d_img:
+            options.imageDim = 2
+        elif img_dim_type == self.rdo_3d_img:
+            options.imageDim = 3
+        self.enable_path_controls()
 
     def _btn_select_img_path_clicked(self):
         if self.cbx_multi.isChecked():
@@ -1200,6 +1215,7 @@ class MainUI(QtWidgets.QMainWindow):
             if g_obj.imp.img_net is not None:
                 q_img = ImageQt.toqpixmap(g_obj.imp.img_net)
                 self._load_image('G', q_img)
+                self.wait_flag = False
             else:
                 self.disable_all_tasks()
                 options_img = self._fetch_img_options()
@@ -1305,9 +1321,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.current_obj_index = 0
         self._load_image('O')
         self.lbl_info.setText(f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
-
-    # def _btn_chaos_gt_clicked(self):
-    #    pass
 
     def _handle_finished(self, task: int, show_dialog: int, obj):
         """
@@ -1758,22 +1771,27 @@ class MainUI(QtWidgets.QMainWindow):
         self.error_flag = False
         self.btn_cancel.setEnabled(True)  # Opposite of others
 
+        self.rdo_2d_img.setEnabled(False)
+        self.rdo_3d_img.setEnabled(False)
         self.btn_select_img_path.setEnabled(False)
+        self.btn_select_out_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
+
         self.btn_zoom_in.setEnabled(False)
         self.btn_zoom_out.setEnabled(False)
         self.btn_next.setEnabled(False)
         self.btn_prev.setEnabled(False)
 
+        # self.btn_reset_filters.setEnabled(False)
+        self.btn_crop.setEnabled(False)
         self.spb_contrast.setEnabled(False)
         self.spb_brightness.setEnabled(False)
 
-        # self.btn_reset_filters.setEnabled(False)
-        self.btn_crop.setEnabled(False)
         self.cb_show_img.setEnabled(False)
         self.btn_show_graph.setEnabled(False)
         self.btn_quick_graph_metrics.setEnabled(False)
         self.btn_save_files.setEnabled(False)
+
         self.cbx_igraph.setEnabled(False)
         self.btn_gt_metrics.setEnabled(False)
         self.btn_gt_metrics_all.setEnabled(False)
@@ -1786,8 +1804,7 @@ class MainUI(QtWidgets.QMainWindow):
         :return:
         """
         if not self.wait_flag:
-            self.btn_select_img_path.setEnabled(True)
-            self.cbx_multi.setEnabled(True)
+            self.enable_path_controls()
             if len(self.graph_objs) > 0:
                 self.btn_cancel.setEnabled(False)  # Opposite of others
                 self.enable_img_tasks()
@@ -1801,9 +1818,26 @@ class MainUI(QtWidgets.QMainWindow):
         """
         self.disable_all_tasks()
         self.btn_cancel.setEnabled(False)  # Opposite of others
+        self.enable_path_controls()
 
+    def enable_path_controls(self):
+        """Allow multi-image path selection if and only if image-dimension is 2D."""
+        options_main = self.configs_data["main_options"]
+
+        self.rdo_2d_img.setEnabled(True)
+        self.rdo_3d_img.setEnabled(True)
         self.btn_select_img_path.setEnabled(True)
-        self.cbx_multi.setEnabled(True)
+        self.btn_select_out_path.setEnabled(True)
+
+        if options_main.imageDim == 2:
+            self.cbx_multi.setEnabled(True)
+        else:
+            self.cbx_multi.setEnabled(False)
+            self.cbx_multi.setChecked(False)
+
+    def enable_filter_controls(self):
+        """Enable all filter controls"""
+        pass
 
     def enable_img_tasks(self):
         """
