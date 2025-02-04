@@ -1771,12 +1771,20 @@ class MainUI(QtWidgets.QMainWindow):
         self.error_flag = False
         self.btn_cancel.setEnabled(True)  # Opposite of others
 
+        self.disable_path_controls()
+        self.disable_img_tasks()
+        self.disable_filter_controls()
+
+    def disable_path_controls(self):
+        """Disable all path controls and buttons."""
         self.rdo_2d_img.setEnabled(False)
         self.rdo_3d_img.setEnabled(False)
         self.btn_select_img_path.setEnabled(False)
         self.btn_select_out_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
 
+    def disable_img_tasks(self):
+        """Disable GT controls and buttons."""
         self.btn_zoom_in.setEnabled(False)
         self.btn_zoom_out.setEnabled(False)
         self.btn_next.setEnabled(False)
@@ -1797,6 +1805,36 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_gt_metrics_all.setEnabled(False)
         # self.btn_chaos_gt.setEnabled(False)
 
+    def disable_filter_controls(self):
+        """Disable all filter controls"""
+        self.txt_scalebar_val.setEnabled(False)
+        self.txt_scalebar_px.setEnabled(False)
+        self.txt_resistivity.setEnabled(False)
+
+        self.spb_brightness.setEnabled(False)
+        self.spb_contrast.setEnabled(False)
+
+        self.sld_lut_gamma.setEnabled(False)
+        self.cbx_gaussian_blur.setEnabled(False)
+        self.sld_gaussian.setEnabled(False)
+        self.cbx_autolevel.setEnabled(False)
+        self.sld_autolevel.setEnabled(False)
+        self.cbx_laplacian.setEnabled(False)
+        self.sld_laplacian.setEnabled(False)
+        self.cbx_sobel.setEnabled(False)
+        self.sld_sobel.setEnabled(False)
+        self.cbx_lowpass.setEnabled(False)
+        self.spb_lowpass.setEnabled(False)
+        self.cbx_scharr.setEnabled(False)
+
+        self.rdo_global_threshold.setEnabled(False)
+        self.sld_global_threshold.setEnabled(False)
+        self.rdo_adaptive_threshold.setEnabled(False)
+        self.spb_adaptive_threshold.setEnabled(False)
+        self.rdo_otsu_threshold.setEnabled(False)
+        self.cbx_dark_foreground.setEnabled(False)
+        self.tree_settings.setEnabled(False)
+
     def enable_all_tasks(self):
         """
         Enable all buttons and controls.
@@ -1807,6 +1845,7 @@ class MainUI(QtWidgets.QMainWindow):
             self.enable_path_controls()
             if len(self.graph_objs) > 0:
                 self.btn_cancel.setEnabled(False)  # Opposite of others
+                self.enable_filter_controls()
                 self.enable_img_tasks()
                 if not self.error_flag:
                     self.enable_gt_tasks()
@@ -1837,7 +1876,33 @@ class MainUI(QtWidgets.QMainWindow):
 
     def enable_filter_controls(self):
         """Enable all filter controls"""
-        pass
+        self.txt_scalebar_val.setEnabled(True)
+        self.txt_scalebar_px.setEnabled(True)
+        self.txt_resistivity.setEnabled(True)
+
+        self.spb_brightness.setEnabled(True)
+        self.spb_contrast.setEnabled(True)
+
+        self.sld_lut_gamma.setEnabled(True)
+        self.cbx_gaussian_blur.setEnabled(True)
+        self.sld_gaussian.setEnabled(True)
+        self.cbx_autolevel.setEnabled(True)
+        self.sld_autolevel.setEnabled(True)
+        self.cbx_laplacian.setEnabled(True)
+        self.sld_laplacian.setEnabled(True)
+        self.cbx_sobel.setEnabled(True)
+        self.sld_sobel.setEnabled(True)
+        self.cbx_lowpass.setEnabled(True)
+        self.spb_lowpass.setEnabled(True)
+        self.cbx_scharr.setEnabled(True)
+
+        self.rdo_global_threshold.setEnabled(True)
+        self.sld_global_threshold.setEnabled(True)
+        self.rdo_adaptive_threshold.setEnabled(True)
+        self.spb_adaptive_threshold.setEnabled(True)
+        self.rdo_otsu_threshold.setEnabled(True)
+        self.cbx_dark_foreground.setEnabled(True)
+        self.tree_settings.setEnabled(True)
 
     def enable_img_tasks(self):
         """
