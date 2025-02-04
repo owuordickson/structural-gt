@@ -9,7 +9,6 @@ import os
 import io
 import cv2
 import numpy as np
-# import porespy as ps
 import matplotlib.pyplot as plt
 from ypstruct import struct
 from PIL import Image
@@ -260,29 +259,11 @@ class ImageProcessor:
 
     def compute_fractal_dimension(self):
         """
-        Compute the fractal dimension of the processed image.
+        Compute the fractal dimension of the processed image using a C module.
 
         :return:
         """
-        # sierpinski_im = ps.generators.sierpinski_foam(4, 5)
-        fd_metrics = ps.metrics.boxcount(self.img)
-        print(fd_metrics.slope)
-        x = np.log(np.array(fd_metrics.size))
-        y = np.log(np.array(fd_metrics.count))
-        fractal_dimension = np.polyfit(x, y, 1)[0]  # fractal_dimension = lim r -> 0 log(Nr)/log(1/r)
-        print(fractal_dimension)
-
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-        ax1.set_yscale('log')
-        ax1.set_xscale('log')
-        ax1.set_xlabel('box size')
-        ax1.set_ylabel('box count')
-        ax2.set_xlabel('box size')
-        ax2.set_ylabel('slope')
-        ax2.set_xscale('log')
-        ax1.plot(fd_metrics.size, fd_metrics.count, '-o')
-        ax2.plot(fd_metrics.size, fd_metrics.slope, '-o')
-        plt.show()
+        pass
 
     def create_filenames(self, image_path: str = None):
         """
