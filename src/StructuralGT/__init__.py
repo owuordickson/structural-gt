@@ -1,5 +1,5 @@
 """
-**StructuralGTb**
+**StructuralGT**
 
 A software package for performing Graph Theory on microscopic TEM images. This software is a \
 modified version of StructuralGT by Drew A. Vecchio: https://github.com/drewvecchio/StructuralGT.
@@ -29,11 +29,11 @@ from .SGT.graph_converter import GraphConverter
 
 
 # Project Details
-__version__ = "1.4.5"
-__title__ = f"StructuralGT (v{__version__}b)"
+__version__ = "2.0.1"
+__title__ = f"StructuralGT (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
 
 
-# Packages available in 'from StructuralGTb import *'
+# Packages available in 'from StructuralGT import *'
 __all__ = ['GraphMetrics', 'GraphSkeleton', 'GraphConverter']

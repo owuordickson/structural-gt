@@ -1,7 +1,4 @@
 # SPDX-License-Identifier: GNU GPL v3
-# This file is dual licensed under the terms of the GNU GPL v3.0
-# See the LICENSE file in the root of this
-# repository for complete details.
 
 """
 Compute graph theory metrics using iGraph library implemented in C language.
@@ -341,7 +338,6 @@ class GraphMetricsClang(GraphMetrics):
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
             anc = sgt.compute_anc(graph_file, cpu_count, self.allow_mp)
-
         except Exception as err:
             print(err)
         return anc

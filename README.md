@@ -30,10 +30,10 @@ pip install .
 * Download link (to be provided)
 * Open a terminal application such as CMD. 
 * Navigate to the location where you saved the **'.whl'** file using the terminal. 
-* Execute the following commands:
+* Execute the following command:
 
 ```bash
-pip install structuralgtb-1.4.5-win_amd64.whl
+pip install structuralgt-2.0.1-win_amd64.whl
 ```
 
 ## Executing program
@@ -41,11 +41,10 @@ pip install structuralgtb-1.4.5-win_amd64.whl
 To execute the program, please follow these steps:
 
 * Open a terminal application such as CMD.
-* Navigate to the **'structural-gt'** folder using the terminal.
-* Once inside the folder, execute the following command:
+* Execute the following command:
 
 ```bash
-StructuralGTb
+StructuralGT
 ```
 
 

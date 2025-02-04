@@ -2,7 +2,7 @@ import platform
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
-from src import StructuralGTb
+from src import StructuralGT
 
 
 class BuildExt(build_ext):
@@ -33,7 +33,7 @@ class BuildExt(build_ext):
 ext_modules = [
     Extension(
         name="sgt_c_module",
-        sources=["src/StructuralGTb/SGT-c/sgtmodule.c", "src/StructuralGTb/SGT-c/sgt_base.c"],
+        sources=["src/StructuralGT/SGT-c/sgtmodule.c", "src/StructuralGT/SGT-c/sgt_base.c"],
         libraries=["igraph"],  # macOS/Linux
         include_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph"],  # macOS/Linux
         library_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"],  # macOS/Linux
@@ -51,7 +51,7 @@ if platform.system() == "Windows":
 # Setup configuration
 setup(
     name="sgt_c_module",
-    version=StructuralGTb.__version__,
+    version=StructuralGT.__version__,
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExt},  # Use the custom build class
 )

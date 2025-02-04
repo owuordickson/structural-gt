@@ -1,1 +1,1 @@
-include src/StructuralGTb/configs/*.ini
+include src/StructuralGT/configs/*.ini
