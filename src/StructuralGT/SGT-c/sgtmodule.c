@@ -15,10 +15,10 @@ compute_anc(PyObject *self, PyObject *args)
     int allow_mp;
     char *f_name;
 
-    /*if (!PyArg_ParseTuple(args, "siii:compute_anc", &str_adj_mat, &length, &num_cpus, &allow_mp))
-        return NULL;*/
-    if (!PyArg_ParseTuple(args, "sii:compute_anc", &f_name, &num_cpus, &allow_mp))
+    // Consider passing graph as String
+    if (!PyArg_ParseTuple(args, "sii:compute_anc", &f_name, &num_cpus, &allow_mp)){
         return NULL;
+    }
 
 	/*if ( f_name == ''){
     	PyErr_SetString(ErrorObject, "Unable to retrieve graph.");
@@ -44,8 +44,6 @@ compute_anc(PyObject *self, PyObject *args)
     // Read the graph from the file
     igraph_read_graph_edgelist(&graph, file, 0, IGRAPH_UNDIRECTED);
     fclose(file);
-
-    // Print the average degree
     // printf("Nodes: %d\nEdges: %d\n", (int)igraph_vcount(&graph), (int)igraph_ecount(&graph));
 
 	num_nodes = igraph_vcount(&graph);
@@ -75,9 +73,7 @@ compute_anc(PyObject *self, PyObject *args)
         pthread_t *threads = (pthread_t *)malloc(MAX_THREAD_COUNT * sizeof(pthread_t));
         ThreadArgsLNC *args = (ThreadArgsLNC *)malloc(MAX_THREAD_COUNT * sizeof(ThreadArgsLNC));
 
-
         if (threads == NULL || args == NULL) {
-            //exit(EXIT_FAILURE);
             PyErr_SetString(ErrorObject, "Memory allocation failed\n");
     	    return NULL;
         }
