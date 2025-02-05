@@ -28,13 +28,14 @@ class ImageProcessor:
         img (MatLike): processed image.
     """
 
-    def __init__(self, img_path, out_path, options_img=None, img: MatLike = None):
+    def __init__(self, img_path, out_path, img_dim=2, options_img=None, img=None):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
         Args:
             img_path (str): input image path.
             out_path (str): directory path for storing results.
+            img_dim (int): image dimension (2D or 3D).
             options_img (struct): image processing parameters and options.
             img (MatLike): processed image.
 
@@ -62,14 +63,16 @@ class ImageProcessor:
         >>>
         >>> i_path = "path/to/image"
         >>> o_dir = ""
+        >>> i_dim = 2
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
+        >>> imp_obj = ImageProcessor(i_path, o_dir, i_dim, options_img=opt_img)
         >>> imp_obj.apply_filters()
         """
-        self.configs_img = options_img
         self.img_path = img_path
         self.output_path = out_path
-        self.img_raw = ImageProcessor.load_img_from_file(img_path)
+        self.img_dim = img_dim
+        self.configs_img = options_img
+        self.img_raw = ImageProcessor.load_img_from_file(img_path, img_dim)
         if img is None:
             self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         else:
@@ -157,12 +160,7 @@ class ImageProcessor:
             d_depth = cv2.CV_16S
             grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
             grad_y = cv2.Scharr(filtered_img, d_depth, 0, 1)
-            abs_grad_x = cv2.convertScaleAbs(grad_x)
-            abs_grad_y = cv2.convertScaleAbs(grad_y)
-            dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
-            dst = cv2.convertScaleAbs(dst)
-            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
-            filtered_img = cv2.convertScaleAbs(filtered_img)
+            filtered_img = ImageProcessor.apply_filter('scharr', filtered_img, grad_x, grad_y)
 
         # applying sobel filter
         if options.apply_sobel == 1:
@@ -173,20 +171,15 @@ class ImageProcessor:
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
             grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=options.sobel_kernel_size, scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
-            abs_grad_x = cv2.convertScaleAbs(grad_x)
-            abs_grad_y = cv2.convertScaleAbs(grad_y)
-            dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
-            dst = cv2.convertScaleAbs(dst)
-            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
-            filtered_img = cv2.convertScaleAbs(filtered_img)
+            filtered_img = ImageProcessor.apply_filter('sobel', filtered_img, grad_x, grad_y)
 
         # applying laplacian filter
         if options.apply_laplacian == 1:
             d_depth = cv2.CV_16S
             dst = cv2.Laplacian(filtered_img, d_depth, ksize=options.laplacian_kernel_size)
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
-            dst = cv2.convertScaleAbs(dst)
-            filtered_img = cv2.addWeighted(filtered_img, 0.75, dst, 0.25, 0)
+            abs_dst = cv2.convertScaleAbs(dst)
+            filtered_img = cv2.addWeighted(filtered_img, 0.75, abs_dst, 0.25, 0)
             filtered_img = cv2.convertScaleAbs(filtered_img)
 
         return filtered_img
@@ -382,6 +375,17 @@ class ImageProcessor:
         return fig
 
     @staticmethod
+    def apply_filter(filter_type: str, img: MatLike, grad_x, grad_y):
+        """"""
+        if filter_type == 'scharr' or filter_type == 'sobel':
+            abs_grad_x = cv2.convertScaleAbs(grad_x)
+            abs_grad_y = cv2.convertScaleAbs(grad_y)
+            dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+            abs_dst = cv2.convertScaleAbs(dst)
+            filtered_img = cv2.addWeighted(img, 0.75, abs_dst, 0.25, 0)
+            return cv2.convertScaleAbs(filtered_img)
+
+    @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
         """
         Apply contrast and brightness filters to image.
@@ -422,13 +426,15 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_file(file: str):
+    def load_img_from_file(file: str, img_dim: int):
         """
         Read image and save it as an OpenCV object.
 
-        :param file:
+        :param file: file path.
+        :param img_dim: image dimension (2D or 3D).
         :return:
         """
+        print(f"Do something with ImgDim={img_dim}.")
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
 
@@ -467,7 +473,7 @@ class ImageProcessor:
         :param image: OpenCV image.
         :return: rescaled image
         """
-        w, h = image.shape
+        w, h = image.shape  # what about 3D?
         if h > w:
             scale_factor = size / h
         else:

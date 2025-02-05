@@ -20,15 +20,12 @@ def load_configs():
     options_gnct = struct()
 
     # 1. Image Path
-    options_path.image_dimensions = 2
     options_path.is_multi_image = 0
     options_path.image_path = ""
     options_path.output_path = ""
 
     # 2. Image Detection settings
-    options_img.scale_value = 1
-    options_img.scalebar_px_count = 0
-    options_img.resistivity = 1
+    options_img.image_dimensions = 2
     options_img.threshold_type = 1
     options_img.threshold_global = 127
     options_img.threshold_adaptive = 11
@@ -48,6 +45,9 @@ def load_configs():
     options_img.apply_dark_foreground = 0
     options_img.brightness_level = 0
     options_img.contrast_level = 0
+    options_img.scale_value = 1
+    options_img.scalebar_px_count = 0
+    options_img.resistivity = 1
 
     # 3. Graph Extraction Settings
     options_gte.merge_nearby_nodes = 1
@@ -142,15 +142,12 @@ def load_configs():
         return configs_data
 
     # 1. Image Path
-    options_path.image_dimensions = int(config.get('image-dir', 'image_dim'))
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
     options_path.image_path = config.get('image-dir', 'image_path')
     options_path.output_path = config.get('image-dir', 'gt_output_path')
 
     # 2. Image Detection settings
-    options_img.scale_value = float(config.get('image-dir', 'scale_value_nanometers'))
-    options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
-    options_img.resistivity = float(config.get('image-dir', 'resistivity'))
+    options_img.image_dimensions = int(config.get('filter-settings', 'image_dim'))
     options_img.threshold_type = int(config.get('filter-settings', 'threshold_type'))
     options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
     options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
@@ -170,6 +167,9 @@ def load_configs():
     options_img.apply_dark_foreground = int(config.get('filter-settings', 'dark_foreground'))
     options_img.brightness_level = int(config.get('filter-settings', 'brightness_level'))
     options_img.contrast_level = int(config.get('filter-settings', 'contrast_level'))
+    options_img.scale_value = float(config.get('image-dir', 'scale_value_nanometers'))
+    options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
+    options_img.resistivity = float(config.get('image-dir', 'resistivity'))
 
     # 3. Graph Extraction Settings
     options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))
@@ -240,11 +240,11 @@ def load_configs():
                           help='is it a multi-image (multiple images in a folder) analysis?',
                           default=options_path.is_multi_image,
                           type='int')
-    opt_parser.add_option('-d', '--imageDim',
+    """opt_parser.add_option('-d', '--imageDim',
                           dest='imageDim',
                           help='is it a 2D or 3D image?',
-                          default=options_path.image_dimensions,
-                          type='int')
+                          default=
+                          type='int')"""
     opt_parser.add_option('-c', '--cores',
                           dest='numCores',
                           help='number of cores',

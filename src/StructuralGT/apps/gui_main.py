@@ -932,6 +932,11 @@ class MainUI(QtWidgets.QMainWindow):
 
     def _init_img_binary_settings(self, options_img):
 
+        if options_img.image_dimensions == 3:
+            self.rdo_3d_img.setChecked(True)
+        else:
+            self.rdo_2d_img.setChecked(True)
+
         if options_img.threshold_type == 2:
             self.rdo_otsu_threshold.setChecked(True)
         elif options_img.threshold_type == 1:
@@ -961,12 +966,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.cbx_dark_foreground.stateChanged.connect(self._image_filters_changed)
 
     def _init_img_path_settings(self, options):
-
-        if options.imageDim == 3:
-            self.rdo_3d_img.setChecked(True)
-        else:
-            self.rdo_2d_img.setChecked(True)
-
         self.cbx_multi.setChecked(options.multiImage)
         if self.txt_img_path.text() == '':
             self.lbl_img.setText("Add 'Image Path' using the 'Select' button")
@@ -1054,6 +1053,7 @@ class MainUI(QtWidgets.QMainWindow):
 
         if self.cbx_multi.isChecked() and os.path.isfile(self.txt_img_path.text()):
             # split the file location into file name and path
+            img_dim = self.configs_data['filter_options']['image_dimensions']
             img_dir, file_name = os.path.split(self.txt_img_path.text())
 
             files = os.listdir(img_dir)
@@ -1063,7 +1063,7 @@ class MainUI(QtWidgets.QMainWindow):
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     file_name = os.path.join(img_dir, a_file)
-                    im_obj = ImageProcessor(file_name, '')
+                    im_obj = ImageProcessor(file_name, '', img_dim)
                     obj = GraphConverter(im_obj)
                     self.graph_objs.append(obj)
             if len(self.graph_objs) <= 0:
@@ -1076,15 +1076,17 @@ class MainUI(QtWidgets.QMainWindow):
             self._reload_ui()
 
     def _rdo_image_dimensions_changed(self):
-        options = self.configs_data['main_options']
+        options_img = self.configs_data['filter_options']
         img_dim_type = self.btn_grp_img.checkedButton()
+
         if img_dim_type == self.rdo_2d_img:
-            options.imageDim = 2
+            options_img.image_dimensions = 2
         elif img_dim_type == self.rdo_3d_img:
-            options.imageDim = 3
+            options_img.image_dimensions = 3
         self.enable_path_controls()
 
     def _btn_select_img_path_clicked(self):
+        img_dim = self.configs_data['filter_options']['image_dimensions']
         if self.cbx_multi.isChecked():
             fd_image_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
             if fd_image_dir:
@@ -1095,7 +1097,7 @@ class MainUI(QtWidgets.QMainWindow):
                 for a_file in files:
                     if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                         file_name = os.path.join(fd_image_dir, a_file)
-                        im_obj = ImageProcessor(file_name, '')
+                        im_obj = ImageProcessor(file_name, '', img_dim)
                         obj = GraphConverter(im_obj)
                         self.graph_objs.append(obj)
                 if len(self.graph_objs) <= 0:
@@ -1109,7 +1111,7 @@ class MainUI(QtWidgets.QMainWindow):
                 self.graph_objs = []
                 # split the file location into path and file name
                 fd_image_dir, _ = os.path.split(fd_image_file)
-                im_obj = ImageProcessor(fd_image_file, '')
+                im_obj = ImageProcessor(fd_image_file, '', img_dim)
                 obj = GraphConverter(im_obj)
                 self.graph_objs.append(obj)
         # Set and display image
@@ -1826,6 +1828,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.cbx_lowpass.setEnabled(False)
         self.spb_lowpass.setEnabled(False)
         self.cbx_scharr.setEnabled(False)
+        self.cbx_median.setEnabled(False)
 
         self.rdo_global_threshold.setEnabled(False)
         self.sld_global_threshold.setEnabled(False)
@@ -1861,14 +1864,14 @@ class MainUI(QtWidgets.QMainWindow):
 
     def enable_path_controls(self):
         """Allow multi-image path selection if and only if image-dimension is 2D."""
-        options_main = self.configs_data["main_options"]
+        options_img = self.configs_data["filter_options"]
 
         self.rdo_2d_img.setEnabled(True)
         self.rdo_3d_img.setEnabled(True)
         self.btn_select_img_path.setEnabled(True)
         self.btn_select_out_path.setEnabled(True)
 
-        if options_main.imageDim == 2:
+        if options_img.image_dimensions == 2:
             self.cbx_multi.setEnabled(True)
         else:
             self.cbx_multi.setEnabled(False)
@@ -1895,6 +1898,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.cbx_lowpass.setEnabled(True)
         self.spb_lowpass.setEnabled(True)
         self.cbx_scharr.setEnabled(True)
+        self.cbx_median.setEnabled(True)
 
         self.rdo_global_threshold.setEnabled(True)
         self.sld_global_threshold.setEnabled(True)
@@ -2130,7 +2134,8 @@ class Worker(QtCore.QThread):
     def service_filter_img(self, img_path, output_path, options_img, img):
         try:
             self.update_progress(10, "applying filters...")
-            im_obj = ImageProcessor(img_path, output_path, options_img=options_img, img=img)
+            img_dim = options_img.image_dimensions
+            im_obj = ImageProcessor(img_path, output_path, img_dim, options_img=options_img, img=img)
             im_obj.apply_filters()
             self.update_progress(100, '')
             self.signals.finished.emit(0, 0, im_obj)
