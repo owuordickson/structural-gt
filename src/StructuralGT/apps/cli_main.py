@@ -13,7 +13,7 @@ from ..configs.config_loader import load_configs, get_num_cores
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
-# from ..SGT.graph_metrics_clang import GraphMetricsClang
+from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
 def terminal_app():
