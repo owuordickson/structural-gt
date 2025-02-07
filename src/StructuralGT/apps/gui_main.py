@@ -833,6 +833,11 @@ class MainUI(QtWidgets.QMainWindow):
                                                data=options_gtc.display_eigenvector_histogram)
         options_compute.appendRow(eigenvector_centrality_item)
 
+        # angle_centrality_item = TreeItem(self.gui_txt.edge_angle, 8, set_checkable=True,
+        #                                       color=QtGui.QColor(128, 0, 0),
+        #                                       data=options_gtc.display_angle_histogram)
+        # options_compute.appendRow(angle_centrality_item)
+
         ohms_centrality_item = TreeItem(self.gui_txt.ohms, 8, set_checkable=True,
                                         color=QtGui.QColor(128, 0, 0),
                                         data=options_gtc.display_ohms_histogram)
@@ -847,9 +852,9 @@ class MainUI(QtWidgets.QMainWindow):
                                       color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_density)
         options_compute.appendRow(graph_density_item)
 
-        graph_conductance_item = TreeItem(self.gui_txt.conductance, 8, set_checkable=True,
-                                          color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_conductance)
-        options_compute.appendRow(graph_conductance_item)
+        # graph_conductance_item = TreeItem(self.gui_txt.conductance, 8, set_checkable=True,
+        #                                  color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_graph_conductance)
+        # options_compute.appendRow(graph_conductance_item)
 
         global_efficiency_item = TreeItem(self.gui_txt.efficiency, 8, set_checkable=True,
                                           color=QtGui.QColor(128, 0, 0), data=options_gtc.compute_global_efficiency)
@@ -1649,6 +1654,8 @@ class MainUI(QtWidgets.QMainWindow):
                         options_gte.weight_type = weight_options.get(item.child(4).text())
                     elif item.child(5).checkState() == QtCore.Qt.CheckState.Checked:
                         options_gte.weight_type = weight_options.get(item.child(5).text())
+                    elif item.child(6).checkState() == QtCore.Qt.CheckState.Checked:
+                        options_gte.weight_type = weight_options.get(item.child(6).text())
                     # print(f"weight type: {options_gte.weight_type}")
                 if item.text() == self.gui_txt.node_id:
                     options_gte.display_node_id = 1
@@ -1693,6 +1700,7 @@ class MainUI(QtWidgets.QMainWindow):
         options_gtc.display_currentflow_histogram = 0
         options_gtc.display_closeness_histogram = 0
         options_gtc.display_eigenvector_histogram = 0
+        options_gtc.display_angle_histogram = 0
         options_gtc.display_ohms_histogram = 0
         options_gtc.display_percolation_histogram = 0
         options_gtc.compute_node_connectivity = 0
@@ -1727,6 +1735,8 @@ class MainUI(QtWidgets.QMainWindow):
                     options_gtc.display_closeness_histogram = 1
                 if item.text() == self.gui_txt.eigenvector:
                     options_gtc.display_eigenvector_histogram = 1
+                if item.text() == self.gui_txt.edge_angle:
+                    options_gtc.display_angle_histogram = 1
                 if item.text() == self.gui_txt.ohms:
                     options_gtc.display_ohms_histogram = 1
                 if item.text() == self.gui_txt.percolation:

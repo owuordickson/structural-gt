@@ -71,6 +71,7 @@ def load_configs():
     options_gtc.display_currentflow_histogram = 1
     options_gtc.display_closeness_histogram = 1
     options_gtc.display_eigenvector_histogram = 1
+    options_gtc.display_angle_histogram = 1
     options_gtc.display_ohms_histogram = 0
     options_gtc.display_percolation_histogram = 0
     options_gtc.compute_node_connectivity = 1
@@ -197,6 +198,8 @@ def load_configs():
                                                              'display_closeness_centrality_histogram'))
     options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
                                                                'display_eigenvector_centrality_histogram'))
+    options_gtc.display_angle_histogram = int(config.get('sgt-settings',
+                                                               'display_edge_angle_centrality_histogram'))
     options_gtc.display_ohms_histogram = int(config.get('sgt-settings', 'display_ohms_histogram'))
     options_gtc.display_percolation_histogram = int(config.get('sgt-settings', 'display_percolation_histogram'))
     options_gtc.compute_node_connectivity = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
@@ -296,6 +299,7 @@ def load_gui_configs():
     gui_txt.current_flow = "Current Flow Betweenness Centrality"
     gui_txt.closeness = "Closeness Centrality"
     gui_txt.eigenvector = "Eigenvector Centrality"
+    gui_txt.edge_angle = "Edge Angle Centrality"
     gui_txt.ohms = "Ohms Centrality"
     gui_txt.percolation = "Percolation Centrality"
     gui_txt.density = "Graph Density"
@@ -351,6 +355,7 @@ def load_gui_configs():
     gui_txt.current_flow = str(config.get('gui', 'current_flow'))
     gui_txt.closeness = str(config.get('gui', 'closeness'))
     gui_txt.eigenvector = str(config.get('gui', 'eigenvector'))
+    gui_txt.edge_angle = str(config.get('gui', 'edge_angle'))
     gui_txt.ohms = str(config.get('gui', 'ohms'))
     gui_txt.percolation = str(config.get('gui', 'percolation'))
     gui_txt.density = str(config.get('gui', 'density'))

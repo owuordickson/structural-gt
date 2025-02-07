@@ -131,6 +131,7 @@ class GraphMetrics(ProgressUpdate):
         self.currentflow_distribution = [0]
         self.weighted_closeness_distribution = [0]
         self.weighted_eigenvector_distribution = [0]
+        # self.weighted_edge_angle_distribution = [0]
         self.weighted_percolation_distribution = [0]
 
     def compute_gt_metrics(self):
@@ -154,6 +155,13 @@ class GraphMetrics(ProgressUpdate):
 
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
+
+        for item in self.gc.nx_info:
+            if item['name'] == 'angle':
+                data_dict["x"].append('Average edge angle (degrees)')
+                data_dict["y"].append(round(np.average(item['value']), 3))
+                data_dict["x"].append('Median edge angle (degrees)')
+                data_dict["y"].append(round(np.median(item['value']), 3))
 
         if graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem with graph (change filter and graph options)."])
@@ -343,8 +351,11 @@ class GraphMetrics(ProgressUpdate):
             data_dict["x"].append("Largest-Entire graph ratio")
             data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
             for item in self.gc.nx_info:
-                data_dict["x"].append(item["name"])
-                data_dict["y"].append(item["value"])
+                if type(item['value']) is np.ndarray:
+                    continue
+                else:
+                    data_dict["x"].append((str(item["name"])))
+                    data_dict["y"].append((str(item["value"])))
 
         self.output_data = pd.DataFrame(data_dict)
 
@@ -453,8 +464,11 @@ class GraphMetrics(ProgressUpdate):
             self.update_status([87, "Computing graph conductance..."])
             # res_items, sg_components = self.gc.approx_conductance_by_spectral(weighted=True)
             for item in self.gc.nx_info:
-                data_dict["x"].append((str(item["name"])))
-                data_dict["y"].append((str(item["value"])))
+                if type(item['value']) is np.ndarray:
+                    continue
+                else:
+                    data_dict["x"].append((str(item["name"])))
+                    data_dict["y"].append((str(item["value"])))
 
         # calculate cross-sectional area of edges
         if self.gc.configs_graph.weight_type == 'AREA':
@@ -472,7 +486,7 @@ class GraphMetrics(ProgressUpdate):
 
     def compute_ohms_centrality(self):
         r"""
-        Computes Ohms centrality value for each node.
+        Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
         Returns: Ohms centrality distribution
         """

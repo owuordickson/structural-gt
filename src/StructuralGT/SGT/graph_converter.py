@@ -118,7 +118,8 @@ class GraphConverter(ProgressUpdate):
                 #    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
                 #        self.nx_graph, weighted=True)
                 # else:
-                self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(self.nx_graph)
+                self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(self.nx_graph,
+                                                                                                           self.nx_info)
 
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
@@ -205,6 +206,7 @@ class GraphConverter(ProgressUpdate):
                     del nx_graph[s][e]['weight']
                 # print(f"{nx_graph[s][e]}\n")
             arr_angle = np.array(lst_angles, dtype=float)
+            self.nx_info.append({'name': 'angle', 'value': arr_angle})
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
@@ -488,7 +490,7 @@ class GraphConverter(ProgressUpdate):
 class GraphComponents:
 
     @staticmethod
-    def compute_conductance(graph: nx.Graph, weighted: bool = False):
+    def compute_conductance(graph: nx.Graph, data_info: list, weighted: bool = False):
         """
         Computes graph conductance through an approach based on eigenvectors or spectral frequency.\
         Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
@@ -508,16 +510,14 @@ class GraphComponents:
         connected to that node. In other words, the node is isolated from\
         the rest of the graph.
 
-        :param weighted: is graph a weighted graph?
         :param graph: NetworkX graph
+        :param data_info: list of tuples containing information about the graph
+        :param weighted: is graph a weighted graph?
 
         """
 
         # It is important to notice our graph is (mostly) a directed graph,
         # meaning that it is: (asymmetric) with self-looping nodes
-
-        data = []
-        # sub_components = []
 
         # 1. Make a copy of the graph
         # eig_graph = graph.copy()
@@ -537,11 +537,11 @@ class GraphComponents:
                 eig_graph)
         eig_graph = sub_graph_largest
         if size > 1:
-            data.append({"name": "Subgraph Count", "value": size})
-            data.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
-            data.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
-            data.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
-            data.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
+            data_info.append({"name": "Subgraph Count", "value": size})
+            data_info.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
+            data_info.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
+            data_info.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
+            data_info.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
 
         # 4. Compute normalized-laplacian matrix
         if weighted:
@@ -557,11 +557,11 @@ class GraphComponents:
         # 6. Approximate conductance using the 2nd smallest eigenvalue
         eigenvalues = e_vals.real
         val_max, val_min = GraphComponents.compute_conductance_range(eigenvalues)
-        data.append({"name": "Graph Conductance (max)", "value": val_max})
-        data.append({"name": "Graph Conductance (min)", "value": val_min})
+        data_info.append({"name": "Graph Conductance (max)", "value": val_max})
+        data_info.append({"name": "Graph Conductance (min)", "value": val_min})
         ratio = eig_graph.number_of_nodes() / graph.number_of_nodes()
 
-        return data, sub_components, ratio
+        return data_info, sub_components, ratio
 
     @staticmethod
     def remove_self_loops(graph: nx.Graph):
