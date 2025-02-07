@@ -98,11 +98,10 @@ class GraphSkeleton:
         :return: width pixel count of edge, computed weight.
         """
 
+        # Initialize parameters
         # Idea copied from 'sknw' library
         pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
-
-        # Initialize parameters
-        pixel_dim = pixel_dim  # * (10 ** 9)  # Convert to nanometers
+        epsilon = 1 * (10 ** -12)  # to avoid division by zero
         # wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
@@ -123,29 +122,43 @@ class GraphSkeleton:
             wt = math.pi * (pix_width * pixel_dim * 0.5) ** 2
         elif weight_options.get(weight_type) == weight_options.get('LEN'):
             wt = pix_length * pixel_dim
+        elif weight_options.get(weight_type) == weight_options.get('ANGLE'):
+            """
+            Edge angle centrality" in graph theory refers to a measure of an edge's importance within a network, 
+            based on the angles formed between the edges connected to its endpoints, essentially assessing how "central" 
+            an edge is in terms of its connection to other edges within the network, with edges forming more acute 
+            angles generally considered more central. 
+            To calculate edge angle centrality, you would typically:
+               1. For each edge, identify the connected edges at its endpoints.
+               2. Calculate the angles between these connected edges.
+               3. Assign a higher centrality score to edges with smaller angles, indicating a more central position in the network structure.
+            """
+            sym_angle = np.minimum(pix_angle, (360 - pix_angle))
+            wt = (sym_angle + epsilon) ** -1
         elif weight_options.get(weight_type) == weight_options.get('INV_LEN'):
-            wt = (pix_length * pixel_dim) ** -1
+            wt = ((pix_length * pixel_dim) + epsilon) ** -1
         elif weight_options.get(weight_type) == weight_options.get('VAR_CON'):
             # Varies with width
             # if pix_width > 0:
             length = pix_length * pixel_dim
             area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
-            wt = ((length * rho_dim) / area) ** -1  # Conductance is inverse of resistance
+            wt = (((length * rho_dim) + epsilon) / (area + epsilon)) ** -1  # Conductance is inverse of resistance
         elif weight_options.get(weight_type) == weight_options.get('FIX_CON'):
             # Fixed width
             # if pix_length > 0:
             length = pix_length * pixel_dim
             area = math.pi * (1 * pixel_dim) ** 2
-            wt = ((length * rho_dim) / area) ** -1
+            wt = (((length * rho_dim) + epsilon) / (area + epsilon)) ** -1
         elif weight_options.get(weight_type) == weight_options.get('RES'):
             # if pix_width > 0:
             length = pix_length * pixel_dim
             area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
-            wt = ((length * rho_dim) / area)
+            wt = (((length * rho_dim) + epsilon) / (area + epsilon))
         else:
             raise TypeError('Invalid weight type')
 
         # returns the width in pixels; the weight which is the width normalized by 10
+        # print(f"{pix_width > epsilon}")
         return pix_width, pix_angle, wt
 
     def assign_weights_by_width(self, ge):

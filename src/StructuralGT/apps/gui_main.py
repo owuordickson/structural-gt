@@ -732,6 +732,9 @@ class MainUI(QtWidgets.QMainWindow):
         by_length_item = TreeItem(self.gui_txt.weight_by_len, 6, set_checkable=True,
                                   color=QtGui.QColor(0, 0, 200))
         by_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
+        by_angle_item = TreeItem(self.gui_txt.weight_by_angle, 6, set_checkable=True,
+                                 color=QtGui.QColor(0, 0, 200))
+        by_angle_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
         by_inv_length_item = TreeItem(self.gui_txt.weight_by_inv_len, 6, set_checkable=True,
                                       color=QtGui.QColor(0, 0, 200))
         by_inv_length_item.setData('RdoItem_Wt', QtCore.Qt.ItemDataRole.UserRole)
@@ -744,6 +747,7 @@ class MainUI(QtWidgets.QMainWindow):
         weighted_item.appendRow(by_diameter_item)
         weighted_item.appendRow(by_area_item)
         weighted_item.appendRow(by_length_item)
+        weighted_item.appendRow(by_angle_item)
         weighted_item.appendRow(by_inv_length_item)
         weighted_item.appendRow(by_conductance_item)
         weighted_item.appendRow(by_resistance_item)
@@ -1604,6 +1608,7 @@ class MainUI(QtWidgets.QMainWindow):
             self.gui_txt.weight_by_dia: 'DIA',
             self.gui_txt.weight_by_area: 'AREA',
             self.gui_txt.weight_by_len: 'LEN',
+            self.gui_txt.weight_by_angle: 'ANGLE',
             self.gui_txt.weight_by_inv_len: 'INV_LEN',
             self.gui_txt.weight_by_var_con: 'VAR_CON',
             # self.gui_txt.weight_by_fix_con: 'FIX_CON',

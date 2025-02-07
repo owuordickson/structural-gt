@@ -173,6 +173,7 @@ class GraphConverter(ProgressUpdate):
                             pass
         else:
             nx_graph = sknw.build_sknw(img_skel)
+            lst_angles = []
             for (s, e) in nx_graph.edges():
                 # 'sknw' library stores length of edge and calls it weight, we reverse this
                 # we create a new attribute 'length', later delete/modify 'weight'
@@ -193,6 +194,7 @@ class GraphConverter(ProgressUpdate):
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
+                    lst_angles.append(pix_angle)
                 else:
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
@@ -201,7 +203,8 @@ class GraphConverter(ProgressUpdate):
                     nx_graph[s][e]['weight'] = wt
                     # delete 'weight'
                     del nx_graph[s][e]['weight']
-                print(f"{nx_graph[s][e]}\n")
+                # print(f"{nx_graph[s][e]}\n")
+            arr_angle = np.array(lst_angles, dtype=float)
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
@@ -472,6 +475,7 @@ class GraphConverter(ProgressUpdate):
             'DIA': 'Width',
             'AREA': 'Area',  # surface area of edge
             'LEN': 'Length',
+            'ANGLE': 'Angle',
             'INV_LEN': 'InverseLength',
             'VAR_CON': 'Conductance',  # with variable width
             'FIX_CON': 'FixedWidthConductance',

@@ -274,6 +274,7 @@ def load_gui_configs():
     gui_txt.weight_by_dia = 'Diameter'
     gui_txt.weight_by_area = 'Area'
     gui_txt.weight_by_len = 'Length'
+    gui_txt.weight_by_angle = 'Angle'
     gui_txt.weight_by_inv_len = 'Inverse Length'
     gui_txt.weight_by_var_con = 'Conductance'
     gui_txt.weight_by_res = 'Resistance'
@@ -328,6 +329,7 @@ def load_gui_configs():
     gui_txt.weight_by_dia = str(config.get('gui', 'weight_by_dia'))
     gui_txt.weight_by_area = str(config.get('gui', 'weight_by_area'))
     gui_txt.weight_by_len = str(config.get('gui', 'weight_by_len'))
+    gui_txt.weight_by_angle = str(config.get('gui', 'weight_by_angle'))
     gui_txt.weight_by_inv_len = str(config.get('gui', 'weight_by_inv_len'))
     gui_txt.weight_by_var_con = str(config.get('gui', 'weight_by_var_con'))
     gui_txt.weight_by_res = str(config.get('gui', 'weight_by_res'))
