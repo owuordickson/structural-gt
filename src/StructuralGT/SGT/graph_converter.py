@@ -188,20 +188,20 @@ class GraphConverter(ProgressUpdate):
                     weight_options = GraphConverter.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']
-                    # pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                    pix_width, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                               pixel_dim=px_size, rho_dim=rho_val)
                     nx_graph[s][e]['width'] = pix_width
+                    nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
                 else:
                     ge = nx_graph[s][e]['pts']
-                    # pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                    pix_width, wt = graph_skel.assign_weights(ge, None)
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
                     nx_graph[s][e]['width'] = pix_width
+                    nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
-
                     # delete 'weight'
                     del nx_graph[s][e]['weight']
+                print(f"{nx_graph[s][e]}\n")
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"

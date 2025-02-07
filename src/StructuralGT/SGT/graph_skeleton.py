@@ -103,30 +103,17 @@ class GraphSkeleton:
 
         # Initialize parameters
         pixel_dim = pixel_dim  # * (10 ** 9)  # Convert to nanometers
-        wt = 1 * (10 ** -9)  # Smallest possible
+        # wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
             # check to see if ge is an empty or unity list, if so, set pixel count to 0
             # Assume only 1/2 pixel exists between edge points
             pix_width = 0.5
+            pix_angle = None
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
-            end_index = len(edge_pts) - 1
-            mid_index = int(len(edge_pts) / 2)
-            pt1 = edge_pts[0]
-            pt2 = edge_pts[end_index]
-            m = edge_pts[mid_index]
-            mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
-            m[0] = int(m[0])
-            m[1] = int(m[1])
-            pix_width = self.estimate_edge_width(m, ortho)
+            pix_width, pix_angle = self.estimate_edge_width(edge_pts)
             pix_width += 0.5  # (normalization) to make it larger than empty widths
-
-            # Delta X and Y: Compute the  difference in x and y coordinates:
-            #       dx = G.nodes[v]['pos'][0] - G.nodes[u]['pos'][0] and
-            #       dy = G.nodes[v]['pos'][1] - G.nodes[u]['pos'][1]
-            # Angle Calculation: Use the arctangent function to get the angle in radians:
-            #       math.atan2(dy, dx)
 
         if weight_type is None:
             wt = pix_width / 10
@@ -159,7 +146,7 @@ class GraphSkeleton:
             raise TypeError('Invalid weight type')
 
         # returns the width in pixels; the weight which is the width normalized by 10
-        return pix_width, wt
+        return pix_width, pix_angle, wt
 
     def assign_weights_by_width(self, ge):
         # Inputs:
@@ -173,26 +160,40 @@ class GraphSkeleton:
             wt = 0.0001  # Smallest possible
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
-            end_index = len(ge) - 1
-            mid_index = int(len(ge) / 2)
-            pt1 = ge[0]
-            pt2 = ge[end_index]
-            m = ge[mid_index]
-            mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
-            m[0] = int(m[0])
-            m[1] = int(m[1])
-            pix_width = self.estimate_edge_width(m, ortho)
+            pix_width, pix_angle = self.estimate_edge_width(ge)
             wt = pix_width / 10
 
         # returns the width in pixels; the weight which is the width normalized by 10
         return pix_width, wt
 
-    def estimate_edge_width(self, m, ortho):
-        # Inputs:
+    def estimate_edge_width(self, graph_edge_coords):
+        """Estimates the edge width of a graph edge."""
+
+        # 1. Estimate orthogonal and mid-point
+        end_index = len(graph_edge_coords) - 1
+        mid_index = int(len(graph_edge_coords) / 2)
+        pt1 = graph_edge_coords[0]
+        pt2 = graph_edge_coords[end_index]
+        m = graph_edge_coords[mid_index]
+        mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
+        m[0] = int(m[0])
+        m[1] = int(m[1])
         # m: the midpoint of a trace of an edge
         # ortho: an orthogonal unit vector
         # img_bin: the binary image that the graph is derived from
 
+        # 2. Compute angle in Radians
+        # Delta X and Y: Compute the  difference in x and y coordinates:
+        dx = pt2[0] - pt1[0]
+        dy = pt2[1] - pt1[1]
+        # Angle Calculation: Use the arc-tangent function to get the angle in radians:
+        angle_rad = math.atan2(dy, dx)
+        angle_deg = math.degrees(angle_rad)
+        if angle_deg < 0:
+            angle_deg += 360
+        # print(f"Edge Pts: {graph_edge_coords}, Angle Deg: {angle_deg}\n")
+
+        # 3. Estimate width
         img_bin = self.img_bin
         w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
         check = 0  # initializing boolean check
@@ -225,7 +226,8 @@ class GraphSkeleton:
                 i += 1
 
         # returns the length between l1 and l2, which is the width of the fiber associated with an edge, at its midpoint
-        return np.linalg.norm(l1 - l2)
+        edge_width = np.linalg.norm(l1 - l2)
+        return edge_width, angle_deg
 
     @staticmethod
     def branched_points(skeleton):
