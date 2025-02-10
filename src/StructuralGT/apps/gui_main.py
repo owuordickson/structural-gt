@@ -20,7 +20,6 @@ from ..configs.config_loader import load_configs, load_gui_configs, get_num_core
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
-from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
 class MainUI(QtWidgets.QMainWindow):
@@ -158,7 +157,7 @@ class MainUI(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def _create_img_path(self):
-        self.btn_grp_img = QtWidgets.QButtonGroup(self)
+        """self.btn_grp_img = QtWidgets.QButtonGroup(self)
         self.btn_grp_img.setObjectName("btn_grp_img")
         self.rdo_2d_img = QtWidgets.QRadioButton(parent=self.grp_path)
         self.rdo_2d_img.setObjectName("rdo_2d_img")
@@ -168,7 +167,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.rdo_3d_img = QtWidgets.QRadioButton(parent=self.grp_path)
         self.rdo_3d_img.setObjectName("rdo_3d_img")
         self.btn_grp_img.addButton(self.rdo_3d_img)
-        self.grid_layout_path.addWidget(self.rdo_3d_img, 0, 5, 1, 1)
+        self.grid_layout_path.addWidget(self.rdo_3d_img, 0, 5, 1, 1)"""
 
         self.lbl_img_path = QtWidgets.QLabel(parent=self.grp_path)
         self.lbl_img_path.setFont(self.bold_font)
@@ -637,8 +636,8 @@ class MainUI(QtWidgets.QMainWindow):
         self.btn_crop.setText(_translate("window_main", "Crop"))
         self.lbl_brightness.setText(_translate("window_main", "Brightness"))
         self.lbl_contrast.setText(_translate("window_main", "Contrast"))
-        self.rdo_2d_img.setText(_translate("window_main", "2D"))
-        self.rdo_3d_img.setText(_translate("window_main", "3D"))
+        #self.rdo_2d_img.setText(_translate("window_main", "2D"))
+        #self.rdo_3d_img.setText(_translate("window_main", "3D"))
         self.lbl_out_path.setText(_translate("window_main", "Output Dir"))
         self.btn_select_out_path.setText(_translate("window_main", "Select"))
         self.btn_select_img_path.setText(_translate("window_main", "Select"))
@@ -961,10 +960,10 @@ class MainUI(QtWidgets.QMainWindow):
 
     def _init_img_binary_settings(self, options_img):
 
-        if options_img.image_dimensions == 3:
+        """if options_img.image_dimensions == 3:
             self.rdo_3d_img.setChecked(True)
         else:
-            self.rdo_2d_img.setChecked(True)
+            self.rdo_2d_img.setChecked(True)"""
 
         if options_img.threshold_type == 2:
             self.rdo_otsu_threshold.setChecked(True)
@@ -1000,8 +999,8 @@ class MainUI(QtWidgets.QMainWindow):
             self.lbl_img.setText("Add 'Image Path' using the 'Select' button")
 
         # Listeners
-        self.rdo_2d_img.toggled.connect(self._rdo_image_dimensions_changed)
-        self.rdo_3d_img.toggled.connect(self._rdo_image_dimensions_changed)
+        #self.rdo_2d_img.toggled.connect(self._rdo_image_dimensions_changed)
+        #self.rdo_3d_img.toggled.connect(self._rdo_image_dimensions_changed)
         self.btn_select_img_path.clicked.connect(self._btn_select_img_path_clicked)
         self.btn_select_out_path.clicked.connect(self._btn_select_out_path_clicked)
         self.cbx_multi.stateChanged.connect(self._cbx_multi_changed)
@@ -1814,8 +1813,8 @@ class MainUI(QtWidgets.QMainWindow):
 
     def disable_path_controls(self):
         """Disable all path controls and buttons."""
-        self.rdo_2d_img.setEnabled(False)
-        self.rdo_3d_img.setEnabled(False)
+        #self.rdo_2d_img.setEnabled(False)
+        #self.rdo_3d_img.setEnabled(False)
         self.btn_select_img_path.setEnabled(False)
         self.btn_select_out_path.setEnabled(False)
         self.cbx_multi.setEnabled(False)
@@ -1901,8 +1900,8 @@ class MainUI(QtWidgets.QMainWindow):
         """Allow multi-image path selection if and only if image-dimension is 2D."""
         options_img = self.configs_data["filter_options"]
 
-        self.rdo_2d_img.setEnabled(True)
-        self.rdo_3d_img.setEnabled(True)
+        #self.rdo_2d_img.setEnabled(True)
+        #self.rdo_3d_img.setEnabled(True)
         self.btn_select_img_path.setEnabled(True)
         self.btn_select_out_path.setEnabled(True)
 
@@ -2225,10 +2224,8 @@ class Worker(QtCore.QThread):
                 self.signals.finished.emit(2, 1, [])
                 return
             graph_obj.configs_graph = options_gte
-            if options_gtc.compute_lang == 'C':
-                metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
-            else:
-                metrics_obj = GraphMetrics(graph_obj, options_gtc)
+
+            metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
             self.add_thread_listener(metrics_obj.abort_tasks)
             metrics_obj.compute_gt_metrics()
@@ -2283,10 +2280,8 @@ class Worker(QtCore.QThread):
                     return
                 graph_obj.configs_graph = options_gte
                 graph_obj.imp.output_path = out_path
-                if options_gtc.compute_lang == 'C':
-                    metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
-                else:
-                    metrics_obj = GraphMetrics(graph_obj, options_gtc)
+
+                metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 metrics_obj.compute_gt_metrics()

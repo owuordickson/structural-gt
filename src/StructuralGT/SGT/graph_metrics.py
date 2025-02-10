@@ -27,6 +27,9 @@ from .progress_update import ProgressUpdate
 from .graph_converter import GraphConverter
 from .image_processor import ImageProcessor
 
+import sgt_c_module as sgt
+from ..configs.config_loader import get_num_cores
+
 
 class GraphMetrics(ProgressUpdate):
     """
@@ -140,7 +143,7 @@ class GraphMetrics(ProgressUpdate):
 
         :return:
         """
-        self.update_status([1, "Using NetworkX to perform un-weighted analysis..."])
+        self.update_status([1, "Performing un-weighted analysis..."])
 
         graph = self.gc.nx_graph
         options = self.configs
@@ -202,10 +205,17 @@ class GraphMetrics(ProgressUpdate):
                 return
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
-                if self.allow_mp:
-                    avg_node_con = self.average_node_connectivity()
+                if options.compute_lang == 'C':
+                    # use iGraph Lib in C
+                    self.update_status([15, "Using iGraph library..."])
+                    avg_node_con = self.igraph_average_node_connectivity()
                 else:
-                    avg_node_con = average_node_connectivity(graph)
+                    # Use NetworkX Lib in Python
+                    self.update_status([15, "Using NetworkX library..."])
+                    if self.allow_mp: # Multi-processing
+                        avg_node_con = self.average_node_connectivity()
+                    else:
+                        avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = 'NaN'
@@ -607,6 +617,27 @@ class GraphMetrics(ProgressUpdate):
         if den == 0:
             return 0
         return num / den
+
+    def igraph_average_node_connectivity(self, **kwargs):
+        r"""Returns the average connectivity of a graph G.
+
+        The average connectivity of a graph G is the average
+        of local node connectivity over all pairs of nodes of G.
+        """
+
+        nx_graph = self.gc.nx_graph
+        cpu_count = get_num_cores()
+        anc = 0
+
+        try:
+            filename, output_location = self.gc.imp.create_filenames()
+            g_filename = filename + "_graph.txt"
+            graph_file = os.path.join(output_location, g_filename)
+            nx.write_edgelist(nx_graph, graph_file, data=False)
+            anc = sgt.compute_anc(graph_file, cpu_count, self.allow_mp)
+        except Exception as err:
+            print(err)
+        return anc
 
     def generate_pdf_output(self, gui_app: bool = False):
         """
