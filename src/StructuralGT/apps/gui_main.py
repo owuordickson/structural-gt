@@ -20,7 +20,6 @@ from ..configs.config_loader import load_configs, load_gui_configs, get_num_core
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_converter import GraphConverter
 from ..SGT.graph_metrics import GraphMetrics
-from ..SGT.graph_metrics_clang import GraphMetricsClang
 
 
 class MainUI(QtWidgets.QMainWindow):
@@ -2225,10 +2224,8 @@ class Worker(QtCore.QThread):
                 self.signals.finished.emit(2, 1, [])
                 return
             graph_obj.configs_graph = options_gte
-            if options_gtc.compute_lang == 'C':
-                metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
-            else:
-                metrics_obj = GraphMetrics(graph_obj, options_gtc)
+
+            metrics_obj = GraphMetrics(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
             self.add_thread_listener(metrics_obj.abort_tasks)
             metrics_obj.compute_gt_metrics()
@@ -2283,10 +2280,8 @@ class Worker(QtCore.QThread):
                     return
                 graph_obj.configs_graph = options_gte
                 graph_obj.imp.output_path = out_path
-                if options_gtc.compute_lang == 'C':
-                    metrics_obj = GraphMetricsClang(graph_obj, options_gtc)
-                else:
-                    metrics_obj = GraphMetrics(graph_obj, options_gtc)
+
+                metrics_obj = GraphMetrics(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 metrics_obj.compute_gt_metrics()
