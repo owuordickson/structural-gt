@@ -1,0 +1,11 @@
+{
+    "files": [
+        "LeftContent.qml",
+        "main.py",
+        "MainWindow.qml",
+        "MenuBarComponent.qml",
+        "StatusBarComponent.qml",
+        "RightContent.qml",
+        "RibbonComponent.qml"
+    ]
+}
