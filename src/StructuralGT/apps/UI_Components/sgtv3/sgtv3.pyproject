@@ -6,6 +6,10 @@
         "MenuBarComponent.qml",
         "StatusBarComponent.qml",
         "RightContent.qml",
-        "RibbonComponent.qml"
+        "RibbonComponent.qml",
+        "assets/icons/brightness_icon.png",
+        "assets/icons/cancel_icon.png",
+        "assets/icons/crop_icon.png",
+        "assets/icons/graph_icon.png"
     ]
 }

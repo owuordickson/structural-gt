@@ -1,7 +1,16 @@
 import QtQuick
 import QtQuick.Controls
+//import Qt.labs.platform
+
 
 MenuBar {
+        Menu {
+            title: "Structural GT"
+            MenuItem { text: "&About"; onTriggered: aboutDialog.open(); }
+            MenuSeparator{}
+            MenuItem { text: "&Quit"; onTriggered: Qt.quit(); }
+        }
+
         Menu {
             title: "File"
             Menu { title: "Project..."
@@ -19,9 +28,7 @@ MenuBar {
                 MenuItem { text: "As gexf"; onTriggered: console.log("gexf") }
                 MenuItem { text: "Save all"; onTriggered: console.log("save all") }
             }
-            MenuSeparator{}
-
-            MenuItem { text: "Quit"; onTriggered: console.log("quit") }
+            //MenuSeparator{}
         }
         Menu {
             title: "Tools"
@@ -57,7 +64,7 @@ MenuBar {
         }
         Menu {
             title: "Help"
-            MenuItem { text: "Tutorials"; onTriggered: console.log("Tutorials clicked") }
-            MenuItem { text: "About"; onTriggered: console.log("About clicked") }
+            MenuItem { text: "Structural GT Help"; onTriggered: console.log("Tutorials clicked") }
         }
-    }
+}
+

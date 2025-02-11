@@ -58,4 +58,16 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: aboutDialog
+        title: "About This App"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "StructuralGT v3.0.1\nCopyright (C) 2024\nthe Regents of the University of Michigan."
+            anchors.centerIn: parent
+        }
+    }
+
 }
