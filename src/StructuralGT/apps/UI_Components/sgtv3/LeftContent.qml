@@ -14,16 +14,21 @@ Rectangle {
 
         TabBar {
             id: tabBar
-            Layout.fillWidth: true
             currentIndex: 1
+            Layout.fillWidth: true
             TabButton { text: "Project" }
             TabButton { text: "Properties" }
             TabButton { text: "Filters" }
         }
 
+
+
         StackLayout {
             id: stackLayout
+            //width: parent.width
+            Layout.fillWidth: true
             currentIndex: tabBar.currentIndex
+
 
             ProjectNav{}
 
@@ -31,7 +36,9 @@ Rectangle {
 
             ImageFilters{}
 
+
         }
+
     }
 
 }

@@ -7,7 +7,7 @@ class TableModel(QAbstractTableModel):
         self.itemData = data
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self.itemData)
+        return len(self.itemData) if self.itemData else 0
 
     def columnCount(self, parent=QModelIndex()):
         return len(self.itemData[0]) if self.itemData else 0

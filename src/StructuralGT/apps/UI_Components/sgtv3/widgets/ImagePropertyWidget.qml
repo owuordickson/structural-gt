@@ -4,9 +4,9 @@ import QtQuick.Layouts
 
 TableView {
     id: tableView
+    height: imgPropsTableModel.rowCount() * 24  // implicitHeight is 24
     //resizableColumns: true
     Layout.fillWidth: true
-    Layout.fillHeight: true
     Layout.topMargin: 5
     Layout.leftMargin: 2
     Layout.rightMargin: 2
@@ -22,7 +22,7 @@ TableView {
         Text {
             text: display
             font.pixelSize: 10
-            color: "#505050"
+            color: "#303030"
             anchors.fill: parent
             anchors.topMargin: 5
             anchors.leftMargin: 10

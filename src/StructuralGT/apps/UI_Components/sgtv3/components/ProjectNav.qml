@@ -9,14 +9,18 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    GridLayout {
-        //anchors.fill: parent
-        columns: 1
+    ScrollView {
+        //width: parent.width
+        height: parent.height
 
-        //BrightnessControlWidget{}
+        GridLayout {
+            //anchors.fill: parent
+            columns: 1
 
+            //BrightnessControlWidget{}
+
+        }
     }
-
     /*
     TreeView {
         id: treeView

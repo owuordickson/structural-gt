@@ -24,8 +24,9 @@ Repeater {
 
         TextField {
             id: txtField
-            Layout.minimumWidth: 80
             Layout.fillWidth: true
+            Layout.minimumWidth: 170
+            Layout.rightMargin: 10
             text: modelData.text
         }
     }

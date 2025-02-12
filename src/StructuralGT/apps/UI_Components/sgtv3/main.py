@@ -17,6 +17,7 @@ class MainWindow(QObject):
         # Create Models
         self.graphTreeModel = None
         self.imgPropsTableModel = None
+        self.graphPropsTableModel = None
 
         # Load Data
         self.load()
@@ -24,6 +25,7 @@ class MainWindow(QObject):
         # Set Models in QML Context
         self.ui_engine.rootContext().setContextProperty("graphTreeModel", self.graphTreeModel)
         self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", self.imgPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", self.graphPropsTableModel)
 
         # Load UI
         self.ui_engine.load("MainWindow.qml")
@@ -38,13 +40,21 @@ class MainWindow(QObject):
                 # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
             self.graphTreeModel = TreeModel(json_data)
 
-            table_data = [
+            data_img_props = [
                 ["Name", "Invitro.png"],
                 ["Width x Height", "500px x 500px"],
                 ["Dimensions", "2D"],
                 ["Pixel Size", "2nm x 2nm"],
             ]
-            self.imgPropsTableModel = TableModel(table_data)
+            self.imgPropsTableModel = TableModel(data_img_props)
+
+            data_graph_props = [
+                ["Node Count", "248"],
+                ["Edge Count", "306"],
+                ["Sub-graph Count", "1"],
+                ["Largest-Full Graph Ratio", "100%"],
+            ]
+            self.graphPropsTableModel = TableModel(data_graph_props)
 
         except Exception as e:
             print(f"Error loading data: {e}")
