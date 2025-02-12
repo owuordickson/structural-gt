@@ -50,6 +50,9 @@ class TreeModel(QAbstractItemModel):
                 self._setupModelData(value, item)
 
     def rowCount(self, parent=QModelIndex()):
+        if parent.column() > 0:
+            return 0
+
         parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
         return parentItem.childCount()
 
@@ -60,17 +63,18 @@ class TreeModel(QAbstractItemModel):
         if not index.isValid() or role != Qt.DisplayRole:
             return ""
 
-        return str(index.internalPointer().data())  # Ensure it returns a string
+        return str(index.internalPointer().data())  # Ensure valid string for display
 
     def index(self, row, column, parent=QModelIndex()):
-        if parent.isValid():
-            parentItem = parent.internalPointer()
-        else:
-            parentItem = self.rootItem
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
 
+        parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
         childItem = parentItem.child(row)
+
         if childItem:
             return self.createIndex(row, column, childItem)
+
         return QModelIndex()
 
     def parent(self, index):
