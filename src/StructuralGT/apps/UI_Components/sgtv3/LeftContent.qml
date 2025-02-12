@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "components"
 
 Rectangle {
     width: parent.width
     height: parent.height
     color: "#f0f0f0"
-    border.color: "#d0d0d0"
+    border.color: "#c0c0c0"
 
     ColumnLayout {
         anchors.fill: parent
@@ -16,7 +17,7 @@ Rectangle {
             Layout.fillWidth: true
             //currentIndex: stackLayout.currentIndex
             TabButton { text: "Project" }
-            TabButton { text: "Image" }
+            TabButton { text: "Properties" }
             TabButton { text: "Filters" }
         }
 
@@ -24,35 +25,12 @@ Rectangle {
             id: stackLayout
             currentIndex: tabBar.currentIndex
 
-            Rectangle {
-                color: "lightgray"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Text {
-                    text: "Content of Tab 1"
-                    anchors.centerIn: parent
-                }
-            }
+            ProjectNav{}
 
-            Rectangle {
-                color: "lightblue"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Text {
-                    text: "Content of Tab 2"
-                    anchors.centerIn: parent
-                }
-            }
+            ImageProperties{}
 
-            Rectangle {
-                color: "lightgreen"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Text {
-                    text: "Content of Tab 3"
-                    anchors.centerIn: parent
-                }
-            }
+            ImageFilters{}
+
         }
     }
 

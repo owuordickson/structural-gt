@@ -1,0 +1,66 @@
+[
+  {
+    "id": "cbxWeight",
+    "text": "Add Weights",
+    "subitems": [
+      {
+        "id": "cbxByDiameter",
+        "text": "by diameter"
+      },
+      {
+        "id": "cbxByArea",
+        "text": "by area"
+      },
+      {
+        "id": "cbxByLength",
+        "text": "by length"
+      },
+      {
+        "id": "cbxByAngle",
+        "text": "by angle"
+      },
+      {
+        "id": "cbxByInvLength",
+        "text": "by inverse-length"
+      },
+      {
+        "id": "cbxByConductance",
+        "text": "by conductance"
+      },
+      {
+        "id": "cbxByResistance",
+        "text": "by resistance"
+      }
+    ]
+  },
+  {
+    "id": "cbxMerge",
+    "text": "Merge Nearby Nodes",
+    "subitems": []
+  },
+  {
+    "id": "cbxPrune",
+    "text": "Prune Dangling Edges",
+    "subitems": []
+  },
+  {
+    "id": "cbxRmDisconn",
+    "text": "Remove Disconnected Segments",
+    "subitems": {"id": "txtRmDisconnSize", "text": ""}
+  },
+  {
+    "id": "cbxRmLoops",
+    "text": "Remove Self Loops",
+    "subitems": []
+  },
+  {
+    "id": "cbxMultigraph",
+    "text": "Is Multigraph?",
+    "subitems": []
+  },
+  {
+    "id": "cbxDisplayID",
+    "text": "Display Node ID",
+    "subitems": []
+  }
+]

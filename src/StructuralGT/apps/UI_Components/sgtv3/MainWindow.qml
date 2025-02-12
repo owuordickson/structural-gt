@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "widgets"
 
 ApplicationWindow {
     width: 1024
@@ -8,9 +9,9 @@ ApplicationWindow {
     visible: true
     title: "Structural GT"
 
-    menuBar: MenuBarComponent{}
+    menuBar: MenuBarWidget{}
 
-    footer: StatusBarComponent{}
+    footer: StatusBarWidget{}
 
     GridLayout {
         anchors.fill: parent
@@ -29,7 +30,7 @@ ApplicationWindow {
             Layout.preferredWidth: parent.width
             Layout.fillWidth: true
             Layout.fillHeight: true
-            RibbonComponent {}
+            RibbonWidget {}
         }
 
         // Second row, first column

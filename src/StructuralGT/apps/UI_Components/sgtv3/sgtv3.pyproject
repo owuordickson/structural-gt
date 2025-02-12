@@ -1,15 +1,27 @@
 {
     "files": [
-        "LeftContent.qml",
         "main.py",
-        "MainWindow.qml",
-        "MenuBarComponent.qml",
-        "StatusBarComponent.qml",
+        "LeftContent.qml",
         "RightContent.qml",
-        "RibbonComponent.qml",
+        "MainWindow.qml",
+        "widgets/MenuBarWidget.qml",
+        "widgets/StatusBarWidget.qml",
+        "widgets/RibbonWidget.qml",
+        "widgets/BinaryFilterWidget.qml",
+        "widgets/ImageFilterWidget.qml",
+        "widgets/MicroscopyWidget.qml",
+        "widgets/GraphExtractWidget.qml",
+        "widgets/GTWidget.qml",
+        "widgets/ProjectWidget.qml",
+        "widgets/ImageViewWidget.qml",
+        "widgets/PropertyWidget.qml",
         "assets/icons/brightness_icon.png",
         "assets/icons/cancel_icon.png",
         "assets/icons/crop_icon.png",
-        "assets/icons/graph_icon.png"
+        "assets/icons/graph_icon.png",
+        "components/ImageFilters.qml",
+        "components/ImageProperties.qml",
+        "components/ProjectNav.qml",
+        "tree_model.py"
     ]
 }

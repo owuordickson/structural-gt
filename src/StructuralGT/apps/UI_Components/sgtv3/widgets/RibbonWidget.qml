@@ -1,20 +1,41 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+//import Qt5Compat.GraphicalEffects
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
 
 Rectangle {
+    id: rectRibbon
     width: parent.width
     height: 40
+    radius: 5
     color: "#f0f0f0"
-    border.color: "#d0d0d0"
-    //border.width: 2
+    border.color: "#c0c0c0"
+    border.width: 1
+
+    /*DropShadow {
+        anchors.fill: rectRibbon
+        source: rectRibbon
+        horizontalOffset: 0
+        verticalOffset: 5
+        radius: 1
+        samples: 16
+        color: "black"
+        opacity: 0.5
+    }
+
+    Rectangle {
+        anchors.fill: rectRibbon
+        radius: 5
+        color: "#f0f0f0" // the rectangle's own background
+        border.color: "#d0d0d0"
+        border.width: 1
+    }*/
 
     RowLayout {
         //anchors.fill: parent
         anchors.right: parent.right
-
 
         Row {
             Layout.alignment: Qt.AlignVCenter
@@ -22,7 +43,7 @@ Rectangle {
             Button {
                 id: btnCrop
                 text: ""
-                icon.source: "assets/icons/crop_icon.png" // Path to your icon
+                icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
                 ToolTip.text: "Crop image"
@@ -32,7 +53,7 @@ Rectangle {
             Button {
                 id: btnBrightness
                 text: ""
-                icon.source: "assets/icons/brightness_icon.png" // Path to your icon
+                icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
                 ToolTip.text: "Adjust brightness/contrast"
@@ -66,7 +87,7 @@ Rectangle {
             Button {
                 id: btnShowGraph
                 text: ""
-                icon.source: "assets/icons/graph_icon.png" // Path to your icon
+                icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
                 ToolTip.text: "Show graph"
