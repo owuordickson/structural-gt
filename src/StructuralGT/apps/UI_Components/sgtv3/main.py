@@ -10,21 +10,16 @@ if __name__ == "__main__":
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
 
-    # code to read from json
-    #gt_data = json.load(open('assets/data/gt_data.json', 'r'))
-
     # Load JSON data
     with open("assets/data/extract_data.json", "r") as file:
-        data = json.load(file)
+        extract_data = json.load(file)
+    # with open("assets/data/gt_data.json", "r") as file:
+    #    gt_data = json.load(file)
 
-    tree_model = TreeModel(data)
-    engine.rootContext().setContextProperty("extractModel", tree_model)
-
-    #gt_tree_model = TreeModel(gt_data)
-    #context = engine.rootContext()
-    #context.setContextProperty("gt_data", gt_data)
-
-    #print(extract_tree_model)
+    extr_tree_model = TreeModel(extract_data)
+    engine.rootContext().setContextProperty("extractModel", extr_tree_model)
+    # gt_tree_model = TreeModel(gt_data)
+    # engine.rootContext().setContextProperty("gtModel", gt_tree_model)
 
     engine.load("MainWindow.qml")
     if not engine.rootObjects():

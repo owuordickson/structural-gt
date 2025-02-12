@@ -2,13 +2,13 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-/*TreeView {
+TreeView {
     id: treeView
     //anchors.fill: parent
     Layout.fillWidth: true
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft
-    model: extractModel
+    model: gtModel
 
     delegate: Item {
         required property TreeView treeView
@@ -37,39 +37,4 @@ import QtQuick.Layouts
             }
         }
     }
-}*/
-
-TreeView {
-        model: extractModel
-        delegate: Item {
-            width: parent.width
-            height: childrenRect.height + 4
-            Column {
-                Text { text: model.data }
-                Repeater {
-                    model: model.children
-                    delegate: Item {
-                        x: 20
-                        width: parent.width - 20
-                        height: childrenRect.height + 4
-                        Column {
-                            Text { text: model.data }
-                            // Recursive Repeater for nested levels
-                            Repeater {
-                                model: model.children
-                                delegate: Item {
-                                    x: 20
-                                    width: parent.width - 20
-                                    height: childrenRect.height + 4
-                                    Column {
-                                        Text { text: model.data }
-                                        // Add more nested Repeater as needed
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+}
