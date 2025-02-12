@@ -9,5 +9,9 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    ImagePropertyWidget{}
+    ColumnLayout {
+        anchors.fill: parent
+
+        ImagePropertyWidget{}
+    }
 }

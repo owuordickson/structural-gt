@@ -5,12 +5,14 @@ import QtQuick.Layouts
 
 TableView {
     id: tableView
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
     model: imgPropsTableModel
 
     delegate: Rectangle {
-        implicitWidth: 80
-        implicitHeight: 25
+        implicitWidth: tableView.width / 2
+        implicitHeight: 20
+        border.color: "#d0d0d0"
         border.width: 1
 
 
