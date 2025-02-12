@@ -39,9 +39,10 @@ class MainWindow(QObject):
             self.graphTreeModel = TreeModel(json_data)
 
             table_data = [
-                ["Item 00", "Item 01"],
-                ["Item 10", "Item 11"],
-                ["Item 20", "Item 21"]
+                ["Name", "Invitro.png"],
+                ["Width x Height", "500px x 500px"],
+                ["Dimensions", "2D"],
+                ["Pixel Size", "2nm x 2nm"],
             ]
             self.imgPropsTableModel = TableModel(table_data)
 
