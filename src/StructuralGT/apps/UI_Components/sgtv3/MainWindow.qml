@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "widgets"
 
 ApplicationWindow {
+    id: mainWindow
     width: 1024
     height: 800
     visible: true
@@ -60,15 +61,155 @@ ApplicationWindow {
     }
 
     Dialog {
-        id: aboutDialog
+        id: dialogAbout
+        //parent: mainWindow
         title: "About This App"
         modal: true
         standardButtons: Dialog.Ok
+        anchors.centerIn: parent
+        width: 300
+        height: 200
 
         Label {
             text: "StructuralGT v3.0.1\nCopyright (C) 2024\nthe Regents of the University of Michigan."
             anchors.centerIn: parent
         }
+    }
+
+    Dialog {
+        id: dialogBrightnessCtrl
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Control Brightness/Contrast"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 300
+        height: 150
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            BrightnessControlWidget{}
+        }
+
+        /*onAccepted: {
+            dialogController.accept()  // In Python side
+            dialog.close()
+        }
+
+        onRejected: {
+            dialogController.reject()
+            dialog.close()
+        }*/
+    }
+
+
+    Dialog {
+        id: dialogShowGraph
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Graph Extraction Options"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 300
+        height: 400
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            GraphExtractWidget{}
+        }
+
+        /*onAccepted: {
+            dialogController.accept()  // In Python side
+            dialog.close()
+        }
+
+        onRejected: {
+            dialogController.reject()
+            dialog.close()
+        }*/
+    }
+
+    Dialog {
+        id: dialogBinFilters
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Adjust Binary Filters"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 300
+        height: 200
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            BinaryFilterWidget{}
+        }
+
+        /*onAccepted: {
+            dialogController.accept()  // In Python side
+            dialog.close()
+        }
+
+        onRejected: {
+            dialogController.reject()
+            dialog.close()
+        }*/
+    }
+
+    Dialog {
+        id: dialogImgFilters
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Adjust Binary Filters"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 300
+        height: 400
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            ImageFilterWidget{}
+        }
+
+        /*onAccepted: {
+            dialogController.accept()  // In Python side
+            dialog.close()
+        }
+
+        onRejected: {
+            dialogController.reject()
+            dialog.close()
+        }*/
+    }
+
+    Dialog {
+        id: dialogGTOptions
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Select Graph Computations"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 300
+        height: 400
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            GTWidget{}
+        }
+
+        /*onAccepted: {
+            dialogController.accept()  // In Python side
+            dialog.close()
+        }
+
+        onRejected: {
+            dialogController.reject()
+            dialog.close()
+        }*/
     }
 
 }

@@ -6,7 +6,7 @@ import QtQuick.Controls
 MenuBar {
     Menu {
         title: "Structural GT"
-        MenuItem { text: "&About"; onTriggered: aboutDialog.open(); }
+        MenuItem { text: "&About"; onTriggered: dialogAbout.open(); }
         MenuSeparator{}
         MenuItem { text: "&Quit"; onTriggered: Qt.quit(); }
     }
@@ -33,23 +33,28 @@ MenuBar {
     Menu {
         title: "Tools"
         MenuItem { text: "Crop"; onTriggered: console.log("") }
-        MenuItem { text: "Brightness/Contrast"; onTriggered: console.log("brightness/contrast") }
+        MenuItem { text: "Brightness/Contrast"; onTriggered: dialogBrightnessCtrl.open() }
+        MenuItem { text: "Show Graph"; onTriggered: dialogShowGraph.open() }
     }
     Menu {
         title: "Filters"
-        MenuItem { text: "Binary Filters";  onTriggered: console.log("binary filters") }
+        MenuItem { text: "Binary Filters";  onTriggered: dialogBinFilters.open() }
 
         MenuSeparator{}
 
-        MenuItem { text: "Image Filters"; onTriggered: console.log("image filters") }
+        MenuItem { text: "Image Filters"; onTriggered: dialogImgFilters.open() }
     }
     Menu {
         title: "Analyze"
-        MenuItem { text: "GT Metrics"; onTriggered: console.log("GT clicked") }
+        //MenuItem { text: "GT Metrics"; onTriggered: console.log("GT clicked") }
+        Menu { title: "Graph Metrics"
+            MenuItem { text: "Current Image"; onTriggered: dialogGTOptions.open() }
+            MenuItem { text: "All Images"; onTriggered: dialogGTOptions.open() }
+        }
     }
     Menu {
         title: "Help"
-        MenuItem { text: "Structural GT Help"; onTriggered: console.log("Tutorials clicked") }
+        MenuItem { text: "Structural GT Help"; onTriggered: dialogAbout.open() }
     }
 }
 

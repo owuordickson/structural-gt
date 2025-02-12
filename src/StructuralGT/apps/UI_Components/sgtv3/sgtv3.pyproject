@@ -10,12 +10,12 @@
         "widgets/RibbonWidget.qml",
         "widgets/BinaryFilterWidget.qml",
         "widgets/ImageFilterWidget.qml",
-        "widgets/MicroscopyWidget.qml",
+        "widgets/MicroscopyPropertyWidget.qml",
         "widgets/GraphExtractWidget.qml",
         "widgets/GTWidget.qml",
         "widgets/ProjectWidget.qml",
         "widgets/ImageViewWidget.qml",
-        "widgets/PropertyWidget.qml",
+        "widgets/ImagePropertyWidget.qml",
         "components/ImageFilters.qml",
         "components/ImageProperties.qml",
         "components/ProjectNav.qml",
@@ -24,6 +24,9 @@
         "assets/icons/crop_icon.png",
         "assets/icons/graph_icon.png",
         "assets/data/extract_data.json",
-        "assets/data/gt_data.json"
+        "assets/data/gt_data.json",
+        "widgets/BrightnessControlWidget.qml",
+        "widgets/GraphPropertyWidget.qml",
+        "table_model.py"
     ]
 }

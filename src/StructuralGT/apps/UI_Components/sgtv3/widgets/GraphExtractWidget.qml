@@ -6,9 +6,9 @@ TreeView {
     id: treeView
     //anchors.fill: parent
     Layout.fillWidth: true
-    Layout.leftMargin: 10
-    Layout.alignment: Qt.AlignLeft
-    model: gtModel
+    //Layout.leftMargin: 10
+    //Layout.alignment: Qt.AlignLeft
+    model: graphTreeModel
 
     delegate: Item {
         required property TreeView treeView

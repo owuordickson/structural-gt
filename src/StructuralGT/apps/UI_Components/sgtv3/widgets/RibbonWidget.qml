@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 //import Qt5Compat.GraphicalEffects
+import "../widgets"
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
 
@@ -58,6 +59,7 @@ Rectangle {
                 icon.height: 24
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
+                onClicked: dialogBrightnessCtrl.open()
             }
         }
 
@@ -92,8 +94,11 @@ Rectangle {
                 icon.height: 24
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
+                onClicked: dialogShowGraph.open()
             }
         }
     }
 
 }
+
+
