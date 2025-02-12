@@ -1,6 +1,7 @@
 {
     "files": [
         "main.py",
+        "tree_model.py",
         "LeftContent.qml",
         "RightContent.qml",
         "MainWindow.qml",
@@ -15,13 +16,14 @@
         "widgets/ProjectWidget.qml",
         "widgets/ImageViewWidget.qml",
         "widgets/PropertyWidget.qml",
+        "components/ImageFilters.qml",
+        "components/ImageProperties.qml",
+        "components/ProjectNav.qml",
         "assets/icons/brightness_icon.png",
         "assets/icons/cancel_icon.png",
         "assets/icons/crop_icon.png",
         "assets/icons/graph_icon.png",
-        "components/ImageFilters.qml",
-        "components/ImageProperties.qml",
-        "components/ProjectNav.qml",
-        "tree_model.py"
+        "assets/data/extract_data.json",
+        "assets/data/gt_data.json"
     ]
 }

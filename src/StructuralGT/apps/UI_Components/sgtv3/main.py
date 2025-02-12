@@ -11,16 +11,20 @@ if __name__ == "__main__":
     engine = QQmlApplicationEngine()
 
     # code to read from json
-    extract_data = json.load(open('assets/data/extract_data.json', 'r'))
-    gt_data = json.load(open('assets/data/gt_data.json', 'r'))
+    #gt_data = json.load(open('assets/data/gt_data.json', 'r'))
 
-    extract_tree_model = TreeModel(extract_data)
-    context = engine.rootContext()
-    context.setContextProperty("extract_data", extract_data)
+    # Load JSON data
+    with open("assets/data/extract_data.json", "r") as file:
+        data = json.load(file)
 
-    gt_tree_model = TreeModel(gt_data)
-    context = engine.rootContext()
-    context.setContextProperty("gt_data", gt_data)
+    tree_model = TreeModel(data)
+    engine.rootContext().setContextProperty("extractModel", tree_model)
+
+    #gt_tree_model = TreeModel(gt_data)
+    #context = engine.rootContext()
+    #context.setContextProperty("gt_data", gt_data)
+
+    #print(extract_tree_model)
 
     engine.load("MainWindow.qml")
     if not engine.rootObjects():

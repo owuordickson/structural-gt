@@ -9,43 +9,40 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    GridLayout {
-        //anchors.fill: parent
-        columns: 1
+    TreeView {
+        id: treeView
+        anchors.fill: parent
+        //Layout.fillWidth: true
+        //Layout.leftMargin: 10
+        //Layout.alignment: Qt.AlignLeft
+        model: extractModel
 
-        GraphExtractWidget{}
+        delegate: Item {
+            required property TreeView treeView
+            required property int row
+            required property int depth
+            required property bool hasChildren
+            required property bool expanded
 
-        /*Text {
-            text: "Binary Filters"
-            font.pixelSize: 12
-            font.bold: true
-            Layout.topMargin: 10
-            Layout.bottomMargin: 5
-            Layout.alignment: Qt.AlignHCenter
+            width: treeView.width
+            height: 30
+
+            RowLayout {
+                spacing: 5
+                anchors.fill: parent
+
+                // Expand/Collapse Button
+                Button {
+                    visible: hasChildren
+                    text: expanded ? "▼" : "▶"
+                    onClicked: treeView.toggleExpanded(row)
+                }
+
+                // Display Item Name
+                Label {
+                    text: treeView.model.data(treeView.model.index(row, 0))
+                }
+            }
         }
-
-        BinaryFilterWidget{}
-
-        Rectangle {
-            height: 1
-            color: "#d0d0d0"
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 20
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-        }
-
-        Text {
-            text: "Image Filters"
-            font.pixelSize: 12
-            font.bold: true
-            Layout.topMargin: 10
-            Layout.bottomMargin: 5
-            Layout.alignment: Qt.AlignHCenter
-        }
-
-        ImageFilterWidget{}*/
-
     }
 }
