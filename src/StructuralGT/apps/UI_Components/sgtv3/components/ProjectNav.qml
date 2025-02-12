@@ -9,7 +9,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    ScrollView {
+    /*ScrollView {
         //width: parent.width
         height: parent.height
 
@@ -20,15 +20,12 @@ Rectangle {
             //BrightnessControlWidget{}
 
         }
-    }
-    /*
+    }*/
+
     TreeView {
         id: treeView
         anchors.fill: parent
-        //Layout.fillWidth: true
-        //Layout.leftMargin: 10
-        //Layout.alignment: Qt.AlignLeft
-        model: extractModel
+        model: graphTreeModel
 
         delegate: Item {
             required property TreeView treeView
@@ -37,8 +34,8 @@ Rectangle {
             required property bool hasChildren
             required property bool expanded
 
-            width: treeView.width
-            height: 30
+            implicitWidth: treeView.width
+            implicitHeight: 24
 
             RowLayout {
                 spacing: 5
@@ -53,10 +50,17 @@ Rectangle {
 
                 // Display Item Name
                 Label {
-                    text: treeView.model.data(treeView.model.index(row, 0))
+                    text: model.display  // Correct way to access model data
+                    elide: Label.ElideRight
+                    Layout.fillWidth: true
                 }
+
+                // Display Item Name
+                /*Label {
+                    text: treeView.model.data(treeView.model.index(row, 0))
+                }*/
             }
         }
     }
-    */
+
 }

@@ -56,10 +56,11 @@ class TreeModel(QAbstractItemModel):
         return 1
 
     def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid() or role != Qt.DisplayRole:
+        if not index.isValid():
             return ""
-
-        return str(index.internalPointer().data())  # Ensure valid string for display
+        if role == Qt.DisplayRole:
+            return str(index.internalPointer().data())  # Ensure valid string for display
+        return ""
 
     def index(self, row, column, parent=QModelIndex()):
         if not self.hasIndex(row, column, parent):

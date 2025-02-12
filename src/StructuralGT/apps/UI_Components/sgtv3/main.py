@@ -4,7 +4,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from tree_model import TreeModel
+from tree_model import TreeModel, TreeItem
 from table_model import TableModel
 
 # Assuming TreeModel and TableModel are properly implemented
@@ -39,6 +39,16 @@ class MainWindow(QObject):
                 json_data = json.load(file)
                 # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
             self.graphTreeModel = TreeModel(json_data)
+
+            # Create tree structure
+            """root_data = ["Header 1", "Header 2"]
+            root = TreeItem(root_data)
+            child1 = TreeItem(["Child 1-1", "Child 1-2"], root)
+            child2 = TreeItem(["Child 2-1", "Child 2-2"], root)
+            root.append_child(child1)
+            root.append_child(child2)
+            # Create the model
+            self.graphTreeModel = TreeModel(root)"""
 
             data_img_props = [
                 ["Name", "Invitro.png"],
