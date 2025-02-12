@@ -1,8 +1,4 @@
-import sys
-import json
-from PySide6.QtWidgets import QApplication
-from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex# , QVariant
+from PySide6.QtCore import Qt, QAbstractItemModel, QModelIndex
 
 
 class TreeItem:

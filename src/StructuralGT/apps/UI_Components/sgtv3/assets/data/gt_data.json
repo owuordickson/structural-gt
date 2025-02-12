@@ -1,16 +1,16 @@
-[
-  {"id":"cbxDispHeatmaps",  "text":  "Display Heatmaps"},
-  {"id":"cbxAvgDegree",  "text":  "Average Degree"},
-  {"id":"cbxNtwkDiameter",  "text":  "Network Diameter"},
-  {"id":"cbxGraphDensity",  "text":  "Graph Density"},
-  {"id":"cbxWienerIndex",  "text":  "Wiener Index"},
-  {"id":"cbxAvgNodeConn",  "text":  "Average Node Connectivity"},
-  {"id":"cbxGlobalCoeff",  "text":  "Global Coefficient"},
-  {"id":"cbxAvgClustering",  "text":  "Average Clustering Coefficient"},
-  {"id":"cbxAssortativity",  "text":  "Assortativity Coefficient"},
-  {"id":"cbxBtnCentrality",  "text":  "Betweenness Centrality"},
-  {"id":"cbxCloCentrality",  "text":  "Closenness Centrality"},
-  {"id":"cbxEigenVector",  "text":  "Eigenvector Centrality"},
-  {"id":"cbxOhmsCentrality",  "text":  "Ohms Centrality"},
-  {"id":"cbxPercCentrality",  "text":  "Percolation Centrality"}
-]
+{
+  "Display Heatmaps": {},
+  "Average Degree": {},
+  "Network Diameter": {},
+  "Graph Density": {},
+  "Wiener Index": {},
+  "Average Node Connectivity": {},
+  "Global Coefficient": {},
+  "Average Clustering Coefficient": {},
+  "Assortativity Coefficient": {},
+  "Betweenness Centrality": {},
+  "Closenness Centrality": {},
+  "Eigenvector Centrality": {},
+  "Ohms Centrality": {},
+  "Percolation Centrality": {}
+}
