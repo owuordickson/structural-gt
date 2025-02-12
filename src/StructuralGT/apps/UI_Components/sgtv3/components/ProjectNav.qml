@@ -45,6 +45,8 @@ Rectangle {
                 Button {
                     visible: hasChildren
                     text: expanded ? "▼" : "▶"
+                    //text: expanded ? "∨" : ">"
+                    background: transientParent
                     onClicked: treeView.toggleExpanded(row)
                 }
 
@@ -55,10 +57,6 @@ Rectangle {
                     Layout.fillWidth: true
                 }
 
-                // Display Item Name
-                /*Label {
-                    text: treeView.model.data(treeView.model.index(row, 0))
-                }*/
             }
         }
     }
