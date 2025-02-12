@@ -192,7 +192,7 @@ ApplicationWindow {
         title: "Select Graph Computations"
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 300
+        width: 240
         height: 400
 
         ColumnLayout {

@@ -42,11 +42,23 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
 
             Button {
+                id: btnSelect
+                text: ""
+                icon.source: "../assets/icons/square_icon.png" // Path to your icon
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
+                //background: transientParent
+                ToolTip.text: "Select area"
+                ToolTip.visible: btnSelect.hovered
+            }
+
+            Button {
                 id: btnCrop
                 text: ""
                 icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
+                //background: transientParent
                 ToolTip.text: "Crop image"
                 ToolTip.visible: btnCrop.hovered
             }
@@ -57,6 +69,7 @@ Rectangle {
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
+                //background: transientParent
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: dialogBrightnessCtrl.open()
@@ -92,6 +105,7 @@ Rectangle {
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
+                //background: transientParent
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogShowGraph.open()
