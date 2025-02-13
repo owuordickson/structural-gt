@@ -9,7 +9,6 @@ ColumnLayout {
 
     ButtonGroup {
         id: btnGroup
-
     }
 
 

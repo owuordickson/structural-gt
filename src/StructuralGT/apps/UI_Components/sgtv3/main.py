@@ -2,10 +2,61 @@ import sys
 import json
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject,Signal, Slot
+from PySide6.QtGui import QPixmap
+from PySide6.QtQuick import QQuickImageProvider
 
-from tree_model import TreeModel, TreeItem
+from tree_model import TreeModel
 from table_model import TableModel
+
+
+class ImageProvider(QQuickImageProvider):
+    image_changed = Signal(str)
+
+    def __init__(self):
+        super().__init__(QQuickImageProvider.Pixmap)
+        # self.images = {}  # Store images with their IDs
+        self._image_path = ""
+        self.pixmap = QPixmap()
+
+    """def requestImage(self, id, requested_size, size):
+        if id in self.images:
+            pixmap = self.images[id]
+            size.setWidth(pixmap.width())
+            size.setHeight(pixmap.height())
+            return pixmap
+        return QPixmap()
+
+    def add_image(self, id, pixmap):
+        self.images[id] = pixmap"""
+
+    def set_image(self, image_path):
+        self._image_path = image_path
+        self.pixmap.load(image_path)
+        self.image_changed.emit("file://" + image_path)
+
+    def requestPixmap(self, id, requested_size, size):
+        return self.pixmap
+
+
+class ImageController(QObject):
+    """Exposes a method to refresh the image in QML"""
+    image_changed = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.img_loaded = False
+
+    @Slot(result=str)
+    def get_pixmap(self):
+        """Returns the URL that QML should use to load the image"""
+        return "image://imageProvider"
+
+    @Slot(result=bool)
+    def is_image_loaded(self):
+        return self.img_loaded
+
+
 
 # Assuming TreeModel and TableModel are properly implemented
 class MainWindow(QObject):
@@ -19,6 +70,11 @@ class MainWindow(QObject):
         self.imgPropsTableModel = None
         self.graphPropsTableModel = None
 
+        # Register Image Provider
+        self.image_provider = ImageProvider()
+        # Register Controller for Dynamic Updates
+        self.image_controller = ImageController()
+
         # Load Data
         self.load()
 
@@ -26,6 +82,8 @@ class MainWindow(QObject):
         self.ui_engine.rootContext().setContextProperty("graphTreeModel", self.graphTreeModel)
         self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", self.imgPropsTableModel)
         self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", self.graphPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("imageController", self.image_controller)
+        self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
         # Load UI
         self.ui_engine.load("MainWindow.qml")
@@ -56,6 +114,12 @@ class MainWindow(QObject):
             ]
             self.graphPropsTableModel = TableModel(data_graph_props)
 
+            # Images
+            img_path = "assets/icons/graph_icon.png"
+            self.image_provider.set_image(img_path)
+            self.image_controller.img_loaded = True
+            # pixmap = QPixmap(img_path)
+            # self.image_provider.add_image("test_image", pixmap)
         except Exception as e:
             print(f"Error loading data: {e}")
 

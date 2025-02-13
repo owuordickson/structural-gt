@@ -1,16 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "widgets"
 
 Rectangle {
     width: parent.width
     height: parent.height
-    color: "#000"
+    //color: "#f0f0f0"
 
-    Text {
-        width: parent
-        //height: parent
-        text: ""
+    GridLayout {
+        anchors.fill: parent
+        columns: 1
+
+        ImageViewWidget{}
+
     }
 
 }
