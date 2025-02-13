@@ -88,6 +88,19 @@ Rectangle {
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: dialogBrightnessCtrl.open()
             }
+
+            Button {
+                id: btnUndo
+                text: ""
+                icon.source: "../assets/icons/undo_icon.png" // Path to your icon
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
+                background: transientParent
+                ToolTip.text: "Undo crop"
+                ToolTip.visible: btnUndo.hovered
+                onClicked: imageController.undo_cropping(true)
+                visible: false
+            }
         }
 
         Rectangle {
@@ -148,6 +161,14 @@ Rectangle {
                 btnCrop.visible = true;
             } else {
                 btnCrop.visible = false
+            }
+        }
+
+        function onImageChangedSignal(src, newPath) {
+            if (newPath === "undo") {
+                btnUndo.visible = false
+            } else {
+                btnUndo.visible = true
             }
         }
     }

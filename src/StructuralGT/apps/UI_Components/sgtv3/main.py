@@ -1,5 +1,6 @@
 import sys
 import json
+import numpy as np
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject,Signal, Slot
@@ -19,6 +20,8 @@ class ImageProvider(QQuickImageProvider):
         # self.images = {}  # Store images with their IDs
         self._image_path = ""
         self.pixmap = QPixmap()
+        self.pixmap_original = QPixmap()
+        self.pixmap_cropped = QPixmap()
         self.img_controller = img_controller
         self.img_controller.imageChangedSignal.connect(self.handle_change_image)
 
@@ -33,19 +36,33 @@ class ImageProvider(QQuickImageProvider):
     def add_image(self, id, pixmap):
         self.images[id] = pixmap"""
 
-    def set_image(self, image_path):
+    def set_image(self, image_path: str, option: str =""):
         self._image_path = image_path
-        self.pixmap.load(image_path)
-        self.img_controller.img_loaded = True
+        if option == "crop":
+            self.pixmap_cropped.load(image_path)
+        else:
+            self.pixmap_original.load(image_path)
+        self.img_controller.img_loaded = False
         # print(image_path)
 
+    def select_image(self, option: str=""):
+        if option == "crop":
+            self.pixmap = self.pixmap_cropped
+        else:
+            self.pixmap = self.pixmap_original
+        self.img_controller.img_loaded = True
+
     def requestPixmap(self, img_id, requested_size, size):
+        # print(img_id)
         return self.pixmap
 
     def handle_change_image(self, src, img_path):
-        if src == 1:  # '1'-Crop, ignore '2' - will make function recursive
-            self.set_image(img_path)
+        if src == 1:  # '0'-Original, '1'-Crop, '2'-Undo crop,  ignore '3' - will make function recursive
+            self.set_image(img_path, "crop")
+            self.select_image("crop")
             self.img_controller.imageChangedSignal.emit(2, img_path)
+        elif src == 2:
+            self.select_image("")
 
 
 
@@ -63,7 +80,6 @@ class ImageController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        import numpy as np
         return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
 
     @Slot(QImage, int, int, int, int)
@@ -89,6 +105,11 @@ class ImageController(QObject):
             self.showCroppingToolSignal.emit(False)
         except Exception as e:
             print(f"Error cropping image: {e}")
+
+    @Slot(bool)
+    def undo_cropping(self, undo: bool = True):
+        if undo:
+            self.imageChangedSignal.emit(2, "undo")
 
     @Slot(result=bool)
     def is_image_loaded(self):
@@ -166,6 +187,7 @@ class MainWindow(QObject):
             # Images
             img_path = "assets/icons/graph_icon.png"
             self.image_provider.set_image(img_path)
+            self.image_provider.select_image("")
             # pixmap = QPixmap(img_path)
             # self.image_provider.add_image("test_image", pixmap)
         except Exception as e:

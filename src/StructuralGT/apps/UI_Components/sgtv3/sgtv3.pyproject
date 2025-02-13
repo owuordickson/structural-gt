@@ -24,6 +24,7 @@
         "assets/icons/crop_icon.png",
         "assets/icons/graph_icon.png",
         "assets/icons/square_icon.png",
+        "assets/icons/undo_icon.png",
         "assets/data/extract_data.json",
         "assets/data/gt_data.json",
         "widgets/BrightnessControlWidget.qml",
