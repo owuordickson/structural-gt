@@ -36,7 +36,7 @@ ColumnLayout {
             //Layout.fillWidth: true
             //Layout.fillHeight: true
             fillMode: Image.PreserveAspectFit
-            source: ""
+            source: imageController.get_pixmap()
         }
 
         // Selection Rectangle for Cropping
@@ -88,13 +88,6 @@ ColumnLayout {
 
     }
 
-
-    Component.onCompleted: {
-        imgView.source = imageController.get_pixmap()
-        //imgView.source = "image://imageProvider"
-        //imgView.source = "image://imageProvider/graph_icon"
-    }
-
     function cropImage() {
         /*
         // Move the main image so that only the selection area is visible
@@ -124,14 +117,16 @@ ColumnLayout {
         function onImageChangedSignal(src, newPath) {
             imgView.source = ""
             imgView.source = imageController.get_pixmap(); // Force refresh
-            console.log(src);
+            //console.log(src);
         }
 
         function onEnableRectangularSelectionSignal(allow) {
             if (allow) {
                 selectionArea.enabled = true;
+                cropArea.visible = true
             } else {
                 selectionArea.enabled = false
+                cropArea.visible = false
             }
         }
 

@@ -44,14 +44,26 @@ Rectangle {
             Button {
                 id: btnSelect
                 text: ""
-                icon.source: "../assets/icons/square_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
-                icon.height: 24
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                width: 35
+                height: 35
                 background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
-                //focus: false
-                onClicked: imageController.enable_rectangular_selection(true)
+                onClicked: enableRectangularSelect()
+
+                Rectangle {
+                    id: btnSelectBorder
+                    width: 20
+                    height: 20
+                    radius: 4
+                    color: "transparent"
+                    border.width: 2
+                    border.color: "black"
+                    anchors.centerIn: parent
+                    enabled: false
+                }
             }
 
             Button {
@@ -115,6 +127,18 @@ Rectangle {
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogShowGraph.open()
             }
+        }
+    }
+
+    function enableRectangularSelect() {
+        if (btnSelectBorder.enabled) {
+            imageController.enable_rectangular_selection(false)
+            btnSelectBorder.border.color = "black"
+            btnSelectBorder.enabled = false
+        } else {
+            imageController.enable_rectangular_selection(true)
+            btnSelectBorder.border.color = "red"
+            btnSelectBorder.enabled = true
         }
     }
 

@@ -37,7 +37,7 @@ class ImageProvider(QQuickImageProvider):
         self._image_path = image_path
         self.pixmap.load(image_path)
         self.img_controller.img_loaded = True
-        print(image_path)
+        # print(image_path)
 
     def requestPixmap(self, img_id, requested_size, size):
         return self.pixmap
@@ -63,7 +63,8 @@ class ImageController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        return "image://imageProvider"
+        import numpy as np
+        return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
 
     @Slot(QImage, int, int, int, int)
     def crop_image(self, q_image, x, y, width, height):
