@@ -3,21 +3,25 @@ import json
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject,Signal, Slot
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtQuick import QQuickImageProvider
+
+from PIL import ImageQt  # Import ImageQt for conversion
 
 from tree_model import TreeModel
 from table_model import TableModel
 
 
 class ImageProvider(QQuickImageProvider):
-    image_changed = Signal(str)
+    # imageChanged = Signal(str)
 
-    def __init__(self):
+    def __init__(self, img_controller):
         super().__init__(QQuickImageProvider.Pixmap)
         # self.images = {}  # Store images with their IDs
         self._image_path = ""
         self.pixmap = QPixmap()
+        self.img_controller = img_controller
+        self.img_controller.imageChanged.connect(self.set_image)
 
     """def requestImage(self, id, requested_size, size):
         if id in self.images:
@@ -33,28 +37,52 @@ class ImageProvider(QQuickImageProvider):
     def set_image(self, image_path):
         self._image_path = image_path
         self.pixmap.load(image_path)
-        self.image_changed.emit("file://" + image_path)
+        self.img_controller.img_loaded = True
+        # print("Image loaded!")
 
-    def requestPixmap(self, id, requested_size, size):
+    def requestPixmap(self, img_id, requested_size, size):
         return self.pixmap
 
 
 class ImageController(QObject):
     """Exposes a method to refresh the image in QML"""
-    image_changed = Signal(str)
+    imageChanged = Signal(str)
 
     def __init__(self):
         super().__init__()
         self.img_loaded = False
+
+    @Slot(result=bool)
+    def is_image_loaded(self):
+        return self.img_loaded
 
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
         return "image://imageProvider"
 
-    @Slot(result=bool)
-    def is_image_loaded(self):
-        return self.img_loaded
+    @Slot(QImage, int, int, int, int)
+    def crop_image(self, q_image, x, y, width, height):
+        """Crop image using PIL and save it."""
+        try:
+            # Convert QPixmap to QImage
+            #q_image = pixmap.toImage()
+
+            # Convert QImage to PIL Image
+            img_pil = ImageQt.fromqimage(q_image)
+
+            # Crop the selected area
+            img_cropped = img_pil.crop((x, y, x + width, y + height))
+
+            # Save cropped image
+            cropped_path = "assets/cropped_image.png"
+            img_cropped.save(cropped_path)
+            # print(f"Cropped image saved: {cropped_path}")
+
+            # Emit signal to update UI with new image
+            self.imageChanged.emit(cropped_path)
+        except Exception as e:
+            print(f"Error cropping image: {e}")
 
 
 
@@ -70,10 +98,10 @@ class MainWindow(QObject):
         self.imgPropsTableModel = None
         self.graphPropsTableModel = None
 
-        # Register Image Provider
-        self.image_provider = ImageProvider()
         # Register Controller for Dynamic Updates
         self.image_controller = ImageController()
+        # Register Image Provider
+        self.image_provider = ImageProvider(self.image_controller)
 
         # Load Data
         self.load()
@@ -117,7 +145,6 @@ class MainWindow(QObject):
             # Images
             img_path = "assets/icons/graph_icon.png"
             self.image_provider.set_image(img_path)
-            self.image_controller.img_loaded = True
             # pixmap = QPixmap(img_path)
             # self.image_provider.add_image("test_image", pixmap)
         except Exception as e:

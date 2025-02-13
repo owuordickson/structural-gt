@@ -47,7 +47,7 @@ Rectangle {
                 icon.source: "../assets/icons/square_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
             }
