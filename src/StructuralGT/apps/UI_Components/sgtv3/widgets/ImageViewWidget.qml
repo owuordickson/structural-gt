@@ -5,8 +5,6 @@ import QtQuick.Layouts
 
 
 ColumnLayout {
-    //width: 512
-    //height: 512
     Layout.fillWidth: true
     Layout.fillHeight: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
@@ -21,20 +19,15 @@ ColumnLayout {
 
     Rectangle {
         id: imgContainer
-        width: 300
-        height: 300
-        //anchors.centerIn: parent
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         clip: true  // Ensures only the selected area is visible
-        border.color: "black"  // TO DELETE
-        border.width: 2        // TO DELETE
         visible: imageController.is_image_loaded()
 
         Image {
             id: imgView
             width: parent.width
             height: parent.height
-            //Layout.fillWidth: true
-            //Layout.fillHeight: true
             fillMode: Image.PreserveAspectFit
             source: imageController.get_pixmap()
         }
@@ -115,7 +108,6 @@ ColumnLayout {
         target: imageController
 
         function onImageChangedSignal(src, newPath) {
-            imgView.source = ""
             imgView.source = imageController.get_pixmap(); // Force refresh
             //console.log(src);
         }

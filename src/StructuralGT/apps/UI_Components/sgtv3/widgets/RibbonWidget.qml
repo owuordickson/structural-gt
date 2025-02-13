@@ -38,7 +38,7 @@ Rectangle {
         //anchors.fill: parent
         anchors.right: parent.right
 
-        Row {
+        RowLayout {
             Layout.alignment: Qt.AlignVCenter
 
             Button {
@@ -46,8 +46,6 @@ Rectangle {
                 text: ""
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                width: 35
-                height: 35
                 background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered

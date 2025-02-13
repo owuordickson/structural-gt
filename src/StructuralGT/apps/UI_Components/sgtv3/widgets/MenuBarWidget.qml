@@ -32,7 +32,6 @@ MenuBar {
     }
     Menu {
         title: "Tools"
-        MenuItem { text: "Crop"; onTriggered: console.log("") }
         MenuItem { text: "Brightness/Contrast"; onTriggered: dialogBrightnessCtrl.open() }
         MenuItem { text: "Show Graph"; onTriggered: dialogShowGraph.open() }
     }

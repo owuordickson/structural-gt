@@ -43,7 +43,7 @@ class ImageProvider(QQuickImageProvider):
         return self.pixmap
 
     def handle_change_image(self, src, img_path):
-        if src == 1:  # ignore '2' - will make function recursive
+        if src == 1:  # '1'-Crop, ignore '2' - will make function recursive
             self.set_image(img_path)
             self.img_controller.imageChangedSignal.emit(2, img_path)
 
