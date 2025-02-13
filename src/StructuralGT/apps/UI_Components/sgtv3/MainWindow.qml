@@ -114,8 +114,9 @@ ApplicationWindow {
         width: 300
         height: 400
 
-        ColumnLayout {
-            anchors.fill: parent
+        ScrollView {
+            width: parent.width
+            height: parent.height
 
             GraphExtractWidget{}
         }

@@ -4,10 +4,6 @@ import QtQuick.Layouts
 
 TreeView {
     id: treeView
-    //anchors.fill: parent
-    Layout.fillWidth: true
-    //Layout.leftMargin: 10
-    //Layout.alignment: Qt.AlignLeft
     model: graphTreeModel
 
     delegate: Item {
@@ -17,8 +13,8 @@ TreeView {
         required property bool hasChildren
         required property bool expanded
 
-        width: treeView.width
-        height: 30
+        implicitWidth: treeView.width
+        implicitHeight: 24
 
         RowLayout {
             spacing: 5
@@ -26,15 +22,42 @@ TreeView {
 
             // Expand/Collapse Button
             Button {
+                Layout.leftMargin: 10
                 visible: hasChildren
                 text: expanded ? "▼" : "▶"
+                //text: expanded ? "∨" : ">"
+                background: transientParent
                 onClicked: treeView.toggleExpanded(row)
             }
 
-            // Display Item Name
-            Label {
-                text: treeView.model.data(treeView.model.index(row, 0))
+            Loader {
+                Layout.fillWidth: model.display === "size" ?  false : true
+                Layout.preferredWidth: 75
+                Layout.leftMargin: hasChildren ? 0 : depth > 0 ? 50 : 10
+                sourceComponent: model.display === "size" ? txtFldComponent : cbxComponent
             }
+
+            Component {
+                id: cbxComponent
+
+                CheckBox {
+                    id: checkBox
+                    text: model.display
+                    checked: false
+                    onClicked: {console.log(depth); console.log(row); console.log(model.display)}
+                }
+            }
+
+            Component {
+                id: txtFldComponent
+
+                TextField {
+                    id: txtField
+                    width: 80
+                    text: "500" // model.display
+                }
+            }
+
         }
     }
 }
