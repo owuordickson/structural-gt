@@ -13,7 +13,6 @@ from table_model import TableModel
 
 
 class ImageProvider(QQuickImageProvider):
-    # imageChanged = Signal(str)
 
     def __init__(self, img_controller):
         super().__init__(QQuickImageProvider.Pixmap)
@@ -21,7 +20,7 @@ class ImageProvider(QQuickImageProvider):
         self._image_path = ""
         self.pixmap = QPixmap()
         self.img_controller = img_controller
-        self.img_controller.imageChanged.connect(self.set_image)
+        self.img_controller.imageChangedSignal.connect(self.handle_change_image)
 
     """def requestImage(self, id, requested_size, size):
         if id in self.images:
@@ -38,23 +37,28 @@ class ImageProvider(QQuickImageProvider):
         self._image_path = image_path
         self.pixmap.load(image_path)
         self.img_controller.img_loaded = True
-        # print("Image loaded!")
+        print(image_path)
 
     def requestPixmap(self, img_id, requested_size, size):
         return self.pixmap
 
+    def handle_change_image(self, src, img_path):
+        if src == 1:  # ignore '2' - will make function recursive
+            self.set_image(img_path)
+            self.img_controller.imageChangedSignal.emit(2, img_path)
+
+
 
 class ImageController(QObject):
     """Exposes a method to refresh the image in QML"""
-    imageChanged = Signal(str)
+    imageChangedSignal = Signal(int, str)
+    enableRectangularSelectionSignal = Signal(bool)
+    showCroppingToolSignal = Signal(bool)
+    performCroppingSignal = Signal(bool)
 
     def __init__(self):
         super().__init__()
         self.img_loaded = False
-
-    @Slot(result=bool)
-    def is_image_loaded(self):
-        return self.img_loaded
 
     @Slot(result=str)
     def get_pixmap(self):
@@ -66,7 +70,7 @@ class ImageController(QObject):
         """Crop image using PIL and save it."""
         try:
             # Convert QPixmap to QImage
-            #q_image = pixmap.toImage()
+            # q_image = pixmap.toImage()
 
             # Convert QImage to PIL Image
             img_pil = ImageQt.fromqimage(q_image)
@@ -80,10 +84,26 @@ class ImageController(QObject):
             # print(f"Cropped image saved: {cropped_path}")
 
             # Emit signal to update UI with new image
-            self.imageChanged.emit(cropped_path)
+            self.imageChangedSignal.emit(1, cropped_path)
+            self.showCroppingToolSignal.emit(False)
         except Exception as e:
             print(f"Error cropping image: {e}")
 
+    @Slot(result=bool)
+    def is_image_loaded(self):
+        return self.img_loaded
+
+    @Slot(bool)
+    def enable_rectangular_selection(self, enabled):
+        self.enableRectangularSelectionSignal.emit(enabled)
+
+    @Slot(bool)
+    def perform_cropping(self, allowed):
+        self.performCroppingSignal.emit(allowed)
+
+    @Slot(bool)
+    def show_cropping_tool(self, allow_cropping):
+        self.showCroppingToolSignal.emit(allow_cropping)
 
 
 # Assuming TreeModel and TableModel are properly implemented

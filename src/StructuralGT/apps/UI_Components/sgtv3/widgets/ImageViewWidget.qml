@@ -62,6 +62,7 @@ ColumnLayout {
         MouseArea {
             id: selectionArea
             anchors.fill: parent
+            enabled: false
             onPressed: (mouse) => {
                            cropArea.x = mouse.x;
                            cropArea.y = mouse.y;
@@ -78,23 +79,13 @@ ColumnLayout {
             onReleased: {
                 if (cropArea.width < 5 || cropArea.height < 5) {
                     cropArea.visible = false;  // Hide small selections
+                    imageController.show_cropping_tool(false);
+                } else {
+                    imageController.show_cropping_tool(true);
                 }
             }
         }
 
-    }
-
-
-
-    Button {
-        text: "Crop"
-        //anchors.top: imgContainer.bottom
-        //anchors.horizontalCenter: parent.horizontalCenter
-        onClicked: {
-            //imgView.x = -cropArea.x;
-            //imgView.y = -cropArea.y;
-            cropImage();
-        }
     }
 
 
@@ -129,8 +120,25 @@ ColumnLayout {
 
     Connections {
         target: imageController
-        function onImageChanged(newPath) {
+
+        function onImageChangedSignal(src, newPath) {
+            imgView.source = ""
             imgView.source = imageController.get_pixmap(); // Force refresh
+            console.log(src);
+        }
+
+        function onEnableRectangularSelectionSignal(allow) {
+            if (allow) {
+                selectionArea.enabled = true;
+            } else {
+                selectionArea.enabled = false
+            }
+        }
+
+        function onPerformCroppingSignal(allow) {
+            if (allow) {
+                cropImage();
+            }
         }
     }
 }

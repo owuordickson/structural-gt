@@ -50,6 +50,8 @@ Rectangle {
                 background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
+                //focus: false
+                onClicked: imageController.enable_rectangular_selection(true)
             }
 
             Button {
@@ -62,6 +64,7 @@ Rectangle {
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
+                onClicked: imageController.perform_cropping(true)
             }
 
             Button {
@@ -111,6 +114,18 @@ Rectangle {
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogShowGraph.open()
+            }
+        }
+    }
+
+    Connections {
+        target: imageController
+
+        function onShowCroppingToolSignal(allow) {
+            if (allow) {
+                btnCrop.visible = true;
+            } else {
+                btnCrop.visible = false
             }
         }
     }
