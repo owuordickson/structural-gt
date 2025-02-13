@@ -47,8 +47,8 @@ Rectangle {
                 icon.source: "../assets/icons/square_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                //background: transientParent
-                ToolTip.text: "Select area"
+                background: transientParent
+                ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
             }
 
@@ -58,9 +58,10 @@ Rectangle {
                 icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                //background: transientParent
-                ToolTip.text: "Crop image"
+                background: transientParent
+                ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
+                visible: false
             }
 
             Button {
@@ -69,7 +70,7 @@ Rectangle {
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                //background: transientParent
+                background: transientParent
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: dialogBrightnessCtrl.open()
@@ -101,11 +102,12 @@ Rectangle {
 
             Button {
                 id: btnShowGraph
+                Layout.rightMargin: 10
                 text: ""
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                //background: transientParent
+                background: transientParent
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogShowGraph.open()
