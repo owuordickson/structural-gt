@@ -40,16 +40,6 @@ class MainWindow(QObject):
                 # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
             self.graphTreeModel = TreeModel(json_data)
 
-            # Create tree structure
-            """root_data = ["Header 1", "Header 2"]
-            root = TreeItem(root_data)
-            child1 = TreeItem(["Child 1-1", "Child 1-2"], root)
-            child2 = TreeItem(["Child 2-1", "Child 2-2"], root)
-            root.append_child(child1)
-            root.append_child(child2)
-            # Create the model
-            self.graphTreeModel = TreeModel(root)"""
-
             data_img_props = [
                 ["Name", "Invitro.png"],
                 ["Width x Height", "500px x 500px"],
