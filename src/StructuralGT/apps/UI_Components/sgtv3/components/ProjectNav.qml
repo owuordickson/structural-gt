@@ -13,11 +13,10 @@ Rectangle {
         width: parent.width
         height: parent.height
 
-        GridLayout {
+        ColumnLayout {
             anchors.fill: parent
-            columns: 1
 
-            //BrightnessControlWidget{}
+            ProjectWidget {}
 
         }
 
