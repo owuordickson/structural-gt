@@ -88,15 +88,12 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-
-            BrightnessControlWidget{}
+            BrightnessControlWidget{ id: brightnessControl }
         }
 
         onAccepted: {
-            //dialogController.accept()  // In Python side //parseFloat(brightnessInput.text), parseFloat(contrastInput.text)
-            imageController.brightness_contrast_control(20, 20)
+            brightnessControl.applyChanges()
             dialogBrightnessCtrl.close()
-            console.log(spbBrightness.value)
         }
 
         /*onRejected: {

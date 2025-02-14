@@ -153,7 +153,7 @@ class ImageController(QObject):
     @Slot(float, float)
     def brightness_contrast_control(self, brightness, contrast):
         self.adjustBrightnessContrastSignal.emit(brightness, contrast)
-        print(brightness+contrast)
+        # print(brightness+contrast)
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):
