@@ -154,7 +154,7 @@ ColumnLayout {
 
 
     // Save Button
-    //imageProcessor.process_image(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
+    //imageProcessor.adjust_brightness_contrast(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
     /*Button {
         text: "Save Processed Image"
         anchors.horizontalCenter: parent
@@ -185,6 +185,7 @@ ColumnLayout {
 
         function onImageChangedSignal(src, newPath) {
             imgView.source = imageController.get_pixmap(); // Force refresh
+            zoomFactor = 1.0
             //console.log(src);
         }
 

@@ -58,13 +58,22 @@ class ImageProvider(QQuickImageProvider):
         return self.pixmap
 
     def handle_change_image(self, src, img_path):
-        if src == 1:  # '0'-Original, '1'-Crop, '2'-Undo crop,  ignore '-1' - will make function recursive
+        # '0' - Original image
+        # '1' - Cropped image
+        # '2' - Processed image
+        # '3'-Undo crop,
+        # ignore '-1' - will make function recursive
+        if src == 1:
             self.set_image(img_path, "crop")
             self.select_image("crop")
-            self.img_controller.imageChangedSignal.emit(-1, img_path)  # to update QML image
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # signal to update QML image
         elif src == 2:
+            self.set_image(img_path, "process")
+            self.select_image("process")
+            self.img_controller.imageChangedSignal.emit(-1, img_path) # signal to update QML image
+        elif src == 3:
             self.select_image("")
-            self.img_controller.imageChangedSignal.emit(-1, img_path)  # to update QML image
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # signal to update QML image
 
 
 class ImageController(QObject):
@@ -73,6 +82,7 @@ class ImageController(QObject):
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
+    adjustBrightnessContrastSignal = Signal(float, float)
 
     def __init__(self):
         super().__init__()
@@ -108,7 +118,7 @@ class ImageController(QObject):
             print(f"Error cropping image: {e}")
 
     @Slot(QImage, float, float)
-    def process_image(self, q_image, brightness, contrast):
+    def adjust_brightness_contrast(self, q_image, brightness, contrast):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
         img = ImageController.qimage_to_cv(q_image)
 
@@ -126,7 +136,7 @@ class ImageController(QObject):
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            self.imageChangedSignal.emit(2, "undo")
+            self.imageChangedSignal.emit(3, "undo")
 
     @Slot(result=bool)
     def is_image_loaded(self):
@@ -139,6 +149,11 @@ class ImageController(QObject):
     @Slot(bool)
     def perform_cropping(self, allowed):
         self.performCroppingSignal.emit(allowed)
+
+    @Slot(float, float)
+    def brightness_contrast_control(self, brightness, contrast):
+        self.adjustBrightnessContrastSignal.emit(brightness, contrast)
+        print(brightness+contrast)
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):

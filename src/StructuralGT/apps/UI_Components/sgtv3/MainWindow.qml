@@ -92,14 +92,16 @@ ApplicationWindow {
             BrightnessControlWidget{}
         }
 
-        /*onAccepted: {
-            dialogController.accept()  // In Python side
-            dialog.close()
+        onAccepted: {
+            //dialogController.accept()  // In Python side //parseFloat(brightnessInput.text), parseFloat(contrastInput.text)
+            imageController.brightness_contrast_control(20, 20)
+            dialogBrightnessCtrl.close()
+            console.log(spbBrightness.value)
         }
 
-        onRejected: {
+        /*onRejected: {
             dialogController.reject()
-            dialog.close()
+            dialogBrightnessCtrl.close()
         }*/
     }
 
