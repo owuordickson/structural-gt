@@ -6,7 +6,7 @@ import "widgets"
 Rectangle {
     width: parent.width
     height: parent.height
-    //color: "#f0f0f0"
+    color: "#f0f0f0"
 
     GridLayout {
         anchors.fill: parent

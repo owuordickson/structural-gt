@@ -185,7 +185,9 @@ class MainWindow(QObject):
             self.graphPropsTableModel = TableModel(data_graph_props)
 
             # Images
-            img_path = "assets/icons/graph_icon.png"
+            #img_path = "assets/icons/graph_icon.png"
+            img_path = "../../../../../datasets/InVitroBioFilm.png"
+            print(img_path)
             self.image_provider.set_image(img_path)
             self.image_provider.select_image("")
             # pixmap = QPixmap(img_path)

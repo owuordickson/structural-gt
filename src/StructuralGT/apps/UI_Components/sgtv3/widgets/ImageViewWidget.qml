@@ -8,8 +8,9 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-    //anchors.fill: parent
-    //spacing: 10
+
+    // Zoom Factor Variable
+    property real zoomFactor: 1.0
 
     Label {
         id: imgLabel
@@ -21,13 +22,17 @@ ColumnLayout {
         id: imgContainer
         Layout.fillWidth: true
         Layout.fillHeight: true
+        color: "transparent"
         clip: true  // Ensures only the selected area is visible
         visible: imageController.is_image_loaded()
 
         Image {
             id: imgView
-            width: parent.width
-            height: parent.height
+            //width: parent.width
+            //height: parent.height
+            anchors.fill: parent
+            scale: zoomFactor
+            transformOrigin: Item.Center
             fillMode: Image.PreserveAspectFit
             source: imageController.get_pixmap()
         }
@@ -79,19 +84,77 @@ ColumnLayout {
             }
         }
 
+        Rectangle {
+            id: zoomControls
+            width: parent.width
+            anchors.top: parent.top
+            color: "transparent"
+            visible: true
+
+            RowLayout {
+                anchors.fill: parent
+
+                Button {
+                    id: btnZoomIn
+                    text: "+"
+                    Layout.alignment: Qt.AlignLeft
+                    ToolTip.text: "Zoom in"
+                    ToolTip.visible: btnZoomIn.hovered
+                    onClicked: zoomFactor = Math.min(zoomFactor + 0.1, 3.0) // Max zoom = 3x
+                }
+
+                Button {
+                    id: btnZoomOut
+                    text: "-"
+                    Layout.alignment: Qt.AlignRight
+                    ToolTip.text: "Zoom out"
+                    ToolTip.visible: btnZoomOut.hovered
+                    onClicked: zoomFactor = Math.max(zoomFactor - 0.1, 0.5) // Min zoom = 0.5x
+                }
+            }
+        }
     }
 
-    function cropImage() {
-        /*
-        // Move the main image so that only the selection area is visible
-        imgView.x = cropArea.x;
-        imgView.y = cropArea.y;
-        imgView.width = cropArea.width;
-        imgView.height = cropArea.height;
+    Rectangle {
+        id: navControls
+        height: 32
+        Layout.fillHeight: false
+        Layout.fillWidth: true
+        color: "transparent"
+        enabled: false
+        visible: imageController.is_image_loaded()
 
-        // Resize the container to match the selection
-        imgContainer.width = cropArea.width;
-        imgContainer.height = cropArea.height;*/
+
+        RowLayout {
+            anchors.fill: parent
+
+            Button {
+                id: btnPrevious
+                text: ""
+                icon.source: "../assets/icons/back_icon.png" // Path to your icon
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
+                background: transientParent
+                Layout.alignment: Qt.AlignLeft
+                //Layout.margins: 5
+            }
+
+            Button {
+                id: btnNext
+                text: ""
+                icon.source: "../assets/icons/next_icon.png" // Path to your icon
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
+                background: transientParent
+                Layout.alignment: Qt.AlignRight
+                //Layout.margins: 5
+            }
+
+        }
+    }
+
+
+    function cropImage() {
 
         // Crop image through ImageController
         imgView.grabToImage(function(result) {
