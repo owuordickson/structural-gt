@@ -120,7 +120,8 @@ class ImageController(QObject):
     @Slot(QImage, float, float)
     def adjust_brightness_contrast(self, q_image, brightness, contrast):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
-        img = ImageController.qimage_to_cv(q_image)
+        img_pil = ImageQt.fromqimage(q_image)
+        img = ImageController.qimage_to_cv(img_pil)
 
         # Apply brightness and contrast adjustments
         brightness = np.clip(brightness, -100, 100)

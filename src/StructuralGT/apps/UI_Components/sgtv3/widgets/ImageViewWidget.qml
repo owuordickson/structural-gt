@@ -205,6 +205,14 @@ ColumnLayout {
             }
         }
 
+        function onAdjustBrightnessContrastSignal(b_val, c_val) {
+            imgView.grabToImage(function(result) {
+                if (result && result.image) {  // Ensure result is valid
+                    imageController.adjust_brightness_contrast(result.image, b_val, c_val);
+                }
+            });
+        }
+
     }
 }
 
