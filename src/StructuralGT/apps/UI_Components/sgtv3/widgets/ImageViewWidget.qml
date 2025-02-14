@@ -30,17 +30,17 @@ ColumnLayout {
             width: parent.width
             height: parent.height*/
 
-            Image {
-                id: imgView
-                //width: parent.width
-                //height: parent.height
-                //anchors.centerIn: parent
-                anchors.fill: parent
-                scale: zoomFactor
-                transformOrigin: Item.Center
-                fillMode: Image.PreserveAspectFit
-                source: imageController.get_pixmap()
-            }
+        Image {
+            id: imgView
+            //width: parent.width
+            //height: parent.height
+            //anchors.centerIn: parent
+            anchors.fill: parent
+            scale: zoomFactor
+            transformOrigin: Item.Center
+            fillMode: Image.PreserveAspectFit
+            source: imageController.get_pixmap()
+        }
 
         //}
 
