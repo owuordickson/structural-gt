@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 
-
 ColumnLayout {
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -154,6 +153,20 @@ ColumnLayout {
     }
 
 
+    // Save Button
+    //imageProcessor.process_image(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
+    /*Button {
+        text: "Save Processed Image"
+        anchors.horizontalCenter: parent
+        onClicked: {
+            colorMatrix.grabToImage(function(result) {
+                if (result && result.image) {
+                    imageProcessor.save_image(result.image);
+                }
+            });
+        }
+    }*/
+
     function cropImage() {
 
         // Crop image through ImageController
@@ -190,6 +203,7 @@ ColumnLayout {
                 cropImage();
             }
         }
+
     }
 }
 

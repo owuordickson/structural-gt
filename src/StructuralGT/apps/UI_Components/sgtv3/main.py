@@ -1,4 +1,5 @@
 import sys
+import cv2
 import json
 import numpy as np
 from PySide6.QtGui import QGuiApplication
@@ -57,13 +58,13 @@ class ImageProvider(QQuickImageProvider):
         return self.pixmap
 
     def handle_change_image(self, src, img_path):
-        if src == 1:  # '0'-Original, '1'-Crop, '2'-Undo crop,  ignore '3' - will make function recursive
+        if src == 1:  # '0'-Original, '1'-Crop, '2'-Undo crop,  ignore '-1' - will make function recursive
             self.set_image(img_path, "crop")
             self.select_image("crop")
-            self.img_controller.imageChangedSignal.emit(2, img_path)
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # to update QML image
         elif src == 2:
             self.select_image("")
-
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # to update QML image
 
 
 class ImageController(QObject):
@@ -106,6 +107,22 @@ class ImageController(QObject):
         except Exception as e:
             print(f"Error cropping image: {e}")
 
+    @Slot(QImage, float, float)
+    def process_image(self, q_image, brightness, contrast):
+        """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
+        img = ImageController.qimage_to_cv(q_image)
+
+        # Apply brightness and contrast adjustments
+        brightness = np.clip(brightness, -100, 100)
+        contrast = np.clip(contrast, 0.1, 3.0)
+
+        img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+        processed_path = "assets/processed_image.png"
+        cv2.imwrite(processed_path, img)
+        print(f"Processed Image Saved: {processed_path}")
+
+        self.imageChangedSignal.emit(3, processed_path)
+
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
@@ -126,6 +143,13 @@ class ImageController(QObject):
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):
         self.showCroppingToolSignal.emit(allow_cropping)
+
+    @staticmethod
+    def qimage_to_cv(q_image):
+        """ Converts QImage to OpenCV format (NumPy array). """
+        img = ImageQt.ImageQt(q_image)  # Convert QImage to PIL Image
+        img = img.convert("RGB")  # Ensure RGB format
+        return np.array(img)[:, :, ::-1]  # Convert PIL Image to OpenCV (BGR)
 
 
 # Assuming TreeModel and TableModel are properly implemented
@@ -187,7 +211,7 @@ class MainWindow(QObject):
             # Images
             #img_path = "assets/icons/graph_icon.png"
             img_path = "../../../../../datasets/InVitroBioFilm.png"
-            print(img_path)
+
             self.image_provider.set_image(img_path)
             self.image_provider.select_image("")
             # pixmap = QPixmap(img_path)

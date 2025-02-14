@@ -60,6 +60,7 @@ Rectangle {
             Layout.bottomMargin: 10
             text: "v3.0.1"  // Copyright (C) 2024, the Regents of the University of Michigan.
             Layout.fillWidth: true
+            color: "blue"
         }
     }
 }
