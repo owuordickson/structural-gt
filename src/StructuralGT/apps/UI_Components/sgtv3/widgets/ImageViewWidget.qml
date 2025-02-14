@@ -23,27 +23,65 @@ ColumnLayout {
 
             Label {
                 id: imgLabel
-                text: "Welcome to StructuralGT"
+                text: "Welcome to Structural GT"
+                color: "blue"
+                //font.bold: true
+                font.pixelSize: 24
             }
 
             Button {
                 id: btnCreateProject
-                text: "Create project..."
+                Layout.preferredWidth: 180
+                Layout.preferredHeight: 48
+                text: ""
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 5
+                    color: "yellow"
+
+                    Label {
+                        text: "Create project..."
+                        color: "#808080"
+                        font.bold: true
+                        font.pixelSize: 16
+                        anchors.centerIn: parent
+                    }
+                }
             }
 
             Button {
                 id: btnOpenProject
-                text: "Open project.."
+                Layout.preferredWidth: 180
+                Layout.preferredHeight: 48
+                background: transientParent
+                text: ""
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 5
+                    color: "transparent"
+                    border.width: 2
+                    border.color: "#808080"
+
+                    Label {
+                        text: "Open project..."
+                        color: "#808080"
+                        font.bold: true
+                        font.pixelSize: 16
+                        anchors.centerIn: parent
+                    }
+                }
             }
 
-            Rectangle {
+            /*Rectangle {
                 width: 150
                 height: 2
                 color: "lightgray"
-            }
+            }*/
 
 
-            Button {
+            /*Button {
                 id: btnAddImageFolder
                 text: "Add image folder"
             }
@@ -51,7 +89,7 @@ ColumnLayout {
             Button {
                 id: btnAddImage
                 text: "Add image"
-            }
+            }*/
 
         }
 
