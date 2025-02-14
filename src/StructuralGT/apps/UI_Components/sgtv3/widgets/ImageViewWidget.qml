@@ -17,25 +17,24 @@ ColumnLayout {
         visible: !imageController.is_image_loaded()
     }
 
-    /*ScrollView {
-        width: parent.width
-        height: parent.height
-        Layout.fillHeight: true
-        Layout.fillWidth: true*/
 
-        Rectangle {
-            id: imgContainer
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            //anchors.fill: parent
-            color: "transparent"
-            clip: true  // Ensures only the selected area is visible
-            visible: imageController.is_image_loaded()
+    Rectangle {
+        id: imgContainer
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: "transparent"
+        clip: true  // Ensures only the selected area is visible
+        visible: imageController.is_image_loaded()
+
+        /*ScrollView {
+            width: parent.width
+            height: parent.height*/
 
             Image {
                 id: imgView
                 //width: parent.width
                 //height: parent.height
+                //anchors.centerIn: parent
                 anchors.fill: parent
                 scale: zoomFactor
                 transformOrigin: Item.Center
@@ -43,84 +42,85 @@ ColumnLayout {
                 source: imageController.get_pixmap()
             }
 
-            // Selection Rectangle for Cropping
-            Rectangle {
-                id: cropArea
-                color: "transparent"
-                border.color: "red"
-                border.width: 2
-                visible: false
+        //}
 
-                // Draggable functionality
-                MouseArea {
-                    id: dragArea
-                    anchors.fill: parent
-                    drag.target: cropArea
-                    drag.minimumX: 0
-                    drag.minimumY: 0
-                    drag.maximumX: imgContainer.width - cropArea.width
-                    drag.maximumY: imgContainer.height - cropArea.height
-                }
-            }
+        // Selection Rectangle for Cropping
+        Rectangle {
+            id: cropArea
+            color: "transparent"
+            border.color: "red"
+            border.width: 2
+            visible: false
 
+            // Draggable functionality
             MouseArea {
-                id: selectionArea
+                id: dragArea
                 anchors.fill: parent
-                enabled: false
-                onPressed: (mouse) => {
-                               cropArea.x = mouse.x;
-                               cropArea.y = mouse.y;
-                               cropArea.width = 0;
-                               cropArea.height = 0;
-                               cropArea.visible = true;
-                           }
-                onPositionChanged: (mouse) => {
-                                       if (cropArea.visible) {
-                                           cropArea.width = Math.abs(mouse.x - cropArea.x);
-                                           cropArea.height = Math.abs(mouse.y - cropArea.y);
-                                       }
-                                   }
-                onReleased: {
-                    if (cropArea.width < 5 || cropArea.height < 5) {
-                        cropArea.visible = false;  // Hide small selections
-                        imageController.show_cropping_tool(false);
-                    } else {
-                        imageController.show_cropping_tool(true);
-                    }
-                }
+                drag.target: cropArea
+                drag.minimumX: 0
+                drag.minimumY: 0
+                drag.maximumX: imgContainer.width - cropArea.width
+                drag.maximumY: imgContainer.height - cropArea.height
             }
+        }
 
-            Rectangle {
-                id: zoomControls
-                width: parent.width
-                anchors.top: parent.top
-                color: "transparent"
-                visible: true
-
-                RowLayout {
-                    anchors.fill: parent
-
-                    Button {
-                        id: btnZoomIn
-                        text: "+"
-                        Layout.alignment: Qt.AlignLeft
-                        ToolTip.text: "Zoom in"
-                        ToolTip.visible: btnZoomIn.hovered
-                        onClicked: zoomFactor = Math.min(zoomFactor + 0.1, 3.0) // Max zoom = 3x
-                    }
-
-                    Button {
-                        id: btnZoomOut
-                        text: "-"
-                        Layout.alignment: Qt.AlignRight
-                        ToolTip.text: "Zoom out"
-                        ToolTip.visible: btnZoomOut.hovered
-                        onClicked: zoomFactor = Math.max(zoomFactor - 0.1, 0.5) // Min zoom = 0.5x
-                    }
+        MouseArea {
+            id: selectionArea
+            anchors.fill: parent
+            enabled: false
+            onPressed: (mouse) => {
+                           cropArea.x = mouse.x;
+                           cropArea.y = mouse.y;
+                           cropArea.width = 0;
+                           cropArea.height = 0;
+                           cropArea.visible = true;
+                       }
+            onPositionChanged: (mouse) => {
+                                   if (cropArea.visible) {
+                                       cropArea.width = Math.abs(mouse.x - cropArea.x);
+                                       cropArea.height = Math.abs(mouse.y - cropArea.y);
+                                   }
+                               }
+            onReleased: {
+                if (cropArea.width < 5 || cropArea.height < 5) {
+                    cropArea.visible = false;  // Hide small selections
+                    imageController.show_cropping_tool(false);
+                } else {
+                    imageController.show_cropping_tool(true);
                 }
             }
         }
-    //}
+
+        Rectangle {
+            id: zoomControls
+            width: parent.width
+            anchors.top: parent.top
+            color: "transparent"
+            visible: true
+
+            RowLayout {
+                anchors.fill: parent
+
+                Button {
+                    id: btnZoomIn
+                    text: "+"
+                    Layout.alignment: Qt.AlignLeft
+                    ToolTip.text: "Zoom in"
+                    ToolTip.visible: btnZoomIn.hovered
+                    onClicked: zoomFactor = Math.min(zoomFactor + 0.1, 3.0) // Max zoom = 3x
+                }
+
+                Button {
+                    id: btnZoomOut
+                    text: "-"
+                    Layout.alignment: Qt.AlignRight
+                    ToolTip.text: "Zoom out"
+                    ToolTip.visible: btnZoomOut.hovered
+                    onClicked: zoomFactor = Math.max(zoomFactor - 0.1, 0.5) // Min zoom = 0.5x
+                }
+            }
+        }
+    }
 
     Rectangle {
         id: navControls
