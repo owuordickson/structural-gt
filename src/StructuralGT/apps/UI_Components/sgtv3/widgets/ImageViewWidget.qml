@@ -11,10 +11,50 @@ ColumnLayout {
     // Zoom Factor Variable
     property real zoomFactor: 1.0
 
-    Label {
-        id: imgLabel
-        text: "No image loaded"
+    Rectangle {
+        id: welcomeContainer
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: "transparent"
         visible: !imageController.is_image_loaded()
+
+        ColumnLayout {
+            anchors.centerIn: parent
+
+            Label {
+                id: imgLabel
+                text: "Welcome to StructuralGT"
+            }
+
+            Button {
+                id: btnCreateProject
+                text: "Create project..."
+            }
+
+            Button {
+                id: btnOpenProject
+                text: "Open project.."
+            }
+
+            Rectangle {
+                width: 150
+                height: 2
+                color: "lightgray"
+            }
+
+
+            Button {
+                id: btnAddImageFolder
+                text: "Add image folder"
+            }
+
+            Button {
+                id: btnAddImage
+                text: "Add image"
+            }
+
+        }
+
     }
 
 

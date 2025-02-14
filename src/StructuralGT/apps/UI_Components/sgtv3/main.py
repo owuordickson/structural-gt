@@ -141,7 +141,8 @@ class ImageController(QObject):
 
     @Slot(result=bool)
     def is_image_loaded(self):
-        return self.img_loaded
+        #return self.img_loaded
+        return False
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):

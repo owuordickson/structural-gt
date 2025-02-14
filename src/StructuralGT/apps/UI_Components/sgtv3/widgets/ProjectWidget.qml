@@ -12,6 +12,14 @@ Item {
         id: projectCtrlLayout
         spacing: 10
 
+        // Create, Open - project
+
+        // add images
+
+        // image list
+
+        // image settings and options (saved from selection) - linked to image list
+
     }
 
 }
