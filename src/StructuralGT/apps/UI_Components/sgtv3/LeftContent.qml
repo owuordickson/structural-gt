@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import "components"
 
 Rectangle {
-    width: parent.width
+    width: 300
     height: parent.height
     color: "#f0f0f0"
     border.color: "#c0c0c0"

@@ -41,7 +41,8 @@ ApplicationWindow {
             Layout.leftMargin: 10
             Layout.rightMargin: 5
             Layout.preferredHeight: parent.height - 40
-            Layout.preferredWidth: parent.width * 0.3
+            //Layout.preferredWidth: parent.width * 0.3
+            Layout.preferredWidth: 300
             Layout.fillWidth: true
             Layout.fillHeight: true
             LeftContent{}
@@ -52,8 +53,9 @@ ApplicationWindow {
             Layout.row: 1
             Layout.column: 1
             Layout.rightMargin: 10
-            Layout.preferredHeight: parent.height-40
-            Layout.preferredWidth: parent.width * 0.7
+            Layout.preferredHeight: parent.height - 40
+            //Layout.preferredWidth: parent.width * 0.7
+            Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
             Layout.fillHeight: true
             RightContent{}
@@ -63,7 +65,7 @@ ApplicationWindow {
     Dialog {
         id: dialogAbout
         //parent: mainWindow
-        title: "About This App"
+        title: "About this software"
         modal: true
         standardButtons: Dialog.Ok
         anchors.centerIn: parent

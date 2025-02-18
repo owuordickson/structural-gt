@@ -22,74 +22,132 @@ ColumnLayout {
             anchors.centerIn: parent
 
             Label {
-                id: imgLabel
+                id: lblWelcome
+                //Layout.preferredWidth:
                 text: "Welcome to Structural GT"
                 color: "blue"
                 //font.bold: true
                 font.pixelSize: 24
             }
 
-            Button {
-                id: btnCreateProject
-                Layout.preferredWidth: 180
-                Layout.preferredHeight: 48
-                text: ""
+            RowLayout {
+                //anchors.fill: parent
+
+                ColumnLayout {
+
+                    Button {
+                        id: btnCreateProject
+                        Layout.preferredWidth: 180
+                        Layout.preferredHeight: 48
+                        text: ""
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 5
+                            color: "yellow"
+
+                            Label {
+                                text: "Create project..."
+                                color: "#808080"
+                                font.bold: true
+                                font.pixelSize: 16
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+
+                    Button {
+                        id: btnOpenProject
+                        Layout.preferredWidth: 180
+                        Layout.preferredHeight: 48
+                        background: transientParent
+                        text: ""
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 5
+                            color: "transparent"
+                            border.width: 2
+                            border.color: "#808080"
+
+                            Label {
+                                text: "Open project..."
+                                color: "#808080"
+                                font.bold: true
+                                font.pixelSize: 16
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+
+                }
 
                 Rectangle {
-                    anchors.fill: parent
-                    radius: 5
-                    color: "yellow"
+                    Layout.leftMargin: 24
+                    Layout.rightMargin: 12
+                    width: 1
+                    height: 75
+                    color: "#c0c0c0"
+                }
+
+                ColumnLayout {
 
                     Label {
-                        text: "Create project..."
+                        id: lblQuick
+                        Layout.leftMargin: 5
+                        //Layout.preferredWidth:
+                        text: "Quick Analysis"
                         color: "#808080"
                         font.bold: true
                         font.pixelSize: 16
-                        anchors.centerIn: parent
                     }
-                }
-            }
 
-            Button {
-                id: btnOpenProject
-                Layout.preferredWidth: 180
-                Layout.preferredHeight: 48
-                background: transientParent
-                text: ""
+                    Button {
+                        id: btnAddImage
+                        Layout.preferredWidth: 125
+                        Layout.preferredHeight: 32
+                        text: ""
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 5
-                    color: "transparent"
-                    border.width: 2
-                    border.color: "#808080"
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 5
+                            color: "#808080"
 
-                    Label {
-                        text: "Open project..."
-                        color: "#808080"
-                        font.bold: true
-                        font.pixelSize: 16
-                        anchors.centerIn: parent
+                            Label {
+                                text: "Add image"
+                                color: "white"
+                                font.bold: true
+                                font.pixelSize: 12
+                                anchors.centerIn: parent
+                            }
+                        }
                     }
+
+                    Button {
+                        id: btnAddImageFolder
+                        Layout.preferredWidth: 125
+                        Layout.preferredHeight: 32
+                        text: ""
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 5
+                            color: "#808080"
+
+                            Label {
+                                text: "Add image folder"
+                                color: "white"
+                                font.bold: true
+                                font.pixelSize: 12
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+                    //}
+
                 }
+
             }
-
-            /*Rectangle {
-                width: 150
-                height: 2
-                color: "lightgray"
-            }*/
-
-
-            /*Button {
-                id: btnAddImageFolder
-                text: "Add image folder"
-            }
-
-            Button {
-                id: btnAddImage
-                text: "Add image"
-            }*/
 
         }
 

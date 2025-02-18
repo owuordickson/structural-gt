@@ -13,6 +13,9 @@ MenuBar {
 
     Menu {
         title: "File"
+        MenuItem { text: "Add image"; onTriggered: console.log("add image clicked") }
+        MenuItem { text: "Add image folder"; onTriggered: console.log("add image folder clicked") }
+
         Menu { title: "Project..."
             MenuItem { text: "Create project"; onTriggered: console.log("create project clicked") }
             MenuItem { text: "Open project"; onTriggered: console.log("Open clicked") }
@@ -22,7 +25,7 @@ MenuBar {
         MenuItem { text: "Save"; onTriggered: console.log("save project") }
         MenuSeparator{}
 
-        Menu { title: "Export graph..."
+        Menu { title: "Export graph as..."
             MenuItem { text: "Edge list"; onTriggered: console.log("edge list") }
             MenuItem { text: "Adjacency matix"; onTriggered: console.log("adj matrix") }
             MenuItem { text: "As gexf"; onTriggered: console.log("gexf") }
