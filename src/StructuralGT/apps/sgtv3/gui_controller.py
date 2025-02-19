@@ -7,8 +7,9 @@ from PIL import ImageQt  # Import ImageQt for conversion
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
+from gui_list_model import CheckBoxModel
 
-from src.StructuralGT.configs.config_loader import load_gtc_configs
+from src.StructuralGT.configs.config_loader import load_gtc_configs, load_gte_configs, load_img_configs
 
 
 class MainController(QObject):
@@ -38,6 +39,9 @@ class MainController(QObject):
         self.graphPropsTableModel = None
         self.imgListTableModel = None
         self.imgPropsTableModel = None
+        self.imgListModel = None
+        self.gteListModel = None
+        self.gtcListModel = None
 
         # Load Model Data
         self._load_model_data()
@@ -52,10 +56,19 @@ class MainController(QObject):
     def _load_model_data(self):
         """Loads data into models"""
         try:
+            # 1.
             with open("assets/data/extract_data.json", "r") as file:
                 json_data = json.load(file)
                 # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
             self.graphTreeModel = TreeModel(json_data)
+
+            # 2.
+            options_img = load_img_configs()
+            option_gte = load_gte_configs()
+            options_gtc = load_gtc_configs()
+            self.imgListModel = CheckBoxModel(list(options_img.values()))
+            self.gteListModel = CheckBoxModel(list(option_gte.values()))
+            self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
 
             data_img_props = data_img_list = data_graph_props = []
             """data_img_props = [
@@ -89,7 +102,8 @@ class MainController(QObject):
 
         :return:
         """
-
+        pass
+        """"
         # 1. Fetch configs
         self.configs_data = load_all_configs()
         options = self.configs_data['main_options']
@@ -111,18 +125,18 @@ class MainController(QObject):
 
         # 6. initialize Image Paths
         self._init_img_path_settings(options)
+        """
 
     @Slot(str, result=bool)
     def load_gte_setting(self, item_name):
         # print(item_name)
-        if len(self.analyze_objs) > 0:
+        if len(self.analyze_objs) <= 0:
             return False
         else:
-            # options_gte = self.analyze_objs[self.current_obj_id]
-            options_gtc = load_gtc_configs()
-            val = options_gtc[item_name]
-            print(val)
-            # if item_name ==
+            options_gtc = self.analyze_objs[self.current_obj_id]
+            # options_gtc = load_gtc_configs()
+            val = options_gtc[item_name]["value"]
+            # print(val)
             return True if val == 1 else False
 
     @Slot(result=bool)

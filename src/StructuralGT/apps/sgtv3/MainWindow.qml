@@ -215,3 +215,6 @@ ApplicationWindow {
     }
 
 }
+
+
+//about = A software tool that allows graph theory analysis of nano-structures. This is a modified version of StructuralGT initially proposed by Drew A. Vecchio, DOI: 10.1021/acsnano.1c04711.

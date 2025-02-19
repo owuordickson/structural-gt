@@ -100,32 +100,33 @@ def load_project_configs():
     return options_main
 
 def load_img_configs():
-    options_img = struct()
+    """Image Detection settings"""
 
-    # 2. Image Detection settings
-    options_img.image_dimensions = 2
-    options_img.threshold_type = 1
-    options_img.threshold_global = 127
-    options_img.threshold_adaptive = 11
-    options_img.gamma = float(1)
-    options_img.gaussian_blurring_size = 3
-    options_img.autolevel_blurring_size = 3
-    options_img.lowpass_window_size = 10
-    options_img.laplacian_kernel_size = 3
-    options_img.sobel_kernel_size = 3
-    options_img.apply_autolevel = 0
-    options_img.apply_laplacian = 0
-    options_img.apply_scharr = 0
-    options_img.apply_sobel = 0
-    options_img.apply_median = 0
-    options_img.apply_gaussian = 0
-    options_img.apply_lowpass = 0
-    options_img.apply_dark_foreground = 0
-    options_img.brightness_level = 0
-    options_img.contrast_level = 0
-    options_img.scale_value = 1
-    options_img.scalebar_px_count = 0
-    options_img.resistivity = 1
+    options_img = {
+        "image_dim": {"id": "image_dim", "text": "", "value": 2 },
+        "threshold_type": {"id": "threshold_type", "text": "", "value": 1 },
+        "global_threshold_value": {"id": "global_threshold_value", "text": "", "value": 127 },
+        "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "text": "", "value": 11 },
+        "adjust_gamma": {"id": "adjust_gamma", "text": "", "value": 1.0 },
+        "gaussian_blurring_size": {"id": "gaussian_blurring_size", "text": "", "value": 3 },
+        "autolevel_blurring_size": {"id": "autolevel_blurring_size", "text": "", "value": 3 },
+        "lowpass_window_size": {"id": "lowpass_window_size", "text": "", "value": 10 },
+        "laplacian_kernel_size": {"id": "laplacian_kernel_size", "text": "", "value": 3 },
+        "sobel_kernel_size": {"id": "sobel_kernel_size", "text": "", "value": 3 },
+        "apply_autolevel": {"id": "apply_autolevel", "text": "", "value": 0 },
+        "apply_laplacian_gradient": {"id": "apply_laplacian_gradient", "text": "", "value": 0 },
+        "apply_scharr_gradient": {"id": "apply_scharr_gradient", "text": "", "value": 0 },
+        "apply_sobel_gradient": {"id": "apply_sobel_gradient", "text": "", "value": 0 },
+        "apply_median_filter": {"id": "apply_median_filter", "text": "", "value": 0 },
+        "apply_gaussian_blur": {"id": "apply_gaussian_blur", "text": "", "value": 0 },
+        "apply_lowpass_filter": {"id": "apply_lowpass_filter", "text": "", "value": 0 },
+        "apply_dark_foreground": {"id": "apply_dark_foreground", "text": "", "value": 0 },
+        "brightness_level": {"id": "brightness_level", "text": "", "value": 0 },
+        "contrast_level": {"id": "contrast_level", "text": "", "value": 0 },
+        "scale_value_nanometers": {"id": "scale_value_nanometers", "text": "", "value": 1.0 },
+        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "text": "", "value": 0 },
+        "resistivity": {"id": "", "text": "", "value": 1.0 },
+    }
 
     # Load configuration from file
     config = configparser.ConfigParser()
@@ -135,54 +136,56 @@ def load_img_configs():
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
-        img_dimensions = int(config.get('filter-settings', 'image_dim'))
+
+        options_img["img_dimensions"]["value"] = int(config.get('filter-settings', 'image_dim'))
+        options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
+        options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
+        options_img["adaptive_local_threshold_value"]["value"] = int(
+            config.get('filter-settings', 'adaptive_local_threshold_value'))
+        options_img["adjust_gamma"]["value"] = float(config.get('filter-settings', 'adjust_gamma'))
+        options_img["gaussian_blurring_size"]["value"] = int(config.get('filter-settings', 'blurring_window_size'))
+        options_img["autolevel_blurring_size"]["value"] = int(config.get('filter-settings', 'blurring_window_size'))
+        options_img["lowpass_window_size"]["value"] = int(config.get('filter-settings', 'filter_window_size'))
+        options_img["laplacian_kernel_size"]["value"] = 3
+        options_img["sobel_kernel_size"]["value"] = 3
+        options_img["apply_autolevel"]["value"] = int(config.get('filter-settings', 'apply_autolevel'))
+        options_img["apply_laplacian_gradient"]["value"] = int(
+            config.get('filter-settings', 'apply_laplacian_gradient'))
+        options_img["apply_scharr_gradient"]["value"] = int(config.get('filter-settings', 'apply_scharr_gradient'))
+        options_img["apply_sobel_gradient"]["value"] = int(config.get('filter-settings', 'apply_sobel_gradient'))
+        options_img["apply_median_filter"]["value"] = int(config.get('filter-settings', 'apply_median_filter'))
+        options_img["apply_gaussian_blur"]["value"] = int(config.get('filter-settings', 'apply_gaussian_blur'))
+        options_img["apply_lowpass_filter"]["value"] = int(config.get('filter-settings', 'apply_lowpass_filter'))
+        options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
+        options_img["brightness_level"]["value"] = int(config.get('filter-settings', 'brightness_level'))
+        options_img["contrast_level"]["value"] = int(config.get('filter-settings', 'contrast_level'))
+        options_img["scale_value_nanometers"]["value"] = float(config.get('filter-settings', 'scale_value_nanometers'))
+        options_img["scalebar_pixel_count"]["value"] = int(config.get('filter-settings', 'scalebar_pixel_count'))
+        options_img["resistivity"]["value"] = float(config.get('filter-settings', 'resistivity'))
+
+        return options_img
     except configparser.NoSectionError:
         return options_img
 
-    # 2. Image Detection settings
-    options_img.image_dimensions = img_dimensions
-    options_img.threshold_type = int(config.get('filter-settings', 'threshold_type'))
-    options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
-    options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
-    options_img.gamma = float(config.get('filter-settings', 'adjust_gamma'))
-    options_img.gaussian_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
-    options_img.autolevel_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
-    options_img.lowpass_window_size = int(config.get('filter-settings', 'filter_window_size'))
-    options_img.laplacian_kernel_size = 3
-    options_img.sobel_kernel_size = 3
-    options_img.apply_autolevel = int(config.get('filter-settings', 'use_autolevel'))
-    options_img.apply_laplacian = int(config.get('filter-settings', 'use_laplacian_gradient'))
-    options_img.apply_scharr = int(config.get('filter-settings', 'use_scharr_gradient'))
-    options_img.apply_sobel = int(config.get('filter-settings', 'use_sobel_gradient'))
-    options_img.apply_median = int(config.get('filter-settings', 'apply_median_filter'))
-    options_img.apply_gaussian = int(config.get('filter-settings', 'apply_gaussian_blur'))
-    options_img.apply_lowpass = int(config.get('filter-settings', 'apply_lowpass_filter'))
-    options_img.apply_dark_foreground = int(config.get('filter-settings', 'dark_foreground'))
-    options_img.brightness_level = int(config.get('filter-settings', 'brightness_level'))
-    options_img.contrast_level = int(config.get('filter-settings', 'contrast_level'))
-    options_img.scale_value = float(config.get('filter-settings', 'scale_value_nanometers'))
-    options_img.scalebar_px_count = int(config.get('filter-settings', 'scalebar_pixel_count'))
-    options_img.resistivity = float(config.get('filter-settings', 'resistivity'))
-
-    return options_img
 
 def load_gte_configs():
-    options_gte = struct()
+    """Graph Extraction Settings"""
 
-    # 3. Graph Extraction Settings
-    options_gte.merge_nearby_nodes = 1
-    options_gte.prune_dangling_edges = 1
-    options_gte.remove_disconnected_segments = 1
-    options_gte.remove_self_loops = 1
-    options_gte.remove_object_size = 500
-    options_gte.is_multigraph = 0
-    options_gte.has_weights = 0
-    options_gte.weight_type = 'DIA'
-    options_gte.display_node_id = 0
-    options_gte.export_edge_list = 0
-    options_gte.export_as_gexf = 0
-    options_gte.export_adj_mat = 0
-    options_gte.save_images = 0
+    options_gte = {
+        "merge_nearby_nodes": {"id": "merge_nearby_nodes", "text": "Merge Nearby Nodes", "value": 1},
+        "prune_dangling_edges": {"id": "prune_dangling_edges", "text": "Prune Dangling Edges", "value": 1},
+        "remove_disconnected_segments": {"id": "remove_disconnected_segments", "text": "Remove Disconnected Segments (set size)", "value": 1},
+        "remove_self_loops": {"id": "remove_self_loops", "text": "Remove Self Loops", "value": 1},
+        "remove_object_size": {"id": "remove_object_size", "text": "", "value": 500},
+        "is_multigraph": {"id": "is_multigraph", "text": "Is Multigraph?", "value": 0},
+        "has_weights": {"id": "has_weights", "text": "Add Weights", "value": 0},
+        "weight_type": {"id": "weight_type", "text": "", "value": 'DIA'},
+        "display_node_id": {"id": "display_node_id", "text": "Display Node ID", "value": 0},
+        "export_edge_list": {"id": "export_edge_list", "text": "Export Edge List", "value": 0},
+        "export_as_gexf": {"id": "export_as_gexf", "text": "Export as gexf", "value": 0},
+        "export_adj_mat": {"id": "export_adj_mat", "text": "Export Adjacency Matrix", "value": 0},
+        "save_images": {"id": "save_images", "text": "Save All Images", "value": 0},
+    }
 
     # Load configuration from file
     config = configparser.ConfigParser()
@@ -192,48 +195,50 @@ def load_gte_configs():
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
-        has_weights = int(config.get('extraction-settings', 'add_weights'))
+
+        options_gte["merge_nearby_nodes"]["value"] = int(config.get('extraction-settings', 'merge_nearby_nodes'))
+        options_gte["prune_dangling_edges"]["value"] = int(config.get('extraction-settings', 'prune_dangling_edges'))
+        options_gte["remove_disconnected_segments"]["value"] = int(
+            config.get('extraction-settings', 'remove_disconnected_segments'))
+        options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
+        options_gte["remove_object_size"]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
+        options_gte["is_multigraph"]["value"] = int(config.get('extraction-settings', 'is_multigraph'))
+        options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
+        options_gte["weight_type"]["value"] = str(config.get('extraction-settings', 'weight_type'))
+        options_gte["display_node_id"]["value"] = int(config.get('extraction-settings', 'display_node_id'))
+        options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
+        options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
+        options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))
+        options_gte["save_images"]["value"] = int(config.get('extraction-settings', 'save_images'))
+
+        return options_gte
     except configparser.NoSectionError:
         return options_gte
 
-    # 3. Graph Extraction Settings
-    options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))
-    options_gte.prune_dangling_edges = int(config.get('extraction-settings', 'prune_dangling_edges'))
-    options_gte.remove_disconnected_segments = int(config.get('extraction-settings', 'remove_disconnected_segments'))
-    options_gte.remove_self_loops = int(config.get('extraction-settings', 'remove_self_loops'))
-    options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
-    options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
-    options_gte.has_weights = has_weights
-    options_gte.weight_type = str(config.get('extraction-settings', 'weight_type'))
-    options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
-    options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
-    options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
-    options_gte.export_adj_mat = int(config.get('extraction-settings', 'export_adj_mat'))
-    options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
-
-    return options_gte
 
 def load_gtc_configs():
-    options_gtc = {"display_heatmaps": 1,
-                   "display_degree_histogram": 1,
-                   "display_betweenness_histogram": 1,
-                   "display_currentflow_histogram": 1,
-                   "display_closeness_histogram": 1,
-                   "display_eigenvector_histogram": 1,
-                   "display_angle_histogram": 1,
-                   "display_ohms_histogram": 0,
-                   "display_percolation_histogram": 0,
-                   "compute_node_connectivity": 1,
-                   "compute_graph_density": 1,
-                   "compute_graph_conductance": 0,
-                   "compute_global_efficiency": 1,
-                   "compute_clustering_coef": 1,
-                   "compute_assortativity_coef": 1,
-                   "compute_network_diameter": 1,
-                   "compute_wiener_index": 1,
-                   "compute_lang": 'Py'}
+    """Networkx Calculation Settings"""
 
-    # 4. Networkx Calculation Settings
+    options_gtc = {
+        "display_heatmaps": {"id": "display_heatmaps", "text": "Display Heatmaps", "value": 1},
+        "display_degree_histogram": {"id": "display_degree_histogram", "text": "Average Degree", "value": 1},
+        "compute_network_diameter": {"id": "compute_network_diameter", "text": "Network Diameter", "value": 1},
+        "compute_graph_density": {"id": "compute_graph_density", "text": "Graph Density", "value": 1},
+        "compute_wiener_index": {"id": "compute_wiener_index", "text": "Wiener Index", "value": 1},
+        "compute_avg_node_connectivity": {"id": "compute_avg_node_connectivity", "text": "Average Node Connectivity", "value": 0},
+        "compute_global_efficiency": {"id": "compute_global_efficiency", "text": "Global Coefficient", "value": 1},
+        "compute_avg_clustering_coef": {"id": "compute_avg_clustering_coef", "text": "Average Clustering Coefficient", "value": 1},
+        "compute_assortativity_coef": {"id": "compute_assortativity_coef", "text": "Assortativity Coefficient", "value": 1},
+        "display_betweenness_centrality_histogram": {"id": "display_betweenness_centrality_histogram", "text": "Betweenness Centrality", "value": 1},
+        "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closenness Centrality", "value": 1},
+        "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
+        "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
+        #"display_currentflow_histogram": {"id": "display_currentflow_histogram", "text": "Current Flow Betweenness Centrality", "value": 0},
+        "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
+        #"compute_graph_conductance": {"id": "compute_graph_conductance", "text": "Graph Conductance", "value": 0},
+        "display_percolation_histogram": {"id": "display_percolation_histogram", "text": "Percolation Centrality", "value": 0},
+        #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
+    }
 
     # Load configuration from file
     config = configparser.ConfigParser()
@@ -243,36 +248,30 @@ def load_gtc_configs():
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
-        display_heatmaps = int(config.get('sgt-settings', 'display_heatmaps'))
+
+        options_gtc["display_heatmaps"]["value"] = int(config.get('sgt-settings', 'display_heatmaps'))
+        options_gtc["display_degree_histogram"]["value"] = int(config.get('sgt-settings', 'display_degree_histogram'))
+        options_gtc["display_betweenness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_betweenness_centrality_histogram'))
+        # options_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] = int(
+        #    config.get('sgt-settings', 'display_current_flow_betweenness_centrality_histogram'))
+        options_gtc["display_closeness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_closeness_centrality_histogram'))
+        options_gtc["display_eigenvector_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_eigenvector_centrality_histogram'))
+        options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
+        options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
+        options_gtc["display_percolation_histogram"]["value"] = int(config.get('sgt-settings', 'display_percolation_histogram'))
+        options_gtc["compute_avg_node_connectivity"]["value"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
+        options_gtc["compute_graph_density"]["value"] = int(config.get('sgt-settings', 'compute_graph_density'))
+        # options_gtc["compute_graph_conductance"]["value"] = int(config.get('sgt-settings', 'compute_graph_conductance'))
+        options_gtc["compute_global_efficiency"]["value"] = int(config.get('sgt-settings', 'compute_global_efficiency'))
+        options_gtc["compute_avg_clustering_coef"]["value"] = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
+        options_gtc["compute_assortativity_coef"]["value"] = int(config.get('sgt-settings', 'compute_assortativity_coef'))
+        options_gtc["compute_network_diameter"]["value"] = int(config.get('sgt-settings', 'compute_network_diameter'))
+        options_gtc["compute_wiener_index"]["value"] = int(config.get('sgt-settings', 'compute_wiener_index'))
+        # options_gtc["compute_lang"]["value"] = str(config.get('sgt-settings', 'compute_lang'))
+
+        return options_gtc
     except configparser.NoSectionError:
         return options_gtc
-
-    # 4. Networkx Calculation Settings
-    options_gtc["display_heatmaps"] = display_heatmaps
-    options_gtc["display_degree_histogram"] = int(config.get('sgt-settings', 'display_degree_histogram'))
-    options_gtc["display_betweenness_histogram"] = int(config.get('sgt-settings',
-                                                               'display_betweenness_centrality_histogram'))
-    options_gtc["display_currentflow_histogram"] = int(config.get('sgt-settings',
-                                                               'display_current_flow_betweenness_centrality_histogram'))
-    options_gtc["display_closeness_histogram"] = int(config.get('sgt-settings',
-                                                             'display_closeness_centrality_histogram'))
-    options_gtc["display_eigenvector_histogram"] = int(config.get('sgt-settings',
-                                                               'display_eigenvector_centrality_histogram'))
-    options_gtc["display_angle_histogram"] = int(config.get('sgt-settings',
-                                                               'display_edge_angle_centrality_histogram'))
-    options_gtc["display_ohms_histogram"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
-    options_gtc["display_percolation_histogram"] = int(config.get('sgt-settings', 'display_percolation_histogram'))
-    options_gtc["compute_node_connectivity"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
-    options_gtc["compute_graph_density"] = int(config.get('sgt-settings', 'compute_graph_density'))
-    options_gtc["compute_graph_conductance"] = int(config.get('sgt-settings', 'compute_graph_conductance'))
-    options_gtc["compute_global_efficiency"] = int(config.get('sgt-settings', 'compute_global_efficiency'))
-    options_gtc["compute_clustering_coef"] = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
-    options_gtc["compute_assortativity_coef"] = int(config.get('sgt-settings', 'compute_assortativity_coef'))
-    options_gtc["compute_network_diameter"] = int(config.get('sgt-settings', 'compute_network_diameter'))
-    options_gtc["compute_wiener_index"] = int(config.get('sgt-settings', 'compute_wiener_index'))
-    options_gtc["compute_lang"] = str(config.get('sgt-settings', 'compute_lang'))
-
-    return options_gtc
 
 def load_all_configs():
 
