@@ -8,6 +8,9 @@ Item {
     height: parent.height
     width: parent.width
 
+    property int spbWidthSize: 170
+    property int lblWidthSize: 100
+
     // Function to get values from SpinBoxes and send to ImageController
     function applyChanges() {
         let brightness_val = 0;
@@ -55,14 +58,14 @@ Item {
 
                 Label {
                     id: label
-                    Layout.preferredWidth: 100
+                    Layout.preferredWidth: lblWidthSize
                     text: modelData.labelText
                 }
 
                 SpinBox {
                     id: spinBox
                     objectName: modelData.id
-                    Layout.minimumWidth: 170
+                    Layout.minimumWidth: spbWidthSize
                     Layout.fillWidth: true
                     from: 0
                     to: 100

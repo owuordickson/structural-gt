@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 TableView {
     id: tableView
-    height: imgPropsTableModel.rowCount() * 30  // implicitHeight is 30
+    height: imgPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
     //resizableColumns: true
     Layout.fillWidth: true
     Layout.topMargin: 5
@@ -12,9 +12,11 @@ TableView {
     Layout.rightMargin: 2
     model: imgPropsTableModel
 
+    property int tblRowHeight: 30
+
     delegate: Rectangle {
         implicitWidth: column === 0 ? (tableView.width * 0.36) : (tableView.width * 0.64) //imgPropsTableModel.columnCount
-        implicitHeight: 30
+        implicitHeight: tblRowHeight
         color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
         //border.color: "#d0d0d0"
         //border.width: 1
@@ -67,7 +69,7 @@ TableView {
         id: lineBorder
         Rectangle {
             width: 1 // Border width
-            height: 30
+            height: tblRowHeight
             color: "#e0e0e0" // Border color
             anchors.left: parent.left
         }
@@ -83,5 +85,4 @@ TableView {
         }
     }
 }
-
 

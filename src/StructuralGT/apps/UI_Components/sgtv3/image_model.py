@@ -1,0 +1,163 @@
+import cv2
+import numpy as np
+from PySide6.QtCore import QObject,Signal, Slot
+from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtQuick import QQuickImageProvider
+
+from PIL import ImageQt  # Import ImageQt for conversion
+
+
+class ImageProvider(QQuickImageProvider):
+
+    def __init__(self, img_controller):
+        super().__init__(QQuickImageProvider.Pixmap)
+        # self.images = {}  # Store images with their IDs
+        self._image_path = ""
+        self.pixmap = QPixmap()
+        self.pixmap_original = QPixmap()
+        self.pixmap_cropped = QPixmap()
+        self.img_controller = img_controller
+        self.img_controller.imageChangedSignal.connect(self.handle_change_image)
+
+    """def requestImage(self, id, requested_size, size):
+        if id in self.images:
+            pixmap = self.images[id]
+            size.setWidth(pixmap.width())
+            size.setHeight(pixmap.height())
+            return pixmap
+        return QPixmap()
+
+    def add_image(self, id, pixmap):
+        self.images[id] = pixmap"""
+
+    def set_image(self, image_path: str, option: str =""):
+        self._image_path = image_path
+        if option == "crop":
+            self.pixmap_cropped.load(image_path)
+        else:
+            self.pixmap_original.load(image_path)
+        self.img_controller.img_loaded = False
+        # print(image_path)
+
+    def select_image(self, option: str=""):
+        if option == "crop":
+            self.pixmap = self.pixmap_cropped
+        else:
+            self.pixmap = self.pixmap_original
+        self.img_controller.img_loaded = True
+
+    def requestPixmap(self, img_id, requested_size, size):
+        # print(img_id)
+        return self.pixmap
+
+    def handle_change_image(self, src, img_path):
+        # '0' - Original image
+        # '1' - Cropped image
+        # '2' - Processed image
+        # '3'-Undo crop,
+        # ignore '-1' - will make function recursive
+        if src == 1:
+            self.set_image(img_path, "crop")
+            self.select_image("crop")
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # signal to update QML image
+        elif src == 2:
+            self.set_image(img_path, "process")
+            self.select_image("process")
+            self.img_controller.imageChangedSignal.emit(-1, img_path) # signal to update QML image
+        elif src == 3:
+            self.select_image("")
+            self.img_controller.imageChangedSignal.emit(-1, img_path)  # signal to update QML image
+
+
+class ImageController(QObject):
+    """Exposes a method to refresh the image in QML"""
+    imageChangedSignal = Signal(int, str)
+    enableRectangularSelectionSignal = Signal(bool)
+    showCroppingToolSignal = Signal(bool)
+    performCroppingSignal = Signal(bool)
+    adjustBrightnessContrastSignal = Signal(float, float)
+
+    def __init__(self):
+        super().__init__()
+        self.img_loaded = False
+
+    @Slot(result=str)
+    def get_pixmap(self):
+        """Returns the URL that QML should use to load the image"""
+        return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
+
+    @Slot(QImage, int, int, int, int)
+    def crop_image(self, q_image, x, y, width, height):
+        """Crop image using PIL and save it."""
+        try:
+            # Convert QPixmap to QImage
+            # q_image = pixmap.toImage()
+
+            # Convert QImage to PIL Image
+            img_pil = ImageQt.fromqimage(q_image)
+
+            # Crop the selected area
+            img_cropped = img_pil.crop((x, y, x + width, y + height))
+
+            # Save cropped image
+            cropped_path = "assets/cropped_image.png"
+            img_cropped.save(cropped_path)
+            # print(f"Cropped image saved: {cropped_path}")
+
+            # Emit signal to update UI with new image
+            self.imageChangedSignal.emit(1, cropped_path)
+            self.showCroppingToolSignal.emit(False)
+        except Exception as e:
+            print(f"Error cropping image: {e}")
+
+    @Slot(QImage, float, float)
+    def adjust_brightness_contrast(self, q_image, brightness, contrast):
+        """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
+        img_pil = ImageQt.fromqimage(q_image)
+        img = ImageController.qimage_to_cv(img_pil)
+
+        # Apply brightness and contrast adjustments
+        brightness = np.clip(brightness, -100, 100)
+        contrast = np.clip(contrast, 0.1, 3.0)
+
+        img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+        processed_path = "assets/processed_image.png"
+        cv2.imwrite(processed_path, img)
+        print(f"Processed Image Saved: {processed_path}")
+
+        self.imageChangedSignal.emit(3, processed_path)
+
+    @Slot(bool)
+    def undo_cropping(self, undo: bool = True):
+        if undo:
+            self.imageChangedSignal.emit(3, "undo")
+
+    @Slot(result=bool)
+    def is_image_loaded(self):
+        #return self.img_loaded
+        return False
+
+    @Slot(bool)
+    def enable_rectangular_selection(self, enabled):
+        self.enableRectangularSelectionSignal.emit(enabled)
+
+    @Slot(bool)
+    def perform_cropping(self, allowed):
+        self.performCroppingSignal.emit(allowed)
+
+    @Slot(float, float)
+    def brightness_contrast_control(self, brightness, contrast):
+        self.adjustBrightnessContrastSignal.emit(brightness, contrast)
+        # print(brightness+contrast)
+
+    @Slot(bool)
+    def show_cropping_tool(self, allow_cropping):
+        self.showCroppingToolSignal.emit(allow_cropping)
+
+    @staticmethod
+    def qimage_to_cv(q_image):
+        """ Converts QImage to OpenCV format (NumPy array). """
+        img = ImageQt.ImageQt(q_image)  # Convert QImage to PIL Image
+        img = img.convert("RGB")  # Ensure RGB format
+        return np.array(img)[:, :, ::-1]  # Convert PIL Image to OpenCV (BGR)
+

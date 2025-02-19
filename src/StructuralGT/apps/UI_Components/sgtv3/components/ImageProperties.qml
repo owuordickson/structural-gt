@@ -25,6 +25,14 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
+            Label {
+                id: lblNoImgProps
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 20
+                text: "No properties to show!"
+                color: "#808080"
+                visible: imgPropsTableModel.rowCount() > 0 ? false : true
+            }
             ImagePropertyWidget{}
 
             Rectangle {
@@ -45,6 +53,14 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
+            Label {
+                id: lblNoGraphProps
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 20
+                text: "No properties to show!"
+                color: "#808080"
+                visible: graphPropsTableModel.rowCount() > 0 ? false : true
+            }
             GraphPropertyWidget{}
 
 

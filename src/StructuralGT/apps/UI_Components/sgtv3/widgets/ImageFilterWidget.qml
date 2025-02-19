@@ -4,6 +4,11 @@ import QtQuick.Layouts
 
 Repeater {
 
+    property int cbxWidthSize: 100
+    property int spbWidthSize: 170
+    property int sldWidthSize: 140
+    property int lblWidthSize: 50
+
     model: [
         { id: "cbxAutolevel", text: "Autolevel", sliderId: "sldAutolevel", labelId: "lblAutolevel" },
         { id: "cbxGaussian", text: "Gaussian", sliderId: "sldGaussian", labelId: "lblGaussian" },
@@ -22,7 +27,7 @@ Repeater {
 
         CheckBox {
             id: checkBox
-            Layout.preferredWidth: 100
+            Layout.preferredWidth: cbxWidthSize
             text: modelData.text
             checked: modelData.id === "cbxGamma"
         }
@@ -38,7 +43,7 @@ Repeater {
                 Layout.fillWidth: true
                 SpinBox {
                     id: spbLowpass
-                    Layout.minimumWidth: 170
+                    Layout.minimumWidth: spbWidthSize
                     Layout.fillWidth: true
                     from: 0
                     to: 100
@@ -56,7 +61,7 @@ Repeater {
 
                 Slider {
                     id: slider
-                    Layout.minimumWidth: 140
+                    Layout.minimumWidth: sldWidthSize
                     Layout.fillWidth: true
                     from: 0
                     to: 5.0
@@ -67,7 +72,7 @@ Repeater {
 
                 Label {
                     id: label
-                    Layout.preferredWidth: 50
+                    Layout.preferredWidth: lblWidthSize
                     text: Number(slider.value).toFixed(2) // Display one decimal place
                     enabled: checkBox.checked
                 }

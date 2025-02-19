@@ -7,6 +7,11 @@ ColumnLayout {
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft
 
+    property int btnWidthSize: 100
+    property int spbWidthSize: 170
+    property int sldWidthSize: 140
+    property int lblWidthSize: 50
+
     ButtonGroup {
         id: btnGroup
     }
@@ -18,12 +23,12 @@ ColumnLayout {
             id:rdoAdaptive
             text: "Adaptive"
             ButtonGroup.group: btnGroup
-            Layout.preferredWidth: 100
+            Layout.preferredWidth: btnWidthSize
         }
 
         SpinBox {
             id: spbAdaptive
-            Layout.minimumWidth: 170
+            Layout.minimumWidth: spbWidthSize
             //Layout.fillWidth: true
             from: 0
             to: 100
@@ -46,7 +51,7 @@ ColumnLayout {
 
         Slider {
             id: sldGlobal
-            Layout.minimumWidth: 140
+            Layout.minimumWidth: sldWidthSize
             Layout.fillWidth: true
             from: 0
             to: 255
@@ -57,7 +62,7 @@ ColumnLayout {
 
         Label {
             id: lblGlobal
-            Layout.preferredWidth: 50
+            Layout.preferredWidth: lblWidthSize
             text: Number(sldGlobal.value).toFixed(0) // Display one decimal place
             enabled: rdoGlobal.checked
         }
@@ -68,7 +73,7 @@ ColumnLayout {
         id: rdoOtsu
         text: "OTSU"
         ButtonGroup.group: btnGroup
-        Layout.preferredWidth: 100
+        Layout.preferredWidth: btnWidthSize
     }
 
     CheckBox {

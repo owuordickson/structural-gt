@@ -5,14 +5,16 @@ import QtQuick.Layouts
 TableView {
     id: tableView
     Layout.fillWidth: true
-    height: graphPropsTableModel.rowCount() * 30  // implicitHeight is 30    Layout.topMargin: 5
+    height: graphPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
     Layout.leftMargin: 2
     Layout.rightMargin: 2
     model: graphPropsTableModel
 
+    property int tblRowHeight: 30
+
     delegate: Rectangle {
         implicitWidth: column === 0 ? (tableView.width * 0.36) : (tableView.width * 0.64)
-        implicitHeight: 30
+        implicitHeight: tblRowHeight
         color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
 
         Text {
@@ -34,7 +36,7 @@ TableView {
         id: lineBorder
         Rectangle {
             width: 1 // Border width
-            height: 30
+            height: tblRowHeight
             color: "#e0e0e0" // Border color
             anchors.left: parent.left
         }
