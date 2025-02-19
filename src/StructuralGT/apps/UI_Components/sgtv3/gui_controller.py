@@ -28,8 +28,7 @@ class MainController(QObject):
         self.wait_flag = False
 
         # Create graph objects
-        # self.graph_objs = []
-        self.metric_objs = []
+        self.analyze_objs = []
         self.current_obj_index = 0
 
         # Create Models
@@ -77,11 +76,9 @@ class MainController(QObject):
             ]"""
             self.graphPropsTableModel = TableModel(data_graph_props)
 
-            # Images
-            #img_path = "assets/icons/graph_icon.png"
-            img_path = "../../../../../datasets/InVitroBioFilm.png"
-
-            self.imageChangedSignal.emit(0, img_path)
+            # Test Image
+            # img_path = "../../../../../datasets/InVitroBioFilm.png"
+            # self.imageChangedSignal.emit(0, img_path)
         except Exception as e:
             print(f"Error loading data: {e}")
 

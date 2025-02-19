@@ -19,10 +19,11 @@ class MainWindow(QObject):
         # Register Image Provider
         self.image_provider = ImageProvider(controller)
 
-        # Load Data
+        # Load Model Data
         controller.load_data()
 
-        # Load Default Configs -- also
+        # Load Default Configs
+        # controller.load_default_configs()
 
         # Set Models in QML Context
         self.ui_engine.rootContext().setContextProperty("graphTreeModel", controller.graphTreeModel)

@@ -10,11 +10,12 @@ import io
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from ypstruct import struct
 from PIL import Image
 from cv2.typing import MatLike
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
+
+from ..configs.config_loader import load_img_configs
 
 
 class ImageProcessor:
@@ -24,11 +25,10 @@ class ImageProcessor:
     Args:
         img_path (str): input image path.
         out_path (str): directory path for storing results.
-        options_img (struct): image processing parameters and options.
         img (MatLike): processed image.
     """
 
-    def __init__(self, img_path, out_path, img_dim=2, options_img=None, img=None):
+    def __init__(self, img_path, out_path, img_dim=2, img=None):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
@@ -36,7 +36,6 @@ class ImageProcessor:
             img_path (str): input image path.
             out_path (str): directory path for storing results.
             img_dim (int): image dimension (2D or 3D).
-            options_img (struct): image processing parameters and options.
             img (MatLike): processed image.
 
         >>> from ypstruct import struct
@@ -65,13 +64,14 @@ class ImageProcessor:
         >>> o_dir = ""
         >>> i_dim = 2
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir, i_dim, options_img=opt_img)
+        >>> imp_obj = ImageProcessor(i_path, o_dir, i_dim)
+        >>> imp_obj.configs = opt_img
         >>> imp_obj.apply_filters()
         """
+        self.configs = load_img_configs()  # image processing parameters and options.
         self.img_path = img_path
         self.output_path = out_path
         self.img_dim = img_dim
-        self.configs_img = options_img
         self.img_raw = ImageProcessor.load_img_from_file(img_path, img_dim)
         if img is None:
             self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
@@ -93,7 +93,7 @@ class ImageProcessor:
         self.img_bin, self.otsu_val = self.binarize_img(self.img_mod.copy())
 
         # Compute pixel dimension in nanometers
-        configs = self.configs_img
+        configs = self.configs
         if (configs.scale_value > 0) and (configs.scalebar_px_count > 0):
             px_width = ImageProcessor.compute_pixel_width(configs.scale_value, configs.scalebar_px_count)
             self.pixel_width = px_width/self.scale_factor
@@ -111,7 +111,7 @@ class ImageProcessor:
         if image is None:
             return None
 
-        options = self.configs_img
+        options = self.configs
         filtered_img = ImageProcessor.control_brightness(image, options.brightness_level, options.contrast_level)
 
         if options.gamma != 1.00:
@@ -193,7 +193,7 @@ class ImageProcessor:
         """
 
         img_bin = None
-        options = self.configs_img
+        options = self.configs
         # only needed for OTSU threshold
         otsu_res = 0
 
@@ -209,9 +209,9 @@ class ImageProcessor:
 
         # adaptive threshold generation
         elif options.threshold_type == 1:
-            if self.configs_img.threshold_adaptive <= 1:
+            if self.configs.threshold_adaptive <= 1:
                 # Bug fix (crushes app)
-                self.configs_img.threshold_adaptive = 3
+                self.configs.threshold_adaptive = 3
 
             if options.apply_dark_foreground == 1:
                 img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -290,7 +290,7 @@ class ImageProcessor:
         :return:
         """
 
-        opt_img = self.configs_img
+        opt_img = self.configs
         
         run_info = "***Image Filter Configurations***\n"
         if opt_img.threshold_type == 0:
@@ -336,7 +336,7 @@ class ImageProcessor:
 
         :return:
         """
-        opt_img = self.configs_img
+        opt_img = self.configs
         raw_img = self.img
         filtered_img = self.img_mod
         img_bin = self.img_bin

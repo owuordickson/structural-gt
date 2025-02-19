@@ -16,10 +16,10 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
 from .. import __title__ as sgt_title
-from ..configs.config_loader import load_configs, load_gui_configs, get_num_cores, write_file
+from ..configs.config_loader import load_all_configs, load_gui_configs, get_num_cores, write_file
 from ..SGT.image_processor import ImageProcessor
-from ..SGT.graph_converter import GraphConverter
-from ..SGT.graph_metrics import GraphMetrics
+from ..SGT.graph_extractor import GraphExtractor
+from ..SGT.graph_analyzer import GraphAnalyzer
 
 
 class MainUI(QtWidgets.QMainWindow):
@@ -675,7 +675,7 @@ class MainUI(QtWidgets.QMainWindow):
         :return:
         """
         # 1. Fetch configs
-        self.configs_data = load_configs()
+        self.configs_data = load_all_configs()
         options = self.configs_data['main_options']
         options_img = self.configs_data['filter_options']
         options_gte = self.configs_data['extraction_options']
@@ -1064,7 +1064,7 @@ class MainUI(QtWidgets.QMainWindow):
             dialog.exec()
             return
         else:
-            self.configs_data = load_configs()
+            self.configs_data = load_all_configs()
             # options = configs_data['main_options']
             options_img = self.configs_data['filter_options']
             options_gte = self.configs_data['extraction_options']
@@ -1092,7 +1092,7 @@ class MainUI(QtWidgets.QMainWindow):
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                     file_name = os.path.join(img_dir, a_file)
                     im_obj = ImageProcessor(file_name, '', img_dim)
-                    obj = GraphConverter(im_obj)
+                    obj = GraphExtractor(im_obj)
                     self.graph_objs.append(obj)
             if len(self.graph_objs) <= 0:
                 dialog = CustomDialog("File Error",
@@ -1126,7 +1126,7 @@ class MainUI(QtWidgets.QMainWindow):
                     if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                         file_name = os.path.join(fd_image_dir, a_file)
                         im_obj = ImageProcessor(file_name, '', img_dim)
-                        obj = GraphConverter(im_obj)
+                        obj = GraphExtractor(im_obj)
                         self.graph_objs.append(obj)
                 if len(self.graph_objs) <= 0:
                     dialog = CustomDialog("File Error",
@@ -1140,7 +1140,7 @@ class MainUI(QtWidgets.QMainWindow):
                 # split the file location into path and file name
                 fd_image_dir, _ = os.path.split(fd_image_file)
                 im_obj = ImageProcessor(fd_image_file, '', img_dim)
-                obj = GraphConverter(im_obj)
+                obj = GraphExtractor(im_obj)
                 self.graph_objs.append(obj)
         # Set and display image
         self._reload_ui()
@@ -1455,7 +1455,7 @@ class MainUI(QtWidgets.QMainWindow):
                 self.graph_objs[self.current_obj_index].reset()
                 im_obj = self.graph_objs[self.current_obj_index].imp
                 im_obj.output_path = self.txt_out_path.text()
-                im_obj.configs_img = self._fetch_img_options()
+                im_obj.configs = self._fetch_img_options()
                 im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
 
                 if self.current_img == 'B':
@@ -2188,8 +2188,8 @@ class Worker(QtCore.QThread):
     def service_generate_graph(self, graph_obj, options_img, options_gte):
         try:
             graph_obj.abort = False
-            graph_obj.imp.configs_img = options_img
-            graph_obj.configs_graph = options_gte
+            graph_obj.imp.configs = options_img
+            graph_obj.configs = options_gte
             graph_obj.add_listener(self.update_progress)
             self.add_thread_listener(graph_obj.abort_tasks)
             graph_obj.fit()
@@ -2207,8 +2207,8 @@ class Worker(QtCore.QThread):
         try:
             graph_obj.abort = False
             if graph_obj.nx_graph is None:
-                graph_obj.imp.configs_img = options_img
-                graph_obj.configs_graph = options_gte
+                graph_obj.imp.configs = options_img
+                graph_obj.configs = options_gte
                 graph_obj.add_listener(self.update_progress)
                 self.add_thread_listener(graph_obj.abort_tasks)
                 graph_obj.fit()
@@ -2223,9 +2223,9 @@ class Worker(QtCore.QThread):
                 self.update_progress(-1, "Task aborted.")
                 self.signals.finished.emit(2, 1, [])
                 return
-            graph_obj.configs_graph = options_gte
+            graph_obj.configs = options_gte
 
-            metrics_obj = GraphMetrics(graph_obj, options_gtc)
+            metrics_obj = GraphAnalyzer(graph_obj, options_gtc)
             metrics_obj.add_listener(self.update_progress)
             self.add_thread_listener(metrics_obj.abort_tasks)
             metrics_obj.compute_gt_metrics()
@@ -2263,8 +2263,8 @@ class Worker(QtCore.QThread):
             try:
                 graph_obj.abort = False
                 if graph_obj.nx_graph is None:
-                    graph_obj.imp.configs_img = options_img
-                    graph_obj.configs_graph = options_gte
+                    graph_obj.imp.configs = options_img
+                    graph_obj.configs = options_gte
                     graph_obj.add_listener(self.update_progress)
                     graph_obj.fit()
                     graph_obj.remove_listener(self.update_progress)
@@ -2278,10 +2278,10 @@ class Worker(QtCore.QThread):
                     self.update_progress(-1, "Task aborted.")
                     self.signals.finished.emit(3, 0, [])
                     return
-                graph_obj.configs_graph = options_gte
+                graph_obj.configs = options_gte
                 graph_obj.imp.output_path = out_path
 
-                metrics_obj = GraphMetrics(graph_obj, options_gtc)
+                metrics_obj = GraphAnalyzer(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)
                 self.add_thread_listener(metrics_obj.abort_tasks)
                 metrics_obj.compute_gt_metrics()

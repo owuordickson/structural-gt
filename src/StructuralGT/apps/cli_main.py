@@ -7,11 +7,11 @@ Terminal interface implementations
 import time
 import os
 import logging
-from ypstruct import struct
-from ..configs.config_loader import load_configs, get_num_cores
+
+from ..configs.config_loader import load_project_configs, get_num_cores
 from ..SGT.image_processor import ImageProcessor
-from ..SGT.graph_converter import GraphConverter
-from ..SGT.graph_metrics import GraphMetrics
+from ..SGT.graph_extractor import GraphExtractor
+from ..SGT.graph_analyzer import GraphAnalyzer
 
 
 def terminal_app():
@@ -19,17 +19,13 @@ def terminal_app():
     Initializes and executes StructuralGT functions.
     :return:
     """
-    configs_data = load_configs()
-    options = configs_data['main_options']
-    options_img = configs_data['filter_options']
-    options_gte = configs_data['extraction_options']
-    options_gtc = configs_data['sgt_options']
+    configs = load_project_configs()
 
-    alg = options.algChoice
-    num_cores = options.numCores
-    is_multi = options.multiImage
-    img_path = options.filePath
-    out_dir = options.outputDir
+    alg = configs.algChoice
+    num_cores = configs.numCores
+    is_multi = configs.multiImage
+    img_path = configs.filePath
+    out_dir = configs.outputDir
     filenames = []
 
     try:
@@ -77,7 +73,7 @@ def terminal_app():
                 print(f'Analyzing Image: {i+1}/{len(filenames)}')
                 logging.info(f'Analyzing Image: {i+1}/{len(filenames)}', extra={'user': 'SGT Logs'})
                 im_path = filenames[i]
-                produce_metrics(im_path, out_dir, options_img, options_gte, options_gtc)
+                produce_metrics(im_path, out_dir)
 
                 # updating the images completed
                 print("Results generated for " + im_path)
@@ -95,28 +91,25 @@ def terminal_app():
         logging.exception("Error: %s", error, extra={'user': 'SGT Logs'})
 
 
-def produce_metrics(img_path, out_dir, options_img, options_gte, options_gtc):
+def produce_metrics(img_path, out_dir):
     """
     Executes StructuralGT functions that compute all the user selected metrics.
 
     Args:
         img_path (str): input image path.
         out_dir (str): directory path for storing results.
-        options_img (struct): image processing parameters and options.
-        options_gte (struct): graph extraction parameters and options.
-        options_gtc (struct): GT computation parameters and options.
     Returns:
         None:
     """
-    imp_obj = ImageProcessor(img_path, out_dir, options_img=options_img)
-    graph_obj = GraphConverter(imp_obj, options_gte=options_gte)
+    imp_obj = ImageProcessor(img_path, out_dir)
+    graph_obj = GraphExtractor(imp_obj)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()
 
-    metrics_obj = GraphMetrics(graph_obj, options_gtc)
+    metrics_obj = GraphAnalyzer(graph_obj)
     metrics_obj.add_listener(print_progress)
     metrics_obj.compute_gt_metrics()
-    if options_gte.weighted_by_diameter:
+    if graph_obj.configs.weighted_by_diameter:
         metrics_obj.compute_weighted_gt_metrics()
     metrics_obj.generate_pdf_output()
     graph_obj.remove_listener(print_progress)

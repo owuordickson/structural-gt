@@ -12,7 +12,6 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-from ypstruct import struct
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
@@ -24,29 +23,27 @@ from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
 from .progress_update import ProgressUpdate
-from .graph_converter import GraphConverter
+from .graph_extractor import GraphExtractor
 from .image_processor import ImageProcessor
 
 import sgt_c_module as sgt
-from ..configs.config_loader import get_num_cores
+from ..configs.config_loader import get_num_cores, load_gtc_configs
 
 
-class GraphMetrics(ProgressUpdate):
+class GraphAnalyzer(ProgressUpdate):
     """
     A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
     Args:
         g_obj: graph converter object.
-        configs: graph theory computation parameters and options.
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
-    def __init__(self, g_obj: GraphConverter, configs: struct, allow_multiprocessing: bool = True):
+    def __init__(self, g_obj: GraphExtractor, allow_multiprocessing: bool = True):
         """
         A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
         :param g_obj: graph converter object.
-        :param configs: graph theory computation parameters and options.
         :param allow_multiprocessing: allow multiprocessing computing.
 
         >>> from ypstruct import struct
@@ -104,20 +101,23 @@ class GraphMetrics(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
-        >>> graph_obj = GraphConverter(imp_obj, options_gte=opt_gte)
+        >>> imp_obj = ImageProcessor(i_path, o_dir)
+        >>> imp_obj.configs = opt_img
+        >>> graph_obj = GraphExtractor(imp_obj)
+        >>> graph_obj.configs = opt_gte
         >>> graph_obj.fit()
-        >>> metrics_obj = GraphMetrics(graph_obj, opt_gtc)
+        >>> metrics_obj = GraphAnalyzer(graph_obj)
+        >>> metrics_obj.configs = opt_gtc
         >>> metrics_obj.compute_gt_metrics()
         >>> if opt_gte.has_weights:
         >>>     metrics_obj.compute_weighted_gt_metrics()
         >>> metrics_obj.generate_pdf_output()
 
         """
-        super(GraphMetrics, self).__init__()
+        super(GraphAnalyzer, self).__init__()
+        self.configs = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp = allow_multiprocessing
         self.gc = g_obj
-        self.configs = configs
         self.output_data = pd.DataFrame([])
         self.degree_distribution = [0]
         self.clustering_coefficients = [0]
@@ -147,7 +147,7 @@ class GraphMetrics(ProgressUpdate):
 
         graph = self.gc.nx_graph
         options = self.configs
-        options_gte = self.gc.configs_graph
+        options_gte = self.gc.configs
         data_dict = {"x": [], "y": []}
 
         node_count = int(nx.number_of_nodes(graph))
@@ -379,7 +379,7 @@ class GraphMetrics(ProgressUpdate):
 
         graph = self.gc.nx_graph
         options = self.configs
-        weight_type = GraphConverter.get_weight_options().get(self.gc.configs_graph.weight_type)
+        weight_type = GraphExtractor.get_weight_options().get(self.gc.configs.weight_type)
         data_dict = {"x": [], "y": []}
 
         if graph.number_of_nodes() <= 0:
@@ -481,7 +481,7 @@ class GraphMetrics(ProgressUpdate):
                     data_dict["y"].append((str(item["value"])))
 
         # calculate cross-sectional area of edges
-        if self.gc.configs_graph.weight_type == 'AREA':
+        if self.gc.configs.weight_type == 'AREA':
             self.update_status([68, "Computing average (edge) cross-sectional area..."])
             temp_distribution = []
             for (s, e) in graph.edges():
@@ -506,7 +506,7 @@ class GraphMetrics(ProgressUpdate):
         lst_width = []
         nx_graph = self.gc.nx_graph
         px_size = self.gc.imp.pixel_width
-        rho_dim = self.gc.imp.configs_img.resistivity
+        rho_dim = self.gc.imp.configs.resistivity
         pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
         g_shape = 1
 
@@ -760,7 +760,7 @@ class GraphMetrics(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs_graph
+        opt_gte = self.gc.configs
         data = self.output_data
         w_data = self.weighted_output_data
 
@@ -790,11 +790,11 @@ class GraphMetrics(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs_graph
+        opt_gte = self.gc.configs
         opt_gtc = self.configs
         figs = []
 
-        weight_type = GraphConverter.get_weight_options().get(opt_gte.weight_type)
+        weight_type = GraphExtractor.get_weight_options().get(opt_gte.weight_type)
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
         cluster_coefs = self.clustering_coefficients
@@ -816,12 +816,12 @@ class GraphMetrics(ProgressUpdate):
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
             deg_title = r'Degree Distribution: $\sigma$='
             ax_1 = fig.add_subplot(2, 1, 1)
-            GraphMetrics.plot_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
+            GraphAnalyzer.plot_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
 
         if opt_gtc.display_closeness_histogram == 1:
             cc_title = r"Closeness Centrality: $\sigma$="
             ax_2 = fig.add_subplot(2, 1, 2)
-            GraphMetrics.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
+            GraphAnalyzer.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
         # Betweenness, Clustering, Eigenvector and Ohms
@@ -829,22 +829,22 @@ class GraphMetrics(ProgressUpdate):
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_betweenness_histogram == 1):
             bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphMetrics.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
+            GraphAnalyzer.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
 
         if (opt_gte.is_multigraph == 0) and (opt_gtc.compute_clustering_coef == 1):
             clu_title = r"Clustering Coefficients: $\sigma$="
             ax_2 = fig.add_subplot(2, 2, 2)
-            GraphMetrics.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
+            GraphAnalyzer.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
 
         if opt_gtc.display_ohms_histogram == 1:
             oh_title = r"Ohms Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
-            GraphMetrics.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
+            GraphAnalyzer.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
         if (opt_gte.is_multigraph == 0) and (opt_gtc.display_eigenvector_histogram == 1):
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
-            GraphMetrics.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
+            GraphAnalyzer.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
         # Currentflow
@@ -852,7 +852,7 @@ class GraphMetrics(ProgressUpdate):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             cf_title = r"Current-flow betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphMetrics.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
+            GraphAnalyzer.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
             figs.append(fig)
 
         # percolation
@@ -860,7 +860,7 @@ class GraphMetrics(ProgressUpdate):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             pc_title = r"Percolation Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphMetrics.plot_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
+            GraphAnalyzer.plot_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
             figs.append(fig)
 
         # weighted histograms
@@ -872,22 +872,22 @@ class GraphMetrics(ProgressUpdate):
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                 w_deg_title = r"Weighted Degree: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                GraphMetrics.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
+                GraphAnalyzer.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
             if (opt_gtc.display_betweenness_histogram == 1) and (opt_gte.is_multigraph == 0):
                 w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
-                GraphMetrics.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
+                GraphAnalyzer.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc.display_closeness_histogram == 1:
                 w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
-                GraphMetrics.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
+                GraphAnalyzer.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
             if (opt_gtc.display_eigenvector_histogram == 1) and (opt_gte.is_multigraph == 0):
                 w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
-                GraphMetrics.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
+                GraphAnalyzer.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
 
             # percolation
@@ -895,7 +895,7 @@ class GraphMetrics(ProgressUpdate):
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 w_pc_title = weight_type + r"-Weighted Percolation Cent.: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                GraphMetrics.plot_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
+                GraphAnalyzer.plot_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
                 figs.append(fig)
 
         return figs
@@ -907,10 +907,10 @@ class GraphMetrics(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs_graph
+        opt_gte = self.gc.configs
         opt_gtc = self.configs
 
-        weight_type = GraphConverter.get_weight_options().get(opt_gte.weight_type)
+        weight_type = GraphExtractor.get_weight_options().get(opt_gte.weight_type)
         deg_distribution = self.degree_distribution
         w_deg_distribution = self.weighted_degree_distribution
         cluster_coefs = self.clustering_coefficients
@@ -1016,7 +1016,7 @@ class GraphMetrics(ProgressUpdate):
         :return: histogram plot figure.
         """
         nx_graph = self.gc.nx_graph
-        opt_gte = self.gc.configs_graph
+        opt_gte = self.gc.configs
         img = self.gc.imp.img
         font_1 = {'fontsize': 9}
 
@@ -1029,7 +1029,7 @@ class GraphMetrics(ProgressUpdate):
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         c_set = ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
-        GraphMetrics.plot_graph_edges(nx_graph, ax, line_width, opt_gte.is_multigraph)
+        GraphAnalyzer.plot_graph_edges(nx_graph, ax, line_width, opt_gte.is_multigraph)
         fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
         return fig
 

@@ -11,88 +11,13 @@ from optparse import OptionParser
 from ypstruct import struct
 
 
-def load_configs():
+def load_project_configs():
     options_path = struct()
-    options_img = struct()
-    options_gte = struct()
-    options_gtc = struct()
-    options_fic = struct()
-    options_gnct = struct()
 
     # 1. Image Path
     options_path.is_multi_image = 0
     options_path.image_path = ""
     options_path.output_path = ""
-
-    # 2. Image Detection settings
-    options_img.image_dimensions = 2
-    options_img.threshold_type = 1
-    options_img.threshold_global = 127
-    options_img.threshold_adaptive = 11
-    options_img.gamma = float(1)
-    options_img.gaussian_blurring_size = 3
-    options_img.autolevel_blurring_size = 3
-    options_img.lowpass_window_size = 10
-    options_img.laplacian_kernel_size = 3
-    options_img.sobel_kernel_size = 3
-    options_img.apply_autolevel = 0
-    options_img.apply_laplacian = 0
-    options_img.apply_scharr = 0
-    options_img.apply_sobel = 0
-    options_img.apply_median = 0
-    options_img.apply_gaussian = 0
-    options_img.apply_lowpass = 0
-    options_img.apply_dark_foreground = 0
-    options_img.brightness_level = 0
-    options_img.contrast_level = 0
-    options_img.scale_value = 1
-    options_img.scalebar_px_count = 0
-    options_img.resistivity = 1
-
-    # 3. Graph Extraction Settings
-    options_gte.merge_nearby_nodes = 1
-    options_gte.prune_dangling_edges = 1
-    options_gte.remove_disconnected_segments = 1
-    options_gte.remove_self_loops = 1
-    options_gte.remove_object_size = 500
-    options_gte.is_multigraph = 0
-    options_gte.has_weights = 0
-    options_gte.weight_type = 'DIA'
-    options_gte.display_node_id = 0
-    options_gte.export_edge_list = 0
-    options_gte.export_as_gexf = 0
-    options_gte.export_adj_mat = 0
-    options_gte.save_images = 0
-
-    # 4. Networkx Calculation Settings
-    options_gtc.display_heatmaps = 1
-    options_gtc.display_degree_histogram = 1
-    options_gtc.display_betweenness_histogram = 1
-    options_gtc.display_currentflow_histogram = 1
-    options_gtc.display_closeness_histogram = 1
-    options_gtc.display_eigenvector_histogram = 1
-    options_gtc.display_angle_histogram = 1
-    options_gtc.display_ohms_histogram = 0
-    options_gtc.display_percolation_histogram = 0
-    options_gtc.compute_node_connectivity = 1
-    options_gtc.compute_graph_density = 1
-    options_gtc.compute_graph_conductance = 0
-    options_gtc.compute_global_efficiency = 1
-    options_gtc.compute_clustering_coef = 1
-    options_gtc.compute_assortativity_coef = 1
-    options_gtc.compute_network_diameter = 1
-    options_gtc.compute_wiener_index = 1
-    options_gtc.compute_lang = 'Py'
-
-    # 5. Fractal Image Compression Settings
-    options_fic.down_sampling_factor = 4
-    options_fic.domain_block_size = 8
-    options_fic.range_block_size = 4
-    options_fic.block_step_size = 8
-    options_fic.decompress_iteration_count = 8
-
-    # 6. Graph Network Chaos Theory Settings
-    options_gnct.ml_model = 'MLP'
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -132,95 +57,12 @@ def load_configs():
         config.read(config_file)
         cpus = int(config.get('computation', 'cpu_cores'))
     except configparser.NoSectionError:
-        configs_data = {
-            "main_options": options_main,
-            "filter_options": options_img,
-            "extraction_options": options_gte,
-            "sgt_options": options_gtc,
-            "fic_options": options_fic,
-            "gnct_options": options_gnct
-        }
-        return configs_data
+        return options_main
 
     # 1. Image Path
     options_path.is_multi_image = int(config.get('image-dir', 'is_multi_image'))
     options_path.image_path = config.get('image-dir', 'image_path')
     options_path.output_path = config.get('image-dir', 'gt_output_path')
-
-    # 2. Image Detection settings
-    options_img.image_dimensions = int(config.get('filter-settings', 'image_dim'))
-    options_img.threshold_type = int(config.get('filter-settings', 'threshold_type'))
-    options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
-    options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
-    options_img.gamma = float(config.get('filter-settings', 'adjust_gamma'))
-    options_img.gaussian_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
-    options_img.autolevel_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
-    options_img.lowpass_window_size = int(config.get('filter-settings', 'filter_window_size'))
-    options_img.laplacian_kernel_size = 3
-    options_img.sobel_kernel_size = 3
-    options_img.apply_autolevel = int(config.get('filter-settings', 'use_autolevel'))
-    options_img.apply_laplacian = int(config.get('filter-settings', 'use_laplacian_gradient'))
-    options_img.apply_scharr = int(config.get('filter-settings', 'use_scharr_gradient'))
-    options_img.apply_sobel = int(config.get('filter-settings', 'use_sobel_gradient'))
-    options_img.apply_median = int(config.get('filter-settings', 'apply_median_filter'))
-    options_img.apply_gaussian = int(config.get('filter-settings', 'apply_gaussian_blur'))
-    options_img.apply_lowpass = int(config.get('filter-settings', 'apply_lowpass_filter'))
-    options_img.apply_dark_foreground = int(config.get('filter-settings', 'dark_foreground'))
-    options_img.brightness_level = int(config.get('filter-settings', 'brightness_level'))
-    options_img.contrast_level = int(config.get('filter-settings', 'contrast_level'))
-    options_img.scale_value = float(config.get('image-dir', 'scale_value_nanometers'))
-    options_img.scalebar_px_count = int(config.get('image-dir', 'scalebar_pixel_count'))
-    options_img.resistivity = float(config.get('image-dir', 'resistivity'))
-
-    # 3. Graph Extraction Settings
-    options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))
-    options_gte.prune_dangling_edges = int(config.get('extraction-settings', 'prune_dangling_edges'))
-    options_gte.remove_disconnected_segments = int(config.get('extraction-settings', 'remove_disconnected_segments'))
-    options_gte.remove_self_loops = int(config.get('extraction-settings', 'remove_self_loops'))
-    options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
-    options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
-    options_gte.has_weights = int(config.get('extraction-settings', 'add_weights'))
-    options_gte.weight_type = str(config.get('extraction-settings', 'weight_type'))
-    options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
-    options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
-    options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
-    options_gte.export_adj_mat = int(config.get('extraction-settings', 'export_adj_mat'))
-    options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
-
-    # 4. Networkx Calculation Settings
-    options_gtc.display_heatmaps = int(config.get('sgt-settings', 'display_heatmaps'))
-    options_gtc.display_degree_histogram = int(config.get('sgt-settings', 'display_degree_histogram'))
-    options_gtc.display_betweenness_histogram = int(config.get('sgt-settings',
-                                                               'display_betweenness_centrality_histogram'))
-    options_gtc.display_currentflow_histogram = int(config.get('sgt-settings',
-                                                               'display_current_flow_betweenness_centrality_histogram'))
-    options_gtc.display_closeness_histogram = int(config.get('sgt-settings',
-                                                             'display_closeness_centrality_histogram'))
-    options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
-                                                               'display_eigenvector_centrality_histogram'))
-    options_gtc.display_angle_histogram = int(config.get('sgt-settings',
-                                                               'display_edge_angle_centrality_histogram'))
-    options_gtc.display_ohms_histogram = int(config.get('sgt-settings', 'display_ohms_histogram'))
-    options_gtc.display_percolation_histogram = int(config.get('sgt-settings', 'display_percolation_histogram'))
-    options_gtc.compute_node_connectivity = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
-    options_gtc.compute_graph_density = int(config.get('sgt-settings', 'compute_graph_density'))
-    options_gtc.compute_graph_conductance = int(config.get('sgt-settings', 'compute_graph_conductance'))
-    options_gtc.compute_global_efficiency = int(config.get('sgt-settings', 'compute_global_efficiency'))
-    options_gtc.compute_clustering_coef = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
-    options_gtc.compute_assortativity_coef = int(config.get('sgt-settings', 'compute_assortativity_coef'))
-    options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
-    options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
-    options_gtc.compute_lang = str(config.get('sgt-settings', 'compute_lang'))
-
-    # 5. Fractal Image Compression Settings
-    options_fic.down_sampling_factor = int(config.get('fic-settings', 'down_sampling_factor'))
-    options_fic.domain_block_size = int(config.get('fic-settings', 'domain_block_size'))
-    options_fic.range_block_size = int(config.get('fic-settings', 'range_block_size'))
-    options_fic.block_step_size = int(config.get('fic-settings', 'block_step_size'))
-    options_fic.decompress_iteration_count = int(config.get('fic-settings', 'decompress_iteration_count'))
-
-    # 6. Graph Network Chaos Theory Settings
-    options_gnct.ml_model = str(config.get('gnct-settings', 'ml_model'))
 
     opt_parser = OptionParser()
     opt_parser.add_option('-f', '--inputImage',
@@ -254,6 +96,215 @@ def load_configs():
                           default=cpus,
                           type='int')
     (options_main, args) = opt_parser.parse_args()
+
+    return options_main
+
+def load_img_configs():
+    options_img = struct()
+
+    # 2. Image Detection settings
+    options_img.image_dimensions = 2
+    options_img.threshold_type = 1
+    options_img.threshold_global = 127
+    options_img.threshold_adaptive = 11
+    options_img.gamma = float(1)
+    options_img.gaussian_blurring_size = 3
+    options_img.autolevel_blurring_size = 3
+    options_img.lowpass_window_size = 10
+    options_img.laplacian_kernel_size = 3
+    options_img.sobel_kernel_size = 3
+    options_img.apply_autolevel = 0
+    options_img.apply_laplacian = 0
+    options_img.apply_scharr = 0
+    options_img.apply_sobel = 0
+    options_img.apply_median = 0
+    options_img.apply_gaussian = 0
+    options_img.apply_lowpass = 0
+    options_img.apply_dark_foreground = 0
+    options_img.brightness_level = 0
+    options_img.contrast_level = 0
+    options_img.scale_value = 1
+    options_img.scalebar_px_count = 0
+    options_img.resistivity = 1
+
+    # Load configuration from file
+    config = configparser.ConfigParser()
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs.ini'
+        config_file = os.path.join(script_dir, config_path)
+        config.read(config_file)
+        img_dimensions = int(config.get('filter-settings', 'image_dim'))
+    except configparser.NoSectionError:
+        return options_img
+
+    # 2. Image Detection settings
+    options_img.image_dimensions = img_dimensions
+    options_img.threshold_type = int(config.get('filter-settings', 'threshold_type'))
+    options_img.threshold_global = int(config.get('filter-settings', 'global_threshold_value'))
+    options_img.threshold_adaptive = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
+    options_img.gamma = float(config.get('filter-settings', 'adjust_gamma'))
+    options_img.gaussian_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
+    options_img.autolevel_blurring_size = int(config.get('filter-settings', 'blurring_window_size'))
+    options_img.lowpass_window_size = int(config.get('filter-settings', 'filter_window_size'))
+    options_img.laplacian_kernel_size = 3
+    options_img.sobel_kernel_size = 3
+    options_img.apply_autolevel = int(config.get('filter-settings', 'use_autolevel'))
+    options_img.apply_laplacian = int(config.get('filter-settings', 'use_laplacian_gradient'))
+    options_img.apply_scharr = int(config.get('filter-settings', 'use_scharr_gradient'))
+    options_img.apply_sobel = int(config.get('filter-settings', 'use_sobel_gradient'))
+    options_img.apply_median = int(config.get('filter-settings', 'apply_median_filter'))
+    options_img.apply_gaussian = int(config.get('filter-settings', 'apply_gaussian_blur'))
+    options_img.apply_lowpass = int(config.get('filter-settings', 'apply_lowpass_filter'))
+    options_img.apply_dark_foreground = int(config.get('filter-settings', 'dark_foreground'))
+    options_img.brightness_level = int(config.get('filter-settings', 'brightness_level'))
+    options_img.contrast_level = int(config.get('filter-settings', 'contrast_level'))
+    options_img.scale_value = float(config.get('filter-settings', 'scale_value_nanometers'))
+    options_img.scalebar_px_count = int(config.get('filter-settings', 'scalebar_pixel_count'))
+    options_img.resistivity = float(config.get('filter-settings', 'resistivity'))
+
+    return options_img
+
+def load_gte_configs():
+    options_gte = struct()
+
+    # 3. Graph Extraction Settings
+    options_gte.merge_nearby_nodes = 1
+    options_gte.prune_dangling_edges = 1
+    options_gte.remove_disconnected_segments = 1
+    options_gte.remove_self_loops = 1
+    options_gte.remove_object_size = 500
+    options_gte.is_multigraph = 0
+    options_gte.has_weights = 0
+    options_gte.weight_type = 'DIA'
+    options_gte.display_node_id = 0
+    options_gte.export_edge_list = 0
+    options_gte.export_as_gexf = 0
+    options_gte.export_adj_mat = 0
+    options_gte.save_images = 0
+
+    # Load configuration from file
+    config = configparser.ConfigParser()
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs.ini'
+        config_file = os.path.join(script_dir, config_path)
+        config.read(config_file)
+        has_weights = int(config.get('extraction-settings', 'add_weights'))
+    except configparser.NoSectionError:
+        return options_gte
+
+    # 3. Graph Extraction Settings
+    options_gte.merge_nearby_nodes = int(config.get('extraction-settings', 'merge_nearby_nodes'))
+    options_gte.prune_dangling_edges = int(config.get('extraction-settings', 'prune_dangling_edges'))
+    options_gte.remove_disconnected_segments = int(config.get('extraction-settings', 'remove_disconnected_segments'))
+    options_gte.remove_self_loops = int(config.get('extraction-settings', 'remove_self_loops'))
+    options_gte.remove_object_size = int(config.get('extraction-settings', 'remove_object_size'))
+    options_gte.is_multigraph = int(config.get('extraction-settings', 'is_multigraph'))
+    options_gte.has_weights = has_weights
+    options_gte.weight_type = str(config.get('extraction-settings', 'weight_type'))
+    options_gte.display_node_id = int(config.get('extraction-settings', 'display_node_id'))
+    options_gte.export_edge_list = int(config.get('extraction-settings', 'export_edge_list'))
+    options_gte.export_as_gexf = int(config.get('extraction-settings', 'export_as_gexf'))
+    options_gte.export_adj_mat = int(config.get('extraction-settings', 'export_adj_mat'))
+    options_gte.save_images = int(config.get('extraction-settings', 'save_images'))
+
+    return options_gte
+
+def load_gtc_configs():
+    options_gtc = struct()
+
+    # 4. Networkx Calculation Settings
+    options_gtc.display_heatmaps = 1
+    options_gtc.display_degree_histogram = 1
+    options_gtc.display_betweenness_histogram = 1
+    options_gtc.display_currentflow_histogram = 1
+    options_gtc.display_closeness_histogram = 1
+    options_gtc.display_eigenvector_histogram = 1
+    options_gtc.display_angle_histogram = 1
+    options_gtc.display_ohms_histogram = 0
+    options_gtc.display_percolation_histogram = 0
+    options_gtc.compute_node_connectivity = 1
+    options_gtc.compute_graph_density = 1
+    options_gtc.compute_graph_conductance = 0
+    options_gtc.compute_global_efficiency = 1
+    options_gtc.compute_clustering_coef = 1
+    options_gtc.compute_assortativity_coef = 1
+    options_gtc.compute_network_diameter = 1
+    options_gtc.compute_wiener_index = 1
+    options_gtc.compute_lang = 'Py'
+
+    # Load configuration from file
+    config = configparser.ConfigParser()
+    try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs.ini'
+        config_file = os.path.join(script_dir, config_path)
+        config.read(config_file)
+        display_heatmaps = int(config.get('sgt-settings', 'display_heatmaps'))
+    except configparser.NoSectionError:
+        return options_gtc
+
+    # 4. Networkx Calculation Settings
+    options_gtc.display_heatmaps = display_heatmaps
+    options_gtc.display_degree_histogram = int(config.get('sgt-settings', 'display_degree_histogram'))
+    options_gtc.display_betweenness_histogram = int(config.get('sgt-settings',
+                                                               'display_betweenness_centrality_histogram'))
+    options_gtc.display_currentflow_histogram = int(config.get('sgt-settings',
+                                                               'display_current_flow_betweenness_centrality_histogram'))
+    options_gtc.display_closeness_histogram = int(config.get('sgt-settings',
+                                                             'display_closeness_centrality_histogram'))
+    options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
+                                                               'display_eigenvector_centrality_histogram'))
+    options_gtc.display_angle_histogram = int(config.get('sgt-settings',
+                                                               'display_edge_angle_centrality_histogram'))
+    options_gtc.display_ohms_histogram = int(config.get('sgt-settings', 'display_ohms_histogram'))
+    options_gtc.display_percolation_histogram = int(config.get('sgt-settings', 'display_percolation_histogram'))
+    options_gtc.compute_node_connectivity = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
+    options_gtc.compute_graph_density = int(config.get('sgt-settings', 'compute_graph_density'))
+    options_gtc.compute_graph_conductance = int(config.get('sgt-settings', 'compute_graph_conductance'))
+    options_gtc.compute_global_efficiency = int(config.get('sgt-settings', 'compute_global_efficiency'))
+    options_gtc.compute_clustering_coef = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
+    options_gtc.compute_assortativity_coef = int(config.get('sgt-settings', 'compute_assortativity_coef'))
+    options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
+    options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
+    options_gtc.compute_lang = str(config.get('sgt-settings', 'compute_lang'))
+
+    return options_gtc
+
+def load_all_configs():
+
+    # 5. Fractal Image Compression Settings
+    options_fic = struct()
+    options_fic.down_sampling_factor = 4
+    options_fic.domain_block_size = 8
+    options_fic.range_block_size = 4
+    options_fic.block_step_size = 8
+    options_fic.decompress_iteration_count = 8
+
+    # 6. Graph Network Chaos Theory Settings
+    options_gnct = struct()
+    options_gnct.ml_model = 'MLP'
+
+    """
+    # 5. Fractal Image Compression Settings
+    options_fic.down_sampling_factor = int(config.get('fic-settings', 'down_sampling_factor'))
+    options_fic.domain_block_size = int(config.get('fic-settings', 'domain_block_size'))
+    options_fic.range_block_size = int(config.get('fic-settings', 'range_block_size'))
+    options_fic.block_step_size = int(config.get('fic-settings', 'block_step_size'))
+    options_fic.decompress_iteration_count = int(config.get('fic-settings', 'decompress_iteration_count'))
+
+    # 6. Graph Network Chaos Theory Settings
+    options_gnct.ml_model = str(config.get('gnct-settings', 'ml_model'))
+    """
+
+    options_main = load_project_configs()
+    options_img = load_img_configs()
+    options_gte = load_gte_configs()
+    options_gtc = load_gtc_configs()
 
     configs_data = {
         "main_options": options_main,

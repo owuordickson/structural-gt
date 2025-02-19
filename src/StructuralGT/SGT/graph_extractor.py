@@ -15,25 +15,25 @@ import scipy as sp
 import networkx as nx
 from ypstruct import struct
 import matplotlib.pyplot as plt
+
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
 from .image_processor import ImageProcessor
+from ..configs.config_loader import load_gte_configs
 
 
-class GraphConverter(ProgressUpdate):
+class GraphExtractor(ProgressUpdate):
     """
     A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
     :param img_obj: ImageProcessor object.
-    :param options_gte: graph extraction parameters and options.
     """
 
-    def __init__(self, img_obj: ImageProcessor, options_gte: struct = None):
+    def __init__(self, img_obj: ImageProcessor):
         """
         A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
         :param img_obj: ImageProcessor object.
-        :param options_gte: graph extraction parameters and options.
 
         >>> from ypstruct import struct
         >>> opt_img = struct()
@@ -74,13 +74,15 @@ class GraphConverter(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir, options_img=opt_img)
-        >>> graph_obj = GraphConverter(imp_obj, options_gte=opt_gte)
+        >>> imp_obj = ImageProcessor(i_path, o_dir)
+        >>> imp_obj.configs = opt_img
+        >>> graph_obj = GraphExtractor(imp_obj)
+        >>> graph_obj.configs = opt_gte
         >>> graph_obj.fit()
         """
-        super(GraphConverter, self).__init__()
+        super(GraphExtractor, self).__init__()
         self.terminal_app = True
-        self.configs_graph = options_gte
+        self.configs = load_gte_configs()  # graph extraction parameters and options.
         self.imp = img_obj
         self.graph_skeleton = None
         self.nx_graph, self.nx_info = None, []
@@ -141,7 +143,7 @@ class GraphConverter(ProgressUpdate):
         :return:
         """
 
-        configs = self.configs_graph
+        configs = self.configs
         if configs is None:
             return False
         graph_skel = GraphSkeleton(self.imp.img_bin, configs)
@@ -186,8 +188,8 @@ class GraphConverter(ProgressUpdate):
                     # We modify 'weight'
                     wt_type = configs.weight_type
                     px_size = self.imp.pixel_width
-                    rho_val = self.imp.configs_img.resistivity
-                    weight_options = GraphConverter.get_weight_options()
+                    rho_val = self.imp.configs.resistivity
+                    weight_options = GraphExtractor.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
@@ -231,7 +233,7 @@ class GraphConverter(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.configs_graph
+        opt_gte = self.configs
         nx_graph = self.nx_graph
         nx_components = self.nx_components
         raw_img = self.imp.img
@@ -300,7 +302,7 @@ class GraphConverter(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.configs_graph
+        opt_gte = self.configs
         nx_graph = self.nx_graph
         g_skel = self.graph_skeleton
         img = self.imp.img
@@ -345,11 +347,11 @@ class GraphConverter(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.configs_graph
+        opt_gte = self.configs
 
         run_info = "***Graph Extraction Configurations***\n"
         if opt_gte.has_weights:
-            run_info += f"Weight Type: {GraphConverter.get_weight_options().get(opt_gte.weight_type)} || "
+            run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(opt_gte.weight_type)} || "
         if opt_gte.merge_nearby_nodes:
             run_info += "Merge Nodes || "
         if opt_gte.prune_dangling_edges:
@@ -376,7 +378,7 @@ class GraphConverter(ProgressUpdate):
 
         nx_graph = self.nx_graph.copy()
         if opt_gte is None:
-            opt_gte = self.configs_graph
+            opt_gte = self.configs
         filename, output_location = self.imp.create_filenames()
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
