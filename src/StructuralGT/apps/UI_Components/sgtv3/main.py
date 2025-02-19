@@ -1,12 +1,10 @@
 import sys
-import json
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from tree_model import TreeModel
-from table_model import TableModel
-from image_model import ImageProvider, ImageController
+from gui_controller import MainController
+from gui_image_provider import ImageProvider
 
 
 # Assuming TreeModel and TableModel are properly implemented
@@ -16,27 +14,22 @@ class MainWindow(QObject):
         self.app = QGuiApplication(sys.argv)
         self.ui_engine = QQmlApplicationEngine()
 
-        # Create Models
-        self.graphTreeModel = None
-        self.graphPropsTableModel = None
-
-        self.imgListTableModel = None
-        self.imgPropsTableModel = None
-
         # Register Controller for Dynamic Updates
-        self.image_controller = ImageController()
+        controller = MainController()
         # Register Image Provider
-        self.image_provider = ImageProvider(self.image_controller)
+        self.image_provider = ImageProvider(controller)
 
         # Load Data
-        self.load()
+        controller.load_data()
+
+        # Load Default Configs -- also
 
         # Set Models in QML Context
-        self.ui_engine.rootContext().setContextProperty("graphTreeModel", self.graphTreeModel)
-        self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", self.graphPropsTableModel)
-        self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", self.imgPropsTableModel)
-        self.ui_engine.rootContext().setContextProperty("imgListTableModel", self.imgListTableModel)
-        self.ui_engine.rootContext().setContextProperty("imageController", self.image_controller)
+        self.ui_engine.rootContext().setContextProperty("graphTreeModel", controller.graphTreeModel)
+        self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", controller.graphPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", controller.imgPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("imgListTableModel", controller.imgListTableModel)
+        self.ui_engine.rootContext().setContextProperty("mainController", controller)
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
         # Load UI
@@ -44,49 +37,6 @@ class MainWindow(QObject):
         if not self.ui_engine.rootObjects():
             sys.exit(-1)
 
-    def load(self):
-        """Loads data into models"""
-        try:
-            with open("assets/data/extract_data.json", "r") as file:
-                json_data = json.load(file)
-                # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
-            self.graphTreeModel = TreeModel(json_data)
-
-            data_img_props = data_img_list = data_graph_props = []
-            """data_img_props = [
-                ["Name", "Invitro.png"],
-                ["Width x Height", "500px x 500px"],
-                ["Dimensions", "2D"],
-                ["Pixel Size", "2nm x 2nm"],
-            ]"""
-            self.imgPropsTableModel = TableModel(data_img_props)
-
-            """data_img_list = [
-                ["Invitro.png"],
-                ["Nano-gel.png"],
-                ["Bacteria.png"],
-            ]"""
-            self.imgListTableModel = TableModel(data_img_list)
-
-
-            """data_graph_props = [
-                ["Node Count", "248"],
-                ["Edge Count", "306"],
-                ["Sub-graph Count", "1"],
-                ["Largest-Full Graph Ratio", "100%"],
-            ]"""
-            self.graphPropsTableModel = TableModel(data_graph_props)
-
-            # Images
-            #img_path = "assets/icons/graph_icon.png"
-            img_path = "../../../../../datasets/InVitroBioFilm.png"
-
-            self.image_provider.set_image(img_path)
-            self.image_provider.select_image("")
-            # pixmap = QPixmap(img_path)
-            # self.image_provider.add_image("test_image", pixmap)
-        except Exception as e:
-            print(f"Error loading data: {e}")
 
 if __name__ == "__main__":
     main_window = MainWindow()

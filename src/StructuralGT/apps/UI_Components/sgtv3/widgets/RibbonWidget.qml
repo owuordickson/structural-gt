@@ -74,7 +74,7 @@ Rectangle {
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
-                onClicked: imageController.perform_cropping(true)
+                onClicked: mainController.perform_cropping(true)
             }
 
             Button {
@@ -98,7 +98,7 @@ Rectangle {
                 background: transientParent
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
-                onClicked: imageController.undo_cropping(true)
+                onClicked: mainController.undo_cropping(true)
                 visible: false
             }
         }
@@ -143,18 +143,18 @@ Rectangle {
 
     function enableRectangularSelect() {
         if (btnSelectBorder.enabled) {
-            imageController.enable_rectangular_selection(false)
+            mainController.enable_rectangular_selection(false)
             btnSelectBorder.border.color = "black"
             btnSelectBorder.enabled = false
         } else {
-            imageController.enable_rectangular_selection(true)
+            mainController.enable_rectangular_selection(true)
             btnSelectBorder.border.color = "red"
             btnSelectBorder.enabled = true
         }
     }
 
     Connections {
-        target: imageController
+        target: mainController
 
         function onShowCroppingToolSignal(allow) {
             if (allow) {

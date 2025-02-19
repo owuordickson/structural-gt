@@ -16,7 +16,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         color: "transparent"
-        visible: !imageController.is_image_loaded()
+        visible: !mainController.is_image_loaded()
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -160,7 +160,7 @@ ColumnLayout {
         Layout.fillHeight: true
         color: "transparent"
         clip: true  // Ensures only the selected area is visible
-        visible: imageController.is_image_loaded()
+        visible: mainController.is_image_loaded()
 
         /*ScrollView {
             width: parent.width
@@ -175,7 +175,7 @@ ColumnLayout {
             scale: zoomFactor
             transformOrigin: Item.Center
             fillMode: Image.PreserveAspectFit
-            source: imageController.get_pixmap()
+            source: mainController.get_pixmap()
         }
 
         //}
@@ -220,9 +220,9 @@ ColumnLayout {
             onReleased: {
                 if (cropArea.width < 5 || cropArea.height < 5) {
                     cropArea.visible = false;  // Hide small selections
-                    imageController.show_cropping_tool(false);
+                    mainController.show_cropping_tool(false);
                 } else {
-                    imageController.show_cropping_tool(true);
+                    mainController.show_cropping_tool(true);
                 }
             }
         }
@@ -265,7 +265,7 @@ ColumnLayout {
         Layout.fillWidth: true
         color: "transparent"
         enabled: false
-        visible: imageController.is_image_loaded()
+        visible: mainController.is_image_loaded()
 
 
         RowLayout {
@@ -313,10 +313,10 @@ ColumnLayout {
 
     function cropImage() {
 
-        // Crop image through ImageController
+        // Crop image through mainController
         imgView.grabToImage(function(result) {
             if (result && result.image) {  // Ensure result is valid
-                imageController.crop_image(result.image, cropArea.x, cropArea.y, cropArea.width, cropArea.height);
+                mainController.crop_image(result.image, cropArea.x, cropArea.y, cropArea.width, cropArea.height);
             }
         });
 
@@ -325,10 +325,10 @@ ColumnLayout {
     }
 
     Connections {
-        target: imageController
+        target: mainController
 
         function onImageChangedSignal(src, newPath) {
-            imgView.source = imageController.get_pixmap(); // Force refresh
+            imgView.source = mainController.get_pixmap(); // Force refresh
             zoomFactor = 1.0
             //console.log(src);
         }
@@ -352,7 +352,7 @@ ColumnLayout {
         function onAdjustBrightnessContrastSignal(b_val, c_val) {
             imgView.grabToImage(function(result) {
                 if (result && result.image) {  // Ensure result is valid
-                    imageController.adjust_brightness_contrast(result.image, b_val, c_val);
+                    mainController.adjust_brightness_contrast(result.image, b_val, c_val);
                 }
             });
         }

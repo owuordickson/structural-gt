@@ -11,7 +11,7 @@ Item {
     property int spbWidthSize: 170
     property int lblWidthSize: 100
 
-    // Function to get values from SpinBoxes and send to ImageController
+    // Function to get values from SpinBoxes and send to MainController
     function applyChanges() {
         let brightness_val = 0;
         let contrast_val = 0;
@@ -35,7 +35,7 @@ Item {
             }
         }
         //console.log("Brightness:", brightness_val, "Contrast:", contrast_val);
-        imageController.brightness_contrast_control(brightness_val, contrast_val)
+        mainController.brightness_contrast_control(brightness_val, contrast_val)
     }
 
 
