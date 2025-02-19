@@ -214,27 +214,26 @@ def load_gte_configs():
     return options_gte
 
 def load_gtc_configs():
-    options_gtc = struct()
+    options_gtc = {"display_heatmaps": 1,
+                   "display_degree_histogram": 1,
+                   "display_betweenness_histogram": 1,
+                   "display_currentflow_histogram": 1,
+                   "display_closeness_histogram": 1,
+                   "display_eigenvector_histogram": 1,
+                   "display_angle_histogram": 1,
+                   "display_ohms_histogram": 0,
+                   "display_percolation_histogram": 0,
+                   "compute_node_connectivity": 1,
+                   "compute_graph_density": 1,
+                   "compute_graph_conductance": 0,
+                   "compute_global_efficiency": 1,
+                   "compute_clustering_coef": 1,
+                   "compute_assortativity_coef": 1,
+                   "compute_network_diameter": 1,
+                   "compute_wiener_index": 1,
+                   "compute_lang": 'Py'}
 
     # 4. Networkx Calculation Settings
-    options_gtc.display_heatmaps = 1
-    options_gtc.display_degree_histogram = 1
-    options_gtc.display_betweenness_histogram = 1
-    options_gtc.display_currentflow_histogram = 1
-    options_gtc.display_closeness_histogram = 1
-    options_gtc.display_eigenvector_histogram = 1
-    options_gtc.display_angle_histogram = 1
-    options_gtc.display_ohms_histogram = 0
-    options_gtc.display_percolation_histogram = 0
-    options_gtc.compute_node_connectivity = 1
-    options_gtc.compute_graph_density = 1
-    options_gtc.compute_graph_conductance = 0
-    options_gtc.compute_global_efficiency = 1
-    options_gtc.compute_clustering_coef = 1
-    options_gtc.compute_assortativity_coef = 1
-    options_gtc.compute_network_diameter = 1
-    options_gtc.compute_wiener_index = 1
-    options_gtc.compute_lang = 'Py'
 
     # Load configuration from file
     config = configparser.ConfigParser()
@@ -249,29 +248,29 @@ def load_gtc_configs():
         return options_gtc
 
     # 4. Networkx Calculation Settings
-    options_gtc.display_heatmaps = display_heatmaps
-    options_gtc.display_degree_histogram = int(config.get('sgt-settings', 'display_degree_histogram'))
-    options_gtc.display_betweenness_histogram = int(config.get('sgt-settings',
+    options_gtc["display_heatmaps"] = display_heatmaps
+    options_gtc["display_degree_histogram"] = int(config.get('sgt-settings', 'display_degree_histogram'))
+    options_gtc["display_betweenness_histogram"] = int(config.get('sgt-settings',
                                                                'display_betweenness_centrality_histogram'))
-    options_gtc.display_currentflow_histogram = int(config.get('sgt-settings',
+    options_gtc["display_currentflow_histogram"] = int(config.get('sgt-settings',
                                                                'display_current_flow_betweenness_centrality_histogram'))
-    options_gtc.display_closeness_histogram = int(config.get('sgt-settings',
+    options_gtc["display_closeness_histogram"] = int(config.get('sgt-settings',
                                                              'display_closeness_centrality_histogram'))
-    options_gtc.display_eigenvector_histogram = int(config.get('sgt-settings',
+    options_gtc["display_eigenvector_histogram"] = int(config.get('sgt-settings',
                                                                'display_eigenvector_centrality_histogram'))
-    options_gtc.display_angle_histogram = int(config.get('sgt-settings',
+    options_gtc["display_angle_histogram"] = int(config.get('sgt-settings',
                                                                'display_edge_angle_centrality_histogram'))
-    options_gtc.display_ohms_histogram = int(config.get('sgt-settings', 'display_ohms_histogram'))
-    options_gtc.display_percolation_histogram = int(config.get('sgt-settings', 'display_percolation_histogram'))
-    options_gtc.compute_node_connectivity = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
-    options_gtc.compute_graph_density = int(config.get('sgt-settings', 'compute_graph_density'))
-    options_gtc.compute_graph_conductance = int(config.get('sgt-settings', 'compute_graph_conductance'))
-    options_gtc.compute_global_efficiency = int(config.get('sgt-settings', 'compute_global_efficiency'))
-    options_gtc.compute_clustering_coef = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
-    options_gtc.compute_assortativity_coef = int(config.get('sgt-settings', 'compute_assortativity_coef'))
-    options_gtc.compute_network_diameter = int(config.get('sgt-settings', 'compute_network_diameter'))
-    options_gtc.compute_wiener_index = int(config.get('sgt-settings', 'compute_wiener_index'))
-    options_gtc.compute_lang = str(config.get('sgt-settings', 'compute_lang'))
+    options_gtc["display_ohms_histogram"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
+    options_gtc["display_percolation_histogram"] = int(config.get('sgt-settings', 'display_percolation_histogram'))
+    options_gtc["compute_node_connectivity"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
+    options_gtc["compute_graph_density"] = int(config.get('sgt-settings', 'compute_graph_density'))
+    options_gtc["compute_graph_conductance"] = int(config.get('sgt-settings', 'compute_graph_conductance'))
+    options_gtc["compute_global_efficiency"] = int(config.get('sgt-settings', 'compute_global_efficiency'))
+    options_gtc["compute_clustering_coef"] = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
+    options_gtc["compute_assortativity_coef"] = int(config.get('sgt-settings', 'compute_assortativity_coef'))
+    options_gtc["compute_network_diameter"] = int(config.get('sgt-settings', 'compute_network_diameter'))
+    options_gtc["compute_wiener_index"] = int(config.get('sgt-settings', 'compute_wiener_index'))
+    options_gtc["compute_lang"] = str(config.get('sgt-settings', 'compute_lang'))
 
     return options_gtc
 

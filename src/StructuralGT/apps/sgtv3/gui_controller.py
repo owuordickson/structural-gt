@@ -8,6 +8,8 @@ from PIL import ImageQt  # Import ImageQt for conversion
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
 
+from src.StructuralGT.configs.config_loader import load_gtc_configs
+
 
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
@@ -28,8 +30,8 @@ class MainController(QObject):
         self.wait_flag = False
 
         # Create graph objects
-        self.analyze_objs = []
-        self.current_obj_index = 0
+        self.analyze_objs = {}
+        self.current_obj_id = 0
 
         # Create Models
         self.graphTreeModel = None
@@ -37,14 +39,17 @@ class MainController(QObject):
         self.imgListTableModel = None
         self.imgPropsTableModel = None
 
+        # Load Model Data
+        self._load_model_data()
+
         # Load Default Configs
         # self.gui_txt = load_gui_configs()
         # self.configs_data = {}
         ## self.threadpool = QtCore.QThreadPool()
         # self.worker = Worker(0, None)
-        # self._init_configs()
+        # self._load_default_configs()
 
-    def load_data(self):
+    def _load_model_data(self):
         """Loads data into models"""
         try:
             with open("assets/data/extract_data.json", "r") as file:
@@ -75,21 +80,18 @@ class MainController(QObject):
                 ["Largest-Full Graph Ratio", "100%"],
             ]"""
             self.graphPropsTableModel = TableModel(data_graph_props)
-
-            # Test Image
-            # img_path = "../../../../../datasets/InVitroBioFilm.png"
-            # self.imageChangedSignal.emit(0, img_path)
         except Exception as e:
-            print(f"Error loading data: {e}")
+            print(f"Error loading GUI model data: {e}")
 
-    def _init_configs(self):
+    def _load_default_configs(self):
         """
         Initialize all UI configurations.
 
         :return:
         """
+
         # 1. Fetch configs
-        self.configs_data = load_configs()
+        self.configs_data = load_all_configs()
         options = self.configs_data['main_options']
         options_img = self.configs_data['filter_options']
         options_gte = self.configs_data['extraction_options']
@@ -110,6 +112,19 @@ class MainController(QObject):
         # 6. initialize Image Paths
         self._init_img_path_settings(options)
 
+    @Slot(str, result=bool)
+    def load_gte_setting(self, item_name):
+        # print(item_name)
+        if len(self.analyze_objs) > 0:
+            return False
+        else:
+            # options_gte = self.analyze_objs[self.current_obj_id]
+            options_gtc = load_gtc_configs()
+            val = options_gtc[item_name]
+            print(val)
+            # if item_name ==
+            return True if val == 1 else False
+
     @Slot(result=bool)
     def is_image_loaded(self):
         return self.img_loaded
@@ -121,6 +136,14 @@ class MainController(QObject):
     @Slot(result=bool)
     def is_project_loaded(self):
         return self.project_loaded
+
+    @Slot(result=bool)
+    def error_occurred(self):
+        return self.error_flag
+
+    @Slot(result=bool)
+    def in_progress(self):
+        return self.wait_flag
 
     @Slot(result=str)
     def get_pixmap(self):

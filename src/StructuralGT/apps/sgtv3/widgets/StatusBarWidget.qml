@@ -26,7 +26,7 @@ Rectangle {
             ProgressBar {
                 id: progressBar
                 Layout.fillWidth: true
-                //visible: false
+                visible: mainController.in_progress()
                 value: 0 // Example value (50% progress)
                 from: 0
                 to: 100
@@ -42,8 +42,8 @@ Rectangle {
                 icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                //visible: false
-                enabled: false
+                visible: mainController.in_progress()
+                enabled: mainController.in_progress()
                 onClicked: {
                     progressBar.value = 0 // Reset progress
                     console.log("Progress canceled")

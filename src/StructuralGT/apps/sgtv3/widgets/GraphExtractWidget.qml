@@ -42,6 +42,7 @@ TreeView {
 
                 CheckBox {
                     id: checkBox
+                    //objectName: modelData.id  // NOT INCLUDED IN MODEL
                     text: model.display
                     checked: false
                     onClicked: {console.log(depth); console.log(row); console.log(model.display)}
@@ -53,6 +54,7 @@ TreeView {
 
                 TextField {
                     id: txtField
+                    //objectName: modelData.id  // CURRENTLY NOT INCLUDED IN MODEL
                     width: 80
                     text: "500" // model.display
                 }

@@ -19,11 +19,12 @@ class MainWindow(QObject):
         # Register Image Provider
         self.image_provider = ImageProvider(controller)
 
-        # Load Model Data
-        controller.load_data()
-
         # Load Default Configs
         # controller.load_default_configs()
+
+        # Test Image
+        # img_path = "../../../../../datasets/InVitroBioFilm.png"
+        # controller.imageChangedSignal.emit(0, img_path)
 
         # Set Models in QML Context
         self.ui_engine.rootContext().setContextProperty("graphTreeModel", controller.graphTreeModel)
