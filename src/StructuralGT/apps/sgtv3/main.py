@@ -27,11 +27,11 @@ class MainWindow(QObject):
         # controller.imageChangedSignal.emit(0, img_path)
 
         # Set Models in QML Context
-        self.ui_engine.rootContext().setContextProperty("graphTreeModel", controller.graphTreeModel)
         self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", controller.graphPropsTableModel)
         self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", controller.imgPropsTableModel)
         self.ui_engine.rootContext().setContextProperty("imgListTableModel", controller.imgListTableModel)
-        # self.ui_engine.rootContext().setContextProperty("gteListModel", controller.gteListModel)
+
+        self.ui_engine.rootContext().setContextProperty("gteTreeModel", controller.gteTreeModel)
         self.ui_engine.rootContext().setContextProperty("gtcListModel", controller.gtcListModel)
         self.ui_engine.rootContext().setContextProperty("imgBinFilterModel", controller.imgBinFilterModel)
         self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)

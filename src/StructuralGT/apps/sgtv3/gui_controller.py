@@ -35,14 +35,12 @@ class MainController(QObject):
         self.current_obj_id = 0
 
         # Create Models
-        self.graphTreeModel = None
         self.graphPropsTableModel = None
         self.imgListTableModel = None
         self.imgPropsTableModel = None
-        # self.imgListModel = None
-        self.gteListModel = None
-        self.gtcListModel = None
 
+        self.gteTreeModel = None
+        self.gtcListModel = None
         self.imgBinFilterModel = None
         self.imgFilterModel = None
         self.imgControlModel = None
@@ -62,27 +60,21 @@ class MainController(QObject):
         """Loads data into models"""
         try:
             # 1.
-            with open("assets/data/extract_data.json", "r") as file:
-                json_data = json.load(file)
-                # self.graphTreeModel.loadData(json_data)  # Assuming TreeModel has a loadData() method
-            self.graphTreeModel = TreeModel(json_data)
-
-            # 2.
             options_img = load_img_configs()
             option_gte = load_gte_configs()
             options_gtc = load_gtc_configs()
-            print(option_gte.values())
-            print("\n")
-            print(options_gtc.values())
 
-            self.gteListModel = CheckBoxModel(list(option_gte.values()))
-            self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
+            # 2.
+            graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
+            file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
 
+            self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
+            self.gteTreeModel = TreeModel(graph_options)
             self.imgBinFilterModel = CheckBoxModel(bin_filters)
             self.imgFilterModel = CheckBoxModel(img_filters)
             self.imgControlModel = CheckBoxModel(img_controls)
