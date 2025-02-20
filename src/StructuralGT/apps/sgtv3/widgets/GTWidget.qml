@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Repeater {
 
-    model: gteListModel
+    model: gtcListModel
     delegate: RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 10
@@ -15,7 +15,7 @@ Repeater {
             objectName: model.id
             //Layout.preferredWidth: 100
             text: model.text
-            checked: mainController.load_gte_setting(model.id)
+            checked: mainController.load_gtc_setting(model.id)
         }
     }
 

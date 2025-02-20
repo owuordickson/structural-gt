@@ -45,11 +45,7 @@ Item {
 
         Repeater {
             id: brightnessCtrlRepeater
-            model: [
-                { id: "spbBrightness", labelId: "lblBrightness", labelText: "Brightness"},
-                { id: "spbContrast", labelId: "lblContrast", labelText: "Contrast"}
-            ]
-
+            model: imgControlModel
             delegate: RowLayout {
                 objectName: "ctrlRowLayout"
                 Layout.fillWidth: true
@@ -59,18 +55,19 @@ Item {
                 Label {
                     id: label
                     Layout.preferredWidth: lblWidthSize
-                    text: modelData.labelText
+                    text: model.text
                 }
 
                 SpinBox {
                     id: spinBox
-                    objectName: modelData.id
+                    objectName: model.id
                     Layout.minimumWidth: spbWidthSize
                     Layout.fillWidth: true
-                    from: 0
+                    editable: true
+                    from: -100
                     to: 100
                     stepSize: 1
-                    value: 0
+                    value: mainController.load_img_setting_val(model.id)
                 }
 
             }

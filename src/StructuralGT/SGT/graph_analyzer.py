@@ -117,7 +117,7 @@ class GraphAnalyzer(ProgressUpdate):
         super(GraphAnalyzer, self).__init__()
         self.configs = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp = allow_multiprocessing
-        self.gc = g_obj
+        self.g_obj = g_obj
         self.output_data = pd.DataFrame([])
         self.degree_distribution = [0]
         self.clustering_coefficients = [0]
@@ -145,9 +145,9 @@ class GraphAnalyzer(ProgressUpdate):
         """
         self.update_status([1, "Performing un-weighted analysis..."])
 
-        graph = self.gc.nx_graph
+        graph = self.g_obj.nx_graph
         options = self.configs
-        options_gte = self.gc.configs
+        options_gte = self.g_obj.configs
         data_dict = {"x": [], "y": []}
 
         node_count = int(nx.number_of_nodes(graph))
@@ -159,7 +159,7 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
 
-        for item in self.gc.nx_info:
+        for item in self.g_obj.nx_info:
             if item['name'] == 'angle':
                 data_dict["x"].append('Average edge angle (degrees)')
                 data_dict["y"].append(round(np.average(item['value']), 3))
@@ -325,7 +325,7 @@ class GraphAnalyzer(ProgressUpdate):
         if (options_gte.is_multigraph == 0) and (options.display_currentflow_histogram == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
-            gph = self.gc.nx_connected_graph
+            gph = self.g_obj.nx_connected_graph
             all_nodes = list(gph.nodes())
             # source_nodes = random.sample(all_nodes, k=5)
             # rem_nodes = list(set(source_nodes) - set(source_nodes))
@@ -359,8 +359,8 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([66, "Computing graph conductance..."])
             # res_items, sg_components = self.gc.approx_conductance_by_spectral()
             data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round((self.gc.connect_ratio * 100), 5)) + "%")
-            for item in self.gc.nx_info:
+            data_dict["y"].append(str(round((self.g_obj.connect_ratio * 100), 5)) + "%")
+            for item in self.g_obj.nx_info:
                 if type(item['value']) is np.ndarray:
                     continue
                 else:
@@ -377,9 +377,9 @@ class GraphAnalyzer(ProgressUpdate):
         """
         self.update_status([70, "Performing weighted analysis..."])
 
-        graph = self.gc.nx_graph
+        graph = self.g_obj.nx_graph
         options = self.configs
-        weight_type = GraphExtractor.get_weight_options().get(self.gc.configs.weight_type)
+        weight_type = GraphExtractor.get_weight_options().get(self.g_obj.configs.weight_type)
         data_dict = {"x": [], "y": []}
 
         if graph.number_of_nodes() <= 0:
@@ -473,7 +473,7 @@ class GraphAnalyzer(ProgressUpdate):
         if options.compute_graph_conductance == 1:
             self.update_status([87, "Computing graph conductance..."])
             # res_items, sg_components = self.gc.approx_conductance_by_spectral(weighted=True)
-            for item in self.gc.nx_info:
+            for item in self.g_obj.nx_info:
                 if type(item['value']) is np.ndarray:
                     continue
                 else:
@@ -481,7 +481,7 @@ class GraphAnalyzer(ProgressUpdate):
                     data_dict["y"].append((str(item["value"])))
 
         # calculate cross-sectional area of edges
-        if self.gc.configs.weight_type == 'AREA':
+        if self.g_obj.configs.weight_type == 'AREA':
             self.update_status([68, "Computing average (edge) cross-sectional area..."])
             temp_distribution = []
             for (s, e) in graph.edges():
@@ -504,9 +504,9 @@ class GraphAnalyzer(ProgressUpdate):
         lst_area = []
         lst_len = []
         lst_width = []
-        nx_graph = self.gc.nx_graph
-        px_size = self.gc.imp.pixel_width
-        rho_dim = self.gc.imp.configs.resistivity
+        nx_graph = self.g_obj.nx_graph
+        px_size = self.g_obj.imp.pixel_width
+        rho_dim = self.g_obj.imp.configs.resistivity
         pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
         g_shape = 1
 
@@ -588,7 +588,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         """
 
-        nx_graph = self.gc.nx_graph
+        nx_graph = self.g_obj.nx_graph
         if nx_graph.is_directed():
             iter_func = itertools.permutations
         else:
@@ -625,12 +625,12 @@ class GraphAnalyzer(ProgressUpdate):
         of local node connectivity over all pairs of nodes of G.
         """
 
-        nx_graph = self.gc.nx_graph
+        nx_graph = self.g_obj.nx_graph
         cpu_count = get_num_cores()
         anc = 0
 
         try:
-            filename, output_location = self.gc.imp.create_filenames()
+            filename, output_location = self.g_obj.imp.create_filenames()
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
@@ -664,15 +664,15 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        fig = self.gc.imp.display_images()
+        fig = self.g_obj.imp.display_images()
         out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = self.gc.display_skeletal_images()
+        fig = self.g_obj.display_skeletal_images()
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = self.gc.draw_graph_network(a4_size=True)
+        fig = self.g_obj.draw_graph_network(a4_size=True)
         if fig:
             out_figs.append(fig)
 
@@ -709,7 +709,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         opt_gtc = self.configs
 
-        filename, output_location = self.gc.imp.create_filenames()
+        filename, output_location = self.g_obj.imp.create_filenames()
         pdf_filename = filename + "_SGT_results.pdf"
         pdf_file = os.path.join(output_location, pdf_filename)
 
@@ -717,15 +717,15 @@ class GraphAnalyzer(ProgressUpdate):
         with (PdfPages(pdf_file) as pdf):
 
             # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            fig = self.gc.imp.display_images()
+            fig = self.g_obj.imp.display_images()
             pdf.savefig(fig)
 
             # 2. plotting skeletal images
-            fig = self.gc.display_skeletal_images()
+            fig = self.g_obj.display_skeletal_images()
             pdf.savefig(fig)  # causes PyQt5 to crash
 
             # 3. plotting sub-graph network
-            fig = self.gc.draw_graph_network(a4_size=True)
+            fig = self.g_obj.draw_graph_network(a4_size=True)
             if fig:
                 pdf.savefig(fig)
 
@@ -751,7 +751,7 @@ class GraphAnalyzer(ProgressUpdate):
             # 8. displaying run information
             fig = self.display_info()
             pdf.savefig(fig)
-        self.gc.save_files()
+        self.g_obj.save_files()
 
     def display_gt_results(self):
         """
@@ -760,7 +760,7 @@ class GraphAnalyzer(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs
+        opt_gte = self.g_obj.configs
         data = self.output_data
         w_data = self.weighted_output_data
 
@@ -790,7 +790,7 @@ class GraphAnalyzer(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs
+        opt_gte = self.g_obj.configs
         opt_gtc = self.configs
         figs = []
 
@@ -907,7 +907,7 @@ class GraphAnalyzer(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.gc.configs
+        opt_gte = self.g_obj.configs
         opt_gtc = self.configs
 
         weight_type = GraphExtractor.get_weight_options().get(opt_gte.weight_type)
@@ -987,7 +987,7 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        _, filename = os.path.split(self.gc.imp.img_path)
+        _, filename = os.path.split(self.g_obj.imp.img_path)
         now = datetime.datetime.now()
 
         run_info = ""
@@ -995,11 +995,11 @@ class GraphAnalyzer(ProgressUpdate):
         run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
         # Image Configs
-        run_info += self.gc.imp.get_config_info()
+        run_info += self.g_obj.imp.get_config_info()
         run_info += "\n\n"
 
         # Graph Configs
-        run_info += self.gc.get_config_info()
+        run_info += self.g_obj.get_config_info()
         run_info += "\n\n"
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
@@ -1015,9 +1015,9 @@ class GraphAnalyzer(ProgressUpdate):
         :param line_width: size of the plot line-width.
         :return: histogram plot figure.
         """
-        nx_graph = self.gc.nx_graph
-        opt_gte = self.gc.configs
-        img = self.gc.imp.img
+        nx_graph = self.g_obj.nx_graph
+        opt_gte = self.g_obj.configs
+        img = self.g_obj.imp.img
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)

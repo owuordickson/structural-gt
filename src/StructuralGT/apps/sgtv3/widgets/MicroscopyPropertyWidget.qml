@@ -7,12 +7,13 @@ Repeater {
     property int txtWidthSize: 170
     property int lblWidthSize: 100
 
-    model: [
+    /*model: [
         { id: "txtScalebar", text: "", labelId: "lblScalebar", labelText: "Scalebar (nm)" },
         { id: "txtPixelCount", text: "", labelId: "lblPixelCount", labelText: "Scalebar Pixel Count" },
         { id: "txtResistivity", text: "", labelId: "lblResistivity", labelText: "Resistivity (<html>&Omega;</html>m)" }
-    ]
+    ]*/
 
+    model: microscopyPropsModel
     delegate: RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 10
@@ -22,16 +23,16 @@ Repeater {
             id: label
             wrapMode: Text.Wrap
             Layout.preferredWidth: lblWidthSize
-            text: modelData.labelText
+            text: model.text
         }
 
         TextField {
             id: txtField
-            objectName: modelData.id
+            objectName: model.id
             Layout.fillWidth: true
             Layout.minimumWidth: txtWidthSize
             Layout.rightMargin: 10
-            text: modelData.text
+            text: mainController.load_img_setting_val(model.id)
         }
     }
 }

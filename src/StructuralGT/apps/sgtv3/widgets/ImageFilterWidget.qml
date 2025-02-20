@@ -9,17 +9,7 @@ Repeater {
     property int sldWidthSize: 140
     property int lblWidthSize: 50
 
-    model: [
-        { id: "cbxAutolevel", text: "Autolevel", dataId: "sldAutolevel", labelId: "lblAutolevel" },
-        { id: "cbxGaussian", text: "Gaussian", dataId: "sldGaussian", labelId: "lblGaussian" },
-        { id: "cbxLaplacian", text: "Laplacian", dataId: "sldLaplacian", labelId: "lblLaplacian" },
-        { id: "cbxLowpass", text: "Lowpass", dataId: "sldLowpass", labelId: "lblLowpass" },
-        { id: "cbxGamma", text: "LUT Gamma", dataId: "sldGamma", labelId: "lblGamma" },
-        { id: "cbxMedian", text: "Median", dataId: "sldMedian", labelId: "lblMedian" },
-        { id: "cbxScharr", text: "Scharr", dataId: "sldScharr", labelId: "lblScharr" },
-        { id: "cbxSobel", text: "Sobel", dataId: "sldSobel", labelId: "lblSobel" }
-    ]
-
+    model: imgFilterModel
     delegate: RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 10
@@ -27,15 +17,24 @@ Repeater {
 
         CheckBox {
             id: checkBox
-            objectName: modelData.id
+            objectName: model.id
             Layout.preferredWidth: cbxWidthSize
-            text: modelData.text
-            checked: modelData.id === "cbxGamma"
+            text: model.text
+            checked: mainController.load_img_setting(model.id)
         }
 
         Loader {
             id: controlLoader
-            sourceComponent: modelData.id === "cbxLowpass" ? spinComponent : sliderComponent
+            sourceComponent: (model.id === "apply_median_filter" || model.id === "apply_scharr_gradient") ? blankComponent : model.id === "apply_lowpass_filter" ? spinComponent : sliderComponent
+        }
+
+        Component {
+            id: blankComponent
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.bottomMargin: 10
+            }
         }
 
         Component {
@@ -45,14 +44,14 @@ Repeater {
                 Layout.fillWidth: true
                 SpinBox {
                     id: spinbox
-                    objectName: modelData.dataId
+                    objectName: model.dataId
                     Layout.minimumWidth: spbWidthSize
                     Layout.fillWidth: true
-                    from: 0
-                    to: 100
-                    stepSize: 1
-                    value: 11
                     enabled: checkBox.checked
+                    from: model.minValue
+                    to: model.maxValue
+                    stepSize: model.stepSize
+                    value: mainController.load_img_setting_val(model.id)
                 }
             }
         }
@@ -65,20 +64,20 @@ Repeater {
 
                 Slider {
                     id: slider
-                    objectName: modelData.dataId
+                    objectName: model.dataId
                     Layout.minimumWidth: sldWidthSize
                     Layout.fillWidth: true
-                    from: 0
-                    to: 5.0
-                    stepSize: 0.01
-                    value: 1.0
                     enabled: checkBox.checked
+                    from: model.minValue
+                    to: model.maxValue
+                    stepSize: model.stepSize
+                    value: mainController.load_img_setting_val(model.id)
                 }
 
                 Label {
                     id: label
                     Layout.preferredWidth: lblWidthSize
-                    text: Number(slider.value).toFixed(2) // Display one decimal place
+                    text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
                     enabled: checkBox.checked
                 }
             }

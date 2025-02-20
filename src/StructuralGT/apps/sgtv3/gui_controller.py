@@ -39,9 +39,14 @@ class MainController(QObject):
         self.graphPropsTableModel = None
         self.imgListTableModel = None
         self.imgPropsTableModel = None
-        self.imgListModel = None
+        # self.imgListModel = None
         self.gteListModel = None
         self.gtcListModel = None
+
+        self.imgBinFilterModel = None
+        self.imgFilterModel = None
+        self.imgControlModel = None
+        self.microscopyPropsModel = None
 
         # Load Model Data
         self._load_model_data()
@@ -66,9 +71,19 @@ class MainController(QObject):
             options_img = load_img_configs()
             option_gte = load_gte_configs()
             options_gtc = load_gtc_configs()
-            self.imgListModel = CheckBoxModel(list(options_img.values()))
+            # self.imgListModel = CheckBoxModel(list(options_img.values()))
             self.gteListModel = CheckBoxModel(list(option_gte.values()))
             self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
+
+            bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
+            img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
+            img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
+            img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
+
+            self.imgBinFilterModel = CheckBoxModel(bin_filters)
+            self.imgFilterModel = CheckBoxModel(img_filters)
+            self.imgControlModel = CheckBoxModel(img_controls)
+            self.microscopyPropsModel = CheckBoxModel(img_properties)
 
             data_img_props = data_img_list = data_graph_props = []
             """data_img_props = [
@@ -96,44 +111,46 @@ class MainController(QObject):
         except Exception as e:
             print(f"Error loading GUI model data: {e}")
 
-    def _load_default_configs(self):
-        """
-        Initialize all UI configurations.
-
-        :return:
-        """
-        pass
-        """"
-        # 1. Fetch configs
-        self.configs_data = load_all_configs()
-        options = self.configs_data['main_options']
-        options_img = self.configs_data['filter_options']
-        options_gte = self.configs_data['extraction_options']
-        options_gtc = self.configs_data['sgt_options']
-
-        # 2. Initialize Settings
-        self._init_tree(options_gte, options_gtc)
-
-        # 3. Initialize Filter Settings
-        self._init_img_filter_settings(options_img)
-
-        # 4. Initialize Binary Settings
-        self._init_img_binary_settings(options_img)
-
-        # 5. Initialize Enhance and Compute Tools
-        self._init_tools()
-
-        # 6. initialize Image Paths
-        self._init_img_path_settings(options)
-        """
-
     @Slot(str, result=bool)
-    def load_gte_setting(self, item_name):
+    def load_img_setting(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
             return False
         else:
-            options_gtc = self.analyze_objs[self.current_obj_id]
+            options_img = self.analyze_objs[self.current_obj_id].g_obj.imp.configs
+            # options_img = load_img_configs()
+            val = options_img[item_name]["value"]
+            return True if val == 1 else False
+
+    @Slot(str, result=float)
+    def load_img_setting_val(self, item_name):
+        # print(item_name)
+        if len(self.analyze_objs) <= 0:
+            return False
+        else:
+            options_img = self.analyze_objs[self.current_obj_id].g_obj.imp.configs
+            # options_img = load_img_configs()
+            if options_img[item_name]["type"] == "image-filter":
+                val = options_img[item_name]["dataValue"]
+            else:
+                val = options_img[item_name]["value"]
+            return val
+
+    @Slot(result=bool)
+    def load_gte_setting(self):
+        if len(self.analyze_objs) > 0:
+            return False
+        else:
+            # options_gte = self.analyze_objs[self.current_obj_id].g_obj.configs
+            options_gte = load_gte_configs()
+
+    @Slot(str, result=bool)
+    def load_gtc_setting(self, item_name):
+        # print(item_name)
+        if len(self.analyze_objs) <= 0:
+            return False
+        else:
+            options_gtc = self.analyze_objs[self.current_obj_id].configs
             # options_gtc = load_gtc_configs()
             val = options_gtc[item_name]["value"]
             # print(val)

@@ -11,9 +11,11 @@ ColumnLayout {
     property int spbWidthSize: 170
     property int sldWidthSize: 140
     property int lblWidthSize: 50
+    property int checkedBtnId: mainController.load_img_setting_val("threshold_type")
 
     ButtonGroup {
         id: btnGroup
+        checkedButton: checkedBtnId === 0 ? rdoGlobal : checkedBtnId === 1 ? rdoAdaptive : checkedBtnId === 2 ? rdoOtsu : rdoGlobal
     }
 
 
@@ -27,16 +29,23 @@ ColumnLayout {
         }
 
         SpinBox {
+            // ONLY ODD NUMBERS
             id: spbAdaptive
             Layout.minimumWidth: spbWidthSize
             //Layout.fillWidth: true
-            from: 0
-            to: 100
-            stepSize: 1
-            value: 11
+            from: 1
+            to: 999
+            stepSize: 2
+            value: mainController.load_img_setting_val("adaptive_local_threshold_value")
             enabled: rdoAdaptive.checked
+            editable: true  // Allow user input
+            onValueChanged: {
+                if (value % 2 === 0) {
+                    value = value - 1;  // Convert even input to nearest odd
+                }
+            }
+            validator: IntValidator { bottom: spbAdaptive.from; top: spbAdaptive.to }
         }
-
     }
 
     RowLayout {
@@ -44,7 +53,6 @@ ColumnLayout {
         RadioButton {
             id: rdoGlobal
             text: "Global"
-            checked: true
             ButtonGroup.group: btnGroup
             Layout.preferredWidth: 100
         }
@@ -53,10 +61,10 @@ ColumnLayout {
             id: sldGlobal
             Layout.minimumWidth: sldWidthSize
             Layout.fillWidth: true
-            from: 0
+            from: 1
             to: 255
             stepSize: 1
-            value: 127
+            value: mainController.load_img_setting_val("global_threshold_value")
             enabled: rdoGlobal.checked
         }
 
@@ -79,5 +87,6 @@ ColumnLayout {
     CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
+        checked: mainController.load_img_setting("apply_dark_foreground")
     }
 }

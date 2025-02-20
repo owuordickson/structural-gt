@@ -103,29 +103,33 @@ def load_img_configs():
     """Image Detection settings"""
 
     options_img = {
-        "image_dim": {"id": "image_dim", "text": "", "value": 2 },
-        "threshold_type": {"id": "threshold_type", "text": "", "value": 1 },
-        "global_threshold_value": {"id": "global_threshold_value", "text": "", "value": 127 },
-        "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "text": "", "value": 11 },
-        "adjust_gamma": {"id": "adjust_gamma", "text": "", "value": 1.0 },
-        "gaussian_blurring_size": {"id": "gaussian_blurring_size", "text": "", "value": 3 },
-        "autolevel_blurring_size": {"id": "autolevel_blurring_size", "text": "", "value": 3 },
-        "lowpass_window_size": {"id": "lowpass_window_size", "text": "", "value": 10 },
-        "laplacian_kernel_size": {"id": "laplacian_kernel_size", "text": "", "value": 3 },
-        "sobel_kernel_size": {"id": "sobel_kernel_size", "text": "", "value": 3 },
-        "apply_autolevel": {"id": "apply_autolevel", "text": "", "value": 0 },
-        "apply_laplacian_gradient": {"id": "apply_laplacian_gradient", "text": "", "value": 0 },
-        "apply_scharr_gradient": {"id": "apply_scharr_gradient", "text": "", "value": 0 },
-        "apply_sobel_gradient": {"id": "apply_sobel_gradient", "text": "", "value": 0 },
-        "apply_median_filter": {"id": "apply_median_filter", "text": "", "value": 0 },
-        "apply_gaussian_blur": {"id": "apply_gaussian_blur", "text": "", "value": 0 },
-        "apply_lowpass_filter": {"id": "apply_lowpass_filter", "text": "", "value": 0 },
-        "apply_dark_foreground": {"id": "apply_dark_foreground", "text": "", "value": 0 },
-        "brightness_level": {"id": "brightness_level", "text": "", "value": 0 },
-        "contrast_level": {"id": "contrast_level", "text": "", "value": 0 },
-        "scale_value_nanometers": {"id": "scale_value_nanometers", "text": "", "value": 1.0 },
-        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "text": "", "value": 0 },
-        "resistivity": {"id": "", "text": "", "value": 1.0 },
+        "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "value": 1 },
+        "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "value": 127 },
+        "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "value": 11 },
+        "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "value": 0},
+
+        "apply_autolevel": {"id": "apply_autolevel", "type": "image-filter", "text": "Autolevel", "value": 0,
+                            "dataId": "autolevel_blurring_size", "dataValue": 3, "minValue": 1, "maxValue": 7, "stepSize": 2},
+        "apply_gaussian_blur": {"id": "apply_gaussian_blur", "type": "image-filter", "text": "Gaussian", "value": 0,
+                                "dataId": "gaussian_blurring_size", "dataValue": 3, "minValue": 1, "maxValue": 7, "stepSize": 2 },
+        "apply_laplacian_gradient": {"id": "apply_laplacian_gradient", "type": "image-filter", "text": "Laplacian",
+                                     "value": 0, "dataId": "laplacian_kernel_size", "dataValue": 3, "minValue": 1, "maxValue": 7,  "stepSize": 2 },
+        "apply_lowpass_filter": {"id": "apply_lowpass_filter", "type": "image-filter", "text": "Lowpass", "value": 0,
+                                 "dataId": "lowpass_window_size", "dataValue": 10, "minValue": 0, "maxValue": 1000,  "stepSize": 1 },
+        "apply_gamma": {"id": "apply_gamma", "type": "image-filter", "text": "LUT Gamma", "value": 1, "dataId": "adjust_gamma",
+                        "dataValue": 1.0, "minValue": 0.01, "maxValue": 5.0, "stepSize": 0.01  },
+        "apply_sobel_gradient": {"id": "apply_sobel_gradient", "type": "image-filter", "text": "Sobel", "value": 0,
+                                 "dataId": "sobel_kernel_size", "dataValue": 3, "minValue": 1, "maxValue": 7,  "stepSize": 2 },
+        "apply_median_filter": {"id": "apply_median_filter", "type": "image-filter", "text": "Median", "value": 0 },
+        "apply_scharr_gradient": {"id": "apply_scharr_gradient", "type": "image-filter", "text": "Scharr", "value": 0},
+
+        "brightness_level": {"id": "brightness_level", "type": "image-control", "text": "Brightness", "value": 0 },
+        "contrast_level": {"id": "contrast_level", "type": "image-control", "text": "Contrast", "value": 0 },
+
+        #"image_dim": {"id": "image_dim", "type": "image-property", "text": "", "value": 2},
+        "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "value": 1.0 },
+        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "value": 0 },
+        "resistivity": {"id": "resistivity", "type": "image-property", "text": "Resistivity (<html>&Omega;</html>m)", "value": 1.0 },
     }
 
     # Load configuration from file
@@ -137,25 +141,27 @@ def load_img_configs():
         config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
 
-        options_img["img_dimensions"]["value"] = int(config.get('filter-settings', 'image_dim'))
+        #options_img["image_dim"]["value"] = int(config.get('filter-settings', 'image_dim'))
         options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
         options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
-        options_img["adaptive_local_threshold_value"]["value"] = int(
-            config.get('filter-settings', 'adaptive_local_threshold_value'))
-        options_img["adjust_gamma"]["value"] = float(config.get('filter-settings', 'adjust_gamma'))
-        options_img["gaussian_blurring_size"]["value"] = int(config.get('filter-settings', 'blurring_window_size'))
-        options_img["autolevel_blurring_size"]["value"] = int(config.get('filter-settings', 'blurring_window_size'))
-        options_img["lowpass_window_size"]["value"] = int(config.get('filter-settings', 'filter_window_size'))
-        options_img["laplacian_kernel_size"]["value"] = 3
-        options_img["sobel_kernel_size"]["value"] = 3
+        options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
+
+        options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))
+        options_img["apply_gamma"]["dataValue"] = float(config.get('filter-settings', 'adjust_gamma'))
         options_img["apply_autolevel"]["value"] = int(config.get('filter-settings', 'apply_autolevel'))
-        options_img["apply_laplacian_gradient"]["value"] = int(
-            config.get('filter-settings', 'apply_laplacian_gradient'))
-        options_img["apply_scharr_gradient"]["value"] = int(config.get('filter-settings', 'apply_scharr_gradient'))
+        options_img["apply_autolevel"]["dataValue"] = int(config.get('filter-settings', 'blurring_window_size'))
+        options_img["apply_laplacian_gradient"]["value"] = int(config.get('filter-settings', 'apply_laplacian_gradient'))
+        options_img["apply_laplacian_gradient"]["dataValue"] = 3
         options_img["apply_sobel_gradient"]["value"] = int(config.get('filter-settings', 'apply_sobel_gradient'))
-        options_img["apply_median_filter"]["value"] = int(config.get('filter-settings', 'apply_median_filter'))
+        options_img["apply_sobel_gradient"]["dataValue"] = 3
         options_img["apply_gaussian_blur"]["value"] = int(config.get('filter-settings', 'apply_gaussian_blur'))
+        options_img["apply_gaussian_blur"]["dataValue"] = int(config.get('filter-settings', 'blurring_window_size'))
         options_img["apply_lowpass_filter"]["value"] = int(config.get('filter-settings', 'apply_lowpass_filter'))
+        options_img["apply_lowpass_filter"]["dataValue"] = int(config.get('filter-settings', 'filter_window_size'))
+
+        options_img["apply_scharr_gradient"]["value"] = int(config.get('filter-settings', 'apply_scharr_gradient'))
+        options_img["apply_median_filter"]["value"] = int(config.get('filter-settings', 'apply_median_filter'))
+
         options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
         options_img["brightness_level"]["value"] = int(config.get('filter-settings', 'brightness_level'))
         options_img["contrast_level"]["value"] = int(config.get('filter-settings', 'contrast_level'))
@@ -166,7 +172,6 @@ def load_img_configs():
         return options_img
     except configparser.NoSectionError:
         return options_img
-
 
 def load_gte_configs():
     """Graph Extraction Settings"""
@@ -214,7 +219,6 @@ def load_gte_configs():
         return options_gte
     except configparser.NoSectionError:
         return options_gte
-
 
 def load_gtc_configs():
     """Networkx Calculation Settings"""
