@@ -49,8 +49,8 @@ class TreeModel(QAbstractItemModel):
         if parent.column() > 0:
             return 0
 
-        parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
-        return parentItem.childCount()
+        parent_item = self.rootItem if not parent.isValid() else parent.internalPointer()
+        return parent_item.childCount()
 
     def columnCount(self, parent=QModelIndex()):
         return 1
@@ -66,11 +66,11 @@ class TreeModel(QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
-        parentItem = self.rootItem if not parent.isValid() else parent.internalPointer()
-        childItem = parentItem.child(row)
+        parent_item = self.rootItem if not parent.isValid() else parent.internalPointer()
+        child_item = parent_item.child(row)
 
-        if childItem:
-            return self.createIndex(row, column, childItem)
+        if child_item:
+            return self.createIndex(row, column, child_item)
 
         return QModelIndex()
 

@@ -180,11 +180,20 @@ def load_gte_configs():
         "merge_nearby_nodes": {"id": "merge_nearby_nodes", "text": "Merge Nearby Nodes", "value": 1},
         "prune_dangling_edges": {"id": "prune_dangling_edges", "text": "Prune Dangling Edges", "value": 1},
         "remove_disconnected_segments": {"id": "remove_disconnected_segments", "text": "Remove Disconnected Segments (set size)", "value": 1},
-        "remove_self_loops": {"id": "remove_self_loops", "text": "Remove Self Loops", "value": 1},
-        "remove_object_size": {"id": "remove_object_size", "text": "", "value": 500},
+        "remove_self_loops": {"id": "remove_self_loops", "text": "Remove Self Loops", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
+        # "remove_object_size": {"id": "remove_object_size", "text": "", "value": 500},
         "is_multigraph": {"id": "is_multigraph", "text": "Is Multigraph?", "value": 0},
-        "has_weights": {"id": "has_weights", "text": "Add Weights", "value": 0},
-        "weight_type": {"id": "weight_type", "text": "", "value": 'DIA'},
+        "has_weights": {"id": "has_weights", "text": "Add Weights", "value": 0,
+                        "items": [
+                            {"id": "DIA", "text": "by diameter", "value": 1},
+                            {"id": "AREA", "text": "by area", "value": 0},
+                            {"id": "LEN", "text": "by length", "value": 0},
+                            {"id": "ANGLE", "text": "by angle", "value": 0},
+                            {"id": "INV-LEN", "text": "by inverse-length", "value": 0},
+                            {"id": "FIX-CON", "text": "by conductance", "value": 0},
+                            {"id": "RES", "text": "by resistance", "value": 0},
+                        ]},
+        # "weight_type": {"id": "weight_type", "text": "", "value": 'DIA'},
         "display_node_id": {"id": "display_node_id", "text": "Display Node ID", "value": 0},
         "export_edge_list": {"id": "export_edge_list", "text": "Export Edge List", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "text": "Export as gexf", "value": 0},
@@ -206,10 +215,14 @@ def load_gte_configs():
         options_gte["remove_disconnected_segments"]["value"] = int(
             config.get('extraction-settings', 'remove_disconnected_segments'))
         options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
-        options_gte["remove_object_size"]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
+        options_gte["remove_self_loops"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
+        # options_gte["remove_object_size"]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["is_multigraph"]["value"] = int(config.get('extraction-settings', 'is_multigraph'))
         options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
-        options_gte["weight_type"]["value"] = str(config.get('extraction-settings', 'weight_type'))
+        # options_gte["weight_type"]["value"] = str(config.get('extraction-settings', 'weight_type'))
+        weight_type = str(config.get('extraction-settings', 'weight_type'))
+        for i in range(len(options_gte["has_weights"]["items"])):
+            options_gte["has_weights"]["items"][i]["value"] = 1 if options_gte["has_weights"]["items"][i]["id"] == weight_type else 0
         options_gte["display_node_id"]["value"] = int(config.get('extraction-settings', 'display_node_id'))
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))

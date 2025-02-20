@@ -71,7 +71,10 @@ class MainController(QObject):
             options_img = load_img_configs()
             option_gte = load_gte_configs()
             options_gtc = load_gtc_configs()
-            # self.imgListModel = CheckBoxModel(list(options_img.values()))
+            print(option_gte.values())
+            print("\n")
+            print(options_gtc.values())
+
             self.gteListModel = CheckBoxModel(list(option_gte.values()))
             self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
 
