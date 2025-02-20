@@ -14,12 +14,22 @@ TreeView {
     }
 
     ButtonGroup {
-        id: btnGroup
+        id: btnGrpWeights
     }
 
     // Array to store selected IDs
-    property var selectedIds: []
-    ListModel { id: selectedIdsModel } // Store selected IDs
+    property var selectedIds: [] //['has_weights','merge_nearby_nodes','prune_dangling_edges','remove_disconnected_segments','remove_self_loops']
+    property string selectedRdoId: "DIA"
+    property int removeObjectSize: 500
+    property int idRole: (Qt.UserRole + 1)
+    property int textRole: (Qt.UserRole + 2)
+    property int valueRole: (Qt.UserRole + 3)
+
+    Component.onCompleted:  {
+        if (selectedIds.length === 0) {  // Ensure it runs only once
+            initializeSelectedIds();
+        }
+    }
 
 
     delegate: Item {
@@ -63,7 +73,6 @@ TreeView {
                     objectName: model.id
                     text: model.text
                     //checked: model.value === 1
-                    //onClicked: {console.log(model.text)}
                     checked: selectedIds.includes(model.id)  // Restore selection
                     onClicked: toggleSelection(model.id)
                 }
@@ -76,11 +85,10 @@ TreeView {
                     id: rdoButton
                     objectName: model.id
                     text: model.text
-                    ButtonGroup.group: btnGroup
+                    ButtonGroup.group: btnGrpWeights
                     //checked: model.value === 1
-                    //onClicked: {console.log(model.text)}
-                    checked: selectedIds.includes(model.id)  // Restore selection
-                    onClicked: toggleSelection(model.id)
+                    checked: model.id === selectedRdoId  // Restore selection
+                    onClicked: toggleSelectedRdoId(model.id)
                 }
             }
 
@@ -91,7 +99,8 @@ TreeView {
                     id: txtField
                     objectName: model.id
                     width: 80
-                    text: model.value
+                    text: removeObjectSize
+                    onEditingFinished: changeRemoveObjectSize(txtField.text)
                 }
             }
 
@@ -99,29 +108,54 @@ TreeView {
     }
 
 
+    function changeRemoveObjectSize(value) {
+        removeObjectSize = value;
+        //console.log(value);
+    }
+
+    function toggleSelectedRdoId(id) {
+        selectedRdoId = id;
+        //console.log(id)
+    }
+
     // Toggle selection in the selectedIds array
-        function toggleSelection(id) {
-            let index = selectedIds.indexOf(id);
-            if (index === -1) {
-                selectedIds.push(id);  // Add to selection
-            } else {
-                selectedIds.splice(index, 1);  // Remove from selection
+    function toggleSelection(id) {
+        let index = selectedIds.indexOf(id);
+        if (index === -1) {
+            selectedIds.push(id);  // Add to selection
+        } else {
+            selectedIds.splice(index, 1);  // Remove from selection
+        }
+        //console.log(selectedIds)
+    }
+
+    // Restore previous selection after collapsing/expanding
+    function restoreSelection() {
+        selectionModel.clear();  // Clear current selection
+
+        for (let row = 0; row < model.rowCount(); row++) {
+            let index = model.index(row, 0);
+            let item_id = model.data(index, idRole);  // IdRole
+            if (selectedIds.includes(item_id)) {
+                selectionModel.select(index, ItemSelectionModel.Select);  // Reselect previously selected items
+            }
+            //console.log(item_id)
+        }
+    }
+
+    function initializeSelectedIds() {
+        selectedIds = [];  // Reset in case it's called multiple times
+        for (let row = 0; row < model.rowCount(); row++) {
+
+            let index = model.index(row, 0);
+            let item_id = model.data(index, idRole);  // IdRole
+            let item_val = model.data(index, valueRole); // ValueRole
+
+            if (item_val === 1) {  // Check if value is 1 (pre-selected)
+                selectedIds.push(item_id);
             }
         }
-
-        // Restore previous selection after collapsing/expanding
-        function restoreSelection() {
-            selectionModel.clear();  // Clear current selection
-
-            for (let row = 0; row < treeView.model.rowCount(); row++) {
-                let index = treeView.model.index(row, 0);
-                let item = treeView.model.data(index, gteTreeModel.IdRole);  // Access the ID with custom role
-                console.log(index)
-                console.log(item)
-                if (selectedIds.includes(item)) {
-                    selectionModel.select(index, ItemSelectionModel.Select);  // Reselect previously selected items
-                }
-            }
-        }
+        //console.log("Pre-selected IDs:", selectedIds);
+    }
 
 }

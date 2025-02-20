@@ -87,7 +87,7 @@ class TreeModel(QAbstractItemModel):
             return item.data(1)  # text
         elif role == self.ValueRole:
             return item.data(2)  # value
-        return None
+        return "Whatever"
 
     def parent(self, index):
         """ Returns the parent index of a given child index. """
