@@ -28,6 +28,9 @@ TreeView {
     Component.onCompleted:  {
         if (selectedIds.length === 0) {  // Ensure it runs only once
             initializeSelectedIds();
+            // Use to activate default selections
+            treeView.toggleExpanded(0)
+            treeView.toggleExpanded(0)
         }
     }
 

@@ -7,7 +7,6 @@ from gui_controller import MainController
 from gui_image_provider import ImageProvider
 
 
-# Assuming TreeModel and TableModel are properly implemented
 class MainWindow(QObject):
     def __init__(self):
         super().__init__()
@@ -18,9 +17,6 @@ class MainWindow(QObject):
         controller = MainController()
         # Register Image Provider
         self.image_provider = ImageProvider(controller)
-
-        # Load Default Configs
-        # controller.load_default_configs()
 
         # Test Image
         # img_path = "../../../../../datasets/InVitroBioFilm.png"

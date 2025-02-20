@@ -1,5 +1,4 @@
 import cv2
-import json
 import numpy as np
 from PySide6.QtCore import QObject,Signal, Slot
 from PySide6.QtGui import QImage
@@ -49,13 +48,6 @@ class MainController(QObject):
         # Load Model Data
         self._load_model_data()
 
-        # Load Default Configs
-        # self.gui_txt = load_gui_configs()
-        # self.configs_data = {}
-        ## self.threadpool = QtCore.QThreadPool()
-        # self.worker = Worker(0, None)
-        # self._load_default_configs()
-
     def _load_model_data(self):
         """Loads data into models"""
         try:
@@ -66,7 +58,7 @@ class MainController(QObject):
 
             # 2.
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
-            file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+            # file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
