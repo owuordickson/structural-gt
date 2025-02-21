@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 
 ColumnLayout {
@@ -107,6 +108,7 @@ ColumnLayout {
                         Layout.preferredWidth: 125
                         Layout.preferredHeight: 32
                         text: ""
+                        onClicked: openFileDialog()
 
                         Rectangle {
                             anchors.fill: parent
@@ -258,6 +260,7 @@ ColumnLayout {
         }
     }
 
+
     Rectangle {
         id: navControls
         height: 32
@@ -296,7 +299,21 @@ ColumnLayout {
         }
     }
 
+    FileDialog {
+        id: fileDialog
+        title: "Open file"
+        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
+        onAccepted: {
+            //console.log("Selected file:", fileDialog.selectedFile)
+            mainController.process_selected_file(fileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
+    }
 
+
+    function openFileDialog() {
+        fileDialog.open()
+    }
     // Save Button
     //imageProcessor.adjust_brightness_contrast(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
     /*Button {

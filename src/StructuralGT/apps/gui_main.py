@@ -1313,7 +1313,7 @@ class MainUI(QtWidgets.QMainWindow):
         try:
             self.wait_flag = True
             g_obj = self.graph_objs[self.current_obj_index]
-            g_obj.imp.output_path = self.txt_out_path.text()
+            g_obj.imp.output_dir = self.txt_out_path.text()
             self.disable_all_tasks()
             options_img = self._fetch_img_options()
             options_gte = self._fetch_gte_options()
@@ -1454,7 +1454,7 @@ class MainUI(QtWidgets.QMainWindow):
 
                 self.graph_objs[self.current_obj_index].reset()
                 im_obj = self.graph_objs[self.current_obj_index].imp
-                im_obj.output_path = self.txt_out_path.text()
+                im_obj.output_dir = self.txt_out_path.text()
                 im_obj.configs = self._fetch_img_options()
                 im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
 
@@ -2279,7 +2279,7 @@ class Worker(QtCore.QThread):
                     self.signals.finished.emit(3, 0, [])
                     return
                 graph_obj.configs = options_gte
-                graph_obj.imp.output_path = out_path
+                graph_obj.imp.output_dir = out_path
 
                 metrics_obj = GraphAnalyzer(graph_obj, options_gtc)
                 metrics_obj.add_listener(self.update_progress)

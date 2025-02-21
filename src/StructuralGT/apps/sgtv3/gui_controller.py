@@ -1,3 +1,5 @@
+import os
+import sys
 import cv2
 import numpy as np
 from PySide6.QtCore import QObject,Signal, Slot
@@ -9,6 +11,9 @@ from gui_table_model import TableModel
 from gui_list_model import CheckBoxModel
 
 from src.StructuralGT.configs.config_loader import load_gtc_configs, load_gte_configs, load_img_configs
+from src.StructuralGT.SGT.image_processor import ImageProcessor
+from src.StructuralGT.SGT.graph_extractor import GraphExtractor
+from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
 
 
 class MainController(QObject):
@@ -230,6 +235,38 @@ class MainController(QObject):
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
         self.enableRectangularSelectionSignal.emit(enabled)
+
+    @Slot(str)
+    def process_selected_file(self, img_path):
+        """"""
+        if not img_path:
+            print("No file selected.")
+            return
+
+        # Convert QML "file:///" path format to a proper OS path
+        if img_path.startswith("file:///"):
+            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
+                img_path = img_path[8:]
+            else:  # macOS/Linux (remove "file://")
+                img_path = img_path[7:]
+        img_path = os.path.normpath(img_path)  # Normalize path
+
+        # Check if file exists
+        if not os.path.exists(img_path):
+            print(f"Error: File does not exist - {img_path}")
+            return
+
+        # Try reading the image
+        try:
+            self.analyze_objs = {}
+            img_dir, filename = os.path.split(img_path)
+            im_obj = ImageProcessor(img_path, img_dir)
+            g_obj = GraphAnalyzer(GraphExtractor(im_obj))
+            self.analyze_objs[filename] = g_obj
+
+            # self.imageChangedSignal.emit(0, img_path)  # TO BE DELETED
+        except Exception as e:
+            print(f"Error loading image: {str(e)}")
 
     @staticmethod
     def q_image_to_cv(q_image):

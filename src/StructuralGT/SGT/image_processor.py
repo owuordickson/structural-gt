@@ -24,17 +24,17 @@ class ImageProcessor:
 
     Args:
         img_path (str): input image path.
-        out_path (str): directory path for storing results.
+        out_dir (str): directory path for storing results.
         img (MatLike): processed image.
     """
 
-    def __init__(self, img_path, out_path, img_dim=2, img=None):
+    def __init__(self, img_path, out_dir, img_dim=2, img=None):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
         Args:
             img_path (str): input image path.
-            out_path (str): directory path for storing results.
+            out_dir (str): directory path for storing results.
             img_dim (int): image dimension (2D or 3D).
             img (MatLike): processed image.
 
@@ -70,9 +70,9 @@ class ImageProcessor:
         """
         self.configs = load_img_configs()  # image processing parameters and options.
         self.img_path = img_path
-        self.output_path = out_path
+        self.output_dir = out_dir
         self.img_dim = img_dim
-        self.img_raw = ImageProcessor.load_img_from_file(img_path, img_dim)
+        self.img_raw = ImageProcessor.load_img_from_file(img_path)
         if img is None:
             self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         else:
@@ -272,10 +272,10 @@ class ImageProcessor:
             img_dir, filename = os.path.split(self.img_path)
         else:
             img_dir, filename = os.path.split(image_path)
-        if self.output_path == '':
+        if self.output_dir == '':
             output_dir = img_dir
         else:
-            output_dir = self.output_path
+            output_dir = self.output_dir
 
         filename = re.sub('.png', '', filename)
         filename = re.sub('.tif', '', filename)
@@ -426,15 +426,14 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_file(file: str, img_dim: int):
+    def load_img_from_file(file: str):
         """
         Read image and save it as an OpenCV object.
 
         :param file: file path.
-        :param img_dim: image dimension (2D or 3D).
         :return:
         """
-        print(f"Do something with ImgDim={img_dim}.")
+        # print(f"Do something with ImgDim={img_dim}.")
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
 
