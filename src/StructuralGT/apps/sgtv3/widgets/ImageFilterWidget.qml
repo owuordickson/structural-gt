@@ -20,7 +20,7 @@ Repeater {
             objectName: model.id
             Layout.preferredWidth: cbxWidthSize
             text: model.text
-            checked: mainController.load_img_setting(model.id)
+            checked: mainController.get_selected_img_val(model.id)
         }
 
         Loader {
@@ -51,7 +51,7 @@ Repeater {
                     from: model.minValue
                     to: model.maxValue
                     stepSize: model.stepSize
-                    value: mainController.load_img_setting_val(model.id)
+                    value: mainController.get_selected_img_data(model.id)
                 }
             }
         }
@@ -71,7 +71,7 @@ Repeater {
                     from: model.minValue
                     to: model.maxValue
                     stepSize: model.stepSize
-                    value: mainController.load_img_setting_val(model.id)
+                    value: mainController.get_selected_img_data(model.id)
                 }
 
                 Label {

@@ -11,7 +11,7 @@ ColumnLayout {
     property int spbWidthSize: 170
     property int sldWidthSize: 140
     property int lblWidthSize: 50
-    property int checkedBtnId: mainController.load_img_setting_val("threshold_type")
+    property int checkedBtnId: mainController.get_selected_img_data("threshold_type")
 
     ButtonGroup {
         id: btnGroup
@@ -36,7 +36,7 @@ ColumnLayout {
             from: 1
             to: 999
             stepSize: 2
-            value: mainController.load_img_setting_val("adaptive_local_threshold_value")
+            value: mainController.get_selected_img_data("adaptive_local_threshold_value")
             enabled: rdoAdaptive.checked
             editable: true  // Allow user input
             onValueChanged: {
@@ -64,7 +64,7 @@ ColumnLayout {
             from: 1
             to: 255
             stepSize: 1
-            value: mainController.load_img_setting_val("global_threshold_value")
+            value: mainController.get_selected_img_data("global_threshold_value")
             enabled: rdoGlobal.checked
         }
 
@@ -87,6 +87,6 @@ ColumnLayout {
     CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
-        checked: mainController.load_img_setting("apply_dark_foreground")
+        checked: mainController.get_selected_img_val("apply_dark_foreground")
     }
 }

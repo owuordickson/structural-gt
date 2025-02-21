@@ -111,7 +111,7 @@ class MainController(QObject):
             print(f"Error loading GUI model data: {e}")
 
     @Slot(str, result=bool)
-    def load_img_setting(self, item_name):
+    def get_selected_img_val(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
             return False
@@ -123,7 +123,7 @@ class MainController(QObject):
             return True if val == 1 else False
 
     @Slot(str, result=float)
-    def load_img_setting_val(self, item_name):
+    def get_selected_img_data(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
             return False
@@ -138,7 +138,7 @@ class MainController(QObject):
             return val
 
     @Slot(result=bool)
-    def load_gte_setting(self):
+    def get_selected_gte_val(self):
         if len(self.analyze_objs) > 0:
             return False
         else:
@@ -146,7 +146,7 @@ class MainController(QObject):
             options_gte = load_gte_configs()
 
     @Slot(str, result=bool)
-    def load_gtc_setting(self, item_name):
+    def get_selected_gtc_val(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
             return False
@@ -157,6 +157,14 @@ class MainController(QObject):
             val = options_gtc[item_name]["value"]
             # print(val)
             return True if val == 1 else False
+
+    @Slot()
+    def apply_img_ctrl_changes(self):
+        """Retrieve settings from model and send to Python."""
+        print(self.imgControlModel.list_data)
+        updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
+        print("Updated Settings:", updated_values)
+        # self.settingsUpdated.emit(updated_values)  # Emit values for further processing
 
     @Slot(result=bool)
     def display_image(self):

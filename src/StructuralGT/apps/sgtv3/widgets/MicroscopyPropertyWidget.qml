@@ -32,7 +32,7 @@ Repeater {
             Layout.fillWidth: true
             Layout.minimumWidth: txtWidthSize
             Layout.rightMargin: 10
-            text: mainController.load_img_setting_val(model.id)
+            text: mainController.get_selected_img_data(model.id)
         }
     }
 }

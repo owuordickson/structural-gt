@@ -15,7 +15,7 @@ Repeater {
             objectName: model.id
             //Layout.preferredWidth: 100
             text: model.text
-            checked: mainController.load_gtc_setting(model.id)
+            checked: mainController.get_selected_gtc_val(model.id)
         }
     }
 

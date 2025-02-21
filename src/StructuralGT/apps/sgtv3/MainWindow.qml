@@ -94,7 +94,7 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            brightnessControl.applyChanges()
+            mainController.apply_img_ctrl_changes()
             dialogBrightnessCtrl.close()
         }
 

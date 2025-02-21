@@ -10,33 +10,7 @@ Item {
 
     property int spbWidthSize: 170
     property int lblWidthSize: 100
-
-    // Function to get values from SpinBoxes and send to MainController
-    function applyChanges() {
-        let brightness_val = 0;
-        let contrast_val = 0;
-
-        // Iterate over children inside the ColumnLayout
-        for (let i = 0; i < brightnessCtrlLayout.children.length; i++) {
-            let elderChild = brightnessCtrlLayout.children[i];
-
-            if (elderChild.objectName === "ctrlRowLayout") {
-
-                // Loop through each child of the RowLayout
-                for (let j = 0; j < elderChild.children.length; j++) {
-                    let child = elderChild.children[j];
-
-                    if (child.objectName === "spbBrightness") {
-                        brightness_val = child.value;
-                    } else if (child.objectName === "spbContrast") {
-                        contrast_val = child.value;
-                    }
-                }
-            }
-        }
-        //console.log("Brightness:", brightness_val, "Contrast:", contrast_val);
-        mainController.adjust_brightness_contrast(brightness_val, contrast_val)
-    }
+    property int valueRole: Qt.UserRole + 4
 
 
     ColumnLayout {
@@ -67,11 +41,21 @@ Item {
                     from: -100
                     to: 100
                     stepSize: 1
-                    value: mainController.load_img_setting_val(model.id)
+                    value: mainController.get_selected_img_data(model.id)
+                    onValueChanged: updateValue(value)
+                    onFocusChanged: updateValue(value)
+                    onEditableChanged: updateValue(value)
+                    //onActiveFocusChanged: if (!activeFocus) updateValue(value)
                 }
 
-            }
+                function updateValue(val) {
+                    var index = imgControlModel.index(model.index, 0);
+                    imgControlModel.setData(index, val, valueRole);
+                }
 
+
+            }
         }
+
     }
 }
