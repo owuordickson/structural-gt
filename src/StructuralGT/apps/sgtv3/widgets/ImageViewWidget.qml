@@ -17,7 +17,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         color: "transparent"
-        visible: !mainController.is_image_loaded()
+        visible: !mainController.display_image()
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -162,7 +162,7 @@ ColumnLayout {
         Layout.fillHeight: true
         color: "transparent"
         clip: true  // Ensures only the selected area is visible
-        visible: mainController.is_image_loaded()
+        visible: mainController.display_image()
 
         /*ScrollView {
             width: parent.width
@@ -177,7 +177,7 @@ ColumnLayout {
             scale: zoomFactor
             transformOrigin: Item.Center
             fillMode: Image.PreserveAspectFit
-            source: mainController.get_pixmap()
+            source: ""
         }
 
         //}
@@ -268,7 +268,7 @@ ColumnLayout {
         Layout.fillWidth: true
         color: "transparent"
         enabled: false
-        visible: mainController.is_image_loaded()
+        visible: mainController.display_image()
 
 
         RowLayout {
@@ -314,6 +314,8 @@ ColumnLayout {
     function openFileDialog() {
         fileDialog.open()
     }
+
+
     // Save Button
     //imageProcessor.adjust_brightness_contrast(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
     /*Button {
@@ -345,7 +347,11 @@ ColumnLayout {
         target: mainController
 
         function onImageChangedSignal(src, newPath) {
-            imgView.source = mainController.get_pixmap(); // Force refresh
+            // Force refresh
+            imgView.source = mainController.get_pixmap();
+            welcomeContainer.visible = !mainController.display_image();
+            imgContainer.visible = mainController.display_image();
+            navControls.visible = mainController.display_image()
             zoomFactor = 1.0
             //console.log(src);
         }

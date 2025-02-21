@@ -149,7 +149,7 @@ class MainController(QObject):
             return True if val == 1 else False
 
     @Slot(result=bool)
-    def is_image_loaded(self):
+    def display_image(self):
         return self.img_loaded
 
     @Slot(result=bool)
@@ -264,7 +264,7 @@ class MainController(QObject):
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.analyze_objs[filename] = g_obj
 
-            # self.imageChangedSignal.emit(0, img_path)  # TO BE DELETED
+            self.imageChangedSignal.emit(0, img_path)  # TO BE DELETED
         except Exception as e:
             print(f"Error loading image: {str(e)}")
 
