@@ -158,9 +158,10 @@ class ImageProcessor:
             auto_lvl_disk = disk(options.autolevel_blurring_size)
             filtered_img = autolevel(filtered_img, footprint=auto_lvl_disk)
 
-        # applying a scharr filter, and then taking that image and weighting it 25% with the original
-        # this should bring out the edges without separating each "edge" into two separate parallel ones
+        # applying a scharr filter,
         if options.apply_scharr == 1:
+            # applying a scharr filter, and then taking that image and weighting it 25% with the original
+            # this should bring out the edges without separating each "edge" into two separate parallel ones
             d_depth = cv2.CV_16S
             grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
             grad_y = cv2.Scharr(filtered_img, d_depth, 0, 1)

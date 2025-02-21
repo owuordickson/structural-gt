@@ -164,11 +164,11 @@ Rectangle {
             }
         }
 
-        function onImageChangedSignal(src, newPath) {
-            if (newPath === "undo") {
-                btnUndo.visible = false
-            } else {
+        function onShowUnCroppingToolSignal(allow) {
+            if (allow) {
                 btnUndo.visible = true
+            } else {
+                btnUndo.visible = false
             }
         }
     }

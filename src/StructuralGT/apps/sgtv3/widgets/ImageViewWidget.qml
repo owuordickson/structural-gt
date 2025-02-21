@@ -348,6 +348,7 @@ ColumnLayout {
             imgContainer.visible = mainController.display_image();
             navControls.visible = mainController.display_image();
             zoomFactor = 1.0;
+            lblNavInfo.text = mainController.get_img_nav_location()
             //console.log(src);
         }
 

@@ -1,6 +1,5 @@
 import os
 import sys
-import cv2
 import logging
 import numpy as np
 from PySide6.QtCore import QObject,Signal, Slot
@@ -22,8 +21,8 @@ class MainController(QObject):
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
+    showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
-    adjustBrightnessContrastSignal = Signal(float, float)
 
     def __init__(self):
         super().__init__()
@@ -163,6 +162,10 @@ class MainController(QObject):
     def display_image(self):
         return self.img_loaded
 
+    @Slot(result=str)
+    def get_img_nav_location(self):
+        return f"{(self.current_obj_index + 1)} / {len(self.analyze_objs)}"
+
     @Slot(result=bool)
     def is_app_activated(self):
         return self.app_active
@@ -212,6 +215,7 @@ class MainController(QObject):
             # Emit signal to update UI with new image
             self.changeImageSignal.emit(1)
             self.showCroppingToolSignal.emit(False)
+            self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
             # print(f"Error cropping image: {err}")
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
@@ -220,6 +224,7 @@ class MainController(QObject):
     def undo_cropping(self, undo: bool = True):
         if undo:
             self.changeImageSignal.emit(4)
+            self.showUnCroppingToolSignal.emit(False)
 
     @Slot( float, float)
     def adjust_brightness_contrast(self, brightness_level, contrast_level):
@@ -228,6 +233,7 @@ class MainController(QObject):
             a_obj = self._get_current_obj()
             img_cv = a_obj.g_obj.imp.img.copy()
             a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
+            print(f"{brightness_level} brightness and {contrast_level} contrast")
 
             """img_cv = a_obj.g_obj.imp.img
             # Apply brightness and contrast adjustments

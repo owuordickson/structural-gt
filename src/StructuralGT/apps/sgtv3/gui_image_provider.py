@@ -27,7 +27,6 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = a_obj.g_obj.imp.img
             else:
                 img_cv = a_obj.g_obj.imp.img
-                # self.pixmap = self.pixmap_original
             img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
             self.img_controller.img_loaded = True
