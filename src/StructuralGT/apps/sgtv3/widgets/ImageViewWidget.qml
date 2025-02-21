@@ -285,6 +285,13 @@ ColumnLayout {
                 //Layout.margins: 5
             }
 
+            Label {
+                id: lblNavInfo
+                //text: "1/1"
+                text: ""
+                Layout.alignment: Qt.AlignCenter
+            }
+
             Button {
                 id: btnNext
                 text: ""
@@ -346,13 +353,13 @@ ColumnLayout {
     Connections {
         target: mainController
 
-        function onImageChangedSignal(src, newPath) {
+        function onImageChangedSignal() {
             // Force refresh
             imgView.source = mainController.get_pixmap();
             welcomeContainer.visible = !mainController.display_image();
             imgContainer.visible = mainController.display_image();
-            navControls.visible = mainController.display_image()
-            zoomFactor = 1.0
+            navControls.visible = mainController.display_image();
+            zoomFactor = 1.0;
             //console.log(src);
         }
 

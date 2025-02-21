@@ -1,10 +1,11 @@
 import os
 import sys
 import cv2
+import logging
 import numpy as np
 from PySide6.QtCore import QObject,Signal, Slot
-from PySide6.QtGui import QImage
-from PIL import ImageQt  # Import ImageQt for conversion
+from PySide6.QtGui import QImage, QPixmap
+from PIL import Image, ImageQt  # Import ImageQt for conversion
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
@@ -18,7 +19,8 @@ from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
 
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
-    imageChangedSignal = Signal(int, str)
+    changeImageSignal = Signal(int, QPixmap)
+    imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
@@ -33,6 +35,7 @@ class MainController(QObject):
         # Initialize flags
         self.error_flag = False
         self.wait_flag = False
+        self.status_msg = {"title": "", "message": ""}
 
         # Create graph objects
         self.analyze_objs = {}
@@ -194,21 +197,28 @@ class MainController(QObject):
             # Crop the selected area
             img_cropped = img_pil.crop((x, y, x + width, y + height))
 
+            # Convert cropped PIL Image back to QImage
+            img_q_image = ImageQt.toqimage(img_cropped)
+
+            # Convert QImage to QPixmap
+            img_q_pixmap = QPixmap.fromImage(img_q_image)
+
             # Save cropped image
-            cropped_path = "assets/cropped_image.png"
-            img_cropped.save(cropped_path)
+            # cropped_path = "assets/cropped_image.png"
+            # img_cropped.save(cropped_path)
             # print(f"Cropped image saved: {cropped_path}")
 
             # Emit signal to update UI with new image
-            self.imageChangedSignal.emit(1, cropped_path)
+            self.changeImageSignal.emit(1, img_q_pixmap)
             self.showCroppingToolSignal.emit(False)
-        except Exception as e:
-            print(f"Error cropping image: {e}")
+        except Exception as err:
+            # print(f"Error cropping image: {err}")
+            logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            self.imageChangedSignal.emit(3, "undo")
+            self.changeImageSignal.emit(3, None)
 
     @Slot(float, float)
     def brightness_contrast_control(self, brightness, contrast):
@@ -219,18 +229,21 @@ class MainController(QObject):
     def adjust_brightness_contrast(self, q_image, brightness, contrast):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
         img_pil = ImageQt.fromqimage(q_image)
-        img = MainController.q_image_to_cv(img_pil)
+        img_cv = MainController.q_image_to_cv(img_pil)
 
         # Apply brightness and contrast adjustments
         brightness = np.clip(brightness, -100, 100)
         contrast = np.clip(contrast, 0.1, 3.0)
 
-        img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-        processed_path = "assets/processed_image.png"
-        cv2.imwrite(processed_path, img)
-        print(f"Processed Image Saved: {processed_path}")
+        img_cv = cv2.convertScaleAbs(img_cv, alpha=contrast, beta=brightness)
+        img_cv = Image.fromarray(img_cv)
+        img_q_pixmap = ImageQt.toqpixmap(img_cv)
 
-        self.imageChangedSignal.emit(3, processed_path)
+        # processed_path = "assets/processed_image.png"
+        # cv2.imwrite(processed_path, img)
+        # print(f"Processed Image Saved: {processed_path}")
+
+        self.changeImageSignal.emit(2, img_q_pixmap)
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
@@ -240,7 +253,9 @@ class MainController(QObject):
     def process_selected_file(self, img_path):
         """"""
         if not img_path:
-            print("No file selected.")
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = "No file selected."
+            self.error_flag = True
             return
 
         # Convert QML "file:///" path format to a proper OS path
@@ -253,20 +268,35 @@ class MainController(QObject):
 
         # Check if file exists
         if not os.path.exists(img_path):
-            print(f"Error: File does not exist - {img_path}")
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = f"File does not exist - {img_path}. Try again."
+            self.error_flag = True
             return
 
         # Try reading the image
         try:
-            self.analyze_objs = {}
             img_dir, filename = os.path.split(img_path)
-            im_obj = ImageProcessor(img_path, img_dir)
+            out_dir_name = "sgt_files"
+            out_dir = os.path.join(img_dir, out_dir_name)
+            out_dir = os.path.normpath(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
+
+            self.analyze_objs = {}
+            im_obj = ImageProcessor(img_path, out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.analyze_objs[filename] = g_obj
+            self.error_flag = False
 
-            self.imageChangedSignal.emit(0, img_path)  # TO BE DELETED
-        except Exception as e:
-            print(f"Error loading image: {str(e)}")
+            img_cv = Image.fromarray(im_obj.img)
+            q_img = ImageQt.toqpixmap(img_cv)
+            self.changeImageSignal.emit(0, q_img)
+
+        except Exception as err:
+            # print(f"Error processing image: {e}")
+            logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = f"Error loading/processing image. Try again."
+            self.error_flag = True
 
     @staticmethod
     def q_image_to_cv(q_image):
