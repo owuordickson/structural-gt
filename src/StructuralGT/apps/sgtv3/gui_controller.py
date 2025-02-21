@@ -163,8 +163,16 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         print(self.imgControlModel.list_data)
         updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
-        print("Updated Settings:", updated_values)
+        brightness = 0
+        contrast = 0
+        for item in updated_values:
+            if item[0] == "brightness_level":
+                brightness = item[1]
+            if item[0] == "contrast_level":
+                contrast = item[1]
+        # print("Updated Settings:", updated_values)
         # self.settingsUpdated.emit(updated_values)  # Emit values for further processing
+        self.adjust_brightness_contrast(brightness, contrast)
 
     @Slot(result=bool)
     def display_image(self):
