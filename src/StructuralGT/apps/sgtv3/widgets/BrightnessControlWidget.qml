@@ -35,7 +35,7 @@ Item {
             }
         }
         //console.log("Brightness:", brightness_val, "Contrast:", contrast_val);
-        mainController.brightness_contrast_control(brightness_val, contrast_val)
+        mainController.adjust_brightness_contrast(brightness_val, contrast_val)
     }
 
 

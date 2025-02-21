@@ -100,6 +100,10 @@ class ImageProcessor:
         else:
             self.pixel_width = 1  # * (10**-9)  # 1 nanometer
 
+    def undo_cropping(self):
+        """"""
+        self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
+
     def process_img(self, image: MatLike):
         """
         Apply filters to image.

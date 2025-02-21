@@ -323,28 +323,16 @@ ColumnLayout {
     }
 
 
-    // Save Button
-    //imageProcessor.adjust_brightness_contrast(parseFloat(brightnessInput.text), parseFloat(contrastInput.text));
-    /*Button {
-        text: "Save Processed Image"
-        anchors.horizontalCenter: parent
-        onClicked: {
-            colorMatrix.grabToImage(function(result) {
-                if (result && result.image) {
-                    imageProcessor.save_image(result.image);
-                }
-            });
-        }
-    }*/
-
     function cropImage() {
 
         // Crop image through mainController
-        imgView.grabToImage(function(result) {
+        /*imgView.grabToImage(function(result) {
             if (result && result.image) {  // Ensure result is valid
                 mainController.crop_image(result.image, cropArea.x, cropArea.y, cropArea.width, cropArea.height);
             }
-        });
+        });*/
+        // Crop image through mainController
+        mainController.crop_image(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
 
         // Hide selection box
         cropArea.visible = false;
@@ -377,14 +365,6 @@ ColumnLayout {
             if (allow) {
                 cropImage();
             }
-        }
-
-        function onAdjustBrightnessContrastSignal(b_val, c_val) {
-            imgView.grabToImage(function(result) {
-                if (result && result.image) {  // Ensure result is valid
-                    mainController.adjust_brightness_contrast(result.image, b_val, c_val);
-                }
-            });
         }
 
     }

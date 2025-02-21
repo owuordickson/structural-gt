@@ -4,7 +4,6 @@ import cv2
 import logging
 import numpy as np
 from PySide6.QtCore import QObject,Signal, Slot
-from PySide6.QtGui import QImage, QPixmap
 from PIL import Image, ImageQt  # Import ImageQt for conversion
 
 from gui_tree_model import TreeModel
@@ -19,7 +18,7 @@ from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
 
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
-    changeImageSignal = Signal(int, QPixmap)
+    changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
@@ -39,7 +38,7 @@ class MainController(QObject):
 
         # Create graph objects
         self.analyze_objs = {}
-        self.current_obj_id = 0
+        self.current_obj_index = 0
 
         # Create Models
         self.graphPropsTableModel = None
@@ -55,6 +54,12 @@ class MainController(QObject):
 
         # Load Model Data
         self._load_model_data()
+
+    def _get_current_obj(self):
+        keys_list = list(self.analyze_objs.keys())
+        key_at_index = keys_list[self.current_obj_index]
+        a_obj = self.analyze_objs[key_at_index]
+        return a_obj
 
     def _load_model_data(self):
         """Loads data into models"""
@@ -112,7 +117,8 @@ class MainController(QObject):
         if len(self.analyze_objs) <= 0:
             return False
         else:
-            options_img = self.analyze_objs[self.current_obj_id].g_obj.imp.configs
+            a_obj = self._get_current_obj()
+            options_img = a_obj.g_obj.imp.configs
             # options_img = load_img_configs()
             val = options_img[item_name]["value"]
             return True if val == 1 else False
@@ -123,7 +129,8 @@ class MainController(QObject):
         if len(self.analyze_objs) <= 0:
             return False
         else:
-            options_img = self.analyze_objs[self.current_obj_id].g_obj.imp.configs
+            a_obj = self._get_current_obj()
+            options_img = a_obj.g_obj.imp.configs
             # options_img = load_img_configs()
             if options_img[item_name]["type"] == "image-filter":
                 val = options_img[item_name]["dataValue"]
@@ -145,7 +152,8 @@ class MainController(QObject):
         if len(self.analyze_objs) <= 0:
             return False
         else:
-            options_gtc = self.analyze_objs[self.current_obj_id].configs
+            a_obj = self._get_current_obj()
+            options_gtc = a_obj.configs
             # options_gtc = load_gtc_configs()
             val = options_gtc[item_name]["value"]
             # print(val)
@@ -184,32 +192,25 @@ class MainController(QObject):
     def perform_cropping(self, allowed):
         self.performCroppingSignal.emit(allowed)
 
-    @Slot(QImage, int, int, int, int)
-    def crop_image(self, q_image, x, y, width, height):
+    @Slot( int, int, int, int)
+    def crop_image(self, x, y, width, height):
         """Crop image using PIL and save it."""
         try:
-            # Convert QPixmap to QImage
-            # q_image = pixmap.toImage()
+            a_obj = self._get_current_obj()
+            img = Image.fromarray(a_obj.g_obj.imp.img)
+            q_img = ImageQt.toqpixmap(img)
 
             # Convert QImage to PIL Image
-            img_pil = ImageQt.fromqimage(q_image)
+            img_pil = ImageQt.fromqimage(q_img)
 
             # Crop the selected area
-            img_cropped = img_pil.crop((x, y, x + width, y + height))
-
-            # Convert cropped PIL Image back to QImage
-            img_q_image = ImageQt.toqimage(img_cropped)
-
-            # Convert QImage to QPixmap
-            img_q_pixmap = QPixmap.fromImage(img_q_image)
-
-            # Save cropped image
-            # cropped_path = "assets/cropped_image.png"
-            # img_cropped.save(cropped_path)
-            # print(f"Cropped image saved: {cropped_path}")
+            img_pil_crop = img_pil.crop((x, y, x + width, y + height))
+            img_cv = ImageProcessor.load_img_from_pil(img_pil_crop)
+            a_obj.g_obj.imp.img, a_obj.g_obj.imp.scale_factor = ImageProcessor.resize_img(512, img_cv)
+            a_obj.g_obj.reset()
 
             # Emit signal to update UI with new image
-            self.changeImageSignal.emit(1, img_q_pixmap)
+            self.changeImageSignal.emit(1)
             self.showCroppingToolSignal.emit(False)
         except Exception as err:
             # print(f"Error cropping image: {err}")
@@ -218,32 +219,27 @@ class MainController(QObject):
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            self.changeImageSignal.emit(3, None)
+            self.changeImageSignal.emit(4)
 
-    @Slot(float, float)
-    def brightness_contrast_control(self, brightness, contrast):
-        self.adjustBrightnessContrastSignal.emit(brightness, contrast)
-        # print(brightness+contrast)
-
-    @Slot(QImage, float, float)
-    def adjust_brightness_contrast(self, q_image, brightness, contrast):
+    @Slot( float, float)
+    def adjust_brightness_contrast(self, brightness_level, contrast_level):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
-        img_pil = ImageQt.fromqimage(q_image)
-        img_cv = MainController.q_image_to_cv(img_pil)
+        try:
+            a_obj = self._get_current_obj()
+            img_cv = a_obj.g_obj.imp.img.copy()
+            a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
 
-        # Apply brightness and contrast adjustments
-        brightness = np.clip(brightness, -100, 100)
-        contrast = np.clip(contrast, 0.1, 3.0)
+            """img_cv = a_obj.g_obj.imp.img
+            # Apply brightness and contrast adjustments
+            brightness = np.clip(brightness_level, -100, 100)
+            contrast = np.clip(contrast_level, 0.1, 3.0)
+            img_cv = cv2.convertScaleAbs(img_cv, alpha=contrast, beta=brightness)
+            a_obj.g_obj.imp.img_mod = img_cv"""
 
-        img_cv = cv2.convertScaleAbs(img_cv, alpha=contrast, beta=brightness)
-        img_cv = Image.fromarray(img_cv)
-        img_q_pixmap = ImageQt.toqpixmap(img_cv)
-
-        # processed_path = "assets/processed_image.png"
-        # cv2.imwrite(processed_path, img)
-        # print(f"Processed Image Saved: {processed_path}")
-
-        self.changeImageSignal.emit(2, img_q_pixmap)
+            self.changeImageSignal.emit(2)
+        except Exception as err:
+            # print(f"Error adjusting brightness/contrast of image: {err}")
+            logging.exception("Image Processing Error: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
@@ -285,11 +281,10 @@ class MainController(QObject):
             im_obj = ImageProcessor(img_path, out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.analyze_objs[filename] = g_obj
+            self.current_obj_index = 0
             self.error_flag = False
 
-            img_cv = Image.fromarray(im_obj.img)
-            q_img = ImageQt.toqpixmap(img_cv)
-            self.changeImageSignal.emit(0, q_img)
+            self.changeImageSignal.emit(0)
 
         except Exception as err:
             # print(f"Error processing image: {e}")
@@ -297,10 +292,3 @@ class MainController(QObject):
             self.status_msg["title"] = "File Error"
             self.status_msg["message"] = f"Error loading/processing image. Try again."
             self.error_flag = True
-
-    @staticmethod
-    def q_image_to_cv(q_image):
-        """ Converts QImage to OpenCV format (NumPy array). """
-        img = ImageQt.ImageQt(q_image)  # Convert QImage to PIL Image
-        img = img.convert("RGB")  # Ensure RGB format
-        return np.array(img)[:, :, ::-1]  # Convert PIL Image to OpenCV (BGR)
