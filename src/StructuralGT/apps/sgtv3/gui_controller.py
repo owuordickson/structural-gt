@@ -38,7 +38,7 @@ class MainController(QObject):
 
         # Create graph objects
         self.analyze_objs = {}
-        self.current_obj_index = 0
+        self.current_obj_index = -1
 
         # Create Models
         self.graphPropsTableModel = None
@@ -178,6 +178,18 @@ class MainController(QObject):
         a_obj.g_obj.imp.output_dir = folder_path
         self.imageChangedSignal.emit()
 
+    @Slot(int)
+    def load_image(self, index):
+        try:
+            self.current_obj_index = index
+            self.imgListTableModel.updateData(self.analyze_objs)
+            self.changeImageSignal.emit(0)
+        except Exception as err:
+            self.current_obj_index = -1
+            # print(f"Error loading GUI model data: {err}")
+            self.status_msg["message"] = f"Error loading image. Try again."
+            logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
+
     @Slot()
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
@@ -312,15 +324,12 @@ class MainController(QObject):
             im_obj = ImageProcessor(img_path, out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.analyze_objs[filename] = g_obj
-            self.current_obj_index = 0
+            index = (len(self.analyze_objs) - 1)
             self.error_flag = False
-
-            self.imgListTableModel.updateData(self.analyze_objs)
-            self.changeImageSignal.emit(0)
-
+            self.load_image(index)
         except Exception as err:
             # print(f"Error processing image: {e}")
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
             self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = f"Error loading/processing image. Try again."
+            self.status_msg["message"] = f"Error processing image. Try again."
             self.error_flag = True

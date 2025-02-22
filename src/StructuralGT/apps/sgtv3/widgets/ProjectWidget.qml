@@ -37,13 +37,21 @@ Item {
             Layout.topMargin: 5
             Layout.leftMargin: 2
             Layout.rightMargin: 2
+            rowSpacing: 2
+            //columnSpacing: 2
             model: imgListTableModel
             visible: imgListTableModel.rowCount() > 0 ? true : false
 
             delegate: Rectangle {
                 implicitWidth: tableView.width
                 implicitHeight: tblRowHeight
-                color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
+                //color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
+                color: "#ffffff"
+
+                MouseArea {
+                    anchors.fill: parent // Make the MouseArea cover the entire Rectangle
+                    onClicked: mainController.load_image(row)
+                }
 
                 RowLayout {
 
@@ -58,7 +66,6 @@ Item {
                         Image {
                             id: imgThumbnail
                             anchors.fill: parent
-                            //source: model.thumbnail ? model.thumbnail : ""  // Display QPixmap
                             source: "data:image/png;base64," + model.thumbnail  // Base64 encoded image
                         }
 
