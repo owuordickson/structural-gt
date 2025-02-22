@@ -8,6 +8,9 @@ Repeater {
     property int spbWidthSize: 170
     property int sldWidthSize: 140
     property int lblWidthSize: 50
+    property int valueRole: Qt.UserRole + 4
+    property int dataValueRole: Qt.UserRole + 6
+
 
     model: imgFilterModel
     delegate: RowLayout {
@@ -20,7 +23,17 @@ Repeater {
             objectName: model.id
             Layout.preferredWidth: cbxWidthSize
             text: model.text
-            checked: mainController.get_selected_img_val(model.id)
+            property bool isChecked: model.value === 1 ? true : false
+            checked: isChecked
+            onCheckedChanged: {
+                if (isChecked !== checked) {  // Only update if there is a change
+                    isChecked = checked
+                    let val = checked ? 1 : 0;
+                    var index = imgFilterModel.index(model.index, 0);
+                    imgFilterModel.setData(index, val, valueRole);
+                    mainController.apply_img_filter_changes()
+                }
+            }
         }
 
         Loader {
@@ -51,7 +64,10 @@ Repeater {
                     from: model.minValue
                     to: model.maxValue
                     stepSize: model.stepSize
-                    value: mainController.get_selected_img_data(model.id)
+                    value: model.dataValue
+                    onValueChanged: updateValue(value)
+                    onFocusChanged: updateValue(value)
+                    onEditableChanged: updateValue(value)
                 }
             }
         }
@@ -71,7 +87,9 @@ Repeater {
                     from: model.minValue
                     to: model.maxValue
                     stepSize: model.stepSize
-                    value: mainController.get_selected_img_data(model.id)
+                    property var currVal: model.dataValue
+                    value: currVal
+                    onValueChanged: updateValue(currVal, value)
                 }
 
                 Label {
@@ -80,6 +98,15 @@ Repeater {
                     text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
                     enabled: checkBox.checked
                 }
+            }
+        }
+
+        function updateValue(currVal, val) {
+            if (currVal !== val){
+                currVal = val;
+            var index = imgControlModel.index(model.index, 0);
+            imgFilterModel.setData(index, val, dataValueRole);
+            mainController.apply_img_filter_changes();
             }
         }
     }

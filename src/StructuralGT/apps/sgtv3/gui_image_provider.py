@@ -39,7 +39,9 @@ class ImageProvider(QQuickImageProvider):
         # '0' - Original image
         # '1' - Cropped image
         # '2' - Processed image
-        # '3' - Undo crop
+        # '3' - Binary image
+        # '4' - Extracted graph
+        # '5' - Undo crop
         if cmd == 0:
             # Original QPixmap image for first time
             self.select_image("")
@@ -50,7 +52,9 @@ class ImageProvider(QQuickImageProvider):
             # processed QPixmap image
             self.select_image("processed")
         elif cmd == 3:
-            self.select_image("graph")
+            self.select_image("binary")
         elif cmd == 4:
+            self.select_image("graph")
+        elif cmd == 5:
             # Undo cropping (load original image)
             self.select_image("un-crop")

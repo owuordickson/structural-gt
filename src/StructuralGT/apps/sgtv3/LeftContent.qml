@@ -14,7 +14,7 @@ Rectangle {
 
         TabBar {
             id: tabBar
-            currentIndex: 0
+            currentIndex: 2
             Layout.fillWidth: true
             TabButton { text: "Project" }
             TabButton { text: "Properties" }

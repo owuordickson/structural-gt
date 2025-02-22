@@ -195,7 +195,7 @@ ApplicationWindow {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         width: 240
-        height: 400
+        height: 500
 
         ColumnLayout {
             anchors.fill: parent
@@ -203,14 +203,13 @@ ApplicationWindow {
             GTWidget{}
         }
 
-        /*onAccepted: {
-            dialogController.accept()  // In Python side
-            dialog.close()
+        onAccepted: {
+            mainController.apply_gtc_changes();
+            dialogGTOptions.close()
         }
 
-        onRejected: {
-            dialogController.reject()
-            dialog.close()
+        /*onRejected: {
+            dialogGTOptions.close()
         }*/
     }
 

@@ -42,24 +42,18 @@ class MainController(QObject):
 
         # Create Models
         self.graphPropsTableModel = None
-        self.imgListTableModel = None
+        self.microscopyPropsModel = None
         self.imgPropsTableModel = None
+        self.imgListTableModel = None
 
         self.gteTreeModel = None
         self.gtcListModel = None
         self.imgBinFilterModel = None
         self.imgFilterModel = None
         self.imgControlModel = None
-        self.microscopyPropsModel = None
 
         # Load Model Data
         self._load_model_data()
-
-    def _get_current_obj(self):
-        keys_list = list(self.analyze_objs.keys())
-        key_at_index = keys_list[self.current_obj_index]
-        a_obj = self.analyze_objs[key_at_index]
-        return a_obj
 
     def _load_model_data(self):
         """Loads data into models"""
@@ -106,7 +100,18 @@ class MainController(QObject):
         except Exception as e:
             print(f"Error loading GUI model data: {e}")
 
-    @Slot(str, result=bool)
+    def _get_current_obj(self):
+        keys_list = list(self.analyze_objs.keys())
+        key_at_index = keys_list[self.current_obj_index]
+        a_obj = self.analyze_objs[key_at_index]
+        return a_obj
+
+    @Slot(result=str)
+    def get_pixmap(self):
+        """Returns the URL that QML should use to load the image"""
+        return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
+
+    """"@Slot(str, result=bool)
     def get_selected_img_val(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
@@ -117,8 +122,9 @@ class MainController(QObject):
             # options_img = load_img_configs()
             val = options_img[item_name]["value"]
             return True if val == 1 else False
+    """
 
-    @Slot(str, result=float)
+    """@Slot(str, result=float)
     def get_selected_img_data(self, item_name):
         # print(item_name)
         if len(self.analyze_objs) <= 0:
@@ -132,27 +138,7 @@ class MainController(QObject):
             else:
                 val = options_img[item_name]["value"]
             return val
-
-    @Slot(result=bool)
-    def get_selected_gte_val(self):
-        if len(self.analyze_objs) > 0:
-            return False
-        else:
-            # options_gte = self.analyze_objs[self.current_obj_id].g_obj.configs
-            options_gte = load_gte_configs()
-
-    @Slot(str, result=bool)
-    def get_selected_gtc_val(self, item_name):
-        # print(item_name)
-        if len(self.analyze_objs) <= 0:
-            return False
-        else:
-            a_obj = self._get_current_obj()
-            options_gtc = a_obj.configs
-            # options_gtc = load_gtc_configs()
-            val = options_gtc[item_name]["value"]
-            # print(val)
-            return True if val == 1 else False
+    """
 
     @Slot(result=str)
     def get_img_nav_location(self):
@@ -179,11 +165,26 @@ class MainController(QObject):
         self.imageChangedSignal.emit()
 
     @Slot(int)
+    def select_img_type(self, choice):
+        """
+            '0' - Original image
+            '1' - Cropped image
+            '2' - Processed image
+            '3' - Binary image
+            '4' - Extracted graph
+            '5' - Undo crop
+        Args:
+            choice:
+        Returns:
+        """
+        self.changeImageSignal.emit(choice)
+
+    @Slot(int)
     def load_image(self, index):
         try:
             self.current_obj_index = index
             self.imgListTableModel.updateData(self.analyze_objs)
-            self.changeImageSignal.emit(0)
+            self.select_img_type(0)
         except Exception as err:
             self.current_obj_index = -1
             # print(f"Error loading GUI model data: {err}")
@@ -193,7 +194,7 @@ class MainController(QObject):
     @Slot()
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
-        print(self.imgControlModel.list_data)
+        # print(self.imgControlModel.list_data)
         updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
         brightness = 0
         contrast = 0
@@ -203,8 +204,31 @@ class MainController(QObject):
             if item[0] == "contrast_level":
                 contrast = item[1]
         # print("Updated Settings:", updated_values)
-        # self.settingsUpdated.emit(updated_values)  # Emit values for further processing
         self.adjust_brightness_contrast(brightness, contrast)
+
+    @Slot()
+    def apply_gtc_changes(self):
+        """Retrieve settings from model and send to Python."""
+        updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
+        print("Updated Settings:", updated_values)
+
+    @Slot()
+    def apply_img_bin_changes(self):
+        """Retrieve settings from model and send to Python."""
+        updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
+        print("Updated Settings:", updated_values)
+
+    @Slot()
+    def apply_img_filter_changes(self):
+        """Retrieve settings from model and send to Python."""
+        updated_values = []
+        for item in self.imgFilterModel.list_data:
+            try:
+                val = [item["id"], item["value"], item["dataValue"]]
+            except KeyError:
+                val = [item["id"], item["value"]]
+            updated_values.append(val)
+        print("Updated Settings:", updated_values)
 
     @Slot(result=bool)
     def display_image(self):
@@ -225,11 +249,6 @@ class MainController(QObject):
     @Slot(result=bool)
     def in_progress(self):
         return self.wait_flag
-
-    @Slot(result=str)
-    def get_pixmap(self):
-        """Returns the URL that QML should use to load the image"""
-        return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):
@@ -257,7 +276,7 @@ class MainController(QObject):
             a_obj.g_obj.reset()
 
             # Emit signal to update UI with new image
-            self.changeImageSignal.emit(1)
+            self.select_img_type(1)
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
@@ -267,7 +286,7 @@ class MainController(QObject):
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            self.changeImageSignal.emit(4)
+            self.select_img_type(5)
             self.showUnCroppingToolSignal.emit(False)
 
     @Slot( float, float)
@@ -278,7 +297,7 @@ class MainController(QObject):
             img_cv = a_obj.g_obj.imp.img.copy()
             a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
             # print(f"{brightness_level} brightness and {contrast_level} contrast")
-            self.changeImageSignal.emit(2)
+            self.select_img_type(2)
         except Exception as err:
             # print(f"Error adjusting brightness/contrast of image: {err}")
             logging.exception("Image Processing Error: %s", err, extra={'user': 'SGT Logs'})

@@ -2,21 +2,49 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Repeater {
 
-    model: gtcListModel
-    delegate: RowLayout {
-        Layout.fillWidth: true
-        Layout.leftMargin: 10
-        Layout.alignment: Qt.AlignLeft
+Item {
+    id: graphComputationCtrl  // used for external access
+    height: parent.height
+    width: parent.width
 
-        CheckBox {
-            id: checkBox
-            objectName: model.id
-            //Layout.preferredWidth: 100
-            text: model.text
-            checked: mainController.get_selected_gtc_val(model.id)
+    property int valueRole: Qt.UserRole + 4
+
+    ColumnLayout {
+        id: brightnessCtrlLayout
+        spacing: 10
+
+        Repeater {
+
+            model: gtcListModel
+            delegate: RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+                Layout.alignment: Qt.AlignLeft
+
+                CheckBox {
+                    id: checkBox
+                    objectName: model.id
+                    //Layout.preferredWidth: 100
+                    text: model.text
+                    property bool isChecked: model.value === 1 ? true : false
+                    checked: isChecked
+                    onCheckedChanged: updateValue(isChecked, checked)
+                }
+
+                function updateValue(isChecked, checked) {
+                    if (isChecked !== checked) {  // Only update if there is a change
+                        isChecked = checked
+                        let val = checked ? 1 : 0;
+                        var index = gtcListModel.index(model.index, 0);
+                        gtcListModel.setData(index, val, valueRole);
+                    }
+                }
+
+            }
+
         }
+
     }
 
 }

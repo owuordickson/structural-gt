@@ -49,6 +49,7 @@ Rectangle {
                 background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
+                visible: mainController.display_image();
                 onClicked: enableRectangularSelect()
 
                 Rectangle {
@@ -60,7 +61,7 @@ Rectangle {
                     border.width: 2
                     border.color: "black"
                     anchors.centerIn: parent
-                    enabled: false
+                    //enabled: false
                 }
             }
 
@@ -87,6 +88,7 @@ Rectangle {
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: dialogBrightnessCtrl.open()
+                enabled: mainController.display_image();
             }
 
             Button {
@@ -124,6 +126,8 @@ Rectangle {
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
                 valueRole: "value"
+                enabled: false
+                onCurrentIndexChanged: {}
             }
 
             Button {
@@ -137,6 +141,7 @@ Rectangle {
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogShowGraph.open()
+                enabled: mainController.display_image();
             }
         }
     }
@@ -170,6 +175,13 @@ Rectangle {
             } else {
                 btnUndo.visible = false
             }
+        }
+
+        function onImageChangedSignal() {
+            // Force refresh
+            btnSelect.visible = mainController.display_image();
+            btnBrightness.enabled = mainController.display_image();
+            btnShowGraph.enabled = mainController.display_image();
         }
     }
 

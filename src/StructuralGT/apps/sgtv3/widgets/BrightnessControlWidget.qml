@@ -41,7 +41,7 @@ Item {
                     from: -100
                     to: 100
                     stepSize: 1
-                    value: mainController.get_selected_img_data(model.id)
+                    value: model.value
                     onValueChanged: updateValue(value)
                     onFocusChanged: updateValue(value)
                     onEditableChanged: updateValue(value)
@@ -52,7 +52,6 @@ Item {
                     var index = imgControlModel.index(model.index, 0);
                     imgControlModel.setData(index, val, valueRole);
                 }
-
 
             }
         }
