@@ -3,9 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ColumnLayout {
+    id:imgBinControls
     Layout.fillWidth: true
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft
+    enabled: mainController.display_image();
 
     property int btnWidthSize: 100
     property int spbWidthSize: 170
@@ -93,5 +95,15 @@ ColumnLayout {
     function updateValue(val) {
         var index = imgBinFilterModel.index(model.index, 0);
         //imgControlModel.setData(index, val, valueRole);
+    }
+
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            // Force refresh
+            imgBinControls.enabled = mainController.display_image();
+        }
+
     }
 }

@@ -230,6 +230,12 @@ class MainController(QObject):
             updated_values.append(val)
         print("Updated Settings:", updated_values)
 
+    @Slot()
+    def apply_microscopy_props_changes(self):
+        """Retrieve settings from model and send to Python."""
+        updated_values = [[val["id"], val["value"]] for val in self.microscopyPropsModel.list_data]
+        print("Updated Settings:", updated_values)
+
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded

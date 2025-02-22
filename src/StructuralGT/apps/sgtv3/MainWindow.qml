@@ -123,13 +123,11 @@ ApplicationWindow {
         }
 
         /*onAccepted: {
-            dialogController.accept()  // In Python side
-            dialog.close()
+            dialogShowGraph.close()
         }
 
         onRejected: {
-            dialogController.reject()
-            dialog.close()
+            dialogShowGraph.close()
         }*/
     }
 
@@ -149,14 +147,12 @@ ApplicationWindow {
             BinaryFilterWidget{}
         }
 
-        /*onAccepted: {
-            dialogController.accept()  // In Python side
-            dialog.close()
+        onAccepted: {
+            dialogBinFilters.close()
         }
 
-        onRejected: {
-            dialogController.reject()
-            dialog.close()
+        /*onRejected: {
+            dialogBinFilters.close()
         }*/
     }
 
@@ -176,14 +172,13 @@ ApplicationWindow {
             ImageFilterWidget{}
         }
 
-        /*onAccepted: {
-            dialogController.accept()  // In Python side
-            dialog.close()
+        onAccepted: {
+            //mainController.apply_img_filter_changes();
+            dialogImgFilters.close()
         }
 
-        onRejected: {
-            dialogController.reject()
-            dialog.close()
+        /*onRejected: {
+            dialogImgFilters.close()
         }*/
     }
 
