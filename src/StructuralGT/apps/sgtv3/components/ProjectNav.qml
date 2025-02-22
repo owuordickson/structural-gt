@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs
-//import Qt.labs.platform
+import QtQuick.Dialogs as QuickDialogs
+import Qt.labs.platform as Platform
 import "../widgets"
 
 Rectangle {
@@ -78,7 +78,7 @@ Rectangle {
         }
     }
 
-    FolderDialog {
+    Platform.FolderDialog {
         id: folderDialog
         title: "Select a Folder"
         onAccepted: {
@@ -88,7 +88,7 @@ Rectangle {
         //onRejected: {console.log("Canceled")}
     }
 
-    FileDialog {
+    QuickDialogs.FileDialog {
         id: fileDialog
         title: "Open file"
         nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
