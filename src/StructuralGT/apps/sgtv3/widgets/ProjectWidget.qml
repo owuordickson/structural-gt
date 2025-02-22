@@ -22,7 +22,7 @@ Item {
             text: "No images to show!\nPlease import/add image."
             color: "#808080"
             visible: imgListTableModel.rowCount() > 0 ? false : true
-            //visible: true
+            //visible: false
         }
 
         // image list
@@ -31,6 +31,7 @@ Item {
         TableView {
             id: tableView
             height: imgListTableModel.rowCount() * tblRowHeight
+            //height: parent.height
             //width: 300
             Layout.fillWidth: true
             Layout.topMargin: 5
@@ -38,7 +39,6 @@ Item {
             Layout.rightMargin: 2
             model: imgListTableModel
             visible: imgListTableModel.rowCount() > 0 ? true : false
-            //visible: false
 
             delegate: Rectangle {
                 implicitWidth: tableView.width
@@ -51,20 +51,22 @@ Item {
                         width: tblRowHeight
                         height: tblRowHeight
                         radius: 4
+                        color: "transparent"
                         border.width: 1
                         border.color: "black"
 
                         Image {
                             id: imgThumbnail
                             anchors.fill: parent
-                            source: ""
+                            //source: model.thumbnail ? model.thumbnail : ""  // Display QPixmap
+                            source: "data:image/png;base64," + model.thumbnail  // Base64 encoded image
                         }
 
                     }
 
                     Label {
                         id: lblImgItem
-                        text: display
+                        text: model.text
                     }
                 }
 
@@ -72,6 +74,18 @@ Item {
             }
 
 
+        }
+
+    }
+
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            // Force refresh
+            lblNoImages.visible = imgListTableModel.rowCount() > 0 ? false : true
+            tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
+            tableView.height = imgListTableModel.rowCount() * tblRowHeight
         }
 
     }

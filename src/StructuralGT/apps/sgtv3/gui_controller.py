@@ -93,11 +93,6 @@ class MainController(QObject):
             ]"""
             self.imgPropsTableModel = TableModel(data_img_props)
 
-            """data_img_list = [
-                ["Invitro.png"],
-                ["Nano-gel.png"],
-                ["Bacteria.png"],
-            ]"""
             self.imgListTableModel = TableModel(data_img_list)
 
             """data_graph_props = [
@@ -157,6 +152,21 @@ class MainController(QObject):
             val = options_gtc[item_name]["value"]
             # print(val)
             return True if val == 1 else False
+
+    @Slot()
+    def update_added_img_list(self):
+        self.imgListTableModel.beginResetModel()
+        keys_list = list(self.analyze_objs.keys())
+        for key in keys_list:
+            self.imgListTableModel.itemData.append([key])
+            a_obj = self.analyze_objs[key]
+            img_cv = a_obj.g_obj.imp.img
+            img = Image.fromarray(img_cv)
+            pixmap = ImageQt.toqpixmap(img)
+            self.imgListTableModel.imageCache[key] = pixmap
+        self.imgListTableModel.endResetModel()
+        print(self.imgListTableModel.imageCache)
+        print(self.imgListTableModel.itemData)
 
     @Slot()
     def apply_img_ctrl_changes(self):
@@ -249,15 +259,7 @@ class MainController(QObject):
             a_obj = self._get_current_obj()
             img_cv = a_obj.g_obj.imp.img.copy()
             a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
-            print(f"{brightness_level} brightness and {contrast_level} contrast")
-
-            """img_cv = a_obj.g_obj.imp.img
-            # Apply brightness and contrast adjustments
-            brightness = np.clip(brightness_level, -100, 100)
-            contrast = np.clip(contrast_level, 0.1, 3.0)
-            img_cv = cv2.convertScaleAbs(img_cv, alpha=contrast, beta=brightness)
-            a_obj.g_obj.imp.img_mod = img_cv"""
-
+            # print(f"{brightness_level} brightness and {contrast_level} contrast")
             self.changeImageSignal.emit(2)
         except Exception as err:
             # print(f"Error adjusting brightness/contrast of image: {err}")
@@ -306,6 +308,7 @@ class MainController(QObject):
             self.current_obj_index = 0
             self.error_flag = False
 
+            self.imgListTableModel.updateData(self.analyze_objs)
             self.changeImageSignal.emit(0)
 
         except Exception as err:

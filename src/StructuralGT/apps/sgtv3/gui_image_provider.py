@@ -33,7 +33,6 @@ class ImageProvider(QQuickImageProvider):
             self.img_controller.imageChangedSignal.emit()  # signal to update QML image
 
     def requestPixmap(self, img_id, requested_size, size):
-        # print(img_id)
         return self.pixmap
 
     def handle_change_image(self, cmd):
