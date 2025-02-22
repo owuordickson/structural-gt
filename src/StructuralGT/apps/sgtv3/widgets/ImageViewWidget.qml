@@ -108,7 +108,7 @@ ColumnLayout {
                         Layout.preferredWidth: 125
                         Layout.preferredHeight: 32
                         text: ""
-                        onClicked: openFileDialog()
+                        onClicked: fileDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -306,6 +306,7 @@ ColumnLayout {
         }
     }
 
+
     FileDialog {
         id: fileDialog
         title: "Open file"
@@ -315,11 +316,6 @@ ColumnLayout {
             mainController.process_selected_file(fileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
-    }
-
-
-    function openFileDialog() {
-        fileDialog.open()
     }
 
 

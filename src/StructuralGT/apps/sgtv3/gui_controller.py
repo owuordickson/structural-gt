@@ -292,6 +292,7 @@ class MainController(QObject):
                 img_path = img_path[7:]
         img_path = os.path.normpath(img_path)  # Normalize path
 
+
         # Check if file exists
         if not os.path.exists(img_path):
             self.status_msg["title"] = "File Error"
@@ -307,7 +308,7 @@ class MainController(QObject):
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
-            self.analyze_objs = {}
+            # self.analyze_objs = {}
             im_obj = ImageProcessor(img_path, out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.analyze_objs[filename] = g_obj

@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.platform
+import QtQuick.Dialogs
+//import Qt.labs.platform
 import "../widgets"
 
 Rectangle {
@@ -41,6 +42,7 @@ Rectangle {
                     icon.width: 21
                     icon.height: 21
                     background: transientParent
+                    enabled: mainController.display_image();
                     onClicked: folderDialog.open()
                 }
             }
@@ -49,6 +51,8 @@ Rectangle {
                 id: btnImportImages
                 Layout.alignment: Qt.AlignLeft
                 text: "Import image(s)"
+                enabled: mainController.display_image();
+                onClicked: fileDialog.open()
             }
 
             Rectangle {
@@ -81,7 +85,18 @@ Rectangle {
             //console.log("Selected folder:", folder)
             mainController.set_output_dir(folder)
         }
-        onRejected: {console.log("Canceled")}
+        //onRejected: {console.log("Canceled")}
+    }
+
+    FileDialog {
+        id: fileDialog
+        title: "Open file"
+        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
+        onAccepted: {
+            //console.log("Selected file:", fileDialog.selectedFile)
+            mainController.process_selected_file(fileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
     }
 
 
@@ -91,6 +106,8 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             txtOutputDir.text = mainController.get_output_dir();
+            btnChangeOutDir.enabled = mainController.display_image();
+            btnImportImages.enabled = mainController.display_image();
         }
 
     }

@@ -36,7 +36,10 @@ class TableModel(QAbstractTableModel):
             return  # No data to add
 
         start_row = len(self.itemData)
-        self.beginInsertRows(QModelIndex(), len(self.itemData), len(self.itemData) + len(new_keys) - 1)
+        self.beginResetModel()
+        self.itemData = []
+        self.imageCache = {}
+
         for key in new_keys:
             self.itemData.append([key])  # Store the key
             a_obj = analyze_objs[key]
@@ -56,7 +59,7 @@ class TableModel(QAbstractTableModel):
 
             self.imageCache[key] = base64_data  # Store base64 string
             # self.imageCache[key] = pixmap  # Store QPixmap in cache
-        self.endInsertRows()
+        self.endResetModel()
         # Emit dataChanged signal to notify QML
         self.dataChanged.emit(self.index(start_row, 0), self.index(len(self.itemData) - 1, 0))
 
