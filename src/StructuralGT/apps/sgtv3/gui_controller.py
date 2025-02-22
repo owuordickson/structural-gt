@@ -2,8 +2,9 @@ import os
 import sys
 import logging
 import numpy as np
-from PySide6.QtCore import QObject,Signal, Slot
 from PIL import Image, ImageQt  # Import ImageQt for conversion
+#from PySide6.QtWidgets import QFileDialog
+from PySide6.QtCore import QObject,Signal, Slot
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
@@ -153,20 +154,29 @@ class MainController(QObject):
             # print(val)
             return True if val == 1 else False
 
-    @Slot()
-    def update_added_img_list(self):
-        self.imgListTableModel.beginResetModel()
-        keys_list = list(self.analyze_objs.keys())
-        for key in keys_list:
-            self.imgListTableModel.itemData.append([key])
-            a_obj = self.analyze_objs[key]
-            img_cv = a_obj.g_obj.imp.img
-            img = Image.fromarray(img_cv)
-            pixmap = ImageQt.toqpixmap(img)
-            self.imgListTableModel.imageCache[key] = pixmap
-        self.imgListTableModel.endResetModel()
-        print(self.imgListTableModel.imageCache)
-        print(self.imgListTableModel.itemData)
+    @Slot(result=str)
+    def get_img_nav_location(self):
+        return f"{(self.current_obj_index + 1)} / {len(self.analyze_objs)}"
+
+    @Slot(result=str)
+    def get_output_dir(self):
+        a_obj = self._get_current_obj()
+        return f"{a_obj.g_obj.imp.output_dir}"
+
+    @Slot(str)
+    def set_output_dir(self, folder_path):
+
+        # Convert QML "file:///" path format to a proper OS path
+        if folder_path.startswith("file:///"):
+            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
+                folder_path = folder_path[8:]
+            else:  # macOS/Linux (remove "file://")
+                folder_path = folder_path[7:]
+        folder_path = os.path.normpath(folder_path)  # Normalize path
+
+        a_obj = self._get_current_obj()
+        a_obj.g_obj.imp.output_dir = folder_path
+        self.imageChangedSignal.emit()
 
     @Slot()
     def apply_img_ctrl_changes(self):
@@ -187,10 +197,6 @@ class MainController(QObject):
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded
-
-    @Slot(result=str)
-    def get_img_nav_location(self):
-        return f"{(self.current_obj_index + 1)} / {len(self.analyze_objs)}"
 
     @Slot(result=bool)
     def is_app_activated(self):

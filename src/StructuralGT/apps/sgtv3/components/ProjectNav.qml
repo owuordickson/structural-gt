@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt.labs.platform
 import "../widgets"
 
 Rectangle {
@@ -40,9 +41,9 @@ Rectangle {
                     icon.width: 21
                     icon.height: 21
                     background: transientParent
+                    onClicked: folderDialog.open()
                 }
             }
-
 
             Button {
                 id: btnImportImages
@@ -70,13 +71,28 @@ Rectangle {
             }
 
             ProjectWidget {}
-
         }
+    }
 
-
-
+    FolderDialog {
+        id: folderDialog
+        title: "Select a Folder"
+        onAccepted: {
+            //console.log("Selected folder:", folder)
+            mainController.set_output_dir(folder)
+        }
+        onRejected: {console.log("Canceled")}
     }
 
 
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            // Force refresh
+            txtOutputDir.text = mainController.get_output_dir();
+        }
+
+    }
 
 }
