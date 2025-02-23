@@ -16,6 +16,10 @@ from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
 
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
+
+    inProgressSignal = Signal(int, int, str)
+    taskFinishedSignal = Signal(int, int, object)
+    displayAlertSignal = Signal(str, str)
     changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
@@ -99,10 +103,16 @@ class MainController(QObject):
             self.error_flag = True
 
     def get_current_obj(self):
-        keys_list = list(self.analyze_objs.keys())
-        key_at_index = keys_list[self.current_obj_index]
-        a_obj = self.analyze_objs[key_at_index]
-        return a_obj
+        try:
+            keys_list = list(self.analyze_objs.keys())
+            key_at_index = keys_list[self.current_obj_index]
+            a_obj = self.analyze_objs[key_at_index]
+            return a_obj
+        except IndexError as err:
+            logging.exception("No Image Error: %s", err, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "No Image Error"
+            self.status_msg["message"] = f"No image added! Please import/add an image."
+            self.error_flag = True
 
     @Slot(result=str)
     def get_pixmap(self):
