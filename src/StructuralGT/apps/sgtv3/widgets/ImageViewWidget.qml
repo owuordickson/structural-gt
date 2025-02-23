@@ -9,7 +9,6 @@ ColumnLayout {
     Layout.fillHeight: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-    // Zoom Factor Variable
     property real zoomFactor: 1.0
 
     Rectangle {
@@ -146,8 +145,6 @@ ColumnLayout {
                             }
                         }
                     }
-                    //}
-
                 }
 
             }
@@ -268,7 +265,6 @@ ColumnLayout {
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
-        enabled: false
         visible: mainController.display_image()
 
 
@@ -283,13 +279,14 @@ ColumnLayout {
                 icon.height: 24
                 background: transientParent
                 Layout.alignment: Qt.AlignLeft
-                //Layout.margins: 5
+                onClicked: mainController.load_prev_image()
             }
 
             Label {
                 id: lblNavInfo
                 //text: "1/1"
                 text: ""
+                color: "#808080"
                 Layout.alignment: Qt.AlignCenter
             }
 
@@ -301,7 +298,7 @@ ColumnLayout {
                 icon.height: 24
                 background: transientParent
                 Layout.alignment: Qt.AlignRight
-                //Layout.margins: 5
+                onClicked: mainController.load_next_image()
             }
 
         }
@@ -317,6 +314,7 @@ ColumnLayout {
         }
         //onRejected: {console.log("Canceled")}
     }
+
 
     QuickDialogs.FileDialog {
         id: fileDialog
@@ -348,7 +346,11 @@ ColumnLayout {
             welcomeContainer.visible = !mainController.display_image();
             imgContainer.visible = mainController.display_image();
             navControls.visible = mainController.display_image();
+
             zoomFactor = 1.0;
+
+            btnPrevious.enabled = mainController.enable_prev_nav_btn()
+            btnNext.enabled = mainController.enable_next_nav_btn()
             lblNavInfo.text = mainController.get_img_nav_location()
             //console.log(src);
         }

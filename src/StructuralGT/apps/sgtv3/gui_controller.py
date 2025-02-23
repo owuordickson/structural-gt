@@ -248,6 +248,28 @@ class MainController(QObject):
             self.status_msg["message"] = f"Error loading image. Try again."
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
 
+    @Slot(result=bool)
+    def load_prev_image(self):
+        """Load the previous image in the list into view."""
+        if self.current_obj_index > 0:
+            pos = self.current_obj_index - 1
+            self.load_image(pos)
+            # return False if pos == 0 else True
+            return True
+        else:
+            return False
+
+    @Slot(result=bool)
+    def load_next_image(self):
+        """Load next image in the list into view."""
+        if self.current_obj_index < (len(self.sgt_objs) - 1):
+            pos = self.current_obj_index + 1
+            self.load_image(pos)
+            # return False if pos == (len(self.sgt_objs) - 1) else True
+            return True
+        else:
+            return False
+
     @Slot()
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
@@ -382,6 +404,20 @@ class MainController(QObject):
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
         self.enableRectangularSelectionSignal.emit(enabled)
+
+    @Slot(result=bool)
+    def enable_prev_nav_btn(self):
+        if self.current_obj_index == 0:
+            return False
+        else:
+            return True
+
+    @Slot(result=bool)
+    def enable_next_nav_btn(self):
+        if self.current_obj_index == (len(self.sgt_objs) - 1):
+            return False
+        else:
+            return True
 
     @Slot(str, result=bool)
     def add_single_image(self, image_path):
