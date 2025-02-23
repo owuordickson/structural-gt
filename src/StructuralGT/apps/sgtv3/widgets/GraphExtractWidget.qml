@@ -6,34 +6,15 @@ TreeView {
     id: treeView
     enabled: mainController.display_image()
     model: gteTreeModel
-    /*selectionModel: ItemSelectionModel { model: treeView.model }
-    onExpanded: {
-        restoreSelection();  // Restore selection when expanding
-    }
-    onCollapsed: {
-        restoreSelection();  // Restore selection when expanding
-    }*/
 
     ButtonGroup {
         id: btnGrpWeights
+        exclusive: true
     }
 
-    // Array to store selected IDs
-    //property var selectedIds: [] //['has_weights','merge_nearby_nodes','prune_dangling_edges','remove_disconnected_segments','remove_self_loops']
-    //property string selectedRdoId: "DIA"
-    //property int removeObjectSize: 500
     property int idRole: (Qt.UserRole + 1)
     property int textRole: (Qt.UserRole + 2)
     property int valueRole: (Qt.UserRole + 3)
-
-    /*Component.onCompleted:  {
-        if (selectedIds.length === 0) {  // Ensure it runs only once
-            initializeSelectedIds();
-            // Use to activate default selections
-            treeView.toggleExpanded(0)
-            treeView.toggleExpanded(0)
-        }
-    }*/
 
     delegate: Item {
         required property TreeView treeView
@@ -75,9 +56,17 @@ TreeView {
                     id: checkBox
                     objectName: model.id
                     text: model.text
-                    checked: model.value === 1 ? true : false
-                    //checked: selectedIds.includes(model.id)  // Restore selection
-                    //onClicked: toggleSelection(model.id)
+                    property bool isChecked: model.value === 1 ? true : false
+                    checked: isChecked
+                    onCheckedChanged: {
+                        if (isChecked !== checked) {  // Only update if there is a change
+                            isChecked = checked
+                            let val = checked ? 1 : 0;
+                            var index = gteTreeModel.index(model.index, 0);
+                            gteTreeModel.setData(index, val, Qt.EditRole);
+                            mainController.apply_gte_changes();
+                        }
+                    }
                 }
             }
 
@@ -90,77 +79,56 @@ TreeView {
                     text: model.text
                     ButtonGroup.group: btnGrpWeights
                     checked: model.value === 1 ? true :  false
-                    //checked: model.id === selectedRdoId  // Restore selection
-                    //onClicked: toggleSelectedRdoId(model.id)
+                    onClicked: btnGrpWeights.checkedButton = this
+                    onCheckedChanged: {
+                        var val = checked ? 1 : 0;
+                        updateChild(model.id, val);
+                        mainController.apply_gte_changes();
+                    }
                 }
             }
 
             Component {
                 id: txtFldComponent
 
-                TextField {
-                    id: txtField
-                    objectName: model.id
-                    width: 80
-                    text: model.value
-                    //text: removeObjectSize
-                    //onEditingFinished: changeRemoveObjectSize(txtField.text)
+                RowLayout {
+
+                    TextField {
+                        id: txtField
+                        objectName: model.id
+                        width: 80
+                        property int txtVal: model.value
+                        text: txtVal
+                    }
+
+                    Button {
+                        text: "OK"
+                        onClicked: {
+                            updateChild(model.id, txtField.text);
+                            mainController.apply_gte_changes();
+                        }
+                    }
+
                 }
             }
 
         }
     }
 
-
-    /*function changeRemoveObjectSize(value) {
-        removeObjectSize = value;
-        //console.log(value);
-    }
-
-    function toggleSelectedRdoId(id) {
-        selectedRdoId = id;
-        //console.log(id)
-    }
-
-    // Toggle selection in the selectedIds array
-    function toggleSelection(id) {
-        let index = selectedIds.indexOf(id);
-        if (index === -1) {
-            selectedIds.push(id);  // Add to selection
-        } else {
-            selectedIds.splice(index, 1);  // Remove from selection
-        }
-        //console.log(selectedIds)
-    }
-
-    // Restore previous selection after collapsing/expanding
-    function restoreSelection() {
-        selectionModel.clear();  // Clear current selection
-
-        for (let row = 0; row < model.rowCount(); row++) {
-            let index = model.index(row, 0);
-            let item_id = model.data(index, idRole);  // IdRole
-            if (selectedIds.includes(item_id)) {
-                selectionModel.select(index, ItemSelectionModel.Select);  // Reselect previously selected items
-            }
-            //console.log(item_id)
-        }
-    }
-
-    function initializeSelectedIds() {
-        selectedIds = [];  // Reset in case it's called multiple times
-        for (let row = 0; row < model.rowCount(); row++) {
-
-            let index = model.index(row, 0);
-            let item_id = model.data(index, idRole);  // IdRole
-            let item_val = model.data(index, valueRole); // ValueRole
-
-            if (item_val === 1) {  // Check if value is 1 (pre-selected)
-                selectedIds.push(item_id);
+    function updateChild(child_id, val) {
+        let row_count = gteTreeModel.rowCount();
+        for (let row = 0; row < row_count; row++) {
+            let parentIndex = gteTreeModel.index(row, 0);
+            let rows = gteTreeModel.rowCount(parentIndex);
+            for (let r = 0; r < rows; r++){
+                let childIndex = gteTreeModel.index(r, 0, parentIndex);
+                let item_id = gteTreeModel.data(childIndex, idRole);
+                if (child_id === item_id) {
+                    gteTreeModel.setData(childIndex, val, Qt.EditRole);
+                }
             }
         }
-        //console.log("Pre-selected IDs:", selectedIds);
-    }*/
+    }
 
     Connections {
         target: mainController

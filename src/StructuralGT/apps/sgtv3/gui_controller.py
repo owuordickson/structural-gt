@@ -210,6 +210,21 @@ class MainController(QObject):
         print("Updated Settings:", updated_values)
 
     @Slot()
+    def apply_gte_changes(self):
+        """Retrieve settings from model and send to Python."""
+        opt_gte = {}
+        for i in range(self.gteTreeModel.rowCount()):
+            parent_index = self.gteTreeModel.index(i, 0)
+            print([self.gteTreeModel.data(parent_index, self.gteTreeModel.IdRole),
+                   self.gteTreeModel.data(parent_index, self.gteTreeModel.ValueRole)])
+            for j in range(self.gteTreeModel.rowCount(parent_index)):
+                child_index = self.gteTreeModel.index(j, 0, parent_index)
+                print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
+                       self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])
+
+        # print(self.gteTreeModel.data())
+
+    @Slot()
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
         updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]

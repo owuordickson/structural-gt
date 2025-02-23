@@ -34,6 +34,16 @@ class TreeItem:
             return self._data.get("value", 0)
         return None
 
+    def set_data(self, column, value):
+        """ Sets the data for a specific column. """
+        if column == 0:
+            self._data["id"] = value
+        elif column == 1:
+            self._data["text"] = value
+        elif column == 2:
+            self._data["value"] = value
+        return True
+
     def parent(self):
         """ Returns the parent of this item. """
         return self._parent
@@ -55,6 +65,7 @@ class TreeModel(QAbstractItemModel):
         super().__init__(parent)
         self._rootItem = TreeItem({"id": "root", "text": "Root", "value": None})
         self.setup_model_data(data, self._rootItem)
+        # self.
 
     def setup_model_data(self, data_list, parent):
         """ Populates the model with data from a list of dictionaries. """
@@ -87,7 +98,17 @@ class TreeModel(QAbstractItemModel):
             return item.data(1)  # text
         elif role == self.ValueRole:
             return item.data(2)  # value
-        return "Whatever"
+        return None
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid():
+            return False
+        item = index.internalPointer()
+        col = 2  # for valueRole
+        if item.set_data(col, value):
+            self.dataChanged.emit(index, index, [role])
+            return True
+        return False
 
     def reset_data(self, new_data):
         """ Resets the data to be displayed. """
