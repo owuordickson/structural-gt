@@ -12,22 +12,22 @@ class ImageProvider(QQuickImageProvider):
         self.img_controller.changeImageSignal.connect(self.handle_change_image)
 
     def select_image(self, option: str=""):
-        if len(self.img_controller.analyze_objs) > 0:
-            a_obj = self.img_controller.get_current_obj()
+        if len(self.img_controller.sgt_objs) > 0:
+            sgt_obj = self.img_controller.get_current_obj()
             if option == "processed":
-                img_cv = a_obj.g_obj.imp.img_mod
+                img_cv = sgt_obj.g_obj.imp.img_mod
             elif option == "graph":
-                img_cv = a_obj.g_obj.imp.img_net
+                img_cv = sgt_obj.g_obj.imp.img_net
             elif option == "crop":
-                img_cv = a_obj.g_obj.imp.img
+                img_cv = sgt_obj.g_obj.imp.img
             elif option == "un-crop":
-                a_obj.g_obj.imp.undo_cropping()
-                img_cv = a_obj.g_obj.imp.img
+                sgt_obj.g_obj.imp.undo_cropping()
+                img_cv = sgt_obj.g_obj.imp.img
             else:
-                img_cv = a_obj.g_obj.imp.img
+                img_cv = sgt_obj.g_obj.imp.img
             img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
-            self.img_controller.load_img_configs(a_obj)
+            self.img_controller.load_img_configs(sgt_obj)
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()  # signal to update QML image
 

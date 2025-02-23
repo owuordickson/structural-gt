@@ -39,7 +39,7 @@ class MainController(QObject):
         self.status_msg = {"title": "", "message": ""}
 
         # Create graph objects
-        self.analyze_objs = {}
+        self.sgt_objs = {}
         self.current_obj_index = -1
         # self.current_img_type = 0
 
@@ -55,13 +55,13 @@ class MainController(QObject):
         self.imgFilterModel = CheckBoxModel([])
         self.imgControlModel = CheckBoxModel([])
 
-    def load_img_configs(self, a_obj):
+    def load_img_configs(self, sgt_obj):
         """Reload image configuration selections and controls after it is loaded."""
         try:
             # 1.
-            options_img = a_obj.g_obj.imp.configs
-            option_gte = a_obj.g_obj.configs
-            options_gtc = a_obj.configs
+            options_img = sgt_obj.g_obj.imp.configs
+            option_gte = sgt_obj.g_obj.configs
+            options_gtc = sgt_obj.configs
 
             # 2.
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
@@ -105,15 +105,62 @@ class MainController(QObject):
 
     def get_current_obj(self):
         try:
-            keys_list = list(self.analyze_objs.keys())
+            keys_list = list(self.sgt_objs.keys())
             key_at_index = keys_list[self.current_obj_index]
-            a_obj = self.analyze_objs[key_at_index]
-            return a_obj
+            sgt_obj = self.sgt_objs[key_at_index]
+            return sgt_obj
         except IndexError as err:
             logging.exception("No Image Error: %s", err, extra={'user': 'SGT Logs'})
             self.status_msg["title"] = "No Image Error"
             self.status_msg["message"] = f"No image added! Please import/add an image."
             self.error_flag = True
+
+    def create_sgt_object(self, img_path):
+        """
+        A function that processes a selected image file and creates an analyzer object with default configurations.
+
+        Args:
+            img_path: file path to image
+
+        Returns:
+        """
+
+        if not img_path:
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = "No file selected."
+            self.error_flag = True
+            return False
+
+        # Normalize file path
+        img_path = MainController.normalize_file_path(img_path)
+
+        # Check if file exists
+        if not os.path.exists(img_path):
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = f"File does not exist - {img_path}. Try again."
+            self.error_flag = True
+            return False
+
+        # Try reading the image
+        try:
+            img_dir, filename = os.path.split(img_path)
+            out_dir_name = "sgt_files"
+            out_dir = os.path.join(img_dir, out_dir_name)
+            out_dir = os.path.normpath(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
+
+            im_obj = ImageProcessor(img_path, out_dir)
+            g_obj = GraphAnalyzer(GraphExtractor(im_obj))
+            self.sgt_objs[filename] = g_obj
+            self.error_flag = False
+            return True
+        except Exception as err:
+            # print(f"Error processing image: {e}")
+            logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = f"Error processing image. Try again."
+            self.error_flag = True
+            return False
 
     @Slot(result=str)
     def get_pixmap(self):
@@ -123,11 +170,11 @@ class MainController(QObject):
     """"@Slot(str, result=bool)
     def get_selected_img_val(self, item_name):
         # print(item_name)
-        if len(self.analyze_objs) <= 0:
+        if len(self.sgt_objs) <= 0:
             return False
         else:
-            a_obj = self._get_current_obj()
-            options_img = a_obj.g_obj.imp.configs
+            sgt_obj = self._get_current_obj()
+            options_img = sgt_obj.g_obj.imp.configs
             # options_img = load_img_configs()
             val = options_img[item_name]["value"]
             return True if val == 1 else False
@@ -136,11 +183,11 @@ class MainController(QObject):
     """@Slot(str, result=float)
     def get_selected_img_data(self, item_name):
         # print(item_name)
-        if len(self.analyze_objs) <= 0:
+        if len(self.sgt_objs) <= 0:
             return False
         else:
-            a_obj = self._get_current_obj()
-            options_img = a_obj.g_obj.imp.configs
+            sgt_obj = self._get_current_obj()
+            options_img = sgt_obj.g_obj.imp.configs
             # options_img = load_img_configs()
             if options_img[item_name]["type"] == "image-filter":
                 val = options_img[item_name]["dataValue"]
@@ -151,12 +198,12 @@ class MainController(QObject):
 
     @Slot(result=str)
     def get_img_nav_location(self):
-        return f"{(self.current_obj_index + 1)} / {len(self.analyze_objs)}"
+        return f"{(self.current_obj_index + 1)} / {len(self.sgt_objs)}"
 
     @Slot(result=str)
     def get_output_dir(self):
-        a_obj = self.get_current_obj()
-        return f"{a_obj.g_obj.imp.output_dir}"
+        sgt_obj = self.get_current_obj()
+        return f"{sgt_obj.g_obj.imp.output_dir}"
 
     @Slot(str)
     def set_output_dir(self, folder_path):
@@ -169,8 +216,8 @@ class MainController(QObject):
                 folder_path = folder_path[7:]
         folder_path = os.path.normpath(folder_path)  # Normalize path
 
-        a_obj = self.get_current_obj()
-        a_obj.g_obj.imp.output_dir = folder_path
+        sgt_obj = self.get_current_obj()
+        sgt_obj.g_obj.imp.output_dir = folder_path
         self.imageChangedSignal.emit()
 
     @Slot(int)
@@ -193,7 +240,7 @@ class MainController(QObject):
     def load_image(self, index):
         try:
             self.current_obj_index = index
-            self.imgListTableModel.update_data(self.analyze_objs)
+            self.imgListTableModel.update_data(self.sgt_objs)
             self.select_img_type(0)
         except Exception as err:
             self.current_obj_index = -1
@@ -292,8 +339,8 @@ class MainController(QObject):
     def crop_image(self, x, y, width, height):
         """Crop image using PIL and save it."""
         try:
-            a_obj = self.get_current_obj()
-            img = Image.fromarray(a_obj.g_obj.imp.img)
+            sgt_obj = self.get_current_obj()
+            img = Image.fromarray(sgt_obj.g_obj.imp.img)
             q_img = ImageQt.toqpixmap(img)
 
             # Convert QImage to PIL Image
@@ -302,8 +349,8 @@ class MainController(QObject):
             # Crop the selected area
             img_pil_crop = img_pil.crop((x, y, x + width, y + height))
             img_cv = ImageProcessor.load_img_from_pil(img_pil_crop)
-            a_obj.g_obj.imp.img, a_obj.g_obj.imp.scale_factor = ImageProcessor.resize_img(512, img_cv)
-            a_obj.g_obj.reset()
+            sgt_obj.g_obj.imp.img, sgt_obj.g_obj.imp.scale_factor = ImageProcessor.resize_img(512, img_cv)
+            sgt_obj.g_obj.reset()
 
             # Emit signal to update UI with new image
             self.select_img_type(1)
@@ -323,9 +370,9 @@ class MainController(QObject):
     def adjust_brightness_contrast(self, brightness_level, contrast_level):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
         try:
-            a_obj = self.get_current_obj()
-            img_cv = a_obj.g_obj.imp.img.copy()
-            a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
+            sgt_obj = self.get_current_obj()
+            img_cv = sgt_obj.g_obj.imp.img.copy()
+            sgt_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
             # print(f"{brightness_level} brightness and {contrast_level} contrast")
             self.select_img_type(2)
         except Exception as err:
@@ -336,49 +383,54 @@ class MainController(QObject):
     def enable_rectangular_selection(self, enabled):
         self.enableRectangularSelectionSignal.emit(enabled)
 
-    @Slot(str)
-    def process_selected_file(self, img_path):
+    @Slot(str, result=bool)
+    def add_single_image(self, image_path):
+        """Verify and validate an image path, use it to create an SGT object and load it in view."""
+        is_created = self.create_sgt_object(image_path)
+        if is_created:
+            pos = (len(self.sgt_objs) - 1)
+            self.load_image(pos)
+            return True
+        return False
+
+    @Slot(str, result=bool)
+    def add_multiple_images(self, img_dir_path):
+        """Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view."""
+
+        if not img_dir_path:
+            self.status_msg["title"] = "Directory Error"
+            self.status_msg["message"] = "No folder selected."
+            self.error_flag = True
+            return False
+
+        # Normalize file path
+        img_dir_path = MainController.normalize_file_path(img_dir_path)
+
+        files = os.listdir(img_dir_path)
+        files = sorted(files)
+        for a_file in files:
+            if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+                img_path = os.path.join(img_dir_path, a_file)
+                self.create_sgt_object(img_path)
+
+        if len(self.sgt_objs) <= 0:
+            self.status_msg["title"] = "File Error"
+            self.status_msg["message"] = "No workable images found! Files have to be either .tif, .png, or .jpg or .jpeg"
+            self.error_flag = True
+            return False
+        else:
+            pos = (len(self.sgt_objs) - 1)
+            self.load_image(pos)
+            return True
+
+    @staticmethod
+    def normalize_file_path(file_path):
         """"""
-        if not img_path:
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = "No file selected."
-            self.error_flag = True
-            return
-
         # Convert QML "file:///" path format to a proper OS path
-        if img_path.startswith("file:///"):
+        if file_path.startswith("file:///"):
             if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
-                img_path = img_path[8:]
+                file_path = file_path[8:]
             else:  # macOS/Linux (remove "file://")
-                img_path = img_path[7:]
-        img_path = os.path.normpath(img_path)  # Normalize path
-
-
-        # Check if file exists
-        if not os.path.exists(img_path):
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = f"File does not exist - {img_path}. Try again."
-            self.error_flag = True
-            return
-
-        # Try reading the image
-        try:
-            img_dir, filename = os.path.split(img_path)
-            out_dir_name = "sgt_files"
-            out_dir = os.path.join(img_dir, out_dir_name)
-            out_dir = os.path.normpath(out_dir)
-            os.makedirs(out_dir, exist_ok=True)
-
-            # self.analyze_objs = {}
-            im_obj = ImageProcessor(img_path, out_dir)
-            g_obj = GraphAnalyzer(GraphExtractor(im_obj))
-            self.analyze_objs[filename] = g_obj
-            index = (len(self.analyze_objs) - 1)
-            self.error_flag = False
-            self.load_image(index)
-        except Exception as err:
-            # print(f"Error processing image: {e}")
-            logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = f"Error processing image. Try again."
-            self.error_flag = True
+                file_path = file_path[7:]
+        file_path = os.path.normpath(file_path)  # Normalize path
+        return file_path

@@ -94,7 +94,7 @@ Rectangle {
         nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
         onAccepted: {
             //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.process_selected_file(fileDialog.selectedFile);
+            mainController.add_single_image(fileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }

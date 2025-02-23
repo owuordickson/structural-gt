@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs
-
+import QtQuick.Dialogs as QuickDialogs
+import Qt.labs.platform as Platform
 
 ColumnLayout {
     Layout.fillWidth: true
@@ -130,6 +130,7 @@ ColumnLayout {
                         Layout.preferredWidth: 125
                         Layout.preferredHeight: 32
                         text: ""
+                        onClicked: folderDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -307,13 +308,23 @@ ColumnLayout {
     }
 
 
-    FileDialog {
+    Platform.FolderDialog {
+        id: folderDialog
+        title: "Select a Folder"
+        onAccepted: {
+            //console.log("Selected folder:", folder)
+            mainController.add_multiple_images(folder);
+        }
+        //onRejected: {console.log("Canceled")}
+    }
+
+    QuickDialogs.FileDialog {
         id: fileDialog
         title: "Open file"
         nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
         onAccepted: {
             //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.process_selected_file(fileDialog.selectedFile);
+            mainController.add_single_image(fileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }
@@ -321,12 +332,6 @@ ColumnLayout {
 
     function cropImage() {
 
-        // Crop image through mainController
-        /*imgView.grabToImage(function(result) {
-            if (result && result.image) {  // Ensure result is valid
-                mainController.crop_image(result.image, cropArea.x, cropArea.y, cropArea.width, cropArea.height);
-            }
-        });*/
         // Crop image through mainController
         mainController.crop_image(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
 
