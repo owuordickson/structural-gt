@@ -41,6 +41,7 @@ class MainController(QObject):
         # Create graph objects
         self.analyze_objs = {}
         self.current_obj_index = -1
+        # self.current_img_type = 0
 
         # Create Models
         self.imgListTableModel = TableModel([])
@@ -185,6 +186,7 @@ class MainController(QObject):
             choice:
         Returns:
         """
+        # self.current_img_type = choice
         self.changeImageSignal.emit(choice)
 
     @Slot(int)
@@ -217,7 +219,7 @@ class MainController(QObject):
     def apply_gtc_changes(self):
         """Retrieve settings from model and send to Python."""
         updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
-        print("Updated Settings:", updated_values)
+        print("GTC Updated Settings:", self.get_current_obj().configs)
 
     @Slot()
     def apply_gte_changes(self):

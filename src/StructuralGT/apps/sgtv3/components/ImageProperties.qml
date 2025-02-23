@@ -25,14 +25,6 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            Label {
-                id: lblNoImgProps
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 20
-                text: "No properties to show!"
-                color: "#808080"
-                visible: imgPropsTableModel.rowCount() > 0 ? false : true
-            }
             ImagePropertyWidget{}
 
             Rectangle {

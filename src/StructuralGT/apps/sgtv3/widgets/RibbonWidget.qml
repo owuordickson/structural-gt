@@ -119,15 +119,15 @@ Rectangle {
                 id: cbImageType
                 Layout.minimumWidth: 150
                 model: ListModel {
-                    ListElement { text: "Original Image"; value: 1 }
-                    ListElement { text: "Binary Image"; value: 2 }
-                    ListElement { text: "Processed Image"; value: 3 }
+                    ListElement { text: "Original Image"; value: 0 }
+                    ListElement { text: "Binary Image"; value: 3 }
+                    ListElement { text: "Processed Image"; value: 2 }
                 }
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
                 valueRole: "value"
-                enabled: false
-                onCurrentIndexChanged: {}
+                enabled: mainController.display_image();
+                onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
             }
 
             Button {
@@ -181,6 +181,7 @@ Rectangle {
             // Force refresh
             btnSelect.visible = mainController.display_image();
             btnBrightness.enabled = mainController.display_image();
+            cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();
         }
     }

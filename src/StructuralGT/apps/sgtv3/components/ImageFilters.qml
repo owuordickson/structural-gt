@@ -9,6 +9,8 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
+    property int lblWidthSize: 280
+
     ScrollView {
         //width: parent.width
         height: parent.height
@@ -26,6 +28,14 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
+            Label {
+                id: lblNoImgFilters
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 20
+                text: "No image filters to show!\nCreate project/add image."
+                color: "#808080"
+                visible: !mainController.display_image();
+            }
             BinaryFilterWidget{}
 
             Rectangle {
@@ -47,8 +57,19 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
+
             ImageFilterWidget{}
 
         }
+    }
+
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            // Force refresh
+            lblNoImgFilters.visible = !mainController.display_image();
+        }
+
     }
 }
