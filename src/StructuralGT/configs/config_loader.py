@@ -145,6 +145,7 @@ def load_img_configs():
         options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
         options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
+        options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
 
         options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))
         options_img["apply_gamma"]["dataValue"] = float(config.get('filter-settings', 'adjust_gamma'))
@@ -162,7 +163,6 @@ def load_img_configs():
         options_img["apply_scharr_gradient"]["value"] = int(config.get('filter-settings', 'apply_scharr_gradient'))
         options_img["apply_median_filter"]["value"] = int(config.get('filter-settings', 'apply_median_filter'))
 
-        options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
         options_img["brightness_level"]["value"] = int(config.get('filter-settings', 'brightness_level'))
         options_img["contrast_level"]["value"] = int(config.get('filter-settings', 'contrast_level'))
         options_img["scale_value_nanometers"]["value"] = float(config.get('filter-settings', 'scale_value_nanometers'))

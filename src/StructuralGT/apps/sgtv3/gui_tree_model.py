@@ -89,6 +89,15 @@ class TreeModel(QAbstractItemModel):
             return item.data(2)  # value
         return "Whatever"
 
+    def reset_data(self, new_data):
+        """ Resets the data to be displayed. """
+        self.beginResetModel()
+        self._rootItem = TreeItem({"id": "root", "text": "Root", "value": None})
+        self.setup_model_data(new_data, self._rootItem)
+        self.endResetModel()
+        self.dataChanged.emit(self.index(0,0), self.index(len(new_data), 0),
+                              [self.IdRole, self.TextRole, self.ValueRole])
+
     def parent(self, index):
         """ Returns the parent index of a given child index. """
         if not index.isValid():

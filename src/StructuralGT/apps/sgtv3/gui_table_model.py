@@ -1,6 +1,5 @@
 import base64
 from PIL import Image, ImageQt  # Import ImageQt for conversion
-from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import QByteArray, QBuffer
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
@@ -29,7 +28,14 @@ class TableModel(QAbstractTableModel):
             return self.imageCache[image_name]
         return None
 
-    def updateData(self, analyze_objs):
+    def reset_data(self, item_data):
+        self.beginResetModel()
+        self.imageCache = {}
+        self.itemData = item_data
+        self.endResetModel()
+        self.dataChanged.emit(self.index(0, 0), self.index(len(self.itemData) - 1, 0))
+
+    def update_data(self, analyze_objs):
         """Updates model with new images from analyze_objs"""
         new_keys = list(analyze_objs.keys())
         if not new_keys:

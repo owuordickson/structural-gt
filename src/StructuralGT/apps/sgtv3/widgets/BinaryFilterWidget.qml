@@ -9,15 +9,23 @@ ColumnLayout {
     Layout.alignment: Qt.AlignLeft
     enabled: mainController.display_image();
 
+    property int idRole: Qt.UserRole + 1
+    property int valueRole: Qt.UserRole + 4
     property int btnWidthSize: 100
     property int spbWidthSize: 170
     property int sldWidthSize: 140
     property int lblWidthSize: 50
-    property int checkedBtnId: 0 // "threshold_type"
 
     ButtonGroup {
-        id: btnGroup
-        checkedButton: checkedBtnId === 0 ? rdoGlobal : checkedBtnId === 1 ? rdoAdaptive : checkedBtnId === 2 ? rdoOtsu : rdoGlobal
+        id: btnGrpBinary
+        exclusive: true
+        //checkedButton: rdoGlobal
+        onCheckedButtonChanged: {
+            var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
+            var index = imgBinFilterModel.index(0, 0);
+            imgBinFilterModel.setData(index, val, valueRole);
+            mainController.apply_img_bin_changes();
+        }
     }
 
 
@@ -26,8 +34,9 @@ ColumnLayout {
         RadioButton {
             id:rdoAdaptive
             text: "Adaptive"
-            ButtonGroup.group: btnGroup
             Layout.preferredWidth: btnWidthSize
+            ButtonGroup.group: btnGrpBinary
+            onClicked: btnGrpBinary.checkedButton = this
         }
 
         SpinBox {
@@ -38,13 +47,17 @@ ColumnLayout {
             from: 1
             to: 999
             stepSize: 2
-            value: 0 // "adaptive_local_threshold_value"
-            enabled: rdoAdaptive.checked
+            value: 11 // "adaptive_local_threshold_value"
             editable: true  // Allow user input
+            enabled: rdoAdaptive.checked
             onValueChanged: {
                 if (value % 2 === 0) {
                     value = value - 1;  // Convert even input to nearest odd
                 }
+
+                var index = imgBinFilterModel.index(2, 0);
+                imgBinFilterModel.setData(index, value, valueRole);
+                mainController.apply_img_bin_changes();
             }
             validator: IntValidator { bottom: spbAdaptive.from; top: spbAdaptive.to }
         }
@@ -55,8 +68,9 @@ ColumnLayout {
         RadioButton {
             id: rdoGlobal
             text: "Global"
-            ButtonGroup.group: btnGroup
-            Layout.preferredWidth: 100
+            Layout.preferredWidth: btnWidthSize
+            ButtonGroup.group: btnGrpBinary
+            onClicked: btnGrpBinary.checkedButton = this
         }
 
         Slider {
@@ -68,6 +82,11 @@ ColumnLayout {
             stepSize: 1
             value: 127  //"global_threshold_value"
             enabled: rdoGlobal.checked
+            onValueChanged: {
+                var index = imgBinFilterModel.index(1, 0);
+                imgBinFilterModel.setData(index, value, valueRole);
+                mainController.apply_img_bin_changes();
+            }
         }
 
         Label {
@@ -82,19 +101,44 @@ ColumnLayout {
     RadioButton {
         id: rdoOtsu
         text: "OTSU"
-        ButtonGroup.group: btnGroup
         Layout.preferredWidth: btnWidthSize
+        ButtonGroup.group: btnGrpBinary
+        onClicked: btnGrpBinary.checkedButton = this
     }
 
     CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
         checked: false
+        onCheckedChanged: {
+            var val = checked === true ? 1 : 0;
+            var index = imgBinFilterModel.index(3, 0);
+            imgBinFilterModel.setData(index, val, valueRole);
+            mainController.apply_img_bin_changes();
+        }
     }
 
     function updateValue(val) {
         var index = imgBinFilterModel.index(model.index, 0);
         //imgControlModel.setData(index, val, valueRole);
+    }
+
+    function initializeSelections() {
+        for (let row = 0; row < imgBinFilterModel.rowCount(); row ++) {
+            var index = imgBinFilterModel.index(row, 0);
+            let item_id = imgBinFilterModel.data(index, idRole);  // IdRole
+            let item_val = imgBinFilterModel.data(index, valueRole); // ValueRole
+
+            if (item_id === "threshold_type") {
+                btnGrpBinary.checkedButton = item_val === 2 ? rdoOtsu : item_val === 1 ? rdoAdaptive : rdoGlobal;
+            } else if (item_id === "global_threshold_value") {
+                sldGlobal.value = item_val;
+            } else if (item_id === "adaptive_local_threshold_value") {
+                spbAdaptive.value = item_val;
+            } else if (item_id === "apply_dark_foreground") {
+                cbxDarkFg.checked = item_val === 1 ? true : false;
+            }
+        }
     }
 
     Connections {
@@ -103,6 +147,7 @@ ColumnLayout {
         function onImageChangedSignal() {
             // Force refresh
             imgBinControls.enabled = mainController.display_image();
+            initializeSelections();
         }
 
     }

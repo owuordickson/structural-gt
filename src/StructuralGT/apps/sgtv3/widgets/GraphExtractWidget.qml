@@ -4,36 +4,36 @@ import QtQuick.Layouts
 
 TreeView {
     id: treeView
+    enabled: mainController.display_image()
     model: gteTreeModel
-    selectionModel: ItemSelectionModel { model: treeView.model }
+    /*selectionModel: ItemSelectionModel { model: treeView.model }
     onExpanded: {
         restoreSelection();  // Restore selection when expanding
     }
     onCollapsed: {
         restoreSelection();  // Restore selection when expanding
-    }
+    }*/
 
     ButtonGroup {
         id: btnGrpWeights
     }
 
     // Array to store selected IDs
-    property var selectedIds: [] //['has_weights','merge_nearby_nodes','prune_dangling_edges','remove_disconnected_segments','remove_self_loops']
-    property string selectedRdoId: "DIA"
-    property int removeObjectSize: 500
+    //property var selectedIds: [] //['has_weights','merge_nearby_nodes','prune_dangling_edges','remove_disconnected_segments','remove_self_loops']
+    //property string selectedRdoId: "DIA"
+    //property int removeObjectSize: 500
     property int idRole: (Qt.UserRole + 1)
     property int textRole: (Qt.UserRole + 2)
     property int valueRole: (Qt.UserRole + 3)
 
-    Component.onCompleted:  {
+    /*Component.onCompleted:  {
         if (selectedIds.length === 0) {  // Ensure it runs only once
             initializeSelectedIds();
             // Use to activate default selections
             treeView.toggleExpanded(0)
             treeView.toggleExpanded(0)
         }
-    }
-
+    }*/
 
     delegate: Item {
         required property TreeView treeView
@@ -75,9 +75,9 @@ TreeView {
                     id: checkBox
                     objectName: model.id
                     text: model.text
-                    //checked: model.value === 1
-                    checked: selectedIds.includes(model.id)  // Restore selection
-                    onClicked: toggleSelection(model.id)
+                    checked: model.value === 1 ? true : false
+                    //checked: selectedIds.includes(model.id)  // Restore selection
+                    //onClicked: toggleSelection(model.id)
                 }
             }
 
@@ -89,9 +89,9 @@ TreeView {
                     objectName: model.id
                     text: model.text
                     ButtonGroup.group: btnGrpWeights
-                    //checked: model.value === 1
-                    checked: model.id === selectedRdoId  // Restore selection
-                    onClicked: toggleSelectedRdoId(model.id)
+                    checked: model.value === 1 ? true :  false
+                    //checked: model.id === selectedRdoId  // Restore selection
+                    //onClicked: toggleSelectedRdoId(model.id)
                 }
             }
 
@@ -102,8 +102,9 @@ TreeView {
                     id: txtField
                     objectName: model.id
                     width: 80
-                    text: removeObjectSize
-                    onEditingFinished: changeRemoveObjectSize(txtField.text)
+                    text: model.value
+                    //text: removeObjectSize
+                    //onEditingFinished: changeRemoveObjectSize(txtField.text)
                 }
             }
 
@@ -111,7 +112,7 @@ TreeView {
     }
 
 
-    function changeRemoveObjectSize(value) {
+    /*function changeRemoveObjectSize(value) {
         removeObjectSize = value;
         //console.log(value);
     }
@@ -159,6 +160,15 @@ TreeView {
             }
         }
         //console.log("Pre-selected IDs:", selectedIds);
-    }
+    }*/
 
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            // Force refresh
+            treeView.enabled = mainController.display_image();
+        }
+
+    }
 }

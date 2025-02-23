@@ -64,6 +64,14 @@ class CheckBoxModel(QAbstractListModel):
             return True
         return False
 
+    def reset_data(self, new_data):
+        self.beginResetModel()
+        self.list_data = new_data
+        self.endResetModel()
+        self.dataChanged.emit(self.index(0,0), self.index(len(new_data), 0),
+                              [self.IdRole, self.TypeRole, self.TextRole, self.ValueRole, self.DataIdRole,
+                               self.DataValueRole, self.MinValueRole, self.MaxValueRole, self.StepSizeRole])
+
     def roleNames(self):
         return {
             self.IdRole: b"id",

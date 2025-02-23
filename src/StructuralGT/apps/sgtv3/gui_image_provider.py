@@ -13,9 +13,7 @@ class ImageProvider(QQuickImageProvider):
 
     def select_image(self, option: str=""):
         if len(self.img_controller.analyze_objs) > 0:
-            keys_list = list(self.img_controller.analyze_objs.keys())
-            key_at_index = keys_list[self.img_controller.current_obj_index]
-            a_obj = self.img_controller.analyze_objs[key_at_index]
+            a_obj = self.img_controller.get_current_obj()
             if option == "processed":
                 img_cv = a_obj.g_obj.imp.img_mod
             elif option == "graph":
@@ -29,6 +27,7 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = a_obj.g_obj.imp.img
             img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
+            self.img_controller.load_img_configs(a_obj)
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()  # signal to update QML image
 

@@ -3,14 +3,12 @@ import sys
 import logging
 import numpy as np
 from PIL import Image, ImageQt  # Import ImageQt for conversion
-#from PySide6.QtWidgets import QFileDialog
 from PySide6.QtCore import QObject,Signal, Slot
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
 from gui_list_model import CheckBoxModel
 
-from src.StructuralGT.configs.config_loader import load_gtc_configs, load_gte_configs, load_img_configs
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
@@ -41,27 +39,24 @@ class MainController(QObject):
         self.current_obj_index = -1
 
         # Create Models
-        self.graphPropsTableModel = None
-        self.microscopyPropsModel = None
-        self.imgPropsTableModel = None
-        self.imgListTableModel = None
+        self.imgListTableModel = TableModel([])
+        self.imgPropsTableModel = TableModel([])
+        self.graphPropsTableModel = TableModel([])
+        self.microscopyPropsModel = CheckBoxModel([])
 
-        self.gteTreeModel = None
-        self.gtcListModel = None
-        self.imgBinFilterModel = None
-        self.imgFilterModel = None
-        self.imgControlModel = None
+        self.gteTreeModel = TreeModel([])
+        self.gtcListModel = CheckBoxModel([])
+        self.imgBinFilterModel = CheckBoxModel([])
+        self.imgFilterModel = CheckBoxModel([])
+        self.imgControlModel = CheckBoxModel([])
 
-        # Load Model Data
-        self._load_model_data()
-
-    def _load_model_data(self):
-        """Loads data into models"""
+    def load_img_configs(self, a_obj):
+        """Reload image configuration selections and controls after it is loaded."""
         try:
             # 1.
-            options_img = load_img_configs()
-            option_gte = load_gte_configs()
-            options_gtc = load_gtc_configs()
+            options_img = a_obj.g_obj.imp.configs
+            option_gte = a_obj.g_obj.configs
+            options_gtc = a_obj.configs
 
             # 2.
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
@@ -72,35 +67,38 @@ class MainController(QObject):
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
 
-            self.gtcListModel = CheckBoxModel(list(options_gtc.values()))
-            self.gteTreeModel = TreeModel(graph_options)
-            self.imgBinFilterModel = CheckBoxModel(bin_filters)
-            self.imgFilterModel = CheckBoxModel(img_filters)
-            self.imgControlModel = CheckBoxModel(img_controls)
-            self.microscopyPropsModel = CheckBoxModel(img_properties)
+            self.gtcListModel.reset_data(list(options_gtc.values()))
+            self.gteTreeModel.reset_data(graph_options)
+            self.imgBinFilterModel.reset_data(bin_filters)
+            self.imgFilterModel.reset_data(img_filters)
+            self.imgControlModel.reset_data(img_controls)
 
-            data_img_props = data_img_list = data_graph_props = []
+            data_img_props = data_graph_props = []
             """data_img_props = [
                 ["Name", "Invitro.png"],
                 ["Width x Height", "500px x 500px"],
                 ["Dimensions", "2D"],
                 ["Pixel Size", "2nm x 2nm"],
             ]"""
-            self.imgPropsTableModel = TableModel(data_img_props)
-
-            self.imgListTableModel = TableModel(data_img_list)
-
             """data_graph_props = [
                 ["Node Count", "248"],
                 ["Edge Count", "306"],
                 ["Sub-graph Count", "1"],
                 ["Largest-Full Graph Ratio", "100%"],
             ]"""
-            self.graphPropsTableModel = TableModel(data_graph_props)
-        except Exception as e:
-            print(f"Error loading GUI model data: {e}")
 
-    def _get_current_obj(self):
+            self.microscopyPropsModel.reset_data(img_properties)
+            self.imgPropsTableModel.reset_data(data_img_props)
+            self.graphPropsTableModel .reset_data(data_graph_props)
+
+        except Exception as err:
+            # print(f"Error loading GUI model data: {err}")
+            logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "Fatal Error"
+            self.status_msg["message"] = f"Error loading image configurations! Close app and try again."
+            self.error_flag = True
+
+    def get_current_obj(self):
         keys_list = list(self.analyze_objs.keys())
         key_at_index = keys_list[self.current_obj_index]
         a_obj = self.analyze_objs[key_at_index]
@@ -146,7 +144,7 @@ class MainController(QObject):
 
     @Slot(result=str)
     def get_output_dir(self):
-        a_obj = self._get_current_obj()
+        a_obj = self.get_current_obj()
         return f"{a_obj.g_obj.imp.output_dir}"
 
     @Slot(str)
@@ -160,7 +158,7 @@ class MainController(QObject):
                 folder_path = folder_path[7:]
         folder_path = os.path.normpath(folder_path)  # Normalize path
 
-        a_obj = self._get_current_obj()
+        a_obj = self.get_current_obj()
         a_obj.g_obj.imp.output_dir = folder_path
         self.imageChangedSignal.emit()
 
@@ -183,7 +181,7 @@ class MainController(QObject):
     def load_image(self, index):
         try:
             self.current_obj_index = index
-            self.imgListTableModel.updateData(self.analyze_objs)
+            self.imgListTableModel.update_data(self.analyze_objs)
             self.select_img_type(0)
         except Exception as err:
             self.current_obj_index = -1
@@ -194,7 +192,6 @@ class MainController(QObject):
     @Slot()
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
-        # print(self.imgControlModel.list_data)
         updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
         brightness = 0
         contrast = 0
@@ -268,7 +265,7 @@ class MainController(QObject):
     def crop_image(self, x, y, width, height):
         """Crop image using PIL and save it."""
         try:
-            a_obj = self._get_current_obj()
+            a_obj = self.get_current_obj()
             img = Image.fromarray(a_obj.g_obj.imp.img)
             q_img = ImageQt.toqpixmap(img)
 
@@ -299,7 +296,7 @@ class MainController(QObject):
     def adjust_brightness_contrast(self, brightness_level, contrast_level):
         """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
         try:
-            a_obj = self._get_current_obj()
+            a_obj = self.get_current_obj()
             img_cv = a_obj.g_obj.imp.img.copy()
             a_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
             # print(f"{brightness_level} brightness and {contrast_level} contrast")
