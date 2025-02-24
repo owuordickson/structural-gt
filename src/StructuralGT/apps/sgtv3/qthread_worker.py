@@ -1,9 +1,13 @@
 import os
 import time
 import logging
-from PySide6 import QtCore
+from PySide6.QtCore import QThread,Signal, Slot
 
-class Worker(QtCore.QThread):
+
+class Worker(QThread):
+
+    inProgressSignal = Signal(int, int, str)
+    taskFinishedSignal = Signal(int, int, object)
 
     def __init__(self, func_id, args, target=None):
         super().__init__()

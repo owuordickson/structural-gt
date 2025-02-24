@@ -83,10 +83,11 @@ class GraphExtractor(ProgressUpdate):
         super(GraphExtractor, self).__init__()
         self.terminal_app = True
         self.configs = load_gte_configs()  # graph extraction parameters and options.
+        self.props = []
         self.imp = img_obj
         self.graph_skeleton = None
-        self.nx_graph, self.nx_info = None, []
-        self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0
+        self.nx_graph, self.nx_info = None, []  # TO DELETE 'nx_info' (ADDED TO PROPS)
+        self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0  # TO BE DELETED (ADDED TO PROPS)
 
     def fit(self):
         """

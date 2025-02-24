@@ -7,6 +7,8 @@ Processes of an image by applying filters to it and converting it to binary vers
 import re
 import os
 import io
+
+import PIL
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -69,6 +71,7 @@ class ImageProcessor:
         >>> imp_obj.apply_filters()
         """
         self.configs = load_img_configs()  # image processing parameters and options.
+        self.props = []
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_dim = img_dim
@@ -80,8 +83,8 @@ class ImageProcessor:
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
-        self.otsu_val = None
-        self.pixel_width = 0
+        self.otsu_val = None  # TO BE DELETED (ADDED TO CONFIGS)
+        self.pixel_width = 0  # TO BE DELETED (ADDED TO PROPS)
 
     def apply_filters(self):
         """
@@ -443,7 +446,7 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_pil(img_pil: MatLike):
+    def load_img_from_pil(img_pil: MatLike|PIL.Image.Image):
         """
         Read image from PIL.
 

@@ -103,10 +103,11 @@ def load_img_configs():
     """Image Detection settings"""
 
     options_img = {
-        "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "value": 1 },
-        "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "value": 127 },
-        "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "value": 11 },
-        "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "value": 0},
+        "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 1 },
+        "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 127 },
+        "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },
+        "otsu_value": {"id": "otsu_value", "type": "binary-filter", "text": "", "visible": 0, "value": 0},
+        "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "visible": 1, "value": 0},
 
         "apply_autolevel": {"id": "apply_autolevel", "type": "image-filter", "text": "Autolevel", "value": 0,
                             "dataId": "autolevel_blurring_size", "dataValue": 3, "minValue": 1, "maxValue": 7, "stepSize": 2},

@@ -17,8 +17,6 @@ from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
 
-    inProgressSignal = Signal(int, int, str)
-    taskFinishedSignal = Signal(int, int, object)
     showAlertSignal = Signal(str, str)
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal(int)
@@ -134,13 +132,13 @@ class MainController(QObject):
 
         # Try reading the image
         try:
-            img_dir, filename = os.path.split(img_path)
+            img_dir, filename = os.path.split(str(img_path))
             out_dir_name = "sgt_files"
             out_dir = os.path.join(img_dir, out_dir_name)
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
-            im_obj = ImageProcessor(img_path, out_dir)
+            im_obj = ImageProcessor(str(img_path), out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = g_obj
             self.error_flag = False
@@ -278,13 +276,13 @@ class MainController(QObject):
     @Slot()
     def apply_gtc_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
+        # updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
         print("GTC Updated Settings:", self.get_current_obj().configs)
 
     @Slot()
     def apply_gte_changes(self):
         """Retrieve settings from model and send to Python."""
-        opt_gte = {}
+        # opt_gte = {}
         for i in range(self.gteTreeModel.rowCount()):
             parent_index = self.gteTreeModel.index(i, 0)
             print([self.gteTreeModel.data(parent_index, self.gteTreeModel.IdRole),
@@ -293,7 +291,6 @@ class MainController(QObject):
                 child_index = self.gteTreeModel.index(j, 0, parent_index)
                 print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
                        self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])
-
         # print(self.gteTreeModel.data())
 
     @Slot()
@@ -430,7 +427,7 @@ class MainController(QObject):
         files = sorted(files)
         for a_file in files:
             if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
-                img_path = os.path.join(img_dir_path, a_file)
+                img_path = os.path.join(str(img_dir_path), a_file)
                 self.create_sgt_object(img_path)
 
         if len(self.sgt_objs) <= 0:
@@ -458,7 +455,7 @@ class MainController(QObject):
         #    os.makedirs(results_dir)
 
         proj_name += '.sgtproj'
-        proj_path = os.path.join(dir_path, proj_name)
+        proj_path = os.path.join(str(dir_path), proj_name)
 
         try:
             # Open the file in write mode ('w'). This will create the file if it doesn't exist
