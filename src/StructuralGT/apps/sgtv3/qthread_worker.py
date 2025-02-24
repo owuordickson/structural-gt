@@ -56,7 +56,7 @@ class QThreadWorker(QThread):
         Send update_progress signal to all listeners.
         progress-value (0-100), progress-message (str)
         Args:
-            value: progress value (0-100), (-1, if it is an error)
+            value: progress value (0-100), (-1, if it is an error), (101, if it is nav-control message)
             msg: progress message (str)
 
         Returns:
@@ -114,17 +114,18 @@ class QThreadWorker(QThread):
         try:
             i = 0
             for sgt_obj in sgt_objs:
-                start = time.time()
+                status_msg = f"Analyzing Image: {(i + 1)} / {len(sgt_objs)}"
+                self.update_progress(101, status_msg)
 
+                start = time.time()
                 success, result = self.compute_gt_parameters(sgt_obj)
                 self.is_aborted(sgt_obj)
                 self.taskFinishedSignal.emit(False, result)
-
                 end = time.time()
-                num_cores = get_num_cores()
+
                 i += 1
-                output = "Analyzing Image:" + str(i) + "/" + str(len(sgt_objs)) + "\n"
-                output += "Run-time: " + str(end - start) + " seconds" + "\n"
+                num_cores = get_num_cores()
+                output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
                 output += "Number of cores: " + str(num_cores) + "\n"
                 output += "Results generated for: " + sgt_obj.g_obj.imp.img_path + "\n"
                 output += "Node Count: " + str(sgt_obj.g_obj.nx_graph.number_of_nodes()) + "\n"
