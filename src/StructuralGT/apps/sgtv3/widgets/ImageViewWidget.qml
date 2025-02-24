@@ -356,7 +356,7 @@ ColumnLayout {
         function onImageChangedSignal() {
             // Force refresh
             imgView.source = mainController.get_pixmap();
-            welcomeContainer.visible = !mainController.display_image();
+            welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
             imgContainer.visible = mainController.display_image();
             navControls.visible = mainController.display_image();
 
@@ -366,6 +366,10 @@ ColumnLayout {
             btnNext.enabled = mainController.enable_next_nav_btn()
             lblNavInfo.text = mainController.get_img_nav_location()
             //console.log(src);
+        }
+
+        function onProjectOpenedSignal(name) {
+            welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
         }
 
         function onEnableRectangularSelectionSignal(allow) {

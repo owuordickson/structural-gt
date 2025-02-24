@@ -34,6 +34,7 @@ class MainController(QObject):
         self.project_open = False
 
         # Project data
+        self.project_data = {"name": "", "file_path": ""}
 
         # Initialize flags
         self.error_flag = False
@@ -127,20 +128,8 @@ class MainController(QObject):
         Returns:
         """
 
+        img_path = self.verify_path(img_path)
         if not img_path:
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = "No file selected."
-            self.error_flag = True
-            return False
-
-        # Normalize file path
-        img_path = MainController.normalize_file_path(img_path)
-
-        # Check if file exists
-        if not os.path.exists(img_path):
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = f"File does not exist - {img_path}. Try again."
-            self.error_flag = True
             return False
 
         # Try reading the image
@@ -429,16 +418,13 @@ class MainController(QObject):
 
     @Slot(str, result=bool)
     def add_multiple_images(self, img_dir_path):
-        """Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view."""
+        """
+        Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view.
+        """
 
+        img_dir_path = self.verify_path(img_dir_path)
         if not img_dir_path:
-            self.status_msg["title"] = "Directory Error"
-            self.status_msg["message"] = "No folder selected."
-            self.error_flag = True
             return False
-
-        # Normalize file path
-        img_dir_path = MainController.normalize_file_path(img_dir_path)
 
         files = os.listdir(img_dir_path)
         files = sorted(files)
@@ -460,21 +446,68 @@ class MainController(QObject):
     @Slot(str, str, result=bool)
     def create_sgt_project(self, proj_name, dir_path):
         """Creates a '.sgtproj' inside the selected directory"""
-        pass
+
+        self.project_open = False
+        dir_path = self.verify_path(dir_path)
+        if not dir_path:
+            return False
+
+        # Create the directory if it doesn't exist
+        # results_dir = os.path.join(dir_path, '/results')
+        # if not os.path.exists(results_dir):
+        #    os.makedirs(results_dir)
+
+        proj_name += '.sgtproj'
+        proj_path = os.path.join(dir_path, proj_name)
+
+        try:
+            # Open the file in write mode ('w'). This will create the file if it doesn't exist
+            # and overwrite it if it does.
+            with open(proj_path, 'w'):
+                pass  # Do nothing, just create the file
+
+            # Update and notify QML
+            self.project_data["name"] = proj_name
+            self.project_data["path"] = proj_path
+            self.project_open = True
+            self.projectOpenedSignal.emit(proj_name)
+            print(f"File '{proj_name}' created successfully in '{dir_path}'.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 
     @Slot(str, result=bool)
-    def open_sgt_object(self, sgt_path):
+    def open_sgt_project(self, sgt_path):
         """Opens and loads SGT project from the '.sgtproj' file"""
-        pass
 
-    @staticmethod
-    def normalize_file_path(file_path):
-        """"""
+        # Verify path
+        sgt_path = self.verify_path(sgt_path)
+        if not sgt_path:
+            return False
+
+        # Read and load project data and SGT objects
+        print(sgt_path)
+
+    def verify_path(self, a_path):
+        if not a_path:
+            self.status_msg["title"] = "File/Directory Error"
+            self.status_msg["message"] = "No folder/file selected."
+            self.error_flag = True
+            return False
+
+        # Normalize file path
         # Convert QML "file:///" path format to a proper OS path
-        if file_path.startswith("file:///"):
+        if a_path.startswith("file:///"):
             if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
-                file_path = file_path[8:]
+                a_path = a_path[8:]
             else:  # macOS/Linux (remove "file://")
-                file_path = file_path[7:]
-        file_path = os.path.normpath(file_path)  # Normalize path
-        return file_path
+                a_path = a_path[7:]
+        a_path = os.path.normpath(a_path)  # Normalize path
+
+        if not os.path.exists(a_path):
+            logging.exception("File/Folder Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "Path Error"
+            self.status_msg["message"] = f"File/Folder does not exist - {a_path}. Try again."
+            self.error_flag = True
+            return False
+        return a_path

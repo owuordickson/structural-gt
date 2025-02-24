@@ -41,4 +41,13 @@ Rectangle {
 
     }
 
+    Connections {
+        target: mainController
+
+        function onProjectOpenedSignal(name) {
+            tabBar.currentIndex = 0;
+        }
+
+    }
+
 }

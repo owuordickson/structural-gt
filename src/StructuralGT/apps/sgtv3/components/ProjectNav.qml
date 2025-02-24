@@ -19,6 +19,7 @@ Rectangle {
             //anchors.fill: parent
 
             RowLayout {
+                id: rowLayoutProject
                 Layout.topMargin: 10
                 Layout.leftMargin: 10
                 Layout.bottomMargin: 5
@@ -125,9 +126,14 @@ Rectangle {
             // Force refresh
             txtOutputDir.text = mainController.get_output_dir();
             btnChangeOutDir.enabled = mainController.display_image();
-            btnImportImages.enabled = mainController.display_image();
+            btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
         }
 
+        function onProjectOpenedSignal(name) {
+            lblProjectName.text = name;
+            rowLayoutProject.visible = mainController.is_project_open();
+            btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
+        }
     }
 
 }

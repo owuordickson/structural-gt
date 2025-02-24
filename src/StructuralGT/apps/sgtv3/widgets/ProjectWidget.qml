@@ -19,7 +19,6 @@ Item {
             id: lblNoImages
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 20
-            //text: "No images to show!\nPlease import/add image."
             text: "No images to show!\nPlease add image/folder."
             color: "#808080"
             visible: imgListTableModel.rowCount() > 0 ? false : true
@@ -89,6 +88,11 @@ Item {
             lblNoImages.visible = imgListTableModel.rowCount() > 0 ? false : true
             tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
             tableView.height = imgListTableModel.rowCount() * tblRowHeight
+        }
+
+        function onProjectOpenedSignal(name) {
+            lblNoImages.text = "No images to show!\nPlease import image(s).";
+            tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
         }
 
     }
