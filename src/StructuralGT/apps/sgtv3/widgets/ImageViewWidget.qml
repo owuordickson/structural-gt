@@ -40,6 +40,7 @@ ColumnLayout {
                         Layout.preferredWidth: 180
                         Layout.preferredHeight: 48
                         text: ""
+                        onClicked: createProjectDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -62,6 +63,7 @@ ColumnLayout {
                         Layout.preferredHeight: 48
                         background: transientParent
                         text: ""
+                        onClicked: projectFileDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -107,7 +109,7 @@ ColumnLayout {
                         Layout.preferredWidth: 125
                         Layout.preferredHeight: 32
                         text: ""
-                        onClicked: fileDialog.open()
+                        onClicked: imageFileDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -129,7 +131,7 @@ ColumnLayout {
                         Layout.preferredWidth: 125
                         Layout.preferredHeight: 32
                         text: ""
-                        onClicked: folderDialog.open()
+                        onClicked: imageFolderDialog.open()
 
                         Rectangle {
                             anchors.fill: parent
@@ -306,23 +308,34 @@ ColumnLayout {
 
 
     Platform.FolderDialog {
-        id: folderDialog
+        id: imageFolderDialog
         title: "Select a Folder"
         onAccepted: {
             //console.log("Selected folder:", folder)
-            mainController.add_multiple_images(folder);
+            mainController.add_multiple_images(imageFolderDialog.folder);
         }
         //onRejected: {console.log("Canceled")}
     }
 
 
     QuickDialogs.FileDialog {
-        id: fileDialog
+        id: imageFileDialog
         title: "Open file"
         nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
         onAccepted: {
             //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.add_single_image(fileDialog.selectedFile);
+            mainController.add_single_image(imageFileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
+    }
+
+
+    QuickDialogs.FileDialog {
+        id: projectFileDialog
+        title: "Open .sgtproj file"
+        nameFilters: ["Project files (*.sgtproj)"]
+        onAccepted: {
+            mainController.open_sgt_project(projectFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }

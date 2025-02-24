@@ -19,7 +19,8 @@ class MainController(QObject):
 
     inProgressSignal = Signal(int, int, str)
     taskFinishedSignal = Signal(int, int, object)
-    displayAlertSignal = Signal(str, str)
+    showAlertSignal = Signal(str, str)
+    projectOpenedSignal = Signal(str)
     changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
@@ -30,8 +31,9 @@ class MainController(QObject):
     def __init__(self):
         super().__init__()
         self.img_loaded = False
-        self.app_active = False
-        self.project_loaded = False
+        self.project_open = False
+
+        # Project data
 
         # Initialize flags
         self.error_flag = False
@@ -334,19 +336,15 @@ class MainController(QObject):
         return self.img_loaded
 
     @Slot(result=bool)
-    def is_app_activated(self):
-        return self.app_active
-
-    @Slot(result=bool)
-    def is_project_loaded(self):
-        return self.project_loaded
+    def is_project_open(self):
+        return self.project_open
 
     @Slot(result=bool)
     def error_occurred(self):
         return self.error_flag
 
     @Slot(result=bool)
-    def in_progress(self):
+    def is_running(self):
         return self.wait_flag
 
     @Slot(bool)
@@ -458,6 +456,16 @@ class MainController(QObject):
             pos = (len(self.sgt_objs) - 1)
             self.load_image(pos)
             return True
+
+    @Slot(str, str, result=bool)
+    def create_sgt_project(self, proj_name, dir_path):
+        """Creates a '.sgtproj' inside the selected directory"""
+        pass
+
+    @Slot(str, result=bool)
+    def open_sgt_object(self, sgt_path):
+        """Opens and loads SGT project from the '.sgtproj' file"""
+        pass
 
     @staticmethod
     def normalize_file_path(file_path):

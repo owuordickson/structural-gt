@@ -22,6 +22,24 @@ Rectangle {
                 Layout.topMargin: 10
                 Layout.leftMargin: 10
                 Layout.bottomMargin: 5
+                visible: mainController.is_project_open()
+
+                Label {
+                    text: "Project Name:"
+                    font.bold: true
+                }
+
+                Label {
+                    id: lblProjectName
+                    Layout.minimumWidth: 175
+                    Layout.fillWidth: true
+                    text: ""
+                }
+            }
+
+            RowLayout {
+                Layout.leftMargin: 10
+                Layout.bottomMargin: 5
 
                 Label {
                     text: "Output Dir:"
@@ -49,7 +67,7 @@ Rectangle {
 
             Button {
                 id: btnImportImages
-                Layout.alignment: Qt.AlignLeft
+                Layout.alignment: Qt.AlignHCenter
                 text: "Import image(s)"
                 enabled: mainController.display_image();
                 onClicked: fileDialog.open()

@@ -30,6 +30,7 @@
         "assets/data/extract_data.json",
         "assets/data/gt_data.json",
         "widgets/BrightnessControlWidget.qml",
-        "widgets/GraphPropertyWidget.qml"
+        "widgets/GraphPropertyWidget.qml",
+        "widgets/CreateProjectWidget.qml"
     ]
 }

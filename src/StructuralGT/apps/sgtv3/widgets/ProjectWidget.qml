@@ -19,14 +19,12 @@ Item {
             id: lblNoImages
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 20
-            text: "No images to show!\nPlease import/add image."
+            //text: "No images to show!\nPlease import/add image."
+            text: "No images to show!\nPlease add image/folder."
             color: "#808080"
             visible: imgListTableModel.rowCount() > 0 ? false : true
             //visible: false
         }
-
-        // image list
-        // image settings and options (saved from selection) - linked to image list
 
         TableView {
             id: tableView

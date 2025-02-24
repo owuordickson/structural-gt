@@ -62,6 +62,7 @@ ApplicationWindow {
         }
     }
 
+
     Dialog {
         id: dialogAbout
         //parent: mainWindow
@@ -75,6 +76,52 @@ ApplicationWindow {
         Label {
             text: "StructuralGT v3.0.1\nCopyright (C) 2024\nthe Regents of the University of Michigan."
             anchors.centerIn: parent
+        }
+    }
+
+    Dialog {
+        id: createProjectDialog
+        anchors.centerIn: parent
+        title: "Create SGT Project"
+        modal: true
+        width: 300
+        height: 150
+
+        ColumnLayout {
+            anchors.fill: parent
+            CreateProjectWidget { id: createProjectControls }
+
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
+                Button {
+                    text: "OK"
+                    onClicked: {
+                        var name = createProjectControls.txtName.text;
+                        var location = createProjectControls.txtLocation.text;
+
+                        if (name === "") {
+                            //console.log("Please fill in all fields.");
+                            createProjectControls.lblName.text = "Name*";
+                            createProjectControls.lblName.color = "red";
+                            createProjectControls.txtName.placeholderText = "please enter a name!"
+
+                        } else if (location === "") {
+                            createProjectControls.lblLocation.text = "Location*";
+                            createProjectControls.lblLocation.color = "red";
+
+                        } else {
+                            mainController.create_sgt_project(name, location);
+                            createProjectDialog.close();
+                        }
+                    }
+                }
+                Button {
+                    text: "Cancel"
+                    onClicked: createProjectDialog.close()
+                }
+            }
         }
     }
 
@@ -103,7 +150,6 @@ ApplicationWindow {
             dialogBrightnessCtrl.close()
         }*/
     }
-
 
     Dialog {
         id: dialogShowGraph
