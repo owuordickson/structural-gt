@@ -136,6 +136,22 @@ class GraphAnalyzer(ProgressUpdate):
         self.weighted_eigenvector_distribution = [0]
         # self.weighted_edge_angle_distribution = [0]
         self.weighted_percolation_distribution = [0]
+    
+    def fit(self):
+        """
+            Execute functions that will process image filters and extract graph from the processed image
+        """
+        if self.g_obj.nx_graph is None:
+            self.g_obj.add_listener(self.update_graph_progress)
+            # self.add_thread_listener(self.g_obj.abort_tasks)
+            self.g_obj.fit()
+            self.g_obj.remove_listener(self.update_graph_progress)
+            # self.add_thread_listener(self.g_obj.abort_tasks)
+        self.abort = self.g_obj.abort
+        self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+
+    def update_graph_progress(self, value, msg):
+        self.update_status([value, msg])
 
     def compute_gt_metrics(self):
         """

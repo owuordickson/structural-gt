@@ -33,7 +33,7 @@ class ProgressUpdate:
         """
         self.abort = True
 
-    def add_listener(self, func: ()):
+    def add_listener(self, func):
         """
         Add functions from the list of listeners.
         :param func:

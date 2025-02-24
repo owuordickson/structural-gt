@@ -105,25 +105,28 @@ class GraphExtractor(ProgressUpdate):
 
         :return:
         """
+        if self.abort:
+            self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
+                                    "image/binary filters and graph options. OR change brightness/contrast"])
+            return
         self.update_status([50, "Making graph skeleton..."])
         success = self.extract_graph()
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
-        elif self.abort:
-            self.update_status([-1, "Task aborted."])
+            self.abort = True
         else:
             self.update_status([75, "Verifying graph network..."])
             if self.nx_graph.number_of_nodes() <= 0:
-                self.update_status([-1, "Problem generating graph (change filter options)."])
+                self.update_status([-1, "Problem generating graph (change image/binary filters)."])
+                self.abort = True
             else:
                 # self.save_adj_csv()
                 # if self.configs_graph.has_weights == 1:
                 #    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
                 #        self.nx_graph, weighted=True)
                 # else:
-                self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(self.nx_graph,
-                                                                                                           self.nx_info)
-
+                self.nx_info, self.nx_components, self.connect_ratio = (
+                    GraphComponents.compute_conductance(self.nx_graph, self.nx_info))
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
                 graph_plt = self.draw_graph_network()
