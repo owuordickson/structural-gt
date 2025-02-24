@@ -30,7 +30,7 @@ class ImageProcessor:
         img (MatLike): processed image.
     """
 
-    def __init__(self, img_path, out_dir, img_dim=2, img=None):
+    def __init__(self, img_path, out_dir, img=None):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
@@ -74,7 +74,6 @@ class ImageProcessor:
         self.props = []
         self.img_path = img_path
         self.output_dir = out_dir
-        self.img_dim = img_dim
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
         if img is None:
             self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
