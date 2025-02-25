@@ -93,7 +93,7 @@ Rectangle {
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
-            console.log(success_val);
+            //console.log(success_val);
             if (success_val) {
                 lblStatusMsg.color = "#2222bc";
                 lblStatusMsg.text = mainController.get_sgt_version();

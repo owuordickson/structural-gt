@@ -46,7 +46,7 @@ class MainController(QObject):
 
         # Create graph objects
         self.sgt_objs = {}
-        self.current_obj_index = -1
+        self.current_obj_index = 0
         self.current_img_type = 0
 
         # Create Models
@@ -174,6 +174,7 @@ class MainController(QObject):
     def _handle_finished(self, success_val: bool, result: object|list):
         """"""
         self.error_flag = success_val
+        self.wait_flag = False
         if not success_val:
             logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
             self.status_msg["title"] = result[0]
@@ -181,7 +182,10 @@ class MainController(QObject):
             self.taskTerminatedSignal.emit(success_val, result)
         else:
             self.taskTerminatedSignal.emit(success_val, [])
-        self.wait_flag = False
+            if type(result) is GraphExtractor:
+                sgt_obj = self.get_current_obj()
+                sgt_obj.g_obj = result
+                self.select_img_type(4)
 
     @Slot(result=str)
     def get_sgt_version(self):
@@ -248,9 +252,9 @@ class MainController(QObject):
         self.changeImageSignal.emit(choice)
 
     @Slot(int)
-    def load_image(self, index):
+    def load_image(self, index=None):
         try:
-            self.current_obj_index = index
+            self.current_obj_index = index if index is not None else self.current_obj_index
             self.imgListTableModel.update_data(self.sgt_objs)
             self.select_img_type(0)
         except Exception as err:
@@ -312,6 +316,7 @@ class MainController(QObject):
                 child_index = self.gteTreeModel.index(j, 0, parent_index)
                 print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
                        self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])"""
+        self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
             sgt_obj = self.get_current_obj()
@@ -445,8 +450,8 @@ class MainController(QObject):
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
         is_created = self.create_sgt_object(image_path)
         if is_created:
-            pos = (len(self.sgt_objs) - 1)
-            self.load_image(pos)
+            # pos = (len(self.sgt_objs) - 1)
+            self.load_image()
             return True
         return False
 
@@ -473,8 +478,8 @@ class MainController(QObject):
             self.error_flag = True
             return False
         else:
-            pos = (len(self.sgt_objs) - 1)
-            self.load_image(pos)
+            # pos = (len(self.sgt_objs) - 1)
+            self.load_image()
             return True
 
     @Slot(str, str, result=bool)

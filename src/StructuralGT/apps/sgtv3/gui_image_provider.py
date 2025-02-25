@@ -17,26 +17,30 @@ class ImageProvider(QQuickImageProvider):
             im_obj = sgt_obj.g_obj.imp
             if option == "crop":
                 img_cv = im_obj.img
+                img = Image.fromarray(img_cv)
             elif option == "un-crop":
                 im_obj.undo_cropping()
                 img_cv = im_obj.img
+                img = Image.fromarray(img_cv)
             elif option == "binary":
                 im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
                 im_obj.img_bin, im_obj.otsu_val = im_obj.binarize_img(im_obj.img_mod.copy())
                 img_cv = im_obj.img_bin
+                img = Image.fromarray(img_cv)
             elif option == "processed":
                 im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
                 img_cv = im_obj.img_mod
+                img = Image.fromarray(img_cv)
             elif option == "graph":
                 if im_obj.img_net is None:
                     self.img_controller.apply_gte_changes()
                     # Wait for task to finish
                     return
                 else:
-                    img_cv = im_obj.img_net
+                    img = im_obj.img_net
             else:
                 img_cv = im_obj.img
-            img = Image.fromarray(img_cv)
+                img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
             #self.img_controller.load_img_configs(sgt_obj)
             self.img_controller.img_loaded = True

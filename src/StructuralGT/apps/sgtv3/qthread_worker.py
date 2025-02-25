@@ -91,7 +91,7 @@ class WorkerTask (QObject):
     def task_extract_graph(self, graph_obj):
         """"""
         try:
-            # graph_obj.abort = False
+            graph_obj.abort = False
             graph_obj.add_listener(self.update_progress)
             graph_obj.fit()
             self.is_aborted(graph_obj)
