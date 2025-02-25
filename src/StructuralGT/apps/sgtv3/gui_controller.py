@@ -185,12 +185,19 @@ class MainController(QObject):
             elif type(result) is GraphAnalyzer:
                 self.write_to_pdf(result)
         else:
-            self.taskTerminatedSignal.emit(success_val, [])
             if type(result) is GraphExtractor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_current_obj()
                 sgt_obj.g_obj = result
                 self.select_img_type(4)
+                self.taskTerminatedSignal.emit(success_val, [])
+            elif type(result) is GraphAnalyzer:
+                self._handle_progress_update(100, "GT PDF successfully generated!")
+                self.taskTerminatedSignal.emit(1, ["GT calculations completed", "All GT parameters have been "
+                                                                                "calculated. Check out generated PDF in "
+                                                                                "'Output Dir'."])
+            else:
+                self.taskTerminatedSignal.emit(success_val, [])
 
     @Slot(result=str)
     def get_sgt_version(self):
@@ -595,8 +602,7 @@ class MainController(QObject):
                     pdf.savefig(fig)
             sgt_obj.g_obj.save_files()
 
-            self._handle_progress_update(100, "GT PDF successfully generated!")
-            self.worker_task.taskFinishedSignal.emit(1, ["GT calculations completed", "Check out generated PDF in 'Output Dir'."])
+            self._handle_finished(1, sgt_obj)
             """if show_dialog == 1:
                 self.wait_flag = False
                 self.enable_all_tasks()

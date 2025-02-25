@@ -190,7 +190,6 @@ Rectangle {
             for (let i=0; i < cbImageType.model.count; i++) {
                 if (cbImageType.model.get(i).value === curr_type){
                     cbImageType.currentIndex = i;
-                    console.log(cbImageType.currentIndex);
                 }
             }
         }

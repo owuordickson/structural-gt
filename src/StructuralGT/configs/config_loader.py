@@ -214,8 +214,8 @@ def load_gte_configs():
         options_gte["prune_dangling_edges"]["value"] = int(config.get('extraction-settings', 'prune_dangling_edges'))
         options_gte["remove_disconnected_segments"]["value"] = int(
             config.get('extraction-settings', 'remove_disconnected_segments'))
+        options_gte["remove_disconnected_segments"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
-        options_gte["remove_self_loops"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["is_multigraph"]["value"] = int(config.get('extraction-settings', 'is_multigraph'))
         options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
         weight_type = str(config.get('extraction-settings', 'weight_type'))
