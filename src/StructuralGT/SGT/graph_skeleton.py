@@ -70,7 +70,7 @@ class GraphSkeleton:
             skeleton = GraphSkeleton.merge_nodes(skeleton)
 
         if self.configs["remove_disconnected_segments"]["value"] == 1:
-            skeleton = remove_small_objects(skeleton, self.configs["remove_self_loops"]["items"][0]["value"] , connectivity=2)
+            skeleton = remove_small_objects(skeleton, self.configs["remove_disconnected_segments"]["items"][0]["value"] , connectivity=2)
 
         skel_int = 1 * skeleton
 

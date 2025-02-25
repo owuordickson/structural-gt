@@ -363,7 +363,7 @@ class GraphExtractor(ProgressUpdate):
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
         run_info += "\n"
         if opt_gte["remove_disconnected_segments"]["value"]:
-            run_info += f"Remove Objects of Size = {opt_gte["remove_self_loops"]["items"][0]["value"]} || "
+            run_info += f"Remove Objects of Size = {opt_gte["remove_disconnected_segments"]["items"][0]["value"]} || "
         if opt_gte["remove_self_loops"]["value"]:
             run_info += "Remove Self Loops || "
         if opt_gte["is_multigraph"]["value"]:

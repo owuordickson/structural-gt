@@ -304,7 +304,7 @@ class ImageProcessor:
             run_info += "Adaptive Threshold, " + str(opt_img["adaptive_local_threshold_value"]["value"]) + " bit kernel"
         elif opt_img["threshold_type"]["value"] == 2:
             run_info += "OTSU Threshold"
-        if opt_img["apply_gamma"]["value"] != 1:
+        if opt_img["apply_gamma"]["value"] == 1:
             run_info += f" || Gamma = {opt_img["apply_gamma"]["dataValue"]}"
         run_info += "\n"
         if opt_img["apply_median_filter"]["value"]:

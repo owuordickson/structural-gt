@@ -190,8 +190,8 @@ def load_gte_configs():
                         ]},
         "merge_nearby_nodes": {"id": "merge_nearby_nodes", "type": "graph-extraction", "text": "Merge Nearby Nodes", "value": 1},
         "prune_dangling_edges": {"id": "prune_dangling_edges", "type": "graph-extraction", "text": "Prune Dangling Edges", "value": 1},
-        "remove_disconnected_segments": {"id": "remove_disconnected_segments", "type": "graph-extraction", "text": "Remove Disconnected Segments", "value": 1},
-        "remove_self_loops": {"id": "remove_self_loops", "type": "graph-extraction", "text": "Remove Self Loops", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
+        "remove_disconnected_segments": {"id": "remove_disconnected_segments", "type": "graph-extraction", "text": "Remove Disconnected Segments", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
+        "remove_self_loops": {"id": "remove_self_loops", "type": "graph-extraction", "text": "Remove Self Loops", "value": 1},
         "is_multigraph": {"id": "is_multigraph", "type": "graph-extraction", "text": "Is Multigraph?", "value": 0},
         "display_node_id": {"id": "display_node_id", "type": "graph-extraction", "text": "Display Node ID", "value": 0},
 
