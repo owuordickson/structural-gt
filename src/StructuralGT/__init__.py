@@ -36,4 +36,4 @@ __credits__ = "The Regents of the University of Michigan"
 
 
 # Packages available in 'from StructuralGT import *'
-__all__ = ['GraphAnalyzer', 'GraphSkeleton', 'GraphExtractor']
+__all__ = ['__version__', 'GraphAnalyzer', 'GraphSkeleton', 'GraphExtractor']

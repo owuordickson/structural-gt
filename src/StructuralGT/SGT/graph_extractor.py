@@ -83,7 +83,7 @@ class GraphExtractor(ProgressUpdate):
         super(GraphExtractor, self).__init__()
         self.terminal_app = True
         self.configs = load_gte_configs()  # graph extraction parameters and options.
-        self.props = []
+        self.props = [["Weight Type", ""]]
         self.imp = img_obj
         self.graph_skeleton = None
         self.nx_graph, self.nx_info = None, []  # TO DELETE 'nx_info' (ADDED TO PROPS)
@@ -117,7 +117,7 @@ class GraphExtractor(ProgressUpdate):
         else:
             self.update_status([75, "Verifying graph network..."])
             if self.nx_graph.number_of_nodes() <= 0:
-                self.update_status([-1, "Problem generating graph (change image/binary filters)."])
+                self.update_status([-1, "Problem generating graph (change image/binary filters)["])
                 self.abort = True
             else:
                 # self.save_adj_csv()
@@ -156,7 +156,7 @@ class GraphExtractor(ProgressUpdate):
 
         self.update_status([60, "Creating graph network..."])
         # skeleton analysis object with sknw
-        if opt_gte.is_multigraph:
+        if opt_gte["is_multigraph"]["value"]:
             nx_graph = sknw.build_sknw(img_skel, multi=True)
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -166,7 +166,7 @@ class GraphExtractor(ProgressUpdate):
             # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
             # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
             for (s, e) in nx_graph.edges():
-                if opt_gte.has_weights == 1:
+                if opt_gte["has_weights"]["value"] == 1:
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
                         pix_width, wt = graph_skel.assign_weights_by_width(ge)
@@ -188,11 +188,14 @@ class GraphExtractor(ProgressUpdate):
                 #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
                 #        nx_graph[s][e]['length'] = 2
 
-                if opt_gte.has_weights == 1:
+                if opt_gte["has_weights"]["value"] == 1:
                     # We modify 'weight'
-                    wt_type = opt_gte.weight_type
+                    wt_type = 'DIA'  # Default weight
+                    for i in range(len(opt_gte["has_weights"]["items"])):
+                        if opt_gte["has_weights"]["items"][i]["value"]:
+                            wt_type = opt_gte["has_weights"]["items"][i]["id"]
                     px_size = self.imp.pixel_width
-                    rho_val = self.imp.configs.resistivity
+                    rho_val = self.imp.configs["resistivity"]["value"]
                     weight_options = GraphExtractor.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']
@@ -216,8 +219,8 @@ class GraphExtractor(ProgressUpdate):
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
-        if opt_gte.remove_self_loops:
-            if opt_gte.is_multigraph:
+        if opt_gte["remove_self_loops"]["value"]:
+            if opt_gte["is_multigraph"]["value"]:
                 for (s, e) in list(self.nx_graph.edges()):
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
@@ -287,7 +290,7 @@ class GraphExtractor(ProgressUpdate):
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
             ax.imshow(raw_img, cmap='gray')
-            if opt_gte.is_multigraph:
+            if opt_gte["is_multigraph"]["value"]:
                 for (s, e) in nx_graph.edges():
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
@@ -296,7 +299,6 @@ class GraphExtractor(ProgressUpdate):
                 for (s, e) in nx_graph.edges():
                     ge = nx_graph[s][e]['pts']
                     ax.plot(ge[:, 1], ge[:, 0], 'red')
-
         return fig
 
     def display_skeletal_images(self):
@@ -324,7 +326,7 @@ class GraphExtractor(ProgressUpdate):
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
         ax_2.imshow(img, cmap='gray')
-        if opt_gte.is_multigraph:
+        if opt_gte["is_multigraph"]["value"]:
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
                     ge = nx_graph[s][e][k]['pts']
@@ -335,7 +337,7 @@ class GraphExtractor(ProgressUpdate):
                 ax_2.plot(ge[:, 1], ge[:, 0], 'red')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
-        if opt_gte.display_node_id == 1:
+        if opt_gte["display_node_id"]["value"] == 1:
             i = 0
             for x, y in zip(gn[:, 1], gn[:, 0]):
                 ax_2.annotate(str(i), (x, y), fontsize=5)
@@ -354,19 +356,23 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
 
         run_info = "***Graph Extraction Configurations***\n"
-        if opt_gte.has_weights:
-            run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(opt_gte.weight_type)} || "
-        if opt_gte.merge_nearby_nodes:
+        if opt_gte["has_weights"]["value"]:
+            wt_type = 'DIA'  # Default weight
+            for i in range(len(opt_gte["has_weights"]["items"])):
+                if opt_gte["has_weights"]["items"][i]["value"]:
+                    wt_type = opt_gte["has_weights"]["items"][i]["id"]
+            run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(wt_type)} || "
+        if opt_gte["merge_nearby_nodes"]["value"]:
             run_info += "Merge Nodes || "
-        if opt_gte.prune_dangling_edges:
+        if opt_gte["prune_dangling_edges"]["value"]:
             run_info += "Prune Dangling Edges || "
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
         run_info += "\n"
-        if opt_gte.remove_disconnected_segments:
-            run_info += f"Remove Objects of Size = {opt_gte.remove_object_size} || "
-        if opt_gte.remove_self_loops:
+        if opt_gte["remove_disconnected_segments"]["value"]:
+            run_info += f"Remove Objects of Size = {opt_gte["remove_self_loops"]["items"][0]["value"]} || "
+        if opt_gte["remove_self_loops"]["value"]:
             run_info += "Remove Self Loops || "
-        if opt_gte.is_multigraph:
+        if opt_gte["is_multigraph"]["value"]:
             run_info += "Multi-graph allowed "
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
 
@@ -397,7 +403,7 @@ class GraphExtractor(ProgressUpdate):
         bin_file = os.path.join(output_location, bin_filename)
         net_file = os.path.join(output_location, net_filename)
 
-        if opt_gte.save_images == 1:
+        if opt_gte["save_images"]["value"] == 1:
             graph_img = self.imp.img_net
             cv2.imwrite(str(img_file), self.imp.img_mod)
             cv2.imwrite(str(bin_file), self.imp.img_bin)
@@ -407,12 +413,12 @@ class GraphExtractor(ProgressUpdate):
                 img_net = graph_img.convert("RGB")
                 img_net.save(net_file, format='JPEG', quality=95)
 
-        if opt_gte.export_adj_mat == 1:
+        if opt_gte["export_adj_mat"]["value"] == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
             np.savetxt(str(adj_file), adj_mat, delimiter=",")
 
-        if opt_gte.export_edge_list == 1:
-            if opt_gte.has_weights == 1:
+        if opt_gte["export_edge_list"]["value"] == 1:
+            if opt_gte["has_weights"]["value"] == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
                 el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
                 with open(csv_file, 'w', newline='') as csvfile:
@@ -441,8 +447,8 @@ class GraphExtractor(ProgressUpdate):
                             pass
                 csvfile.close()
 
-        if opt_gte.export_as_gexf == 1:
-            if opt_gte.is_multigraph:
+        if opt_gte["export_as_gexf"]["value"] == 1:
+            if opt_gte["is_multigraph"]["value"]:
                 # deleting extraneous info and then exporting the final skeleton
                 for (x) in nx_graph.nodes():
                     del nx_graph.nodes[x]['pts']

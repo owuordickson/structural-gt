@@ -84,7 +84,9 @@ class WorkerTask (QObject):
             # self.abort = True
             self.update_progress(-1, "Error encountered! Try again")
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, None)
+            self.taskFinishedSignal.emit(False, ["Apply Filters Failed", "Fatal error while applying filters! "
+                                                                         "Change filter settings and try again; "
+                                                                         "Or, Close the app and try again."])
 
     def task_extract_graph(self, graph_obj):
         """"""
@@ -100,7 +102,10 @@ class WorkerTask (QObject):
             # Clean up listeners before exiting
             graph_obj.remove_listener(self.update_progress)
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, None)
+            self.taskFinishedSignal.emit(False, ["Extract Graph Aborted", "Graph extraction aborted due to error! "
+                                                                          "Change image filters and/or graph settings "
+                                                                          "and try again. If error persists then close "
+                                                                          "the app and try again."])
         except Exception as err:
             print(err)
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
@@ -109,7 +114,10 @@ class WorkerTask (QObject):
             graph_obj.remove_listener(self.update_progress)
             self.remove_thread_listener(graph_obj.abort_tasks)
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, None)
+            self.taskFinishedSignal.emit(False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
+                                                                          "Change image filters and/or graph settings "
+                                                                          "and try again. If error persists then close "
+                                                                          "the app and try again."])
 
     def task_compute_gt(self, sgt_obj):
         """"""
@@ -147,13 +155,17 @@ class WorkerTask (QObject):
             print(f"All tasks aborted: {err}")
             self.update_progress(-1, "All tasks aborted!")
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, None)
+            self.taskFinishedSignal.emit(False, ["SGT Computations Aborted", "Graph theory parameter computations "
+                                                                             "aborted by user."])
         except Exception as err:
             print(f"Error:  {err}")
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.update_progress(-1, "Error encountered! Try again")
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, None)
+            self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing "
+                                                                            "GT parameters. Change image filters and/or "
+                                                                            "graph settings and try again. If error "
+                                                                            "persists then close the app and try again."])
 
     def compute_gt_parameters(self, sgt_obj):
         """"""

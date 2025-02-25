@@ -9,6 +9,7 @@ from gui_tree_model import TreeModel
 from gui_table_model import TableModel
 from gui_list_model import CheckBoxModel
 
+from src.StructuralGT import __version__
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
@@ -18,10 +19,10 @@ from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTask
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
 
-    # showAlertSignal = Signal(str, str)
+    showAlertSignal = Signal(str, str)
     errorSignal = Signal(str)
     updateProgressSignal = Signal(int, str)
-
+    taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
@@ -170,9 +171,31 @@ class MainController(QObject):
         else:
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success: bool, msg: str):
+    def _handle_finished(self, success_val: bool, result: object|list):
         """"""
+        self.error_flag = success_val
+        if not success_val:
+            logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = result[0]
+            self.status_msg["message"] = result[1]
+            self.taskTerminatedSignal.emit(success_val, result)
+        else:
+            self.taskTerminatedSignal.emit(success_val, [])
         self.wait_flag = False
+
+    @Slot(result=str)
+    def get_sgt_version(self):
+        """"""
+        # Copyright (C) 2024, the Regents of the University of Michigan.
+        return f"StructuralGT v{__version__}"
+
+    @Slot(result=list)
+    def get_alert_message(self):
+        """"""
+        if self.error_flag:
+            return [self.status_msg["title"], self.status_msg["message"]]
+        else:
+            return []
 
     @Slot(result=str)
     def get_pixmap(self):
@@ -289,13 +312,21 @@ class MainController(QObject):
                 child_index = self.gteTreeModel.index(j, 0, parent_index)
                 print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
                        self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])"""
-        self.wait_flag = True
-        sgt_obj = self.get_current_obj()
-        # self.worker_task = WorkerTask()
-        self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj,))
-        self.worker_task.inProgressSignal.connect(self._handle_progress_update)
-        self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-        self.worker.start()
+        try:
+            self.wait_flag = True
+            sgt_obj = self.get_current_obj()
+            # self.worker_task = WorkerTask()
+            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj,))
+            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
+            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+            self.worker.start()
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            logging.exception("Graph Extraction Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
+            self.worker_task.taskFinishedSignal.emit(-1, ["Graph Extraction Error",
+                                                          "Fatal error while trying to extract graph. "
+                                                          "Close the app and try again."])
 
     @Slot()
     def apply_img_bin_changes(self):
@@ -475,8 +506,12 @@ class MainController(QObject):
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
             print(f"File '{proj_name}' created successfully in '{dir_path}'.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            logging.exception("Create Project Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "Create Project Error"
+            self.status_msg["message"] = f"Fatal error while trying to create SGT project. Close the app and try again."
+            self.error_flag = True
 
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):

@@ -45,7 +45,8 @@ Rectangle {
                 visible: mainController.is_task_running()
                 enabled: mainController.is_task_running()
                 onClicked: {
-                    progressBar.value = 0 // Reset progress
+                    btnCancel.visible = false;
+                    lblStatusMsg.text = "initiating abort...";
                     console.log("Progress canceled")
                 }
             }
@@ -58,7 +59,7 @@ Rectangle {
             Layout.leftMargin: 36
             Layout.rightMargin: 36 // Progress bar covers 80% of the width
             Layout.bottomMargin: 10
-            text: "v3.0.1"  // Copyright (C) 2024, the Regents of the University of Michigan.
+            text: mainController.get_sgt_version()
             Layout.fillWidth: true
             color: "blue"
         }
@@ -73,8 +74,10 @@ Rectangle {
                 lblStatusMsg.text = msg;
                 lblStatusMsg.color = "#008b00";
                 progressBar.visible = mainController.is_task_running();
-                btnCancel.visible = mainController.is_task_running();
-                btnCancel.enabled = mainController.is_task_running();
+                if (btnCancel.visible === true){
+                    btnCancel.visible = mainController.is_task_running();
+                    btnCancel.enabled = mainController.is_task_running();
+                }
             }
         }
 
@@ -83,8 +86,31 @@ Rectangle {
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#bc2222";
             progressBar.visible = mainController.is_task_running();
-            btnCancel.visible = mainController.is_task_running()
-            btnCancel.enabled = mainController.is_task_running()
+            if (btnCancel.visible === true){
+                btnCancel.visible = mainController.is_task_running();
+                btnCancel.enabled = mainController.is_task_running();
+            }
+        }
+
+        function onTaskTerminatedSignal(success_val, msg_data){
+            console.log(success_val);
+            if (success_val) {
+                lblStatusMsg.color = "#2222bc";
+                lblStatusMsg.text = mainController.get_sgt_version();
+            } else {
+                lblStatusMsg.color = "#bc2222";
+                lblStatusMsg.text = "Task terminated due to an error. Try again.";
+            }
+
+            if (msg_data.length > 0) {
+                dialogAlert.title = msg_data[0];
+                lblAlertMsg.text = msg_data[1];
+                dialogAlert.open();
+            }
+
+            progressBar.visible = mainController.is_task_running();
+            btnCancel.visible = mainController.is_task_running();
+            btnCancel.enabled = mainController.is_task_running();
         }
 
     }
