@@ -26,7 +26,7 @@ Rectangle {
             ProgressBar {
                 id: progressBar
                 Layout.fillWidth: true
-                visible: mainController.is_running()
+                visible: mainController.is_task_running()
                 value: 0 // Example value (50% progress)
                 from: 0
                 to: 100
@@ -42,8 +42,8 @@ Rectangle {
                 icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                visible: mainController.is_running()
-                enabled: mainController.is_running()
+                visible: mainController.is_task_running()
+                enabled: mainController.is_task_running()
                 onClicked: {
                     progressBar.value = 0 // Reset progress
                     console.log("Progress canceled")
@@ -62,5 +62,28 @@ Rectangle {
             Layout.fillWidth: true
             color: "blue"
         }
+    }
+
+    Connections {
+        target: mainController
+
+        function onUpdateProgressSignal(val, msg) {
+            if (val <= 100) {
+                progressBar.value = val;
+                lblStatusMsg.text = msg;
+                lblStatusMsg.color = "#22bc22";
+                btnCancel.visible = mainController.is_task_running()
+                btnCancel.enabled = mainController.is_task_running()
+            }
+        }
+
+        function onErrorSignal (msg) {
+            progressBar.value = 0;
+            lblStatusMsg.text = msg;
+            lblStatusMsg.color = "#bc2222";
+            btnCancel.visible = mainController.is_task_running()
+            btnCancel.enabled = mainController.is_task_running()
+        }
+
     }
 }

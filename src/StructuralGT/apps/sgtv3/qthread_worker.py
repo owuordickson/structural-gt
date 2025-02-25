@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from PySide6.QtCore import QThread,Signal
+from PySide6.QtCore import QObject,QThread,Signal
 
 from src.StructuralGT.configs.config_loader import get_num_cores, write_file
 
@@ -12,7 +12,7 @@ class AbortException(Exception):
 
 
 class QThreadWorker(QThread):
-    def __init__(self, func, *args, parent=None):
+    def __init__(self, func, args, parent=None):
         super().__init__(parent)
         self.func = func  # Store function reference
         self.args = args  # Store arguments
@@ -21,7 +21,7 @@ class QThreadWorker(QThread):
         if self.func:
             self.func(*self.args)  # Call function with arguments
 
-class WorkerTasks:
+class WorkerTask (QObject):
 
     inProgressSignal = Signal(int, str)         # progress-value (0-100), progress-message (str)
     taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
@@ -29,6 +29,7 @@ class WorkerTasks:
     # abortSignal = Signal()
 
     def __init__(self):
+        super().__init__()
         self.__listeners = []
 
     def add_thread_listener(self, func):

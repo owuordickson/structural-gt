@@ -3,7 +3,7 @@ import sys
 import logging
 import numpy as np
 from PIL import Image, ImageQt  # Import ImageQt for conversion
-from PySide6.QtCore import QObject,Signal, Slot
+from PySide6.QtCore import QObject,Signal,Slot
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
@@ -12,13 +12,15 @@ from gui_list_model import CheckBoxModel
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
-from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTasks
+from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTask
 
 
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
 
-    showAlertSignal = Signal(str, str)
+    # showAlertSignal = Signal(str, str)
+    errorSignal = Signal(str)
+    updateProgressSignal = Signal(int, str)
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
@@ -59,7 +61,7 @@ class MainController(QObject):
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
-        self.worker_tasks = WorkerTasks()
+        self.worker_task = WorkerTask()
 
     def load_img_configs(self, sgt_obj):
         """Reload image configuration selections and controls after it is loaded."""
@@ -157,6 +159,20 @@ class MainController(QObject):
             self.error_flag = True
             return False
 
+    def _handle_progress_update(self, value: int, msg: str):
+        """"""
+        progress_val = 0 if value < 0 else value
+        print(str(progress_val) + "%: " + msg)
+        logging.info(str(progress_val) + "%: " + msg, extra={'user': 'SGT Logs'})
+        if progress_val >= 0:
+            self.updateProgressSignal.emit(progress_val, msg)
+        else:
+            self.errorSignal.emit(msg)
+
+    def _handle_finished(self, success: bool, msg: str):
+        """"""
+        pass
+
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
@@ -165,35 +181,6 @@ class MainController(QObject):
     @Slot(result=int)
     def get_current_img_type(self):
         return self.current_img_type
-
-    """"@Slot(str, result=bool)
-    def get_selected_img_val(self, item_name):
-        # print(item_name)
-        if len(self.sgt_objs) <= 0:
-            return False
-        else:
-            sgt_obj = self._get_current_obj()
-            options_img = sgt_obj.g_obj.imp.configs
-            # options_img = load_img_configs()
-            val = options_img[item_name]["value"]
-            return True if val == 1 else False
-    """
-
-    """@Slot(str, result=float)
-    def get_selected_img_data(self, item_name):
-        # print(item_name)
-        if len(self.sgt_objs) <= 0:
-            return False
-        else:
-            sgt_obj = self._get_current_obj()
-            options_img = sgt_obj.g_obj.imp.configs
-            # options_img = load_img_configs()
-            if options_img[item_name]["type"] == "image-filter":
-                val = options_img[item_name]["dataValue"]
-            else:
-                val = options_img[item_name]["value"]
-            return val
-    """
 
     @Slot(result=str)
     def get_img_nav_location(self):
@@ -293,16 +280,20 @@ class MainController(QObject):
     @Slot()
     def apply_gte_changes(self):
         """Retrieve settings from model and send to Python."""
-        # opt_gte = {}
-        for i in range(self.gteTreeModel.rowCount()):
+        """for i in range(self.gteTreeModel.rowCount()):
             parent_index = self.gteTreeModel.index(i, 0)
             print([self.gteTreeModel.data(parent_index, self.gteTreeModel.IdRole),
                    self.gteTreeModel.data(parent_index, self.gteTreeModel.ValueRole)])
             for j in range(self.gteTreeModel.rowCount(parent_index)):
                 child_index = self.gteTreeModel.index(j, 0, parent_index)
                 print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
-                       self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])
-        # print(self.gteTreeModel.data())
+                       self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])"""
+        sgt_obj = self.get_current_obj()
+        # self.worker_task = WorkerTask()
+        self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj))
+        self.worker_task.inProgressSignal.connect(self._handle_progress_update)
+        self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+        self.worker.start()
 
     @Slot()
     def apply_img_bin_changes(self):
@@ -343,7 +334,7 @@ class MainController(QObject):
         return self.error_flag
 
     @Slot(result=bool)
-    def is_running(self):
+    def is_task_running(self):
         return self.wait_flag
 
     @Slot(bool)

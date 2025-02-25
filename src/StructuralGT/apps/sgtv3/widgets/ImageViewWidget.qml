@@ -286,7 +286,6 @@ ColumnLayout {
 
             Label {
                 id: lblNavInfo
-                //text: "1/1"
                 text: ""
                 color: "#808080"
                 Layout.alignment: Qt.AlignCenter
@@ -385,6 +384,12 @@ ColumnLayout {
         function onPerformCroppingSignal(allow) {
             if (allow) {
                 cropImage();
+            }
+        }
+
+        function onUpdateProgressSignal(val, msg) {
+            if (val === 101) {
+                lblNavInfo.text = msg;
             }
         }
 
