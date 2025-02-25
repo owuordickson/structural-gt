@@ -38,7 +38,7 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = im_obj.img
             img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
-            self.img_controller.load_img_configs(sgt_obj)
+            #self.img_controller.load_img_configs(sgt_obj)
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()  # signal to update QML image
 

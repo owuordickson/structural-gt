@@ -146,6 +146,7 @@ class MainController(QObject):
             im_obj = ImageProcessor(str(img_path), out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = g_obj
+            self.load_img_configs(g_obj)
             self.error_flag = False
             return True
         except Exception as err:
@@ -219,7 +220,7 @@ class MainController(QObject):
         self.imageChangedSignal.emit()
 
     @Slot(int)
-    def select_img_type(self, choice):
+    def select_img_type(self, choice=None):
         """
             '0' - Original image
             '1' - Cropped image
@@ -231,6 +232,7 @@ class MainController(QObject):
             choice:
         Returns:
         """
+        choice = self.current_img_type if choice is None else choice
         self.current_img_type = 0 if (choice == 1 or choice == 5) else choice
         self.changeImageSignal.emit(choice)
 
@@ -305,24 +307,22 @@ class MainController(QObject):
     @Slot()
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
-        print("Updated Settings:", updated_values)
-        # self.select_img_type()
-        pass
+        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
+        # print("Updated Settings:", updated_values)
+        self.select_img_type()
 
     @Slot()
     def apply_img_filter_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = []
+        """updated_values = []
         for item in self.imgFilterModel.list_data:
             try:
                 val = [item["id"], item["value"], item["dataValue"]]
             except KeyError:
                 val = [item["id"], item["value"]]
             updated_values.append(val)
-        print("Updated Settings:", updated_values)
-        # self.select_img_type(self.current_img_type)
-        pass
+        print("Updated Settings:", updated_values)"""
+        self.select_img_type()
 
     @Slot()
     def apply_microscopy_props_changes(self):
