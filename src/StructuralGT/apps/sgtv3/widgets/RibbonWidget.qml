@@ -119,9 +119,11 @@ Rectangle {
                 id: cbImageType
                 Layout.minimumWidth: 150
                 model: ListModel {
+                    id: imgTypeModel
                     ListElement { text: "Original Image"; value: 0 }
                     ListElement { text: "Binary Image"; value: 3 }
                     ListElement { text: "Processed Image"; value: 2 }
+                    ListElement { text: "Extracted Graph"; value: 4 }
                 }
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
@@ -183,6 +185,12 @@ Rectangle {
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();
+
+            for (let i=0; i < cbImageType.model.length; i++) {
+                if (cbImageType.model[i].value === mainController.get_current_img_type()){
+                    cbImageType.currentIndex = i;
+                }
+            }
         }
     }
 

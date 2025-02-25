@@ -10,20 +10,26 @@ class AbortException(Exception):
     """Custom exception to handle task abortion."""
     pass
 
+
 class QThreadWorker(QThread):
+    def __init__(self, func, *args, parent=None):
+        super().__init__(parent)
+        self.func = func  # Store function reference
+        self.args = args  # Store arguments
+
+    def run(self):
+        if self.func:
+            self.func(*self.args)  # Call function with arguments
+
+class WorkerTasks:
 
     inProgressSignal = Signal(int, str)         # progress-value (0-100), progress-message (str)
     taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
     # errorOccurredSignal = Signal()
     # abortSignal = Signal()
 
-    def __init__(self, args, target=None):
-        super().__init__()
+    def __init__(self):
         self.__listeners = []
-        self.func = target
-        # self.func_id = func_id
-        self.args = args
-        # self.abort = False
 
     def add_thread_listener(self, func):
         """
@@ -147,9 +153,6 @@ class QThreadWorker(QThread):
             self.update_progress(-1, "Error encountered! Try again")
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, None)
-
-    def run(self):
-        self.func(*self.args)
 
     def compute_gt_parameters(self, sgt_obj):
         """"""

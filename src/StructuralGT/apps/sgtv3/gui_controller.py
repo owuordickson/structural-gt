@@ -12,6 +12,7 @@ from gui_list_model import CheckBoxModel
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
+from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTasks
 
 
 class MainController(QObject):
@@ -42,7 +43,7 @@ class MainController(QObject):
         # Create graph objects
         self.sgt_objs = {}
         self.current_obj_index = -1
-        # self.current_img_type = 0
+        self.current_img_type = 0
 
         # Create Models
         self.imgListTableModel = TableModel([])
@@ -55,6 +56,10 @@ class MainController(QObject):
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
         self.imgControlModel = CheckBoxModel([])
+
+        # Create QThreadWorker for long tasks
+        self.worker = QThreadWorker(0, None)
+        self.worker_tasks = WorkerTasks()
 
     def load_img_configs(self, sgt_obj):
         """Reload image configuration selections and controls after it is loaded."""
@@ -156,6 +161,10 @@ class MainController(QObject):
         """Returns the URL that QML should use to load the image"""
         return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
 
+    @Slot(result=int)
+    def get_current_img_type(self):
+        return self.current_img_type
+
     """"@Slot(str, result=bool)
     def get_selected_img_val(self, item_name):
         # print(item_name)
@@ -222,7 +231,7 @@ class MainController(QObject):
             choice:
         Returns:
         """
-        # self.current_img_type = choice
+        self.current_img_type = 0 if (choice == 1 or choice == 5) else choice
         self.changeImageSignal.emit(choice)
 
     @Slot(int)
@@ -296,20 +305,24 @@ class MainController(QObject):
     @Slot()
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
-        print("Updated Settings:", updated_values)
+        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
+        # print("Updated Settings:", updated_values)
+        # self.select_img_type()
+        pass
 
     @Slot()
     def apply_img_filter_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = []
+        """updated_values = []
         for item in self.imgFilterModel.list_data:
             try:
                 val = [item["id"], item["value"], item["dataValue"]]
             except KeyError:
                 val = [item["id"], item["value"]]
             updated_values.append(val)
-        print("Updated Settings:", updated_values)
+        print("Updated Settings:", updated_values)"""
+        # self.select_img_type()
+        pass
 
     @Slot()
     def apply_microscopy_props_changes(self):

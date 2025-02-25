@@ -112,15 +112,10 @@ ColumnLayout {
         checked: false
         onCheckedChanged: {
             var val = checked === true ? 1 : 0;
-            var index = imgBinFilterModel.index(3, 0);
+            var index = imgBinFilterModel.index(4, 0);
             imgBinFilterModel.setData(index, val, valueRole);
             mainController.apply_img_bin_changes();
         }
-    }
-
-    function updateValue(val) {
-        var index = imgBinFilterModel.index(model.index, 0);
-        //imgControlModel.setData(index, val, valueRole);
     }
 
     function initializeSelections() {

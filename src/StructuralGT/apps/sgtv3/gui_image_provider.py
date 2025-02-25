@@ -14,17 +14,28 @@ class ImageProvider(QQuickImageProvider):
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
             sgt_obj = self.img_controller.get_current_obj()
-            if option == "processed":
-                img_cv = sgt_obj.g_obj.imp.img_mod
-            elif option == "graph":
-                img_cv = sgt_obj.g_obj.imp.img_net
-            elif option == "crop":
-                img_cv = sgt_obj.g_obj.imp.img
+            im_obj = sgt_obj.g_obj.imp
+            if option == "crop":
+                img_cv = im_obj.img
             elif option == "un-crop":
-                sgt_obj.g_obj.imp.undo_cropping()
-                img_cv = sgt_obj.g_obj.imp.img
+                im_obj.undo_cropping()
+                img_cv = im_obj.img
+            elif option == "binary":
+                im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
+                im_obj.img_bin, im_obj.otsu_val = im_obj.binarize_img(im_obj.img_mod.copy())
+                img_cv = im_obj.img_bin
+            elif option == "processed":
+                im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
+                img_cv = im_obj.img_mod
+            elif option == "graph":
+                if im_obj.img_net is None:
+                    self.img_controller.apply_gte_changes()
+                    # Wait for task to finish
+                    return
+                else:
+                    img_cv = im_obj.img_net
             else:
-                img_cv = sgt_obj.g_obj.imp.img
+                img_cv = im_obj.img
             img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
             self.img_controller.load_img_configs(sgt_obj)
@@ -36,10 +47,10 @@ class ImageProvider(QQuickImageProvider):
 
     def handle_change_image(self, cmd):
         # '0' - Original image
-        # '1' - Cropped image
-        # '2' - Processed image
-        # '3' - Binary image
-        # '4' - Extracted graph
+        # '1' - Cropping image
+        # '2' - Processing image
+        # '3' - Binarize image
+        # '4' - Extract graph
         # '5' - Undo crop
         if cmd == 0:
             # Original QPixmap image for first time
