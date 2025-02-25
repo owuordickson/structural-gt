@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import numpy as np
-from PIL import Image, ImageQt  # Import ImageQt for conversion
+from PIL import Image, ImageQt  # ImageQt for conversion
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
