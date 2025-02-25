@@ -305,23 +305,23 @@ class MainController(QObject):
     @Slot()
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
-        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
-        # print("Updated Settings:", updated_values)
+        updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
+        print("Updated Settings:", updated_values)
         # self.select_img_type()
         pass
 
     @Slot()
     def apply_img_filter_changes(self):
         """Retrieve settings from model and send to Python."""
-        """updated_values = []
+        updated_values = []
         for item in self.imgFilterModel.list_data:
             try:
                 val = [item["id"], item["value"], item["dataValue"]]
             except KeyError:
                 val = [item["id"], item["value"]]
             updated_values.append(val)
-        print("Updated Settings:", updated_values)"""
-        # self.select_img_type()
+        print("Updated Settings:", updated_values)
+        # self.select_img_type(self.current_img_type)
         pass
 
     @Slot()
@@ -484,7 +484,6 @@ class MainController(QObject):
             print(f"File '{proj_name}' created successfully in '{dir_path}'.")
         except Exception as e:
             print(f"An error occurred: {e}")
-
 
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):

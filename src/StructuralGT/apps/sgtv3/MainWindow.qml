@@ -168,11 +168,12 @@ ApplicationWindow {
             GraphExtractWidget{}
         }
 
-        /*onAccepted: {
+        onAccepted: {
+            mainController.apply_gte_changes();
             dialogShowGraph.close()
         }
 
-        onRejected: {
+        /*onRejected: {
             dialogShowGraph.close()
         }*/
     }
