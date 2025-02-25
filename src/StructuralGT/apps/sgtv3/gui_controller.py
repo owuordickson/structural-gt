@@ -256,9 +256,9 @@ class MainController(QObject):
         try:
             self.current_obj_index = index if index is not None else self.current_obj_index
             self.imgListTableModel.update_data(self.sgt_objs)
-            self.select_img_type(0)
+            self.select_img_type()
         except Exception as err:
-            self.current_obj_index = -1
+            self.current_obj_index = 0
             # print(f"Error loading GUI model data: {err}")
             self.status_msg["message"] = f"Error loading image. Try again."
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
