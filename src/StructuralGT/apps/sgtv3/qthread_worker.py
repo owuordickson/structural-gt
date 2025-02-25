@@ -121,7 +121,7 @@ class WorkerTask (QObject):
 
     def task_compute_gt(self, sgt_obj):
         """"""
-        success, result = self.compute_gt_parameters(sgt_obj)
+        success, result = self._compute_gt_parameters(sgt_obj)
         self.taskFinishedSignal.emit(success, result)
 
     def task_compute_gt_all(self, sgt_objs):
@@ -133,7 +133,7 @@ class WorkerTask (QObject):
                 self.update_progress(101, status_msg)
 
                 start = time.time()
-                success, result = self.compute_gt_parameters(sgt_obj)
+                success, result = self._compute_gt_parameters(sgt_obj)
                 self.is_aborted(sgt_obj)
                 self.taskFinishedSignal.emit(False, result)
                 end = time.time()
@@ -167,7 +167,7 @@ class WorkerTask (QObject):
                                                                             "graph settings and try again. If error "
                                                                             "persists then close the app and try again."])
 
-    def compute_gt_parameters(self, sgt_obj):
+    def _compute_gt_parameters(self, sgt_obj):
         """"""
         try:
             # Add Listeners
@@ -187,12 +187,12 @@ class WorkerTask (QObject):
             self.is_aborted(sgt_obj)
 
             # 4. Generate results PDF
-            plot_figs = sgt_obj.generate_pdf_output(gui_app=True)
+            sgt_obj.plot_figures = sgt_obj.generate_pdf_output(gui_app=True)
 
             # Cleanup - remove listeners
             sgt_obj.remove_listener(self.update_progress)
             self.remove_thread_listener(sgt_obj.abort_tasks)
-            return True, plot_figs
+            return True, sgt_obj
         except AbortException as err:
             print(f"Task aborted: {err}")
             self.update_progress(-1, "Task aborted!")

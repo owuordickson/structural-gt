@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from PIL import Image, ImageQt  # Import ImageQt for conversion
 from PySide6.QtCore import QObject,Signal,Slot
+from matplotlib.backends.backend_pdf import PdfPages
 
 from gui_tree_model import TreeModel
 from gui_table_model import TableModel
@@ -171,18 +172,22 @@ class MainController(QObject):
         else:
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success_val: bool, result: object|list):
+    def _handle_finished(self, success_val: bool, result: None|list|GraphExtractor|GraphAnalyzer):
         """"""
         self.error_flag = success_val
         self.wait_flag = False
         if not success_val:
-            logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = result[0]
-            self.status_msg["message"] = result[1]
-            self.taskTerminatedSignal.emit(success_val, result)
+            if type(result) is list:
+                logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
+                self.status_msg["title"] = result[0]
+                self.status_msg["message"] = result[1]
+                self.taskTerminatedSignal.emit(success_val, result)
+            elif type(result) is GraphAnalyzer:
+                self.write_to_pdf(result)
         else:
             self.taskTerminatedSignal.emit(success_val, [])
             if type(result) is GraphExtractor:
+                self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_current_obj()
                 sgt_obj.g_obj = result
                 self.select_img_type(4)
@@ -303,7 +308,23 @@ class MainController(QObject):
     def apply_gtc_changes(self):
         """Retrieve settings from model and send to Python."""
         # updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
-        print("GTC Updated Settings:", self.get_current_obj().configs)
+        # print("GTC Updated Settings:", self.get_current_obj().configs)
+        self.worker_task = WorkerTask()
+        try:
+            self.wait_flag = True
+            sgt_obj = self.get_current_obj()
+
+            self.worker = QThreadWorker(func=self.worker_task.task_compute_gt, args=(sgt_obj,))
+            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
+            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+            self.worker.start()
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
+            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
+                                                          "Fatal error while trying calculate GT parameters. "
+                                                          "Close the app and try again."])
 
     @Slot()
     def apply_gte_changes(self):
@@ -320,7 +341,7 @@ class MainController(QObject):
         try:
             self.wait_flag = True
             sgt_obj = self.get_current_obj()
-            # self.worker_task = WorkerTask()
+
             self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj,))
             self.worker_task.inProgressSignal.connect(self._handle_progress_update)
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
@@ -553,3 +574,44 @@ class MainController(QObject):
             self.error_flag = True
             return False
         return a_path
+
+    def write_to_pdf(self, sgt_obj):
+        """
+        Write results to PDF file.
+        Args:
+            sgt_obj:
+
+        Returns:
+
+        """
+        try:
+            self._handle_progress_update(98, "Writing PDF...")
+
+            filename, output_location = sgt_obj.g_obj.imp.create_filenames()
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+            with (PdfPages(pdf_file) as pdf):
+                for fig in sgt_obj.plot_figures:
+                    pdf.savefig(fig)
+            sgt_obj.g_obj.save_files()
+
+            self._handle_progress_update(100, "GT PDF successfully generated!")
+            self.worker_task.taskFinishedSignal.emit(1, ["GT calculations completed", "Check out generated PDF in 'Output Dir'."])
+            """if show_dialog == 1:
+                self.wait_flag = False
+                self.enable_all_tasks()
+                dialog = CustomDialog("Success!",
+                                      "GT calculations completed. Check out generated PDF in 'Output Dir'")
+                dialog.exec()
+            else:
+                if (self.current_obj_index + 1) < len(self.graph_objs):
+                    self.current_obj_index += 1
+                    self.lbl_info.setText(
+                        f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
+                    self._load_image('O')"""
+        except Exception as err:
+            print(err)
+            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
+            # self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error", "Error occurred while trying to write "
+            #                                                                      "to PDF. Run GT computations again."])

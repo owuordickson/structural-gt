@@ -105,6 +105,7 @@ Rectangle {
             if (msg_data.length > 0) {
                 dialogAlert.title = msg_data[0];
                 lblAlertMsg.text = msg_data[1];
+                lblAlertMsg.color = success_val ? "#2222bc" : "#bc2222";
                 dialogAlert.open();
             }
 

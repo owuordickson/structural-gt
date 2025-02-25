@@ -118,7 +118,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.configs = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp = allow_multiprocessing
         self.g_obj = g_obj
+        self.plot_figures = None
         self.output_data = pd.DataFrame([])
+        self.weighted_output_data = pd.DataFrame([])
         self.degree_distribution = [0]
         self.clustering_coefficients = [0]
         self.betweenness_distribution = [0]
@@ -127,7 +129,6 @@ class GraphAnalyzer(ProgressUpdate):
         self.ohms_distribution = [0]
         self.percolation_distribution = []
         # self.nx_subgraph_components = []
-        self.weighted_output_data = pd.DataFrame([])
         self.weighted_degree_distribution = [0]
         self.weighted_clustering_coefficients = [0]  # NOT USED
         self.weighted_betweenness_distribution = [0]
