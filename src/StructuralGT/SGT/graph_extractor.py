@@ -190,10 +190,7 @@ class GraphExtractor(ProgressUpdate):
 
                 if opt_gte["has_weights"]["value"] == 1:
                     # We modify 'weight'
-                    wt_type = 'DIA'  # Default weight
-                    for i in range(len(opt_gte["has_weights"]["items"])):
-                        if opt_gte["has_weights"]["items"][i]["value"]:
-                            wt_type = opt_gte["has_weights"]["items"][i]["id"]
+                    wt_type = self.get_weight_type()
                     px_size = self.imp.pixel_width
                     rho_val = self.imp.configs["resistivity"]["value"]
                     weight_options = GraphExtractor.get_weight_options()
@@ -357,10 +354,7 @@ class GraphExtractor(ProgressUpdate):
 
         run_info = "***Graph Extraction Configurations***\n"
         if opt_gte["has_weights"]["value"]:
-            wt_type = 'DIA'  # Default weight
-            for i in range(len(opt_gte["has_weights"]["items"])):
-                if opt_gte["has_weights"]["items"][i]["value"]:
-                    wt_type = opt_gte["has_weights"]["items"][i]["id"]
+            wt_type = self.get_weight_type()
             run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(wt_type)} || "
         if opt_gte["merge_nearby_nodes"]["value"]:
             run_info += "Merge Nodes || "
@@ -377,6 +371,13 @@ class GraphExtractor(ProgressUpdate):
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
 
         return run_info
+
+    def get_weight_type(self):
+        wt_type = 'DIA'  # Default weight
+        for i in range(len(self.configs["has_weights"]["items"])):
+            if self.configs["has_weights"]["items"][i]["value"]:
+                wt_type = self.configs["has_weights"]["items"][i]["id"]
+        return wt_type
 
     def save_files(self, opt_gte: struct = None):
         """
