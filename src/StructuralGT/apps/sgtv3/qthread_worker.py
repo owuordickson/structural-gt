@@ -168,7 +168,7 @@ class WorkerTask (QObject):
 
             # 2. Compute GT parameters
             sgt_obj.compute_gt_metrics()
-            if sgt_obj.g_obj.configs.has_weights:
+            if sgt_obj.g_obj.configs["has_weights"]["value"]:
                 self.is_aborted(sgt_obj)
                 # 3. Compute weighted-GT parameters
                 sgt_obj.compute_weighted_gt_metrics()

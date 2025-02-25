@@ -66,15 +66,15 @@ class GraphSkeleton:
         ep_coord_y, ep_coord_x = np.where(e_points == 1)
 
         # calling the three functions for merging nodes, pruning edges, and removing disconnected segments
-        if self.configs.merge_nearby_nodes == 1:
+        if self.configs["merge_nearby_nodes"]["value"] == 1:
             skeleton = GraphSkeleton.merge_nodes(skeleton)
 
-        if self.configs.remove_disconnected_segments == 1:
-            skeleton = remove_small_objects(skeleton, self.configs.remove_object_size, connectivity=2)
+        if self.configs["remove_disconnected_segments"]["value"] == 1:
+            skeleton = remove_small_objects(skeleton, self.configs["remove_self_loops"]["items"][0]["value"] , connectivity=2)
 
         skel_int = 1 * skeleton
 
-        if self.configs.prune_dangling_edges == 1:
+        if self.configs["prune_dangling_edges"]["value"] == 1:
             b_points_1 = GraphSkeleton.branched_points(skel_int)
             skeleton = GraphSkeleton.pruning(skeleton, 500, b_points_1)
 

@@ -21,6 +21,7 @@ class MainController(QObject):
     # showAlertSignal = Signal(str, str)
     errorSignal = Signal(str)
     updateProgressSignal = Signal(int, str)
+
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal(int)
     imageChangedSignal = Signal()
@@ -164,14 +165,14 @@ class MainController(QObject):
         progress_val = 0 if value < 0 else value
         print(str(progress_val) + "%: " + msg)
         logging.info(str(progress_val) + "%: " + msg, extra={'user': 'SGT Logs'})
-        if progress_val >= 0:
+        if value >= 0:
             self.updateProgressSignal.emit(progress_val, msg)
         else:
             self.errorSignal.emit(msg)
 
     def _handle_finished(self, success: bool, msg: str):
         """"""
-        pass
+        self.wait_flag = False
 
     @Slot(result=str)
     def get_pixmap(self):
@@ -288,9 +289,10 @@ class MainController(QObject):
                 child_index = self.gteTreeModel.index(j, 0, parent_index)
                 print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
                        self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])"""
+        self.wait_flag = True
         sgt_obj = self.get_current_obj()
         # self.worker_task = WorkerTask()
-        self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj))
+        self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.g_obj,))
         self.worker_task.inProgressSignal.connect(self._handle_progress_update)
         self.worker_task.taskFinishedSignal.connect(self._handle_finished)
         self.worker.start()

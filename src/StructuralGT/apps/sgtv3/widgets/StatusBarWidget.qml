@@ -71,9 +71,10 @@ Rectangle {
             if (val <= 100) {
                 progressBar.value = val;
                 lblStatusMsg.text = msg;
-                lblStatusMsg.color = "#22bc22";
-                btnCancel.visible = mainController.is_task_running()
-                btnCancel.enabled = mainController.is_task_running()
+                lblStatusMsg.color = "#008b00";
+                progressBar.visible = mainController.is_task_running();
+                btnCancel.visible = mainController.is_task_running();
+                btnCancel.enabled = mainController.is_task_running();
             }
         }
 
@@ -81,6 +82,7 @@ Rectangle {
             progressBar.value = 0;
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#bc2222";
+            progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running()
             btnCancel.enabled = mainController.is_task_running()
         }

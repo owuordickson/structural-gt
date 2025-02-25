@@ -121,7 +121,7 @@ class GraphExtractor(ProgressUpdate):
                 self.abort = True
             else:
                 # self.save_adj_csv()
-                # if self.configs_graph.has_weights == 1:
+                # if self.configs_graph["has_weights"]["value"] == 1:
                 #    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
                 #        self.nx_graph, weighted=True)
                 # else:
@@ -147,16 +147,16 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
 
-        configs = self.configs
-        if configs is None:
+        opt_gte = self.configs
+        if opt_gte is None:
             return False
-        graph_skel = GraphSkeleton(self.imp.img_bin, configs)
+        graph_skel = GraphSkeleton(self.imp.img_bin, opt_gte)
         img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
 
         self.update_status([60, "Creating graph network..."])
         # skeleton analysis object with sknw
-        if configs.is_multigraph:
+        if opt_gte.is_multigraph:
             nx_graph = sknw.build_sknw(img_skel, multi=True)
             for (s, e) in nx_graph.edges():
                 for k in range(int(len(nx_graph[s][e]))):
@@ -166,7 +166,7 @@ class GraphExtractor(ProgressUpdate):
             # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
             # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
             for (s, e) in nx_graph.edges():
-                if configs.has_weights == 1:
+                if opt_gte.has_weights == 1:
                     for k in range(int(len(nx_graph[s][e]))):
                         ge = nx_graph[s][e][k]['pts']
                         pix_width, wt = graph_skel.assign_weights_by_width(ge)
@@ -188,9 +188,9 @@ class GraphExtractor(ProgressUpdate):
                 #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
                 #        nx_graph[s][e]['length'] = 2
 
-                if configs.has_weights == 1:
+                if opt_gte.has_weights == 1:
                     # We modify 'weight'
-                    wt_type = configs.weight_type
+                    wt_type = opt_gte.weight_type
                     px_size = self.imp.pixel_width
                     rho_val = self.imp.configs.resistivity
                     weight_options = GraphExtractor.get_weight_options()
@@ -216,8 +216,8 @@ class GraphExtractor(ProgressUpdate):
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
-        if configs.remove_self_loops:
-            if configs.is_multigraph:
+        if opt_gte.remove_self_loops:
+            if opt_gte.is_multigraph:
                 for (s, e) in list(self.nx_graph.edges()):
                     if s == e:
                         self.nx_graph.remove_edge(s, e)
