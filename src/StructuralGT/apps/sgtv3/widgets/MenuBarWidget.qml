@@ -50,7 +50,7 @@ MenuBar {
         title: "Analyze"
         //MenuItem { text: "GT Metrics"; onTriggered: console.log("GT clicked") }
         Menu { title: "Graph Metrics"
-            MenuItem { text: "Current Image"; enabled: false; onTriggered: dialogGTOptions.open() }
+            MenuItem { text: "Current Image"; enabled: true; onTriggered: dialogGTOptions.open() }
             MenuItem { text: "All Images"; enabled: false; onTriggered: dialogGTOptions.open() }
         }
     }
