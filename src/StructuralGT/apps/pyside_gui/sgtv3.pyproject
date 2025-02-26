@@ -1,6 +1,6 @@
 {
     "files": [
-        "main.py",
+        "gui_main.py",
         "LeftContent.qml",
         "RightContent.qml",
         "MainWindow.qml",

@@ -14,7 +14,7 @@ from src.StructuralGT import __version__
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
-from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTask
+from src.StructuralGT.apps.pyside_gui.qthread_worker import QThreadWorker, WorkerTask
 
 
 class MainController(QObject):
