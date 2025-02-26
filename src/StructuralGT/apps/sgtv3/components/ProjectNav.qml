@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs as QuickDialogs
-import Qt.labs.platform as Platform
+//import QtQuick.Dialogs as QuickDialogs
+//import Qt.labs.platform as Platform
 import "../widgets"
 
 Rectangle {
@@ -62,7 +62,7 @@ Rectangle {
                     icon.height: 21
                     background: transientParent
                     enabled: mainController.display_image();
-                    onClicked: folderDialog.open()
+                    onClicked: outFolderDialog.open()
                 }
             }
 
@@ -71,7 +71,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 text: "Import image(s)"
                 enabled: mainController.display_image();
-                onClicked: fileDialog.open()
+                onClicked: imageFileDialog.open()
             }
 
             Rectangle {
@@ -95,27 +95,6 @@ Rectangle {
 
             ProjectWidget {}
         }
-    }
-
-    Platform.FolderDialog {
-        id: folderDialog
-        title: "Select a Folder"
-        onAccepted: {
-            //console.log("Selected folder:", folder)
-            mainController.set_output_dir(folder)
-        }
-        //onRejected: {console.log("Canceled")}
-    }
-
-    QuickDialogs.FileDialog {
-        id: fileDialog
-        title: "Open file"
-        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
-        onAccepted: {
-            //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.add_single_image(fileDialog.selectedFile);
-        }
-        //onRejected: console.log("File selection canceled")
     }
 
 

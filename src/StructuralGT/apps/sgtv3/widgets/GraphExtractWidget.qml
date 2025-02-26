@@ -64,7 +64,6 @@ TreeView {
                             let val = checked ? 1 : 0;
                             var index = gteTreeModel.index(model.index, 0);
                             gteTreeModel.setData(index, val, Qt.EditRole);
-                            //mainController.apply_gte_changes();
                         }
                     }
                 }
@@ -83,7 +82,6 @@ TreeView {
                     onCheckedChanged: {
                         var val = checked ? 1 : 0;
                         updateChild(model.id, val);
-                        //mainController.apply_gte_changes();
                     }
                 }
             }
@@ -105,7 +103,6 @@ TreeView {
                         text: "OK"
                         onClicked: {
                             updateChild(model.id, txtField.text);
-                            //mainController.apply_gte_changes();
                         }
                     }
 

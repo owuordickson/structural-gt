@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs as QuickDialogs
-import Qt.labs.platform as Platform
+//import QtQuick.Dialogs as QuickDialogs
+//import Qt.labs.platform as Platform
 
 ColumnLayout {
     Layout.fillWidth: true
@@ -306,40 +306,6 @@ ColumnLayout {
     }
 
 
-    Platform.FolderDialog {
-        id: imageFolderDialog
-        title: "Select a Folder"
-        onAccepted: {
-            //console.log("Selected folder:", folder)
-            mainController.add_multiple_images(imageFolderDialog.folder);
-        }
-        //onRejected: {console.log("Canceled")}
-    }
-
-
-    QuickDialogs.FileDialog {
-        id: imageFileDialog
-        title: "Open file"
-        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
-        onAccepted: {
-            //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.add_single_image(imageFileDialog.selectedFile);
-        }
-        //onRejected: console.log("File selection canceled")
-    }
-
-
-    QuickDialogs.FileDialog {
-        id: projectFileDialog
-        title: "Open .sgtproj file"
-        nameFilters: ["Project files (*.sgtproj)"]
-        onAccepted: {
-            mainController.open_sgt_project(projectFileDialog.selectedFile);
-        }
-        //onRejected: console.log("File selection canceled")
-    }
-
-
     function cropImage() {
 
         // Crop image through mainController
@@ -361,9 +327,9 @@ ColumnLayout {
 
             zoomFactor = 1.0;
 
-            btnPrevious.enabled = mainController.enable_prev_nav_btn()
-            btnNext.enabled = mainController.enable_next_nav_btn()
-            lblNavInfo.text = mainController.get_img_nav_location()
+            btnPrevious.enabled = mainController.enable_prev_nav_btn();
+            btnNext.enabled = mainController.enable_next_nav_btn();
+            lblNavInfo.text = mainController.get_img_nav_location();
             //console.log(src);
         }
 
@@ -391,6 +357,10 @@ ColumnLayout {
             if (val === 101) {
                 lblNavInfo.text = msg;
             }
+        }
+
+        function onTaskTerminatedSignal(success_val, msg_data){
+            lblNavInfo.text = mainController.get_img_nav_location();
         }
 
     }

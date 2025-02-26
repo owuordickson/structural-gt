@@ -36,7 +36,7 @@ MenuBar {
     Menu {
         title: "Tools"
         MenuItem { text: "Brightness/Contrast"; enabled: false; onTriggered: dialogBrightnessCtrl.open() }
-        MenuItem { text: "Show Graph"; enabled: false; onTriggered: dialogShowGraph.open() }
+        MenuItem { text: "Show Graph"; enabled: false; onTriggered: dialogExtractGraph.open() }
     }
     Menu {
         title: "Filters"
@@ -50,8 +50,8 @@ MenuBar {
         title: "Analyze"
         //MenuItem { text: "GT Metrics"; onTriggered: console.log("GT clicked") }
         Menu { title: "Graph Metrics"
-            MenuItem { text: "Current Image"; enabled: true; onTriggered: dialogGTOptions.open() }
-            MenuItem { text: "All Images"; enabled: false; onTriggered: dialogGTOptions.open() }
+            MenuItem { text: "Current Image"; enabled: false; onTriggered: dialogRunAnalyzer.open() }
+            MenuItem { text: "All Images"; enabled: true; onTriggered: dialogRunMultiAnalyzer.open() }
         }
     }
     Menu {

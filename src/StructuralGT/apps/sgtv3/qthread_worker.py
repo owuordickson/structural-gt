@@ -25,8 +25,6 @@ class WorkerTask (QObject):
 
     inProgressSignal = Signal(int, str)         # progress-value (0-100), progress-message (str)
     taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
-    # errorOccurredSignal = Signal()
-    # abortSignal = Signal()
 
     def __init__(self):
         super().__init__()
@@ -130,11 +128,14 @@ class WorkerTask (QObject):
                                                                             "graph settings and try again. If error "
                                                                             "persists then close the app and try again."])
 
-    def task_compute_gt_all(self, sgt_objs):
+    def task_compute_multi_gt(self, sgt_objs):
         """"""
         try:
             i = 0
-            for sgt_obj in sgt_objs:
+            keys_list = list(sgt_objs.keys())
+            for key in keys_list:
+                sgt_obj = sgt_objs[key]
+
                 status_msg = f"Analyzing Image: {(i + 1)} / {len(sgt_objs)}"
                 self.update_progress(101, status_msg)
 
@@ -156,7 +157,7 @@ class WorkerTask (QObject):
                 write_file(output, out_file)
                 print(output)
                 logging.info(output, extra={'user': 'SGT Logs'})
-            self.taskFinishedSignal.emit(True, None)
+            self.taskFinishedSignal.emit(True, sgt_objs)
         except AbortException as err:
             print(f"All tasks aborted: {err}")
             self.update_progress(-1, "All tasks aborted!")

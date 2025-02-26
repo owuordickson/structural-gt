@@ -33,7 +33,7 @@ class ImageProvider(QQuickImageProvider):
                 img = Image.fromarray(img_cv)
             elif option == "graph":
                 if im_obj.img_net is None:
-                    self.img_controller.apply_gte_changes()
+                    self.img_controller.run_extract_graph()
                     # Wait for task to finish
                     return
                 else:

@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as QuickDialogs
+import Qt.labs.platform as Platform
 import "widgets"
 
 ApplicationWindow {
@@ -202,7 +204,7 @@ ApplicationWindow {
     }
 
     Dialog {
-        id: dialogShowGraph
+        id: dialogExtractGraph
         //parent: mainWindow
         anchors.centerIn: parent
         title: "Graph Extraction Options"
@@ -219,12 +221,12 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            mainController.apply_gte_changes();
-            dialogShowGraph.close()
+            mainController.run_extract_graph();
+            dialogExtractGraph.close()
         }
 
         /*onRejected: {
-            dialogShowGraph.close()
+            dialogExtractGraph.close()
         }*/
     }
 
@@ -280,7 +282,7 @@ ApplicationWindow {
     }
 
     Dialog {
-        id: dialogGTOptions
+        id: dialogRunAnalyzer
         //parent: mainWindow
         anchors.centerIn: parent
         title: "Select Graph Computations"
@@ -296,15 +298,81 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            mainController.apply_gtc_changes();
-            dialogGTOptions.close()
+            mainController.run_graph_analyzer();
+            dialogRunAnalyzer.close()
         }
 
         /*onRejected: {
-            dialogGTOptions.close()
+            dialogRunAnalyzer.close()
         }*/
     }
 
+    Dialog {
+        id: dialogRunMultiAnalyzer
+        //parent: mainWindow
+        anchors.centerIn: parent
+        title: "Select Graph Computations"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 240
+        height: 500
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            GTWidget{}
+        }
+
+        onAccepted: {
+            mainController.run_multi_graph_analyzer();
+            dialogRunAnalyzer.close()
+        }
+
+        /*onRejected: {
+            dialogRunAnalyzer.close()
+        }*/
+    }
+
+    Platform.FolderDialog {
+        id: outFolderDialog
+        title: "Select a Folder"
+        onAccepted: {
+            //console.log("Selected folder:", folder)
+            mainController.set_output_dir(folder)
+        }
+        //onRejected: {console.log("Canceled")}
+    }
+
+    Platform.FolderDialog {
+        id: imageFolderDialog
+        title: "Select a Folder"
+        onAccepted: {
+            //console.log("Selected folder:", folder)
+            mainController.add_multiple_images(imageFolderDialog.folder);
+        }
+        //onRejected: {console.log("Canceled")}
+    }
+
+    QuickDialogs.FileDialog {
+        id: imageFileDialog
+        title: "Open file"
+        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
+        onAccepted: {
+            //console.log("Selected file:", fileDialog.selectedFile)
+            mainController.add_single_image(imageFileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
+    }
+
+    QuickDialogs.FileDialog {
+        id: projectFileDialog
+        title: "Open .sgtproj file"
+        nameFilters: ["Project files (*.sgtproj)"]
+        onAccepted: {
+            mainController.open_sgt_project(projectFileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
+    }
 }
 
 

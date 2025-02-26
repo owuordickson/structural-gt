@@ -142,7 +142,7 @@ Rectangle {
                 background: transientParent
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
-                onClicked: dialogShowGraph.open()
+                onClicked: dialogExtractGraph.open()
                 enabled: mainController.display_image();
             }
         }

@@ -193,9 +193,15 @@ class MainController(QObject):
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
                 self._handle_progress_update(100, "GT PDF successfully generated!")
-                self.taskTerminatedSignal.emit(1, ["GT calculations completed", "All GT parameters have been "
+                self.taskTerminatedSignal.emit(1, ["GT calculations completed", "The image's GT parameters have been "
                                                                                 "calculated. Check out generated PDF in "
                                                                                 "'Output Dir'."])
+            elif type(result) is dict:
+                self._handle_progress_update(100, "All GT PDF successfully generated!")
+                self.taskTerminatedSignal.emit(1, ["All GT calculations completed", "GT parameters of all "
+                                                                                    "images have been calculated. Check "
+                                                                                    "out all the generated PDFs in "
+                                                                                    "'Output Dir'."])
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
 
@@ -312,29 +318,27 @@ class MainController(QObject):
         self.adjust_brightness_contrast(brightness, contrast)
 
     @Slot()
-    def apply_gtc_changes(self):
+    def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
-        # updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
-        # print("GTC Updated Settings:", self.get_current_obj().configs)
-        self.worker_task = WorkerTask()
-        try:
-            self.wait_flag = True
-            sgt_obj = self.get_current_obj()
-
-            self.worker = QThreadWorker(func=self.worker_task.task_compute_gt, args=(sgt_obj,))
-            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
-            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-            self.worker.start()
-        except Exception as err:
-            print(f"An error occurred: {err}")
-            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
-                                                          "Fatal error while trying calculate GT parameters. "
-                                                          "Close the app and try again."])
+        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
+        # print("Updated Settings:", updated_values)
+        self.select_img_type()
 
     @Slot()
-    def apply_gte_changes(self):
+    def apply_img_filter_changes(self):
+        """Retrieve settings from model and send to Python."""
+        """updated_values = []
+        for item in self.imgFilterModel.list_data:
+            try:
+                val = [item["id"], item["value"], item["dataValue"]]
+            except KeyError:
+                val = [item["id"], item["value"]]
+            updated_values.append(val)
+        print("Updated Settings:", updated_values)"""
+        self.select_img_type()
+
+    @Slot()
+    def run_extract_graph(self):
         """Retrieve settings from model and send to Python."""
         """for i in range(self.gteTreeModel.rowCount()):
             parent_index = self.gteTreeModel.index(i, 0)
@@ -362,24 +366,45 @@ class MainController(QObject):
                                                           "Close the app and try again."])
 
     @Slot()
-    def apply_img_bin_changes(self):
+    def run_graph_analyzer(self):
         """Retrieve settings from model and send to Python."""
-        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
-        # print("Updated Settings:", updated_values)
-        self.select_img_type()
+        # updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
+        # print("GTC Updated Settings:", self.get_current_obj().configs)
+        self.worker_task = WorkerTask()
+        try:
+            self.wait_flag = True
+            sgt_obj = self.get_current_obj()
+
+            self.worker = QThreadWorker(func=self.worker_task.task_compute_gt, args=(sgt_obj,))
+            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
+            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+            self.worker.start()
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
+            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
+                                                          "Fatal error while trying calculate GT parameters. "
+                                                          "Close the app and try again."])
 
     @Slot()
-    def apply_img_filter_changes(self):
-        """Retrieve settings from model and send to Python."""
-        """updated_values = []
-        for item in self.imgFilterModel.list_data:
-            try:
-                val = [item["id"], item["value"], item["dataValue"]]
-            except KeyError:
-                val = [item["id"], item["value"]]
-            updated_values.append(val)
-        print("Updated Settings:", updated_values)"""
-        self.select_img_type()
+    def run_multi_graph_analyzer(self):
+        """"""
+        self.worker_task = WorkerTask()
+        try:
+            self.wait_flag = True
+
+            self.worker = QThreadWorker(func=self.worker_task.task_compute_multi_gt, args=(self.sgt_objs,))
+            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
+            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+            self.worker.start()
+        except Exception as err:
+            print(f"An error occurred: {err}")
+            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
+            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
+                                                          "Fatal error while trying calculate GT parameters. "
+                                                          "Close the app and try again."])
 
     @Slot()
     def apply_microscopy_props_changes(self):
@@ -602,19 +627,7 @@ class MainController(QObject):
                     pdf.savefig(fig)
             sgt_obj.g_obj.save_files()
 
-            self._handle_finished(1, sgt_obj)
-            """if show_dialog == 1:
-                self.wait_flag = False
-                self.enable_all_tasks()
-                dialog = CustomDialog("Success!",
-                                      "GT calculations completed. Check out generated PDF in 'Output Dir'")
-                dialog.exec()
-            else:
-                if (self.current_obj_index + 1) < len(self.graph_objs):
-                    self.current_obj_index += 1
-                    self.lbl_info.setText(
-                        f"processing image {(self.current_obj_index + 1)} of {len(self.graph_objs)}")
-                    self._load_image('O')"""
+            self._handle_finished(True, sgt_obj)
         except Exception as err:
             print(err)
             logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
