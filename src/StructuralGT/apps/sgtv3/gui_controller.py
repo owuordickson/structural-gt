@@ -20,7 +20,7 @@ from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTask
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
 
-    showAlertSignal = Signal(str, str)
+    # showAlertSignal = Signal(str, str)
     errorSignal = Signal(str)
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)

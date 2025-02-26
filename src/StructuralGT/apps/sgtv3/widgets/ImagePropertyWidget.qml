@@ -11,14 +11,15 @@ Item {
     Layout.leftMargin: 5
     Layout.rightMargin: 5
 
-    property int tblRowHeight: 30
+    property int numRows: 10  // imgPropsTableModel.rowCount()
+    property int tblRowHeight: 25
 
     ColumnLayout {
         //anchors.fill: parent
 
         TableView {
             id: tblImgProps
-            height: imgPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
+            height: numRows * tblRowHeight
             width: 290
             model: imgPropsTableModel
 
@@ -72,9 +73,9 @@ Item {
     Connections {
         target: mainController
 
-        function onImageChangedSignal(){
+        /*function onImageChangedSignal(){
             tblImgProps.height = imgPropsTableModel.rowCount() * tblRowHeight;
-        }
+        }*/
 
     }
 }

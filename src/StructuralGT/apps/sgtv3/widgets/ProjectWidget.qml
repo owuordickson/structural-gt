@@ -7,6 +7,7 @@ Item {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
+    property int numRows: 10  // imgListTableModel.rowCount()
     property int tblRowHeight: 50
 
 
@@ -27,7 +28,7 @@ Item {
 
         TableView {
             id: tableView
-            height: imgListTableModel.rowCount() * tblRowHeight
+            height: numRows * tblRowHeight
             //height: parent.height
             //width: 300
             Layout.fillWidth: true
@@ -87,7 +88,8 @@ Item {
             // Force refresh
             lblNoImages.visible = imgListTableModel.rowCount() > 0 ? false : true
             tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
-            tableView.height = imgListTableModel.rowCount() * tblRowHeight
+            let rowCount = imgListTableModel.rowCount() > numRows ? imgListTableModel.rowCount() : numRows;
+            tableView.height = rowCount * tblRowHeight;
         }
 
         function onProjectOpenedSignal(name) {

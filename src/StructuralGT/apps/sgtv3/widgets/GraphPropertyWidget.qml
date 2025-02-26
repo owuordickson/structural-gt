@@ -11,14 +11,15 @@ Item {
     Layout.leftMargin: 5
     Layout.rightMargin: 5
 
-    property int tblRowHeight: 30
+    property int numRows: 10  // graphPropsTableModel.rowCount()
+    property int tblRowHeight: 25
 
     ColumnLayout {
         //anchors.fill: parent
 
         TableView {
             id: tblViewGraphProps
-            height: graphPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
+            height:numRows * tblRowHeight
             width: 290
             model: graphPropsTableModel
 
@@ -67,9 +68,9 @@ Item {
     Connections {
         target: mainController
 
-        function onImageChangedSignal(){
+        /*function onImageChangedSignal(){
             tblViewGraphProps.height = graphPropsTableModel.rowCount() * tblRowHeight;
-        }
+        }*/
 
     }
 }
