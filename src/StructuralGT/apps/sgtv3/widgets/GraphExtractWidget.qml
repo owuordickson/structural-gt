@@ -100,10 +100,13 @@ TreeView {
                     }
 
                     Button {
+                        id: btnRemoveOk
                         text: "OK"
                         onClicked: {
                             updateChild(model.id, txtField.text);
+                            btnRemoveOk.visible = false;
                         }
+                        onFocusChanged: {btnRemoveOk.visible = true;}
                     }
 
                 }

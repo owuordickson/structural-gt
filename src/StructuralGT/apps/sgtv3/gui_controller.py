@@ -99,38 +99,26 @@ class MainController(QObject):
             self.status_msg["message"] = f"Error loading image configurations! Close app and try again."
             self.error_flag = True
 
-    def update_img_configs(self, sgt_obj):
+    def update_configs_models(self, sgt_obj):
         """"""
         """Reload image configuration selections and controls after it is loaded."""
         try:
-            # 1.
-            options_img = sgt_obj.g_obj.imp.configs
             option_gte = sgt_obj.g_obj.configs
             options_gtc = sgt_obj.configs
 
-            # 2.
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
             # file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
-            bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
-            img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
-            img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
-            img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
-
             self.gtcListModel.reset_data(list(options_gtc.values()))
             self.gteTreeModel.reset_data(graph_options)
-            self.imgBinFilterModel.reset_data(bin_filters)
-            self.imgFilterModel.reset_data(img_filters)
-            self.imgControlModel.reset_data(img_controls)
 
-            self.microscopyPropsModel.reset_data(img_properties)
-            # self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
-            # self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
+            self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
+            self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
             # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.status_msg["title"] = "Fatal Error"
-            self.status_msg["message"] = f"Error loading image configurations! Close app and try again."
+            self.status_msg["message"] = f"Error re-loading image configurations! Close app and try again."
             self.error_flag = True
 
     def get_current_obj(self):
