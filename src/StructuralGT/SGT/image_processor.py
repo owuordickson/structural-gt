@@ -95,7 +95,7 @@ class ImageProcessor:
         # Compute pixel dimension in nanometers
         opt_img = self.configs
         self.pixel_width = 1  # * (10**-9)  # 1 nanometer
-        if (int(opt_img["scale_value_nanometers"]["value"]) > 0) and (int(opt_img["scalebar_pixel_count"]["value"]) > 0):
+        if (float(opt_img["scale_value_nanometers"]["value"]) > 0) and (int(opt_img["scalebar_pixel_count"]["value"]) > 0):
             px_width = ImageProcessor.compute_pixel_width(opt_img["scale_value_nanometers"]["value"], opt_img["scalebar_pixel_count"]["value"])
             self.pixel_width = px_width/self.scale_factor
 
@@ -117,8 +117,8 @@ class ImageProcessor:
         opt_img = self.configs
         filtered_img = ImageProcessor.control_brightness(image, opt_img["brightness_level"]["value"], opt_img["contrast_level"]["value"])
 
-        if opt_img["apply_gamma"]["dataValue"] != 1.00:
-            inv_gamma = 1.00 / opt_img["apply_gamma"]["dataValue"]
+        if float(opt_img["apply_gamma"]["dataValue"]) != 1.00:
+            inv_gamma = 1.00 / float(opt_img["apply_gamma"]["dataValue"])
             table = np.array([((i / 255.0) ** inv_gamma) * 255
                               for i in np.arange(0, 256)]).astype('uint8')
             filtered_img = cv2.LUT(filtered_img, table)
@@ -128,7 +128,7 @@ class ImageProcessor:
             w, h = filtered_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
-            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** opt_img["apply_lowpass_filter"]["dataValue"]  # expand to 2D hamming
+            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** int(opt_img["apply_lowpass_filter"]["dataValue"] ) # expand to 2D hamming
             f = cv2.dft(filtered_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
             f_shifted = np.fft.fftshift(f)
             f_complex = f_shifted[:, :, 0] * 1j + f_shifted[:, :, 1]
@@ -148,13 +148,13 @@ class ImageProcessor:
 
         # applying gaussian blur
         if opt_img["apply_gaussian_blur"]["value"] == 1:
-            b_size = opt_img["apply_gaussian_blur"]["dataValue"]
+            b_size = int(opt_img["apply_gaussian_blur"]["dataValue"])
             filtered_img = cv2.GaussianBlur(filtered_img, (b_size, b_size), 0)
 
         # applying auto-level filter
         if opt_img["apply_autolevel"]["value"] == 1:
             # making a disk for the auto-level filter
-            auto_lvl_disk = disk(opt_img["apply_autolevel"]["dataValue"])
+            auto_lvl_disk = disk(int(opt_img["apply_autolevel"]["dataValue"]))
             filtered_img = autolevel(filtered_img, footprint=auto_lvl_disk)
 
         # applying a scharr filter,
@@ -171,16 +171,16 @@ class ImageProcessor:
             scale = 1
             delta = 0
             d_depth = cv2.CV_16S
-            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=opt_img["apply_sobel_gradient"]["dataValue"], scale=scale,
+            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]), scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
-            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=opt_img["apply_sobel_gradient"]["dataValue"], scale=scale,
+            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]), scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
             filtered_img = ImageProcessor.apply_filter('sobel', filtered_img, grad_x, grad_y)
 
         # applying laplacian filter
         if opt_img["apply_laplacian_gradient"]["value"] == 1:
             d_depth = cv2.CV_16S
-            dst = cv2.Laplacian(filtered_img, d_depth, ksize=opt_img["apply_laplacian_gradient"]["dataValue"])
+            dst = cv2.Laplacian(filtered_img, d_depth, ksize=int(opt_img["apply_laplacian_gradient"]["dataValue"]))
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             abs_dst = cv2.convertScaleAbs(dst)
             filtered_img = cv2.addWeighted(filtered_img, 0.75, abs_dst, 0.25, 0)
@@ -207,9 +207,9 @@ class ImageProcessor:
         # applying universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = cv2.threshold(image, opt_img["global_threshold_value"]["value"], 255, cv2.THRESH_BINARY_INV)[1]
+                img_bin = cv2.threshold(image, int(opt_img["global_threshold_value"]["value"]), 255, cv2.THRESH_BINARY_INV)[1]
             else:
-                img_bin = cv2.threshold(image, opt_img["global_threshold_value"]["value"], 255, cv2.THRESH_BINARY)[1]
+                img_bin = cv2.threshold(image, int(opt_img["global_threshold_value"]["value"]), 255, cv2.THRESH_BINARY)[1]
 
         # adaptive threshold generation
         elif opt_img["threshold_type"]["value"] == 1:
@@ -219,10 +219,10 @@ class ImageProcessor:
 
             if opt_img["apply_dark_foreground"]["value"] == 1:
                 img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                cv2.THRESH_BINARY_INV, opt_img["adaptive_local_threshold_value"]["value"], 2)
+                                                cv2.THRESH_BINARY_INV, int(opt_img["adaptive_local_threshold_value"]["value"]), 2)
             else:
                 img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                cv2.THRESH_BINARY, opt_img["adaptive_local_threshold_value"]["value"], 2)
+                                                cv2.THRESH_BINARY, int(opt_img["adaptive_local_threshold_value"]["value"]), 2)
 
         # OTSU threshold generation
         elif opt_img["threshold_type"]["value"] == 2:
@@ -385,7 +385,7 @@ class ImageProcessor:
         ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax_4.plot(img_histogram)
         if opt_img["threshold_type"]["value"] == 0:
-            thresh_arr = np.array([[opt_img["global_threshold_value"]["value"], opt_img["global_threshold_value"]["value"]],
+            thresh_arr = np.array([[int(opt_img["global_threshold_value"]["value"]), int(opt_img["global_threshold_value"]["value"])],
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         elif opt_img["threshold_type"]["value"] == 2:

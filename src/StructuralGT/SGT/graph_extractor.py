@@ -192,7 +192,7 @@ class GraphExtractor(ProgressUpdate):
                     # We modify 'weight'
                     wt_type = self.get_weight_type()
                     px_size = self.imp.pixel_width
-                    rho_val = self.imp.configs["resistivity"]["value"]
+                    rho_val = float(self.imp.configs["resistivity"]["value"])
                     weight_options = GraphExtractor.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']

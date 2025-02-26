@@ -90,8 +90,8 @@ class MainController(QObject):
             self.imgControlModel.reset_data(img_controls)
 
             self.microscopyPropsModel.reset_data(img_properties)
-            # self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
-            # self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
+            self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
+            self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
             # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -100,7 +100,6 @@ class MainController(QObject):
             self.error_flag = True
 
     def update_configs_models(self, sgt_obj):
-        """"""
         """Reload image configuration selections and controls after it is loaded."""
         try:
             option_gte = sgt_obj.g_obj.configs
