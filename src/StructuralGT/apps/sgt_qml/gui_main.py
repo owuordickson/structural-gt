@@ -4,12 +4,9 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from gui_controller import MainController
-from gui_image_provider import ImageProvider
+from .gui_controller import MainController
+from .gui_image_provider import ImageProvider
 
-
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class MainWindow(QObject):
     def __init__(self):
@@ -42,11 +39,16 @@ class MainWindow(QObject):
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
         # Load UI
-        self.ui_engine.load("MainWindow.qml")
+        self.ui_engine.load("StructuralGT/apps/sgt_qml/MainWindow.qml")
         if not self.ui_engine.rootObjects():
             sys.exit(-1)
 
 
-if __name__ == "__main__":
+def pyside_app():
+    """
+    Initialize and run the PySide GUI application.
+    Returns:
+
+    """
     main_window = MainWindow()
     sys.exit(main_window.app.exec())

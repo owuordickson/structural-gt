@@ -6,15 +6,15 @@ from PIL import Image, ImageQt  # ImageQt for conversion
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
-from gui_tree_model import TreeModel
-from gui_table_model import TableModel
-from gui_list_model import CheckBoxModel
+from .gui_tree_model import TreeModel
+from .gui_table_model import TableModel
+from .gui_list_model import CheckBoxModel
 
 from src.StructuralGT import __version__
 from src.StructuralGT.SGT.image_processor import ImageProcessor
 from src.StructuralGT.SGT.graph_extractor import GraphExtractor
 from src.StructuralGT.SGT.graph_analyzer import GraphAnalyzer
-from src.StructuralGT.apps.pyside_gui.qthread_worker import QThreadWorker, WorkerTask
+from src.StructuralGT.apps.sgt_qml.qthread_worker import QThreadWorker, WorkerTask
 
 
 class MainController(QObject):

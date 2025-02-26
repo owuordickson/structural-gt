@@ -6,7 +6,7 @@ Entry points that allow users to execute GUI or Cli programs
 
 import time
 import logging
-from .apps.gui_main import pyqt_app
+from .apps.sgt_qml.gui_main import pyside_app
 from .apps.cli_main import terminal_app
 
 
@@ -20,11 +20,8 @@ def main_gui():
     Start graphical user interface application.
     :return:
     """
-    f_name = str('sgt_app' + str(time.time()).replace('.', '', 1) + '.log')
-    logging.basicConfig(filename=f_name, encoding='utf-8', level=logging.INFO,
-                        format=FORMAT, datefmt=DATE_FORMAT)
-    logging.info("SGT application started running...", extra={'user': 'SGT Logs'})
-    pyqt_app()
+    initialize_logging()
+    pyside_app()
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
 
 
@@ -33,9 +30,13 @@ def main_cli():
     Start terminal/CMD application.
     :return:
     """
+    initialize_logging()
+    terminal_app()
+    logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
+
+
+def initialize_logging():
     f_name = str('sgt_app' + str(time.time()).replace('.', '', 1) + '.log')
     logging.basicConfig(filename=f_name, encoding='utf-8', level=logging.INFO,
                         format=FORMAT, datefmt=DATE_FORMAT)
     logging.info("SGT application started running...", extra={'user': 'SGT Logs'})
-    terminal_app()
-    logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})

@@ -8,7 +8,8 @@ import time
 import os
 import logging
 
-from ..configs.config_loader import load_project_configs, get_num_cores
+from ..configs.config_loader import load_project_configs
+from ..SGT.sgt_utils import get_num_cores
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_extractor import GraphExtractor
 from ..SGT.graph_analyzer import GraphAnalyzer
