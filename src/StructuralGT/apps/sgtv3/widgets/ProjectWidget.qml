@@ -88,13 +88,26 @@ Item {
             // Force refresh
             lblNoImages.visible = imgListTableModel.rowCount() > 0 ? false : true
             tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
+            tableView.enabled = !mainController.is_task_running();
+
             let rowCount = imgListTableModel.rowCount() > numRows ? imgListTableModel.rowCount() : numRows;
             tableView.height = rowCount * tblRowHeight;
+
+            let index = mainController.get_current_img_index();
+            //imgListTableModel.setProperty(index, "color", "#f5f5f5"); NOT WORKING
         }
 
         function onProjectOpenedSignal(name) {
             lblNoImages.text = "No images to show!\nPlease import image(s).";
             tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
+        }
+
+        function onUpdateProgressSignal(val, msg) {
+            tableView.enabled = !mainController.is_task_running();
+        }
+
+        function onTaskTerminatedSignal(success_val, msg_data){
+            tableView.enabled = !mainController.is_task_running();
         }
 
     }

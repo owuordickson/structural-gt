@@ -1,4 +1,5 @@
 import sys
+import logging
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
@@ -6,6 +7,9 @@ from PySide6.QtCore import QObject
 from gui_controller import MainController
 from gui_image_provider import ImageProvider
 
+
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class MainWindow(QObject):
     def __init__(self):

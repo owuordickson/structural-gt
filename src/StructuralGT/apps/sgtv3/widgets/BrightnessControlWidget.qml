@@ -41,16 +41,19 @@ Item {
                     from: -100
                     to: 100
                     stepSize: 1
-                    value: model.value
-                    onValueChanged: updateValue(value)
-                    onFocusChanged: updateValue(value)
-                    onEditableChanged: updateValue(value)
-                    //onActiveFocusChanged: if (!activeFocus) updateValue(value)
+                    property var currVal: model.value
+                    value: currVal
+                    onValueChanged: updateValue(currVal, value)
+                    onFocusChanged: updateValue(currVal, value)
+                    onEditableChanged: updateValue(currVal, value)
                 }
 
-                function updateValue(val) {
-                    var index = imgControlModel.index(model.index, 0);
-                    imgControlModel.setData(index, val, valueRole);
+                function updateValue(curr_val, val) {
+                    if (curr_val !== val){
+                        curr_val = val;
+                        var index = imgControlModel.index(model.index, 0);
+                        imgControlModel.setData(index, val, valueRole);
+                    }
                 }
 
             }

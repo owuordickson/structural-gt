@@ -20,7 +20,7 @@ from src.StructuralGT.apps.sgtv3.qthread_worker import QThreadWorker, WorkerTask
 class MainController(QObject):
     """Exposes a method to refresh the image in QML"""
 
-    # showAlertSignal = Signal(str, str)
+    showAlertSignal = Signal(str, str)
     errorSignal = Signal(str)
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
@@ -41,9 +41,7 @@ class MainController(QObject):
         self.project_data = {"name": "", "file_path": ""}
 
         # Initialize flags
-        self.error_flag = False
         self.wait_flag = False
-        self.status_msg = {"title": "", "message": ""}
 
         # Create graph objects
         self.sgt_objs = {}
@@ -67,39 +65,23 @@ class MainController(QObject):
         self.worker = QThreadWorker(0, None)
         self.worker_task = WorkerTask()
 
-    def load_configs_to_models(self, sgt_obj):
+    def update_img_config_models(self, sgt_obj):
         """Load image configuration selections and controls after it is loaded."""
         try:
-            # 1.
             options_img = sgt_obj.g_obj.imp.configs
-            option_gte = sgt_obj.g_obj.configs
-            options_gtc = sgt_obj.configs
-
-            # 2.
-            graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
-            file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
 
-            self.gteTreeModel.reset_data(graph_options)
-            self.gtcListModel.reset_data(list(options_gtc.values()))
             self.imgControlModel.reset_data(img_controls)
-            self.exportGraphModel.reset_data(file_options)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
-
-            self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
-            self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
             self.microscopyPropsModel.reset_data(img_properties)
         except Exception as err:
-            # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "Fatal Error"
-            self.status_msg["message"] = f"Error loading image configurations! Close app and try again."
-            self.error_flag = True
+            self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
     def update_configs_models(self, sgt_obj):
         """Reload image configuration selections and controls after it is loaded."""
@@ -117,11 +99,8 @@ class MainController(QObject):
             self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
             self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
-            # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "Fatal Error"
-            self.status_msg["message"] = f"Error re-loading image configurations! Close app and try again."
-            self.error_flag = True
+            self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
     def get_current_obj(self):
         try:
@@ -131,9 +110,7 @@ class MainController(QObject):
             return sgt_obj
         except IndexError as err:
             logging.exception("No Image Error: %s", err, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "No Image Error"
-            self.status_msg["message"] = f"No image added! Please import/add an image."
-            self.error_flag = True
+            self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
 
     def create_sgt_object(self, img_path):
         """
@@ -160,21 +137,17 @@ class MainController(QObject):
             im_obj = ImageProcessor(str(img_path), out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = g_obj
-            self.load_configs_to_models(g_obj)
-            self.error_flag = False
+            self.update_img_config_models(g_obj)
+            self.update_configs_models(g_obj)
             return True
         except Exception as err:
-            # print(f"Error processing image: {e}")
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = f"Error processing image. Try again."
-            self.error_flag = True
+            self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
     def _handle_progress_update(self, value: int, msg: str):
         """"""
         progress_val = 0 if value < 0 else value
-        print(str(progress_val) + "%: " + msg)
         logging.info(str(progress_val) + "%: " + msg, extra={'user': 'SGT Logs'})
         if value >= 0:
             self.updateProgressSignal.emit(progress_val, msg)
@@ -183,13 +156,10 @@ class MainController(QObject):
 
     def _handle_finished(self, success_val: bool, result: None|list|GraphExtractor|GraphAnalyzer):
         """"""
-        self.error_flag = success_val
         self.wait_flag = False
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
-                self.status_msg["title"] = result[0]
-                self.status_msg["message"] = result[1]
                 self.taskTerminatedSignal.emit(success_val, result)
             elif type(result) is GraphAnalyzer:
                 self.write_to_pdf(result)
@@ -222,18 +192,15 @@ class MainController(QObject):
         # Copyright (C) 2024, the Regents of the University of Michigan.
         return f"StructuralGT v{__version__}"
 
-    @Slot(result=list)
-    def get_alert_message(self):
-        """"""
-        if self.error_flag:
-            return [self.status_msg["title"], self.status_msg["message"]]
-        else:
-            return []
-
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
         return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
+
+    @Slot(result=int)
+    def get_current_img_index(self):
+        """Returns the index of the current image"""
+        return self.current_obj_index
 
     @Slot(result=int)
     def get_current_img_type(self):
@@ -288,27 +255,29 @@ class MainController(QObject):
             self.select_img_type()
         except Exception as err:
             self.current_obj_index = 0
-            # print(f"Error loading GUI model data: {err}")
-            self.status_msg["message"] = f"Error loading image. Try again."
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
 
     @Slot(result=bool)
     def load_prev_image(self):
         """Load the previous image in the list into view."""
         if self.current_obj_index > 0:
-            pos = self.current_obj_index - 1
-            self.load_image(pos)
+            # pos = self.current_obj_index - 1
+            # self.load_image(pos)
+            self.current_obj_index = self.current_obj_index - 1
+            self.update_img_config_models(self.get_current_obj())
+            self.load_image(self.current_obj_index)
             # return False if pos == 0 else True
             return True
-        else:
-            return False
+        return False
 
     @Slot(result=bool)
     def load_next_image(self):
         """Load next image in the list into view."""
         if self.current_obj_index < (len(self.sgt_objs) - 1):
-            pos = self.current_obj_index + 1
-            self.load_image(pos)
+            self.current_obj_index = self.current_obj_index + 1
+            self.update_img_config_models(self.get_current_obj())
+            self.load_image(self.current_obj_index)
             # return False if pos == (len(self.sgt_objs) - 1) else True
             return True
         else:
@@ -323,7 +292,6 @@ class MainController(QObject):
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
             brightness = sgt_obj.g_obj.imp.configs["brightness_level"]["value"]
             contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
-            # print(f"Updated Settings: {brightness}, {contrast}")
             self.adjust_brightness_contrast(brightness, contrast)
         except Exception as err:
             logging.info("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
@@ -337,7 +305,7 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.imgBinFilterModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            self.select_img_type(3)
+            self.select_img_type()
         except Exception as err:
             logging.info("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
@@ -354,7 +322,8 @@ class MainController(QObject):
                     sgt_obj.g_obj.imp.configs[val["id"]]["dataValue"] = val["dataValue"]
                 except KeyError:
                     pass
-            self.select_img_type(3)
+            #self.select_img_type(3)
+            self.select_img_type()
         except Exception as err:
             logging.info("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
@@ -377,14 +346,11 @@ class MainController(QObject):
     @Slot()
     def run_extract_graph(self):
         """Retrieve settings from model and send to Python."""
-        """for i in range(self.gteTreeModel.rowCount()):
-            parent_index = self.gteTreeModel.index(i, 0)
-            print([self.gteTreeModel.data(parent_index, self.gteTreeModel.IdRole),
-                   self.gteTreeModel.data(parent_index, self.gteTreeModel.ValueRole)])
-            for j in range(self.gteTreeModel.rowCount(parent_index)):
-                child_index = self.gteTreeModel.index(j, 0, parent_index)
-                print([self.gteTreeModel.data(child_index, self.gteTreeModel.IdRole),
-                       self.gteTreeModel.data(child_index, self.gteTreeModel.ValueRole)])"""
+        if self.wait_flag:
+            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
         self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
@@ -395,8 +361,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
-            print(f"An error occurred: {err}")
-            logging.exception("Graph Extraction Error: %s", IOError, extra={'user': 'SGT Logs'})
+            logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["Graph Extraction Error",
                                                           "Fatal error while trying to extract graph. "
@@ -405,8 +370,11 @@ class MainController(QObject):
     @Slot()
     def run_graph_analyzer(self):
         """Retrieve settings from model and send to Python."""
-        # updated_values = [[val["id"], val["value"]] for val in self.gtcListModel.list_data]
-        # print("GTC Updated Settings:", self.get_current_obj().configs)
+        if self.wait_flag:
+            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
         self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
@@ -417,8 +385,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
-            print(f"An error occurred: {err}")
-            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
@@ -427,6 +394,11 @@ class MainController(QObject):
     @Slot()
     def run_multi_graph_analyzer(self):
         """"""
+        if self.wait_flag:
+            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
         self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
@@ -436,8 +408,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
-            print(f"An error occurred: {err}")
-            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
@@ -450,7 +421,6 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.microscopyPropsModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            # print(sgt_obj.g_obj.imp.configs)
             self.taskTerminatedSignal.emit(True, ["Microscopy Properties", "Microscopy property values successfully updated."])
         except Exception as err:
             logging.info("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
@@ -464,10 +434,6 @@ class MainController(QObject):
     @Slot(result=bool)
     def is_project_open(self):
         return self.project_open
-
-    @Slot(result=bool)
-    def error_occurred(self):
-        return self.error_flag
 
     @Slot(result=bool)
     def is_task_running(self):
@@ -503,8 +469,8 @@ class MainController(QObject):
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
-            # print(f"Error cropping image: {err}")
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Cropping Error", "Error occurred while cropping image. Close the app and try again.")
 
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
@@ -519,11 +485,10 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             img_cv = sgt_obj.g_obj.imp.img.copy()
             sgt_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
-            # print(f"{brightness_level} brightness and {contrast_level} contrast")
             self.select_img_type(2)
         except Exception as err:
-            # print(f"Error adjusting brightness/contrast of image: {err}")
-            logging.exception("Image Processing Error: %s", err, extra={'user': 'SGT Logs'})
+            logging.exception("Adjust Brightness/Contrast Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Processing Error", "Error occurred while adjusting brightness/contrast. Try again.")
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
@@ -531,14 +496,14 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def enable_prev_nav_btn(self):
-        if self.current_obj_index == 0:
+        if (self.current_obj_index == 0) or self.is_task_running():
             return False
         else:
             return True
 
     @Slot(result=bool)
     def enable_next_nav_btn(self):
-        if self.current_obj_index == (len(self.sgt_objs) - 1):
+        if (self.current_obj_index == (len(self.sgt_objs) - 1)) or self.is_task_running():
             return False
         else:
             return True
@@ -571,9 +536,8 @@ class MainController(QObject):
                 self.create_sgt_object(img_path)
 
         if len(self.sgt_objs) <= 0:
-            self.status_msg["title"] = "File Error"
-            self.status_msg["message"] = "No workable images found! Files have to be either .tif, .png, or .jpg or .jpeg"
-            self.error_flag = True
+            logging.exception("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, or .jpg or .jpeg")
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
@@ -608,13 +572,10 @@ class MainController(QObject):
             self.project_data["path"] = proj_path
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
-            print(f"File '{proj_name}' created successfully in '{dir_path}'.")
+            logging.exception(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
         except Exception as err:
-            print(f"An error occurred: {err}")
-            logging.exception("Create Project Error: %s", IOError, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "Create Project Error"
-            self.status_msg["message"] = f"Fatal error while trying to create SGT project. Close the app and try again."
-            self.error_flag = True
+            logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
 
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
@@ -626,13 +587,11 @@ class MainController(QObject):
             return False
 
         # Read and load project data and SGT objects
-        print(sgt_path)
 
     def verify_path(self, a_path):
         if not a_path:
-            self.status_msg["title"] = "File/Directory Error"
-            self.status_msg["message"] = "No folder/file selected."
-            self.error_flag = True
+            logging.exception("File/Directory Error: No folder/file selected.", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
             return False
 
         # Normalize file path
@@ -645,10 +604,8 @@ class MainController(QObject):
         a_path = os.path.normpath(a_path)  # Normalize path
 
         if not os.path.exists(a_path):
-            logging.exception("File/Folder Error: %s", IOError, extra={'user': 'SGT Logs'})
-            self.status_msg["title"] = "Path Error"
-            self.status_msg["message"] = f"File/Folder does not exist - {a_path}. Try again."
-            self.error_flag = True
+            logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Path Error", f"File/Folder in {a_path} does not exist. Try again.")
             return False
         return a_path
 
@@ -674,8 +631,5 @@ class MainController(QObject):
 
             self._handle_finished(True, sgt_obj)
         except Exception as err:
-            print(err)
-            logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
-            # self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error", "Error occurred while trying to write "
-            #                                                                      "to PDF. Run GT computations again."])

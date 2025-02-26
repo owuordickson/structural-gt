@@ -357,9 +357,13 @@ ColumnLayout {
             if (val === 101) {
                 lblNavInfo.text = msg;
             }
+            btnNext.enabled = mainController.enable_next_nav_btn();
+            lblNavInfo.text = mainController.get_img_nav_location();
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
+            lblNavInfo.text = mainController.get_img_nav_location();
+            btnNext.enabled = mainController.enable_next_nav_btn();
             lblNavInfo.text = mainController.get_img_nav_location();
         }
 
