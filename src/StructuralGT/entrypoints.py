@@ -4,6 +4,7 @@
 Entry points that allow users to execute GUI or Cli programs
 """
 
+import sys
 import time
 import logging
 from .apps.sgt_qml.gui_main import pyside_app
@@ -36,7 +37,7 @@ def main_cli():
 
 
 def initialize_logging():
-    f_name = str('sgt_app' + str(time.time()).replace('.', '', 1) + '.log')
-    logging.basicConfig(filename=f_name, encoding='utf-8', level=logging.INFO,
-                        format=FORMAT, datefmt=DATE_FORMAT)
+    # f_name = str('sgt_app' + str(time.time()).replace('.', '', 1) + '.log')
+    # logging.basicConfig(filename=f_name, encoding='utf-8', level=logging.INFO, format=FORMAT, datefmt=DATE_FORMAT)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
     logging.info("SGT application started running...", extra={'user': 'SGT Logs'})
