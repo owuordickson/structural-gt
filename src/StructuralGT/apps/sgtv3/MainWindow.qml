@@ -178,6 +178,51 @@ ApplicationWindow {
     }
 
     Dialog {
+        id: saveProjectDialog
+        anchors.centerIn: parent
+        title: "Save SGT Project"
+        modal: true
+        width: 300
+        height: 150
+
+        ColumnLayout {
+            anchors.fill: parent
+            CreateProjectWidget { id: saveProjectControls }
+
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
+                Button {
+                    text: "OK"
+                    onClicked: {
+                        var name = saveProjectControls.txtName.text;
+                        var location = saveProjectControls.txtLocation.text;
+
+                        if (name === "") {
+                            saveProjectControls.lblName.text = "Name*";
+                            saveProjectControls.lblName.color = "red";
+                            saveProjectControls.txtName.placeholderText = "please enter a name!"
+
+                        } else if (location === "") {
+                            saveProjectControls.lblLocation.text = "Location*";
+                            saveProjectControls.lblLocation.color = "red";
+
+                        } else {
+                            mainController.create_sgt_project(name, location);
+                            saveProjectDialog.close();
+                        }
+                    }
+                }
+                Button {
+                    text: "Cancel"
+                    onClicked: saveProjectDialog.close()
+                }
+            }
+        }
+    }
+
+    Dialog {
         id: dialogBrightnessCtrl
         //parent: mainWindow
         anchors.centerIn: parent
@@ -242,7 +287,6 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-
             BinaryFilterWidget{}
         }
 
@@ -267,12 +311,10 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-
             ImageFilterWidget{}
         }
 
         onAccepted: {
-            //mainController.apply_img_filter_changes();
             dialogImgFilters.close()
         }
 
@@ -293,7 +335,6 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-
             GTWidget{}
         }
 
@@ -319,7 +360,6 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-
             GTWidget{}
         }
 
