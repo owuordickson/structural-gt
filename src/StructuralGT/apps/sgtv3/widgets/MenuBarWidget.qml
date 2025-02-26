@@ -4,6 +4,8 @@ import QtQuick.Controls
 
 
 MenuBar {
+    property int valueRole: Qt.UserRole + 4
+
     Menu {
         title: "Structural GT"
         MenuItem { text: "&About"; onTriggered: dialogAbout.open(); }
@@ -29,12 +31,14 @@ MenuBar {
             id: mnuExportGraphAs
             title: "Export GT graph as..."
             enabled: true
-            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: console.log("edge list") }
-            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: console.log("adj matrix") }
-            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: console.log("gexf") }
-            MenuItem {id:mnuExportAll; text: "Save all"; enabled: false; onTriggered: console.log("save all") }
+            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: initiate_export_graph(0) }
+            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: initiate_export_graph(2) }
+            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: initiate_export_graph(1) }
         }
-        //MenuSeparator{}
+        MenuSeparator{}
+
+        MenuItem {id:mnuExportAll; text: "Save processed images"; enabled: false; onTriggered: initiate_export_graph(3) }
+
     }
     Menu {
         id: mnuImgCtrls
@@ -65,6 +69,16 @@ MenuBar {
     Menu {
         title: "Help"
         MenuItem { id:mnuHelp; text: "Structural GT Help"; enabled: true; onTriggered: dialogAbout.open() }
+    }
+
+    function initiate_export_graph (row) {
+
+        for (let i = 0; i < exportGraphModel.rowCount(); i++) {
+            let val = i === row ? 1 : 0;
+            var index = exportGraphModel.index(i, 0);
+            exportGraphModel.setData(index, val, valueRole);
+        }
+        mainController.export_graph();
     }
 
     Connections {

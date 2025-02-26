@@ -58,9 +58,10 @@ class MainController(QObject):
 
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
+        self.imgControlModel = CheckBoxModel([])
+        self.exportGraphModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
-        self.imgControlModel = CheckBoxModel([])
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -76,22 +77,23 @@ class MainController(QObject):
 
             # 2.
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
-            # file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+            file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
+            img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
-            img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
 
-            self.gtcListModel.reset_data(list(options_gtc.values()))
             self.gteTreeModel.reset_data(graph_options)
+            self.gtcListModel.reset_data(list(options_gtc.values()))
+            self.imgControlModel.reset_data(img_controls)
+            self.exportGraphModel.reset_data(file_options)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
-            self.imgControlModel.reset_data(img_controls)
 
-            self.microscopyPropsModel.reset_data(img_properties)
             self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
             self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
+            self.microscopyPropsModel.reset_data(img_properties)
         except Exception as err:
             # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -106,10 +108,11 @@ class MainController(QObject):
             options_gtc = sgt_obj.configs
 
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
-            # file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+            file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
-            self.gtcListModel.reset_data(list(options_gtc.values()))
             self.gteTreeModel.reset_data(graph_options)
+            self.gtcListModel.reset_data(list(options_gtc.values()))
+            self.exportGraphModel.reset_data(file_options)
 
             self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
             self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
@@ -201,12 +204,12 @@ class MainController(QObject):
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
                 self._handle_progress_update(100, "GT PDF successfully generated!")
-                self.taskTerminatedSignal.emit(1, ["GT calculations completed", "The image's GT parameters have been "
+                self.taskTerminatedSignal.emit(True, ["GT calculations completed", "The image's GT parameters have been "
                                                                                 "calculated. Check out generated PDF in "
                                                                                 "'Output Dir'."])
             elif type(result) is dict:
                 self._handle_progress_update(100, "All GT PDF successfully generated!")
-                self.taskTerminatedSignal.emit(1, ["All GT calculations completed", "GT parameters of all "
+                self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                     "images have been calculated. Check "
                                                                                     "out all the generated PDFs in "
                                                                                     "'Output Dir'."])
@@ -314,16 +317,21 @@ class MainController(QObject):
     @Slot()
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
-        brightness = 0
-        contrast = 0
-        for item in updated_values:
-            if item[0] == "brightness_level":
-                brightness = item[1]
-            if item[0] == "contrast_level":
-                contrast = item[1]
-        # print("Updated Settings:", updated_values)
-        self.adjust_brightness_contrast(brightness, contrast)
+        try:
+            updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
+            brightness = 0
+            contrast = 0
+            for item in updated_values:
+                if item[0] == "brightness_level":
+                    brightness = item[1]
+                if item[0] == "contrast_level":
+                    contrast = item[1]
+            # print("Updated Settings:", updated_values)
+            self.adjust_brightness_contrast(brightness, contrast)
+        except Exception as err:
+            logging.info("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
+                                                   "Error trying to adjust image brightness/contrast.Try again."])
 
     @Slot()
     def apply_img_bin_changes(self):
@@ -344,6 +352,20 @@ class MainController(QObject):
             updated_values.append(val)
         print("Updated Settings:", updated_values)"""
         self.select_img_type()
+
+    @Slot()
+    def export_graph(self):
+        """"""
+        # updated_values = {val["id"]: val["value"] for val in self.exportGraphModel.list_data}
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.exportGraphModel.list_data:
+                sgt_obj.g_obj.configs[val["id"]]["value"] = val["value"]
+            sgt_obj.g_obj.save_files()
+            self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
+        except Exception as err:
+            logging.info("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
     @Slot()
     def run_extract_graph(self):
@@ -369,7 +391,7 @@ class MainController(QObject):
             print(f"An error occurred: {err}")
             logging.exception("Graph Extraction Error: %s", IOError, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(-1, ["Graph Extraction Error",
+            self.worker_task.taskFinishedSignal.emit(False, ["Graph Extraction Error",
                                                           "Fatal error while trying to extract graph. "
                                                           "Close the app and try again."])
 
@@ -391,7 +413,7 @@ class MainController(QObject):
             print(f"An error occurred: {err}")
             logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
+            self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
 
@@ -410,7 +432,7 @@ class MainController(QObject):
             print(f"An error occurred: {err}")
             logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error",
+            self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
 
@@ -640,5 +662,5 @@ class MainController(QObject):
             print(err)
             logging.exception("GT Computation Error: %s", IOError, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
-            # self.worker_task.taskFinishedSignal.emit(-1, ["GT Computation Error", "Error occurred while trying to write "
+            # self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error", "Error occurred while trying to write "
             #                                                                      "to PDF. Run GT computations again."])

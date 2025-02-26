@@ -13,7 +13,6 @@ import numpy as np
 import scipy as sp
 import networkx as nx
 from cv2.typing import MatLike
-from ypstruct import struct
 import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
@@ -364,7 +363,7 @@ class GraphExtractor(ProgressUpdate):
                 wt_type = self.configs["has_weights"]["items"][i]["id"]
         return wt_type
 
-    def save_files(self, opt_gte: struct = None):
+    def save_files(self, opt_gte: dict = None):
         """
         Save graph data into files.
 
@@ -375,6 +374,7 @@ class GraphExtractor(ProgressUpdate):
         nx_graph = self.nx_graph.copy()
         if opt_gte is None:
             opt_gte = self.configs
+
         filename, output_location = self.imp.create_filenames()
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
