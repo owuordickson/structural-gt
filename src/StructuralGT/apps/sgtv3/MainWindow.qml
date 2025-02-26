@@ -238,7 +238,21 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            mainController.apply_img_ctrl_changes()
+            //mainController.apply_img_ctrl_changes()
+
+            /*var sbBrightness = brightnessControl.clBrightnessCtrl.findChild(SpinBox, "brightness_level");
+            var sbContrast = brightnessControl.clBrightnessCtrl.findChild(SpinBox, "contrast_level");
+
+            if (sbBrightness) {
+                sbBrightness.valueChanged();
+                console.log("Brightness...");
+            }
+
+            if (sbContrast) {
+                sbContrast.valueChanged();
+                console.log("Contrast...");
+            }*/
+
             dialogBrightnessCtrl.close()
         }
 

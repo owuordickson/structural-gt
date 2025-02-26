@@ -11,7 +11,7 @@ Item {
     property int spbWidthSize: 170
     property int lblWidthSize: 100
     property int valueRole: Qt.UserRole + 4
-
+    property alias clBrightnessCtrl: brightnessCtrlLayout
 
     ColumnLayout {
         id: brightnessCtrlLayout

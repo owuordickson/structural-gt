@@ -318,15 +318,12 @@ class MainController(QObject):
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
         try:
-            updated_values = [[val["id"], val["value"]] for val in self.imgControlModel.list_data]
-            brightness = 0
-            contrast = 0
-            for item in updated_values:
-                if item[0] == "brightness_level":
-                    brightness = item[1]
-                if item[0] == "contrast_level":
-                    contrast = item[1]
-            # print("Updated Settings:", updated_values)
+            sgt_obj = self.get_current_obj()
+            for val in self.imgControlModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+            brightness = sgt_obj.g_obj.imp.configs["brightness_level"]["value"]
+            contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
+            # print(f"Updated Settings: {brightness}, {contrast}")
             self.adjust_brightness_contrast(brightness, contrast)
         except Exception as err:
             logging.info("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
@@ -336,22 +333,32 @@ class MainController(QObject):
     @Slot()
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
-        # updated_values = [[val["id"], val["value"]] for val in self.imgBinFilterModel.list_data]
-        # print("Updated Settings:", updated_values)
-        self.select_img_type()
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.imgBinFilterModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+            self.select_img_type(3)
+        except Exception as err:
+            logging.info("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
+                                                                                     "binary filters to image. Try again."])
 
     @Slot()
     def apply_img_filter_changes(self):
         """Retrieve settings from model and send to Python."""
-        """updated_values = []
-        for item in self.imgFilterModel.list_data:
-            try:
-                val = [item["id"], item["value"], item["dataValue"]]
-            except KeyError:
-                val = [item["id"], item["value"]]
-            updated_values.append(val)
-        print("Updated Settings:", updated_values)"""
-        self.select_img_type()
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.imgFilterModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+                try:
+                    sgt_obj.g_obj.imp.configs[val["id"]]["dataValue"] = val["dataValue"]
+                except KeyError:
+                    pass
+            self.select_img_type(3)
+        except Exception as err:
+            logging.info("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
+                                                                                    "image filters. Try again."])
 
     @Slot()
     def export_graph(self):
@@ -439,8 +446,16 @@ class MainController(QObject):
     @Slot()
     def apply_microscopy_props_changes(self):
         """Retrieve settings from model and send to Python."""
-        updated_values = [[val["id"], val["value"]] for val in self.microscopyPropsModel.list_data]
-        print("Updated Settings:", updated_values)
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.microscopyPropsModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+            # print(sgt_obj.g_obj.imp.configs)
+            self.taskTerminatedSignal.emit(True, ["Microscopy Properties", "Microscopy property values successfully updated."])
+        except Exception as err:
+            logging.info("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
+                                                   "Error trying to update microscopy property values.Try again."])
 
     @Slot(result=bool)
     def display_image(self):
