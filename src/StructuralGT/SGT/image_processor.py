@@ -69,10 +69,10 @@ class ImageProcessor:
         >>> imp_obj.apply_filters()
         """
         self.configs = load_img_configs()  # image processing parameters and options.
-        self.props = []
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
+        self.props = self.get_img_props()
         if img is None:
             self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         else:
@@ -94,11 +94,10 @@ class ImageProcessor:
 
         # Compute pixel dimension in nanometers
         opt_img = self.configs
-        if (opt_img["scale_value_nanometers"]["value"] > 0) and (opt_img["scalebar_pixel_count"]["value"] > 0):
+        self.pixel_width = 1  # * (10**-9)  # 1 nanometer
+        if (int(opt_img["scale_value_nanometers"]["value"]) > 0) and (int(opt_img["scalebar_pixel_count"]["value"]) > 0):
             px_width = ImageProcessor.compute_pixel_width(opt_img["scale_value_nanometers"]["value"], opt_img["scalebar_pixel_count"]["value"])
             self.pixel_width = px_width/self.scale_factor
-        else:
-            self.pixel_width = 1  # * (10**-9)  # 1 nanometer
 
     def undo_cropping(self):
         """"""
@@ -334,6 +333,22 @@ class ImageProcessor:
         run_info += f"Resistivity = {opt_img["resistivity"]["value"]}" + r"$\Omega$m"
 
         return run_info
+
+    def get_img_props(self):
+        """
+
+        Returns:
+
+        """
+        f_name, _ = self.create_filenames()
+        height, width = self.img_raw.shape
+        props = [
+            ["Name", f_name],
+            ["Height x Width", f"({width} x {height}) pixels"],
+            ["Dimensions", f"{len(self.img_raw.shape)}D"],
+            # ["Pixel Size", "2nm x 2nm"]
+        ]
+        return props
 
     def display_images(self):
         """

@@ -66,7 +66,41 @@ class MainController(QObject):
         self.worker = QThreadWorker(0, None)
         self.worker_task = WorkerTask()
 
-    def load_img_configs(self, sgt_obj):
+    def load_configs_to_models(self, sgt_obj):
+        """Load image configuration selections and controls after it is loaded."""
+        try:
+            # 1.
+            options_img = sgt_obj.g_obj.imp.configs
+            option_gte = sgt_obj.g_obj.configs
+            options_gtc = sgt_obj.configs
+
+            # 2.
+            graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
+            # file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+
+            bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
+            img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
+            img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
+            img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
+
+            self.gtcListModel.reset_data(list(options_gtc.values()))
+            self.gteTreeModel.reset_data(graph_options)
+            self.imgBinFilterModel.reset_data(bin_filters)
+            self.imgFilterModel.reset_data(img_filters)
+            self.imgControlModel.reset_data(img_controls)
+
+            self.microscopyPropsModel.reset_data(img_properties)
+            # self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
+            # self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
+        except Exception as err:
+            # print(f"Error loading GUI model data: {err}")
+            logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
+            self.status_msg["title"] = "Fatal Error"
+            self.status_msg["message"] = f"Error loading image configurations! Close app and try again."
+            self.error_flag = True
+
+    def update_img_configs(self, sgt_obj):
+        """"""
         """Reload image configuration selections and controls after it is loaded."""
         try:
             # 1.
@@ -89,24 +123,9 @@ class MainController(QObject):
             self.imgFilterModel.reset_data(img_filters)
             self.imgControlModel.reset_data(img_controls)
 
-            data_img_props = data_graph_props = []
-            """data_img_props = [
-                ["Name", "Invitro.png"],
-                ["Width x Height", "500px x 500px"],
-                ["Dimensions", "2D"],
-                ["Pixel Size", "2nm x 2nm"],
-            ]"""
-            """data_graph_props = [
-                ["Node Count", "248"],
-                ["Edge Count", "306"],
-                ["Sub-graph Count", "1"],
-                ["Largest-Full Graph Ratio", "100%"],
-            ]"""
-
             self.microscopyPropsModel.reset_data(img_properties)
-            self.imgPropsTableModel.reset_data(data_img_props)
-            self.graphPropsTableModel .reset_data(data_graph_props)
-
+            # self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
+            # self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
             # print(f"Error loading GUI model data: {err}")
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -151,7 +170,7 @@ class MainController(QObject):
             im_obj = ImageProcessor(str(img_path), out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = g_obj
-            self.load_img_configs(g_obj)
+            self.load_configs_to_models(g_obj)
             self.error_flag = False
             return True
         except Exception as err:
@@ -189,7 +208,9 @@ class MainController(QObject):
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_current_obj()
                 sgt_obj.g_obj = result
+                # Load image superimposed with graph
                 self.select_img_type(4)
+                # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
                 self._handle_progress_update(100, "GT PDF successfully generated!")

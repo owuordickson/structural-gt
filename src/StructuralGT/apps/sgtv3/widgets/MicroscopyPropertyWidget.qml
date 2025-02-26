@@ -4,8 +4,10 @@ import QtQuick.Layouts
 
 Item {
     id: microscopyProps  // used for external access
-    height: parent.height
+    //height: parent.height
     width: 300
+    //Layout.fillHeight: true
+    //Layout.fillWidth: true
     enabled: mainController.display_image();
 
     property int txtWidthSize: 170

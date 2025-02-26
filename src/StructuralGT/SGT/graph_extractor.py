@@ -83,11 +83,10 @@ class GraphExtractor(ProgressUpdate):
         super(GraphExtractor, self).__init__()
         self.terminal_app = True
         self.configs = load_gte_configs()  # graph extraction parameters and options.
-        self.props = [["Weight Type", ""]]
+        self.props = []
         self.imp = img_obj
         self.graph_skeleton = None
-        self.nx_graph, self.nx_info = None, []  # TO DELETE 'nx_info' (ADDED TO PROPS)
-        self.nx_components, self.nx_connected_graph, self.connect_ratio = [], None, 0  # TO BE DELETED (ADDED TO PROPS)
+        self.nx_graph, self.nx_components, self.nx_info = None, [], []
 
     def fit(self):
         """
@@ -120,13 +119,14 @@ class GraphExtractor(ProgressUpdate):
                 self.update_status([-1, "Problem generating graph (change image/binary filters)["])
                 self.abort = True
             else:
-                # self.save_adj_csv()
-                # if self.configs_graph["has_weights"]["value"] == 1:
-                #    self.nx_info, self.nx_components, self.connect_ratio = GraphComponents.compute_conductance(
-                #        self.nx_graph, weighted=True)
-                # else:
-                self.nx_info, self.nx_components, self.connect_ratio = (
+                self.nx_info, self.nx_components, connect_ratio = (
                     GraphComponents.compute_conductance(self.nx_graph, self.nx_info))
+                self.props = [
+                    ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
+                    ["Edge Count", str(self.nx_graph.number_of_edges())],
+                    ["Node Count", str(self.nx_graph.number_of_nodes())],
+                    ["Graph Count", str(len(self.nx_components))],
+                    ["Largest-to-Entire graph ratio", f"{round((connect_ratio * 100), 3) }%"]]
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
                 graph_plt = self.draw_graph_network()

@@ -2,87 +2,80 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-TableView {
-    id: tableView
-    height: imgPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
-    //resizableColumns: true
+
+Item {
+    id: imgPropsTbl // used for external access
+    height: 175 //parent.height
+    width: parent.width
     Layout.fillWidth: true
-    Layout.topMargin: 5
-    Layout.leftMargin: 2
-    Layout.rightMargin: 2
-    model: imgPropsTableModel
+    Layout.leftMargin: 5
+    Layout.rightMargin: 5
 
     property int tblRowHeight: 30
 
-    delegate: Rectangle {
-        implicitWidth: column === 0 ? (tableView.width * 0.36) : (tableView.width * 0.64) //imgPropsTableModel.columnCount
-        implicitHeight: tblRowHeight
-        color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
-        //border.color: "#d0d0d0"
-        //border.width: 1
+    ColumnLayout {
+        //anchors.fill: parent
 
-        Text {
-            text: display
-            wrapMode: Text.Wrap
-            font.pixelSize: 10
-            color: "#303030"
-            anchors.fill: parent
-            anchors.topMargin: 5
-            anchors.leftMargin: 10
-        }
+        TableView {
+            id: tblImgProps
+            height: imgPropsTableModel.rowCount() * tblRowHeight  // implicitHeight is 30
+            width: 290
+            model: imgPropsTableModel
 
-        Loader {
-            sourceComponent: column === 1 ? lineBorder : noBorder
-        }
-    }
+            property int tblRowHeight: 30
 
-    /*HorizontalHeaderView {
-        syncView: tableView
-        width: tableView.width
-    }*/
+            delegate: Rectangle {
+                implicitWidth: column === 0 ? (tblImgProps.width * 0.36) : (tblImgProps.width * 0.64) //imgPropsTableModel.columnCount
+                implicitHeight: tblRowHeight
+                color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
+                //border.color: "#d0d0d0"
+                //border.width: 1
 
-    /*columnHeader: Rectangle {
-        height: 40
-        color: "lightgray"
-        border.color: "#a0a0a0"
+                Text {
+                    text: model.text
+                    wrapMode: Text.Wrap
+                    font.pixelSize: 10
+                    color: "#303030"
+                    anchors.fill: parent
+                    anchors.topMargin: 5
+                    anchors.leftMargin: 10
+                }
 
-        Row {
-            anchors.fill: parent
-            Repeater {
-                model: imgPropsTableModel.columnCount()
-                delegate: Rectangle {
-                    width: tableView.width / imgPropsTableModel.columnCount()
-                    height: 40
-                    border.color: "#c0c0c0"
+                Loader {
+                    sourceComponent: column === 1 ? lineBorder : noBorder
+                }
+            }
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: imgPropsTableModel.headerData(index, Qt.Horizontal, Qt.DisplayRole)
-                        font.bold: true
-                    }
+            Component {
+                id: lineBorder
+                Rectangle {
+                    width: 1 // Border width
+                    height: tblRowHeight
+                    color: "#e0e0e0" // Border color
+                    anchors.left: parent.left
+                }
+            }
+
+            Component {
+                id: noBorder
+                Rectangle {
+                    width: 5 // Border width
+                    height: parent.height
+                    color: transientParent
+                    anchors.left: parent.left
                 }
             }
         }
-    }*/
 
-    Component {
-        id: lineBorder
-        Rectangle {
-            width: 1 // Border width
-            height: tblRowHeight
-            color: "#e0e0e0" // Border color
-            anchors.left: parent.left
-        }
     }
 
-    Component {
-        id: noBorder
-        Rectangle {
-            width: 5 // Border width
-            height: parent.height
-            color: transientParent
-            anchors.left: parent.left
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal(){
+            tblImgProps.height = imgPropsTableModel.rowCount() * tblRowHeight;
         }
+
     }
 }
 

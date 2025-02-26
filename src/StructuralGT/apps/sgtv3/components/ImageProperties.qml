@@ -78,4 +78,13 @@ Rectangle {
         }
     }
 
+    Connections {
+        target: mainController
+
+        function onTaskTerminatedSignal(success_val, msg_data){
+            lblNoGraphProps.visible = graphPropsTableModel.rowCount() > 0 ? false : true;
+        }
+
+    }
+
 }
