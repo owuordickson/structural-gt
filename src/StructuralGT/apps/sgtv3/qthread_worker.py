@@ -3,7 +3,7 @@ import time
 import logging
 from PySide6.QtCore import QObject,QThread,Signal
 
-from src.StructuralGT.configs.config_loader import get_num_cores, write_file
+from src.StructuralGT.SGT.sgt_utils import get_num_cores, write_txt_file
 
 
 class AbortException(Exception):
@@ -154,7 +154,7 @@ class WorkerTask (QObject):
                 output += "Edge Count: " + str(sgt_obj.g_obj.nx_graph.number_of_edges()) + "\n"
                 filename, out_dir = sgt_obj.g_obj.imp.create_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
-                write_file(output, out_file)
+                write_txt_file(output, out_file)
                 print(output)
                 logging.info(output, extra={'user': 'SGT Logs'})
             self.taskFinishedSignal.emit(True, sgt_objs)

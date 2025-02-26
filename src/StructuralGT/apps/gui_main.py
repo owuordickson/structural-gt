@@ -15,8 +15,11 @@ from PIL import Image, ImageQt
 from PyQt6 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_pdf import PdfPages
 from .gui_crop import QCrop
+
 from .. import __title__ as sgt_title
-from ..configs.config_loader import load_all_configs, load_gui_configs, get_num_cores, write_file
+from ..configs.config_loader import load_all_configs, load_gui_configs
+
+from ..SGT.sgt_utils import get_num_cores, write_txt_file
 from ..SGT.image_processor import ImageProcessor
 from ..SGT.graph_extractor import GraphExtractor
 from ..SGT.graph_analyzer import GraphAnalyzer
@@ -2312,7 +2315,7 @@ class Worker(QtCore.QThread):
                 output += "Edge Count: " + str(graph_obj.nx_graph.number_of_edges()) + "\n"
                 filename, out_dir = graph_obj.imp.create_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
-                write_file(output, out_file)
+                write_txt_file(output, out_file)
                 print(output)
                 logging.info(output, extra={'user': 'SGT Logs'})
             except Exception as err:

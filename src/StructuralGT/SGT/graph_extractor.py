@@ -4,7 +4,6 @@
 Builds a graph network from nano-scale microscopy images.
 """
 
-import csv
 import cv2
 import os
 import math
@@ -13,12 +12,14 @@ import itertools
 import numpy as np
 import scipy as sp
 import networkx as nx
+from cv2.typing import MatLike
 from ypstruct import struct
 import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
 from .image_processor import ImageProcessor
+from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
 
@@ -286,16 +287,8 @@ class GraphExtractor(ProgressUpdate):
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
-            ax.imshow(raw_img, cmap='gray')
-            if opt_gte["is_multigraph"]["value"]:
-                for (s, e) in nx_graph.edges():
-                    for k in range(int(len(nx_graph[s][e]))):
-                        ge = nx_graph[s][e][k]['pts']
-                        ax.plot(ge[:, 1], ge[:, 0], 'red')
-            else:
-                for (s, e) in nx_graph.edges():
-                    ge = nx_graph[s][e]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], 'red')
+            GraphExtractor.superimpose_graph_to_img(ax, raw_img, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+
         return fig
 
     def display_skeletal_images(self):
@@ -322,16 +315,8 @@ class GraphExtractor(ProgressUpdate):
 
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
-        ax_2.imshow(img, cmap='gray')
-        if opt_gte["is_multigraph"]["value"]:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    ax_2.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax_2.plot(ge[:, 1], ge[:, 0], 'red')
+        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, img, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         if opt_gte["display_node_id"]["value"] == 1:
@@ -422,31 +407,11 @@ class GraphExtractor(ProgressUpdate):
             if opt_gte["has_weights"]["value"] == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
                 el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
-                with open(csv_file, 'w', newline='') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(fields)
-                    for line in el:
-                        line = str(line)
-                        row = line.split(',')
-                        try:
-                            writer.writerow(row)
-                        except csv.Error:
-                            pass
-                csvfile.close()
+                write_csv_file(csv_file, fields, el)
             else:
                 fields = ['Source', 'Target']
                 el = nx.generate_edgelist(nx_graph, delimiter=',', data=False)
-                with open(csv_file, 'w', newline='') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(fields)
-                    for line in el:
-                        line = str(line)
-                        row = line.split(',')
-                        try:
-                            writer.writerow(row)
-                        except csv.Error:
-                            pass
-                csvfile.close()
+                write_csv_file(csv_file, fields, el)
 
         if opt_gte["export_as_gexf"]["value"] == 1:
             if opt_gte["is_multigraph"]["value"]:
@@ -499,6 +464,28 @@ class GraphExtractor(ProgressUpdate):
         }
         return weight_options
 
+    @staticmethod
+    def superimpose_graph_to_img(axis, image: MatLike, is_multi_graph: bool, nx_graph: nx.Graph):
+        """
+        Plot graph edges on top of the image.
+        :param axis: matplotlib axis
+        :param image: image to be superimposed with graph edges
+        :param is_multi_graph: is the graph edges multigraph?
+        :param nx_graph: a NetworkX graph
+        :return:
+        """
+        # axis.set_axis_off()
+        axis.imshow(image, cmap='gray')
+        if is_multi_graph:
+            for (s, e) in nx_graph.edges():
+                for k in range(int(len(nx_graph[s][e]))):
+                    ge = nx_graph[s][e][k]['pts']
+                    axis.plot(ge[:, 1], ge[:, 0], 'red')
+        else:
+            for (s, e) in nx_graph.edges():
+                ge = nx_graph[s][e]['pts']
+                axis.plot(ge[:, 1], ge[:, 0], 'red')
+        return axis
 
 class GraphComponents:
 

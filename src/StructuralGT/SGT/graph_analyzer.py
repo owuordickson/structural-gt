@@ -27,7 +27,8 @@ from .graph_extractor import GraphExtractor
 from .image_processor import ImageProcessor
 
 import sgt_c_module as sgt
-from ..configs.config_loader import get_num_cores, load_gtc_configs
+from .sgt_utils import get_num_cores
+from ..configs.config_loader import load_gtc_configs
 
 
 class GraphAnalyzer(ProgressUpdate):
