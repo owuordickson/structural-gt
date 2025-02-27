@@ -18,8 +18,6 @@ This specified version is not currently available for download via GitHub. There
 ```bash
 cd structural-gt
 pip install --upgrade pip
-pip uninstall pyqt6-tools
-pip uninstall pyqt6-plugins
 pip install -r requirements.txt
 pip install .
 ```
