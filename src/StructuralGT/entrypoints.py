@@ -5,9 +5,8 @@ Entry points that allow users to execute GUI or Cli programs
 """
 
 import sys
-import time
 import logging
-from .apps.sgt_qml.gui_main import pyside_app
+from src.StructuralGT.apps.gui_main import pyside_app
 from .apps.cli_main import terminal_app
 
 
