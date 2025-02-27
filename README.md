@@ -31,7 +31,7 @@ pip install .
 * Execute the following command:
 
 ```bash
-pip install structuralgt-2.0.1-win_amd64.whl
+pip install structuralgt-3.0.1-win_amd64.whl
 ```
 
 ## Executing program
