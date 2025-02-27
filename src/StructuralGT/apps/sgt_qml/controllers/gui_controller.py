@@ -66,8 +66,12 @@ class MainController(QObject):
         self.worker = QThreadWorker(0, None)
         self.worker_task = WorkerTask()
 
-    def update_img_config_models(self, sgt_obj):
-        """Load image configuration selections and controls after it is loaded."""
+    def update_img_models(self, sgt_obj: GraphAnalyzer):
+        """
+            Reload image configuration selections and controls from saved dict to QML models after the image is loaded.
+
+            :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
+        """
         try:
             options_img = sgt_obj.g_obj.imp.configs
 
@@ -84,8 +88,15 @@ class MainController(QObject):
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
-    def update_configs_models(self, sgt_obj):
-        """Reload image configuration selections and controls after it is loaded."""
+    def update_graph_models(self, sgt_obj: GraphAnalyzer):
+        """
+            Reload graph configuration selections and controls from saved dict to QML models.
+        Args:
+            sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
+
+        Returns:
+
+        """
         try:
             option_gte = sgt_obj.g_obj.configs
             options_gtc = sgt_obj.configs
@@ -138,8 +149,8 @@ class MainController(QObject):
             im_obj = ImageProcessor(str(img_path), out_dir)
             g_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = g_obj
-            self.update_img_config_models(g_obj)
-            self.update_configs_models(g_obj)
+            self.update_img_models(g_obj)
+            self.update_graph_models(g_obj)
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -297,7 +308,7 @@ class MainController(QObject):
             # pos = self.current_obj_index - 1
             # self.load_image(pos)
             self.current_obj_index = self.current_obj_index - 1
-            self.update_img_config_models(self.get_current_obj())
+            self.update_img_models(self.get_current_obj())
             self.load_image(self.current_obj_index)
             # return False if pos == 0 else True
             return True
@@ -308,7 +319,7 @@ class MainController(QObject):
         """Load next image in the list into view."""
         if self.current_obj_index < (len(self.sgt_objs) - 1):
             self.current_obj_index = self.current_obj_index + 1
-            self.update_img_config_models(self.get_current_obj())
+            self.update_img_models(self.get_current_obj())
             self.load_image(self.current_obj_index)
             # return False if pos == (len(self.sgt_objs) - 1) else True
             return True
@@ -619,9 +630,11 @@ class MainController(QObject):
         self.project_data["name"] = proj_name
         self.project_data["file_path"] = str(sgt_path)
         self.project_open = True
-        self.imgListTableModel.update_data(self.sgt_objs)
-        self.imageChangedSignal.emit()
         self.projectOpenedSignal.emit(proj_name)
+
+        # Load Image to GUI - activates QML
+        self.update_img_models(self.get_current_obj())
+        self.load_image()
         logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
 
     def verify_path(self, a_path):

@@ -95,8 +95,10 @@ class ImageProcessor:
         # Compute pixel dimension in nanometers
         opt_img = self.configs
         self.pixel_width = 1  # * (10**-9)  # 1 nanometer
-        if (float(opt_img["scale_value_nanometers"]["value"]) > 0) and (int(opt_img["scalebar_pixel_count"]["value"]) > 0):
-            px_width = ImageProcessor.compute_pixel_width(opt_img["scale_value_nanometers"]["value"], opt_img["scalebar_pixel_count"]["value"])
+        pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
+        scale_val = float(opt_img["scale_value_nanometers"]["value"])
+        if (scale_val > 0) and (pixel_count > 0):
+            px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
             self.pixel_width = px_width/self.scale_factor
 
     def undo_cropping(self):
@@ -516,7 +518,7 @@ class ImageProcessor:
         return cv2.resize(image, (length, length))
 
     @staticmethod
-    def compute_pixel_width(scale_val: int, scalebar_pixel_count: int):
+    def compute_pixel_width(scale_val: float, scalebar_pixel_count: int):
         """
         Compute the width of a single pixel in nanometers.
 
