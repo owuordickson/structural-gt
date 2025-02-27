@@ -620,6 +620,7 @@ class MainController(QObject):
         self.project_data["file_path"] = str(sgt_path)
         self.project_open = True
         self.imgListTableModel.update_data(self.sgt_objs)
+        self.imageChangedSignal.emit()
         self.projectOpenedSignal.emit(proj_name)
         logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
 
