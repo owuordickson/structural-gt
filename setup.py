@@ -47,7 +47,7 @@ if platform.system() == "Windows":
     ext_modules[0].library_dirs = ["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"]
     ext_modules[0].extra_link_args = ["/VERBOSE:LIB"]
 
-"""mainscript = '__main__.py'
+"""mainscript = 'StructuralGT.py'
 if sys.platform == 'darwin':
     extra_options = dict(
         setup_requires=['py2app'],
