@@ -1,3 +1,4 @@
+import sys
 import platform
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -25,6 +26,7 @@ class BuildExt(build_ext):
                 ext.extra_compile_args = ["-std=c99", "-O2"]
         build_ext.build_extensions(self)
 
+
 # Make sure igraph lib is installed
 # brew install igraph  - macOS (Homebrew)
 # sudo apt install libigraph-dev  - Linux (Debian-based)
@@ -45,6 +47,29 @@ if platform.system() == "Windows":
     ext_modules[0].library_dirs = ["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"]
     ext_modules[0].extra_link_args = ["/VERBOSE:LIB"]
 
+"""mainscript = '__main__.py'
+if sys.platform == 'darwin':
+    extra_options = dict(
+        setup_requires=['py2app'],
+        app=[mainscript],
+        # Cross-platform applications generally expect sys.argv to
+        # be used for opening files.
+        # Don't use this with GUI toolkits, the argv
+        # emulator causes problems and toolkits generally have
+        # hooks for responding to file-open events.
+        options=dict(py2app=dict(argv_emulation=True)),
+    )
+elif sys.platform == 'win32':
+    extra_options = dict(
+        setup_requires=['py2exe'],
+        app=[mainscript],
+    )
+else:
+    extra_options = dict(
+    # Normally unix-like platforms will use "setup.py install"
+    # and install the main script as such
+    scripts=[mainscript],
+)"""
 
 # Setup configuration
 setup(
@@ -52,5 +77,5 @@ setup(
     version="1.0.0",
     ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExt},  # Use the custom build class
+    # **extra_options
 )
-
