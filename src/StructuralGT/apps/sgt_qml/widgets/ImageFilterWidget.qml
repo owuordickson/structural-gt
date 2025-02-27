@@ -74,10 +74,9 @@ Item {
                             from: model.minValue
                             to: model.maxValue
                             stepSize: model.stepSize
-                            value: model.dataValue
-                            onValueChanged: updateValue(value)
-                            onFocusChanged: updateValue(value)
-                            onEditableChanged: updateValue(value)
+                            property var currSBVal: model.dataValue
+                            value: currSBVal
+                            onValueChanged: updateValue(currSBVal, value)
                         }
                     }
                 }
@@ -111,10 +110,10 @@ Item {
                     }
                 }
 
-                function updateValue(currVal, val) {
-                    if (currVal !== val){
-                        currVal = val;
-                        var index = imgControlModel.index(model.index, 0);
+                function updateValue(curr_val, val) {
+                    if (curr_val !== val){
+                        curr_val = val;
+                        var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, dataValueRole);
                         mainController.apply_img_filter_changes();
                     }
