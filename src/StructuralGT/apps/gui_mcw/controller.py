@@ -167,8 +167,8 @@ class MainController(QObject):
         if not self.project_open:
             return False
         try:
-            file_data = {}
             file_path = self.project_data["file_path"]
+            """file_data = {}
             key_list = list(self.sgt_objs.keys())
             for key in key_list:
                 sgt_obj = self.sgt_objs[key]
@@ -177,11 +177,10 @@ class MainController(QObject):
                 file_data[key]["out_dir"] = sgt_obj.g_obj.imp.output_dir
                 file_data[key]["opt_gtc"] = sgt_obj.configs
                 file_data[key]["opt_gte"] = sgt_obj.g_obj.configs
-                file_data[key]["opt_img"] = sgt_obj.g_obj.imp.configs
+                file_data[key]["opt_img"] = sgt_obj.g_obj.imp.configs"""
             with open(file_path, 'w') as project_file:
-                json.dump(file_data, project_file)
-                # pickle.dump(file_data, project_file)
-            print(file_data)
+                # json.dump(file_data, project_file)
+                pickle.dump(self.sgt_objs, project_file)
             return True
         except Exception as err:
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
@@ -663,9 +662,9 @@ class MainController(QObject):
 
             # Read and load project data and SGT objects
             with open(str(sgt_path), 'r') as sgt_file:
-                # self.sgt_objs = pickle.load(sgt_file)
-                file_data = json.load(sgt_file)
-            if not file_data:
+                self.sgt_objs = pickle.load(sgt_file)
+                # file_data = json.load(sgt_file)
+            """if not file_data:
                 self.wait_flag = False
                 return False
 
@@ -679,7 +678,7 @@ class MainController(QObject):
                 g_obj.configs = file_data[key]["opt_gte"]
                 sgt_obj = GraphAnalyzer(g_obj)
                 sgt_obj.configs = file_data[key]["opt_gtc"]
-                self.sgt_objs[key] = sgt_obj
+                self.sgt_objs[key] = sgt_obj"""
 
             # Update and notify QML
             self.project_data["name"] = proj_name
