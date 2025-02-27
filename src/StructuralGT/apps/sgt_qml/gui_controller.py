@@ -290,13 +290,25 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.imgControlModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            brightness = sgt_obj.g_obj.imp.configs["brightness_level"]["value"]
-            contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
-            self.adjust_brightness_contrast(brightness, contrast)
+            # brightness = sgt_obj.g_obj.imp.configs["brightness_level"]["value"]
+            # contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
+            self.select_img_type()
         except Exception as err:
             logging.info("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
                                                    "Error trying to adjust image brightness/contrast.Try again."])
+
+    @Slot()
+    def apply_microscopy_props_changes(self):
+        """Retrieve settings from model and send to Python."""
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.microscopyPropsModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+        except Exception as err:
+            logging.info("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
+                                                   "Error trying to update microscopy property values.Try again."])
 
     @Slot()
     def apply_img_bin_changes(self):
@@ -414,19 +426,6 @@ class MainController(QObject):
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
 
-    @Slot()
-    def apply_microscopy_props_changes(self):
-        """Retrieve settings from model and send to Python."""
-        try:
-            sgt_obj = self.get_current_obj()
-            for val in self.microscopyPropsModel.list_data:
-                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            self.taskTerminatedSignal.emit(True, ["Microscopy Properties", "Microscopy property values successfully updated."])
-        except Exception as err:
-            logging.info("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
-                                                   "Error trying to update microscopy property values.Try again."])
-
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded
@@ -477,18 +476,6 @@ class MainController(QObject):
         if undo:
             self.select_img_type(5)
             self.showUnCroppingToolSignal.emit(False)
-
-    @Slot( float, float)
-    def adjust_brightness_contrast(self, brightness_level, contrast_level):
-        """ Converts QImage to OpenCV format, applies brightness/contrast, and saves. """
-        try:
-            sgt_obj = self.get_current_obj()
-            img_cv = sgt_obj.g_obj.imp.img.copy()
-            sgt_obj.g_obj.imp.img_mod = ImageProcessor.control_brightness(img_cv, brightness_level, contrast_level)
-            self.select_img_type(2)
-        except Exception as err:
-            logging.exception("Adjust Brightness/Contrast Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Processing Error", "Error occurred while adjusting brightness/contrast. Try again.")
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):

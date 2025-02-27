@@ -101,12 +101,29 @@ TreeView {
 
                     Button {
                         id: btnRemoveOk
-                        text: "OK"
+                        text: ""
+                        Layout.preferredWidth: 40
+                        Layout.preferredHeight: 28
+                        Layout.rightMargin: 10
+                        onFocusChanged: {btnRemoveOk.visible = true;}
                         onClicked: {
                             updateChild(model.id, txtField.text);
                             btnRemoveOk.visible = false;
                         }
-                        onFocusChanged: {btnRemoveOk.visible = true;}
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 5
+                            color: "#22bc55"
+
+                            Label {
+                                text: "OK"
+                                color: "#ffffff"
+                                //font.bold: true
+                                //font.pixelSize: 10
+                                anchors.centerIn: parent
+                            }
+                        }
                     }
 
                 }

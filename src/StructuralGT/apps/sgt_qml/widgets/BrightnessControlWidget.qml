@@ -8,7 +8,7 @@ Item {
     height: parent.height
     width: parent.width
 
-    property int spbWidthSize: 170
+    property int spbWidthSize: 120
     property int lblWidthSize: 100
     property int valueRole: Qt.UserRole + 4
     property alias clBrightnessCtrl: brightnessCtrlLayout
@@ -36,7 +36,7 @@ Item {
                     id: spinBox
                     objectName: model.id
                     Layout.minimumWidth: spbWidthSize
-                    Layout.fillWidth: true
+                    Layout.fillWidth: false
                     editable: true
                     from: -100
                     to: 100
@@ -44,8 +44,46 @@ Item {
                     property var currVal: model.value
                     value: currVal
                     onValueChanged: updateValue(currVal, value)
-                    onFocusChanged: updateValue(currVal, value)
-                    onEditableChanged: updateValue(currVal, value)
+                    onFocusChanged: {
+                        if (focus) {
+                            btnOK.visible = true;
+                        }
+                    }
+                }
+
+                Button {
+                    id: btnOK
+                    text: ""
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 28
+                    Layout.rightMargin: 10
+                    visible: false
+                    onClicked: {
+                        btnOK.visible = false;
+
+                        //let textValue = spinBox.text;
+                        //let val = spinBox.valueFromText(textValue);
+                        //console.log(textValue);
+                        let val = spinBox.value;
+
+                        var index = imgControlModel.index(model.index, 0);
+                        imgControlModel.setData(index, val, valueRole);
+                        mainController.apply_img_ctrl_changes();
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            //font.bold: true
+                            //font.pixelSize: 10
+                            anchors.centerIn: parent
+                        }
+                    }
                 }
 
                 function updateValue(curr_val, val) {
@@ -53,11 +91,13 @@ Item {
                         curr_val = val;
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
+                        mainController.apply_img_ctrl_changes();
                     }
                 }
 
-            }
-        }
 
+            }
+
+        }
     }
 }
