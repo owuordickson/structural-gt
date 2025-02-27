@@ -44,6 +44,9 @@ class ImageProvider(QQuickImageProvider):
             self.pixmap = ImageQt.toqpixmap(img)
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_configs_models(sgt_obj)
+            # Save changes to project data file
+            self.img_controller.handle_save_project_data()
+
             # Acknowledge image load and send signal to update QML
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()

@@ -146,12 +146,15 @@ class MainController(QObject):
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
-    def _handle_save_project_data(self):
+    def handle_save_project_data(self):
         """
         A handler function that handles saving project data.
         Returns:
 
         """
+        if not self.project_open:
+            return
+
         with open(self.project_data["file_path"], 'wb') as project_file:
             pickle.dump(self.sgt_objs, project_file)
 
@@ -323,7 +326,7 @@ class MainController(QObject):
             # contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
             self.select_img_type()
         except Exception as err:
-            logging.info("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
+            logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
                                                    "Error trying to adjust image brightness/contrast.Try again."])
 
@@ -335,7 +338,7 @@ class MainController(QObject):
             for val in self.microscopyPropsModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
         except Exception as err:
-            logging.info("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
+            logging.exception("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
                                                    "Error trying to update microscopy property values.Try again."])
 
@@ -348,7 +351,7 @@ class MainController(QObject):
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
             self.select_img_type()
         except Exception as err:
-            logging.info("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
+            logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
                                                                                      "binary filters to image. Try again."])
 
@@ -366,7 +369,7 @@ class MainController(QObject):
             #self.select_img_type(3)
             self.select_img_type()
         except Exception as err:
-            logging.info("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
+            logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
                                                                                     "image filters. Try again."])
 
@@ -381,14 +384,14 @@ class MainController(QObject):
             sgt_obj.g_obj.save_files()
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
-            logging.info("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
+            logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
     @Slot()
     def run_extract_graph(self):
         """Retrieve settings from model and send to Python."""
         if self.wait_flag:
-            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
@@ -412,7 +415,7 @@ class MainController(QObject):
     def run_graph_analyzer(self):
         """Retrieve settings from model and send to Python."""
         if self.wait_flag:
-            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
@@ -436,7 +439,7 @@ class MainController(QObject):
     def run_multi_graph_analyzer(self):
         """"""
         if self.wait_flag:
-            logging.exception("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
@@ -552,7 +555,7 @@ class MainController(QObject):
                 self.create_sgt_object(img_path)
 
         if len(self.sgt_objs) <= 0:
-            logging.exception("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
+            logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, or .jpg or .jpeg")
             return False
         else:
@@ -579,7 +582,7 @@ class MainController(QObject):
 
         try:
             if os.path.exists(proj_path):
-                logging.exception(f"Error: Project '{proj_name}' already exists.", extra={'user': 'SGT Logs'})
+                logging.info(f"Project '{proj_name}' already exists.", extra={'user': 'SGT Logs'})
                 self.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
                 return False
 
@@ -590,10 +593,10 @@ class MainController(QObject):
 
             # Update and notify QML
             self.project_data["name"] = proj_name
-            self.project_data["path"] = proj_path
+            self.project_data["file_path"] = proj_path
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
-            logging.exception(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
+            logging.info(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
         except Exception as err:
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
@@ -601,7 +604,7 @@ class MainController(QObject):
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
         """Opens and loads SGT project from the '.sgtproj' file"""
-
+        self.project_open = False
         # Verify path
         sgt_path = self.verify_path(sgt_path)
         if not sgt_path:
@@ -614,14 +617,15 @@ class MainController(QObject):
 
         # Update and notify QML
         self.project_data["name"] = proj_name
-        self.project_data["path"] = sgt_path
+        self.project_data["file_path"] = str(sgt_path)
         self.project_open = True
+        self.imgListTableModel.update_data(self.sgt_objs)
         self.projectOpenedSignal.emit(proj_name)
-        logging.exception(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
+        logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
 
     def verify_path(self, a_path):
         if not a_path:
-            logging.exception("File/Directory Error: No folder/file selected.", extra={'user': 'SGT Logs'})
+            logging.info("No folder/file selected.", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
             return False
 
