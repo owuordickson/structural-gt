@@ -6,7 +6,7 @@ Entry points that allow users to execute GUI or Cli programs
 
 import sys
 import logging
-from src.StructuralGT.apps.gui_main import pyside_app
+from .apps.gui_main import pyside_app
 from .apps.cli_main import terminal_app
 
 

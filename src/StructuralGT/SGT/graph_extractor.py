@@ -300,7 +300,7 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
 
         run_info = "***Graph Extraction Configurations***\n"
-        if opt_gte["has_weights"]["value"]:
+        if opt_gte["has_weights"]["value"] == 1:
             wt_type = self.get_weight_type()
             run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(wt_type)} || "
         if opt_gte["merge_nearby_nodes"]["value"]:
@@ -321,6 +321,9 @@ class GraphExtractor(ProgressUpdate):
 
     def get_weight_type(self):
         wt_type = None  # Default weight
+        if self.configs["has_weights"]["value"] == 0:
+            return wt_type
+
         for i in range(len(self.configs["has_weights"]["items"])):
             if self.configs["has_weights"]["items"][i]["value"]:
                 wt_type = self.configs["has_weights"]["items"][i]["id"]

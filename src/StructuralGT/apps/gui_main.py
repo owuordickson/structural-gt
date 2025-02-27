@@ -4,13 +4,14 @@
 Pyside6 implementation of StructuralGT user interface.
 """
 
+import os
 import sys
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from src.StructuralGT.apps.sgt_qml.controllers.gui_controller import MainController
-from src.StructuralGT.apps.sgt_qml.models.gui_image_provider import ImageProvider
+from .sgt_qml.controllers.gui_controller import MainController
+from .sgt_qml.models.gui_image_provider import ImageProvider
 
 
 class MainWindow(QObject):
@@ -44,7 +45,11 @@ class MainWindow(QObject):
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
         # Load UI
-        self.ui_engine.load("StructuralGT/apps/sgt_qml/MainWindow.qml")
+        # Get the directory of the current script
+        qml_dir = os.path.dirname(os.path.abspath(__file__))
+        qml_name = 'sgt_qml/MainWindow.qml'
+        qml_path = os.path.join(qml_dir, qml_name)
+        self.ui_engine.load(qml_path)
         if not self.ui_engine.rootObjects():
             sys.exit(-1)
 
