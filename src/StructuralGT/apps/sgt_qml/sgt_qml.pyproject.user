@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 15.0.1, 2025-02-26T22:17:53. -->
+<!-- Written by QtCreator 15.0.1, 2025-02-27T17:02:59. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -211,10 +211,8 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">/Users/owuorjnr/owProjects/structural-gt/src/StructuralGT/apps/sgt_qml/gui_main.py</value>
     <value type="bool" key="ProjectExplorer.RunConfiguration.Customized">true</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Script">/Users/owuorjnr/owProjects/structural-gt/src/StructuralGT/apps/sgt_qml/gui_main.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/Users/owuorjnr/owProjects/structural-gt/src/StructuralGT/apps/sgt_qml</value>
    </valuemap>
    <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">4</value>
   </valuemap>

@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 import logging
 import pickle
 import numpy as np
@@ -168,18 +167,7 @@ class MainController(QObject):
             return False
         try:
             file_path = self.project_data["file_path"]
-            """file_data = {}
-            key_list = list(self.sgt_objs.keys())
-            for key in key_list:
-                sgt_obj = self.sgt_objs[key]
-                file_data[key] = {"img_path": "", "out_dir": "", "opt_gtc": None, "opt_gte": None, "opt_img": None}
-                file_data[key]["img_path"] = sgt_obj.g_obj.imp.img_path
-                file_data[key]["out_dir"] = sgt_obj.g_obj.imp.output_dir
-                file_data[key]["opt_gtc"] = sgt_obj.configs
-                file_data[key]["opt_gte"] = sgt_obj.g_obj.configs
-                file_data[key]["opt_img"] = sgt_obj.g_obj.imp.configs"""
-            with open(file_path, 'w') as project_file:
-                # json.dump(file_data, project_file)
+            with open(file_path, 'wb') as project_file:
                 pickle.dump(self.sgt_objs, project_file)
             return True
         except Exception as err:
@@ -661,28 +649,13 @@ class MainController(QObject):
             img_dir, proj_name = os.path.split(str(sgt_path))
 
             # Read and load project data and SGT objects
-            with open(str(sgt_path), 'r') as sgt_file:
+            with open(str(sgt_path), 'rb') as sgt_file:
                 self.sgt_objs = pickle.load(sgt_file)
-                # file_data = json.load(sgt_file)
-            """if not file_data:
-                self.wait_flag = False
-                return False
-
-            key_list = list(file_data.keys())
-            for key in key_list:
-                img_path = file_data[key]["img_path"]
-                out_dir = file_data[key]["out_dir"]
-                im_obj = ImageProcessor(img_path, out_dir)
-                im_obj.configs = file_data[key]["opt_img"]
-                g_obj = GraphExtractor(im_obj)
-                g_obj.configs = file_data[key]["opt_gte"]
-                sgt_obj = GraphAnalyzer(g_obj)
-                sgt_obj.configs = file_data[key]["opt_gtc"]
-                self.sgt_objs[key] = sgt_obj"""
 
             # Update and notify QML
             self.project_data["name"] = proj_name
             self.project_data["file_path"] = str(sgt_path)
+            self.wait_flag = False
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
 
@@ -690,7 +663,6 @@ class MainController(QObject):
             self.update_img_models(self.get_current_obj())
             self.load_image()
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
-            self.wait_flag = False
         except Exception as err:
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Open Project Error", "Unable retrieve your data and open project. "
