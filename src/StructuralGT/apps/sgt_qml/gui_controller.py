@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import pickle
 import numpy as np
 from PIL import Image, ImageQt  # ImageQt for conversion
 from PySide6.QtCore import QObject,Signal,Slot
@@ -145,8 +146,25 @@ class MainController(QObject):
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
+    def _handle_save_project_data(self):
+        """
+        A handler function that handles saving project data.
+        Returns:
+
+        """
+        with open(self.project_data["file_path"], 'wb') as project_file:
+            pickle.dump(self.sgt_objs, project_file)
+
     def _handle_progress_update(self, value: int, msg: str):
-        """"""
+        """
+        Handler function for progress updates for ongoing tasks.
+        Args:
+            value:
+            msg:
+
+        Returns:
+
+        """
         progress_val = 0 if value < 0 else value
         logging.info(str(progress_val) + "%: " + msg, extra={'user': 'SGT Logs'})
         if value >= 0:
@@ -155,7 +173,15 @@ class MainController(QObject):
             self.errorSignal.emit(msg)
 
     def _handle_finished(self, success_val: bool, result: None|list|GraphExtractor|GraphAnalyzer):
-        """"""
+        """
+        Handler function for sending updates/signals on termination of tasks.
+        Args:
+            success_val:
+            result:
+
+        Returns:
+
+        """
         self.wait_flag = False
         if not success_val:
             if type(result) is list:
@@ -226,8 +252,11 @@ class MainController(QObject):
                 folder_path = folder_path[7:]
         folder_path = os.path.normpath(folder_path)  # Normalize path
 
-        sgt_obj = self.get_current_obj()
-        sgt_obj.g_obj.imp.output_dir = folder_path
+        # Update for all sgt_objs
+        key_list = list(self.sgt_objs.keys())
+        for key in key_list:
+            sgt_obj = self.sgt_objs[key]
+            sgt_obj.g_obj.imp.output_dir = folder_path
         self.imageChangedSignal.emit()
 
     @Slot(int)
@@ -549,10 +578,15 @@ class MainController(QObject):
         proj_path = os.path.join(str(dir_path), proj_name)
 
         try:
-            # Open the file in write mode ('w'). This will create the file if it doesn't exist
-            # and overwrite it if it does.
+            if os.path.exists(proj_path):
+                logging.exception(f"Error: Project '{proj_name}' already exists.", extra={'user': 'SGT Logs'})
+                self.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
+                return False
+
+            # Open the file in write mode ('w').
+            # This will create the file if it doesn't exist
             with open(proj_path, 'w'):
-                pass  # Do nothing, just create the file
+                pass  # Do nothing, just create the file (updates will be done automatically/dynamically)
 
             # Update and notify QML
             self.project_data["name"] = proj_name
@@ -572,8 +606,18 @@ class MainController(QObject):
         sgt_path = self.verify_path(sgt_path)
         if not sgt_path:
             return False
+        img_dir, proj_name = os.path.split(str(sgt_path))
 
         # Read and load project data and SGT objects
+        with open(str(sgt_path), 'rb') as sgt_file:
+            self.sgt_objs = pickle.load(sgt_file)
+
+        # Update and notify QML
+        self.project_data["name"] = proj_name
+        self.project_data["path"] = sgt_path
+        self.project_open = True
+        self.projectOpenedSignal.emit(proj_name)
+        logging.exception(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
 
     def verify_path(self, a_path):
         if not a_path:
