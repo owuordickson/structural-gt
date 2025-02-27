@@ -45,7 +45,8 @@ class ImageProvider(QQuickImageProvider):
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_graph_models(sgt_obj)
             # Save changes to project data file
-            self.img_controller.handle_save_project_data()
+            if len(self.img_controller.sgt_objs.items()) <= 10:
+                self.img_controller.save_project_data()
 
             # Acknowledge image load and send signal to update QML
             self.img_controller.img_loaded = True

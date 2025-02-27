@@ -24,7 +24,7 @@ MenuBar {
         }
         MenuSeparator{}
 
-        MenuItem {id: mnuSaveProjAs; text: "Save project as..."; enabled: mainController.display_image(); onTriggered: saveProjectDialog.open() }
+        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: mainController.display_image(); onTriggered: initiate_save() }
         MenuSeparator{}
 
         Menu {
@@ -79,6 +79,20 @@ MenuBar {
             exportGraphModel.setData(index, val, valueRole);
         }
         mainController.export_graph();
+    }
+
+    function initiate_save () {
+
+        let is_open = mainController.is_project_open();
+        if (is_open === false) {
+            dialogAlert.title = "Save Error";
+            lblAlertMsg.text = "Please create/open the SGT project first, then try again.";
+            lblAlertMsg.color = "#2255bc";
+            dialogAlert.open();
+        } else {
+            let success_val = mainController.run_save_project();
+        }
+
     }
 
     Connections {

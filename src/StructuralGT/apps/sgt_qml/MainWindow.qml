@@ -177,7 +177,7 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    /*Dialog {
         id: saveProjectDialog
         anchors.centerIn: parent
         title: "Save SGT Project"
@@ -220,7 +220,7 @@ ApplicationWindow {
                 }
             }
         }
-    }
+    }*/
 
     Dialog {
         id: dialogBrightnessCtrl

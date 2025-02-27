@@ -157,17 +157,21 @@ class MainController(QObject):
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
-    def handle_save_project_data(self):
+    def save_project_data(self):
         """
         A handler function that handles saving project data.
-        Returns:
+        Returns: True on success, False otherwise.
 
         """
         if not self.project_open:
-            return
-
-        with open(self.project_data["file_path"], 'wb') as project_file:
-            pickle.dump(self.sgt_objs, project_file)
+            return False
+        try:
+            with open(self.project_data["file_path"], 'wb') as project_file:
+                pickle.dump(self.sgt_objs, project_file)
+            return True
+        except Exception as err:
+            logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Save Error", "Unable to save project data. Close app and try again.")
 
     def _handle_progress_update(self, value: int, msg: str):
         """
@@ -468,6 +472,19 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
+
+    @Slot(result=bool)
+    def run_save_project(self):
+        """"""
+        if self.wait_flag:
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        self.wait_flag = True
+        success_val = self.save_project_data()
+        self.wait_flag = False
+        return success_val
 
     @Slot(result=bool)
     def display_image(self):
