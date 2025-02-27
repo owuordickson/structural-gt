@@ -9,7 +9,6 @@ dependencies = [
   "numpy<2.2",
   "pandas",
   "scipy",
-  "ypstruct",
   "matplotlib",
   "networkx",
   "sknw",
@@ -41,7 +40,7 @@ classifiers = [
 # docs = []
 
 [project.optional-dependencies]
-gui = ["pyqt6"]
+gui = ["PySide6"]
 cli = []
 
 [project.urls]

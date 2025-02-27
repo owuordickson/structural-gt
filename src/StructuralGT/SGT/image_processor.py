@@ -39,33 +39,11 @@ class ImageProcessor:
             out_dir (str): directory path for storing results.
             img (MatLike): processed image.
 
-        >>> from ypstruct import struct
-        >>> opt_img = struct()
-        >>> opt_img.threshold_type = 1
-        >>> opt_img.global_threshold_value = 127
-        >>> opt_img.adaptive_local_threshold_value = 11
-        >>> opt_img.gamma = float(1)
-        >>> opt_img.gaussian_blurring_size = 3
-        >>> opt_img.autolevel_blurring_size = 3
-        >>> opt_img.lowpass_window_size = 10
-        >>> opt_img.laplacian_kernel_size = 3
-        >>> opt_img.sobel_kernel_size = 3
-        >>> opt_img.apply_autolevel = 0
-        >>> opt_img.apply_laplacian_gradient = 0
-        >>> opt_img.apply_scharr_gradient = 0
-        >>> opt_img.apply_sobel_gradient = 0
-        >>> opt_img.apply_median_filter = 0
-        >>> opt_img.apply_gaussian_blur = 0
-        >>> opt_img.apply_lowpass_filter = 0
-        >>> opt_img.apply_dark_foreground = 0
-        >>> opt_img.brightness_level = 0
-        >>> opt_img.contrast_level = 0
         >>>
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.configs = opt_img
         >>> imp_obj.apply_filters()
         """
         self.configs = load_img_configs()  # image processing parameters and options.

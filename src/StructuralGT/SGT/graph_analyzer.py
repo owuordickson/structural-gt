@@ -47,70 +47,15 @@ class GraphAnalyzer(ProgressUpdate):
         :param g_obj: graph converter object.
         :param allow_multiprocessing: allow multiprocessing computing.
 
-        >>> from ypstruct import struct
-        >>> opt_img = struct()
-        >>> opt_img.threshold_type = 1
-        >>> opt_img.threshold_global = 127
-        >>> opt_img.threshold_adaptive = 11
-        >>> opt_img.gamma = float(1)
-        >>> opt_img.gaussian_blurring_size = 3
-        >>> opt_img.autolevel_blurring_size = 3
-        >>> opt_img.lowpass_window_size = 10
-        >>> opt_img.laplacian_kernel_size = 3
-        >>> opt_img.sobel_kernel_size = 3
-        >>> opt_img.apply_autolevel = 0
-        >>> opt_img.apply_laplacian = 0
-        >>> opt_img.apply_scharr = 0
-        >>> opt_img.apply_sobel = 0
-        >>> opt_img.apply_median = 0
-        >>> opt_img.apply_gaussian = 0
-        >>> opt_img.apply_lowpass = 0
-        >>> opt_img.apply_dark_foreground = 0
-        >>> opt_img.brightness_level = 0
-        >>> opt_img.contrast_level = 0
-        >>>
-        >>> opt_gte = struct()
-        >>> opt_gte["merge_nearby_nodes"]["value"] = 1
-        >>> opt_gte["prune_dangling_edges"]["value"] = 1
-        >>> opt_gte["remove_disconnected_segments"]["value"] = 1
-        >>> opt_gte["remove_self_loops"]["value"] = 1
-        >>> opt_gte["remove_object_size"]["value"] = 500
-        >>> opt_gte["is_multigraph"]["value"] = 0
-        >>> opt_gte["has_weights"]["value"] = 0
-        >>> opt_gte["display_node_id"]["value"] = 0
-        >>> opt_gte["export_edge_list"]["value"] = 0
-        >>> opt_gte["export_as_gexf"]["value"] = 0
-        >>> opt_gte["export_adj_mat"]["value"] = 0
-        >>> opt_gte["save_images"]["value"] = 0
-        >>>
-        >>> opt_gtc = struct()
-        >>> opt_gtc["display_heatmaps"]["value"] = 1
-        >>> opt_gtc["display_degree_histogram"]["value"] = 1
-        >>> opt_gtc["display_betweenness_centrality_histogram"]["value"] = 1
-        >>> opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] = 1
-        >>> opt_gtc["display_closeness_centrality_histogram"]["value"] = 1
-        >>> opt_gtc["display_eigenvector_centrality_histogram"]["value"] = 1
-        >>> opt_gtc["compute_avg_node_connectivity"]["value"] = 1
-        >>> opt_gtc["compute_graph_density"]["value"] = 1
-        >>> opt_gtc["compute_graph_conductance"]["value"] = 0
-        >>> opt_gtc["compute_global_efficiency"]["value"] = 1
-        >>> opt_gtc["compute_avg_clustering_coef"]["value"] = 1
-        >>> opt_gtc["compute_assortativity_coef"]["value"] = 1
-        >>> opt_gtc["compute_network_diameter"]["value"] = 1
-        >>> opt_gtc["compute_wiener_index"]["value"] = 1
-        >>>
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.configs = opt_img
         >>> graph_obj = GraphExtractor(imp_obj)
-        >>> graph_obj.configs = opt_gte
         >>> graph_obj.fit()
         >>> metrics_obj = GraphAnalyzer(graph_obj)
-        >>> metrics_obj.configs = opt_gtc
         >>> metrics_obj.compute_gt_metrics()
-        >>> if opt_gte["has_weights"]["value"]:
+        >>> if graph_obj.configs["has_weights"]["value"]:
         >>>     metrics_obj.compute_weighted_gt_metrics()
         >>> metrics_obj.generate_pdf_output()
 

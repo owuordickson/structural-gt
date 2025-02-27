@@ -1,3 +1,9 @@
+# SPDX-License-Identifier: GNU GPL v3
+
+"""
+Pyside6 implementation of StructuralGT user interface.
+"""
+
 import sys
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine

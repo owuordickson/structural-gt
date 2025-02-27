@@ -35,49 +35,12 @@ class GraphExtractor(ProgressUpdate):
 
         :param img_obj: ImageProcessor object.
 
-        >>> from ypstruct import struct
-        >>> opt_img = struct()
-        >>> opt_img.threshold_type = 1
-        >>> opt_img.threshold_global = 127
-        >>> opt_img.threshold_adaptive = 11
-        >>> opt_img.gamma = float(1)
-        >>> opt_img.gaussian_blurring_size = 3
-        >>> opt_img.autolevel_blurring_size = 3
-        >>> opt_img.lowpass_window_size = 10
-        >>> opt_img.laplacian_kernel_size = 3
-        >>> opt_img.sobel_kernel_size = 3
-        >>> opt_img.apply_autolevel = 0
-        >>> opt_img.apply_laplacian = 0
-        >>> opt_img.apply_scharr = 0
-        >>> opt_img.apply_sobel = 0
-        >>> opt_img.apply_median = 0
-        >>> opt_img.apply_gaussian = 0
-        >>> opt_img.apply_lowpass = 0
-        >>> opt_img.apply_dark_foreground = 0
-        >>> opt_img.brightness_level = 0
-        >>> opt_img.contrast_level = 0
-        >>>
-        >>> opt_gte = struct()
-        >>> opt_gte.merge_nearby_nodes = 1
-        >>> opt_gte.prune_dangling_edges = 1
-        >>> opt_gte.remove_disconnected_segments = 1
-        >>> opt_gte.remove_self_loops = 1
-        >>> opt_gte.remove_object_size = 500
-        >>> opt_gte.is_multigraph = 0
-        >>> opt_gte.has_weights = 0
-        >>> opt_gte.display_node_id = 0
-        >>> opt_gte.export_edge_list = 0
-        >>> opt_gte.export_as_gexf = 0
-        >>> opt_gte.export_adj_mat = 0
-        >>> opt_gte.save_images = 0
         >>>
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.configs = opt_img
         >>> graph_obj = GraphExtractor(imp_obj)
-        >>> graph_obj.configs = opt_gte
         >>> graph_obj.fit()
         """
         super(GraphExtractor, self).__init__()
