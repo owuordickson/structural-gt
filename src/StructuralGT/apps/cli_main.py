@@ -8,10 +8,10 @@ import time
 import os
 import logging
 
-from StructuralGT.SGT.sgt_utils import get_num_cores
-from StructuralGT.SGT.image_processor import ImageProcessor
-from StructuralGT.SGT.graph_extractor import GraphExtractor
-from StructuralGT.SGT.graph_analyzer import GraphAnalyzer
+from ..SGT.sgt_utils import get_num_cores
+from ..SGT.image_processor import ImageProcessor
+from ..SGT.graph_extractor import GraphExtractor
+from ..SGT.graph_analyzer import GraphAnalyzer
 
 
 def terminal_app():

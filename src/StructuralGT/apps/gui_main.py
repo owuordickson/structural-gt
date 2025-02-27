@@ -10,8 +10,8 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from .sgt_qml.controllers.gui_controller import MainController
-from .sgt_qml.models.gui_image_provider import ImageProvider
+from .gui_mcw.controller import MainController
+from .gui_mcw.image_provider import ImageProvider
 
 
 class MainWindow(QObject):

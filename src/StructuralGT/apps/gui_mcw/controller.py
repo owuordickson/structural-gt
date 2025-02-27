@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import logging
 import pickle
 import numpy as np
@@ -7,15 +8,15 @@ from PIL import Image, ImageQt  # ImageQt for conversion
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
-from ..models.gui_tree_model import TreeModel
-from ..models.gui_table_model import TableModel
-from ..models.gui_checkbox_model import CheckBoxModel
+from .tree_model import TreeModel
+from .table_model import TableModel
+from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
-from StructuralGT import __version__
-from StructuralGT.SGT.image_processor import ImageProcessor
-from StructuralGT.SGT.graph_extractor import GraphExtractor
-from StructuralGT.SGT.graph_analyzer import GraphAnalyzer
+from ... import __version__
+from ...SGT.image_processor import ImageProcessor
+from ...SGT.graph_extractor import GraphExtractor
+from ...SGT.graph_analyzer import GraphAnalyzer
 
 
 class MainController(QObject):
@@ -68,7 +69,7 @@ class MainController(QObject):
 
     def update_img_models(self, sgt_obj: GraphAnalyzer):
         """
-            Reload image configuration selections and controls from saved dict to QML models after the image is loaded.
+            Reload image configuration selections and controls from saved dict to QML gui_mcw after the image is loaded.
 
             :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
         """
@@ -90,7 +91,7 @@ class MainController(QObject):
 
     def update_graph_models(self, sgt_obj: GraphAnalyzer):
         """
-            Reload graph configuration selections and controls from saved dict to QML models.
+            Reload graph configuration selections and controls from saved dict to QML gui_mcw.
         Args:
             sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
 
@@ -147,10 +148,10 @@ class MainController(QObject):
             os.makedirs(out_dir, exist_ok=True)
 
             im_obj = ImageProcessor(str(img_path), out_dir)
-            g_obj = GraphAnalyzer(GraphExtractor(im_obj))
-            self.sgt_objs[filename] = g_obj
-            self.update_img_models(g_obj)
-            self.update_graph_models(g_obj)
+            sgt_obj = GraphAnalyzer(GraphExtractor(im_obj))
+            self.sgt_objs[filename] = sgt_obj
+            self.update_img_models(sgt_obj)
+            self.update_graph_models(sgt_obj)
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -166,8 +167,21 @@ class MainController(QObject):
         if not self.project_open:
             return False
         try:
-            with open(self.project_data["file_path"], 'wb') as project_file:
-                pickle.dump(self.sgt_objs, project_file)
+            file_data = {}
+            file_path = self.project_data["file_path"]
+            key_list = list(self.sgt_objs.keys())
+            for key in key_list:
+                sgt_obj = self.sgt_objs[key]
+                file_data[key] = {"img_path": "", "out_dir": "", "opt_gtc": None, "opt_gte": None, "opt_img": None}
+                file_data[key]["img_path"] = sgt_obj.g_obj.imp.img_path
+                file_data[key]["out_dir"] = sgt_obj.g_obj.imp.output_dir
+                file_data[key]["opt_gtc"] = sgt_obj.configs
+                file_data[key]["opt_gte"] = sgt_obj.g_obj.configs
+                file_data[key]["opt_img"] = sgt_obj.g_obj.imp.configs
+            with open(file_path, 'w') as project_file:
+                json.dump(file_data, project_file)
+                # pickle.dump(file_data, project_file)
+            print(file_data)
             return True
         except Exception as err:
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
@@ -632,27 +646,56 @@ class MainController(QObject):
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
         """Opens and loads SGT project from the '.sgtproj' file"""
-        self.project_open = False
-        # Verify path
-        sgt_path = self.verify_path(sgt_path)
-        if not sgt_path:
-            return False
-        img_dir, proj_name = os.path.split(str(sgt_path))
+        if self.wait_flag:
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
 
-        # Read and load project data and SGT objects
-        with open(str(sgt_path), 'r') as sgt_file:
-            self.sgt_objs = pickle.load(sgt_file)
+        try:
+            self.wait_flag = True
+            self.project_open = False
+            # Verify path
+            sgt_path = self.verify_path(sgt_path)
+            if not sgt_path:
+                self.wait_flag = False
+                return False
+            img_dir, proj_name = os.path.split(str(sgt_path))
 
-        # Update and notify QML
-        self.project_data["name"] = proj_name
-        self.project_data["file_path"] = str(sgt_path)
-        self.project_open = True
-        self.projectOpenedSignal.emit(proj_name)
+            # Read and load project data and SGT objects
+            with open(str(sgt_path), 'r') as sgt_file:
+                # self.sgt_objs = pickle.load(sgt_file)
+                file_data = json.load(sgt_file)
+            if not file_data:
+                self.wait_flag = False
+                return False
 
-        # Load Image to GUI - activates QML
-        self.update_img_models(self.get_current_obj())
-        self.load_image()
-        logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
+            key_list = list(file_data.keys())
+            for key in key_list:
+                img_path = file_data[key]["img_path"]
+                out_dir = file_data[key]["out_dir"]
+                im_obj = ImageProcessor(img_path, out_dir)
+                im_obj.configs = file_data[key]["opt_img"]
+                g_obj = GraphExtractor(im_obj)
+                g_obj.configs = file_data[key]["opt_gte"]
+                sgt_obj = GraphAnalyzer(g_obj)
+                sgt_obj.configs = file_data[key]["opt_gtc"]
+                self.sgt_objs[key] = sgt_obj
+
+            # Update and notify QML
+            self.project_data["name"] = proj_name
+            self.project_data["file_path"] = str(sgt_path)
+            self.project_open = True
+            self.projectOpenedSignal.emit(proj_name)
+
+            # Load Image to GUI - activates QML
+            self.update_img_models(self.get_current_obj())
+            self.load_image()
+            logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
+            self.wait_flag = False
+        except Exception as err:
+            logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Open Project Error", "Unable retrieve your data and open project. "
+                                                            "Close the app and try again.")
 
     def verify_path(self, a_path):
         if not a_path:

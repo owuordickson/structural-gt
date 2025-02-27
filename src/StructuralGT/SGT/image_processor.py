@@ -434,6 +434,8 @@ class ImageProcessor:
         :return:
         """
         # print(f"Do something with ImgDim={img_dim}.")
+        if file == "":
+            return None
         img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         return img
 
@@ -472,6 +474,8 @@ class ImageProcessor:
         :param image: OpenCV image.
         :return: rescaled image
         """
+        if image is None:
+            return None, None
         w, h = image.shape  # what about 3D?
         if h > w:
             scale_factor = size / h
