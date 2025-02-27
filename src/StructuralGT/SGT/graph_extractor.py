@@ -320,7 +320,7 @@ class GraphExtractor(ProgressUpdate):
         return run_info
 
     def get_weight_type(self):
-        wt_type = 'DIA'  # Default weight
+        wt_type = None  # Default weight
         for i in range(len(self.configs["has_weights"]["items"])):
             if self.configs["has_weights"]["items"][i]["value"]:
                 wt_type = self.configs["has_weights"]["items"][i]["id"]
