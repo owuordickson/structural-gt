@@ -78,12 +78,19 @@ ApplicationWindow {
         modal: true
         standardButtons: Dialog.Ok
         anchors.centerIn: parent
-        width: 300
-        height: 200
+        width: 360
+        height: 360
 
         Label {
-            text: "StructuralGT v3.0.1\nCopyright (C) 2024\nthe Regents of the University of Michigan."
-            anchors.centerIn: parent
+            width: parent.width - 20  // Ensures text does not expand indefinitely
+            anchors.horizontalCenter: parent.horizontalCenter
+            property string aboutText: mainController.get_about_details()
+            text: aboutText
+            wrapMode: Text.WordWrap
+            textFormat: Text.RichText  // Enable HTML formatting
+            maximumLineCount: 10  // Optional: Limits lines to avoid excessive height
+            elide: Text.ElideRight   // Optional: Adds "..." if text overflows
+            onLinkActivated: (link) => Qt.openUrlExternally(link)  // Opens links in default browser
         }
     }
 
