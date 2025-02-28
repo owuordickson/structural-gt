@@ -102,7 +102,7 @@ ApplicationWindow {
         standardButtons: Dialog.Ok
         anchors.centerIn: parent
         width: 300
-        height: 200
+        height: 150
 
         /*contentItem: ColumnLayout {
                 spacing: 10
@@ -150,7 +150,7 @@ ApplicationWindow {
         title: "Create SGT Project"
         modal: true
         width: 300
-        height: 150
+        height: 200
 
         ColumnLayout {
             anchors.fill: parent
@@ -160,8 +160,30 @@ ApplicationWindow {
                 spacing: 10
                 //Layout.topMargin: 10
                 Layout.alignment: Qt.AlignHCenter
+
                 Button {
-                    text: "OK"
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: createProjectDialog.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
                     onClicked: {
                         var name = createProjectControls.txtName.text;
                         var location = createProjectControls.txtLocation.text;
@@ -181,59 +203,22 @@ ApplicationWindow {
                             createProjectDialog.close();
                         }
                     }
-                }
-                Button {
-                    text: "Cancel"
-                    onClicked: createProjectDialog.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
                 }
             }
         }
     }
-
-    /*Dialog {
-        id: saveProjectDialog
-        anchors.centerIn: parent
-        title: "Save SGT Project"
-        modal: true
-        width: 300
-        height: 150
-
-        ColumnLayout {
-            anchors.fill: parent
-            CreateProjectWidget { id: saveProjectControls }
-
-            RowLayout {
-                spacing: 10
-                //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
-                Button {
-                    text: "OK"
-                    onClicked: {
-                        var name = saveProjectControls.txtName.text;
-                        var location = saveProjectControls.txtLocation.text;
-
-                        if (name === "") {
-                            saveProjectControls.lblName.text = "Name*";
-                            saveProjectControls.lblName.color = "red";
-                            saveProjectControls.txtName.placeholderText = "please enter a name!"
-
-                        } else if (location === "") {
-                            saveProjectControls.lblLocation.text = "Location*";
-                            saveProjectControls.lblLocation.color = "red";
-
-                        } else {
-                            mainController.create_sgt_project(name, location);
-                            saveProjectDialog.close();
-                        }
-                    }
-                }
-                Button {
-                    text: "Cancel"
-                    onClicked: saveProjectDialog.close()
-                }
-            }
-        }
-    }*/
 
     Dialog {
         id: dialogBrightnessCtrl
@@ -241,24 +226,58 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Control Brightness/Contrast"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 300
         height: 150
 
         ColumnLayout {
             anchors.fill: parent
             BrightnessControlWidget{ id: brightnessControl }
-        }
 
-        onAccepted: {
-            //mainController.apply_img_ctrl_changes();
-            dialogBrightnessCtrl.close()
-        }
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
 
-        /*onRejected: {
-            dialogController.reject()
-            dialogBrightnessCtrl.close()
-        }*/
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogBrightnessCtrl.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogBrightnessCtrl.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+
+        }
     }
 
     Dialog {
@@ -267,25 +286,69 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Graph Extraction Options"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 300
-        height: 400
+        height: 480
 
-        ScrollView {
-            width: parent.width
-            height: parent.height
 
-            GraphExtractWidget{}
+        ColumnLayout {
+            anchors.fill: parent
+
+            ScrollView {
+                width: parent.width
+                height: parent.height
+                Layout.alignment: Qt.AlignTop
+
+                GraphExtractWidget{}
+            }
+
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
+
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogExtractGraph.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: {
+                        mainController.run_extract_graph();
+                        dialogExtractGraph.close();
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
         }
 
-        onAccepted: {
-            mainController.run_extract_graph();
-            dialogExtractGraph.close()
-        }
-
-        /*onRejected: {
-            dialogExtractGraph.close()
-        }*/
     }
 
     Dialog {
@@ -294,22 +357,58 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Adjust Binary Filters"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 300
-        height: 200
+        height: 210
 
         ColumnLayout {
             anchors.fill: parent
             BinaryFilterWidget{}
-        }
 
-        onAccepted: {
-            dialogBinFilters.close()
-        }
 
-        /*onRejected: {
-            dialogBinFilters.close()
-        }*/
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
+
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogBinFilters.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogBinFilters.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Dialog {
@@ -318,22 +417,57 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Adjust Binary Filters"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 300
         height: 400
 
         ColumnLayout {
             anchors.fill: parent
             ImageFilterWidget{}
-        }
 
-        onAccepted: {
-            dialogImgFilters.close()
-        }
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
 
-        /*onRejected: {
-            dialogImgFilters.close()
-        }*/
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogImgFilters.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogImgFilters.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Dialog {
@@ -342,23 +476,61 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Select Graph Computations"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 240
-        height: 500
+        height: 512
 
         ColumnLayout {
             anchors.fill: parent
             GTWidget{}
-        }
 
-        onAccepted: {
-            mainController.run_graph_analyzer();
-            dialogRunAnalyzer.close()
-        }
+            RowLayout {
+                spacing: 10
+                //Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
 
-        /*onRejected: {
-            dialogRunAnalyzer.close()
-        }*/
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogRunAnalyzer.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: {
+                        mainController.run_graph_analyzer();
+                        dialogRunAnalyzer.close()
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+
+        }
     }
 
     Dialog {
@@ -367,23 +539,59 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Select Graph Computations"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: 240
-        height: 500
+        height: 512
 
         ColumnLayout {
             anchors.fill: parent
             GTWidget{}
-        }
 
-        onAccepted: {
-            mainController.run_multi_graph_analyzer();
-            dialogRunAnalyzer.close()
-        }
+            RowLayout {
+                spacing: 10
+                Layout.alignment: Qt.AlignHCenter
 
-        /*onRejected: {
-            dialogRunAnalyzer.close()
-        }*/
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogRunMultiAnalyzer.close()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc2255"
+
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: {
+                        mainController.run_multi_graph_analyzer();
+                        dialogRunAnalyzer.close()
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Platform.FolderDialog {

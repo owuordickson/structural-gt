@@ -5,8 +5,8 @@ import QtQuick.Layouts
 
 Item {
     id: brightnessControl  // used for external access
-    height: parent.height
-    width: parent.width
+    Layout.preferredHeight: 75
+    Layout.preferredWidth: parent.width
 
     property int spbWidthSize: 120
     property int lblWidthSize: 100

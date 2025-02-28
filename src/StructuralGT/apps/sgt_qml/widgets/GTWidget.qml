@@ -5,8 +5,10 @@ import QtQuick.Layouts
 
 Item {
     id: graphComputationCtrl  // used for external access
-    height: parent.height
-    width: parent.width
+    Layout.preferredHeight: 250
+    Layout.preferredWidth: parent.width
+    Layout.alignment: Qt.AlignTop
+
 
     property int valueRole: Qt.UserRole + 4
 
