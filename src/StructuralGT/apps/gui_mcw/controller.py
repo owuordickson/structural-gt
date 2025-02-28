@@ -252,16 +252,10 @@ class MainController(QObject):
                      "Copyright (C) 2024, The Regents of the University of Michigan.")
         return about_app
 
-
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
         return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
-
-    @Slot(result=int)
-    def get_current_img_index(self):
-        """Returns the index of the current image"""
-        return self.current_obj_index
 
     @Slot(result=int)
     def get_current_img_type(self):
@@ -275,6 +269,11 @@ class MainController(QObject):
     def get_output_dir(self):
         sgt_obj = self.get_current_obj()
         return f"{sgt_obj.g_obj.imp.output_dir}"
+
+    @Slot(int)
+    def set_selected_img(self, row_index):
+        """Change color of list item to gray if it is the active image"""
+        self.imgListTableModel.set_selected(row_index)
 
     @Slot(str)
     def set_output_dir(self, folder_path):
@@ -316,6 +315,7 @@ class MainController(QObject):
         try:
             self.current_obj_index = index if index is not None else self.current_obj_index
             self.imgListTableModel.update_data(self.sgt_objs)
+            self.imgListTableModel.set_selected(self.current_obj_index)
             self.select_img_type()
         except Exception as err:
             self.current_obj_index = 0

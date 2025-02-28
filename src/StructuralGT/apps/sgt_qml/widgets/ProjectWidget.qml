@@ -42,11 +42,14 @@ Item {
                 implicitWidth: tableView.width
                 implicitHeight: tblRowHeight
                 //color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
-                color: "#ffffff"
+                color: model.selected ? "#808080" : "#ffffff"
 
                 MouseArea {
                     anchors.fill: parent // Make the MouseArea cover the entire Rectangle
-                    onClicked: mainController.load_image(row)
+                    onClicked: {
+                        mainController.load_image(row);
+                        mainController.set_selected_img(model.index);
+                    }
                 }
 
                 RowLayout {
@@ -70,6 +73,7 @@ Item {
                     Label {
                         id: lblImgItem
                         text: model.text
+                        color: model.selected ? "#ffffff" : "#303030"
                     }
                 }
 
@@ -90,9 +94,6 @@ Item {
 
             let rowCount = imgListTableModel.rowCount() > numRows ? imgListTableModel.rowCount() : numRows;
             tableView.height = rowCount * tblRowHeight;
-
-            let index = mainController.get_current_img_index();
-            //imgListTableModel.setProperty(index, "color", "#f5f5f5"); NOT WORKING
         }
 
         function onProjectOpenedSignal(name) {

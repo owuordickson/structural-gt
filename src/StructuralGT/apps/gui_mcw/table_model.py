@@ -5,10 +5,13 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 # Define a simple table model
 class TableModel(QAbstractTableModel):
+    SelectedRole = Qt.UserRole + 10
+
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.itemData = data
         self.imageCache = {}
+        self.selected_index = -1  # Track selected row
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.itemData) if self.itemData else 0
@@ -26,7 +29,17 @@ class TableModel(QAbstractTableModel):
                 return None
             image_name = self.itemData[index.row()][index.column()]
             return self.imageCache[image_name]
+        elif role == self.SelectedRole:
+            return index.row() == self.selected_index  # True if selected
         return None
+
+    def set_selected(self, row):
+        if 0 <= row < len(self.itemData):
+            old_index = self.selected_index
+            self.selected_index = row
+            if old_index != -1:
+                self.dataChanged.emit(self.index(old_index, 0), self.index(old_index, 0), [self.SelectedRole])
+            self.dataChanged.emit(self.index(row, 0), self.index(row, 0), [self.SelectedRole])
 
     def reset_data(self, item_data):
         self.beginResetModel()
@@ -70,7 +83,11 @@ class TableModel(QAbstractTableModel):
         self.dataChanged.emit(self.index(start_row, 0), self.index(len(self.itemData) - 1, 0))
 
     def roleNames(self):
-        return {Qt.DisplayRole: b"text", Qt.DecorationRole: b"thumbnail"}
+        return {
+            Qt.DisplayRole: b"text",
+            Qt.DecorationRole: b"thumbnail",
+            self.SelectedRole: b"selected",
+        }
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
          if role == Qt.DisplayRole and orientation == Qt.Horizontal:
