@@ -29,11 +29,12 @@ CREATING AN EXECUTABLE WITH PyInstaller
     pip install pyinstaller
 
 2. Run PyInstaller once to create the .spec file:
-    pyinstaller src/StructuralGT.py  # creates StructuralGT.spec
+     pyinstaller --windowed --onefile --icon=icon.ico src/StructuralGT.py    # creates StructuralGT.spec
 
 3. Modify the first part of StructuralGT.spec (a) to look like this:
 
 import os
+from PyInstaller.utils.hooks import collect_submodules
 a = Analysis(
     ['src/StructuralGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
@@ -48,5 +49,5 @@ a = Analysis(
     optimize=0,
 )
 
-4. Run PyInstaller to test if it creates a functional distribution in dist/ folder:
+4. Run PyInstaller with .spec file. The executable is in dist/ folder:
     pyinstaller StructuralGT.spec
