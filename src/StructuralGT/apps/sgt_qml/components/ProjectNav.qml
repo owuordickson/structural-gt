@@ -12,11 +12,19 @@ Rectangle {
     Layout.fillHeight: true
 
     ScrollView {
-        //width: parent.width
-        height: parent.height
+        id: scrollViewProjNav
+        anchors.fill: parent
+        clip: true
+
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
+
+        contentHeight: colImgProjNavLayout.implicitHeight
 
         ColumnLayout {
-            //anchors.fill: parent
+            id: colImgProjNavLayout
+            width: scrollViewProjNav.width // Ensures it never exceeds parent width
+            Layout.preferredWidth: parent.width // Fills the available width
 
             RowLayout {
                 id: rowLayoutProject

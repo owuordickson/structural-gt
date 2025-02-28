@@ -38,6 +38,7 @@ ApplicationWindow {
 
         // Second row, first column
         Rectangle {
+            id: recLeftPane
             Layout.row: 1
             Layout.column: 0
             Layout.leftMargin: 10
@@ -52,6 +53,7 @@ ApplicationWindow {
 
         // Second row, second column
         Rectangle {
+            id: recRightPane
             Layout.row: 1
             Layout.column: 1
             Layout.rightMargin: 10
@@ -62,6 +64,10 @@ ApplicationWindow {
             Layout.fillHeight: true
             RightContent{}
         }
+    }
+
+    function toggleLeftPane (showVal) {
+        recLeftPane.visible = showVal;
     }
 
 

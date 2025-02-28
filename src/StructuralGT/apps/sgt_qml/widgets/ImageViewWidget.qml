@@ -164,23 +164,34 @@ ColumnLayout {
         clip: true  // Ensures only the selected area is visible
         visible: mainController.display_image()
 
-        /*ScrollView {
-            width: parent.width
-            height: parent.height*/
-
-        Image {
-            id: imgView
-            //width: parent.width
-            //height: parent.height
-            //anchors.centerIn: parent
+        Flickable {
+            id: flickableArea
             anchors.fill: parent
-            scale: zoomFactor
-            transformOrigin: Item.Center
-            fillMode: Image.PreserveAspectFit
-            source: ""
-        }
+            contentWidth: imgView.width * imgView.scale
+            contentHeight: imgView.height * imgView.scale
+            clip: true
+            flickableDirection: Flickable.HorizontalAndVerticalFlick
 
-        //}
+            ScrollBar.vertical: ScrollBar {
+                id: vScrollBar
+                policy: flickableArea.contentHeight > flickableArea.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+            }
+            ScrollBar.horizontal: ScrollBar {
+                id: hScrollBar
+                policy: flickableArea.contentWidth > flickableArea.width ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+            }
+
+            Image {
+                id: imgView
+                width: flickableArea.width
+                height: flickableArea.height
+                anchors.centerIn: parent
+                scale: zoomFactor
+                transformOrigin: Item.Center
+                fillMode: Image.PreserveAspectFit
+                source: ""
+            }
+        }
 
         // Selection Rectangle for Cropping
         Rectangle {

@@ -5,8 +5,8 @@ import QtQuick.Layouts
 
 Item {
     id: imgFiltersControl  // used for external access
-    height: parent.height
-    width: 300
+    Layout.preferredHeight: 250
+    Layout.preferredWidth: parent.width
     enabled: mainController.display_image();
 
     property int cbxWidthSize: 100

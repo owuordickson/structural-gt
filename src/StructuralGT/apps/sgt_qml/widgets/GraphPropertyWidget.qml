@@ -5,8 +5,8 @@ import QtQuick.Layouts
 
 Item {
     id: graphPropsTbl // used for external access
-    height: 150 //parent.height
-    width: parent.width
+    Layout.preferredHeight: 150
+    Layout.preferredWidth: parent.width
     Layout.fillWidth: true
     Layout.leftMargin: 5
     Layout.rightMargin: 5

@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: projectControls // used for external access
-    Layout.fillWidth: true
-    Layout.fillHeight: true
+    Layout.preferredHeight: 200
+    Layout.preferredWidth: parent.width
 
     property int numRows: 10  // imgListTableModel.rowCount()
     property int tblRowHeight: 50
@@ -29,8 +29,6 @@ Item {
         TableView {
             id: tableView
             height: numRows * tblRowHeight
-            //height: parent.height
-            //width: 300
             Layout.fillWidth: true
             Layout.topMargin: 5
             Layout.leftMargin: 2

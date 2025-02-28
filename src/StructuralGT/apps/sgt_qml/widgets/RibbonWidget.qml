@@ -35,6 +35,32 @@ Rectangle {
     }*/
 
     RowLayout {
+        anchors.left: parent.left
+
+        Button {
+            id: btnHideLeftPane
+            Layout.alignment: Qt.AlignVCenter
+            text: ""
+            property bool hidePane: true
+            icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
+            icon.width: 28
+            icon.height: 28
+            background: transientParent
+            ToolTip.text: hidePane ? "Hide left pane" : "Show left pane"
+            ToolTip.visible: btnHideLeftPane.hovered
+            visible: true
+            onClicked: {
+                if (hidePane) {
+                    hidePane = false;
+                } else {
+                    hidePane = true;
+                }
+                toggleLeftPane(hidePane);
+            }
+        }
+    }
+
+    RowLayout {
         //anchors.fill: parent
         anchors.right: parent.right
 

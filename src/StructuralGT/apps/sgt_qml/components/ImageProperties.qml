@@ -10,11 +10,19 @@ Rectangle {
     Layout.fillHeight: true
 
     ScrollView {
-        //width: parent.width
-        height: parent.height
+        id: scrollViewImgProps
+        anchors.fill: parent
+        clip: true
+
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
+
+        contentHeight: colImgPropsLayout.implicitHeight
 
         ColumnLayout {
-            //anchors.fill: parent
+            id: colImgPropsLayout
+            width: scrollViewImgProps.width // Ensures it never exceeds parent width
+            Layout.preferredWidth: parent.width // Fills the available width
 
             Text {
                 text: "Image Properties"

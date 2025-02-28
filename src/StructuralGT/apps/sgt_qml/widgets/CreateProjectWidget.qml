@@ -5,8 +5,10 @@ import Qt.labs.platform as Platform
 
 
 Item {
-    height: 75//parent.height
-    width: parent.width
+    //height: 75//parent.height
+    //width: parent.width
+    Layout.preferredHeight: 100
+    Layout.preferredWidth: parent.width
 
     // Expose TextFields as properties to make them accessible
     property alias lblName: lblProjectName

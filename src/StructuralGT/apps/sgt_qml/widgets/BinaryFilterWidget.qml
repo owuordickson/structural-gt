@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id:imgBinControls
+    Layout.preferredHeight: 120
+    Layout.preferredWidth: parent.width
     Layout.fillWidth: true
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft

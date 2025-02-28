@@ -5,8 +5,8 @@ import QtQuick.Layouts
 
 Item {
     id: imgPropsTbl // used for external access
-    height: 100 //parent.height
-    width: parent.width
+    Layout.preferredHeight: 100
+    Layout.preferredWidth: parent.width
     Layout.fillWidth: true
     Layout.leftMargin: 5
     Layout.rightMargin: 5

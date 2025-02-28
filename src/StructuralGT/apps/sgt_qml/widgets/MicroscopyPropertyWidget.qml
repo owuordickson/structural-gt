@@ -4,10 +4,8 @@ import QtQuick.Layouts
 
 Item {
     id: microscopyProps  // used for external access
-    //height: parent.height
-    width: 300
-    //Layout.fillHeight: true
-    //Layout.fillWidth: true
+    Layout.preferredHeight: 150
+    Layout.preferredWidth: parent.width
     enabled: mainController.display_image();
 
     property int txtWidthSize: 80
@@ -79,6 +77,19 @@ Item {
             }
         }
 
+
+        Label {
+            id: lblMicroscopyRequired
+            Layout.fillWidth: true
+            Layout.topMargin: 20
+            Layout.leftMargin: 20
+            wrapMode: Text.Wrap
+            text: "*Required for calculation of Ohms Centrality"
+            color: "#bc2222"
+            font.pixelSize: 10
+            visible: mainController.display_image();
+        }
+
     }
 
     Connections {
@@ -87,6 +98,7 @@ Item {
         function onImageChangedSignal() {
             // Force refresh
             microscopyProps.enabled = mainController.display_image();
+            lblMicroscopyRequired.visible = mainController.display_image();
         }
 
     }

@@ -12,12 +12,19 @@ Rectangle {
     property int lblWidthSize: 280
 
     ScrollView {
-        //width: parent.width
-        height: parent.height
+        id: scrollViewImgFilters
+        anchors.fill: parent
+        clip: true
 
-        GridLayout {
-            //anchors.fill: parent
-            columns: 1
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
+
+        contentHeight: colImgFiltersLayout.implicitHeight
+
+        ColumnLayout {
+            id: colImgFiltersLayout
+            width: scrollViewImgFilters.width // Ensures it never exceeds parent width
+            Layout.preferredWidth: parent.width // Fills the available width
 
             Text {
                 text: "Binary Filters"
