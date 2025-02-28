@@ -21,3 +21,32 @@ BUILD & DISTRIBUTE PRE-COMPILED WHEEL
     pip install dist/sgt-1.4.5-cp39-cp39-macosx_10_9_x86_64.whl
     or
     pip install sgt-1.4.5-cp39-cp39-win_amd64.whl
+
+CREATING AN EXECUTABLE WITH PyInstaller
+---------------------------------------
+
+1. Install Pyinstaller with pip:
+    pip install pyinstaller
+
+2. Run PyInstaller once to create the .spec file:
+    pyinstaller src/StructuralGT.py  # creates StructuralGT.spec
+
+3. Modify the first part of StructuralGT.spec (a) to look like this:
+
+import os
+a = Analysis(
+    ['src/StructuralGT.py'],
+    pathex=[os.path.abspath("src")],  # Absolute path for reliability
+    binaries=[],
+    datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
+    hiddenimports=['PySide6.QtQml', 'PySide6.QtQuick'],  # Add PySide6 dependencies
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
+4. Run PyInstaller to test if it creates a functional distribution in dist/ folder:
+    pyinstaller StructuralGT.spec
