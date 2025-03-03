@@ -54,6 +54,7 @@ Windows (Go with Option 1):
     Windows (use Option 1):
         -- Option 1 --
         Download POSIX Phread source files (README has instructions on how to make a .lib)
+        https://sourceforge.net/projects/pthreads4w/
         We create the library files using 'nmake realclean VCE-static' through 'Developer Command Prompt' (choose x86/x64)
         Copy header files and .dll and .lib files to MinGW folder
         -- Option 2 --
