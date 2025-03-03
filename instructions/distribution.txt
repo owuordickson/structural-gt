@@ -50,4 +50,6 @@ a = Analysis(
 )
 
 4. Run PyInstaller with .spec file. The executable is in dist/ folder:
-    pyinstaller StructuralGT.spec
+    pyinstaller StructuralGT-Win.spec
+
+5. For Windows, use Inno Setup to create an installer
