@@ -668,6 +668,11 @@ class MainController(QObject):
             with open(str(sgt_path), 'rb') as sgt_file:
                 self.sgt_objs = pickle.load(sgt_file)
 
+            if self.sgt_objs:
+                key_list = list(self.sgt_objs.keys())
+                for key in key_list:
+                    self.sgt_objs[key].g_obj.imp.output_dir = img_dir
+
             # Update and notify QML
             self.project_data["name"] = proj_name
             self.project_data["file_path"] = str(sgt_path)
