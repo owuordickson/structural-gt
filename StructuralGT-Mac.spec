@@ -18,22 +18,11 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
-"""splash = Splash(
-    'splash.png',
-    binaries=a.binaries,
-    datas=a.datas,
-    text_pos=(10, 50),
-    text_size=12,
-    text_color='black'
-)"""
-
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
     a.datas,
-    #splash,                   # <-- both, splash target
-    #splash.binaries,          # <-- and splash binaries
     [],
     name='StructuralGT',
     debug=False,
