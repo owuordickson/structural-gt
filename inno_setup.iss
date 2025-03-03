@@ -5,7 +5,7 @@
 #define MyAppVersion "3.0.1"
 #define MyAppPublisher "Kotov Lab"
 #define MyAppURL "https://kotov.engin.umich.edu/"
-#define MyAppExeName "StructuralGT-py313-x64.exe"
+#define MyAppExeName "StructuralGT.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -32,7 +32,7 @@ DisableProgramGroupPage=yes
 LicenseFile=C:\Users\owuor\PycharmProjects\structural-gt\license.txt
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
-OutputDir=C:\Users\owuor\PycharmProjects\structural-gt
+OutputDir=C:\Users\owuor\PycharmProjects\structural-gt\dist\
 OutputBaseFilename=StructuralGT_WIN_3.0.1_setup
 SetupIconFile=C:\Users\owuor\PycharmProjects\structural-gt\setup_icon.ico
 SolidCompression=yes
