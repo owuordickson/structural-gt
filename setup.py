@@ -1,4 +1,4 @@
-import sys
+import os
 import platform
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -13,9 +13,9 @@ class BuildExt(build_ext):
         # Use MinGW (Windows) or system compiler (Linux/macOS)
         if platform.system() == "Windows":
             print("Configuring build for Windows (MinGW)...")
-            for ext in self.extensions:
-                ext.extra_compile_args = ["-Wall", "-O2"]
-                ext.extra_link_args = ["-static"]
+            #for ext in self.extensions:
+            #    ext.extra_compile_args = ["-Wall", "-O2"]
+            #    ext.extra_link_args = ["-static"]
         elif platform.system() == "Darwin":
             print("Configuring build for macOS...")
             for ext in self.extensions:
@@ -42,9 +42,9 @@ ext_modules = [
 
 # Windows-specific settings (make sure MinGW is installed in location "C:MinGW")
 if platform.system() == "Windows":
-    ext_modules[0].libraries = ["igraph-x64", "libpthreadVC3-x64"]
-    ext_modules[0].include_dirs = ["C:/MinGW/include/igraph", "C:/MinGW/include/pthread"]
-    ext_modules[0].library_dirs = ["C:/MinGW/lib/igraph", "C:/MinGW/lib/pthread"]
+    ext_modules[0].libraries = ["igraph-x64", "libpthreadVCE3-x64"]
+    ext_modules[0].include_dirs = ["C:/msys64/ucrt64/include/igraph", "C:/msys64/ucrt64/include/pthread"]
+    ext_modules[0].library_dirs = ["C:/msys64/ucrt64/lib/igraph", "C:/msys64/ucrt64/lib/pthread"]
     ext_modules[0].extra_link_args = ["/VERBOSE:LIB"]
 
 """mainscript = 'StructuralGT.py'

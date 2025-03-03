@@ -12,7 +12,7 @@ SETTING UP WORKSPACE IN PyCharm
 2. INSTALL gcc/g++ (C/C++ COMPILER)
 Linux/MacOS:
     use 'brew install gcc'
-Windows (Go with Option 2):
+Windows (Go with Option 1 and 2):
     -- Option 1 --
     download and install 'Microsoft C++ Build Tools' (install Desktop development with C++)
     * Use 'Launch' and command where.exe to find: clang/cl and cmake and nmake
@@ -30,26 +30,15 @@ Windows (Go with Option 2):
 3. INSTALL CMAKE (for Windows, ignore for MacOS)
 Linux/MacOS:
     use 'brew install cmake'
-Windows (Go with Option 2):
+Windows (Go with Option 1):
     -- Option 1 --
     use 'Microsoft C++ Build Tools' to install
-    -- Option 2 --
-    pacman -S cmake
-    test 'cmake --version'
+    -- Option 2 (NO NEED TO INSTALL)--
+        pacman -S cmake
+        test 'cmake --version'
 
 4. C LIBRARIES (iGraph pre-requisites)
-4a. PTHREADS library
-    Linux/macOS:
-        Already installed
-    Windows (use Option 2):
-        -- Option 1 --
-        Install Microsoft Build Tools
-        We create the library files using 'nmake clean VC-small-static' through 'Developer Command Prompt' (choose x86/x64)
-        Copy header files and .dll and .lib files to MinGW folder
-        -- Option 2 --
-        * Open "MSYS2 UCRT64" as Admin and install:
-            pacman -S mingw-w64-ucrt-x86_64-libwinpthread-git
-4b. BISON/Flex
+4a. BISON/Flex
     Linux/macOS:
         Already installed
     Windows:
@@ -57,12 +46,25 @@ Windows (Go with Option 2):
         * Open "MSYS2 UCRT64" as Admin and install:
             pacman -S bison
             pacman -S flex
+        * Add their locations 'C:\msys64\usr\bin' to Path in Environment Variables
 
-4b. IGRAPH library
+4b. PTHREADS library
+    Linux/macOS:
+        Already installed
+    Windows (use Option 1):
+        -- Option 1 --
+        Download POSIX Phread source files (README has instructions on how to make a .lib)
+        We create the library files using 'nmake realclean VCE-static' through 'Developer Command Prompt' (choose x86/x64)
+        Copy header files and .dll and .lib files to MinGW folder
+        -- Option 2 --
+        * Open "MSYS2 UCRT64" as Admin and install:
+            pacman -S mingw-w64-ucrt-x86_64-libwinpthread-git
+
+4c. IGRAPH library
     Linux/macOS:
         brew install igraph
     Windows:
-    -- Option 1 --
+    -- Option 1 (use Option 1)--
         * Pre-requisites
         * Install Microsoft Build Tools
         * https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-installation
@@ -70,8 +72,10 @@ Windows (Go with Option 2):
             mkdir build
             cd build
             cmake ..
+            cmake .. -DCMAKE_INSTALL_PREFIX=C:\Users\owuor\owProjects
             cmake --build . --config Release
             cmake --build . --target check --config Release
+            cmake --install .
             Copy (include) header files and igraph.lib files to MinGW folder
     -- Option 2 --
         * Open "MSYS2 UCRT64" as Admin and install:
