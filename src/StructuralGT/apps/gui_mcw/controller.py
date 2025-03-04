@@ -173,6 +173,7 @@ class MainController(QObject):
         except Exception as err:
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Save Error", "Unable to save project data. Close app and try again.")
+            return False
 
     def _handle_progress_update(self, value: int, msg: str):
         """
@@ -249,7 +250,8 @@ class MainController(QObject):
                      "Documentation:<html><br/></html>"
                      "<html><a href='http://structural-gt.readthedocs.io'>structural-gt.readthedocs.io</a></html><html><br/><br/></html>"
                      f"{self.get_sgt_version()}<html><br/></html>"
-                     "Copyright (C) 2024, The Regents of the University of Michigan.")
+                     "Copyright (C) 2018-2025, The Regents of the University of Michigan.<html><br/></html>"
+                     "License: GPL GNU v3<html><br/></html>")
         return about_app
 
     @Slot(result=str)
@@ -437,6 +439,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
+            self.wait_flag = False
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["Graph Extraction Error",
@@ -461,6 +464,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
+            self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
@@ -484,6 +488,7 @@ class MainController(QObject):
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
         except Exception as err:
+            self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
             self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
@@ -652,7 +657,7 @@ class MainController(QObject):
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
-            return
+            return False
 
         try:
             self.wait_flag = True
@@ -684,10 +689,15 @@ class MainController(QObject):
             self.update_img_models(self.get_current_obj())
             self.load_image()
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
+            return True
         except Exception as err:
+            self.wait_flag = False
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Open Project Error", "Unable retrieve your data and open project. "
-                                                            "Close the app and try again.")
+            self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Please close the "
+                                                            "application and try again. If the issue persists, the file "
+                                                            "may be corrupted or incompatible. Consider restoring from a "
+                                                            "backup or contacting support for assistance.")
+            return False
 
     def verify_path(self, a_path):
         if not a_path:

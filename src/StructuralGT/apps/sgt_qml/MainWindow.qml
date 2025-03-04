@@ -170,7 +170,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -207,7 +207,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -247,7 +247,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -266,7 +266,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -315,7 +315,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -337,7 +337,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -379,7 +379,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -398,7 +398,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -438,7 +438,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -457,7 +457,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -497,7 +497,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -519,7 +519,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
@@ -559,7 +559,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#bc2255"
+                        color: "#bc0000"
 
                         Label {
                             text: "Cancel"
@@ -581,7 +581,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: "#00bc00"
 
                         Label {
                             text: "OK"
