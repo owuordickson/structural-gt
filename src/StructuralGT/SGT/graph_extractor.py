@@ -418,7 +418,7 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
         weight_options = {
-            'DIA': 'Width',
+            'DIA': 'Diameter',
             'AREA': 'Area',  # surface area of edge
             'LEN': 'Length',
             'ANGLE': 'Angle',

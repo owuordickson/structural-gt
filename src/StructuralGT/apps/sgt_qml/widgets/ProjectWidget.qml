@@ -42,7 +42,7 @@ Item {
                 implicitWidth: tableView.width
                 implicitHeight: tblRowHeight
                 //color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
-                color: model.selected ? "#808080" : "#ffffff"
+                color: model.selected ? "#d0d0d0" : "transparent"
 
                 MouseArea {
                     anchors.fill: parent // Make the MouseArea cover the entire Rectangle
@@ -73,7 +73,7 @@ Item {
                     Label {
                         id: lblImgItem
                         text: model.text
-                        color: model.selected ? "#ffffff" : "#303030"
+                        color: model.selected ? "#303030" : "#808080"
                     }
                 }
 

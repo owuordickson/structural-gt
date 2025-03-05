@@ -207,7 +207,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -266,7 +266,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -337,7 +337,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -398,7 +398,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -457,7 +457,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -519,7 +519,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
@@ -581,7 +581,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#00bc00"
+                        color: "#22bc55"
 
                         Label {
                             text: "OK"
