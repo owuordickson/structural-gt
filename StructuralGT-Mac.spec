@@ -18,6 +18,7 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -32,7 +33,6 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    icon=['icon.icns'],
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -46,4 +46,3 @@ app = BUNDLE(
     icon='icon.icns',
     bundle_identifier='edu.umich.kotov',
 )
-
