@@ -39,7 +39,8 @@ igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices)
     const char delimiters[] = ",";
 
     // Get the first token
-    // strtok_r
+    // strtok_r - MacOs
+    //token = strtok_r(str_adj_mat, delimiters, &nextToken);
     token = strtok_s(str_adj_mat, delimiters, &nextToken);
 
     // Iterate through the remaining tokens
@@ -47,7 +48,8 @@ igraph_matrix_t* str_to_matrix(char* str_adj_mat, igraph_integer_t num_vertices)
         for (igraph_integer_t j = 0; j < num_vertices; j++) {
             MATRIX(*mat, i, j) = atoi(token);
             // Get the next token
-            // strtok_r
+            // strtok_r - MacOs
+            //token = strtok_r(NULL, delimiters, &nextToken);
             token = strtok_s(NULL, delimiters, &nextToken);
         }
     }

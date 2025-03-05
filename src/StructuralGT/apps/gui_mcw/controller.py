@@ -693,10 +693,10 @@ class MainController(QObject):
         except Exception as err:
             self.wait_flag = False
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Please close the "
-                                                            "application and try again. If the issue persists, the file "
-                                                            "may be corrupted or incompatible. Consider restoring from a "
-                                                            "backup or contacting support for assistance.")
+            self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
+                                                            "issue persists, the file may be corrupted or incompatible. "
+                                                            "Consider restoring from a backup or contacting support for "
+                                                            "assistance.")
             return False
 
     def verify_path(self, a_path):
