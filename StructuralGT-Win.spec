@@ -3,7 +3,7 @@ import os
 from PyInstaller.utils.hooks import collect_submodules
 
 a = Analysis(
-    ['src/StructuralGT.py'],
+    ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
     binaries=[],
     datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
