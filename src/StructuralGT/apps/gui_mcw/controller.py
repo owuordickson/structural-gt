@@ -240,18 +240,19 @@ class MainController(QObject):
 
     @Slot(result=str)
     def get_about_details(self):
-        about_app = (f"A software tool that allows graph theory analysis of nano-structures. This is a modified version "
-                     "of StructuralGT initially proposed by Drew A. Vecchio, DOI: "
-                     "<html><a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a></html><html><br/><br/></html>"
-                     "Contributors:<html><br/></html>"
-                     "1. Nicolas Kotov<html><br/></html>"
-                     "2. Dickson Owuor<html><br/></html>"
-                     "3. Alain Kadar<html><br/><br/></html>"
-                     "Documentation:<html><br/></html>"
-                     "<html><a href='http://structural-gt.readthedocs.io'>structural-gt.readthedocs.io</a></html><html><br/><br/></html>"
-                     f"{self.get_sgt_version()}<html><br/></html>"
-                     "Copyright (C) 2018-2025, The Regents of the University of Michigan.<html><br/></html>"
-                     "License: GPL GNU v3<html><br/></html>")
+        about_app = (
+            f"A software tool that allows graph theory analysis of nano-structures. This is a modified version "
+            "of StructuralGT initially proposed by Drew A. Vecchio, DOI: "
+            "<html><a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a></html><html><br/><br/></html>"
+            "Contributors:<html><br/></html>"
+            "1. Nicolas Kotov<html><br/></html>"
+            "2. Dickson Owuor<html><br/></html>"
+            "3. Alain Kadar<html><br/><br/></html>"
+            "Documentation:<html><br/></html>"
+            "<html><a href='https://structural-gt.readthedocs.io'>structural-gt.readthedocs.io</a></html><html><br/><br/></html>"
+            f"{self.get_sgt_version()}<html><br/></html>"
+            "Copyright (C) 2018-2025, The Regents of the University of Michigan.<html><br/></html>"
+            "License: GPL GNU v3<html><br/></html>")
         return about_app
 
     @Slot(result=str)
