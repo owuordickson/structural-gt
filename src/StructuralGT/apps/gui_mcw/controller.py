@@ -705,14 +705,25 @@ class MainController(QObject):
             self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
             return False
 
-        # Normalize file path
+        # print(a_path)
         # Convert QML "file:///" path format to a proper OS path
         if a_path.startswith("file:///"):
             if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
                 a_path = a_path[8:]
             else:  # macOS/Linux (remove "file://")
                 a_path = a_path[7:]
-        a_path = os.path.normpath(a_path)  # Normalize path
+        # Normalize path
+        a_path = os.path.normpath(a_path)
+        # print(a_path)
+
+        # Convert to a proper file system path
+        """import urllib.parse
+        a_path = urllib.parse.urlparse(a_path).path
+
+        # If running on Windows, remove leading '/'
+        if os.name == "nt":
+            a_path = a_path.lstrip("/")  # Remove leading slash for Windows
+        print(a_path)"""
 
         if not os.path.exists(a_path):
             logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
