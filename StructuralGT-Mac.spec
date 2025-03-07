@@ -3,7 +3,7 @@ import os
 from PyInstaller.utils.hooks import collect_submodules
 
 a = Analysis(
-    ['src/StructuralGT.py'],
+    ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
     binaries=[],
     datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
@@ -17,7 +17,6 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
-
 
 exe = EXE(
     pyz,
@@ -38,8 +37,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['icon.icns'],
 )
-
 app = BUNDLE(
     exe,
     name='StructuralGT.app',
