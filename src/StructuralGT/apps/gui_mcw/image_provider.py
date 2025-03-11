@@ -24,7 +24,7 @@ class ImageProvider(QQuickImageProvider):
                 img = Image.fromarray(img_cv)
             elif option == "binary":
                 im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
-                im_obj.img_bin, im_obj.otsu_val = im_obj.binarize_img(im_obj.img_mod.copy())
+                im_obj.img_bin = im_obj.binarize_img(im_obj.img_mod.copy())
                 img_cv = im_obj.img_bin
                 img = Image.fromarray(img_cv)
             elif option == "processed":

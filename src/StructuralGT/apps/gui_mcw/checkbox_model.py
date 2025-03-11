@@ -11,6 +11,7 @@ class CheckBoxModel(QAbstractListModel):
     MinValueRole = Qt.UserRole + 7
     MaxValueRole = Qt.UserRole + 8
     StepSizeRole = Qt.UserRole + 9
+    VisibleRole = Qt.UserRole + 10
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -41,6 +42,8 @@ class CheckBoxModel(QAbstractListModel):
             return item["maxValue"]
         elif role == self.StepSizeRole:
             return item["stepSize"]
+        elif role == self.VisibleRole:
+            return item["visible"]
         return None
 
     def setData(self, index, value, role):
@@ -71,7 +74,8 @@ class CheckBoxModel(QAbstractListModel):
         self.endResetModel()
         self.dataChanged.emit(self.index(0,0), self.index(len(new_data), 0),
                               [self.IdRole, self.TypeRole, self.TextRole, self.ValueRole, self.DataIdRole,
-                               self.DataValueRole, self.MinValueRole, self.MaxValueRole, self.StepSizeRole])
+                               self.DataValueRole, self.MinValueRole, self.MaxValueRole, self.StepSizeRole,
+                               self.VisibleRole])
 
     def roleNames(self):
         return {
@@ -84,4 +88,5 @@ class CheckBoxModel(QAbstractListModel):
             self.MinValueRole: b"minValue",
             self.MaxValueRole: b"maxValue",
             self.StepSizeRole: b"stepSize",
+            self.VisibleRole: b"visible"
         }

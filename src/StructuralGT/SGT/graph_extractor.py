@@ -154,7 +154,7 @@ class GraphExtractor(ProgressUpdate):
                 if opt_gte["has_weights"]["value"] == 1:
                     # We modify 'weight'
                     wt_type = self.get_weight_type()
-                    px_size = self.imp.pixel_width
+                    px_size = self.imp.configs["pixel_width"]["value"]
                     rho_val = float(self.imp.configs["resistivity"]["value"])
                     weight_options = GraphExtractor.get_weight_options()
 

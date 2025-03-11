@@ -21,6 +21,7 @@ Item {
             delegate: RowLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignLeft
+                visible: model.visible === 1
 
                 Label {
                     id: label

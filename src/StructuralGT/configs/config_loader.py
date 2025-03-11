@@ -15,7 +15,7 @@ def load_img_configs():
         "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 1 },
         "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 127 },
         "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },
-        "otsu_value": {"id": "otsu_value", "type": "binary-filter", "text": "", "visible": 0, "value": 0},
+        "otsu": {"id": "otsu", "type": "binary-filter", "text": "", "visible": 0, "value": 0},
         "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "visible": 1, "value": 0},
 
         "apply_autolevel": {"id": "apply_autolevel", "type": "image-filter", "text": "Autolevel", "value": 0,
@@ -37,9 +37,11 @@ def load_img_configs():
         "contrast_level": {"id": "contrast_level", "type": "image-control", "text": "Contrast", "value": 0 },
 
         #"image_dim": {"id": "image_dim", "type": "image-property", "text": "", "value": 2},
-        "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "value": 1.0 },
-        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "value": 0 },
-        "resistivity": {"id": "resistivity", "type": "image-property", "text": "Resistivity (<html>&Omega;</html>m)", "value": 1.0 },
+        "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "visible": 1, "value": 1.0 },
+        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "visible": 1, "value": 0 },
+        "resistivity": {"id": "resistivity", "type": "image-property", "text": "Resistivity (<html>&Omega;</html>m)", "visible": 1, "value": 1.0 },
+        "pixel_width": {"id": "pixel_width", "type": "image-property", "text": "", "visible": 0, "value": 1.0},  # * (10**-9)  # 1 nanometer
+
     }
 
     # Load configuration from file

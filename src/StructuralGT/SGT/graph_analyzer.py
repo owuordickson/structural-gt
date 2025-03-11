@@ -472,7 +472,7 @@ class GraphAnalyzer(ProgressUpdate):
         lst_len = []
         lst_width = []
         nx_graph = self.g_obj.nx_graph
-        px_size = self.g_obj.imp.pixel_width
+        px_size = self.g_obj.imp.configs["pixel_width"]["value"]
         rho_dim = float(self.g_obj.imp.configs["resistivity"]["value"])
         pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
         g_shape = 1

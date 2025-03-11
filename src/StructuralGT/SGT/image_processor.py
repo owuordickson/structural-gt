@@ -58,8 +58,6 @@ class ImageProcessor:
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
-        self.otsu_val = None  # TO BE DELETED (ADDED TO CONFIGS)
-        self.pixel_width = 0  # TO BE DELETED (ADDED TO PROPS)
 
     def apply_filters(self):
         """
@@ -68,16 +66,15 @@ class ImageProcessor:
         :return: None
         """
         self.img_mod = self.process_img(self.img.copy())
-        self.img_bin, self.otsu_val = self.binarize_img(self.img_mod.copy())
+        self.img_bin = self.binarize_img(self.img_mod.copy())
 
         # Compute pixel dimension in nanometers
         opt_img = self.configs
-        self.pixel_width = 1  # * (10**-9)  # 1 nanometer
         pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
         scale_val = float(opt_img["scale_value_nanometers"]["value"])
         if (scale_val > 0) and (pixel_count > 0):
             px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
-            self.pixel_width = px_width/self.scale_factor
+            opt_img["pixel_width"]["value"] = px_width/self.scale_factor
 
     def undo_cropping(self):
         """"""
@@ -214,8 +211,8 @@ class ImageProcessor:
                 temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 img_bin = temp[1]
                 otsu_res = temp[0]
-
-        return img_bin, otsu_res
+        opt_img["otsu"]["value"] = otsu_res
+        return img_bin
 
     def compute_pixel_length(self, img_path: str, img_path_w_bar: str = None, img_length: float = None):
         """
@@ -369,7 +366,8 @@ class ImageProcessor:
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         elif opt_img["threshold_type"]["value"] == 2:
-            thresh_arr = np.array([[self.otsu_val, self.otsu_val],
+            otsu_val = opt_img["otsu"]["value"]
+            thresh_arr = np.array([[otsu_val, otsu_val],
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
