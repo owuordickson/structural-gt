@@ -46,7 +46,7 @@ class ImageProcessor:
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> imp_obj.apply_filters()
         """
-        self.configs = load_img_configs()  # image processing parameters and options.
+        self.configs = load_img_configs()  # image processing configuration parameters and options.
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
