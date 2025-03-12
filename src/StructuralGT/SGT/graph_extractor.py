@@ -7,9 +7,9 @@ Builds a graph network from nano-scale microscopy images.
 import cv2
 import math
 import sknw
-import logging
+# import logging
 import itertools
-import numpy as np
+import numpy as xp
 import scipy as sp
 import networkx as nx
 from cv2.typing import MatLike
@@ -21,6 +21,7 @@ from .image_processor import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
+"""
 try:
     import os
     import cupy as cp
@@ -29,6 +30,7 @@ try:
     test = cp.cuda.Device(0).compute_capability
     # Check for CUDA_PATH in environment variables
     cuda_path = os.getenv("CUDA_PATH")
+    print(cuda_path)
     if cuda_path:
         xp = cp  # Use CuPy for GPU
         print("Using GPU with CuPy!")
@@ -41,6 +43,7 @@ except (ImportError, cp.cuda.runtime.CUDARuntimeError, AttributeError):
     xp = np  # Fallback to NumPy for CPU
     print("Using CPU with NumPy!")
     logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
+"""
 
 
 class GraphExtractor(ProgressUpdate):

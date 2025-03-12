@@ -211,11 +211,11 @@ def install_package(package):
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
         logging.info(f"Successfully installed {package}", extra={'user': 'SGT Logs'})
-    except subprocess.CalledProcessError as err:
-        logging.exception(f"Failed to install {package}: ", err, extra={'user': 'SGT Logs'})
+    except subprocess.CalledProcessError:
+        logging.info(f"Failed to install {package}: ", extra={'user': 'SGT Logs'})
 
 
-def detect_cuda_version_v1():
+def detect_cuda_version():
     """Check if CUDA is installed and return its version."""
     try:
         output = subprocess.check_output(['nvcc', '--version']).decode()
@@ -226,49 +226,8 @@ def detect_cuda_version_v1():
         else:
             return None
     except (subprocess.CalledProcessError, FileNotFoundError):
-        logging.exception(f"Please install NVIDIA GPU Toolkit and try again.", FileNotFoundError, extra={'user': 'SGT Logs'})
+        logging.info(f"Please install 'NVIDIA GPU Computing Toolkit' via: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})
         return None
-
-
-def detect_cuda_version():
-    """Detect CUDA version using nvcc, nvidia-smi, or environment variables."""
-    # 1. Check using nvcc
-    try:
-        result = subprocess.run(["nvcc", "--version"], capture_output=True, text=True)
-        if result.returncode == 0:
-            version_str = result.stdout
-            cuda_version = version_str.split("release")[1].split()[0]
-            return cuda_version.split(".")[0]  # Return major version
-    except (FileNotFoundError, IndexError):
-        pass
-
-    # 2. Check using nvidia-smi
-    try:
-        result = subprocess.run(["nvidia-smi"], capture_output=True, text=True)
-        if result.returncode == 0:
-            for line in result.stdout.split("\n"):
-                if "CUDA Version" in line:
-                    return line.split("CUDA Version:")[1].strip().split(".")[0]
-    except (FileNotFoundError, IndexError):
-        pass
-
-    # 3. Check environment variables (Windows/Linux)
-    cuda_path = os.environ.get("CUDA_PATH") or os.environ.get("CUDA_HOME")
-    if cuda_path:
-        version = os.path.basename(cuda_path).replace("v", "").split(".")[0]
-        return version
-
-    # 4. Check default CUDA installation directories
-    possible_paths = [
-        "/usr/local/cuda/version.txt",    # Linux
-        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\version.txt"  # Windows
-    ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                version = f.read().strip().split(" ")[-1].split(".")[0]
-                return version
-    return None
 
 
 def is_connected(host="8.8.8.8", port=53, timeout=3):
