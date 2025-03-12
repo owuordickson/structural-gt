@@ -4,6 +4,7 @@
 Builds a graph network from nano-scale microscopy images.
 """
 
+import os
 import cv2
 import math
 import sknw
@@ -23,7 +24,6 @@ from ..configs.config_loader import load_gte_configs
 
 """
 try:
-    import os
     import cupy as cp
 
     # Check for GPU
