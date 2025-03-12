@@ -9,6 +9,7 @@ import sys
 import logging
 from .apps.gui_main import pyside_app
 from .apps.cli_main import terminal_app
+from .configs.config_loader import detect_cuda_and_install_cupy
 
 
 logger = logging.getLogger("SGT App")
@@ -21,8 +22,16 @@ def main_gui():
     Start graphical user interface application.
     :return:
     """
+    # Initialize log collection
     initialize_logging()
+
+    # Install CuPy for GPU
+    detect_cuda_and_install_cupy()
+
+    # Start GUI app
     pyside_app()
+
+    # Log to show the App stopped
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
 
 

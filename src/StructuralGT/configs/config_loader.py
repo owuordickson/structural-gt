@@ -7,6 +7,7 @@ Loads default configurations from 'configs.ini' file
 import os
 import sys
 import socket
+import logging
 import subprocess
 import configparser
 
@@ -208,9 +209,9 @@ def load_gtc_configs():
 def install_package(package):
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        print(f"Successfully installed {package}")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to install {package}: {e}")
+        logging.info(f"Successfully installed {package}", extra={'user': 'SGT Logs'})
+    except subprocess.CalledProcessError as err:
+        logging.exception(f"Failed to install {package}: ", err, extra={'user': 'SGT Logs'})
 
 
 def detect_cuda_version():
@@ -240,13 +241,13 @@ def is_connected(host="8.8.8.8", port=53, timeout=3):
 def detect_cuda_and_install_cupy():
     try:
         import cupy
-        print(f"CuPy is already installed: {cupy.__version__}")
+        logging.info(f"CuPy is already installed: {cupy.__version__}", extra={'user': 'SGT Logs'})
         return
     except ImportError:
-        print("CuPy is not installed.")
+        logging.info("CuPy is not installed.", extra={'user': 'SGT Logs'})
 
     if not is_connected():
-        print("No internet connection. Cannot install CuPy.")
+        logging.info("No internet connection. Cannot install CuPy.", extra={'user': 'SGT Logs'})
         return
 
     # Proceed with installation if connected
@@ -256,5 +257,5 @@ def detect_cuda_and_install_cupy():
     elif cuda_version == '11':
         install_package('cupy-cuda11x')
     else:
-        print("CUDA not found. Installing CPU-only CuPy.")
+        logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
         install_package('cupy')
