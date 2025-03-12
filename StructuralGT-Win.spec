@@ -1,14 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
-from PyInstaller.utils.hooks import collect_submodules
 
 a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
     binaries=[],
     datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
-    #hiddenimports=['PySide6.QtQml', 'PySide6.QtQuick'],  # Add PySide6 dependencies
-    hiddenimports=collect_submodules('PySide6'),  # Auto-detect PySide6 dependencies
+    hiddenimports=['PySide6.QtQml', 'PySide6.QtQuick', 'subprocess', 'pip'],  # Add dependencies
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

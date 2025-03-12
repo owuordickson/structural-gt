@@ -5,6 +5,9 @@ Loads default configurations from 'configs.ini' file
 """
 
 import os
+import sys
+import socket
+import subprocess
 import configparser
 
 
@@ -200,3 +203,58 @@ def load_gtc_configs():
         return options_gtc
     except configparser.NoSectionError:
         return options_gtc
+
+
+def install_package(package):
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        print(f"Successfully installed {package}")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install {package}: {e}")
+
+
+def detect_cuda_version():
+    """Check if CUDA is installed and return its version."""
+    try:
+        output = subprocess.check_output(['nvcc', '--version']).decode()
+        if 'release 12' in output:
+            return '12'
+        elif 'release 11' in output:
+            return '11'
+        else:
+            return None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def is_connected(host="8.8.8.8", port=53, timeout=3):
+    """Check if the system has an active internet connection."""
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error:
+        return False
+
+
+def detect_cuda_and_install_cupy():
+    try:
+        import cupy
+        print(f"CuPy is already installed: {cupy.__version__}")
+        return
+    except ImportError:
+        print("CuPy is not installed.")
+
+    if not is_connected():
+        print("No internet connection. Cannot install CuPy.")
+        return
+
+    # Proceed with installation if connected
+    cuda_version = detect_cuda_version()
+    if cuda_version == '12':
+        install_package('cupy-cuda12x')
+    elif cuda_version == '11':
+        install_package('cupy-cuda11x')
+    else:
+        print("CUDA not found. Installing CPU-only CuPy.")
+        install_package('cupy')

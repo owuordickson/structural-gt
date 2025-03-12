@@ -9,7 +9,7 @@ import os
 import math
 import sknw
 import itertools
-import numpy as np
+import numpy as xp
 import scipy as sp
 import networkx as nx
 from cv2.typing import MatLike
@@ -174,7 +174,7 @@ class GraphExtractor(ProgressUpdate):
                     # delete 'weight'
                     del nx_graph[s][e]['weight']
                 # print(f"{nx_graph[s][e]}\n")
-            arr_angle = np.array(lst_angles, dtype=float)
+            arr_angle = xp.array(lst_angles, dtype=float)
             self.nx_info.append({'name': 'angle', 'value': arr_angle})
         self.nx_graph = nx_graph
 
@@ -216,12 +216,12 @@ class GraphExtractor(ProgressUpdate):
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black')
             nodes = nx_graph.nodes()
-            gn = np.array([nodes[i]['o'] for i in nodes])
+            gn = xp.array([nodes[i]['o'] for i in nodes])
             ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
-            img = np.array(ImageProcessor.plot_to_img(fig))
+            img = xp.array(ImageProcessor.plot_to_img(fig))
             if len(img.shape) == 3:
-                img = np.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
+                img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
             return img
 
         if len(nx_components) > 0:
@@ -280,7 +280,7 @@ class GraphExtractor(ProgressUpdate):
         ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, img, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
 
         nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
+        gn = xp.array([nodes[i]['o'] for i in nodes])
         if opt_gte["display_node_id"]["value"] == 1:
             i = 0
             for x, y in zip(gn[:, 1], gn[:, 0]):
@@ -367,7 +367,7 @@ class GraphExtractor(ProgressUpdate):
 
         if opt_gte["export_adj_mat"]["value"] == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
-            np.savetxt(str(adj_file), adj_mat, delimiter=",")
+            xp.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte["export_edge_list"]["value"] == 1:
             if opt_gte["has_weights"]["value"] == 1:
@@ -508,7 +508,7 @@ class GraphComponents:
             norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
 
         # 5. Compute eigenvalues
-        # e_vals, _ = np.linalg.eig(norm_laplacian_matrix)
+        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
         e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
 
         # 6. Approximate conductance using the 2nd smallest eigenvalue
@@ -533,10 +533,10 @@ class GraphComponents:
         adj_mat = nx.adjacency_matrix(graph).todense()
 
         # 2. Symmetric-ize the Adjacency matrix
-        # adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+        # adj_mat = xp.maximum(adj_mat, adj_mat.transpose())
 
         # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        np.fill_diagonal(adj_mat, 0)
+        xp.fill_diagonal(adj_mat, 0)
 
         # 4. Create new graph
         new_graph = nx.from_numpy_array(adj_mat)
@@ -556,10 +556,10 @@ class GraphComponents:
         adj_mat = nx.adjacency_matrix(graph).todense()
 
         # 2. Symmetric-ize the Adjacency matrix
-        adj_mat = np.maximum(adj_mat, adj_mat.transpose())
+        adj_mat = xp.maximum(adj_mat, adj_mat.transpose())
 
         # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        np.fill_diagonal(adj_mat, 0)
+        xp.fill_diagonal(adj_mat, 0)
 
         # 4. Create new graph
         new_graph = nx.from_numpy_array(adj_mat)
@@ -567,7 +567,7 @@ class GraphComponents:
         return new_graph
 
     @staticmethod
-    def compute_conductance_range(eig_vals: np.ndarray):
+    def compute_conductance_range(eig_vals: xp.ndarray):
         """
         Computes the minimum and maximum values of graph conductance.
 
@@ -576,7 +576,7 @@ class GraphComponents:
         """
 
         # Sort the eigenvalues in ascending order
-        sorted_vals = np.array(eig_vals)
+        sorted_vals = xp.array(eig_vals)
         sorted_vals.sort()
 
         # Sort the eigenvalues in descending order
