@@ -5,11 +5,11 @@ Builds a graph network from nano-scale microscopy images.
 """
 
 import cv2
-import os
 import math
 import sknw
+import logging
 import itertools
-import numpy as xp
+import numpy as np
 import scipy as sp
 import networkx as nx
 from cv2.typing import MatLike
@@ -20,6 +20,27 @@ from .graph_skeleton import GraphSkeleton
 from .image_processor import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
+
+try:
+    import os
+    import cupy as cp
+
+    # Check for GPU
+    test = cp.cuda.Device(0).compute_capability
+    # Check for CUDA_PATH in environment variables
+    cuda_path = os.getenv("CUDA_PATH")
+    if cuda_path:
+        xp = cp  # Use CuPy for GPU
+        print("Using GPU with CuPy!")
+        logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
+    else:
+        print("Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads")
+        logging.info("Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})
+        raise ImportError("Please add CUDA_PATH to System environment variables.")
+except (ImportError, cp.cuda.runtime.CUDARuntimeError, AttributeError):
+    xp = np  # Fallback to NumPy for CPU
+    print("Using CPU with NumPy!")
+    logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
 
 
 class GraphExtractor(ProgressUpdate):

@@ -7,6 +7,7 @@ Loads default configurations from 'configs.ini' file
 import os
 import sys
 import socket
+import platform
 import logging
 import subprocess
 import configparser
@@ -214,7 +215,7 @@ def install_package(package):
         logging.exception(f"Failed to install {package}: ", err, extra={'user': 'SGT Logs'})
 
 
-def detect_cuda_version():
+def detect_cuda_version_v1():
     """Check if CUDA is installed and return its version."""
     try:
         output = subprocess.check_output(['nvcc', '--version']).decode()
@@ -225,7 +226,49 @@ def detect_cuda_version():
         else:
             return None
     except (subprocess.CalledProcessError, FileNotFoundError):
+        logging.exception(f"Please install NVIDIA GPU Toolkit and try again.", FileNotFoundError, extra={'user': 'SGT Logs'})
         return None
+
+
+def detect_cuda_version():
+    """Detect CUDA version using nvcc, nvidia-smi, or environment variables."""
+    # 1. Check using nvcc
+    try:
+        result = subprocess.run(["nvcc", "--version"], capture_output=True, text=True)
+        if result.returncode == 0:
+            version_str = result.stdout
+            cuda_version = version_str.split("release")[1].split()[0]
+            return cuda_version.split(".")[0]  # Return major version
+    except (FileNotFoundError, IndexError):
+        pass
+
+    # 2. Check using nvidia-smi
+    try:
+        result = subprocess.run(["nvidia-smi"], capture_output=True, text=True)
+        if result.returncode == 0:
+            for line in result.stdout.split("\n"):
+                if "CUDA Version" in line:
+                    return line.split("CUDA Version:")[1].strip().split(".")[0]
+    except (FileNotFoundError, IndexError):
+        pass
+
+    # 3. Check environment variables (Windows/Linux)
+    cuda_path = os.environ.get("CUDA_PATH") or os.environ.get("CUDA_HOME")
+    if cuda_path:
+        version = os.path.basename(cuda_path).replace("v", "").split(".")[0]
+        return version
+
+    # 4. Check default CUDA installation directories
+    possible_paths = [
+        "/usr/local/cuda/version.txt",    # Linux
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\version.txt"  # Windows
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                version = f.read().strip().split(" ")[-1].split(".")[0]
+                return version
+    return None
 
 
 def is_connected(host="8.8.8.8", port=53, timeout=3):
@@ -250,6 +293,29 @@ def detect_cuda_and_install_cupy():
         logging.info("No internet connection. Cannot install CuPy.", extra={'user': 'SGT Logs'})
         return
 
+    # Handle MacOS (Apple Silicon) - CPU only
+    if platform.system() == "Darwin" and platform.processor().startswith("arm"):
+        logging.info("Detected MacOS with Apple Silicon (M1/M2/M3). Installing CPU-only version of CuPy.", extra={'user': 'SGT Logs'})
+        install_package('cupy')  # CPU-only version
+        return
+
+    # Handle CUDA systems (Linux/Windows with GPU)
+    cuda_version = detect_cuda_version()
+
+    if cuda_version:
+        logging.info(f"CUDA detected: {cuda_version}", extra={'user': 'SGT Logs'})
+        if cuda_version == '12':
+            install_package('cupy-cuda12x')
+        elif cuda_version == '11':
+            install_package('cupy-cuda11x')
+        else:
+            logging.info("CUDA version not supported. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+            install_package('cupy')
+    else:
+        # No CUDA found, fall back to CPU-only version
+        logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+        install_package('cupy')
+
     # Proceed with installation if connected
     cuda_version = detect_cuda_version()
     if cuda_version == '12':
@@ -257,5 +323,5 @@ def detect_cuda_and_install_cupy():
     elif cuda_version == '11':
         install_package('cupy-cuda11x')
     else:
-        logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+        logging.info("No CUDA detected or NVIDIA GPU Toolkit not installed. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
         install_package('cupy')
