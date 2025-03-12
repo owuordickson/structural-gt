@@ -372,7 +372,7 @@ class GraphExtractor(ProgressUpdate):
         if opt_gte["export_edge_list"]["value"] == 1:
             if opt_gte["has_weights"]["value"] == 1:
                 fields = ['Source', 'Target', 'Weight', 'Length']
-                el = nx.generate_edgelist(nx_graph, delimiter=',', data=["weight", "length"])
+                el = nx.generate_edgelist(nx_graph, delimiter=',', data=True)
                 write_csv_file(csv_file, fields, el)
             else:
                 fields = ['Source', 'Target']
@@ -400,15 +400,6 @@ class GraphExtractor(ProgressUpdate):
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
-
-    def compute_edge_length(self):
-        pass
-
-    def compute_edge_width(self):
-        pass
-
-    def compute_edge_angle(self):
-        pass
 
     @staticmethod
     def get_weight_options():
@@ -617,8 +608,8 @@ class GraphComponents:
         smallest_component = min(connected_components, key=len)
 
         # 3. Create a new graph containing only the largest/smallest connected component
-        sub_graph_largest = graph.subgraph(largest_component)
-        sub_graph_smallest = graph.subgraph(smallest_component)
+        sub_graph_largest = graph.subgraph(largest_component).copy()
+        sub_graph_smallest = graph.subgraph(smallest_component).copy()
 
         component_count = len(connected_components)
         # large_subgraph_node_count = sub_graph_largest.number_of_nodes()

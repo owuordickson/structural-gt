@@ -11,6 +11,7 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 import networkx as nx
+import matplotlib.table as tbl
 import matplotlib.pyplot as plt
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
@@ -67,23 +68,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.plot_figures = None
         self.output_data = pd.DataFrame([])
         self.weighted_output_data = pd.DataFrame([])
-        self.degree_distribution = [0]
-        self.clustering_coefficients = [0]
-        self.betweenness_distribution = [0]
-        self.closeness_distribution = [0]
-        self.eigenvector_distribution = [0]
-        self.ohms_distribution = [0]
-        self.percolation_distribution = []
-        # self.nx_subgraph_components = []
-        self.weighted_degree_distribution = [0]
-        self.weighted_clustering_coefficients = [0]  # NOT USED
-        self.weighted_betweenness_distribution = [0]
-        self.currentflow_distribution = [0]
-        self.weighted_closeness_distribution = [0]
-        self.weighted_eigenvector_distribution = [0]
-        # self.weighted_edge_angle_distribution = [0]
-        self.weighted_percolation_distribution = [0]
-    
+        self.histogram_data = {}
+
     def fit(self):
         """
             Execute functions that will process image filters and extract graph from the processed image
@@ -96,6 +82,14 @@ class GraphAnalyzer(ProgressUpdate):
             # self.add_thread_listener(self.g_obj.abort_tasks)
         self.abort = self.g_obj.abort
         self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+        if not self.abort:
+            self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
+                                   "betweenness_distribution": [0], "closeness_distribution": [0],
+                                   "eigenvector_distribution": [0], "ohms_distribution": [0],
+                                   "percolation_distribution": [], "weighted_degree_distribution": [0],
+                                   "weighted_clustering_coefficients": [0], "weighted_betweenness_distribution": [0],
+                                   "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
+                                   "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
 
     def update_graph_progress(self, value, msg):
         self.update_status([value, msg])
@@ -138,10 +132,9 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([5, "Computing graph degree..."])
             deg_distribution_1 = dict(nx.degree(graph))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
-            deg_val = round(np.average(deg_distribution), 5)
-            self.degree_distribution = deg_distribution
-            data_dict["x"].append("Average degree")
-            data_dict["y"].append(deg_val)
+            hist_name = "degree_distribution"
+            hist_label = "Average degree"
+            data_dict = self._update_histogram_data(data_dict, deg_distribution, hist_name, hist_label)
 
         if (opt_gtc["compute_network_diameter"]["value"] == 1) or (opt_gtc["compute_avg_node_connectivity"]["value"] == 1):
             try:
@@ -226,21 +219,19 @@ class GraphAnalyzer(ProgressUpdate):
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["compute_avg_clustering_coef"]["value"] == 1):
             self.update_status([40, "Computing clustering coefficients..."])
             coefficients_1 = clustering(graph)
-            coefficients = np.array(list(coefficients_1.values()), dtype=float)
-            avg_clust = round(np.average(coefficients), 5)  # average_clustering(graph)
-            self.clustering_coefficients = coefficients
-            data_dict["x"].append("Average clustering coefficient")
-            data_dict["y"].append(avg_clust)
+            cl_coefficients = np.array(list(coefficients_1.values()), dtype=float)
+            hist_name = "clustering_coefficients"
+            hist_label = "Average clustering coefficient"
+            data_dict = self._update_histogram_data(data_dict, cl_coefficients, hist_name, hist_label)
 
         # calculating betweenness centrality histogram
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1):
             self.update_status([45, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
-            b_val = round(np.average(b_distribution), 5)
-            self.betweenness_distribution = b_distribution
-            data_dict["x"].append("Average betweenness centrality")
-            data_dict["y"].append(b_val)
+            hist_name = "betweenness_distribution"
+            hist_label = "Average betweenness centrality"
+            data_dict = self._update_histogram_data(data_dict, b_distribution, hist_name, hist_label)
 
         # calculating eigenvector centrality
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
@@ -250,31 +241,27 @@ class GraphAnalyzer(ProgressUpdate):
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
             e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
-            e_val = round(np.average(e_vecs), 5)
-            self.eigenvector_distribution = e_vecs
-            data_dict["x"].append("Average eigenvector centrality")
-            data_dict["y"].append(e_val)
+            hist_name = "eigenvector_distribution"
+            hist_label = "Average eigenvector centrality"
+            data_dict = self._update_histogram_data(data_dict, e_vecs, hist_name, hist_label)
 
         # calculating closeness centrality
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             self.update_status([55, "Computing closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph)
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
-            c_val = round(np.average(close_distribution), 5)
-            self.closeness_distribution = close_distribution
-            data_dict["x"].append("Average closeness centrality")
-            data_dict["y"].append(c_val)
+            hist_name = "closeness_distribution"
+            hist_label = "Average closeness centrality"
+            data_dict = self._update_histogram_data(data_dict, close_distribution, hist_name, hist_label)
 
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             self.update_status([60, "Computing Ohms centrality..."])
-            ohms_distribution_1, res = self.compute_ohms_centrality()
-            ohms_distribution = np.array(list(ohms_distribution_1.values()), dtype=float)
-            ohms_val = round(np.average(ohms_distribution), 5)
-            # ohms_std = round(np.std(ohms_distribution), 5)
-            self.ohms_distribution = ohms_distribution
-            data_dict["x"].append("Average Ohms centrality")
-            data_dict["y"].append(ohms_val)
+            o_distribution_1, res = self.compute_ohms_centrality()
+            o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
+            hist_name = "ohms_distribution"
+            hist_label = "Average Ohms centrality"
+            data_dict = self._update_histogram_data(data_dict, o_distribution, hist_name, hist_label)
             data_dict["x"].append("Ohms centrality (avg. area)")
             data_dict["y"].append(f"{res['avg area']} " + r"$m^2$")
             data_dict["x"].append("Ohms centrality (avg. length)")
@@ -287,7 +274,8 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["y"].append(f"{res['conductivity']} S/m")
 
             # calculating current-flow betweenness centrality
-        """if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
+        """
+        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
             # We select source nodes and target nodes with highest degree-centrality
 
             gph = self.g_obj.nx_connected_graph
@@ -303,24 +291,23 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([62, "Computing current-flow betweenness centrality..."])
             cf_distribution_1 = nx.current_flow_betweenness_centrality_subset(gph, source_nodes, target_nodes)
             cf_distribution = np.array(list(cf_distribution_1.values()), dtype=float)
-            cf_val = np.average(cf_distribution)
-            cf_val = round(cf_val, 5)
-            self.currentflow_distribution = cf_distribution
-            data_dict["x"].append("Average current-flow betweenness centrality")
-            data_dict["y"].append(cf_val)"""
+            hist_name = "currentflow_distribution"
+            hist_label = "Average current-flow betweenness centrality"
+            data_dict = self.update_histogram_data(data_dict, cf_distribution, hist_name, hist_label)
+        """
 
         # calculating percolation centrality
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_percolation_histogram"]["value"] == 1):
             self.update_status([65, "Computing percolation centrality..."])
             p_distribution_1 = percolation_centrality(graph, states=None)
             p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
-            p_val = round(np.average(p_distribution), 5)
-            self.percolation_distribution = p_distribution
-            data_dict["x"].append("Average percolation centrality")
-            data_dict["y"].append(p_val)
+            hist_name = "percolation_distribution"
+            hist_label = "Average percolation centrality"
+            data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
 
         # calculating graph conductance
-        """if opt_gtc["compute_graph_conductance"]["value"] == 1:
+        """
+        if opt_gtc["compute_graph_conductance"]["value"] == 1:
             self.update_status([66, "Computing graph conductance..."])
             # res_items, sg_components = self.gc.approx_conductance_by_spectral()
             data_dict["x"].append("Largest-Entire graph ratio")
@@ -330,7 +317,8 @@ class GraphAnalyzer(ProgressUpdate):
                     continue
                 else:
                     data_dict["x"].append((str(item["name"])))
-                    data_dict["y"].append((str(item["value"])))"""
+                    data_dict["y"].append((str(item["value"])))
+        """
 
         self.output_data = pd.DataFrame(data_dict)
 
@@ -356,10 +344,9 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([72, "Compute weighted graph degree..."])
             deg_distribution_1 = dict(nx.degree(graph, weight='weight'))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
-            deg_val = round(np.average(deg_distribution), 5)
-            self.weighted_degree_distribution = deg_distribution
-            data_dict["x"].append(f"{weight_type}-weighted average degree")
-            data_dict["y"].append(deg_val)
+            hist_name = "weighted_degree_distribution"
+            hist_label = f"{weight_type}-weighted average degree"
+            data_dict = self._update_histogram_data(data_dict, deg_distribution, hist_name, hist_label)
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
             self.update_status([74, "Compute weighted wiener index..."])
@@ -397,19 +384,17 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([80, "Compute weighted betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
-            b_val = round(np.average(b_distribution), 5)
-            self.weighted_betweenness_distribution = b_distribution
-            data_dict["x"].append(f"{weight_type}-weighted average betweenness centrality")
-            data_dict["y"].append(b_val)
+            hist_name = "weighted_betweenness_distribution"
+            hist_label = f"{weight_type}-weighted average betweenness centrality"
+            data_dict = self._update_histogram_data(data_dict, b_distribution, hist_name, hist_label)
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             self.update_status([82, "Compute weighted closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph, distance='length')
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
-            c_val = round(np.average(close_distribution), 5)
-            self.weighted_closeness_distribution = close_distribution
-            data_dict["x"].append("Length-weighted average closeness centrality")
-            data_dict["y"].append(c_val)
+            hist_name = "weighted_closeness_distribution"
+            hist_label = f"Length-weighted average closeness centrality"
+            data_dict = self._update_histogram_data(data_dict, close_distribution, hist_name, hist_label)
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             if self.abort:
@@ -421,19 +406,17 @@ class GraphAnalyzer(ProgressUpdate):
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000, weight='weight')
             e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
-            e_val = round(np.average(e_vecs), 5)
-            self.weighted_eigenvector_distribution = e_vecs
-            data_dict["x"].append(f"{weight_type}-weighted average eigenvector centrality")
-            data_dict["y"].append(e_val)
+            hist_name = "weighted_eigenvector_distribution"
+            hist_label = f"{weight_type}-weighted average eigenvector centrality"
+            data_dict = self._update_histogram_data(data_dict, e_vecs, hist_name, hist_label)
 
         if opt_gtc["display_percolation_histogram"]["value"] == 1:
             self.update_status([86, "Compute weighted percolation centrality..."])
             p_distribution_1 = percolation_centrality(graph, states=None, weight='weight')
             p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
-            p_val = round(np.average(p_distribution), 5)
-            self.weighted_percolation_distribution = p_distribution
-            data_dict["x"].append(f"{weight_type}-weighted average percolation centrality")
-            data_dict["y"].append(p_val)
+            hist_name = "weighted_percolation_distribution"
+            hist_label = f"{weight_type}-weighted average percolation centrality"
+            data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
 
         # calculating graph conductance
         """if opt_gtc["compute_graph_conductance"]["value"] == 1:
@@ -551,7 +534,7 @@ class GraphAnalyzer(ProgressUpdate):
         ----------
         [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
                 connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
-                http://www.sciencedirect.com/science/article/pii/S0012365X01001807
+                https://www.sciencedirect.com/science/article/pii/S0012365X01001807
 
         """
 
@@ -585,7 +568,7 @@ class GraphAnalyzer(ProgressUpdate):
             return 0
         return num / den
 
-    def igraph_average_node_connectivity(self, **kwargs):
+    def igraph_average_node_connectivity(self):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
@@ -720,6 +703,13 @@ class GraphAnalyzer(ProgressUpdate):
             pdf.savefig(fig)
         self.g_obj.save_files()
 
+    def _update_histogram_data(self, data_dict: dict, arr_distribution: np.ndarray, hist_name: str, hist_label: str):
+        val = round(np.average(arr_distribution), 5)
+        self.histogram_data[hist_name] = arr_distribution
+        data_dict["x"].append(hist_label)
+        data_dict["y"].append(val)
+        return data_dict
+
     def display_gt_results(self):
         """
         Create a table of weighted and un-weighted graph theory results.
@@ -736,7 +726,7 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_axis_off()
         ax.set_title("Unweighted GT parameters")
         col_width = [2 / 3, 1 / 3]
-        tab_1 = ax.table(cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
+        tab_1 = tbl.table(ax, cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
         tab_1.scale(1, 1.5)
 
         if opt_gte["has_weights"]["value"] == 1:
@@ -744,7 +734,7 @@ class GraphAnalyzer(ProgressUpdate):
             ax = fig_wt.add_subplot(1, 1, 1)
             ax.set_axis_off()
             ax.set_title("Weighted GT parameters")
-            tab_2 = ax.table(cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
+            tab_2 = tbl.table(ax, cellText=w_data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
             tab_2.scale(1, 1.5)
         else:
             fig_wt = None
@@ -763,20 +753,20 @@ class GraphAnalyzer(ProgressUpdate):
 
         wt_type = self.g_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
-        deg_distribution = self.degree_distribution
-        w_deg_distribution = self.weighted_degree_distribution
-        cluster_coefs = self.clustering_coefficients
-        # w_cluster_coefs = self.weighted_clustering_coefficients
-        bet_distribution = self.betweenness_distribution
-        w_bet_distribution = self.weighted_betweenness_distribution
-        clo_distribution = self.closeness_distribution
-        w_clo_distribution = self.weighted_closeness_distribution
-        eig_distribution = self.eigenvector_distribution
-        w_eig_distribution = self.weighted_eigenvector_distribution
-        cf_distribution = self.currentflow_distribution
-        ohm_distribution = self.ohms_distribution
-        per_distribution = self.percolation_distribution
-        w_per_distribution = self.weighted_percolation_distribution
+        deg_distribution = self.histogram_data["degree_distribution"]
+        w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
+        cluster_coefs = self.histogram_data["clustering_coefficients"]
+        # w_cluster_coefs = self.histogram_data["weighted_clustering_coefficients"]
+        bet_distribution = self.histogram_data["betweenness_distribution"]
+        w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
+        clo_distribution = self.histogram_data["closeness_distribution"]
+        w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
+        eig_distribution = self.histogram_data["eigenvector_distribution"]
+        w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
+        # cf_distribution = self.histogram_data["currentflow_distribution"]
+        ohm_distribution = self.histogram_data["ohms_distribution"]
+        per_distribution = self.histogram_data["percolation_distribution"]
+        w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
 
         # Degree and Closeness
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
@@ -816,12 +806,14 @@ class GraphAnalyzer(ProgressUpdate):
         figs.append(fig)
 
         # Currentflow
-        """if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
+        """
+        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            cf_title = r"Current-flow betweenness Centrality: $\sigma$="
+            # cf_title = r"Current-flow betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
             GraphAnalyzer.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
-            figs.append(fig)"""
+            figs.append(fig)
+        """
 
         # percolation
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_percolation_histogram"]["value"] == 1):
@@ -880,20 +872,20 @@ class GraphAnalyzer(ProgressUpdate):
 
         wt_type = self.g_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
-        deg_distribution = self.degree_distribution
-        w_deg_distribution = self.weighted_degree_distribution
-        cluster_coefs = self.clustering_coefficients
-        # w_cluster_coefs = self.weighted_clustering_coefficients
-        bet_distribution = self.betweenness_distribution
-        w_bet_distribution = self.weighted_betweenness_distribution
-        clo_distribution = self.closeness_distribution
-        w_clo_distribution = self.weighted_closeness_distribution
-        eig_distribution = self.eigenvector_distribution
-        w_eig_distribution = self.weighted_eigenvector_distribution
-        # cf_distribution = self.currentflow_distribution
-        ohm_distribution = self.ohms_distribution
-        per_distribution = self.percolation_distribution
-        w_per_distribution = self.weighted_percolation_distribution
+        deg_distribution = self.histogram_data["degree_distribution"]
+        w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
+        cluster_coefs = self.histogram_data["clustering_coefficients"]
+        # w_cluster_coefs = self.histogram_data["weighted_clustering_coefficients"]
+        bet_distribution = self.histogram_data["betweenness_distribution"]
+        w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
+        clo_distribution = self.histogram_data["closeness_distribution"]
+        w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
+        eig_distribution = self.histogram_data["eigenvector_distribution"]
+        w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
+        # cf_distribution = self.histogram_data["currentflow_distribution"]
+        ohm_distribution = self.histogram_data["ohms_distribution"]
+        per_distribution = self.histogram_data["percolation_distribution"]
+        w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
 
         sz = 30
         lw = 1.5
