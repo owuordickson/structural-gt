@@ -163,7 +163,7 @@ def load_gtc_configs():
         "compute_avg_clustering_coef": {"id": "compute_avg_clustering_coef", "text": "Average Clustering Coefficient", "value": 1},
         "compute_assortativity_coef": {"id": "compute_assortativity_coef", "text": "Assortativity Coefficient", "value": 1},
         "display_betweenness_centrality_histogram": {"id": "display_betweenness_centrality_histogram", "text": "Betweenness Centrality", "value": 1},
-        "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closenness Centrality", "value": 1},
+        "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closeness Centrality", "value": 1},
         "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
         #"display_currentflow_histogram": {"id": "display_currentflow_histogram", "text": "Current Flow Betweenness Centrality", "value": 0},
@@ -252,7 +252,7 @@ def detect_cuda_and_install_cupy():
         logging.info("No internet connection. Cannot install CuPy.", extra={'user': 'SGT Logs'})
         return
 
-    # Handle MacOS (Apple Silicon) - CPU only
+    # Handle macOS (Apple Silicon) - CPU only
     if platform.system() == "Darwin" and platform.processor().startswith("arm"):
         logging.info("Detected MacOS with Apple Silicon (M1/M2/M3). Installing CPU-only version of CuPy.", extra={'user': 'SGT Logs'})
         # install_package('cupy')  # CPU-only version
