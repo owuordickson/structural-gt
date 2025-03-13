@@ -128,3 +128,4 @@ def print_progress(x, y):
     """
     print(str(x) + "%: " + y)
     logging.info(str(x) + "%: " + y, extra={'user': 'SGT Logs'})
+

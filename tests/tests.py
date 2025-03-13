@@ -35,5 +35,19 @@ def compute_betweenness_centrality(self):
 
 x = (10**-9)
 y = 1e-9
+# print(x == y)
 
-print(x == y)
+filename = 'file.qptiff'
+ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.qptiff']
+pattern_string = ' '.join(ALLOWED_IMG_EXTENSIONS)
+# print(pattern_string)
+
+
+import re
+for ext in ALLOWED_IMG_EXTENSIONS:
+    ext = ext.replace('*', '')
+    pattern = re.escape(ext) + r'$'
+    filename = re.sub(pattern, '', filename)
+
+# Example usage
+print(filename)

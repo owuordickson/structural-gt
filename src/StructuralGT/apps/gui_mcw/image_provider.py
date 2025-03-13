@@ -15,20 +15,13 @@ class ImageProvider(QQuickImageProvider):
         if len(self.img_controller.sgt_objs) > 0:
             sgt_obj = self.img_controller.get_current_obj()
             im_obj = sgt_obj.g_obj.imp
-            if option == "crop":
-                img_cv = im_obj.img
-                img = Image.fromarray(img_cv)
-            elif option == "un-crop":
-                im_obj.undo_cropping()
-                img_cv = im_obj.img
-                img = Image.fromarray(img_cv)
-            elif option == "binary":
-                im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
+            if option == "binary":
+                im_obj.img_mod = im_obj.process_img(im_obj.img_2d.copy())
                 im_obj.img_bin = im_obj.binarize_img(im_obj.img_mod.copy())
                 img_cv = im_obj.img_bin
                 img = Image.fromarray(img_cv)
             elif option == "processed":
-                im_obj.img_mod = im_obj.process_img(im_obj.img.copy())
+                im_obj.img_mod = im_obj.process_img(im_obj.img_2d.copy())
                 img_cv = im_obj.img_mod
                 img = Image.fromarray(img_cv)
             elif option == "graph":
@@ -39,7 +32,8 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     img = im_obj.img_net
             else:
-                img_cv = im_obj.img
+                # Original
+                img_cv = im_obj.img_3d
                 img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
             # Reset graph/image configs with selected values - reloads QML
@@ -57,17 +51,12 @@ class ImageProvider(QQuickImageProvider):
 
     def handle_change_image(self, cmd):
         # '0' - Original image
-        # '1' - Cropping image
         # '2' - Processing image
         # '3' - Binarize image
         # '4' - Extract graph
-        # '5' - Undo crop
         if cmd == 0:
             # Original QPixmap image for first time
             self.select_image("")
-        elif cmd == 1:
-            # cropped QPixmap image
-            self.select_image("crop")
         elif cmd == 2:
             # processed QPixmap image
             self.select_image("processed")
@@ -75,6 +64,3 @@ class ImageProvider(QQuickImageProvider):
             self.select_image("binary")
         elif cmd == 4:
             self.select_image("graph")
-        elif cmd == 5:
-            # Undo cropping (load original image)
-            self.select_image("un-crop")

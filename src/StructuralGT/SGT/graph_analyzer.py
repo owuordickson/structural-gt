@@ -14,7 +14,6 @@ import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
 from statistics import stdev, StatisticsError
-from matplotlib.backends.backend_pdf import PdfPages
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
 from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
@@ -589,22 +588,9 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def generate_pdf_output(self, gui_app: bool = False):
+    def generate_pdf_output(self):
         """
-        Generate and display results in a PDF file or list of Figures.
-
-        :param gui_app: is it Graphical User Interface/Terminal app?
-        :return:
-        """
-
-        if gui_app:
-            return self.generate_output()
-        else:
-            self.generate_pdf()
-
-    def generate_output(self):
-        """
-        Generate results as graphs and plots.
+        Generate results as graphs and plots which should be written in a PDF file.
         :return: list of results.
         """
 
@@ -618,11 +604,12 @@ class GraphAnalyzer(ProgressUpdate):
         out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = self.g_obj.display_skeletal_images()
+        img_2d = self.g_obj.imp.img_2d
+        fig = self.g_obj.display_skeletal_images(img_2d)
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = self.g_obj.draw_graph_network(a4_size=True)
+        fig = self.g_obj.draw_graph_network(img_2d, a4_size=True)
         if fig:
             out_figs.append(fig)
 
@@ -649,59 +636,6 @@ class GraphAnalyzer(ProgressUpdate):
         fig = self.display_info()
         out_figs.append(fig)
         return out_figs
-
-    def generate_pdf(self):
-        """
-        Generate results and write them to a PDF file.
-
-        :return:
-        """
-
-        opt_gtc = self.configs
-
-        filename, output_location = self.g_obj.imp.create_filenames()
-        pdf_filename = filename + "_SGT_results.pdf"
-        pdf_file = os.path.join(output_location, pdf_filename)
-
-        self.update_status([90, "Generating PDF GT Output..."])
-        with (PdfPages(pdf_file) as pdf):
-
-            # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-            fig = self.g_obj.imp.display_images()
-            pdf.savefig(fig)
-
-            # 2. plotting skeletal images
-            fig = self.g_obj.display_skeletal_images()
-            pdf.savefig(fig)  # causes PyQt5 to crash
-
-            # 3. plotting sub-graph network
-            fig = self.g_obj.draw_graph_network(a4_size=True)
-            if fig:
-                pdf.savefig(fig)
-
-            # 4. displaying all the GT calculations in Table  on entire page
-            fig, fig_wt = self.display_gt_results()
-            pdf.savefig(fig)
-            if fig_wt:
-                pdf.savefig(fig_wt)
-
-            # 5. displaying histograms
-            self.update_status([92, "Generating histograms..."])
-            figs = self.display_histograms()
-            for fig in figs:
-                pdf.savefig(fig)
-
-            # 6. displaying heatmaps
-            if opt_gtc["display_heatmaps"]["value"] == 1:
-                self.update_status([95, "Generating heatmaps..."])
-                figs = self.display_heatmaps()
-                for fig in figs:
-                    pdf.savefig(fig)
-
-            # 8. displaying run information
-            fig = self.display_info()
-            pdf.savefig(fig)
-        self.g_obj.save_files()
 
     def _update_histogram_data(self, data_dict: dict, arr_distribution: np.ndarray, hist_name: str, hist_label: str):
         val = round(np.average(arr_distribution), 5)
@@ -809,7 +743,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            # cf_title = r"Current-flow betweenness Centrality: $\sigma$="
+            # cf_title = r"Current-flow betweenness Centrality: <dollar-sign>\sigma<dollar-sign>="
             ax_1 = fig.add_subplot(2, 2, 1)
             GraphAnalyzer.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
             figs.append(fig)

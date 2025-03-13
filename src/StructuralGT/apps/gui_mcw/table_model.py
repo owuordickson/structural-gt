@@ -62,7 +62,7 @@ class TableModel(QAbstractTableModel):
         for key in new_keys:
             self.itemData.append([key])  # Store the key
             a_obj = analyze_objs[key]
-            img_cv = a_obj.g_obj.imp.img  # Assuming OpenCV image format
+            img_cv = a_obj.g_obj.imp.img_2d  # Assuming OpenCV image format
             img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
             pixmap = ImageQt.toqpixmap(img_pil)  # Convert to QPixmap
 

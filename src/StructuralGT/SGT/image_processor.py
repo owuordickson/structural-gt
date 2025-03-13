@@ -20,6 +20,7 @@ from skimage.filters.rank import autolevel, median
 from ..configs.config_loader import load_img_configs
 
 
+ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.qptiff']
 class ImageProcessor:
     """
     A class for processing and preparing microscopy images for graph theory analysis.
@@ -50,11 +51,15 @@ class ImageProcessor:
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
+        self.img_3d = ImageProcessor.convert_to_3d(self.img_raw.copy())
+        self.img_2d = ImageProcessor.convert_to_grayscale(self.img_raw.copy())
         self.props = self.get_img_props()
         if img is None:
-            self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
-        else:
-            self.img = img
+            # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
+            # self.img = self.img_2d  # self.img - NO LONGER USEFUL
+            self.scale_factor = 1
+        # else:
+            # self.img = img  # No longer useful
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
@@ -65,7 +70,7 @@ class ImageProcessor:
 
         :return: None
         """
-        self.img_mod = self.process_img(self.img.copy())
+        self.img_mod = self.process_img(self.img_2d.copy())
         self.img_bin = self.binarize_img(self.img_mod.copy())
 
         # Compute pixel dimension in nanometers
@@ -76,9 +81,33 @@ class ImageProcessor:
             px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width/self.scale_factor
 
+    def crop_img(self, x: float, y: float, width: float, height: float):
+        """
+        A function that crops images into a new box dimension.
+        :param x: left coordinate of cropping box.
+        :param y: top coordinate of cropping box.
+        :param width: width of cropping box.
+        :param height: height of cropping box.
+        """
+
+        # Verify bounds of cropping box
+        h, w = self.img_2d.shape
+        x = max(0.0, min(x, w))
+        y = max(0.0, min(y, h))
+        width = min(width, w - x)
+        height = min(height, h - y)
+
+        # Crop image
+        self.img_2d = self.img_2d[y:y + height, x:x + width]
+        self.img_3d = self.img_3d[y:y + height, x:x + width]
+
     def undo_cropping(self):
-        """"""
-        self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
+        """
+        A function that restores image to its original size.
+        """
+        # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
+        self.img_2d = ImageProcessor.convert_to_grayscale(self.img_raw.copy())
+        self.img_3d = ImageProcessor.convert_to_3d(self.img_raw.copy())
 
     def process_img(self, image: MatLike):
         """
@@ -258,11 +287,10 @@ class ImageProcessor:
         else:
             output_dir = self.output_dir
 
-        filename = re.sub('.png', '', filename)
-        filename = re.sub('.tif', '', filename)
-        filename = re.sub('.jpg', '', filename)
-        filename = re.sub('.jpeg', '', filename)
-
+        for ext in ALLOWED_IMG_EXTENSIONS:
+            ext = ext.replace('*', '')
+            pattern = re.escape(ext) + r'$'
+            filename = re.sub(pattern, '', filename)
         return filename, output_dir
 
     def get_config_info(self):
@@ -313,12 +341,13 @@ class ImageProcessor:
 
     def get_img_props(self):
         """
+        A method that retrieves image properties and stores them in a list-array.
 
-        Returns:
+        Returns: list of image properties
 
         """
         f_name, _ = self.create_filenames()
-        height, width = self.img_raw.shape
+        height, width = self.img_2d.shape
         props = [
             ["Name", f_name],
             ["Height x Width", f"({width} x {height}) pixels"],
@@ -334,7 +363,7 @@ class ImageProcessor:
         :return:
         """
         opt_img = self.configs
-        raw_img = self.img
+        raw_img = self.img_2d
         filtered_img = self.img_mod
         img_bin = self.img_bin
 
@@ -434,7 +463,7 @@ class ImageProcessor:
         # print(f"Do something with ImgDim={img_dim}.")
         if file == "":
             return None
-        img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         return img
 
     @staticmethod
@@ -462,6 +491,26 @@ class ImageProcessor:
             buf.seek(0)
             img = Image.open(buf)
             return img
+
+    @staticmethod
+    def convert_to_3d(img: MatLike):
+        """
+        A functions that converts an image into 2 dimensions (depth/slices x height x width)
+
+        :param img: OpenCV image.
+        """
+        img_3d = img
+        return img_3d
+
+    @staticmethod
+    def convert_to_grayscale(img: MatLike):
+        """
+        A function that converts a multi-layer or multichannel image to grayscale (only 2 dimensions: height x width).
+
+        :param img: OpenCV image.
+        """
+        img_2d = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        return img_2d
 
     @staticmethod
     def resize_img(size: int, image: MatLike):

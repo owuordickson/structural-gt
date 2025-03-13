@@ -3,9 +3,13 @@ import sys
 import logging
 import pickle
 import numpy as np
-from PIL import Image, ImageQt  # ImageQt for conversion
+from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
+
+if TYPE_CHECKING:
+    # False at run time, only for type checker
+    from _typeshed import SupportsWrite
 
 from .tree_model import TreeModel
 from .table_model import TableModel
@@ -13,8 +17,8 @@ from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ...SGT.image_processor import ImageProcessor
-from ...SGT.graph_extractor import GraphExtractor, device_in_use
+from ...SGT.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
 
 
@@ -167,7 +171,7 @@ class MainController(QObject):
             return False
         try:
             file_path = self.project_data["file_path"]
-            with open(file_path, 'wb') as project_file:
+            with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrites[bytes]]
                 pickle.dump(self.sgt_objs, project_file)
             return True
         except Exception as err:
@@ -236,7 +240,7 @@ class MainController(QObject):
     def get_sgt_version(self):
         """"""
         # Copyright (C) 2024, the Regents of the University of Michigan.
-        return f"StructuralGT v{__version__}, Computing: {device_in_use}"
+        return f"StructuralGT v{__version__}, Computing: {COMPUTING_DEVICE}"
 
     @Slot(result=str)
     def get_about_details(self):
@@ -258,7 +262,8 @@ class MainController(QObject):
     @Slot(str, result=str)
     def get_file_extensions(self, option):
         if option == "img":
-            return "Image files (*.jpg *.png *.jpeg *.tif *.qptiff)"
+            pattern_string = ' '.join(ALLOWED_IMG_EXTENSIONS)
+            return f"Image files ({pattern_string})"
         elif option == "proj":
             return "Project files (*.sgtproj)"
         else:
@@ -309,11 +314,9 @@ class MainController(QObject):
     def select_img_type(self, choice=None):
         """
             '0' - Original image
-            '1' - Cropped image
             '2' - Processed image
             '3' - Binary image
             '4' - Extracted graph
-            '5' - Undo crop
         Args:
             choice:
         Returns:
@@ -543,20 +546,11 @@ class MainController(QObject):
         """Crop image using PIL and save it."""
         try:
             sgt_obj = self.get_current_obj()
-            img = Image.fromarray(sgt_obj.g_obj.imp.img)
-            q_img = ImageQt.toqpixmap(img)
-
-            # Convert QImage to PIL Image
-            img_pil = ImageQt.fromqimage(q_img)
-
-            # Crop the selected area
-            img_pil_crop = img_pil.crop((x, y, x + width, y + height))
-            img_cv = ImageProcessor.load_img_from_pil(img_pil_crop)
-            sgt_obj.g_obj.imp.img, sgt_obj.g_obj.imp.scale_factor = ImageProcessor.resize_img(512, img_cv)
+            sgt_obj.g_obj.imp.crop_img(x, y, width, height)
             sgt_obj.g_obj.reset()
 
             # Emit signal to update UI with new image
-            self.select_img_type(1)
+            self.select_img_type(None)
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
@@ -566,7 +560,12 @@ class MainController(QObject):
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            self.select_img_type(5)
+            sgt_obj = self.get_current_obj()
+            sgt_obj.g_obj.imp.undo_cropping()
+            sgt_obj.g_obj.reset()
+
+            # Emit signal to update UI with new image
+            self.select_img_type(None)
             self.showUnCroppingToolSignal.emit(False)
 
     @Slot(bool)

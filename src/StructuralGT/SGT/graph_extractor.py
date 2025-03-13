@@ -23,7 +23,7 @@ from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
 
-device_in_use = "CPU"
+COMPUTING_DEVICE = "CPU"
 try:
     import sys
     logger = logging.getLogger("SGT App")
@@ -37,7 +37,7 @@ try:
     print(cuda_path)
     if cuda_path:
         xp = cp  # Use CuPy for GPU
-        device_in_use = "GPU"
+        COMPUTING_DEVICE = "GPU"
         logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
     else:
         logging.info("Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})
@@ -120,7 +120,8 @@ class GraphExtractor(ProgressUpdate):
                     ["Largest-to-Entire graph ratio", f"{round((connect_ratio * 100), 3) }%"]]
                 # draw graph network
                 self.update_status([90, "Drawing graph network..."])
-                graph_plt = self.draw_graph_network()
+                img_2d = self.imp.img_2d
+                graph_plt = self.draw_graph_network(img_2d)
                 self.imp.img_net = ImageProcessor.plot_to_img(graph_plt)
 
     def reset(self):
@@ -218,10 +219,11 @@ class GraphExtractor(ProgressUpdate):
                         self.nx_graph.remove_edge(s, e)
         return True
 
-    def draw_graph_network(self, a4_size: bool = False, blank: bool = False):
+    def draw_graph_network(self, raw_img, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
+        :param raw_img: image to be used to draw the network.
         :param a4_size: decision if to create an A4 size plot figure.
         :param blank: do not add image in the background, have a white background.
 
@@ -231,7 +233,6 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
         nx_graph = self.nx_graph
         nx_components = self.nx_components
-        raw_img = self.imp.img
 
         if blank:
             w, h = raw_img.shape
@@ -281,9 +282,11 @@ class GraphExtractor(ProgressUpdate):
 
         return fig
 
-    def display_skeletal_images(self):
+    def display_skeletal_images(self, image: MatLike):
         """
         Create plot figures of skeletal image and graph network image.
+
+        :param image: raw image to be super-imposed with graph.
 
         :return:
         """
@@ -291,7 +294,6 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
         nx_graph = self.nx_graph
         g_skel = self.graph_skeleton
-        img = self.imp.img
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
         ax_1 = fig.add_subplot(2, 1, 1)
@@ -305,7 +307,7 @@ class GraphExtractor(ProgressUpdate):
 
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
-        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, img, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
 
         nodes = nx_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
