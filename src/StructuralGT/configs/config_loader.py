@@ -255,7 +255,7 @@ def detect_cuda_and_install_cupy():
     # Handle MacOS (Apple Silicon) - CPU only
     if platform.system() == "Darwin" and platform.processor().startswith("arm"):
         logging.info("Detected MacOS with Apple Silicon (M1/M2/M3). Installing CPU-only version of CuPy.", extra={'user': 'SGT Logs'})
-        install_package('cupy')  # CPU-only version
+        # install_package('cupy')  # CPU-only version
         return
 
     # Handle CUDA systems (Linux/Windows with GPU)
