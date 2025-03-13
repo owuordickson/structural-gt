@@ -1,5 +1,6 @@
 import base64
 from PIL import Image, ImageQt  # Import ImageQt for conversion
+from PIL.ImageQt import QIODevice
 from PySide6.QtCore import QByteArray, QBuffer
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
@@ -72,9 +73,9 @@ class TableModel(QAbstractTableModel):
             # Convert QImage to base64 string
             byte_array = QByteArray()
             buffer = QBuffer(byte_array)
-            buffer.open(QBuffer.WriteOnly)
+            buffer.open(QIODevice.WriteOnly)
             q_image.save(buffer, "PNG")  # Save QImage to buffer as PNG
-            base64_data = base64.b64encode(byte_array).decode("utf-8")  # Encode to base64
+            base64_data = base64.b64encode(byte_array.data()).decode("utf-8")  # Encode to base64
 
             self.imageCache[key] = base64_data  # Store base64 string
             # self.imageCache[key] = pixmap  # Store QPixmap in cache

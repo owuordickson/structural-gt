@@ -6,7 +6,7 @@ from PySide6.QtQuick import QQuickImageProvider
 class ImageProvider(QQuickImageProvider):
 
     def __init__(self, img_controller):
-        super().__init__(QQuickImageProvider.Pixmap)
+        super().__init__(QQuickImageProvider.ImageType.Pixmap)
         self.pixmap = QPixmap()
         self.img_controller = img_controller
         self.img_controller.changeImageSignal.connect(self.handle_change_image)

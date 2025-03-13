@@ -57,6 +57,7 @@ class TreeItem:
 
 class TreeModel(QAbstractItemModel):
     """ QAbstractItemModel for displaying hierarchical data in QML. """
+    # Qt.ItemDataRole.UserRole
     IdRole = Qt.UserRole + 1
     TextRole = Qt.UserRole + 2
     ValueRole = Qt.UserRole + 3

@@ -171,7 +171,7 @@ class MainController(QObject):
             return False
         try:
             file_path = self.project_data["file_path"]
-            with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrites[bytes]]
+            with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrite[bytes]]
                 pickle.dump(self.sgt_objs, project_file)
             return True
         except Exception as err:
