@@ -23,6 +23,7 @@ from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
 
+device_in_use = "CPU"
 try:
     import sys
     logger = logging.getLogger("SGT App")
@@ -36,6 +37,7 @@ try:
     print(cuda_path)
     if cuda_path:
         xp = cp  # Use CuPy for GPU
+        device_in_use = "GPU"
         logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
     else:
         logging.info("Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})

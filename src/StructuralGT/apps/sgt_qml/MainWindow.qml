@@ -617,7 +617,7 @@ ApplicationWindow {
     QuickDialogs.FileDialog {
         id: imageFileDialog
         title: "Open file"
-        nameFilters: ["Image files (*.jpg *.tif *.png *.jpeg)"]
+        nameFilters: [mainController.get_file_extensions("img")]
         onAccepted: {
             //console.log("Selected file:", fileDialog.selectedFile)
             mainController.add_single_image(imageFileDialog.selectedFile);
@@ -628,7 +628,7 @@ ApplicationWindow {
     QuickDialogs.FileDialog {
         id: projectFileDialog
         title: "Open .sgtproj file"
-        nameFilters: ["Project files (*.sgtproj)"]
+        nameFilters: [mainController.get_file_extensions("proj")]
         onAccepted: {
             mainController.open_sgt_project(projectFileDialog.selectedFile);
         }

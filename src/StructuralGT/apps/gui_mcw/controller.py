@@ -14,7 +14,7 @@ from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
 from ...SGT.image_processor import ImageProcessor
-from ...SGT.graph_extractor import GraphExtractor
+from ...SGT.graph_extractor import GraphExtractor, device_in_use
 from ...SGT.graph_analyzer import GraphAnalyzer
 
 
@@ -236,7 +236,7 @@ class MainController(QObject):
     def get_sgt_version(self):
         """"""
         # Copyright (C) 2024, the Regents of the University of Michigan.
-        return f"StructuralGT v{__version__}"
+        return f"StructuralGT v{__version__}, Computing: {device_in_use}"
 
     @Slot(result=str)
     def get_about_details(self):
@@ -254,6 +254,15 @@ class MainController(QObject):
             "Copyright (C) 2018-2025, The Regents of the University of Michigan.<html><br/></html>"
             "License: GPL GNU v3<html><br/></html>")
         return about_app
+
+    @Slot(str, result=str)
+    def get_file_extensions(self, option):
+        if option == "img":
+            return "Image files (*.jpg *.png *.jpeg *.tif *.qptiff)"
+        elif option == "proj":
+            return "Project files (*.sgtproj)"
+        else:
+            return ""
 
     @Slot(result=str)
     def get_pixmap(self):
