@@ -13,8 +13,6 @@ TreeView {
     }
 
     property int idRole: (Qt.UserRole + 1)
-    property int textRole: (Qt.UserRole + 2)
-    property int valueRole: (Qt.UserRole + 3)
 
     delegate: Item {
         required property TreeView treeView

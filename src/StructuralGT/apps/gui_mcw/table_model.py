@@ -6,7 +6,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 # Define a simple table model
 class TableModel(QAbstractTableModel):
-    SelectedRole = Qt.UserRole + 10
+    SelectedRole = Qt.ItemDataRole.UserRole + 10
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -20,12 +20,12 @@ class TableModel(QAbstractTableModel):
     def columnCount(self, parent=QModelIndex()):
         return len(self.itemData[0]) if self.itemData else 0
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()):
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self.itemData[index.row()][index.column()]
-        elif role == Qt.DecorationRole:
+        elif role == Qt.ItemDataRole.DecorationRole:
             if len(self.imageCache) <= 0:
                 return None
             image_name = self.itemData[index.row()][index.column()]
@@ -85,12 +85,12 @@ class TableModel(QAbstractTableModel):
 
     def roleNames(self):
         return {
-            Qt.DisplayRole: b"text",
-            Qt.DecorationRole: b"thumbnail",
+            Qt.ItemDataRole.DisplayRole: b"text",
+            Qt.ItemDataRole.DecorationRole: b"thumbnail",
             self.SelectedRole: b"selected",
         }
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+         if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
             return f"Column {section + 1}"
          return super().headerData(section, orientation, role)

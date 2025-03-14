@@ -57,10 +57,10 @@ class TreeItem:
 
 class TreeModel(QAbstractItemModel):
     """ QAbstractItemModel for displaying hierarchical data in QML. """
-    # Qt.ItemDataRole.UserRole
-    IdRole = Qt.UserRole + 1
-    TextRole = Qt.UserRole + 2
-    ValueRole = Qt.UserRole + 3
+    # Qt.UserRole
+    IdRole = Qt.ItemDataRole.UserRole + 1
+    TextRole = Qt.ItemDataRole.UserRole + 2
+    ValueRole = Qt.ItemDataRole.UserRole + 3
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -86,7 +86,7 @@ class TreeModel(QAbstractItemModel):
         """ Returns the number of columns (fixed at 3). """
         return 1
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """ Returns the data to be displayed. """
         if not index.isValid():
             return None
@@ -101,7 +101,8 @@ class TreeModel(QAbstractItemModel):
             return item.data(2)  # value
         return None
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+        print(f"Python-side: {self.IdRole}, {Qt.ItemDataRole.EditRole}")
         if not index.isValid():
             return False
         item = index.internalPointer()

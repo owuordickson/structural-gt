@@ -2,16 +2,16 @@ from PySide6.QtCore import Qt, QAbstractListModel, QModelIndex, QPersistentModel
 
 # Define a simple QAbstractListModel
 class CheckBoxModel(QAbstractListModel):
-    IdRole = Qt.UserRole + 1
-    TypeRole = Qt.UserRole + 2
-    TextRole = Qt.UserRole + 3
-    ValueRole = Qt.UserRole + 4
-    DataIdRole = Qt.UserRole + 5
-    DataValueRole = Qt.UserRole + 6
-    MinValueRole = Qt.UserRole + 7
-    MaxValueRole = Qt.UserRole + 8
-    StepSizeRole = Qt.UserRole + 9
-    VisibleRole = Qt.UserRole + 10
+    IdRole = Qt.ItemDataRole.UserRole + 1
+    TypeRole = Qt.ItemDataRole.UserRole + 2
+    TextRole = Qt.ItemDataRole.UserRole + 3
+    ValueRole = Qt.ItemDataRole.UserRole + 4
+    DataIdRole = Qt.ItemDataRole.UserRole + 5
+    DataValueRole = Qt.ItemDataRole.UserRole + 6
+    MinValueRole = Qt.ItemDataRole.UserRole + 7
+    MaxValueRole = Qt.ItemDataRole.UserRole + 8
+    StepSizeRole = Qt.ItemDataRole.UserRole + 9
+    VisibleRole = Qt.ItemDataRole.UserRole + 10
 
     def __init__(self, data, parent=None):
         super().__init__(parent)

@@ -13,7 +13,9 @@ import numpy as np
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
+from cv2.typing import MatLike
 from statistics import stdev, StatisticsError
+
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
 from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
@@ -740,16 +742,8 @@ class GraphAnalyzer(ProgressUpdate):
         figs.append(fig)
 
         # Currentflow
-        """
-        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1):
-            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            # cf_title = r"Current-flow betweenness Centrality: <dollar-sign>\sigma<dollar-sign>="
-            ax_1 = fig.add_subplot(2, 2, 1)
-            GraphAnalyzer.plot_histogram(ax_1, cf_title, cf_distribution, 'Betweenness value')
-            figs.append(fig)
-        """
 
-        # percolation
+        # Percolation
         if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_percolation_histogram"]["value"] == 1):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             pc_title = r"Percolation Centrality: $\sigma$="
@@ -803,6 +797,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         opt_gte = self.g_obj.configs
         opt_gtc = self.configs
+        img_2d = self.g_obj.imp.img_2d
 
         wt_type = self.g_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
@@ -826,46 +821,46 @@ class GraphAnalyzer(ProgressUpdate):
         figs = []
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = self.plot_heatmap(w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["compute_avg_clustering_coef"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(w_bet_distribution,
+            fig = self.plot_heatmap(img_2d, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = self.plot_heatmap(w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(w_eig_distribution,
+            fig = self.plot_heatmap(img_2d, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
 
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            fig = self.plot_heatmap(img_2d, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(w_per_distribution,
+            fig = self.plot_heatmap(img_2d, w_per_distribution,
                                     f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
@@ -900,10 +895,11 @@ class GraphAnalyzer(ProgressUpdate):
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
 
-    def plot_heatmap(self, distribution: list, title: str, size: float, line_width: float):
+    def plot_heatmap(self, image: MatLike , distribution: list, title: str, size: float, line_width: float):
         """
         Create a heatmap from a distribution.
 
+        :param image: image to plot.
         :param distribution: dataset to be plotted.
         :param title: title of the plot figure.
         :param size: size of the scatter items.
@@ -912,7 +908,6 @@ class GraphAnalyzer(ProgressUpdate):
         """
         nx_graph = self.g_obj.nx_graph
         opt_gte = self.g_obj.configs
-        img = self.g_obj.imp.img
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
@@ -920,7 +915,7 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title(title, fontdict=font_1)
         ax.set_axis_off()
 
-        ax.imshow(img, cmap='gray')
+        ax.imshow(image, cmap='gray')
         nodes = nx_graph.nodes()
         gn = np.array([nodes[i]['o'] for i in nodes])
         c_set = ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
