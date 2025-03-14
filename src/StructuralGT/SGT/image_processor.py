@@ -7,10 +7,10 @@ Processes of an image by applying filters to it and converting it to binary vers
 import re
 import os
 import io
-
-import PIL
 import cv2
+import pydicom
 import numpy as np
+import nibabel as nib
 import matplotlib.pyplot as plt
 from PIL import Image
 from cv2.typing import MatLike
@@ -453,7 +453,7 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_file(file: str):
+    def load_img_from_file_v1(file: str):
         """
         Read image and save it as an OpenCV object.
 
@@ -467,7 +467,58 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_pil(img_pil: MatLike|PIL.Image.Image):
+    def load_img_from_file(file: str):
+        """
+        Read image and save it as an OpenCV object.
+
+        :param file: file path.
+        :return:
+        """
+        ext = os.path.splitext(file)[1].lower()
+
+        try:
+            if ext in ['.png', '.jpg', '.jpeg']:
+                # Load standard 2D images with OpenCV
+                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+                if image is None:
+                    raise ValueError(f"Failed to load {file}")
+                return image
+            elif ext in ['.tif', '.tiff']:
+                # Try load multi-page TIFF using PIL
+                img = Image.open(file)
+                images = []
+                while True:
+                    images.append(np.array(img))
+                    try:
+                        img.seek(img.tell() + 1)
+                    except EOFError:
+                        break
+                if len(images) > 1:
+                    return np.stack(images, axis=0)
+                else:
+                    return images[0]
+            elif ext in ['.nii', '.nii.gz']:
+                # Load NIfTI image using nibabel
+                img_nib = nib.load(file)
+                data = img_nib.get_fdata()
+                # Normalize and convert to uint8 for OpenCV compatibility
+                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+                return data
+            elif ext == '.dcm':
+                # Load DICOM image using pydicom
+                dcm = pydicom.dcmread(file)
+                data = dcm.pixel_array
+                # Normalize and convert to uint8 if needed
+                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+                return data
+            else:
+                raise ValueError(f"Unsupported file format: {ext}")
+        except Exception as err:
+            print(f"Error loading {file}: {err}")
+            return None
+
+    @staticmethod
+    def load_img_from_pil(img_pil: MatLike|Image.Image):
         """
         Read image from PIL.
 
