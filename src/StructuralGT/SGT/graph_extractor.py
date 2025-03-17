@@ -23,7 +23,7 @@ from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
 
-# WE ARE USING CPU BCOZ CuPy generates some errors - yet to be resolved.
+# WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
 try:
     import sys
