@@ -56,12 +56,6 @@ class GraphSkeleton:
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
         skeleton = skeletonize(img_bin)
-        skel_int = 1 * skeleton
-        b_points = GraphSkeleton.branched_points(skel_int)
-        e_points = GraphSkeleton.end_points(skel_int)
-
-        bp_coord_y, bp_coord_x = np.where(b_points == 1)
-        ep_coord_y, ep_coord_x = np.where(e_points == 1)
 
         # calling the three functions for merging nodes, pruning edges, and removing disconnected segments
         if self.configs["merge_nearby_nodes"]["value"] == 1:
@@ -71,17 +65,16 @@ class GraphSkeleton:
             skeleton = remove_small_objects(skeleton, int(self.configs["remove_disconnected_segments"]["items"][0]["value"]) , connectivity=2)
 
         skel_int = 1 * skeleton
-
         if self.configs["prune_dangling_edges"]["value"] == 1:
             b_points_1 = GraphSkeleton.branched_points(skel_int)
             skeleton = GraphSkeleton.pruning(skeleton, 500, b_points_1)
 
+        b_points = GraphSkeleton.branched_points(skel_int)
+        e_points = GraphSkeleton.end_points(skel_int)
+        self.bp_coord_y, self.bp_coord_x = np.where(b_points == 1)
+        self.ep_coord_y, self.ep_coord_x = np.where(e_points == 1)
         self.skeleton = skeleton
-        self.skel_int = skel_int
-        self.bp_coord_x = bp_coord_x
-        self.bp_coord_y = bp_coord_y
-        self.ep_coord_x = ep_coord_x
-        self.ep_coord_y = ep_coord_y
+        self.skel_int = 1 * skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
