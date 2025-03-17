@@ -100,6 +100,7 @@ class GraphSkeleton:
         # Idea copied from 'sknw' library
         pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
         epsilon = 0.001  # to avoid division by zero
+        pix_length += epsilon
         # wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
@@ -118,8 +119,11 @@ class GraphSkeleton:
             wt = pix_width * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('AREA'):
             wt = math.pi * (pix_width * pixel_dim * 0.5) ** 2
-        elif weight_options.get(weight_type) == weight_options.get('LEN'):
+        elif weight_options.get(weight_type) == weight_options.get('LEN') or weight_options.get(weight_type) == weight_options.get('INV_LEN'):
             wt = pix_length * pixel_dim
+            if weight_options.get(weight_type) == weight_options.get('INV_LEN'):
+                wt = wt + epsilon if wt == 0 else wt
+                wt = wt ** -1
         elif weight_options.get(weight_type) == weight_options.get('ANGLE'):
             """
             Edge angle centrality" in graph theory refers to a measure of an edge's importance within a network, 
@@ -133,41 +137,20 @@ class GraphSkeleton:
             """
             sym_angle = np.minimum(pix_angle, (360 - pix_angle))
             wt = (sym_angle + epsilon) ** -1
-        elif weight_options.get(weight_type) == weight_options.get('INV_LEN'):
-            calc = (pix_length * pixel_dim)
-            calc = calc + epsilon if calc == 0 else calc
-            wt = calc ** -1
-        elif weight_options.get(weight_type) == weight_options.get('VAR_CON'):
+        elif weight_options.get(weight_type) == weight_options.get('FIX_CON') or weight_options.get(weight_type) == weight_options.get('VAR_CON') or weight_options.get(weight_type) == weight_options.get('RES'):
             # Varies with width
-            # if pix_width > 0:
             length = pix_length * pixel_dim
             area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+            if weight_options.get(weight_type) == weight_options.get('FIX_CON'):
+                area = math.pi * (1 * pixel_dim) ** 2
             num = length * rho_dim
             area = area + epsilon if area == 0 else area
             num =  num + epsilon if num == 0 else num
-            wt = (num / area) ** -1  # Conductance is inverse of resistance
-        elif weight_options.get(weight_type) == weight_options.get('FIX_CON'):
-            # Fixed width
-            # if pix_length > 0:
-            length = pix_length * pixel_dim
-            area = math.pi * (1 * pixel_dim) ** 2
-            num = length * rho_dim
-            area = area + epsilon if area == 0 else area
-            num = num + epsilon if num == 0 else num
-            wt = (num / area) ** -1
-        elif weight_options.get(weight_type) == weight_options.get('RES'):
-            # if pix_width > 0:
-            length = pix_length * pixel_dim
-            area = math.pi * (pix_width * pixel_dim * 0.5) ** 2
-            num = length * rho_dim
-            area = area + epsilon if area == 0 else area
-            num = num + epsilon if num == 0 else num
-            wt = (num / area)
+            wt = (num / area)  # Resistance
+            if weight_options.get(weight_type) == weight_options.get('VAR_CON') or weight_options.get(weight_type) == weight_options.get('FIX_CON'):
+                wt = wt ** -1  # Conductance is inverse of resistance
         else:
             raise TypeError('Invalid weight type')
-
-        # returns the width in pixels; the weight which is the width normalized by 10
-        # print(f"{pix_width > epsilon}")
         return pix_width, pix_angle, wt
 
     def assign_weights_by_width(self, ge):
@@ -254,204 +237,72 @@ class GraphSkeleton:
     @staticmethod
     def branched_points(skeleton):
 
-        # defining branch shapes to locate nodes
-        # over-explained this section a bit
-        x_branch_0 = np.array([[1, 0, 1],
-                               [0, 1, 0],
-                               [1, 0, 1]])
+        # Define base patterns
+        base_patterns = [
+            [[1, 0, 1], [0, 1, 0], [1, 0, 1]],  # x_branch
+            [[0, 1, 0], [1, 1, 1], [0, 1, 0]],  # x_branch variant
+            [[0, 0, 0], [1, 1, 1], [0, 1, 0]],  # t_branch
+            [[1, 0, 1], [0, 1, 0], [1, 0, 0]],  # t_branch variant
+            [[1, 0, 1], [0, 1, 0], [0, 1, 0]],  # y_branch
+            [[0, 1, 0], [1, 1, 0], [0, 0, 1]],  # y_branch variant
+            [[0, 1, 0], [1, 1, 0], [1, 0, 1]],  # off_branch
+            [[0, 1, 1], [0, 1, 1], [1, 0, 0]],  # clust_branch
+            [[1, 1, 1], [0, 1, 1], [1, 0, 0]],  # clust_branch variant
+            [[1, 1, 1], [0, 1, 1], [1, 0, 1]],  # clust_branch variant
+            [[1, 0, 0], [1, 1, 1], [0, 1, 0]]  # cross_branch
+        ]
 
-        x_branch_1 = np.array([[0, 1, 0],
-                               [1, 1, 1],
-                               [0, 1, 0]])
+        # Generate all transformations
+        all_patterns = []
+        for pattern in base_patterns:
+            all_patterns.extend(GraphSkeleton.generate_transformations(np.array(pattern)))
 
-        t_branch_0 = np.array([[0, 0, 0],
-                               [1, 1, 1],
-                               [0, 1, 0]])
+        # Remove duplicate patterns (if any)
+        unique_patterns = []
+        for pattern in all_patterns:
+            if not any(np.array_equal(pattern, existing) for existing in unique_patterns):
+                unique_patterns.append(pattern)
 
+        # Apply binary hit-or-miss for all unique patterns
+        br = sum(ndimage.binary_hit_or_miss(skeleton, pattern) for pattern in unique_patterns)
+        return br
+
+    @staticmethod
+    def generate_transformations(pattern):
+        """Generate common transformations for a pattern."""
         # flipud is flipping them up-down
         # t_branch_2 is t_branch_0 transposed, which permutes it in all directions (might not be using that word right)
         # t_branch_3 is t_branch_2 flipped left right
         # those 3 functions are used to create all possible branches with just a few starting arrays below
-
-        t_branch_1 = np.flipud(t_branch_0)
-        t_branch_2 = t_branch_0.T
-        t_branch_3 = np.fliplr(t_branch_2)
-
-        t_branch_4 = np.array([[1, 0, 1],
-                               [0, 1, 0],
-                               [1, 0, 0]])
-        t_branch_5 = np.flipud(t_branch_4)
-        t_branch_6 = np.fliplr(t_branch_4)
-        t_branch_7 = np.fliplr(t_branch_5)
-
-        y_branch_0 = np.array([[1, 0, 1],
-                               [0, 1, 0],
-                               [0, 1, 0]])
-
-        y_branch_1 = np.flipud(y_branch_0)
-        y_branch_2 = y_branch_0.T
-        y_branch_3 = np.fliplr(y_branch_2)
-
-        y_branch_4 = np.array([[0, 1, 0],
-                               [1, 1, 0],
-                               [0, 0, 1]])
-
-        y_branch_5 = np.flipud(y_branch_4)
-        y_branch_6 = np.fliplr(y_branch_4)
-        y_branch_7 = np.fliplr(y_branch_5)
-
-        off_branch_0 = np.array([[0, 1, 0],
-                                 [1, 1, 0],
-                                 [1, 0, 1]])
-
-        off_branch_1 = np.flipud(off_branch_0)
-        off_branch_2 = np.fliplr(off_branch_0)
-        off_branch_3 = np.fliplr(off_branch_1)
-        off_branch_4 = off_branch_0.T
-        off_branch_5 = np.flipud(off_branch_4)
-        off_branch_6 = np.fliplr(off_branch_4)
-        off_branch_7 = np.fliplr(off_branch_5)
-
-        clust_branch_0 = np.array([[0, 1, 1],
-                                   [0, 1, 1],
-                                   [1, 0, 0]])
-
-        clust_branch_1 = np.flipud(clust_branch_0)
-        clust_branch_2 = np.fliplr(clust_branch_0)
-        clust_branch_3 = np.fliplr(clust_branch_1)
-
-        clust_branch_4 = np.array([[1, 1, 1],
-                                   [0, 1, 1],
-                                   [1, 0, 0]])
-
-        clust_branch_5 = np.flipud(clust_branch_4)
-        clust_branch_6 = np.fliplr(clust_branch_4)
-        clust_branch_7 = np.fliplr(clust_branch_5)
-
-        clust_branch_8 = np.array([[1, 1, 1],
-                                   [0, 1, 1],
-                                   [1, 0, 1]])
-
-        clust_branch_9 = np.flipud(clust_branch_8)
-        clust_branch_10 = np.fliplr(clust_branch_8)
-        clust_branch_11 = np.fliplr(clust_branch_9)
-
-        cross_branch_0 = np.array([[1, 0, 0],
-                                   [1, 1, 1],
-                                   [0, 1, 0]])
-
-        cross_branch_1 = np.flipud(cross_branch_0)
-        cross_branch_2 = np.fliplr(cross_branch_0)
-        cross_branch_3 = np.fliplr(cross_branch_1)
-        cross_branch_4 = cross_branch_0.T
-        cross_branch_5 = np.flipud(cross_branch_4)
-        cross_branch_6 = np.fliplr(cross_branch_4)
-        cross_branch_7 = np.fliplr(cross_branch_5)
-
-        # finding the location of all the branch points based on the arrays above
-        br1 = ndimage.binary_hit_or_miss(skeleton, x_branch_0)
-        br2 = ndimage.binary_hit_or_miss(skeleton, x_branch_1)
-        br3 = ndimage.binary_hit_or_miss(skeleton, t_branch_0)
-        br4 = ndimage.binary_hit_or_miss(skeleton, t_branch_1)
-        br5 = ndimage.binary_hit_or_miss(skeleton, t_branch_2)
-        br6 = ndimage.binary_hit_or_miss(skeleton, t_branch_3)
-        br7 = ndimage.binary_hit_or_miss(skeleton, t_branch_4)
-        br8 = ndimage.binary_hit_or_miss(skeleton, t_branch_5)
-        br9 = ndimage.binary_hit_or_miss(skeleton, t_branch_6)
-        br10 = ndimage.binary_hit_or_miss(skeleton, t_branch_7)
-        br11 = ndimage.binary_hit_or_miss(skeleton, y_branch_0)
-        br12 = ndimage.binary_hit_or_miss(skeleton, y_branch_1)
-        br13 = ndimage.binary_hit_or_miss(skeleton, y_branch_2)
-        br14 = ndimage.binary_hit_or_miss(skeleton, y_branch_3)
-        br15 = ndimage.binary_hit_or_miss(skeleton, y_branch_4)
-        br16 = ndimage.binary_hit_or_miss(skeleton, y_branch_5)
-        br17 = ndimage.binary_hit_or_miss(skeleton, y_branch_6)
-        br18 = ndimage.binary_hit_or_miss(skeleton, y_branch_7)
-        br19 = ndimage.binary_hit_or_miss(skeleton, off_branch_0)
-        br20 = ndimage.binary_hit_or_miss(skeleton, off_branch_1)
-        br21 = ndimage.binary_hit_or_miss(skeleton, off_branch_2)
-        br22 = ndimage.binary_hit_or_miss(skeleton, off_branch_3)
-        br23 = ndimage.binary_hit_or_miss(skeleton, off_branch_4)
-        br24 = ndimage.binary_hit_or_miss(skeleton, off_branch_5)
-        br25 = ndimage.binary_hit_or_miss(skeleton, off_branch_6)
-        br26 = ndimage.binary_hit_or_miss(skeleton, off_branch_7)
-        br27 = ndimage.binary_hit_or_miss(skeleton, clust_branch_0)
-        br28 = ndimage.binary_hit_or_miss(skeleton, clust_branch_1)
-        br29 = ndimage.binary_hit_or_miss(skeleton, clust_branch_2)
-        br30 = ndimage.binary_hit_or_miss(skeleton, clust_branch_3)
-        br31 = ndimage.binary_hit_or_miss(skeleton, clust_branch_4)
-        br32 = ndimage.binary_hit_or_miss(skeleton, clust_branch_5)
-        br33 = ndimage.binary_hit_or_miss(skeleton, clust_branch_6)
-        br34 = ndimage.binary_hit_or_miss(skeleton, clust_branch_7)
-        br35 = ndimage.binary_hit_or_miss(skeleton, clust_branch_8)
-        br36 = ndimage.binary_hit_or_miss(skeleton, clust_branch_9)
-        br37 = ndimage.binary_hit_or_miss(skeleton, clust_branch_10)
-        br38 = ndimage.binary_hit_or_miss(skeleton, clust_branch_11)
-        br39 = ndimage.binary_hit_or_miss(skeleton, cross_branch_0)
-        br40 = ndimage.binary_hit_or_miss(skeleton, cross_branch_1)
-        br41 = ndimage.binary_hit_or_miss(skeleton, cross_branch_2)
-        br42 = ndimage.binary_hit_or_miss(skeleton, cross_branch_3)
-        br43 = ndimage.binary_hit_or_miss(skeleton, cross_branch_4)
-        br44 = ndimage.binary_hit_or_miss(skeleton, cross_branch_5)
-        br45 = ndimage.binary_hit_or_miss(skeleton, cross_branch_6)
-        br46 = ndimage.binary_hit_or_miss(skeleton, cross_branch_7)
-
-        br = (br1 + br2 + br3 + br4 + br5 + br6 + br7 + br8 + br9 + br10 + br11 + br12 + br13 + br14 + br15 + br16 +
-              br17 + br18 + br19 + br20 + br21 + br22 + br23 + br24 + br25 + br26 + br27 + br28 + br29 + br30 + br31 +
-              br32 + br33 + br34 + br35 + br36 + br37 + br38 + br39 + br40 + br41 + br42 + br43 + br44 + br45 + br46)
-        return br
+        return [
+            pattern,
+            np.flipud(pattern),
+            np.fliplr(pattern),
+            np.fliplr(np.flipud(pattern)),
+            pattern.T,
+            np.flipud(pattern.T),
+            np.fliplr(pattern.T),
+            np.fliplr(np.flipud(pattern.T))
+        ]
 
     @staticmethod
     def end_points(skeleton):
 
-        # defining different types of endpoints
-        end_point_1 = np.array([[0, 0, 0],
-                                [0, 1, 0],
-                                [0, 1, 0]])
+        # List of endpoint patterns
+        endpoints = [
+            [[0, 0, 0], [0, 1, 0], [0, 1, 0]],
+            [[0, 0, 0], [0, 1, 0], [0, 0, 1]],
+            [[0, 0, 0], [0, 1, 1], [0, 0, 0]],
+            [[0, 0, 1], [0, 1, 0], [0, 0, 0]],
+            [[0, 1, 0], [0, 1, 0], [0, 0, 0]],
+            [[1, 0, 0], [0, 1, 0], [0, 0, 0]],
+            [[0, 0, 0], [1, 1, 0], [0, 0, 0]],
+            [[0, 0, 0], [0, 1, 0], [1, 0, 0]],
+            [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
+        ]
 
-        end_point_2 = np.array([[0, 0, 0],
-                                [0, 1, 0],
-                                [0, 0, 1]])
-
-        end_point_3 = np.array([[0, 0, 0],
-                                [0, 1, 1],
-                                [0, 0, 0]])
-
-        end_point_4 = np.array([[0, 0, 1],
-                                [0, 1, 0],
-                                [0, 0, 0]])
-
-        end_point_5 = np.array([[0, 1, 0],
-                                [0, 1, 0],
-                                [0, 0, 0]])
-
-        end_point_6 = np.array([[1, 0, 0],
-                                [0, 1, 0],
-                                [0, 0, 0]])
-
-        end_point_7 = np.array([[0, 0, 0],
-                                [1, 1, 0],
-                                [0, 0, 0]])
-
-        end_point_8 = np.array([[0, 0, 0],
-                                [0, 1, 0],
-                                [1, 0, 0]])
-
-        end_point_9 = np.array([[0, 0, 0],
-                                [0, 1, 0],
-                                [0, 0, 0]])
-
-        # finding all the locations of the endpoints
-        ep1 = ndimage.binary_hit_or_miss(skeleton, end_point_1)
-        ep2 = ndimage.binary_hit_or_miss(skeleton, end_point_2)
-        ep3 = ndimage.binary_hit_or_miss(skeleton, end_point_3)
-        ep4 = ndimage.binary_hit_or_miss(skeleton, end_point_4)
-        ep5 = ndimage.binary_hit_or_miss(skeleton, end_point_5)
-        ep6 = ndimage.binary_hit_or_miss(skeleton, end_point_6)
-        ep7 = ndimage.binary_hit_or_miss(skeleton, end_point_7)
-        ep8 = ndimage.binary_hit_or_miss(skeleton, end_point_8)
-        ep9 = ndimage.binary_hit_or_miss(skeleton, end_point_9)
-        ep = ep1 + ep2 + ep3 + ep4 + ep5 + ep6 + ep7 + ep8 + ep9
+        # Apply binary hit-or-miss for each pattern and sum results
+        ep = sum(ndimage.binary_hit_or_miss(skeleton, np.array(pattern)) for pattern in endpoints)
         return ep
 
     @staticmethod
