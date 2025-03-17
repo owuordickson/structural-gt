@@ -23,6 +23,7 @@ from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
 
+# WE ARE USING CPU BCOZ CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
 try:
     import sys
@@ -36,7 +37,7 @@ try:
     cuda_path = os.getenv("CUDA_PATH")
     print(cuda_path)
     if cuda_path:
-        xp = cp  # Use CuPy for GPU
+        xp = np  # Use CuPy for GPU
         COMPUTING_DEVICE = "GPU"
         logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
     else:
