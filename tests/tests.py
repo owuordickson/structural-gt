@@ -51,3 +51,19 @@ for ext in ALLOWED_IMG_EXTENSIONS:
 
 # Example usage
 print(filename)
+
+
+import os
+import cv2
+import numpy as np
+from PIL import Image
+
+img_dir_path = "../datasets/at3_10/"
+files = os.listdir(img_dir_path)
+files = sorted(files)
+
+# Open all images
+images = [Image.open(os.path.join(str(img_dir_path), img)) for img in files]
+
+# Save as a multi-page TIFF
+images[0].save("combined_stack.tiff", save_all=True, append_images=images[1:])
