@@ -94,8 +94,8 @@ class ImageProcessor:
             "back": back,
             "top": top,
             "bottom": bottom,
-            "side_left": side_left,
-            "side_right": side_right
+            "side-left": side_left,
+            "side-right": side_right
         }
 
         # Create figure
@@ -663,7 +663,7 @@ class ImageProcessor:
                 return False, "Multi"
 
         if len(img.shape) == 4:  # (Depth, Height, Width, Channels)
-            return True, "Multi"
+            return True, "Multi + Alpha"
 
     @staticmethod
     def resize_img(size: int, image: MatLike):
