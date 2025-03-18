@@ -20,7 +20,7 @@ from skimage.filters.rank import autolevel, median
 from ..configs.config_loader import load_img_configs
 
 
-ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff']
+ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
 class ImageProcessor:
     """
     A class for processing and preparing microscopy images for graph theory analysis.

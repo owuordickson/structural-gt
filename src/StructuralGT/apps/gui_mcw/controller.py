@@ -609,7 +609,7 @@ class MainController(QObject):
         files = os.listdir(img_dir_path)
         files = sorted(files)
         for a_file in files:
-            if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
+            if a_file.endswith(ALLOWED_IMG_EXTENSIONS):
                 img_path = os.path.join(str(img_dir_path), a_file)
                 self.create_sgt_object(img_path)
 
