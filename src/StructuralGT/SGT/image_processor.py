@@ -602,7 +602,7 @@ class ImageProcessor:
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
-            logging.exception(f"Error loading {file}", err, extra={'user': 'SGT Logs'})
+            logging.info(f"Error loading {file}: {err}", extra={'user': 'SGT Logs'})
             return None
 
     @staticmethod

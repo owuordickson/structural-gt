@@ -161,6 +161,16 @@ class MainController(QObject):
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
+    def delete_sgt_object(self, index=None):
+        """
+        Delete SGT Obj stored at specified index (if not specified, get the current index).
+        """
+        del_index = index if index is not None else self.current_obj_index
+        if 0 <= del_index < len(self.sgt_objs):  # Check if index exists
+            keys_list = list(self.sgt_objs.keys())
+            key_at_del_index = keys_list[self.current_obj_index]
+            del self.sgt_objs[key_at_del_index]  # Delete the object at index
+
     def save_project_data(self):
         """
         A handler function that handles saving project data.
@@ -333,6 +343,7 @@ class MainController(QObject):
             self.imgListTableModel.set_selected(self.current_obj_index)
             self.select_img_type()
         except Exception as err:
+            self.delete_sgt_object()
             self.current_obj_index = 0
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
