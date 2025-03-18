@@ -46,10 +46,24 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent // Make the MouseArea cover the entire Rectangle
+
+                    // Left-click to select item
                     onClicked: {
+                        console.log("Clicked!");
                         mainController.load_image(row);
                         mainController.set_selected_img(model.index);
                     }
+
+                    // Right-click to show context menu
+                    /*onPressed: {
+                        console.log("Pressed");
+                        if (mouse.button === Qt.RightButton) {
+                            contextMenu.x = mouse.x;
+                            contextMenu.y = mouse.y;
+                            contextMenu.itemIndex = model.index;  // Store index to delete later
+                            contextMenu.open();
+                        }
+                    }*/
                 }
 
                 RowLayout {
@@ -81,6 +95,22 @@ Item {
 
         }
 
+    }
+
+    // Context Menu for deleting an item
+    Menu {
+        id: contextMenu
+        property int itemIndex: -1  // Stores the selected item's index
+
+        MenuItem {
+            text: "Delete"
+            onTriggered: {
+                if (contextMenu.itemIndex !== -1) {
+                    // mainController.delete_image(contextMenu.itemIndex)
+                    console.log("Delete item at: " + contextMenu.itemIndex);
+                }
+            }
+        }
     }
 
     Connections {
