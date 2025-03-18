@@ -7,8 +7,10 @@ Processes of an image by applying filters to it and converting it to binary vers
 import re
 import os
 import io
+import sys
 import cv2
 import pydicom
+import logging
 import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
@@ -18,6 +20,8 @@ from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
 from ..configs.config_loader import load_img_configs
+logger = logging.getLogger("SGT App")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
@@ -28,17 +32,15 @@ class ImageProcessor:
     Args:
         img_path (str): input image path.
         out_dir (str): directory path for storing results.
-        img (MatLike): processed image.
     """
 
-    def __init__(self, img_path, out_dir, img=None):
+    def __init__(self, img_path, out_dir):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
         Args:
             img_path (str): input image path.
             out_dir (str): directory path for storing results.
-            img (MatLike): processed image.
 
         >>>
         >>> i_path = "path/to/image"
@@ -51,28 +53,98 @@ class ImageProcessor:
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
-        if img is None:
-            # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
-            # self.img = self.img_2d  # self.img - NO LONGER USEFUL
-            self.scale_factor = 1
-        # else:
-            # self.img = img  # No longer useful
         self.props = []
         self.img_3d = None
         self.img_2d = None
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
+        self.scale_factor = 1
+        self.has_alpha_channel = False
         if self.img_raw is not None:
-            self.initialize_members(self.img_raw)
+            self._initialize_members()
 
-    def initialize_members(self, img_data):
+    def _initialize_members(self):
         """"""
-        print(img_data.shape)
-        self.img_2d = ImageProcessor.convert_to_grayscale(img_data.copy())
-        self.img_3d = ImageProcessor.convert_to_3d(img_data.copy())
-        if self.img_2d:
+        self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw)
+        self.img_2d = self._convert_to_grayscale()
+        self.img_3d = self._convert_to_3d()
+        if self.img_2d is not None:
             self.props = self.get_img_props()
+
+    def _convert_to_3d(self):
+        """
+        A functions that converts an image into 2 dimensions (depth/slices x height x width)
+
+        """
+        img_data = self.img_raw.copy()
+        if img_data is None or self.has_alpha_channel or len(img_data.shape) < 3:
+            return None
+
+        # Extract slices
+        front = img_data[:, :, 0]  # First slice along depth (Z-axis)
+        back = img_data[:, :, -1]  # Last slice along depth (Z-axis)
+        top = img_data[0, :, :]  # First slice along height (Y-axis)
+        bottom = img_data[-1, :, :]  # Last slice along height (Y-axis)
+        side_left = img_data[:, 0, :]  # First slice along width (X-axis)
+        side_right = img_data[:, -1, :]  # Last slice along width (X-axis)
+
+        img_views = {
+            "front": front,
+            "back": back,
+            "top": top,
+            "bottom": bottom,
+            "side_left": side_left,
+            "side_right": side_right
+        }
+
+        # Create figure
+        fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+        for ax, view, title in zip(axes.flat, img_views.values(), img_views.keys()):
+            ax.imshow(view, cmap="gray")
+            ax.set_title(title)
+            ax.axis("off")
+        plt.tight_layout()
+
+        # Convert plot to OpenCV image
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
+        buf.seek(0)
+
+        # Convert PNG buffer to OpenCV image
+        file_bytes = np.asarray(bytearray(buf.read()), dtype=np.uint8)
+        img_3d = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)  # Read as OpenCV image
+
+        logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
+        return img_3d
+
+    def _convert_to_grayscale(self):
+        """
+            Reads the first slice of a 3D image if it is indeed 3D, image itself if 2D.
+
+            Returns:
+                numpy.ndarray or None: The first slice of the image if it's 3D, image itself if 2D, None otherwise.
+        """
+        img_data = self.img_raw.copy()
+
+        if img_data is None:
+            return None
+
+        if len(img_data.shape) == 3 and self.has_alpha_channel:
+            logging.info("Image is 2D with Alpha Channel (RGBA).", extra={'user': 'SGT Logs'})
+            img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
+            return img_2d
+
+        if len(img_data.shape) >= 3:
+            # Get first slice and check if it is RGB or RGBA?
+            img_2d = img_data[0, :, :]  # or image[:, :, 0] depending on the axis
+            if self.has_alpha_channel:
+                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
+            return img_2d
+        else:
+            logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+            return img_data
 
     def apply_filters(self):
         """
@@ -116,8 +188,8 @@ class ImageProcessor:
         A function that restores image to its original size.
         """
         # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
-        self.img_2d = ImageProcessor.convert_to_grayscale(self.img_raw.copy())
-        self.img_3d = ImageProcessor.convert_to_3d(self.img_raw.copy())
+        self.img_2d = self._convert_to_grayscale()
+        self.img_3d = self._convert_to_3d()
 
     def process_img(self, image: MatLike):
         """
@@ -357,11 +429,18 @@ class ImageProcessor:
 
         """
         f_name, _ = self.create_filenames()
-        height, width = self.img_2d.shape
+        _, fmt = ImageProcessor.check_alpha_channel(self.img_raw)
+        num_dim = 2 if self.img_3d is None else len(self.img_raw.shape)
+        if num_dim == 2:
+            slices = 0
+            height, width = self.img_2d.shape
+        else:
+            slices, height, width = self.img_raw.shape
         props = [
             ["Name", f_name],
-            ["Height x Width", f"({width} x {height}) pixels"],
-            ["Dimensions", f"{len(self.img_raw.shape)}D"],
+            ["Height x Width", f"({width} x {height}) pixels"] if slices==0 else ["Slices x H x W", f"({slices} x {width} x {height}) pixels"],
+            ["Dimensions", f"{num_dim}D"],
+            ["Format", f"{fmt}"],
             # ["Pixel Size", "2nm x 2nm"]
         ]
         return props
@@ -470,7 +549,6 @@ class ImageProcessor:
         :param file: file path.
         :return:
         """
-        # print(f"Do something with ImgDim={img_dim}.")
         if file == "":
             return None
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
@@ -524,7 +602,7 @@ class ImageProcessor:
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
-            print(f"Error loading {file}: {err}")
+            logging.exception(f"Error loading {file}", err, extra={'user': 'SGT Logs'})
             return None
 
     @staticmethod
@@ -554,59 +632,38 @@ class ImageProcessor:
             return img
 
     @staticmethod
-    def convert_to_3d(img_data: MatLike):
+    def check_alpha_channel(img: MatLike):
         """
-        A functions that converts an image into 2 dimensions (depth/slices x height x width)
-
-        :param img_data: OpenCV image.
-        """
-
-        # Extract slices
-        front = img_data[:, :, 0]  # First slice along depth (Z-axis)
-        back = img_data[:, :, -1]  # Last slice along depth (Z-axis)
-        top = img_data[0, :, :]  # First slice along height (Y-axis)
-        bottom = img_data[-1, :, :]  # Last slice along height (Y-axis)
-        side_left = img_data[:, 0, :]  # First slice along width (X-axis)
-        side_right = img_data[:, -1, :]  # Last slice along width (X-axis)
-
-        img_views = {
-            "front": front,
-            "back": back,
-            "top": top,
-            "bottom": bottom,
-            "side_left": side_left,
-            "side_right": side_right
-        }
-
-        # Create figure
-        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-        for ax, view, title in zip(axes.flat, img_views.values(), img_views.keys()):
-            ax.imshow(view, cmap="gray")
-            ax.set_title(title)
-            ax.axis("off")
-        plt.tight_layout()
-
-        # Convert plot to OpenCV image
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
-        plt.close(fig)
-        buf.seek(0)
-
-        # Convert PNG buffer to OpenCV image
-        file_bytes = np.asarray(bytearray(buf.read()), dtype=np.uint8)
-        img_3d = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)  # Read as OpenCV image
-
-        return img_3d
-
-    @staticmethod
-    def convert_to_grayscale(img: MatLike):
-        """
-        A function that converts a multi-layer or multichannel image to grayscale (only 2 dimensions: height x width).
+        A function that checks if an image has an Alpha channel or not. Only works for images with upto 4-Dimensions.
 
         :param img: OpenCV image.
         """
-        img_2d = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        return img_2d
+
+        if img is None:
+            return False, None
+
+        if len(img.shape) > 4:
+            # Unknown Format
+            return False, None
+
+        if len(img.shape) == 2:
+            return False, "Grayscale"
+
+        if len(img.shape) == 3:
+            channels = img.shape[2]
+            if channels == 4:
+                return True, "RGBA"
+            elif channels == 3:
+                return True, "RGB"
+            elif channels == 2:
+                return True, "Grayscale + Alpha"
+            elif channels == 1:
+                return True, "Grayscale"
+            else:
+                return False, "Multi"
+
+        if len(img.shape) == 4:  # (Depth, Height, Width, Channels)
+            return True, "Multi"
 
     @staticmethod
     def resize_img(size: int, image: MatLike):
@@ -656,64 +713,3 @@ class ImageProcessor:
         pixel_width = val_in_meters/scalebar_pixel_count
         return pixel_width
 
-    """
-    @staticmethod
-    def extract_views(tiff_path, output_dir="output_views"):
-        # Load the 3D TIFF image
-        volume = tiff.imread(tiff_path)
-
-        # Ensure output directory exists
-        import os
-        os.makedirs(output_dir, exist_ok=True)
-
-        # Extract slices
-        front = volume[:, :, 0]  # First slice along depth (Z-axis)
-        back = volume[:, :, -1]  # Last slice along depth (Z-axis)
-        top = volume[0, :, :]  # First slice along height (Y-axis)
-        bottom = volume[-1, :, :]  # Last slice along height (Y-axis)
-        side_left = volume[:, 0, :]  # First slice along width (X-axis)
-        side_right = volume[:, -1, :]  # Last slice along width (X-axis)
-
-        views = {
-            "front": front,
-            "back": back,
-            "top": top,
-            "bottom": bottom,
-            "side_left": side_left,
-            "side_right": side_right
-        }
-
-        # Plot all 6 views in a 2x3 grid
-        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-
-        # Save and display the images
-        for name, img in views.items():
-            plt.imshow(img, cmap="gray")
-            plt.axis("off")
-            plt.title(name)
-            plt.savefig(f"{output_dir}/{name}.png", bbox_inches='tight', pad_inches=0)
-            plt.close()
-        print(f"Saved 2D views in '{output_dir}'.")
-
-        # Create figure
-        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-
-        for ax, view, title in zip(axes.flat, views.values(), views.keys()):
-            ax.imshow(view, cmap="gray")
-            ax.set_title(title)
-            ax.axis("off")
-
-        plt.tight_layout()
-
-        # Convert plot to OpenCV image
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
-        plt.close(fig)
-        buf.seek(0)
-
-        # Convert PNG buffer to OpenCV image
-        file_bytes = np.asarray(bytearray(buf.read()), dtype=np.uint8)
-        cv2_img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)  # Read as OpenCV image
-
-        return cv2_img  # This is an OpenCV image (NumPy array)
-    """
