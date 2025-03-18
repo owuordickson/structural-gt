@@ -48,6 +48,8 @@ class ImageProvider(QQuickImageProvider):
             # Acknowledge image load and send signal to update QML
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()
+        else:
+            self.img_controller.img_loaded = False
 
     def requestPixmap(self, img_id, requested_size, size):
         return self.pixmap

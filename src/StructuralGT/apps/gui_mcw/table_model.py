@@ -51,12 +51,19 @@ class TableModel(QAbstractTableModel):
 
     def update_data(self, analyze_objs):
         """Updates model with new images from analyze_objs"""
+        self.beginResetModel()
         new_keys = list(analyze_objs.keys())
         if not new_keys:
-            return  # No data to add
+            # No data to add/update
+            self.itemData = []
+            self.imageCache = {}
+            self.endResetModel()
+            # Emit dataChanged signal to notify QML
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self.itemData) - 1, 0))
+            return
 
         start_row = len(self.itemData)
-        self.beginResetModel()
+        # self.beginResetModel()
         self.itemData = []
         self.imageCache = {}
 

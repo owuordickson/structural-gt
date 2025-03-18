@@ -124,9 +124,10 @@ class MainController(QObject):
             key_at_index = keys_list[self.current_obj_index]
             sgt_obj = self.sgt_objs[key_at_index]
             return sgt_obj
-        except IndexError as err:
-            logging.exception("No Image Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
+        except IndexError:
+            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
+            # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
+            return None
 
     def create_sgt_object(self, img_path):
         """
@@ -169,7 +170,13 @@ class MainController(QObject):
         if 0 <= del_index < len(self.sgt_objs):  # Check if index exists
             keys_list = list(self.sgt_objs.keys())
             key_at_del_index = keys_list[self.current_obj_index]
-            del self.sgt_objs[key_at_del_index]  # Delete the object at index
+            # Delete the object at index
+            del self.sgt_objs[key_at_del_index]
+            # Update Data
+            self.imgListTableModel.update_data(self.sgt_objs)
+            self.current_obj_index = 0
+            self.load_image()
+            self.imageChangedSignal.emit()
 
     def save_project_data(self):
         """
@@ -295,12 +302,19 @@ class MainController(QObject):
     @Slot(result=str)
     def get_output_dir(self):
         sgt_obj = self.get_current_obj()
+        if sgt_obj is None:
+            return ""
         return f"{sgt_obj.g_obj.imp.output_dir}"
 
     @Slot(int)
     def set_selected_img(self, row_index):
         """Change color of list item to gray if it is the active image"""
         self.imgListTableModel.set_selected(row_index)
+
+    @Slot(int)
+    def delete_selected_img(self, img_index):
+        """Delete the selected image from list."""
+        self.delete_sgt_object(img_index)
 
     @Slot(str)
     def set_output_dir(self, folder_path):
@@ -622,11 +636,12 @@ class MainController(QObject):
         for a_file in files:
             if a_file.endswith(ALLOWED_IMG_EXTENSIONS):
                 img_path = os.path.join(str(img_dir_path), a_file)
-                self.create_sgt_object(img_path)
+                is_created = self.create_sgt_object(img_path)
+                print(is_created)
 
         if len(self.sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, or .jpg or .jpeg")
+            self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, .jpg or .jpeg")
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
