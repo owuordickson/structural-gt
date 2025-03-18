@@ -20,7 +20,7 @@ from skimage.filters.rank import autolevel, median
 from ..configs.config_loader import load_img_configs
 
 
-ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.qptiff']
+ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff']
 class ImageProcessor:
     """
     A class for processing and preparing microscopy images for graph theory analysis.
@@ -51,18 +51,28 @@ class ImageProcessor:
         self.img_path = img_path
         self.output_dir = out_dir
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
-        self.img_3d = ImageProcessor.convert_to_3d(self.img_raw.copy())
-        self.img_2d = ImageProcessor.convert_to_grayscale(self.img_raw.copy())
-        self.props = self.get_img_props()
         if img is None:
             # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
             # self.img = self.img_2d  # self.img - NO LONGER USEFUL
             self.scale_factor = 1
         # else:
             # self.img = img  # No longer useful
+        self.props = []
+        self.img_3d = None
+        self.img_2d = None
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
+        if self.img_raw is not None:
+            self.initialize_members(self.img_raw)
+
+    def initialize_members(self, img_data):
+        """"""
+        print(img_data.shape)
+        self.img_2d = ImageProcessor.convert_to_grayscale(img_data.copy())
+        self.img_3d = ImageProcessor.convert_to_3d(img_data.copy())
+        if self.img_2d:
+            self.props = self.get_img_props()
 
     def apply_filters(self):
         """
@@ -483,7 +493,7 @@ class ImageProcessor:
                 if image is None:
                     raise ValueError(f"Failed to load {file}")
                 return image
-            elif ext in ['.tif', '.tiff']:
+            elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
                 img = Image.open(file)
                 images = []
@@ -544,13 +554,48 @@ class ImageProcessor:
             return img
 
     @staticmethod
-    def convert_to_3d(img: MatLike):
+    def convert_to_3d(img_data: MatLike):
         """
         A functions that converts an image into 2 dimensions (depth/slices x height x width)
 
-        :param img: OpenCV image.
+        :param img_data: OpenCV image.
         """
-        img_3d = img
+
+        # Extract slices
+        front = img_data[:, :, 0]  # First slice along depth (Z-axis)
+        back = img_data[:, :, -1]  # Last slice along depth (Z-axis)
+        top = img_data[0, :, :]  # First slice along height (Y-axis)
+        bottom = img_data[-1, :, :]  # Last slice along height (Y-axis)
+        side_left = img_data[:, 0, :]  # First slice along width (X-axis)
+        side_right = img_data[:, -1, :]  # Last slice along width (X-axis)
+
+        img_views = {
+            "front": front,
+            "back": back,
+            "top": top,
+            "bottom": bottom,
+            "side_left": side_left,
+            "side_right": side_right
+        }
+
+        # Create figure
+        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+        for ax, view, title in zip(axes.flat, img_views.values(), img_views.keys()):
+            ax.imshow(view, cmap="gray")
+            ax.set_title(title)
+            ax.axis("off")
+        plt.tight_layout()
+
+        # Convert plot to OpenCV image
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
+        buf.seek(0)
+
+        # Convert PNG buffer to OpenCV image
+        file_bytes = np.asarray(bytearray(buf.read()), dtype=np.uint8)
+        img_3d = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)  # Read as OpenCV image
+
         return img_3d
 
     @staticmethod
@@ -610,3 +655,65 @@ class ImageProcessor:
         val_in_meters = scale_val / 1e9
         pixel_width = val_in_meters/scalebar_pixel_count
         return pixel_width
+
+    """
+    @staticmethod
+    def extract_views(tiff_path, output_dir="output_views"):
+        # Load the 3D TIFF image
+        volume = tiff.imread(tiff_path)
+
+        # Ensure output directory exists
+        import os
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Extract slices
+        front = volume[:, :, 0]  # First slice along depth (Z-axis)
+        back = volume[:, :, -1]  # Last slice along depth (Z-axis)
+        top = volume[0, :, :]  # First slice along height (Y-axis)
+        bottom = volume[-1, :, :]  # Last slice along height (Y-axis)
+        side_left = volume[:, 0, :]  # First slice along width (X-axis)
+        side_right = volume[:, -1, :]  # Last slice along width (X-axis)
+
+        views = {
+            "front": front,
+            "back": back,
+            "top": top,
+            "bottom": bottom,
+            "side_left": side_left,
+            "side_right": side_right
+        }
+
+        # Plot all 6 views in a 2x3 grid
+        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+        # Save and display the images
+        for name, img in views.items():
+            plt.imshow(img, cmap="gray")
+            plt.axis("off")
+            plt.title(name)
+            plt.savefig(f"{output_dir}/{name}.png", bbox_inches='tight', pad_inches=0)
+            plt.close()
+        print(f"Saved 2D views in '{output_dir}'.")
+
+        # Create figure
+        fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+        for ax, view, title in zip(axes.flat, views.values(), views.keys()):
+            ax.imshow(view, cmap="gray")
+            ax.set_title(title)
+            ax.axis("off")
+
+        plt.tight_layout()
+
+        # Convert plot to OpenCV image
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
+        buf.seek(0)
+
+        # Convert PNG buffer to OpenCV image
+        file_bytes = np.asarray(bytearray(buf.read()), dtype=np.uint8)
+        cv2_img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)  # Read as OpenCV image
+
+        return cv2_img  # This is an OpenCV image (NumPy array)
+    """
