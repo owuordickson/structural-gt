@@ -23,7 +23,7 @@ from ..configs.config_loader import load_img_configs
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
-
+Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
 class ImageProcessor:
     """
@@ -576,15 +576,26 @@ class ImageProcessor:
                 img = Image.open(file)
                 images = []
                 while True:
-                    images.append(np.array(img))
+                    frame = np.array(img)  # Convert the current frame to numpy array
+                    images.append(frame)
+                    print(frame.shape)
                     try:
+                        # Move to next frame
                         img.seek(img.tell() + 1)
                     except EOFError:
+                        # Stop when all frames are read
                         break
-                if len(images) > 1:
-                    return np.stack(images, axis=0)
-                else:
-                    return images[0]
+
+                # Resize all frames to 1024x1024 while maintaining aspect ratio
+                images_small = [Image.fromarray(f).resize((1024, 1024)) for f in images]
+                print(len(images_small))
+
+                # Convert back to numpy arrays
+                images_arr = [np.array(f) for f in images_small]
+
+                if len(images_arr) > 1:
+                    return np.stack(images_arr, axis=0)
+                return images_arr[0]
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
                 img_nib = nib.load(file)
@@ -602,7 +613,7 @@ class ImageProcessor:
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
-            logging.info(f"Error loading {file}: {err}", extra={'user': 'SGT Logs'})
+            logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
             return None
 
     @staticmethod
