@@ -132,7 +132,7 @@ class ImageProcessor:
             return None
 
         if len(img_data.shape) == 3 and self.has_alpha_channel:
-            logging.info("Image is 2D with Alpha Channel (RGBA).", extra={'user': 'SGT Logs'})
+            logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
             return img_2d
 
