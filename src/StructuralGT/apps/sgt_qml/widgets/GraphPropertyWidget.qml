@@ -19,7 +19,7 @@ Item {
 
         TableView {
             id: tblViewGraphProps
-            height:numRows * tblRowHeight
+            height: numRows * tblRowHeight
             width: 290
             model: graphPropsTableModel
 

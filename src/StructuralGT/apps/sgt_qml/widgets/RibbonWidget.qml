@@ -75,27 +75,22 @@ Rectangle {
 
         RowLayout {
 
-            Rectangle { // Ensures both Button & Popup share same parent
+            Button {
+                id: btnRescale
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
-                color: "transparent"
-
-                Button {
-                    id: btnRescale
-                    //Layout.preferredWidth: 32
-                    //Layout.preferredHeight: 32
-                    width: parent.width
-                    height: parent.height
-                    text: ""
-                    icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
-                    icon.width: 20 // Adjust as needed
-                    icon.height: 20
-                    background: Rectangle { color: "transparent" }
-                    ToolTip.text: "Re-scale large images"
-                    ToolTip.visible: btnRescale.hovered
-                    enabled: true //mainController.display_image()
-                    onClicked: drpDownRescale.open()
+                text: ""
+                icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
+                icon.width: 20 // Adjust as needed
+                icon.height: 20
+                background: Rectangle {
+                    color: "transparent"
                 }
+                ToolTip.text: "Re-scale large images"
+                ToolTip.visible: btnRescale.hovered
+                enabled: true //mainController.display_image()
+                onClicked: drpDownRescale.open()
+
 
                 Popup {
                     id: drpDownRescale
@@ -104,13 +99,13 @@ Rectangle {
                     height: 100
                     modal: false
                     focus: true
-                    //anchors.top: parent.bottom
-                    //anchors.horizontalCenter: btnRescale.horizontalCenter
+                    x: 2
+                    y: 32
                     background: Rectangle {
-                        color: "white"
-                        border.color: "gray"
+                        color: "#f0f0f0"
+                        border.color: "#d0d0d0"
                         border.width: 1
-                        radius: 4
+                        radius: 2
                     }
                 }
             }
@@ -126,8 +121,75 @@ Rectangle {
                 background: Rectangle { color: "transparent"}
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
-                onClicked: dialogBrightnessCtrl.open()
+                onClicked: drpDownBrightness.open()
                 enabled: mainController.display_image()
+
+                Popup {
+                    id: drpDownBrightness
+                    width: 250
+                    height: 150
+                    modal: false
+                    focus: true
+                    x: 2
+                    y: 32
+                    background: Rectangle {
+                        color: "#f0f0f0"
+                        border.color: "#d0d0d0"
+                        border.width: 1
+                        radius: 2
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        BrightnessControlWidget{ id: brightnessControl }
+
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+
+                            Button {
+                                Layout.preferredWidth: 54
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownBrightness.close()
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#bc0000"
+
+                                    Label {
+                                        text: "Cancel"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+
+                            Button {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownBrightness.close()
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#22bc55"
+
+                                    Label {
+                                        text: "OK"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+
             }
 
             Button {
@@ -223,8 +285,78 @@ Rectangle {
                 background: Rectangle { color: "transparent"}
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
-                onClicked: dialogExtractGraph.open()
+                onClicked: drpDownGraph.open()
                 enabled: mainController.display_image()
+                
+                Popup {
+                    id: drpDownGraph
+                    width: 250
+                    height: 480
+                    modal: true
+                    //focus: false
+                    x: -250
+                    y: 32
+                    background: Rectangle {
+                        color: "#f0f0f0"
+                        border.color: "#d0d0d0"
+                        border.width: 1
+                        radius: 2
+                    }
+                    
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        GraphExtractWidget{}
+            
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+            
+                            Button {
+                                Layout.preferredWidth: 54
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownGraph.close()
+            
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#bc0000"
+            
+                                    Label {
+                                        text: "Cancel"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+            
+                            Button {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: {
+                                    mainController.run_extract_graph();
+                                    drpDownGraph.close();
+                                }
+            
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#22bc55"
+            
+                                    Label {
+                                        text: "OK"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+                
             }
         }
     }

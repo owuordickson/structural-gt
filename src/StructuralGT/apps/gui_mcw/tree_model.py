@@ -102,7 +102,6 @@ class TreeModel(QAbstractItemModel):
         return None
 
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
-        print(f"Python-side: {self.IdRole}, {Qt.ItemDataRole.EditRole}")
         if not index.isValid():
             return False
         item = index.internalPointer()

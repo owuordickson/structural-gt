@@ -226,7 +226,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Control Brightness/Contrast"
         modal: true
-        width: 300
+        width: 250
         height: 150
 
         ColumnLayout {
@@ -287,67 +287,70 @@ ApplicationWindow {
         title: "Graph Extraction Options"
         modal: true
         width: 300
-        height: 480
+        height: 400
 
 
-        ColumnLayout {
-            anchors.fill: parent
+        //ColumnLayout {
+        //    anchors.fill: parent
 
-            ScrollView {
-                width: parent.width
-                height: parent.height
-                Layout.alignment: Qt.AlignTop
+            //ScrollView {
+             //   width: parent.width
+             //   height: parent.height
+                //Layout.alignment: Qt.AlignTop
 
-                GraphExtractWidget{}
-            }
+                ColumnLayout {
+                    anchors.fill: parent
 
-            RowLayout {
-                spacing: 10
-                //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                    GraphExtractWidget {}
 
-                Button {
-                    Layout.preferredWidth: 54
-                    Layout.preferredHeight: 30
-                    text: ""
-                    onClicked: dialogExtractGraph.close()
+                    RowLayout {
+                        spacing: 10
+                        Layout.alignment: Qt.AlignHCenter
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 5
-                        color: "#bc0000"
+                        Button {
+                            Layout.preferredWidth: 54
+                            Layout.preferredHeight: 30
+                            text: ""
+                            onClicked: dialogExtractGraph.close()
 
-                        Label {
-                            text: "Cancel"
-                            color: "#ffffff"
-                            anchors.centerIn: parent
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 5
+                                color: "#bc0000"
+
+                                Label {
+                                    text: "Cancel"
+                                    color: "#ffffff"
+                                    anchors.centerIn: parent
+                                }
+                            }
+                        }
+
+                        Button {
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 30
+                            text: ""
+                            onClicked: {
+                                mainController.run_extract_graph();
+                                dialogExtractGraph.close();
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 5
+                                color: "#22bc55"
+
+                                Label {
+                                    text: "OK"
+                                    color: "#ffffff"
+                                    anchors.centerIn: parent
+                                }
+                            }
                         }
                     }
                 }
-
-                Button {
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 30
-                    text: ""
-                    onClicked: {
-                        mainController.run_extract_graph();
-                        dialogExtractGraph.close();
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 5
-                        color: "#22bc55"
-
-                        Label {
-                            text: "OK"
-                            color: "#ffffff"
-                            anchors.centerIn: parent
-                        }
-                    }
-                }
-            }
-        }
+            //}
+        //}
 
     }
 

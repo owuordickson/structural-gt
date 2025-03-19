@@ -8,8 +8,8 @@ Item {
     Layout.preferredHeight: 75
     Layout.preferredWidth: parent.width
 
-    property int spbWidthSize: 120
-    property int lblWidthSize: 100
+    property int spbWidthSize: 75
+    property int lblWidthSize: 75
     property int valueRole: Qt.UserRole + 4
     property alias clBrightnessCtrl: brightnessCtrlLayout
 
@@ -54,8 +54,8 @@ Item {
                 Button {
                     id: btnOK
                     text: ""
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 28
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 24
                     Layout.rightMargin: 10
                     visible: false
                     onClicked: {
