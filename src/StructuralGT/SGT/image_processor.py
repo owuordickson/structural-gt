@@ -559,6 +559,10 @@ class ImageProcessor:
         """
         Read image and save it as an OpenCV object.
 
+        Most 3D images are like layers of multiple image frames layered on-top of each other. The image frames may be
+        images of the same object/item through time or through space (i.e., from different angles). Our approach is to
+        separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
+
         :param file: file path.
         :return:
         """
@@ -585,6 +589,26 @@ class ImageProcessor:
                     except EOFError:
                         # Stop when all frames are read
                         break
+
+                """
+                # Plot all frames
+                num_frames = len(images)
+                cols = min(5, num_frames)  # Limit to 5 columns
+                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
+
+                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+                axes = np.array(axes).flatten()  # Flatten in case of single row
+
+                for ax, frame, idx in zip(axes, images, range(num_frames)):
+                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
+                    ax.set_title(f"Frame {idx + 1}")
+                    ax.axis("off")
+
+                # Hide extra subplots if any
+                for ax in axes[num_frames:]:
+                    ax.axis("off")
+                plt.tight_layout()
+                plt.show()"""
 
                 # Resize all frames to 1024x1024 while maintaining aspect ratio
                 images_small = [Image.fromarray(f).resize((1024, 1024)) for f in images]
