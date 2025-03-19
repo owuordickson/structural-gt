@@ -36,10 +36,10 @@ Rectangle {
 
     RowLayout {
         anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
 
         RowLayout {
             Layout.leftMargin: 5
-            Layout.topMargin: 5
 
             Button {
                 id: btnHideLeftPane
@@ -71,23 +71,48 @@ Rectangle {
 
     RowLayout {
         anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
 
         RowLayout {
-            Layout.topMargin: 5
 
-            Button {
-                id: btnRescale
+            Rectangle { // Ensures both Button & Popup share same parent
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
-                text: ""
-                icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
-                icon.width: 20 // Adjust as needed
-                icon.height: 20
-                background: Rectangle { color: "transparent"}
-                ToolTip.text: "Re-scale large images"
-                ToolTip.visible: btnRescale.hovered
-                //onClicked: dialogBrightnessCtrl.open()
-                enabled: mainController.display_image()
+                color: "transparent"
+
+                Button {
+                    id: btnRescale
+                    //Layout.preferredWidth: 32
+                    //Layout.preferredHeight: 32
+                    width: parent.width
+                    height: parent.height
+                    text: ""
+                    icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
+                    icon.width: 20 // Adjust as needed
+                    icon.height: 20
+                    background: Rectangle { color: "transparent" }
+                    ToolTip.text: "Re-scale large images"
+                    ToolTip.visible: btnRescale.hovered
+                    enabled: true //mainController.display_image()
+                    onClicked: drpDownRescale.open()
+                }
+
+                Popup {
+                    id: drpDownRescale
+                    width: 64
+                    //height: colRadioButtons.implicitHeight + 10
+                    height: 100
+                    modal: false
+                    focus: true
+                    //anchors.top: parent.bottom
+                    //anchors.horizontalCenter: btnRescale.horizontalCenter
+                    background: Rectangle {
+                        color: "white"
+                        border.color: "gray"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
             }
 
             Button {
@@ -165,13 +190,10 @@ Rectangle {
             width: 1
             height: 24
             color: "#d0d0d0"
-            Layout.alignment: Qt.AlignVCenter
         }
 
         RowLayout {
-            Layout.alignment: Qt.AlignVCenter
             Layout.rightMargin: 5
-            Layout.topMargin: 5
 
             ComboBox {
                 id: cbImageType
