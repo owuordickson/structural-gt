@@ -291,10 +291,10 @@ Rectangle {
                 Popup {
                     id: drpDownGraph
                     width: 250
-                    height: 480
+                    height: 420
                     modal: true
-                    //focus: false
-                    x: -250
+                    focus: false
+                    x: -225
                     y: 32
                     background: Rectangle {
                         color: "#f0f0f0"

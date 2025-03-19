@@ -12,9 +12,11 @@ ApplicationWindow {
     visible: true
     title: "Structural GT"
 
-    menuBar: MenuBarWidget{}
+    menuBar: MenuBarWidget {
+    }
 
-    footer: StatusBarWidget{}
+    footer: StatusBarWidget {
+    }
 
     GridLayout {
         anchors.fill: parent
@@ -33,7 +35,8 @@ ApplicationWindow {
             Layout.preferredWidth: parent.width
             Layout.fillWidth: true
             Layout.fillHeight: true
-            RibbonWidget {}
+            RibbonWidget {
+            }
         }
 
         // Second row, first column
@@ -48,7 +51,8 @@ ApplicationWindow {
             Layout.preferredWidth: 300
             Layout.fillWidth: true
             Layout.fillHeight: true
-            LeftContent{}
+            LeftContent {
+            }
         }
 
         // Second row, second column
@@ -62,11 +66,12 @@ ApplicationWindow {
             Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
             Layout.fillHeight: true
-            RightContent{}
+            RightContent {
+            }
         }
     }
 
-    function toggleLeftPane (showVal) {
+    function toggleLeftPane(showVal) {
         recLeftPane.visible = showVal;
     }
 
@@ -154,7 +159,9 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            CreateProjectWidget { id: createProjectControls }
+            CreateProjectWidget {
+                id: createProjectControls
+            }
 
             RowLayout {
                 spacing: 10
@@ -231,7 +238,9 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            BrightnessControlWidget{ id: brightnessControl }
+            BrightnessControlWidget {
+                id: brightnessControl
+            }
 
             RowLayout {
                 spacing: 10
@@ -293,63 +302,64 @@ ApplicationWindow {
         //ColumnLayout {
         //    anchors.fill: parent
 
-            //ScrollView {
-             //   width: parent.width
-             //   height: parent.height
-                //Layout.alignment: Qt.AlignTop
+        //ScrollView {
+        //   width: parent.width
+        //   height: parent.height
+        //Layout.alignment: Qt.AlignTop
 
-                ColumnLayout {
-                    anchors.fill: parent
+        ColumnLayout {
+            anchors.fill: parent
 
-                    GraphExtractWidget {}
+            GraphExtractWidget {
+            }
 
-                    RowLayout {
-                        spacing: 10
-                        Layout.alignment: Qt.AlignHCenter
+            RowLayout {
+                spacing: 10
+                Layout.alignment: Qt.AlignHCenter
 
-                        Button {
-                            Layout.preferredWidth: 54
-                            Layout.preferredHeight: 30
-                            text: ""
-                            onClicked: dialogExtractGraph.close()
+                Button {
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: dialogExtractGraph.close()
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 5
-                                color: "#bc0000"
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#bc0000"
 
-                                Label {
-                                    text: "Cancel"
-                                    color: "#ffffff"
-                                    anchors.centerIn: parent
-                                }
-                            }
-                        }
-
-                        Button {
-                            Layout.preferredWidth: 40
-                            Layout.preferredHeight: 30
-                            text: ""
-                            onClicked: {
-                                mainController.run_extract_graph();
-                                dialogExtractGraph.close();
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 5
-                                color: "#22bc55"
-
-                                Label {
-                                    text: "OK"
-                                    color: "#ffffff"
-                                    anchors.centerIn: parent
-                                }
-                            }
+                        Label {
+                            text: "Cancel"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
                         }
                     }
                 }
-            //}
+
+                Button {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 30
+                    text: ""
+                    onClicked: {
+                        mainController.run_extract_graph();
+                        dialogExtractGraph.close();
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 5
+                        color: "#22bc55"
+
+                        Label {
+                            text: "OK"
+                            color: "#ffffff"
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+            }
+        }
+        //}
         //}
 
     }
@@ -365,7 +375,8 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            BinaryFilterWidget{}
+            BinaryFilterWidget {
+            }
 
 
             RowLayout {
@@ -425,7 +436,8 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            ImageFilterWidget{}
+            ImageFilterWidget {
+            }
 
             RowLayout {
                 spacing: 10
@@ -484,7 +496,8 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            GTWidget{}
+            GTWidget {
+            }
 
             RowLayout {
                 spacing: 10
@@ -547,7 +560,8 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            GTWidget{}
+            GTWidget {
+            }
 
             RowLayout {
                 spacing: 10
