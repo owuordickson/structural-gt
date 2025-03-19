@@ -563,11 +563,20 @@ class ImageProcessor:
         images of the same object/item through time or through space (i.e., from different angles). Our approach is to
         separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
 
+        Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
+        depending on the users re-scaling options); and allows the user to select which frames to run GT computations
+        on (some frames are just too noisy to be used).
+
+        Again, our software provides a button that allows the user to select which frames are used to reconstruct the
+        layered GT graphs in the same order as their respective frames.
+
         :param file: file path.
         :return:
         """
-        ext = os.path.splitext(file)[1].lower()
 
+        # We allow the user to
+
+        ext = os.path.splitext(file)[1].lower()
         try:
             if ext in ['.png', '.jpg', '.jpeg']:
                 # Load standard 2D images with OpenCV
