@@ -38,7 +38,7 @@ Rectangle {
                 text: ""
                 ToolTip.text: "Cancel task!"
                 ToolTip.visible: btnCancel.hovered
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24

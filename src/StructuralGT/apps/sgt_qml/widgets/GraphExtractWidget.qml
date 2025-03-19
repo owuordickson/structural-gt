@@ -35,7 +35,7 @@ TreeView {
                 visible: hasChildren
                 text: expanded ? "▼" : "▶"
                 //text: expanded ? "∨" : ">"
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 onClicked: treeView.toggleExpanded(row)
             }
 

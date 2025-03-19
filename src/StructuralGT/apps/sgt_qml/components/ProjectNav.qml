@@ -68,7 +68,7 @@ Rectangle {
                     icon.source: "../assets/icons/edit_icon.png"
                     icon.width: 21
                     icon.height: 21
-                    background: transientParent
+                    background: Rectangle { color: "transparent"}
                     enabled: mainController.display_image();
                     onClicked: outFolderDialog.open()
                 }

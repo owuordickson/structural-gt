@@ -181,7 +181,8 @@ class ImageProcessor:
 
         # Crop image
         self.img_2d = self.img_2d[y:y + height, x:x + width]
-        self.img_3d = self.img_3d[y:y + height, x:x + width]
+        # What about CROPPING 3D images?
+        # self.img_3d = self.img_3d[y:y + height, x:x + width]
 
     def undo_cropping(self):
         """
@@ -189,7 +190,7 @@ class ImageProcessor:
         """
         # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         self.img_2d = self._convert_to_grayscale()
-        self.img_3d = self._convert_to_3d()
+        # self.img_3d = self._convert_to_3d()
 
     def process_img(self, image: MatLike):
         """
@@ -564,8 +565,8 @@ class ImageProcessor:
         separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
 
         Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
-        depending on the users re-scaling options); and allows the user to select which frames to run GT computations
-        on (some frames are just too noisy to be used).
+        depending on the user-selected re-scaling options); and allows the user to select which frames to run
+        GT computations on (some frames are just too noisy to be used).
 
         Again, our software provides a button that allows the user to select which frames are used to reconstruct the
         layered GT graphs in the same order as their respective frames.

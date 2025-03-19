@@ -26,6 +26,7 @@
         "assets/icons/back_icon.png",
         "assets/icons/next_icon.png",
         "assets/icons/edit_icon.png",
+        "assets/icons/rescale_icon.png",
         "assets/icons/show_panel.png",
         "assets/icons/hide_panel.png",
         "widgets/BrightnessControlWidget.qml",

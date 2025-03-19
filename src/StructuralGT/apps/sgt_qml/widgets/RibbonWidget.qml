@@ -37,67 +37,108 @@ Rectangle {
     RowLayout {
         anchors.left: parent.left
 
-        Button {
-            id: btnHideLeftPane
-            Layout.alignment: Qt.AlignVCenter
-            text: ""
-            property bool hidePane: true
-            icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
-            icon.width: 28
-            icon.height: 28
-            background: transientParent
-            ToolTip.text: hidePane ? "Hide left pane" : "Show left pane"
-            ToolTip.visible: btnHideLeftPane.hovered
-            visible: true
-            onClicked: {
-                if (hidePane) {
-                    hidePane = false;
-                } else {
-                    hidePane = true;
+        RowLayout {
+            Layout.leftMargin: 5
+            Layout.topMargin: 5
+
+            Button {
+                id: btnHideLeftPane
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                text: ""
+                property bool hidePane: true
+                icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
+                icon.width: 28
+                icon.height: 28
+                background: Rectangle {
+                    color: "transparent"
                 }
-                toggleLeftPane(hidePane);
+                ToolTip.text: hidePane ? "Hide left pane" : "Show left pane"
+                ToolTip.visible: btnHideLeftPane.hovered
+                visible: true
+                onClicked: {
+                    if (hidePane) {
+                        hidePane = false;
+                    } else {
+                        hidePane = true;
+                    }
+                    toggleLeftPane(hidePane);
+                }
             }
+
         }
     }
 
     RowLayout {
-        //anchors.fill: parent
         anchors.right: parent.right
 
         RowLayout {
-            Layout.alignment: Qt.AlignVCenter
+            Layout.topMargin: 5
+
+            Button {
+                id: btnRescale
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                text: ""
+                icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
+                icon.width: 20 // Adjust as needed
+                icon.height: 20
+                background: Rectangle { color: "transparent"}
+                ToolTip.text: "Re-scale large images"
+                ToolTip.visible: btnRescale.hovered
+                //onClicked: dialogBrightnessCtrl.open()
+                enabled: mainController.display_image()
+            }
+
+            Button {
+                id: btnBrightness
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                text: ""
+                icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
+                background: Rectangle { color: "transparent"}
+                ToolTip.text: "Adjust brightness/contrast"
+                ToolTip.visible: btnBrightness.hovered
+                onClicked: dialogBrightnessCtrl.open()
+                enabled: mainController.display_image()
+            }
 
             Button {
                 id: btnSelect
                 text: ""
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                background: transientParent  // bgcolor same as parent color (i.e., rectRibbon)
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                background: Rectangle { color: "transparent"}
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
-                visible: mainController.display_image();
+                visible: mainController.display_image()
                 onClicked: enableRectangularSelect()
 
                 Rectangle {
                     id: btnSelectBorder
                     width: 20
                     height: 20
+                    //width: parent.width
+                    //height: parent.height
+                    anchors.centerIn: parent
                     radius: 4
                     color: "transparent"
                     border.width: 2
                     border.color: "black"
-                    anchors.centerIn: parent
-                    //enabled: false
                 }
             }
 
             Button {
                 id: btnCrop
                 text: ""
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
                 icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
@@ -105,25 +146,14 @@ Rectangle {
             }
 
             Button {
-                id: btnBrightness
-                text: ""
-                icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
-                icon.height: 24
-                background: transientParent
-                ToolTip.text: "Adjust brightness/contrast"
-                ToolTip.visible: btnBrightness.hovered
-                onClicked: dialogBrightnessCtrl.open()
-                enabled: mainController.display_image();
-            }
-
-            Button {
                 id: btnUndo
                 text: ""
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
                 icon.source: "../assets/icons/undo_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
                 onClicked: mainController.undo_cropping(true)
@@ -133,13 +163,15 @@ Rectangle {
 
         Rectangle {
             width: 1
-            height: 25
+            height: 24
             color: "#d0d0d0"
             Layout.alignment: Qt.AlignVCenter
         }
 
         RowLayout {
             Layout.alignment: Qt.AlignVCenter
+            Layout.rightMargin: 5
+            Layout.topMargin: 5
 
             ComboBox {
                 id: cbImageType
@@ -154,22 +186,23 @@ Rectangle {
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
                 valueRole: "value"
-                enabled: mainController.display_image();
+                enabled: mainController.display_image()
                 onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
             }
 
             Button {
                 id: btnShowGraph
-                Layout.rightMargin: 10
                 text: ""
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: dialogExtractGraph.open()
-                enabled: mainController.display_image();
+                enabled: mainController.display_image()
             }
         }
     }
@@ -208,6 +241,7 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             btnSelect.visible = mainController.display_image();
+            btnRescale.enabled = mainController.display_image();
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();

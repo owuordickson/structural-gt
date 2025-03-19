@@ -39,6 +39,7 @@ ColumnLayout {
                         id: btnCreateProject
                         Layout.preferredWidth: 180
                         Layout.preferredHeight: 48
+                        background: Rectangle { color: "transparent"}
                         text: ""
                         onClicked: createProjectDialog.open()
 
@@ -61,7 +62,7 @@ ColumnLayout {
                         id: btnOpenProject
                         Layout.preferredWidth: 180
                         Layout.preferredHeight: 48
-                        background: transientParent
+                        background: Rectangle { color: "transparent"}
                         text: ""
                         onClicked: projectFileDialog.open()
 
@@ -290,7 +291,7 @@ ColumnLayout {
                 icon.source: "../assets/icons/back_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 Layout.alignment: Qt.AlignLeft
                 onClicked: mainController.load_prev_image()
             }
@@ -308,7 +309,7 @@ ColumnLayout {
                 icon.source: "../assets/icons/next_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: transientParent
+                background: Rectangle { color: "transparent"}
                 Layout.alignment: Qt.AlignRight
                 onClicked: mainController.load_next_image()
             }
