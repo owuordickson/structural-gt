@@ -48,9 +48,7 @@ Item {
                         visible: hasChildren
                         text: expanded ? "▼" : "▶"
                         //text: expanded ? "∨" : ">"
-                        background: Rectangle {
-                            color: "transparent"
-                        }
+                        background: Rectangle { color: "transparent" }
                         onClicked: gteTreeView.toggleExpanded(row)
                     }
 

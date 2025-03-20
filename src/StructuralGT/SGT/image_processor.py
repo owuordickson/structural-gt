@@ -34,7 +34,7 @@ class ImageProcessor:
         out_dir (str): directory path for storing results.
     """
 
-    def __init__(self, img_path, out_dir):
+    def __init__(self, img_path, out_dir, auto_scale=True):
         """
         A class for processing and preparing microscopy images for graph theory analysis.
 
@@ -52,6 +52,7 @@ class ImageProcessor:
         self.configs = load_img_configs()  # image processing configuration parameters and options.
         self.img_path = img_path
         self.output_dir = out_dir
+        self.auto_scale = auto_scale
         self.img_raw = ImageProcessor.load_img_from_file(img_path)
         self.props = []
         self.img_3d = None
@@ -60,6 +61,7 @@ class ImageProcessor:
         self.img_mod = None
         self.img_net = None
         self.scale_factor = 1
+        self.scaling_options = []
         self.has_alpha_channel = False
         if self.img_raw is not None:
             self._initialize_members()
@@ -584,14 +586,24 @@ class ImageProcessor:
                 image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
                 if image is None:
                     raise ValueError(f"Failed to load {file}")
-                return image
+                img_px_size = max(image.shape[0], image.shape[1])
+                scaling_opts = []
+                optimal_size = 0
+                if img_px_size > 0:
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                return image, scaling_opts, optimal_size
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
                 img = Image.open(file)
                 images = []
+                img_px_size = 0
+                scaling_opts = []
+                optimal_size = 0
                 while True:
                     frame = np.array(img)  # Convert the current frame to numpy array
                     images.append(frame)
+                    temp_px = max(frame.shape[0], frame.shape[1])
+                    img_px_size = temp_px if temp_px > img_px_size else img_px_size
                     print(frame.shape)
                     try:
                         # Move to next frame
@@ -600,6 +612,9 @@ class ImageProcessor:
                         # Stop when all frames are read
                         break
 
+                if img_px_size > 0:
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                    print('Scaling options:', scaling_opts)
                 """
                 # Plot all frames
                 num_frames = len(images)
@@ -758,3 +773,22 @@ class ImageProcessor:
         pixel_width = val_in_meters/scalebar_pixel_count
         return pixel_width
 
+    @staticmethod
+    def get_scaling_options(orig_size: float):
+        """"""
+        orig_size = int(orig_size)
+        if orig_size > 2048:
+            recommended_size = 1024
+            scaling_options = [1024, 2048, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
+        elif orig_size > 1024:
+            recommended_size = 1024
+            scaling_options = [1024, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
+        else:
+            recommended_size = orig_size
+            scaling_options = [int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
+
+        # Remove duplicates and arrange in ascending order
+        scaling_options = sorted(list(set(scaling_options)))
+        scaling_data = [{"text": f"{val} px (recommended)" if val == recommended_size else f"{val} px", "value": val}
+                        for val in scaling_options]
+        return scaling_data, recommended_size

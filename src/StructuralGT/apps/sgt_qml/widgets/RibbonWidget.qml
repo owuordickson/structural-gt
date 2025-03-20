@@ -50,9 +50,7 @@ Rectangle {
                 icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
                 icon.width: 28
                 icon.height: 28
-                background: Rectangle {
-                    color: "transparent"
-                }
+                background: Rectangle { color: "transparent" }
                 ToolTip.text: hidePane ? "Hide left pane" : "Show left pane"
                 ToolTip.visible: btnHideLeftPane.hovered
                 visible: true
@@ -83,18 +81,16 @@ Rectangle {
                 icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
                 icon.width: 20 // Adjust as needed
                 icon.height: 20
-                background: Rectangle {
-                    color: "transparent"
-                }
+                background: Rectangle { color: "transparent" }
                 ToolTip.text: "Re-scale large images"
                 ToolTip.visible: btnRescale.hovered
-                enabled: true //mainController.display_image()
+                enabled: true  // mainController.display_image()
                 onClicked: drpDownRescale.open()
 
 
                 Popup {
                     id: drpDownRescale
-                    width: 64
+                    width: 180
                     //height: colRadioButtons.implicitHeight + 10
                     height: 100
                     modal: false
@@ -107,6 +103,88 @@ Rectangle {
                         border.width: 1
                         radius: 2
                     }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        RowLayout {
+                            id: allowScalingContainer
+                            spacing: 2
+                            Layout.alignment: Qt.AlignHCenter
+                            visible: !mainController.display_image()
+
+                            Label {
+                                text: "Auto Scale Image"
+                                color: "#2244bc"
+                            }
+
+                            Switch {
+                                id: toggleAllowScaling
+                                checked: true
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        // Actions when switched on
+                                        mainController.set_auto_scale(true)
+                                    } else {
+                                        // Actions when switched off
+                                        mainController.set_auto_scale(false)
+                                    }
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            id: scalingContainer
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            visible: mainController.display_image()
+                        }
+
+                        /*RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+
+                            Button {
+                                Layout.preferredWidth: 54
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownRescale.close()
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#bc0000"
+
+                                    Label {
+                                        text: "Cancel"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+
+                            Button {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownRescale.close()
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#22bc55"
+
+                                    Label {
+                                        text: "OK"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }*/
+
+                    }
+
                 }
             }
 
@@ -118,7 +196,7 @@ Rectangle {
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: Rectangle { color: "transparent"}
+                background: Rectangle { color: "transparent" }
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: drpDownBrightness.open()
@@ -395,7 +473,9 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             btnSelect.visible = mainController.display_image();
-            btnRescale.enabled = mainController.display_image();
+            allowScalingContainer.visible = !mainController.display_image();
+            scalingContainer.visible = mainController.display_image();
+            //btnRescale.enabled = mainController.display_image();
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();

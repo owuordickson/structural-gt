@@ -41,6 +41,7 @@ class MainController(QObject):
         super().__init__()
         self.img_loaded = False
         self.project_open = False
+        self.allow_auto_scale = True
 
         # Project data
         self.project_data = {"name": "", "file_path": ""}
@@ -151,7 +152,7 @@ class MainController(QObject):
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
-            im_obj = ImageProcessor(str(img_path), out_dir)
+            im_obj = ImageProcessor(str(img_path), out_dir, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(GraphExtractor(im_obj))
             self.sgt_objs[filename] = sgt_obj
             self.update_img_models(sgt_obj)
@@ -333,6 +334,11 @@ class MainController(QObject):
             sgt_obj = self.sgt_objs[key]
             sgt_obj.g_obj.imp.output_dir = folder_path
         self.imageChangedSignal.emit()
+
+    @Slot(bool)
+    def set_auto_scale(self, auto_scale):
+        """Set the auto-scale parameter for each image."""
+        self.allow_auto_scale = auto_scale
 
     @Slot(int)
     def select_img_type(self, choice=None):
