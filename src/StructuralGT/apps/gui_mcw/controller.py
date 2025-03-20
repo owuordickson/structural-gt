@@ -465,6 +465,7 @@ class MainController(QObject):
             sgt_obj.g_obj.imp.auto_scale = self.allow_auto_scale
             sgt_obj.g_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
             print(sgt_obj.g_obj.imp.scaling_options)
+            print(sgt_obj.g_obj.imp.auto_scale)
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
