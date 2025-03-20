@@ -36,7 +36,7 @@ class ImageProvider(QQuickImageProvider):
                 if im_obj.img_3d is None:
                     img_cv = im_obj.img_2d
                 else:
-                    img_cv = im_obj.img_3d
+                    img_cv = im_obj.img_3d[0]
                 img = Image.fromarray(img_cv)
             self.pixmap = ImageQt.toqpixmap(img)
             # Reset graph/image configs with selected values - reloads QML

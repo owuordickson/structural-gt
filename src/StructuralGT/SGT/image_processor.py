@@ -90,23 +90,23 @@ class ImageProcessor:
                 image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
                 if image is None:
                     raise ValueError(f"Failed to load {file}")
-                img_px_size = max(image.shape[0], image.shape[1])
-                scaling_opts = []
+
                 scale_factor = 1
-                optimal_size = 0
-                if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                if optimal_size > 0 and self.auto_scale:
-                    image, scale_factor = ImageProcessor.resize_img(optimal_size, image)
+                scaling_opts = []
+                img_px_size = max(image.shape[0], image.shape[1])
+                if img_px_size > 0 and self.auto_scale:
+                    scaling_opts = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
+                    image, scale_factor = ImageProcessor.rescale_img(image, scaling_opts)
+
                 return image, scaling_opts, scale_factor
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
                 img = Image.open(file)
+
                 images = []
                 img_px_size = 0
-                scaling_opts = []
                 scale_factor = 1
-                optimal_size = 0
+                scaling_opts = []
                 while True:
                     frame = np.array(img)  # Convert the current frame to numpy array
                     images.append(frame)
@@ -119,42 +119,34 @@ class ImageProcessor:
                         # Stop when all frames are read
                         break
 
-                if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                    scale_factor = optimal_size / img_px_size
-
-                """
-                # Plot all frames
-                num_frames = len(images)
-                cols = min(5, num_frames)  # Limit to 5 columns
-                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
-
-                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
-                axes = np.array(axes).flatten()  # Flatten in case of single row
-
-                for ax, frame, idx in zip(axes, images, range(num_frames)):
-                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
-                    ax.set_title(f"Frame {idx + 1}")
-                    ax.axis("off")
-
-                # Hide extra subplots if any
-                for ax in axes[num_frames:]:
-                    ax.axis("off")
-                plt.tight_layout()
-                plt.show()"""
-
-                # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
                 images_small = []
-                if optimal_size > 0 and self.auto_scale:
-                    # image, scale_factor = ImageProcessor.resize_img(optimal_size, image)
-                    for img in images:
-                        scale_size = scale_factor * max(img.shape[0], img.shape[1])
-                        img_small, _ = ImageProcessor.resize_img(scale_size, img)
-                        images_small.append(img_small)
+                if img_px_size > 0 and self.auto_scale:
+                    scaling_opts = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
+                    images_small, scale_factor = ImageProcessor.rescale_img(images, scaling_opts)
 
                 # Convert back to numpy arrays
                 images = images_small if len(images_small) > 0 else images
                 images_lst = [np.array(f) for f in images]
+
+                """
+                # Plot all frames
+                num_frames = len(images)
+                                cols = min(5, num_frames)  # Limit to 5 columns
+                                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
+
+                                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+                                axes = np.array(axes).flatten()  # Flatten in case of single row
+
+                                for ax, frame, idx in zip(axes, images, range(num_frames)):
+                                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
+                                    ax.set_title(f"Frame {idx + 1}")
+                                    ax.axis("off")
+
+                                # Hide extra subplots if any
+                                for ax in axes[num_frames:]:
+                                    ax.axis("off")
+                                plt.tight_layout()
+                                plt.show()"""
                 return images_lst, scaling_opts, scale_factor
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
@@ -185,11 +177,53 @@ class ImageProcessor:
             self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw)
 
         self.img_2d = self._convert_to_2d()
-        # self.img_3d = self._convert_to_3d()
+        self.img_3d = self._convert_to_3d()
         if self.img_2d is not None:
             self.props = self.get_img_props()
 
+    def _convert_to_2d(self):
+        """
+            Reads the first slice of a 3D image if it is indeed 3D, image itself if 2D.
+
+            Returns:
+                numpy.ndarray or None: The first slice of the image if it's 3D, image itself if 2D, None otherwise.
+        """
+        img_data = self.img_raw.copy()
+
+        if img_data is None:
+            return None
+
+        if type(img_data) is list:
+            img_2d = img_data[0]
+            if self.has_alpha_channel:
+                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
+            return img_2d
+
+        if len(img_data.shape) == 3 and self.has_alpha_channel:
+            logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+            img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
+            return img_2d
+        else:
+            logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+            return img_data
+
     def _convert_to_3d(self):
+        """
+        A functions that reads all slices of a 3D image and loads them as separate images.
+
+        """
+
+        img_data = self.img_raw.copy()
+        if img_data is None:
+            return None
+
+        img_3d = None
+        if type(img_data) is list:
+            img_3d = img_data
+            logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
+        return img_3d
+
+    def _convert_to_3d_spatial(self):
         """
         A functions that converts an image into 2 dimensions (depth/slices x height x width)
 
@@ -236,32 +270,6 @@ class ImageProcessor:
         logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         return img_3d
 
-    def _convert_to_2d(self):
-        """
-            Reads the first slice of a 3D image if it is indeed 3D, image itself if 2D.
-
-            Returns:
-                numpy.ndarray or None: The first slice of the image if it's 3D, image itself if 2D, None otherwise.
-        """
-        img_data = self.img_raw.copy()
-
-        if img_data is None:
-            return None
-
-        if type(img_data) is list:
-            img_2d = img_data[0]
-            if self.has_alpha_channel:
-                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
-            return img_2d
-
-        if len(img_data.shape) == 3 and self.has_alpha_channel:
-            logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
-            img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
-            return img_2d
-        else:
-            logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-            return img_data
-
     def apply_filters(self):
         """
         Executes function for processing image filters and converting the resulting image into a binary.
@@ -304,9 +312,8 @@ class ImageProcessor:
         """
         A function that restores image to its original size.
         """
-        # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
         self.img_2d = self._convert_to_2d()
-        # self.img_3d = self._convert_to_3d()
+        self.img_3d = self._convert_to_3d()
 
     def process_img(self, image: MatLike):
         """
@@ -556,15 +563,16 @@ class ImageProcessor:
         else:
             _, fmt = ImageProcessor.check_alpha_channel(self.img_raw)
 
-        num_dim = 2 if self.img_3d is None else len(self.img_raw.shape)
-        if num_dim == 2:
-            slices = 0
-            height, width = self.img_2d.shape
-        else:
-            slices, height, width = self.img_raw.shape
+        num_dim = 2 if self.img_3d is None else 3
+        slices = 0
+        height, width = self.img_2d.shape[:2]
+        if num_dim >= 3:
+            slices = len(self.img_raw)
+            # height, width = self.img_raw[0].shape
+
         props = [
             ["Name", f_name],
-            ["Height x Width", f"({width} x {height}) pixels"] if slices==0 else ["Slices x H x W", f"({slices} x {width} x {height}) pixels"],
+            ["Height x Width", f"({width} x {height}) pixels"] if slices==0 else ["Depth x H x W", f"({slices} x {width} x {height}) pixels"],
             ["Dimensions", f"{num_dim}D"],
             ["Format", f"{fmt}"],
             # ["Pixel Size", "2nm x 2nm"]
@@ -735,6 +743,46 @@ class ImageProcessor:
         return False, None
 
     @staticmethod
+    def rescale_img(image_data, scale_options):
+        """Downsample or up-sample image to specified pixel size."""
+
+        scale_factor = 1
+        img_2d, img_3d = None, None
+
+        if image_data is None:
+            return None, scale_factor
+
+        scale_size = 0
+        for scale_item in scale_options:
+            try:
+                scale_size = scale_item["dataValue"] if scale_item["value"] == 1 else scale_size
+            except KeyError:
+                continue
+
+        if scale_size <= 0:
+            return None, scale_factor
+
+        if type(image_data) is np.ndarray:
+            img_2d, scale_factor = ImageProcessor.resize_img(scale_size, image_data)
+            return img_2d, scale_factor
+
+        if type(image_data) is list:
+            img_px_size = 1
+            images = image_data
+            for img in images:
+                temp_px = max(img.shape[0], img.shape[1])
+                img_px_size = temp_px if temp_px > img_px_size else img_px_size
+            scale_factor = scale_size / img_px_size
+
+            # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
+            img_3d = []
+            for img in images:
+                scale_size = scale_factor * max(img.shape[0], img.shape[1])
+                img_small, _ = ImageProcessor.resize_img(scale_size, img)
+                img_3d.append(img_small)
+        return img_3d, scale_factor
+
+    @staticmethod
     def resize_img(size: int, image: MatLike):
         """
         Resizes image to specified size.
@@ -807,9 +855,5 @@ class ImageProcessor:
             if val == recommended_size:
                 data["text"] = f"{data['text']} (recommended)"
                 data["value"] = 1 if auto_scale else 0
-            """if val == recommended_size:
-                data = {"text": f"{val} px (recommended)", "value": 1, "dataValue": val}
-            else:
-                data = {"text": f"{val} px", "value": 0, "dataValue": val}"""
             scaling_data.append(data)
-        return scaling_data, recommended_size
+        return scaling_data

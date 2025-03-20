@@ -386,7 +386,7 @@ Rectangle {
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();
 
-            drpDownRescale.height = mainController.display_image() ? 150 : 50;
+            drpDownRescale.height = mainController.display_image() ? 180 : 50;
             //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
             let curr_type = mainController.get_current_img_type();

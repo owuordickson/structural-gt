@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 Item {
     id: rescaleControl
-    height: 150
+    height: 180
     width: parent.width
 
     // Expose TextFields as properties to make them accessible

@@ -40,17 +40,10 @@ y = 1e-9
 filename = 'file.qptiff'
 ALLOWED_IMG_EXTENSIONS = ['*.jpg', '*.png', '*.jpeg', '*.tif', '*.qptiff']
 pattern_string = ' '.join(ALLOWED_IMG_EXTENSIONS)
+img_ext = ALLOWED_IMG_EXTENSIONS.copy()
 # print(pattern_string)
+print(img_ext)
 
-
-import re
-for ext in ALLOWED_IMG_EXTENSIONS:
-    ext = ext.replace('*', '')
-    pattern = re.escape(ext) + r'$'
-    filename = re.sub(pattern, '', filename)
-
-# Example usage
-print(filename)
 
 """
 import os
