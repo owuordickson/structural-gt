@@ -53,24 +53,142 @@ class ImageProcessor:
         self.img_path = img_path
         self.output_dir = out_dir
         self.auto_scale = auto_scale
-        self.img_raw = ImageProcessor.load_img_from_file(img_path)
+        self.img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props = []
         self.img_3d = None
         self.img_2d = None
         self.img_bin = None
         self.img_mod = None
         self.img_net = None
-        self.scale_factor = 1
-        self.scaling_options = []
         self.has_alpha_channel = False
         if self.img_raw is not None:
             self._initialize_members()
 
+    def _load_img_from_file(self, file: str):
+        """
+        Read image and save it as an OpenCV object.
+
+        Most 3D images are like layers of multiple image frames layered on-top of each other. The image frames may be
+        images of the same object/item through time or through space (i.e., from different angles). Our approach is to
+        separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
+
+        Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
+        depending on the user-selected re-scaling options); and allows the user to select which frames to run
+        GT computations on (some frames are just too noisy to be used).
+
+        Again, our software provides a button that allows the user to select which frames are used to reconstruct the
+        layered GT graphs in the same order as their respective frames.
+
+        :param file: file path.
+        :return:
+        """
+
+        ext = os.path.splitext(file)[1].lower()
+        try:
+            if ext in ['.png', '.jpg', '.jpeg']:
+                # Load standard 2D images with OpenCV
+                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+                if image is None:
+                    raise ValueError(f"Failed to load {file}")
+                img_px_size = max(image.shape[0], image.shape[1])
+                scaling_opts = []
+                scale_factor = 1
+                optimal_size = 0
+                if img_px_size > 0:
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                if optimal_size > 0 and self.auto_scale:
+                    image, scale_factor = ImageProcessor.resize_img(optimal_size, image)
+                return image, scaling_opts, scale_factor
+            elif ext in ['.tif', '.tiff', '.qptiff']:
+                # Try load multi-page TIFF using PIL
+                img = Image.open(file)
+                images = []
+                img_px_size = 0
+                scaling_opts = []
+                scale_factor = 1
+                optimal_size = 0
+                while True:
+                    frame = np.array(img)  # Convert the current frame to numpy array
+                    images.append(frame)
+                    temp_px = max(frame.shape[0], frame.shape[1])
+                    img_px_size = temp_px if temp_px > img_px_size else img_px_size
+                    try:
+                        # Move to next frame
+                        img.seek(img.tell() + 1)
+                    except EOFError:
+                        # Stop when all frames are read
+                        break
+
+                if img_px_size > 0:
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                    scale_factor = optimal_size / img_px_size
+
+                """
+                # Plot all frames
+                num_frames = len(images)
+                cols = min(5, num_frames)  # Limit to 5 columns
+                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
+
+                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+                axes = np.array(axes).flatten()  # Flatten in case of single row
+
+                for ax, frame, idx in zip(axes, images, range(num_frames)):
+                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
+                    ax.set_title(f"Frame {idx + 1}")
+                    ax.axis("off")
+
+                # Hide extra subplots if any
+                for ax in axes[num_frames:]:
+                    ax.axis("off")
+                plt.tight_layout()
+                plt.show()"""
+
+                # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
+                images_small = []
+                if optimal_size > 0 and self.auto_scale:
+                    # image, scale_factor = ImageProcessor.resize_img(optimal_size, image)
+                    for img in images:
+                        scale_size = scale_factor * max(img.shape[0], img.shape[1])
+                        img_small, _ = ImageProcessor.resize_img(scale_size, img)
+                        images_small.append(img_small)
+                print(len(images_small))
+
+                # Convert back to numpy arrays
+                images = images_small if len(images_small) > 0 else images
+                images_lst = [np.array(f) for f in images]
+                return images_lst, scaling_opts, scale_factor
+            elif ext in ['.nii', '.nii.gz']:
+                # Load NIfTI image using nibabel
+                img_nib = nib.load(file)
+                data = img_nib.get_fdata()
+                # Normalize and convert to uint8 for OpenCV compatibility
+                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+                return data
+            elif ext == '.dcm':
+                # Load DICOM image using pydicom
+                dcm = pydicom.dcmread(file)
+                data = dcm.pixel_array
+                # Normalize and convert to uint8 if needed
+                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+                return data
+            else:
+                raise ValueError(f"Unsupported file format: {ext}")
+        except Exception as err:
+            logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
+            return None
+
     def _initialize_members(self):
         """"""
-        self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw)
-        self.img_2d = self._convert_to_grayscale()
-        self.img_3d = self._convert_to_3d()
+        print(f"{self.scaling_options}\n{self.scale_factor}")
+
+        if type(self.img_raw) is list:
+            # (Depth, Height, Width, Channels)
+            self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw[0])
+        else:
+            self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw)
+
+        self.img_2d = self._convert_to_2d()
+        # self.img_3d = self._convert_to_3d()
         if self.img_2d is not None:
             self.props = self.get_img_props()
 
@@ -121,7 +239,7 @@ class ImageProcessor:
         logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         return img_3d
 
-    def _convert_to_grayscale(self):
+    def _convert_to_2d(self):
         """
             Reads the first slice of a 3D image if it is indeed 3D, image itself if 2D.
 
@@ -133,16 +251,15 @@ class ImageProcessor:
         if img_data is None:
             return None
 
+        if type(img_data) is list:
+            img_2d = img_data[0]
+            if self.has_alpha_channel:
+                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
+            return img_2d
+
         if len(img_data.shape) == 3 and self.has_alpha_channel:
             logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
-            return img_2d
-
-        if len(img_data.shape) >= 3:
-            # Get first slice and check if it is RGB or RGBA?
-            img_2d = img_data[0, :, :]  # or image[:, :, 0] depending on the axis
-            if self.has_alpha_channel:
-                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
             return img_2d
         else:
             logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
@@ -191,7 +308,7 @@ class ImageProcessor:
         A function that restores image to its original size.
         """
         # self.img, self.scale_factor = ImageProcessor.resize_img(512, self.img_raw.copy())
-        self.img_2d = self._convert_to_grayscale()
+        self.img_2d = self._convert_to_2d()
         # self.img_3d = self._convert_to_3d()
 
     def process_img(self, image: MatLike):
@@ -432,7 +549,16 @@ class ImageProcessor:
 
         """
         f_name, _ = self.create_filenames()
-        _, fmt = ImageProcessor.check_alpha_channel(self.img_raw)
+
+        # if len(img.shape) == 4:  # (Depth, Height, Width, Channels)
+        # return True, "Multi + Alpha"
+        if type(self.img_raw) is list:
+            # (Depth, Height, Width, Channels)
+            self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw[0])
+            fmt = "Multi + Alpha" if self.has_alpha_channel else "Multi"
+        else:
+            _, fmt = ImageProcessor.check_alpha_channel(self.img_raw)
+
         num_dim = 2 if self.img_3d is None else len(self.img_raw.shape)
         if num_dim == 2:
             slices = 0
@@ -558,114 +684,6 @@ class ImageProcessor:
         return img
 
     @staticmethod
-    def load_img_from_file(file: str):
-        """
-        Read image and save it as an OpenCV object.
-
-        Most 3D images are like layers of multiple image frames layered on-top of each other. The image frames may be
-        images of the same object/item through time or through space (i.e., from different angles). Our approach is to
-        separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
-
-        Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
-        depending on the user-selected re-scaling options); and allows the user to select which frames to run
-        GT computations on (some frames are just too noisy to be used).
-
-        Again, our software provides a button that allows the user to select which frames are used to reconstruct the
-        layered GT graphs in the same order as their respective frames.
-
-        :param file: file path.
-        :return:
-        """
-
-        # We allow the user to
-
-        ext = os.path.splitext(file)[1].lower()
-        try:
-            if ext in ['.png', '.jpg', '.jpeg']:
-                # Load standard 2D images with OpenCV
-                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-                if image is None:
-                    raise ValueError(f"Failed to load {file}")
-                img_px_size = max(image.shape[0], image.shape[1])
-                scaling_opts = []
-                optimal_size = 0
-                if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
-                return image, scaling_opts, optimal_size
-            elif ext in ['.tif', '.tiff', '.qptiff']:
-                # Try load multi-page TIFF using PIL
-                img = Image.open(file)
-                images = []
-                img_px_size = 0
-                scaling_opts = []
-                optimal_size = 0
-                while True:
-                    frame = np.array(img)  # Convert the current frame to numpy array
-                    images.append(frame)
-                    temp_px = max(frame.shape[0], frame.shape[1])
-                    img_px_size = temp_px if temp_px > img_px_size else img_px_size
-                    print(frame.shape)
-                    try:
-                        # Move to next frame
-                        img.seek(img.tell() + 1)
-                    except EOFError:
-                        # Stop when all frames are read
-                        break
-
-                if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
-                    print('Scaling options:', scaling_opts)
-                """
-                # Plot all frames
-                num_frames = len(images)
-                cols = min(5, num_frames)  # Limit to 5 columns
-                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
-
-                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
-                axes = np.array(axes).flatten()  # Flatten in case of single row
-
-                for ax, frame, idx in zip(axes, images, range(num_frames)):
-                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
-                    ax.set_title(f"Frame {idx + 1}")
-                    ax.axis("off")
-
-                # Hide extra subplots if any
-                for ax in axes[num_frames:]:
-                    ax.axis("off")
-                plt.tight_layout()
-                plt.show()"""
-
-                # Resize all frames to 1024x1024 while maintaining aspect ratio
-                images_small = [Image.fromarray(f).resize((1024, 1024)) for f in images]
-                print(len(images_small))
-
-                # Convert back to numpy arrays
-                images_arr = [np.array(f) for f in images_small]
-
-                if len(images_arr) > 1:
-                    return np.stack(images_arr, axis=0)
-                return images_arr[0]
-            elif ext in ['.nii', '.nii.gz']:
-                # Load NIfTI image using nibabel
-                img_nib = nib.load(file)
-                data = img_nib.get_fdata()
-                # Normalize and convert to uint8 for OpenCV compatibility
-                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-                return data
-            elif ext == '.dcm':
-                # Load DICOM image using pydicom
-                dcm = pydicom.dcmread(file)
-                data = dcm.pixel_array
-                # Normalize and convert to uint8 if needed
-                data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-                return data
-            else:
-                raise ValueError(f"Unsupported file format: {ext}")
-        except Exception as err:
-            logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
-            return None
-
-    @staticmethod
     def load_img_from_pil(img_pil: MatLike|Image.Image):
         """
         Read image from PIL.
@@ -702,10 +720,6 @@ class ImageProcessor:
         if img is None:
             return False, None
 
-        if len(img.shape) > 4:
-            # Unknown Format
-            return False, None
-
         if len(img.shape) == 2:
             return False, "Grayscale"
 
@@ -719,11 +733,9 @@ class ImageProcessor:
                 return True, "Grayscale + Alpha"
             elif channels == 1:
                 return True, "Grayscale"
-            else:
-                return False, "Multi"
 
-        if len(img.shape) == 4:  # (Depth, Height, Width, Channels)
-            return True, "Multi + Alpha"
+        # Unknown Format
+        return False, None
 
     @staticmethod
     def resize_img(size: int, image: MatLike):
@@ -736,7 +748,7 @@ class ImageProcessor:
         """
         if image is None:
             return None, None
-        w, h = image.shape  # what about 3D?
+        w, h = image.shape[:2]
         if h > w:
             scale_factor = size / h
         else:
