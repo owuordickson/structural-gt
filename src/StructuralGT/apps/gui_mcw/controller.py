@@ -66,6 +66,7 @@ class MainController(QObject):
         self.exportGraphModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
+        self.imgScaleOptionModel = CheckBoxModel([])
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -79,6 +80,7 @@ class MainController(QObject):
         """
         try:
             options_img = sgt_obj.g_obj.imp.configs
+            options_scaling = sgt_obj.g_obj.imp.scaling_options
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
@@ -89,6 +91,7 @@ class MainController(QObject):
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
             self.microscopyPropsModel.reset_data(img_properties)
+            self.imgScaleOptionModel.reset_data(options_scaling)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")

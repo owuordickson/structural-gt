@@ -41,6 +41,7 @@ class MainWindow(QObject):
         self.ui_engine.rootContext().setContextProperty("exportGraphModel", controller.exportGraphModel)
         self.ui_engine.rootContext().setContextProperty("imgBinFilterModel", controller.imgBinFilterModel)
         self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)
+        self.ui_engine.rootContext().setContextProperty("imgScaleOptionModel", controller.imgScaleOptionModel)
         self.ui_engine.rootContext().setContextProperty("mainController", controller)
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
