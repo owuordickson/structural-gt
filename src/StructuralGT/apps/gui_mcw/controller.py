@@ -464,8 +464,8 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             sgt_obj.g_obj.imp.auto_scale = self.allow_auto_scale
             sgt_obj.g_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
-            print(sgt_obj.g_obj.imp.scaling_options)
-            print(sgt_obj.g_obj.imp.auto_scale)
+            sgt_obj.g_obj.imp.apply_scaling()
+            self.select_img_type()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
@@ -597,7 +597,7 @@ class MainController(QObject):
         """Crop image using PIL and save it."""
         try:
             sgt_obj = self.get_current_obj()
-            sgt_obj.g_obj.imp.crop_img(x, y, width, height)
+            sgt_obj.g_obj.imp.crop_image(x, y, width, height)
             sgt_obj.g_obj.reset()
 
             # Emit signal to update UI with new image

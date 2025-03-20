@@ -287,7 +287,24 @@ class ImageProcessor:
             px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width/self.scale_factor
 
-    def crop_img(self, x: float, y: float, width: float, height: float):
+    def apply_scaling(self):
+        """Re-scale a 2D/3D image to a specified size"""
+        img_data = self.img_raw.copy()
+        img, self.scale_factor = ImageProcessor.rescale_img(img_data, self.scaling_options)
+
+        if img is None:
+            # raise Exception("Unable to Rescale Image")
+            return
+
+        if type(img) is np.ndarray:
+            self.img_2d = img
+
+        if type(img) is list:
+            self.img_2d = img[0]
+            self.img_3d = img
+        self.props = self.get_img_props()
+
+    def crop_image(self, x: float, y: float, width: float, height: float):
         """
         A function that crops images into a new box dimension.
         :param x: left coordinate of cropping box.
@@ -307,6 +324,7 @@ class ImageProcessor:
         self.img_2d = self.img_2d[y:y + height, x:x + width]
         # What about CROPPING 3D images?
         # self.img_3d = self.img_3d[y:y + height, x:x + width]
+        self.props = self.get_img_props()
 
     def undo_cropping(self):
         """
@@ -314,6 +332,7 @@ class ImageProcessor:
         """
         self.img_2d = self._convert_to_2d()
         self.img_3d = self._convert_to_3d()
+        self.props = self.get_img_props()
 
     def process_img(self, image: MatLike):
         """
