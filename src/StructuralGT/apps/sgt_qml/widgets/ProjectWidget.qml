@@ -59,7 +59,7 @@ Item {
                         if (mouse.button === Qt.RightButton) {
                             contextMenu.x = mouse.x;
                             contextMenu.y = mouse.y;
-                            contextMenu.itemRow = row;  // Store index to delete later
+                            contextMenu.itemRow = row;  // index to delete
                             contextMenu.open();
                         }
                     }
