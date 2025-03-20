@@ -92,7 +92,7 @@ Rectangle {
                     id: drpDownRescale
                     width: 180
                     //height: colRadioButtons.implicitHeight + 10
-                    height: 100
+                    height: 50
                     modal: false
                     focus: true
                     x: 2
@@ -133,55 +133,45 @@ Rectangle {
                             }
                         }
 
-                        RowLayout {
-                            id: scalingContainer
-                            spacing: 10
-                            Layout.alignment: Qt.AlignHCenter
+                        ListView {
+                            id: listViewScalingOptions
+                            //anchors.fill: parent
+                            width: 180
+                            height: 150
                             visible: mainController.display_image()
+                            model: imgScaleOptionModel
+                            ButtonGroup {
+                                id: btnGrpScales
+                                exclusive: true
+                            }
+
+                            delegate: Item {
+                                width: listViewScalingOptions.width
+                                height: 24
+
+                                property int valueRole: Qt.UserRole + 4
+
+                                RowLayout {
+                                    anchors.fill: parent
+
+                                    RadioButton {
+                                        text: model.text
+                                        ButtonGroup.group: btnGrpScales
+                                        property bool isChecked: model.value
+                                        checked: isChecked
+                                        onClicked: btnGrpScales.checkedButton = this
+                                        onCheckedChanged: {
+                                            if (isChecked !== checked) {  // Only update if there is a change
+                                                isChecked = checked
+                                                var val = checked ? 1 : 0;
+                                                var index = imgFilterModel.index(model.index, 0);
+                                                imgScaleOptionModel.setData(index, val, valueRole);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-
-                        /*RowLayout {
-                            spacing: 10
-                            Layout.alignment: Qt.AlignHCenter
-
-                            Button {
-                                Layout.preferredWidth: 54
-                                Layout.preferredHeight: 30
-                                text: ""
-                                onClicked: drpDownRescale.close()
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 5
-                                    color: "#bc0000"
-
-                                    Label {
-                                        text: "Cancel"
-                                        color: "#ffffff"
-                                        anchors.centerIn: parent
-                                    }
-                                }
-                            }
-
-                            Button {
-                                Layout.preferredWidth: 40
-                                Layout.preferredHeight: 30
-                                text: ""
-                                onClicked: drpDownRescale.close()
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 5
-                                    color: "#22bc55"
-
-                                    Label {
-                                        text: "OK"
-                                        color: "#ffffff"
-                                        anchors.centerIn: parent
-                                    }
-                                }
-                            }
-                        }*/
 
                     }
 
@@ -474,13 +464,13 @@ Rectangle {
             // Force refresh
             btnSelect.visible = mainController.display_image();
             allowScalingContainer.visible = !mainController.display_image();
-            scalingContainer.visible = mainController.display_image();
+            listViewScalingOptions.visible = mainController.display_image();
             //btnRescale.enabled = mainController.display_image();
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();
 
-            drpDownRescale.height = mainController.display_image() ? 200 : 100;
+            drpDownRescale.height = mainController.display_image() ? 150 : 50;
 
             let curr_type = mainController.get_current_img_type();
             for (let i=0; i < cbImageType.model.count; i++) {

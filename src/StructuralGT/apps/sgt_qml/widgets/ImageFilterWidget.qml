@@ -33,7 +33,7 @@ Item {
                     objectName: model.id
                     Layout.preferredWidth: cbxWidthSize
                     text: model.text
-                    property bool isChecked: model.value === 1 ? true : false
+                    property bool isChecked: model.value
                     checked: isChecked
                     onCheckedChanged: {
                         if (isChecked !== checked) {  // Only update if there is a change

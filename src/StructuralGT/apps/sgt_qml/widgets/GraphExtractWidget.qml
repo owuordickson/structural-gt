@@ -88,7 +88,7 @@ Item {
                             objectName: model.id
                             text: model.text
                             ButtonGroup.group: btnGrpWeights
-                            checked: model.value === 1 ? true : false
+                            checked: model.value
                             onClicked: btnGrpWeights.checkedButton = this
                             onCheckedChanged: {
                                 var val = checked ? 1 : 0;

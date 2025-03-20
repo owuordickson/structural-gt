@@ -801,6 +801,11 @@ class ImageProcessor:
 
         # Remove duplicates and arrange in ascending order
         scaling_options = sorted(list(set(scaling_options)))
-        scaling_data = [{"text": f"{val} px (recommended)" if val == recommended_size else f"{val} px", "value": val}
-                        for val in scaling_options]
+        scaling_data = []
+        for val in scaling_options:
+            if val == recommended_size:
+                data = {"text": f"{val} px (recommended)", "value": 1, "dataValue": val}
+            else:
+                data = {"text": f"{val} px", "value": 0, "dataValue": val}
+            scaling_data.append(data)
         return scaling_data, recommended_size
