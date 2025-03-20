@@ -812,5 +812,4 @@ class ImageProcessor:
             else:
                 data = {"text": f"{val} px", "value": 0, "dataValue": val}"""
             scaling_data.append(data)
-        print(f"Scaling: {scaling_data}")
         return scaling_data, recommended_size
