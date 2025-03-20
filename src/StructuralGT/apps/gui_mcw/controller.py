@@ -455,6 +455,18 @@ class MainController(QObject):
                                                                                     "image filters. Try again."])
 
     @Slot()
+    def apply_img_scaling(self):
+        """Retrieve settings from model and send to Python."""
+        try:
+            sgt_obj = self.get_current_obj()
+            sgt_obj.g_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
+            print(sgt_obj.g_obj.imp.scaling_options)
+        except Exception as err:
+            logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
+                                                                              "image. Try again."])
+
+    @Slot()
     def export_graph(self):
         """"""
         # updated_values = {val["id"]: val["value"] for val in self.exportGraphModel.list_data}
