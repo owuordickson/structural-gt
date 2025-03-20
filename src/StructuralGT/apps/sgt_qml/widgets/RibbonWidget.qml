@@ -110,7 +110,7 @@ Rectangle {
                         RowLayout {
                             id: allowScalingContainer
                             spacing: 2
-                            Layout.alignment: Qt.AlignHCenter
+                            //Layout.alignment: Qt.AlignHCenter
                             visible: !mainController.display_image()
 
                             Label {
@@ -133,46 +133,7 @@ Rectangle {
                             }
                         }
 
-                        ListView {
-                            id: listViewScalingOptions
-                            //anchors.fill: parent
-                            width: 180
-                            height: 150
-                            visible: mainController.display_image()
-                            model: imgScaleOptionModel
-                            ButtonGroup {
-                                id: btnGrpScales
-                                exclusive: true
-                            }
-
-                            delegate: Item {
-                                width: listViewScalingOptions.width
-                                height: 24
-
-                                property int valueRole: Qt.UserRole + 4
-
-                                RowLayout {
-                                    anchors.fill: parent
-
-                                    RadioButton {
-                                        text: model.text
-                                        ButtonGroup.group: btnGrpScales
-                                        property bool isChecked: model.value
-                                        checked: isChecked
-                                        onClicked: btnGrpScales.checkedButton = this
-                                        onCheckedChanged: {
-                                            if (isChecked !== checked) {  // Only update if there is a change
-                                                isChecked = checked
-                                                var val = checked ? 1 : 0;
-                                                var index = imgFilterModel.index(model.index, 0);
-                                                imgScaleOptionModel.setData(index, val, valueRole);
-                                                mainController.apply_img_scaling();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        RescaleControlWidget{}
 
                     }
 
@@ -196,7 +157,7 @@ Rectangle {
                 Popup {
                     id: drpDownBrightness
                     width: 250
-                    height: 150
+                    height: 100
                     modal: false
                     focus: true
                     x: 2
@@ -210,51 +171,7 @@ Rectangle {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        BrightnessControlWidget{ id: brightnessControl }
-
-                        RowLayout {
-                            spacing: 10
-                            Layout.alignment: Qt.AlignHCenter
-
-                            Button {
-                                Layout.preferredWidth: 54
-                                Layout.preferredHeight: 30
-                                text: ""
-                                onClicked: drpDownBrightness.close()
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 5
-                                    color: "#bc0000"
-
-                                    Label {
-                                        text: "Cancel"
-                                        color: "#ffffff"
-                                        anchors.centerIn: parent
-                                    }
-                                }
-                            }
-
-                            Button {
-                                Layout.preferredWidth: 40
-                                Layout.preferredHeight: 30
-                                text: ""
-                                onClicked: drpDownBrightness.close()
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 5
-                                    color: "#22bc55"
-
-                                    Label {
-                                        text: "OK"
-                                        color: "#ffffff"
-                                        anchors.centerIn: parent
-                                    }
-                                }
-                            }
-                        }
-
+                        BrightnessControlWidget{}
                     }
 
                 }
@@ -465,8 +382,6 @@ Rectangle {
             // Force refresh
             btnSelect.visible = mainController.display_image();
             allowScalingContainer.visible = !mainController.display_image();
-            listViewScalingOptions.visible = mainController.display_image();
-            //btnRescale.enabled = mainController.display_image();
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();

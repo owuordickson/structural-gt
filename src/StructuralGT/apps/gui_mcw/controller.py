@@ -403,9 +403,7 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.imgControlModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            # brightness = sgt_obj.g_obj.imp.configs["brightness_level"]["value"]
-            # contrast = sgt_obj.g_obj.imp.configs["contrast_level"]["value"]
-            self.select_img_type()
+            self.select_img_type(choice=2)
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
