@@ -270,16 +270,35 @@ class ImageProcessor:
         logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         return img_3d
 
-    def apply_filters(self):
+    def apply_filters(self, filter_type=2):
         """
         Executes function for processing image filters and converting the resulting image into a binary.
 
+        Filter Types:
+        1 - Just Image Filters
+        2 - Both Image + Binary (1+2) Filters
+
         :return: None
         """
-        self.img_mod = self.process_img(self.img_2d.copy())
-        self.img_bin = self.binarize_img(self.img_mod.copy())
 
-        # Compute pixel dimension in nanometers
+        img_data = self.img_2d.copy() if self.img_3d is None else self.img_3d.copy()
+        if self.img_3d is None:
+            # 2D image
+            self.img_mod = self.process_img(image=img_data)
+        else:
+            # 3D image
+            self.img_mod = [self.process_img(image=img) for img in img_data]
+
+        if filter_type == 2:
+            img_mod = self.img_mod.copy()
+            if self.img_3d is None:
+                self.img_bin = self.binarize_img(self.img_mod.copy())
+            else:
+                self.img_bin = [self.binarize_img(image=img) for img in img_mod]
+
+
+    def update_pixel_width(self):
+        """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""
         opt_img = self.configs
         pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
         scale_val = float(opt_img["scale_value_nanometers"]["value"])

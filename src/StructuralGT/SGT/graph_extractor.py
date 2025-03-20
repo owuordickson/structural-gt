@@ -88,6 +88,7 @@ class GraphExtractor(ProgressUpdate):
         """
         self.update_status([10, "Processing image..."])
         self.imp.apply_filters()
+        self.imp.update_pixel_width()
         self.fit_graph()
 
     def fit_graph(self):

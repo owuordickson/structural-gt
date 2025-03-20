@@ -16,13 +16,12 @@ class ImageProvider(QQuickImageProvider):
             sgt_obj = self.img_controller.get_current_obj()
             im_obj = sgt_obj.g_obj.imp
             if option == "binary":
-                im_obj.img_mod = im_obj.process_img(im_obj.img_2d.copy())
-                im_obj.img_bin = im_obj.binarize_img(im_obj.img_mod.copy())
-                img_cv = im_obj.img_bin
+                im_obj.apply_filters(filter_type=2)
+                img_cv = im_obj.img_bin if im_obj.img_3d is None else im_obj.img_bin[0]
                 img = Image.fromarray(img_cv)
             elif option == "processed":
-                im_obj.img_mod = im_obj.process_img(im_obj.img_2d.copy())
-                img_cv = im_obj.img_mod
+                im_obj.apply_filters(filter_type=1)
+                img_cv = im_obj.img_mod if im_obj.img_3d is None else im_obj.img_mod[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
                 if im_obj.img_net is None:
