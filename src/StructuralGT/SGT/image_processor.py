@@ -95,7 +95,7 @@ class ImageProcessor:
                 scale_factor = 1
                 optimal_size = 0
                 if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
                 if optimal_size > 0 and self.auto_scale:
                     image, scale_factor = ImageProcessor.resize_img(optimal_size, image)
                 return image, scaling_opts, scale_factor
@@ -120,7 +120,7 @@ class ImageProcessor:
                         break
 
                 if img_px_size > 0:
-                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size)
+                    scaling_opts, optimal_size = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
                     scale_factor = optimal_size / img_px_size
 
                 """
@@ -151,7 +151,6 @@ class ImageProcessor:
                         scale_size = scale_factor * max(img.shape[0], img.shape[1])
                         img_small, _ = ImageProcessor.resize_img(scale_size, img)
                         images_small.append(img_small)
-                print(len(images_small))
 
                 # Convert back to numpy arrays
                 images = images_small if len(images_small) > 0 else images
@@ -179,8 +178,6 @@ class ImageProcessor:
 
     def _initialize_members(self):
         """"""
-        print(f"{self.scaling_options}\n{self.scale_factor}")
-
         if type(self.img_raw) is list:
             # (Depth, Height, Width, Channels)
             self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw[0])
@@ -786,7 +783,7 @@ class ImageProcessor:
         return pixel_width
 
     @staticmethod
-    def get_scaling_options(orig_size: float):
+    def get_scaling_options(orig_size: float, auto_scale: bool):
         """"""
         orig_size = int(orig_size)
         if orig_size > 2048:
@@ -803,9 +800,17 @@ class ImageProcessor:
         scaling_options = sorted(list(set(scaling_options)))
         scaling_data = []
         for val in scaling_options:
+            data = {"text": f"{val} px", "value": 0, "dataValue": val}
+            if val == orig_size:
+                data["text"] = f"{data['text']}*"
+
             if val == recommended_size:
+                data["text"] = f"{data['text']} (recommended)"
+                data["value"] = 1 if auto_scale else 0
+            """if val == recommended_size:
                 data = {"text": f"{val} px (recommended)", "value": 1, "dataValue": val}
             else:
-                data = {"text": f"{val} px", "value": 0, "dataValue": val}
+                data = {"text": f"{val} px", "value": 0, "dataValue": val}"""
             scaling_data.append(data)
+        print(f"Scaling: {scaling_data}")
         return scaling_data, recommended_size

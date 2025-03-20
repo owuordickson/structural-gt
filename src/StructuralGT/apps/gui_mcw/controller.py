@@ -310,6 +310,10 @@ class MainController(QObject):
             return ""
         return f"{sgt_obj.g_obj.imp.output_dir}"
 
+    @Slot(result=bool)
+    def get_auto_scale(self):
+        return self.allow_auto_scale
+
     @Slot(int)
     def set_selected_img(self, row_index):
         """Change color of list item to gray if it is the active image"""
