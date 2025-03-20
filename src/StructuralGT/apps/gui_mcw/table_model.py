@@ -1,8 +1,6 @@
-import base64
-from PIL import Image, ImageQt  # Import ImageQt for conversion
-from PIL.ImageQt import QIODevice
-from PySide6.QtCore import QByteArray, QBuffer
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+
+from ...SGT.sgt_utils import get_pixmap
 
 # Define a simple table model
 class TableModel(QAbstractTableModel):
@@ -71,18 +69,7 @@ class TableModel(QAbstractTableModel):
             self.itemData.append([key])  # Store the key
             a_obj = analyze_objs[key]
             img_cv = a_obj.g_obj.imp.img_2d  # Assuming OpenCV image format
-            img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
-            pixmap = ImageQt.toqpixmap(img_pil)  # Convert to QPixmap
-
-            # Convert QPixmap to QImage
-            q_image = pixmap.toImage()
-
-            # Convert QImage to base64 string
-            byte_array = QByteArray()
-            buffer = QBuffer(byte_array)
-            buffer.open(QIODevice.WriteOnly)
-            q_image.save(buffer, "PNG")  # Save QImage to buffer as PNG
-            base64_data = base64.b64encode(byte_array.data()).decode("utf-8")  # Encode to base64
+            base64_data = get_pixmap(img_cv)
 
             self.imageCache[key] = base64_data  # Store base64 string
             # self.imageCache[key] = pixmap  # Store QPixmap in cache

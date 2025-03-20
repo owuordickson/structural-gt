@@ -1,7 +1,11 @@
 import os
 import csv
+import base64
 import multiprocessing as mp
 from typing import LiteralString
+from PIL import Image, ImageQt  # Import ImageQt for conversion
+from PIL.ImageQt import QIODevice
+from PySide6.QtCore import QByteArray, QBuffer
 
 
 def get_num_cores():
@@ -40,7 +44,7 @@ def __get_slurm_cores__():
         return False
 
 
-def write_txt_file(data: str, path: LiteralString|str|bytes, wr=True):
+def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):
     """Description
         Writes data into a txt file.
 
@@ -57,7 +61,7 @@ def write_txt_file(data: str, path: LiteralString|str|bytes, wr=True):
         pass
 
 
-def write_csv_file(csv_file: LiteralString|str|bytes, column_tiles: list, data):
+def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, data):
     """
     Write data to a csv file.
     Args:
@@ -78,3 +82,20 @@ def write_csv_file(csv_file: LiteralString|str|bytes, column_tiles: list, data):
             except csv.Error:
                 pass
     csvfile.close()
+
+
+def get_pixmap(img_cv):
+    """ Converts an OpenCV image to a QPixmap"""
+    img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
+    pixmap = ImageQt.toqpixmap(img_pil)  # Convert to QPixmap
+
+    # Convert QPixmap to QImage
+    q_image = pixmap.toImage()
+
+    # Convert QImage to base64 string
+    byte_array = QByteArray()
+    buffer = QBuffer(byte_array)
+    buffer.open(QIODevice.WriteOnly)
+    q_image.save(buffer, "PNG")  # Save QImage to buffer as PNG
+    base64_data = base64.b64encode(byte_array.data()).decode("utf-8")  # Encode to base64
+    return base64_data

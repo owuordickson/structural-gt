@@ -293,7 +293,13 @@ class MainController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        return "image://imageProvider?t=" + str(np.random.randint(1, 1000))
+        return "image://imageProvider/" + str(self.current_obj_index)
+
+    @Slot(result=bool)
+    def is_img_3d(self):
+        sgt_obj = self.get_current_obj()
+        is_3d = False if sgt_obj.g_obj.imp.img_3d is None else True
+        return is_3d
 
     @Slot(result=int)
     def get_current_img_type(self):
