@@ -460,7 +460,9 @@ class MainController(QObject):
     def apply_img_scaling(self):
         """Retrieve settings from model and send to Python."""
         try:
+            self.set_auto_scale(True)
             sgt_obj = self.get_current_obj()
+            sgt_obj.g_obj.imp.auto_scale = self.allow_auto_scale
             sgt_obj.g_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
             print(sgt_obj.g_obj.imp.scaling_options)
         except Exception as err:

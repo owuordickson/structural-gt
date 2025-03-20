@@ -84,7 +84,7 @@ Rectangle {
                 background: Rectangle { color: "transparent" }
                 ToolTip.text: "Re-scale large images"
                 ToolTip.visible: btnRescale.hovered
-                enabled: true  // mainController.display_image()
+                enabled: true
                 onClicked: drpDownRescale.open()
 
 
@@ -387,6 +387,7 @@ Rectangle {
             btnShowGraph.enabled = mainController.display_image();
 
             drpDownRescale.height = mainController.display_image() ? 150 : 50;
+            //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
             let curr_type = mainController.get_current_img_type();
             for (let i=0; i < cbImageType.model.count; i++) {

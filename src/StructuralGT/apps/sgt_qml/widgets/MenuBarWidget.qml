@@ -44,6 +44,7 @@ MenuBar {
         id: mnuImgCtrls
         title: "Tools"
         enabled: true
+        //MenuItem {id:mnuRescaleImgCtrl; text: "Rescale Image"; enabled: false; onTriggered: dialogRescaleCtrl.open() }
         MenuItem {id:mnuBrightnessImgCtrl; text: "Brightness/Contrast"; enabled: false; onTriggered: dialogBrightnessCtrl.open() }
         MenuItem {id:mnuContrastImgCtrl; text: "Show Graph"; enabled: false; onTriggered: dialogExtractGraph.open() }
     }
@@ -107,6 +108,7 @@ MenuBar {
             mnuExportGexf.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
             mnuExportAll.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
 
+            //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS
             mnuBrightnessImgCtrl.enabled = mainController.display_image();
             mnuContrastImgCtrl.enabled = mainController.display_image();
             mnuBinImgFilter.enabled = mainController.display_image();

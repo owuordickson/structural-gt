@@ -8,6 +8,8 @@ Item {
     height: 150
     width: parent.width
 
+    // Expose TextFields as properties to make them accessible
+    property alias lblScale: lblScaling
     property int valueRole: Qt.UserRole + 4
 
 
@@ -18,6 +20,7 @@ Item {
         visible: mainController.display_image()
 
         Label {
+            id: lblScaling
             text: "Re-scale to:"
             font.bold: true
         }
@@ -53,6 +56,9 @@ Item {
                                 var index = imgFilterModel.index(model.index, 0);
                                 imgScaleOptionModel.setData(index, val, valueRole);
                                 mainController.apply_img_scaling();
+
+                                //if (dialogRescaleCtrl) { dialogRescaleCtrl.close(); }
+                                drpDownRescale.close();
                             }
                         }
                     }
