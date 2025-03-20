@@ -6,7 +6,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 # Define a simple table model
 class TableModel(QAbstractTableModel):
-    SelectedRole = Qt.ItemDataRole.UserRole + 10
+    SelectedRole = Qt.ItemDataRole.UserRole + 20
 
     def __init__(self, data, parent=None):
         super().__init__(parent)

@@ -20,7 +20,7 @@ class CheckBoxModel(QAbstractListModel):
     def rowCount(self, parent=None):
         return len(self.list_data)
 
-    def data(self, index, role):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or index.row() >= len(self.list_data):
             return None
         item = self.list_data[index.row()]
@@ -46,7 +46,7 @@ class CheckBoxModel(QAbstractListModel):
             return item["visible"]
         return None
 
-    def setData(self, index, value, role):
+    def setData(self, index, value, role=Qt.ItemDataRole.DisplayRole):
         """
 
         Args:

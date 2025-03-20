@@ -120,7 +120,7 @@ class TreeModel(QAbstractItemModel):
         self.dataChanged.emit(self.index(0,0), self.index(len(new_data), 0),
                               [self.IdRole, self.TextRole, self.ValueRole])
 
-    def parent(self, index):
+    def parent(self, index=QModelIndex()):
         """ Returns the parent index of a given child index. """
         if not index.isValid():
             return QModelIndex()
