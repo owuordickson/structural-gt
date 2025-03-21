@@ -21,11 +21,11 @@ from .image_processor import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
-
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
 try:
     import sys
+
     logger = logging.getLogger("SGT App")
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
     import cupy as cp
@@ -40,7 +40,9 @@ try:
         COMPUTING_DEVICE = "GPU"
         logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
     else:
-        logging.info("Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})
+        logging.info(
+            "Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads",
+            extra={'user': 'SGT Logs'})
         raise ImportError("Please add CUDA_PATH to System environment variables.")
 except (ImportError, NameError, AttributeError):
     xp = np  # Fallback to NumPy for CPU
@@ -100,30 +102,26 @@ class GraphExtractor(ProgressUpdate):
             self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
                                     "image/binary filters and graph options. OR change brightness/contrast"])
             return
+
         self.update_status([50, "Making graph skeleton..."])
         success = self.extract_graph()
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
-        else:
-            self.update_status([75, "Verifying graph network..."])
-            if self.nx_graph.number_of_nodes() <= 0:
-                self.update_status([-1, "Problem generating graph (change image/binary filters)["])
-                self.abort = True
-            else:
-                self.nx_info, self.nx_components, connect_ratio = (
-                    GraphComponents.compute_conductance(self.nx_graph, self.nx_info))
-                self.props = [
-                    ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
-                    ["Edge Count", str(self.nx_graph.number_of_edges())],
-                    ["Node Count", str(self.nx_graph.number_of_nodes())],
-                    ["Graph Count", str(len(self.nx_components))],
-                    ["Largest-to-Entire graph ratio", f"{round((connect_ratio * 100), 3) }%"]]
-                # draw graph network
-                self.update_status([90, "Drawing graph network..."])
-                img_2d = self.imp.img_2d
-                graph_plt = self.draw_graph_network(img_2d)
-                self.imp.img_net = ImageProcessor.plot_to_img(graph_plt)
+            return
+
+        self.update_status([75, "Verifying graph network..."])
+        if self.nx_graph.number_of_nodes() <= 0:
+            self.update_status([-1, "Problem generating graph (change image/binary filters)["])
+            self.abort = True
+            return
+
+        self.update_status([80, "Retrieving graph properties..."])
+        self.props = self.get_graph_props()
+
+        self.update_status([90, "Drawing graph network..."])
+        graph_plt = self.draw_graph_network()
+        self.imp.img_net = ImageProcessor.plot_to_img(graph_plt)
 
     def reset(self):
         """
@@ -190,7 +188,7 @@ class GraphExtractor(ProgressUpdate):
 
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
-                                                              pixel_dim=px_size, rho_dim=rho_val)
+                                                                         pixel_dim=px_size, rho_dim=rho_val)
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
@@ -220,7 +218,7 @@ class GraphExtractor(ProgressUpdate):
                         self.nx_graph.remove_edge(s, e)
         return True
 
-    def draw_graph_network(self, raw_img, a4_size: bool = False, blank: bool = False):
+    def draw_graph_network(self, raw_img: MatLike = None, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -230,6 +228,8 @@ class GraphExtractor(ProgressUpdate):
 
         :return:
         """
+
+        raw_img = self.imp.img_2d if raw_img is None else raw_img
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -283,7 +283,7 @@ class GraphExtractor(ProgressUpdate):
 
         return fig
 
-    def display_skeletal_images(self, image: MatLike):
+    def display_skeletal_images(self, image: MatLike = None):
         """
         Create plot figures of skeletal image and graph network image.
 
@@ -291,6 +291,8 @@ class GraphExtractor(ProgressUpdate):
 
         :return:
         """
+
+        image = self.imp.img_2d if image is None else image
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -349,6 +351,22 @@ class GraphExtractor(ProgressUpdate):
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
 
         return run_info
+
+    def get_graph_props(self):
+        """
+        A method that retrieves graph properties and stores them in a list-array.
+
+        Returns: list of graph properties
+        """
+        self.nx_info, self.nx_components, connect_ratio = (
+            GraphComponents.compute_conductance(self.nx_graph, self.nx_info))
+        props = [
+            ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
+            ["Edge Count", str(self.nx_graph.number_of_edges())],
+            ["Node Count", str(self.nx_graph.number_of_nodes())],
+            ["Graph Count", str(len(self.nx_components))],
+            ["Largest-to-Entire graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
+        return props
 
     def get_weight_type(self):
         wt_type = None  # Default weight
@@ -462,6 +480,7 @@ class GraphExtractor(ProgressUpdate):
                 axis.plot(ge[:, 1], ge[:, 0], 'red')
         return axis
 
+
 class GraphComponents:
 
     @staticmethod
@@ -509,7 +528,7 @@ class GraphComponents:
         # 3a. Check connectivity of graph
         # It has less than two nodes or is not connected.
         sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(
-                eig_graph)
+            eig_graph)
         eig_graph = sub_graph_largest
         if size > 1:
             data_info.append({"name": "Subgraph Count", "value": size})

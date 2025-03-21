@@ -612,12 +612,11 @@ class GraphAnalyzer(ProgressUpdate):
         out_figs.append(fig)
 
         # 2. plotting skeletal images
-        img_2d = self.g_obj.imp.img_2d
-        fig = self.g_obj.display_skeletal_images(img_2d)
+        fig = self.g_obj.display_skeletal_images()
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = self.g_obj.draw_graph_network(img_2d, a4_size=True)
+        fig = self.g_obj.draw_graph_network(a4_size=True)
         if fig:
             out_figs.append(fig)
 
@@ -636,7 +635,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.display_heatmaps()
+            figs = self.display_2d_heatmaps()
             for fig in figs:
                 out_figs.append(fig)
 
@@ -794,7 +793,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def display_heatmaps(self):
+    def display_2d_heatmaps(self):
         """
         Create plot figures of graph theory heatmaps.
 
