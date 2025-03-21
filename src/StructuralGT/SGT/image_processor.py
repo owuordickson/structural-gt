@@ -301,6 +301,10 @@ class ImageProcessor:
             else:
                 self.img_bin = [self.binarize_img(image=img) for img in img_mod]
 
+    def reset_filters(self):
+        """Delete existing filters that have been applied on image."""
+        self.img_mod, self.img_bin, self.img_net = None, None, None
+
     def apply_img_scaling(self):
         """Re-scale a 2D/3D image to a specified size"""
         img_data = self.img_raw.copy()
@@ -321,6 +325,7 @@ class ImageProcessor:
     def crop_image(self, x: float, y: float, width: float, height: float):
         """
         A function that crops images into a new box dimension.
+
         :param x: left coordinate of cropping box.
         :param y: top coordinate of cropping box.
         :param width: width of cropping box.
@@ -328,7 +333,7 @@ class ImageProcessor:
         """
 
         # Verify bounds of cropping box
-        h, w = self.img_2d.shape
+        h, w = self.img_2d.shape[:2]
         x = max(0.0, min(x, w))
         y = max(0.0, min(y, h))
         width = min(width, w - x)
@@ -589,10 +594,8 @@ class ImageProcessor:
         Returns: list of image properties
 
         """
-        f_name, _ = self.create_filenames()
 
-        # if len(img.shape) == 4:  # (Depth, Height, Width, Channels)
-        # return True, "Multi + Alpha"
+        f_name, _ = self.create_filenames()
         if type(self.img_raw) is list:
             # (Depth, Height, Width, Channels)
             self.has_alpha_channel, _ = ImageProcessor.check_alpha_channel(self.img_raw[0])
@@ -605,7 +608,6 @@ class ImageProcessor:
         height, width = self.img_2d.shape[:2]
         if num_dim >= 3:
             slices = len(self.img_raw)
-            # height, width = self.img_raw[0].shape
 
         props = [
             ["Name", f_name],
@@ -660,6 +662,26 @@ class ImageProcessor:
                                    [0, max(img_histogram)]], dtype='object')
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
+
+    def save_images_to_file(self):
+        """Write images to file."""
+        img_dir, filename = os.path.split(self.img_path)
+        out_dir = self.output_dir if self.output_dir != '' else img_dir
+        pr_filename = filename + "_processed.jpg"
+        bin_filename = filename + "_binary.jpg"
+        net_filename = filename + "_final.jpg"
+        img_file = os.path.join(out_dir, pr_filename)
+        bin_file = os.path.join(out_dir, bin_filename)
+        net_file = os.path.join(out_dir, net_filename)
+
+        graph_img = self.img_net
+        cv2.imwrite(str(img_file), self.img_mod)
+        cv2.imwrite(str(bin_file), self.img_bin)
+        if graph_img.mode == "JPEG":
+            graph_img.save(net_file, format='JPEG', quality=95)
+        elif graph_img.mode in ["RGBA", "P"]:
+            img_net = graph_img.convert("RGB")
+            img_net.save(net_file, format='JPEG', quality=95)
 
     @staticmethod
     def apply_filter(filter_type: str, img: MatLike, grad_x, grad_y):
@@ -849,7 +871,7 @@ class ImageProcessor:
         :param image: OpenCV image.
         :return: rescaled image.
         """
-        w, h = image.shape
+        w, h = image.shape[:2]
         length = h if h > w else w
         return cv2.resize(image, (length, length))
 

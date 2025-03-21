@@ -5,7 +5,6 @@ Builds a graph network from nano-scale microscopy images.
 """
 
 import os
-import cv2
 import math
 import sknw
 import logging
@@ -131,7 +130,7 @@ class GraphExtractor(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.imp.img_mod, self.imp.img_bin, self.imp.img_net = None, None, None
+        self.imp.reset_filters()
         self.nx_graph, self.nx_info = None, []
 
     def extract_graph(self):
@@ -377,25 +376,12 @@ class GraphExtractor(ProgressUpdate):
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
         adj_filename = filename + "_adj.csv"
-        pr_filename = filename + "_processed.jpg"
-        bin_filename = filename + "_binary.jpg"
-        net_filename = filename + "_final.jpg"
         gexf_file = os.path.join(output_location, g_filename)
         csv_file = os.path.join(output_location, el_filename)
         adj_file = os.path.join(output_location, adj_filename)
-        img_file = os.path.join(output_location, pr_filename)
-        bin_file = os.path.join(output_location, bin_filename)
-        net_file = os.path.join(output_location, net_filename)
 
         if opt_gte["save_images"]["value"] == 1:
-            graph_img = self.imp.img_net
-            cv2.imwrite(str(img_file), self.imp.img_mod)
-            cv2.imwrite(str(bin_file), self.imp.img_bin)
-            if graph_img.mode == "JPEG":
-                graph_img.save(net_file, format='JPEG', quality=95)
-            elif graph_img.mode in ["RGBA", "P"]:
-                img_net = graph_img.convert("RGB")
-                img_net.save(net_file, format='JPEG', quality=95)
+            self.imp.save_images_to_file()
 
         if opt_gte["export_adj_mat"]["value"] == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
