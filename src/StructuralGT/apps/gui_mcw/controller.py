@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
+from .imagegrid_model import ImageGridModel
+
 if TYPE_CHECKING:
     # False at run time, only for type checker
     from _typeshed import SupportsWrite
@@ -62,11 +64,12 @@ class MainController(QObject):
 
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
-        self.imgControlModel = CheckBoxModel([])
         self.exportGraphModel = CheckBoxModel([])
+        self.imgControlModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
+        self.img3dGridModel = ImageGridModel([])
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -293,7 +296,8 @@ class MainController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        return "image://imageProvider/" + str(self.current_obj_index)
+        unique_num = self.current_obj_index + self.current_img_type + np.random.randint(low=21, high=1000)
+        return "image://imageProvider/" + str(unique_num)
 
     @Slot(result=bool)
     def is_img_3d(self):

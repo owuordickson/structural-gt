@@ -40,6 +40,17 @@ class ImageGridModel(QAbstractListModel):
             self.dataChanged.emit(index, index, [role])
             return True
 
+    def reset_data(self, new_data):
+        """ Resets the data to be displayed. """
+        self._image_data = new_data
+        if new_data is None:
+            return
+        self.beginResetModel()
+        self._image_data = [{"id": i, "image": get_pixmap(new_data[i]), "selected": 0} for i in range(len(new_data))]
+        self.endResetModel()
+        self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),
+                              [self.IdRole, self.ImageRole, self.SelectedRole])
+
     def roleNames(self):
         return {
             self.IdRole: b"id",
