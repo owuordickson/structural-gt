@@ -302,6 +302,8 @@ class MainController(QObject):
     @Slot(result=bool)
     def is_img_3d(self):
         sgt_obj = self.get_current_obj()
+        if sgt_obj is None:
+            return False
         is_3d = False if sgt_obj.g_obj.imp.img_3d is None else True
         return is_3d
 

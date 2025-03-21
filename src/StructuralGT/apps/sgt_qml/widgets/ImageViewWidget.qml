@@ -191,7 +191,45 @@ ColumnLayout {
                 transformOrigin: Item.Center
                 fillMode: Image.PreserveAspectFit
                 source: ""
+                visible: !mainController.is_img_3d()
             }
+
+
+            GridView {
+                id: imgGridView
+                width: flickableArea.width
+                height: flickableArea.height
+                anchors.centerIn: parent
+                cellWidth: 250
+                cellHeight: 250
+                model: img3dGridModel
+                visible: mainController.is_img_3d()
+
+                delegate: Item {
+                    width: imgGridView.cellWidth
+                    height: imgGridView.cellHeight
+
+                    Image {
+                        source: "data:image/png;base64," + model.image  // Base64 encoded image
+                        width: parent.width
+                        height: parent.height
+                        transformOrigin: Item.Center
+                        fillMode: Image.PreserveAspectFit
+                        cache: true
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        property int isSelected: 0
+                                                onClicked: {
+                            isSelected = isSelected === 1 ? 0 : 1;
+                            console.log("Clicked on:", model.id)
+                            console.log("Selected: ", isSelected);
+                        }
+                    }
+                }
+            }
+
         }
 
         // Selection Rectangle for Cropping
@@ -333,6 +371,8 @@ ColumnLayout {
         function onImageChangedSignal() {
             // Force refresh
             imgView.source = mainController.get_pixmap();
+            imgView.visible = !mainController.is_img_3d();
+            imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
             imgContainer.visible = mainController.display_image();
             navControls.visible = mainController.display_image();

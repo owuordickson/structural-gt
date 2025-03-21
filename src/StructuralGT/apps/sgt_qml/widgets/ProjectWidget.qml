@@ -55,7 +55,7 @@ Item {
                     }
 
                     // Right-click to show context menu
-                    onPressed: {
+                    onPressed: (mouse) => {
                         if (mouse.button === Qt.RightButton) {
                             contextMenu.x = mouse.x;
                             contextMenu.y = mouse.y;
