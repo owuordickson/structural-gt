@@ -309,7 +309,12 @@ ColumnLayout {
                 Button {
                     id: btnZoomIn
                     text: "+"
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: 24
                     Layout.alignment: Qt.AlignLeft
+                    Layout.margins: 5
+                    font.bold: true
+                    background: Rectangle { color: "#80ffffff"}  // 80% opacity (50% transparency)
                     ToolTip.text: "Zoom in"
                     ToolTip.visible: btnZoomIn.hovered
                     onClicked: zoomFactor = Math.min(zoomFactor + 0.1, 3.0) // Max zoom = 3x
@@ -318,7 +323,12 @@ ColumnLayout {
                 Button {
                     id: btnZoomOut
                     text: "-"
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: 24
                     Layout.alignment: Qt.AlignRight
+                    Layout.margins: 5
+                    font.bold: true
+                    background: Rectangle { color: "#80ffffff"}
                     ToolTip.text: "Zoom out"
                     ToolTip.visible: btnZoomOut.hovered
                     onClicked: zoomFactor = Math.max(zoomFactor - 0.1, 0.5) // Min zoom = 0.5x

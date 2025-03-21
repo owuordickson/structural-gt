@@ -270,6 +270,15 @@ class ImageProcessor:
         logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         return img_3d
 
+    def update_pixel_width(self):
+        """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""
+        opt_img = self.configs
+        pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
+        scale_val = float(opt_img["scale_value_nanometers"]["value"])
+        if (scale_val > 0) and (pixel_count > 0):
+            px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
+            opt_img["pixel_width"]["value"] = px_width/self.scale_factor
+
     def apply_filters(self, filter_type=2):
         """
         Executes function for processing image filters and converting the resulting image into a binary.
@@ -295,16 +304,6 @@ class ImageProcessor:
                 self.img_bin = self.binarize_img(self.img_mod.copy())
             else:
                 self.img_bin = [self.binarize_img(image=img) for img in img_mod]
-
-
-    def update_pixel_width(self):
-        """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""
-        opt_img = self.configs
-        pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
-        scale_val = float(opt_img["scale_value_nanometers"]["value"])
-        if (scale_val > 0) and (pixel_count > 0):
-            px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
-            opt_img["pixel_width"]["value"] = px_width/self.scale_factor
 
     def apply_scaling(self):
         """Re-scale a 2D/3D image to a specified size"""
