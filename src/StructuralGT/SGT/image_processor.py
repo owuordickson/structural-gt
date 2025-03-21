@@ -59,7 +59,6 @@ class ImageProcessor:
         self.img_2d = None
         self.img_bin = None
         self.img_mod = None
-        self.img_net = None
         self.has_alpha_channel = False
         if self.img_raw is not None:
             self._initialize_members()
@@ -303,7 +302,7 @@ class ImageProcessor:
 
     def reset_filters(self):
         """Delete existing filters that have been applied on image."""
-        self.img_mod, self.img_bin, self.img_net = None, None, None
+        self.img_mod, self.img_bin = None, None
 
     def apply_img_scaling(self):
         """Re-scale a 2D/3D image to a specified size"""
@@ -663,8 +662,12 @@ class ImageProcessor:
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
 
-    def save_images_to_file(self):
-        """Write images to file."""
+    def save_images_to_file(self, graph_img):
+        """
+        Write images to file.
+
+        :param graph_img: an image with GT graph ontop of it.
+        """
         img_dir, filename = os.path.split(self.img_path)
         out_dir = self.output_dir if self.output_dir != '' else img_dir
         pr_filename = filename + "_processed.jpg"
@@ -674,9 +677,10 @@ class ImageProcessor:
         bin_file = os.path.join(out_dir, bin_filename)
         net_file = os.path.join(out_dir, net_filename)
 
-        graph_img = self.img_net
         cv2.imwrite(str(img_file), self.img_mod)
         cv2.imwrite(str(bin_file), self.img_bin)
+        if graph_img is None:
+            return
         if graph_img.mode == "JPEG":
             graph_img.save(net_file, format='JPEG', quality=95)
         elif graph_img.mode in ["RGBA", "P"]:

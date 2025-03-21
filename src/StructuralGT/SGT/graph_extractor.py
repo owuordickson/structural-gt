@@ -78,8 +78,10 @@ class GraphExtractor(ProgressUpdate):
         self.configs = load_gte_configs()  # graph extraction parameters and options.
         self.props = []
         self.imp = img_obj
+        self.img_net = None
+        self.nx_graph = None
         self.graph_skeleton = None
-        self.nx_graph, self.nx_components, self.nx_info = None, [], []
+        self.nx_components, self.nx_info = [], []
 
     def fit(self):
         """
@@ -120,8 +122,8 @@ class GraphExtractor(ProgressUpdate):
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
-        graph_plt = self.draw_graph_network()
-        self.imp.img_net = ImageProcessor.plot_to_img(graph_plt)
+        graph_plt = self.draw_2d_graph_network()
+        self.img_net = ImageProcessor.plot_to_img(graph_plt)
 
     def reset(self):
         """
@@ -218,7 +220,7 @@ class GraphExtractor(ProgressUpdate):
                         self.nx_graph.remove_edge(s, e)
         return True
 
-    def draw_graph_network(self, raw_img: MatLike = None, a4_size: bool = False, blank: bool = False):
+    def draw_2d_graph_network(self, raw_img: MatLike = None, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -283,7 +285,7 @@ class GraphExtractor(ProgressUpdate):
 
         return fig
 
-    def display_skeletal_images(self, image: MatLike = None):
+    def draw_2d_skeletal_images(self, image: MatLike = None):
         """
         Create plot figures of skeletal image and graph network image.
 
@@ -399,7 +401,7 @@ class GraphExtractor(ProgressUpdate):
         adj_file = os.path.join(output_location, adj_filename)
 
         if opt_gte["save_images"]["value"] == 1:
-            self.imp.save_images_to_file()
+            self.imp.save_images_to_file(self.img_net)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()

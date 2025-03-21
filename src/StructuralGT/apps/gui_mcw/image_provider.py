@@ -26,13 +26,13 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = im_obj.img_mod if im_obj.img_3d is None else im_obj.img_mod[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
-                if im_obj.img_net is None:
+                if sgt_obj.g_obj.img_net is None:
                     self.img_controller.run_extract_graph()
                     # Wait for task to finish
                     return
                 else:
-                    # self.img_controller.img3dGridModel.reset_data(im_obj.img_net)
-                    img = im_obj.img_net
+                    # self.img_controller.img3dGridModel.reset_data(img_net)
+                    img = sgt_obj.g_obj.img_net
             else:
                 # Original
                 self.img_controller.img3dGridModel.reset_data(im_obj.img_3d)

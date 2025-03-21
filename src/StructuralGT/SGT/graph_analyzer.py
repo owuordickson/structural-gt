@@ -612,11 +612,11 @@ class GraphAnalyzer(ProgressUpdate):
         out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = self.g_obj.display_skeletal_images()
+        fig = self.g_obj.draw_2d_skeletal_images()
         out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = self.g_obj.draw_graph_network(a4_size=True)
+        fig = self.g_obj.draw_2d_graph_network(a4_size=True)
         if fig:
             out_figs.append(fig)
 
