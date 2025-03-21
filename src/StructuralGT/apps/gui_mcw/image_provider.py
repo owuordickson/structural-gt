@@ -31,7 +31,7 @@ class ImageProvider(QQuickImageProvider):
                     # Wait for task to finish
                     return
                 else:
-                    self.img_controller.img3dGridModel.reset_data(im_obj.img_net)
+                    # self.img_controller.img3dGridModel.reset_data(im_obj.img_net)
                     img = im_obj.img_net
             else:
                 # Original
