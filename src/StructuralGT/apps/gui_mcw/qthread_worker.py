@@ -74,7 +74,7 @@ class WorkerTask (QObject):
         """"""
         try:
             self.update_progress(10, "applying filters...")
-            im_obj.apply_filters()
+            im_obj.apply_img_filters()
             self.update_progress(100, '')
             self.taskFinishedSignal.emit(True, im_obj)
         except Exception as err:

@@ -477,7 +477,7 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             sgt_obj.g_obj.imp.auto_scale = self.allow_auto_scale
             sgt_obj.g_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
-            sgt_obj.g_obj.imp.apply_scaling()
+            sgt_obj.g_obj.imp.apply_img_scaling()
             self.select_img_type()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})

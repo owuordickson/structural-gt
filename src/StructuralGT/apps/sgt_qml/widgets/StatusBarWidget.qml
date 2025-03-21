@@ -36,12 +36,14 @@ Rectangle {
             Button {
                 id: btnCancel
                 text: ""
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
+                icon.width: 21 // Adjust as needed
+                icon.height: 21
                 ToolTip.text: "Cancel task!"
                 ToolTip.visible: btnCancel.hovered
                 background: Rectangle { color: "transparent"}
-                icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
-                icon.height: 24
                 visible: mainController.is_task_running()
                 enabled: mainController.is_task_running()
                 onClicked: {

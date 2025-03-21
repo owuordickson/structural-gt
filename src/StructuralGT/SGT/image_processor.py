@@ -47,7 +47,7 @@ class ImageProcessor:
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.apply_filters()
+        >>> imp_obj.apply_img_filters()
         """
         self.configs = load_img_configs()  # image processing configuration parameters and options.
         self.img_path = img_path
@@ -195,17 +195,13 @@ class ImageProcessor:
 
         if type(img_data) is list:
             img_2d = img_data[0]
-            if self.has_alpha_channel:
-                img_2d = cv2.cvtColor(img_2d, cv2.COLOR_RGB2GRAY)
-            return img_2d
-
-        if len(img_data.shape) == 3 and self.has_alpha_channel:
-            logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
-            img_2d = cv2.cvtColor(img_data, cv2.COLOR_RGB2GRAY)
-            return img_2d
         else:
-            logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-            return img_data
+            if len(img_data.shape) == 3 and self.has_alpha_channel:
+                logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+            else:
+                logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+            img_2d = img_data
+        return img_2d
 
     def _convert_to_3d(self):
         """
@@ -279,7 +275,7 @@ class ImageProcessor:
             px_width = ImageProcessor.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width/self.scale_factor
 
-    def apply_filters(self, filter_type=2):
+    def apply_img_filters(self, filter_type=2):
         """
         Executes function for processing image filters and converting the resulting image into a binary.
 
@@ -301,11 +297,11 @@ class ImageProcessor:
         if filter_type == 2:
             img_mod = self.img_mod.copy()
             if self.img_3d is None:
-                self.img_bin = self.binarize_img(self.img_mod.copy())
+                self.img_bin = self.binarize_img(img_mod)
             else:
                 self.img_bin = [self.binarize_img(image=img) for img in img_mod]
 
-    def apply_scaling(self):
+    def apply_img_scaling(self):
         """Re-scale a 2D/3D image to a specified size"""
         img_data = self.img_raw.copy()
         img, self.scale_factor = ImageProcessor.rescale_img(img_data, self.scaling_options)
@@ -362,6 +358,10 @@ class ImageProcessor:
 
         if image is None:
             return None
+
+        alpha_channel, _ = ImageProcessor.check_alpha_channel(image)
+        if alpha_channel:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         opt_img = self.configs
         filtered_img = ImageProcessor.control_brightness(image, opt_img["brightness_level"]["value"], opt_img["contrast_level"]["value"])
@@ -483,7 +483,7 @@ class ImageProcessor:
                 temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 img_bin = temp[1]
                 otsu_res = temp[0]
-        opt_img["otsu"]["value"] = otsu_res
+        self.configs["otsu"]["value"] = otsu_res
         return img_bin
 
     def compute_pixel_length(self, img_path: str, img_path_w_bar: str = None, img_length: float = None):

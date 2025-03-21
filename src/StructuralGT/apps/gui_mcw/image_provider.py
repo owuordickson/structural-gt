@@ -16,12 +16,12 @@ class ImageProvider(QQuickImageProvider):
             sgt_obj = self.img_controller.get_current_obj()
             im_obj = sgt_obj.g_obj.imp
             if option == "binary":
-                im_obj.apply_filters(filter_type=2)
+                im_obj.apply_img_filters(filter_type=2)
                 self.img_controller.img3dGridModel.reset_data(im_obj.img_bin)
                 img_cv = im_obj.img_bin if im_obj.img_3d is None else im_obj.img_bin[0]
                 img = Image.fromarray(img_cv)
             elif option == "processed":
-                im_obj.apply_filters(filter_type=1)
+                im_obj.apply_img_filters(filter_type=1)
                 self.img_controller.img3dGridModel.reset_data(im_obj.img_mod)
                 img_cv = im_obj.img_mod if im_obj.img_3d is None else im_obj.img_mod[0]
                 img = Image.fromarray(img_cv)
