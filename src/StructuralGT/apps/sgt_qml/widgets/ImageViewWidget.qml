@@ -200,8 +200,8 @@ ColumnLayout {
                 width: flickableArea.width
                 height: flickableArea.height
                 anchors.centerIn: parent
-                cellWidth: 250
-                cellHeight: 250
+                cellWidth: flickableArea.width * zoomFactor / 3
+                cellHeight: flickableArea.height * zoomFactor / 3
                 model: img3dGridModel
                 visible: mainController.is_img_3d()
 
@@ -209,22 +209,39 @@ ColumnLayout {
                     width: imgGridView.cellWidth
                     height: imgGridView.cellHeight
 
-                    Image {
-                        source: "data:image/png;base64," + model.image  // Base64 encoded image
-                        width: parent.width
-                        height: parent.height
-                        transformOrigin: Item.Center
-                        fillMode: Image.PreserveAspectFit
-                        cache: true
-                    }
+                    Rectangle {
+                        width: parent.width - 2  // Adds horizontal spacing
+                        height: parent.height - 2  // Adds vertical spacing
+                        color: "#d0d0d0"  // Background color for spacing effect
 
-                    MouseArea {
-                        anchors.fill: parent
-                        property int isSelected: 0
-                                                onClicked: {
-                            isSelected = isSelected === 1 ? 0 : 1;
-                            console.log("Clicked on:", model.id)
-                            console.log("Selected: ", isSelected);
+                        Image {
+                            source: "data:image/png;base64," + model.image  // Base64 encoded image
+                            width: parent.width
+                            height: parent.height
+                            anchors.centerIn: parent
+                            //scale: zoomFactor
+                            transformOrigin: Item.Center
+                            fillMode: Image.PreserveAspectCrop
+                            //cache: true
+                        }
+
+                        Label {
+                            text: "Frame " + model.id
+                            color: "#bc0022"
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.margins: 2
+                            background: Rectangle { color: "transparent" }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            property int isSelected: model.selected ? 1 : 0
+                            onClicked: {
+                                isSelected = isSelected === 1 ? 0 : 1;
+                                console.log("Clicked on:", model.id)
+                                console.log("Selected: ", isSelected);
+                            }
                         }
                     }
                 }
