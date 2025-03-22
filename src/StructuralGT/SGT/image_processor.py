@@ -583,6 +583,11 @@ class ImageProcessor:
         run_info += f"Scalebar Value = {opt_img["scale_value_nanometers"]["value"]} nm"
         run_info += f" || Scalebar Pixel Count = {opt_img["scalebar_pixel_count"]["value"]}\n"
         run_info += f"Resistivity = {opt_img["resistivity"]["value"]}" + r"$\Omega$m"
+        run_info += "\n\n"
+
+        run_info += "***Image Scale Info***\n"
+        run_info += f"Pixels = {max(self.img_2d.shape[0], self.img_2d.shape[1])}"
+        run_info += f" || Scale Factor = {self.scale_factor}"
 
         return run_info
 
