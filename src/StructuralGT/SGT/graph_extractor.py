@@ -81,7 +81,7 @@ class GraphExtractor(ProgressUpdate):
         self.img_net = None
         self.nx_graph = None
         self.graph_skeleton = None
-        self.nx_components, self.nx_info = [], []
+        self.nx_components = []
 
     def fit(self):
         """
@@ -142,7 +142,7 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
         self.imp.reset_filters()
-        self.nx_graph, self.nx_info = None, []
+        self.nx_graph = None
 
     def extract_graph(self, image_bin: MatLike = None):
         """
@@ -370,8 +370,8 @@ class GraphExtractor(ProgressUpdate):
 
         Returns: list of graph properties
         """
-        self.nx_info, self.nx_components, connect_ratio = (
-            GraphComponents.compute_conductance(self.nx_graph, self.nx_info))
+        nx_info = []
+        nx_info, self.nx_components, connect_ratio = (GraphComponents.compute_conductance(self.nx_graph, nx_info))
         props = [
             ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
             ["Edge Count", str(self.nx_graph.number_of_edges())],

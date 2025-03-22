@@ -71,6 +71,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.weighted_output_data = pd.DataFrame([])
         self.histogram_data = {}
 
+    def update_graph_progress(self, value, msg):
+        self.update_status([value, msg])
+
     def fit(self):
         """
             Execute functions that will process image filters and extract graph from the processed image
@@ -91,9 +94,6 @@ class GraphAnalyzer(ProgressUpdate):
                                    "weighted_clustering_coefficients": [0], "weighted_betweenness_distribution": [0],
                                    "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
                                    "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
-
-    def update_graph_progress(self, value, msg):
-        self.update_status([value, msg])
 
     def compute_gt_metrics(self):
         """
@@ -307,21 +307,6 @@ class GraphAnalyzer(ProgressUpdate):
             hist_label = "Average percolation centrality"
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
 
-        # calculating graph conductance
-        """
-        if opt_gtc["compute_graph_conductance"]["value"] == 1:
-            self.update_status([66, "Computing graph conductance..."])
-            # res_items, sg_components = self.gc.approx_conductance_by_spectral()
-            data_dict["x"].append("Largest-Entire graph ratio")
-            data_dict["y"].append(str(round((self.g_obj.connect_ratio * 100), 5)) + "%")
-            for item in self.g_obj.nx_info:
-                if type(item['value']) is np.ndarray:
-                    continue
-                else:
-                    data_dict["x"].append((str(item["name"])))
-                    data_dict["y"].append((str(item["value"])))
-        """
-
         self.output_data = pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self):
@@ -419,17 +404,6 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "weighted_percolation_distribution"
             hist_label = f"{weight_type}-weighted average percolation centrality"
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
-
-        # calculating graph conductance
-        """if opt_gtc["compute_graph_conductance"]["value"] == 1:
-            self.update_status([87, "Computing graph conductance..."])
-            # res_items, sg_components = self.gc.approx_conductance_by_spectral(weighted=True)
-            for item in self.g_obj.nx_info:
-                if type(item['value']) is np.ndarray:
-                    continue
-                else:
-                    data_dict["x"].append((str(item["name"])))
-                    data_dict["y"].append((str(item["value"])))"""
 
         # calculate cross-sectional area of edges
         wt_type = self.g_obj.get_weight_type()
