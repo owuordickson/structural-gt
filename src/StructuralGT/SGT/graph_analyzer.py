@@ -117,18 +117,13 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
 
-        for item in self.g_obj.nx_info:
-            try:
-                if item['name'] == 'angle':
-                    self.update_status([2, "Computing vertice/edge angles..."])
-                    avg_angle = round(np.average(item['value']), 3)
-                    med_angle = round(np.median(item['value']), 3)
-                    data_dict["x"].append('Average edge angle (degrees)')
-                    data_dict["y"].append(avg_angle)
-                    data_dict["x"].append('Median edge angle (degrees)')
-                    data_dict["y"].append(med_angle)
-            except (KeyError, TypeError):
-                self.update_status([2, "Problem computing vertice/edge angles."])
+        # angle of edges (inbound & outbound)
+        angle_arr = np.array(list(nx.get_edge_attributes(graph, 'angle').values()))
+        data_dict["x"].append('Average edge angle (degrees)')
+        data_dict["y"].append(round(np.average(angle_arr), 3))
+
+        data_dict["x"].append('Median edge angle (degrees)')
+        data_dict["y"].append(round(np.median(angle_arr), 3))
 
         if graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem with graph (change filter and graph options)."])

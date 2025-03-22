@@ -4,8 +4,9 @@ import base64
 import multiprocessing as mp
 from typing import LiteralString
 from PIL import Image, ImageQt  # Import ImageQt for conversion
-from PIL.ImageQt import QIODevice
+from PIL.ImageQt import QIODevice, QImage
 from PySide6.QtCore import QByteArray, QBuffer
+
 
 
 def get_num_cores():
@@ -91,6 +92,9 @@ def get_pixmap(img_cv):
 
     # Convert QPixmap to QImage
     q_image = pixmap.toImage()
+
+    # Ensure the format is compatible with PNG saving
+    q_image = q_image.convertToFormat(QImage.Format_ARGB32)
 
     # Convert QImage to base64 string
     byte_array = QByteArray()

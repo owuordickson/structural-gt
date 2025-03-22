@@ -92,11 +92,22 @@ class GraphExtractor(ProgressUpdate):
         self.update_status([10, "Processing image..."])
         self.imp.apply_img_filters()
         self.imp.update_pixel_width()
-        self.fit_graph()
+        self.update_status([40, "Image processing complete..."])
+        if self.imp.img_3d is None:
+            # This is a 2D image
+            self.update_status([48, "Starting 2D graph extraction..."])
+            self.fit_graph()
+        elif type(self.imp.img_3d) is list:
+            # This a 3D image
+            self.update_status([48, "Starting 3D graph extraction..."])
 
-    def fit_graph(self):
+
+    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None):
         """
         Execute a function that builds a NetworkX graph from the image.
+
+        :param image_bin: a binary image for building Graph Skeleton for the NetworkX graph.
+        :param image_2d: the raw 2D image for creating a visual graph plot image.
 
         :return:
         """
@@ -106,7 +117,7 @@ class GraphExtractor(ProgressUpdate):
             return
 
         self.update_status([50, "Making graph skeleton..."])
-        success = self.extract_graph()
+        success = self.extract_graph(image_bin=image_bin)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
@@ -122,7 +133,7 @@ class GraphExtractor(ProgressUpdate):
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
-        graph_plt = self.draw_2d_graph_network()
+        graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
         self.img_net = ImageProcessor.plot_to_img(graph_plt)
 
     def reset(self):
@@ -133,17 +144,20 @@ class GraphExtractor(ProgressUpdate):
         self.imp.reset_filters()
         self.nx_graph, self.nx_info = None, []
 
-    def extract_graph(self):
+    def extract_graph(self, image_bin: MatLike = None):
         """
         Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
+        :param image_bin: binary image from which skeleton will be built and graph drawn.
         :return:
         """
+
+        image_bin = self.imp.img_bin if image_bin is None else image_bin
 
         opt_gte = self.configs
         if opt_gte is None:
             return False
-        graph_skel = GraphSkeleton(self.imp.img_bin, opt_gte)
+        graph_skel = GraphSkeleton(image_bin, opt_gte)
         img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
 
@@ -173,7 +187,6 @@ class GraphExtractor(ProgressUpdate):
                             pass
         else:
             nx_graph = sknw.build_sknw(img_skel)
-            lst_angles = []
             for (s, e) in nx_graph.edges():
                 # 'sknw' library stores length of edge and calls it weight, we reverse this
                 # we create a new attribute 'length', later delete/modify 'weight'
@@ -194,7 +207,6 @@ class GraphExtractor(ProgressUpdate):
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
-                    lst_angles.append(pix_angle)
                 else:
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
@@ -204,8 +216,6 @@ class GraphExtractor(ProgressUpdate):
                     # delete 'weight'
                     del nx_graph[s][e]['weight']
                 # print(f"{nx_graph[s][e]}\n")
-            arr_angle = xp.array(lst_angles, dtype=float)
-            self.nx_info.append({'name': 'angle', 'value': arr_angle})
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
@@ -220,30 +230,30 @@ class GraphExtractor(ProgressUpdate):
                         self.nx_graph.remove_edge(s, e)
         return True
 
-    def draw_2d_graph_network(self, raw_img: MatLike = None, a4_size: bool = False, blank: bool = False):
+    def draw_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
-        :param raw_img: image to be used to draw the network.
+        :param image_2d: 2D image to be used to draw the network.
         :param a4_size: decision if to create an A4 size plot figure.
         :param blank: do not add image in the background, have a white background.
 
         :return:
         """
 
-        raw_img = self.imp.img_2d if raw_img is None else raw_img
+        image_2d = self.imp.img_2d if image_2d is None else image_2d
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
         nx_components = self.nx_components
 
         if blank:
-            w, h = raw_img.shape
+            w, h = image_2d.shape
             my_dpi = 96
             fig = plt.Figure(figsize=(h / my_dpi, w / my_dpi), dpi=my_dpi)
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.axis('off')
-            ax.imshow(raw_img, cmap='gray', alpha=0)
+            ax.imshow(image_2d, cmap='gray', alpha=0)
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black')
@@ -265,7 +275,7 @@ class GraphExtractor(ProgressUpdate):
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
-            ax.imshow(raw_img, cmap='gray')
+            ax.imshow(image_2d, cmap='gray')
             color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
             color_cycle = itertools.cycle(color_list)
             for component in nx_components:
@@ -281,20 +291,20 @@ class GraphExtractor(ProgressUpdate):
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
-            GraphExtractor.superimpose_graph_to_img(ax, raw_img, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+            GraphExtractor.superimpose_graph_to_img(ax, image_2d, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
 
         return fig
 
-    def draw_2d_skeletal_images(self, image: MatLike = None):
+    def draw_2d_skeletal_images(self, image_2d: MatLike = None):
         """
         Create plot figures of skeletal image and graph network image.
 
-        :param image: raw image to be super-imposed with graph.
+        :param image_2d: raw 2D image to be super-imposed with graph.
 
         :return:
         """
 
-        image = self.imp.img_2d if image is None else image
+        image_2d = self.imp.img_2d if image_2d is None else image_2d
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -312,7 +322,7 @@ class GraphExtractor(ProgressUpdate):
 
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
-        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image_2d, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
 
         nodes = nx_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
