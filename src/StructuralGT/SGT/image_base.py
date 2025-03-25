@@ -50,11 +50,11 @@ class ImageBase:
         Returns:
 
         """
-        self.has_alpha_channel, _ = ImageBase.check_alpha_channel(self.img_raw)
         img_data = self.img_raw.copy()
-
         if img_data is None:
-            return None
+            return
+
+        self.has_alpha_channel, _ = ImageBase.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
 
     def update_pixel_width(self):
@@ -209,13 +209,12 @@ class ImageBase:
         :return: None
         """
 
+        if image is None:
+            return None
+
         img_bin = None
         opt_img = self.configs
-        # only needed for OTSU threshold
-        otsu_res = 0
-
-        if image is None:
-            return None, None
+        otsu_res = 0  # only needed for OTSU threshold
 
         # applying universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
