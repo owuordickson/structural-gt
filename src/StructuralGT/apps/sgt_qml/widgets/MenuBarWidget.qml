@@ -103,10 +103,10 @@ MenuBar {
             // Force refresh
             mnuSaveProjAs.enabled = mainController.display_image();
 
-            mnuExportEdge.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
-            mnuExportAdj.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
-            mnuExportGexf.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
-            mnuExportAll.enabled = graphPropsTableModel.rowCount() > 0 ? true : false;
+            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportAdj.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportGexf.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportAll.enabled = graphPropsModel.rowCount() > 0 ? true : false;
 
             //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS
             mnuBrightnessImgCtrl.enabled = mainController.display_image();

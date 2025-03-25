@@ -11,7 +11,7 @@ Item {
     Layout.leftMargin: 5
     Layout.rightMargin: 5
 
-    property int numRows: 10  // graphPropsTableModel.rowCount()
+    property int numRows: 10  // graphPropsModel.rowCount()
     property int tblRowHeight: 25
 
     ColumnLayout {
@@ -21,7 +21,7 @@ Item {
             id: tblViewGraphProps
             height: numRows * tblRowHeight
             width: 290
-            model: graphPropsTableModel
+            model: graphPropsModel
 
             delegate: Rectangle {
                 implicitWidth: column === 0 ? (tblViewGraphProps.width * 0.36) : (tblViewGraphProps.width * 0.64)
@@ -69,7 +69,7 @@ Item {
         target: mainController
 
         /*function onImageChangedSignal(){
-            tblViewGraphProps.height = graphPropsTableModel.rowCount() * tblRowHeight;
+            tblViewGraphProps.height = graphPropsModel.rowCount() * tblRowHeight;
         }*/
 
     }

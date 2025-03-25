@@ -60,7 +60,7 @@ class MainController(QObject):
         # Create Models
         self.imgThumbnailModel = TableModel([])
         self.imagePropsModel = TableModel([])
-        self.graphPropsTableModel = TableModel([])
+        self.graphPropsModel = TableModel([])
         self.microscopyPropsModel = CheckBoxModel([])
 
         self.gteTreeModel = TreeModel([])
@@ -124,7 +124,7 @@ class MainController(QObject):
             self.exportGraphModel.reset_data(file_options)
 
             self.imagePropsModel.reset_data(sgt_obj.g_obj.imp.props)
-            self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
+            self.graphPropsModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")

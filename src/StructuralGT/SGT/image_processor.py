@@ -181,9 +181,7 @@ class ImageProcessor:
             if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-        # self.selected_images = [i for i in range(len(self.images))]
         self.selected_images = set(range(len(self.images)))
-        print(self.selected_images)
         # self.selected_images.discard(index)
         # self.selected_images.add(index)
         self.props = self.get_img_props()

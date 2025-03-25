@@ -32,7 +32,7 @@ class MainWindow(QObject):
         # Set Models in QML Context
         self.ui_engine.rootContext().setContextProperty("imgThumbnailModel", controller.imgThumbnailModel)
         self.ui_engine.rootContext().setContextProperty("imagePropsModel", controller.imagePropsModel)
-        self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", controller.graphPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("graphPropsModel", controller.graphPropsModel)
         self.ui_engine.rootContext().setContextProperty("microscopyPropsModel", controller.microscopyPropsModel)
 
         self.ui_engine.rootContext().setContextProperty("gteTreeModel", controller.gteTreeModel)

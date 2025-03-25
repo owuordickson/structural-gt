@@ -59,7 +59,7 @@ Rectangle {
                 Layout.topMargin: 20
                 text: "No properties to show!"
                 color: "#808080"
-                visible: graphPropsTableModel.rowCount() > 0 ? false : true
+                visible: graphPropsModel.rowCount() > 0 ? false : true
             }
             GraphPropertyWidget{}
 
@@ -90,11 +90,11 @@ Rectangle {
         target: mainController
 
         function onImageChangedSignal() {
-            lblNoGraphProps.visible = graphPropsTableModel.rowCount() > 0 ? false : true;
+            lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
-            lblNoGraphProps.visible = graphPropsTableModel.rowCount() > 0 ? false : true;
+            lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
         }
 
     }
