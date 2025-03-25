@@ -51,7 +51,7 @@ class ImageProcessor:
         img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props = []
         self.images: list[ImageBase] = []
-        self.selected_img = -1
+        self.selected_images = set()
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
@@ -181,7 +181,11 @@ class ImageProcessor:
             if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-        self.selected_img = 0  if len(self.images) > 0 else -1
+        # self.selected_images = [i for i in range(len(self.images))]
+        self.selected_images = set(range(len(self.images)))
+        print(self.selected_images)
+        # self.selected_images.discard(index)
+        # self.selected_images.add(index)
         self.props = self.get_img_props()
 
     def reset_img_filters(self):
@@ -254,16 +258,16 @@ class ImageProcessor:
         :param height: height of cropping box.
         """
 
-        if self.selected_img >= 0:
-            self.images[self.selected_img].apply_img_crop(x, y, width, height)
+        if len(self.selected_images) > 1:
+            [self.images[i].apply_img_crop(x, y, width, height) for i in self.selected_images]
         self.props = self.get_img_props()
 
     def undo_cropping(self):
         """
         A function that restores image to its original size.
         """
-        if self.selected_img >= 0:
-            self.images[self.selected_img].init_image()
+        if len(self.selected_images) > 1:
+            [self.images[i].init_image() for i in self.selected_images]
         self.props = self.get_img_props()
 
     def create_filenames(self, image_path: str = None):
@@ -302,15 +306,15 @@ class ImageProcessor:
         f_name, _ = self.create_filenames()
         if len(self.images) > 1:
             # (Depth, Height, Width, Channels)
-            alpha_channel = self.images[self.selected_img].has_alpha_channel
+            alpha_channel = self.images[0].has_alpha_channel  # first image
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
         else:
-            _, fmt = ImageBase.check_alpha_channel(self.images[self.selected_img].img_raw)
+            _, fmt = ImageBase.check_alpha_channel(self.images[0].img_raw) # first image
             num_dim = 2
 
         slices = 0
-        height, width = self.images[self.selected_img].img_2d.shape[:2]
+        height, width = self.images[0].img_2d.shape[:2]  # first image
         if num_dim >= 3:
             slices = len(self.images)
 

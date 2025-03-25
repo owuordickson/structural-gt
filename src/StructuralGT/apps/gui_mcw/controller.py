@@ -83,8 +83,11 @@ class MainController(QObject):
             :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
-            options_img = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img].configs
-            options_scaling = sgt_obj.g_obj.imp.scaling_options
+            im_obj = sgt_obj.g_obj.imp
+            first_index = next(iter(im_obj.selected_images), None)  # 1st selected image
+            first_index = first_index if first_index is not None else 0  # first image if None
+            options_img = im_obj.images[first_index].configs
+            options_scaling = im_obj.scaling_options
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
@@ -420,9 +423,11 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
+            im_obj = sgt_obj.g_obj.imp
+            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
             for val in self.imgControlModel.list_data:
-                im_obj.configs[val["id"]]["value"] = val["value"]
+                for img in sel_images:
+                    img.configs[val["id"]]["value"] = val["value"]
             self.select_img_type(choice=2)
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
@@ -434,10 +439,12 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
+            im_obj = sgt_obj.g_obj.imp
+            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
             for val in self.microscopyPropsModel.list_data:
-                im_obj.configs[val["id"]]["value"] = val["value"]
-            im_obj.get_pixel_width()
+                for img in sel_images:
+                    img.configs[val["id"]]["value"] = val["value"]
+                    img.get_pixel_width()
         except Exception as err:
             logging.exception("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
@@ -448,9 +455,11 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
+            im_obj = sgt_obj.g_obj.imp
+            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
             for val in self.imgBinFilterModel.list_data:
-                im_obj.configs[val["id"]]["value"] = val["value"]
+                for img in sel_images:
+                    img.configs[val["id"]]["value"] = val["value"]
             self.select_img_type()
         except Exception as err:
             logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
@@ -462,14 +471,15 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
+            im_obj = sgt_obj.g_obj.imp
+            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
             for val in self.imgFilterModel.list_data:
-                im_obj.configs[val["id"]]["value"] = val["value"]
-                try:
-                    im_obj.configs[val["id"]]["dataValue"] = val["dataValue"]
-                except KeyError:
-                    pass
-            #self.select_img_type(3)
+                for img in sel_images:
+                    img.configs[val["id"]]["value"] = val["value"]
+                    try:
+                        img.configs[val["id"]]["dataValue"] = val["dataValue"]
+                    except KeyError:
+                        pass
             self.select_img_type()
         except Exception as err:
             logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
@@ -791,8 +801,7 @@ class MainController(QObject):
             item_data.append([key])  # Store the key
             sgt_obj = self.sgt_objs[key]
             im_obj = sgt_obj.g_obj.imp
-            # img_cv = im_obj.img_2d  # Assuming OpenCV image format
-            img_cv = im_obj.images[im_obj.selected_img].img_2d  # Assuming OpenCV image format
+            img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
             base64_data = get_pixmap(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache

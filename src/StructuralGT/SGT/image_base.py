@@ -36,10 +36,10 @@ class ImageBase:
             scale_factor: Scale factor used to downsample/up-sample the image.
         """
         self.configs = load_img_configs()  # image processing configuration parameters and options.
-        self.img_raw = raw_img
-        self.img_2d = None
-        self.img_bin = None
-        self.img_mod = None
+        self.img_raw: MatLike | None = raw_img
+        self.img_2d: MatLike | None = None
+        self.img_bin: MatLike | None = None
+        self.img_mod: MatLike | None = None
         self.has_alpha_channel = False
         self.scale_factor = scale_factor
         self.init_image()

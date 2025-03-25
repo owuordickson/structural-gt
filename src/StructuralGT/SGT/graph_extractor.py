@@ -77,8 +77,8 @@ class GraphExtractor(ProgressUpdate):
         self.terminal_app = True
         self.configs = load_gte_configs()  # graph extraction parameters and options.
         self.props = []
-        self.imp = img_obj
-        self.img_net = None
+        self.imp: ImageProcessor = img_obj
+        self.img_net: MatLike | None = None
         self.nx_graph = None
         self.graph_skeleton = None
         self.nx_components = []
