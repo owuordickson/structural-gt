@@ -6,9 +6,7 @@ Processes of an image by applying filters to it and converting it to binary vers
 
 import os
 import io
-import sys
 import cv2
-import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -17,8 +15,6 @@ from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
 from ..configs.config_loader import load_img_configs
-logger = logging.getLogger("SGT App")
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 
 
@@ -46,11 +42,6 @@ class ImageBase:
 
         if img_data is None:
             return None
-
-        if len(img_data.shape) == 3 and self.has_alpha_channel:
-            logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
-        logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-
         self.img_2d = img_data
 
     def update_pixel_width(self):

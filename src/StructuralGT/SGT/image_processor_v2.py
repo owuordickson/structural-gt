@@ -176,7 +176,11 @@ class ImageProcessor:
             self.images = [ImageBase(img, self.scale_factor) for img in img_data]
             logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         else:
-            self.images.append(ImageBase(img_data, self.scale_factor))
+            img_obj = ImageBase(img_data, self.scale_factor)
+            self.images.append(img_obj)
+            if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
+                logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+            logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.selected_img = 0  if len(self.images) > 0 else -1
         self.props = self.get_img_props()
 
