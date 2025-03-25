@@ -21,7 +21,7 @@ Item {
             id: tblImgProps
             height: numRows * tblRowHeight
             width: 290
-            model: imgPropsTableModel
+            model: imagePropsModel
 
             property int tblRowHeight: 30
 
