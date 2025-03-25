@@ -23,7 +23,7 @@ Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
 class ImageProcessor:
     """
-    A class for processing and preparing microscopy images for graph theory analysis.
+    A class for processing and preparing 2D or 3D microscopy images for graph theory analysis.
 
     Args:
         img_path (str): input image path.

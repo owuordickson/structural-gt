@@ -19,9 +19,22 @@ from ..configs.config_loader import load_img_configs
 
 
 class ImageBase:
+    """
+    A class that is used to binarize an image by applying filters to it and converting it to binary version.
+
+    Args:
+        raw_img (MatLike): Raw image in OpenCV format.
+        scale_factor (float): Scale factor used to downsample/up-sample the image.
+    """
 
     def __init__(self, raw_img: MatLike, scale_factor: float = 1.0):
-        """"""
+        """
+        A class that is used to binarize an image by applying filters to it and converting it to binary version.
+
+        Args:
+            raw_img: Raw image in OpenCV format.
+            scale_factor: Scale factor used to downsample/up-sample the image.
+        """
         self.configs = load_img_configs()  # image processing configuration parameters and options.
         self.img_raw = raw_img
         self.img_2d = None
