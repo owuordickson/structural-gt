@@ -58,8 +58,8 @@ class MainController(QObject):
         self.current_img_type = 0
 
         # Create Models
-        self.imgListTableModel = TableModel([])
-        self.imgPropsTableModel = TableModel([])
+        self.imgThumbnailModel = TableModel([])
+        self.imagePropsModel = TableModel([])
         self.graphPropsTableModel = TableModel([])
         self.microscopyPropsModel = CheckBoxModel([])
 
@@ -123,7 +123,7 @@ class MainController(QObject):
             self.gtcListModel.reset_data(list(options_gtc.values()))
             self.exportGraphModel.reset_data(file_options)
 
-            self.imgPropsTableModel.reset_data(sgt_obj.g_obj.imp.props)
+            self.imagePropsModel.reset_data(sgt_obj.g_obj.imp.props)
             self.graphPropsTableModel.reset_data(sgt_obj.g_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -185,7 +185,7 @@ class MainController(QObject):
             del self.sgt_objs[key_at_del_index]
             # Update Data
             img_list, img_cache = self.get_thumbnail_list()
-            self.imgListTableModel.update_data(img_list, img_cache)
+            self.imgThumbnailModel.update_data(img_list, img_cache)
             self.current_obj_index = 0
             self.load_image()
             self.imageChangedSignal.emit()
@@ -418,7 +418,7 @@ class MainController(QObject):
     @Slot(int)
     def set_selected_thumbnail(self, row_index):
         """Change color of list item to gray if it is the active image"""
-        self.imgListTableModel.set_selected(row_index)
+        self.imgThumbnailModel.set_selected(row_index)
 
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
@@ -468,8 +468,8 @@ class MainController(QObject):
         try:
             self.current_obj_index = index if index is not None else self.current_obj_index
             img_list, img_cache = self.get_thumbnail_list()
-            self.imgListTableModel.update_data(img_list, img_cache)
-            self.imgListTableModel.set_selected(self.current_obj_index)
+            self.imgThumbnailModel.update_data(img_list, img_cache)
+            self.imgThumbnailModel.set_selected(self.current_obj_index)
             self.select_img_type()
         except Exception as err:
             self.delete_sgt_object()

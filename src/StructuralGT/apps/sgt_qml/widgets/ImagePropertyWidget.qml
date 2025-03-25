@@ -11,7 +11,7 @@ Item {
     Layout.leftMargin: 5
     Layout.rightMargin: 5
 
-    property int numRows: 10  // imgPropsTableModel.rowCount()
+    property int numRows: 10  // imagePropsModel.rowCount()
     property int tblRowHeight: 25
 
     ColumnLayout {
@@ -26,7 +26,7 @@ Item {
             property int tblRowHeight: 30
 
             delegate: Rectangle {
-                implicitWidth: column === 0 ? (tblImgProps.width * 0.36) : (tblImgProps.width * 0.64) //imgPropsTableModel.columnCount
+                implicitWidth: column === 0 ? (tblImgProps.width * 0.36) : (tblImgProps.width * 0.64) //imagePropsModel.columnCount
                 implicitHeight: tblRowHeight
                 color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
                 //border.color: "#d0d0d0"
@@ -74,7 +74,7 @@ Item {
         target: mainController
 
         /*function onImageChangedSignal(){
-            tblImgProps.height = imgPropsTableModel.rowCount() * tblRowHeight;
+            tblImgProps.height = imagePropsModel.rowCount() * tblRowHeight;
         }*/
 
     }

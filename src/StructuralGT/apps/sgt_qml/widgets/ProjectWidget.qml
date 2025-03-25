@@ -7,7 +7,7 @@ Item {
     Layout.preferredHeight: 200
     Layout.preferredWidth: parent.width
 
-    property int numRows: 10  // imgListTableModel.rowCount()
+    property int numRows: 10  // imgThumbnailModel.rowCount()
     property int tblRowHeight: 50
 
 
@@ -22,7 +22,7 @@ Item {
             Layout.topMargin: 20
             text: "No images to show!\nPlease add image/folder."
             color: "#808080"
-            visible: imgListTableModel.rowCount() > 0 ? false : true
+            visible: imgThumbnailModel.rowCount() > 0 ? false : true
             //visible: false
         }
 
@@ -35,8 +35,8 @@ Item {
             Layout.rightMargin: 2
             rowSpacing: 2
             //columnSpacing: 2
-            model: imgListTableModel
-            visible: imgListTableModel.rowCount() > 0 ? true : false
+            model: imgThumbnailModel
+            visible: imgThumbnailModel.rowCount() > 0 ? true : false
 
             delegate: Rectangle {
                 implicitWidth: tableView.width
@@ -116,17 +116,17 @@ Item {
 
         function onImageChangedSignal() {
             // Force refresh
-            lblNoImages.visible = imgListTableModel.rowCount() > 0 ? false : true
-            tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
+            lblNoImages.visible = imgThumbnailModel.rowCount() > 0 ? false : true
+            tableView.visible = imgThumbnailModel.rowCount() > 0 ? true : false
             tableView.enabled = !mainController.is_task_running();
 
-            let rowCount = imgListTableModel.rowCount() > numRows ? imgListTableModel.rowCount() : numRows;
+            let rowCount = imgThumbnailModel.rowCount() > numRows ? imgThumbnailModel.rowCount() : numRows;
             tableView.height = rowCount * tblRowHeight;
         }
 
         function onProjectOpenedSignal(name) {
             lblNoImages.text = "No images to show!\nPlease import image(s).";
-            tableView.visible = imgListTableModel.rowCount() > 0 ? true : false
+            tableView.visible = imgThumbnailModel.rowCount() > 0 ? true : false
         }
 
         function onUpdateProgressSignal(val, msg) {

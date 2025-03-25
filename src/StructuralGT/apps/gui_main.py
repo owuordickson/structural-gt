@@ -30,8 +30,8 @@ class MainWindow(QObject):
         # controller.imageChangedSignal.emit(0, img_path)
 
         # Set Models in QML Context
-        self.ui_engine.rootContext().setContextProperty("imgListTableModel", controller.imgListTableModel)
-        self.ui_engine.rootContext().setContextProperty("imgPropsTableModel", controller.imgPropsTableModel)
+        self.ui_engine.rootContext().setContextProperty("imgThumbnailModel", controller.imgThumbnailModel)
+        self.ui_engine.rootContext().setContextProperty("imagePropsModel", controller.imagePropsModel)
         self.ui_engine.rootContext().setContextProperty("graphPropsTableModel", controller.graphPropsTableModel)
         self.ui_engine.rootContext().setContextProperty("microscopyPropsModel", controller.microscopyPropsModel)
 
