@@ -184,7 +184,7 @@ class MainController(QObject):
             # Delete the object at index
             del self.sgt_objs[key_at_del_index]
             # Update Data
-            img_list, img_cache = self.get_image_list()
+            img_list, img_cache = self.get_thumbnail_list()
             self.imgListTableModel.update_data(img_list, img_cache)
             self.current_obj_index = 0
             self.load_image()
@@ -207,6 +207,90 @@ class MainController(QObject):
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Save Error", "Unable to save project data. Close app and try again.")
             return False
+
+    def get_thumbnail_list(self):
+        """
+        Get names and base64 data of images to be used in Project List thumbnails.
+        """
+        keys_list = list(self.sgt_objs.keys())
+        if len(keys_list) <= 0:
+            return None, None
+        item_data = []
+        image_cache = {}
+        for key in keys_list:
+            item_data.append([key])  # Store the key
+            sgt_obj = self.sgt_objs[key]
+            im_obj = sgt_obj.g_obj.imp
+            img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
+            base64_data = get_pixmap(img_cv)
+            image_cache[key] = base64_data  # Store base64 string
+        return item_data, image_cache
+
+    def get_selected_images(self):
+        """
+        Get indices of selected images.
+        """
+        sgt_obj = self.get_current_obj()
+        im_obj = sgt_obj.g_obj.imp
+        sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+        return sel_images
+
+    def verify_path(self, a_path):
+        if not a_path:
+            logging.info("No folder/file selected.", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
+            return False
+
+        # print(a_path)
+        # Convert QML "file:///" path format to a proper OS path
+        if a_path.startswith("file:///"):
+            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
+                a_path = a_path[8:]
+            else:  # macOS/Linux (remove "file://")
+                a_path = a_path[7:]
+        # Normalize path
+        a_path = os.path.normpath(a_path)
+        # print(a_path)
+
+        # Convert to a proper file system path
+        """import urllib.parse
+        a_path = urllib.parse.urlparse(a_path).path
+
+        # If running on Windows, remove leading '/'
+        if os.name == "nt":
+            a_path = a_path.lstrip("/")  # Remove leading slash for Windows
+        print(a_path)"""
+
+        if not os.path.exists(a_path):
+            logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Path Error", f"File/Folder in {a_path} does not exist. Try again.")
+            return False
+        return a_path
+
+    def write_to_pdf(self, sgt_obj):
+        """
+        Write results to PDF file.
+        Args:
+            sgt_obj:
+
+        Returns:
+
+        """
+        try:
+            self._handle_progress_update(98, "Writing PDF...")
+
+            filename, output_location = sgt_obj.g_obj.imp.create_filenames()
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+            with (PdfPages(pdf_file) as pdf):
+                for fig in sgt_obj.plot_figures:
+                    pdf.savefig(fig)
+            sgt_obj.g_obj.save_files()
+
+            self._handle_finished(True, sgt_obj)
+        except Exception as err:
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
+            self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
 
     def _handle_progress_update(self, value: int, msg: str):
         """
@@ -332,12 +416,12 @@ class MainController(QObject):
         return self.allow_auto_scale
 
     @Slot(int)
-    def set_selected_img(self, row_index):
+    def set_selected_thumbnail(self, row_index):
         """Change color of list item to gray if it is the active image"""
         self.imgListTableModel.set_selected(row_index)
 
     @Slot(int)
-    def delete_selected_img(self, img_index):
+    def delete_selected_thumbnail(self, img_index):
         """Delete the selected image from list."""
         self.delete_sgt_object(img_index)
 
@@ -383,7 +467,7 @@ class MainController(QObject):
     def load_image(self, index=None):
         try:
             self.current_obj_index = index if index is not None else self.current_obj_index
-            img_list, img_cache = self.get_image_list()
+            img_list, img_cache = self.get_thumbnail_list()
             self.imgListTableModel.update_data(img_list, img_cache)
             self.imgListTableModel.set_selected(self.current_obj_index)
             self.select_img_type()
@@ -422,9 +506,7 @@ class MainController(QObject):
     def apply_img_ctrl_changes(self):
         """Retrieve settings from model and send to Python."""
         try:
-            sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp
-            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+            sel_images = self.get_selected_images()
             for val in self.imgControlModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -438,9 +520,7 @@ class MainController(QObject):
     def apply_microscopy_props_changes(self):
         """Retrieve settings from model and send to Python."""
         try:
-            sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp
-            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+            sel_images = self.get_selected_images()
             for val in self.microscopyPropsModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -454,9 +534,7 @@ class MainController(QObject):
     def apply_img_bin_changes(self):
         """Retrieve settings from model and send to Python."""
         try:
-            sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp
-            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+            sel_images = self.get_selected_images()
             for val in self.imgBinFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -470,9 +548,7 @@ class MainController(QObject):
     def apply_img_filter_changes(self):
         """Retrieve settings from model and send to Python."""
         try:
-            sgt_obj = self.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp
-            sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+            sel_images = self.get_selected_images()
             for val in self.imgFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -789,76 +865,3 @@ class MainController(QObject):
                                                             "Consider restoring from a backup or contacting support for "
                                                             "assistance.")
             return False
-
-    def get_image_list(self):
-        """"""
-        keys_list = list(self.sgt_objs.keys())
-        if len(keys_list) <= 0:
-            return None, None
-        item_data = []
-        image_cache = {}
-        for key in keys_list:
-            item_data.append([key])  # Store the key
-            sgt_obj = self.sgt_objs[key]
-            im_obj = sgt_obj.g_obj.imp
-            img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
-            base64_data = get_pixmap(img_cv)
-            image_cache[key] = base64_data  # Store base64 string
-        return item_data, image_cache
-
-    def verify_path(self, a_path):
-        if not a_path:
-            logging.info("No folder/file selected.", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
-            return False
-
-        # print(a_path)
-        # Convert QML "file:///" path format to a proper OS path
-        if a_path.startswith("file:///"):
-            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
-                a_path = a_path[8:]
-            else:  # macOS/Linux (remove "file://")
-                a_path = a_path[7:]
-        # Normalize path
-        a_path = os.path.normpath(a_path)
-        # print(a_path)
-
-        # Convert to a proper file system path
-        """import urllib.parse
-        a_path = urllib.parse.urlparse(a_path).path
-
-        # If running on Windows, remove leading '/'
-        if os.name == "nt":
-            a_path = a_path.lstrip("/")  # Remove leading slash for Windows
-        print(a_path)"""
-
-        if not os.path.exists(a_path):
-            logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Path Error", f"File/Folder in {a_path} does not exist. Try again.")
-            return False
-        return a_path
-
-    def write_to_pdf(self, sgt_obj):
-        """
-        Write results to PDF file.
-        Args:
-            sgt_obj:
-
-        Returns:
-
-        """
-        try:
-            self._handle_progress_update(98, "Writing PDF...")
-
-            filename, output_location = sgt_obj.g_obj.imp.create_filenames()
-            pdf_filename = filename + "_SGT_results.pdf"
-            pdf_file = os.path.join(output_location, pdf_filename)
-            with (PdfPages(pdf_file) as pdf):
-                for fig in sgt_obj.plot_figures:
-                    pdf.savefig(fig)
-            sgt_obj.g_obj.save_files()
-
-            self._handle_finished(True, sgt_obj)
-        except Exception as err:
-            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")

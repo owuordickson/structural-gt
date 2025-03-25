@@ -51,7 +51,7 @@ Item {
                     // Left-click to select item
                     onClicked: {
                         mainController.load_image(row);
-                        mainController.set_selected_img(model.index);
+                        mainController.set_selected_thumbnail(model.index);
                     }
 
                     // Right-click to show context menu
@@ -105,7 +105,7 @@ Item {
             text: "Delete"
             onTriggered: {
                 if (contextMenu.itemIndex !== -1) {
-                    mainController.delete_selected_img(contextMenu.itemRow);
+                    mainController.delete_selected_thumbnail(contextMenu.itemRow);
                 }
             }
         }
