@@ -74,9 +74,9 @@ class GraphExtractor(ProgressUpdate):
         >>> graph_obj.fit()
         """
         super(GraphExtractor, self).__init__()
-        self.terminal_app = True
-        self.configs = load_gte_configs()  # graph extraction parameters and options.
-        self.props = []
+        self.terminal_app: bool = True
+        self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
+        self.props: list = []
         self.imp: ImageProcessor = img_obj
         self.img_net: MatLike | None = None
         self.nx_graph = None

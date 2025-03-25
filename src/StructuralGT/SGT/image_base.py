@@ -35,13 +35,13 @@ class ImageBase:
             raw_img: Raw image in OpenCV format.
             scale_factor: Scale factor used to downsample/up-sample the image.
         """
-        self.configs = load_img_configs()  # image processing configuration parameters and options.
+        self.configs: dict = load_img_configs()  # image processing configuration parameters and options.
         self.img_raw: MatLike | None = raw_img
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
-        self.has_alpha_channel = False
-        self.scale_factor = scale_factor
+        self.has_alpha_channel: bool = False
+        self.scale_factor: float = scale_factor
         self.init_image()
 
     def init_image(self):

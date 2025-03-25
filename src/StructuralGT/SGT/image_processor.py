@@ -45,13 +45,13 @@ class ImageProcessor:
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> imp_obj.apply_img_filters()
         """
-        self.img_path = img_path
-        self.output_dir = out_dir
-        self.auto_scale = auto_scale
+        self.img_path: str = img_path
+        self.output_dir: str = out_dir
+        self.auto_scale: bool = auto_scale
         img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
-        self.props = []
+        self.props: list = []
         self.images: list[ImageBase] = []
-        self.selected_images = set()
+        self.selected_images: set = set()
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
