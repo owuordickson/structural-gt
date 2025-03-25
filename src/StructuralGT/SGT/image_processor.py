@@ -43,14 +43,14 @@ class ImageProcessor:
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.images[0].apply_img_filters()
+        >>> imp_obj.apply_img_filters()
         """
         self.img_path = img_path
         self.output_dir = out_dir
         self.auto_scale = auto_scale
         img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props = []
-        self.images = []
+        self.images: list[ImageBase] = []
         self.selected_img = -1
         self._initialize_members(img_raw)
 
@@ -183,6 +183,30 @@ class ImageProcessor:
             logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.selected_img = 0  if len(self.images) > 0 else -1
         self.props = self.get_img_props()
+
+    def reset_img_filters(self):
+        """Delete existing filters that have been applied on image."""
+        for img_obj in self.images:
+            img_obj.img_mod, img_obj.img_bin = None, None
+
+    def apply_img_filters(self, filter_type=2):
+        """
+        Executes function for processing image filters and converting the resulting image into a binary.
+
+        Filter Types:
+        1 - Just Image Filters
+        2 - Both Image + Binary (1+2) Filters
+
+        :return: None
+        """
+
+        for img_obj in self.images:
+            img_data = img_obj.img_2d.copy()
+            img_obj.img_mod = img_obj.process_img(image=img_data)
+
+            if filter_type == 2:
+                img_mod = img_obj.img_mod.copy()
+                img_obj.img_bin = img_obj.binarize_img(img_mod)
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""

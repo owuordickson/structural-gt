@@ -437,7 +437,7 @@ class MainController(QObject):
             im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             for val in self.microscopyPropsModel.list_data:
                 im_obj.configs[val["id"]]["value"] = val["value"]
-            im_obj.update_pixel_width()
+            im_obj.get_pixel_width()
         except Exception as err:
             logging.exception("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",

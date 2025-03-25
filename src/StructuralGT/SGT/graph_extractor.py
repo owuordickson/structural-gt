@@ -141,7 +141,7 @@ class GraphExtractor(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.imp.reset_filters()
+        self.imp.reset_img_filters()
         self.nx_graph = None
 
     def extract_graph(self, image_bin: MatLike = None):

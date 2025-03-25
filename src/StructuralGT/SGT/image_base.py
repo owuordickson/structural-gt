@@ -57,7 +57,7 @@ class ImageBase:
         self.has_alpha_channel, _ = ImageBase.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
 
-    def update_pixel_width(self):
+    def get_pixel_width(self):
         """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""
         opt_img = self.configs
         pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
@@ -65,28 +65,6 @@ class ImageBase:
         if (scale_val > 0) and (pixel_count > 0):
             px_width = ImageBase.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width / self.scale_factor
-
-    def apply_img_filters(self, filter_type=2):
-        """
-        Executes function for processing image filters and converting the resulting image into a binary.
-
-        Filter Types:
-        1 - Just Image Filters
-        2 - Both Image + Binary (1+2) Filters
-
-        :return: None
-        """
-
-        img_data = self.img_2d.copy()
-        self.img_mod = self.process_img(image=img_data)
-
-        if filter_type == 2:
-            img_mod = self.img_mod.copy()
-            self.img_bin = self.binarize_img(img_mod)
-
-    def reset_filters(self):
-        """Delete existing filters that have been applied on image."""
-        self.img_mod, self.img_bin = None, None
 
     def apply_img_crop(self, x: float, y: float, width: float, height: float):
         """
