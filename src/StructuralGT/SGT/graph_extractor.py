@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
-from .image_processor import ImageProcessor
+from .image_processor_v2 import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 

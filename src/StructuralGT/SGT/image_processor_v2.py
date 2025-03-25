@@ -662,7 +662,8 @@ class ImageProcessor:
         if type(img_data) is list:
             self.images = [ImageBase(img, self.scale_factor) for img in img_data]
             logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
-        self.images.append(ImageBase(img_data, self.scale_factor))
+        else:
+            self.images.append(ImageBase(img_data, self.scale_factor))
         self.selected_img = 0  if len(self.images) > 0 else -1
         self.props = self.get_img_props()
 
@@ -758,9 +759,9 @@ class ImageProcessor:
         """
 
         f_name, _ = self.create_filenames()
-        if len(self.images) > 0:
+        if len(self.images) > 1:
             # (Depth, Height, Width, Channels)
-            alpha_channel, _ = self.images[self.selected_img].has_alpha_channel
+            alpha_channel = self.images[self.selected_img].has_alpha_channel
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
         else:

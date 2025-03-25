@@ -1,6 +1,6 @@
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
-from ...SGT.sgt_utils import get_pixmap
+
 
 # Define a simple table model
 class TableModel(QAbstractTableModel):
@@ -47,11 +47,10 @@ class TableModel(QAbstractTableModel):
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(self.itemData) - 1, 0))
 
-    def update_data(self, analyze_objs):
+    def update_data(self, img_list, img_cache):
         """Updates model with new images from analyze_objs"""
         self.beginResetModel()
-        new_keys = list(analyze_objs.keys())
-        if not new_keys:
+        if img_list is None or img_cache is None:
             # No data to add/update
             self.itemData = []
             self.imageCache = {}
@@ -61,18 +60,8 @@ class TableModel(QAbstractTableModel):
             return
 
         start_row = len(self.itemData)
-        # self.beginResetModel()
-        self.itemData = []
-        self.imageCache = {}
-
-        for key in new_keys:
-            self.itemData.append([key])  # Store the key
-            a_obj = analyze_objs[key]
-            img_cv = a_obj.g_obj.imp.img_2d  # Assuming OpenCV image format
-            base64_data = get_pixmap(img_cv)
-
-            self.imageCache[key] = base64_data  # Store base64 string
-            # self.imageCache[key] = pixmap  # Store QPixmap in cache
+        self.itemData = img_list
+        self.imageCache = img_cache
         self.endResetModel()
         # Emit dataChanged signal to notify QML
         self.dataChanged.emit(self.index(start_row, 0), self.index(len(self.itemData) - 1, 0))

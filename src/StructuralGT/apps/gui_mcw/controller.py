@@ -19,9 +19,10 @@ from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ...SGT.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+from ...SGT.image_processor_v2 import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
+from ...SGT.sgt_utils import get_pixmap
 
 
 class MainController(QObject):
@@ -82,7 +83,7 @@ class MainController(QObject):
             :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
-            options_img = sgt_obj.g_obj.imp.configs
+            options_img = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img].configs
             options_scaling = sgt_obj.g_obj.imp.scaling_options
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
@@ -180,7 +181,8 @@ class MainController(QObject):
             # Delete the object at index
             del self.sgt_objs[key_at_del_index]
             # Update Data
-            self.imgListTableModel.update_data(self.sgt_objs)
+            img_list, img_cache = self.get_image_list()
+            self.imgListTableModel.update_data(img_list, img_cache)
             self.current_obj_index = 0
             self.load_image()
             self.imageChangedSignal.emit()
@@ -304,7 +306,7 @@ class MainController(QObject):
         sgt_obj = self.get_current_obj()
         if sgt_obj is None:
             return False
-        is_3d = False if sgt_obj.g_obj.imp.img_3d is None else True
+        is_3d = True if len(sgt_obj.g_obj.imp.images) > 1 else False
         return is_3d
 
     @Slot(result=int)
@@ -378,7 +380,8 @@ class MainController(QObject):
     def load_image(self, index=None):
         try:
             self.current_obj_index = index if index is not None else self.current_obj_index
-            self.imgListTableModel.update_data(self.sgt_objs)
+            img_list, img_cache = self.get_image_list()
+            self.imgListTableModel.update_data(img_list, img_cache)
             self.imgListTableModel.set_selected(self.current_obj_index)
             self.select_img_type()
         except Exception as err:
@@ -417,8 +420,9 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
+            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             for val in self.imgControlModel.list_data:
-                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+                im_obj.configs[val["id"]]["value"] = val["value"]
             self.select_img_type(choice=2)
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
@@ -430,9 +434,10 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
+            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             for val in self.microscopyPropsModel.list_data:
-                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            sgt_obj.g_obj.imp.update_pixel_width()
+                im_obj.configs[val["id"]]["value"] = val["value"]
+            im_obj.update_pixel_width()
         except Exception as err:
             logging.exception("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
@@ -443,8 +448,9 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
+            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             for val in self.imgBinFilterModel.list_data:
-                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+                im_obj.configs[val["id"]]["value"] = val["value"]
             self.select_img_type()
         except Exception as err:
             logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
@@ -456,10 +462,11 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sgt_obj = self.get_current_obj()
+            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             for val in self.imgFilterModel.list_data:
-                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+                im_obj.configs[val["id"]]["value"] = val["value"]
                 try:
-                    sgt_obj.g_obj.imp.configs[val["id"]]["dataValue"] = val["dataValue"]
+                    im_obj.configs[val["id"]]["dataValue"] = val["dataValue"]
                 except KeyError:
                     pass
             #self.select_img_type(3)
@@ -772,6 +779,23 @@ class MainController(QObject):
                                                             "Consider restoring from a backup or contacting support for "
                                                             "assistance.")
             return False
+
+    def get_image_list(self):
+        """"""
+        keys_list = list(self.sgt_objs.keys())
+        if len(keys_list) <= 0:
+            return None, None
+        item_data = []
+        image_cache = {}
+        for key in keys_list:
+            item_data.append([key])  # Store the key
+            sgt_obj = self.sgt_objs[key]
+            im_obj = sgt_obj.g_obj.imp
+            # img_cv = im_obj.img_2d  # Assuming OpenCV image format
+            img_cv = im_obj.images[im_obj.selected_img].img_2d  # Assuming OpenCV image format
+            base64_data = get_pixmap(img_cv)
+            image_cache[key] = base64_data  # Store base64 string
+        return item_data, image_cache
 
     def verify_path(self, a_path):
         if not a_path:

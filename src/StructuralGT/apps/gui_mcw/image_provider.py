@@ -14,16 +14,18 @@ class ImageProvider(QQuickImageProvider):
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
             sgt_obj = self.img_controller.get_current_obj()
-            im_obj = sgt_obj.g_obj.imp
+            im_obj = sgt_obj.g_obj.imp.images[sgt_obj.g_obj.imp.selected_img]
             if option == "binary":
                 im_obj.apply_img_filters(filter_type=2)
-                self.img_controller.img3dGridModel.reset_data(im_obj.img_bin)
-                img_cv = im_obj.img_bin if im_obj.img_3d is None else im_obj.img_bin[0]
+                bin_images = [obj.img_bin for obj in sgt_obj.g_obj.imp.images]
+                self.img_controller.img3dGridModel.reset_data(bin_images)
+                img_cv = bin_images[0]  # im_obj.img_bin if im_obj.img_3d is None else im_obj.img_bin[0]
                 img = Image.fromarray(img_cv)
             elif option == "processed":
                 im_obj.apply_img_filters(filter_type=1)
-                self.img_controller.img3dGridModel.reset_data(im_obj.img_mod)
-                img_cv = im_obj.img_mod if im_obj.img_3d is None else im_obj.img_mod[0]
+                mod_images = [obj.img_mod for obj in sgt_obj.g_obj.imp.images]
+                self.img_controller.img3dGridModel.reset_data(mod_images)
+                img_cv = mod_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
                 if sgt_obj.g_obj.img_net is None:
@@ -35,8 +37,9 @@ class ImageProvider(QQuickImageProvider):
                     img = sgt_obj.g_obj.img_net
             else:
                 # Original
-                self.img_controller.img3dGridModel.reset_data(im_obj.img_3d)
-                img_cv = im_obj.img_2d if im_obj.img_3d is None else im_obj.img_3d[0]
+                images = [obj.img_2d for obj in sgt_obj.g_obj.imp.images]
+                self.img_controller.img3dGridModel.reset_data(images)   # (im_obj.img_3d)
+                img_cv = images[0]  # im_obj.img_2d if im_obj.img_3d is None else im_obj.img_3d[0]
                 img = Image.fromarray(img_cv)
 
             # Create Pixmap image
