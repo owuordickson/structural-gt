@@ -648,6 +648,7 @@ class ImageProcessor:
 
     def _initialize_members(self, img_data):
         """
+
         Reads all slices of a 3D image and loads them as separate images if it is 3D, or image itself if 2D.
 
         Args:
