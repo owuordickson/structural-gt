@@ -205,6 +205,7 @@ class ImageProcessor(ProgressUpdate):
         """Delete existing filters that have been applied on image."""
         for img_obj in self.images:
             img_obj.img_mod, img_obj.img_bin = None, None
+            img_obj.graph_obj.reset_graph()
 
     def apply_img_filters(self, filter_type=2):
         """
@@ -256,6 +257,9 @@ class ImageProcessor(ProgressUpdate):
                 rho_val = float(img_obj.configs["resistivity"]["value"])
                 img_obj.graph_obj.fit_graph(img_obj.img_bin, img_obj.img_2d, px_size, rho_val)
                 img_obj.graph_obj.remove_listener(self.update_graph_progress)
+                self.abort = img_obj.graph_obj.abort
+                if self.abort:
+                    return
             except Exception:
                 logging.exception(f"Error creating graph for image {i}.")
 
@@ -305,7 +309,7 @@ class ImageProcessor(ProgressUpdate):
         :param height: height of cropping box.
         """
 
-        if len(self.selected_images) > 1:
+        if len(self.selected_images) > 0:
             [self.images[i].apply_img_crop(x, y, width, height) for i in self.selected_images]
         self.props = self.get_img_props()
 
@@ -313,7 +317,7 @@ class ImageProcessor(ProgressUpdate):
         """
         A function that restores image to its original size.
         """
-        if len(self.selected_images) > 1:
+        if len(self.selected_images) > 0:
             [self.images[i].init_image() for i in self.selected_images]
         self.props = self.get_img_props()
 
@@ -443,7 +447,7 @@ class ImageProcessor(ProgressUpdate):
 
         pr_filename = filename + "_processed.jpg"
         bin_filename = filename + "_binary.jpg"
-        net_filename = filename + "_final.jpg"
+        net_filename = filename + "_graph.jpg"
         img_file = os.path.join(out_dir, pr_filename)
         bin_file = os.path.join(out_dir, bin_filename)
         net_file = os.path.join(out_dir, net_filename)

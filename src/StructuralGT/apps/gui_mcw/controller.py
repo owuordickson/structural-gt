@@ -730,10 +730,9 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             sgt_obj.imp.crop_image(x, y, width, height)
             sgt_obj.imp.reset_img_filters()
-            sgt_obj.g_obj.reset_graph()
 
             # Emit signal to update UI with new image
-            self.select_img_type(None)
+            self.select_img_type(2)
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
@@ -746,7 +745,6 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             sgt_obj.imp.undo_cropping()
             sgt_obj.imp.reset_img_filters()
-            sgt_obj.g_obj.reset_graph()
 
             # Emit signal to update UI with new image
             self.select_img_type(None)
