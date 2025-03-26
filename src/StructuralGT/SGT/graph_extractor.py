@@ -70,7 +70,7 @@ class GraphExtractor(ProgressUpdate):
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.
+        >>> imp_obj.create_graphs()
         """
         super(GraphExtractor, self).__init__()
         self.terminal_app: bool = True
@@ -81,13 +81,14 @@ class GraphExtractor(ProgressUpdate):
         self.graph_skeleton = None
         self.nx_components = []
 
-    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None):
+    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
         :param image_bin: a binary image for building Graph Skeleton for the NetworkX graph.
         :param image_2d: the raw 2D image for creating a visual graph plot image.
-
+        :param px_width_sz: width of a pixel in nano-meters.
+        :param rho_val: resistivity coefficient/value of the material.
         :return:
         """
 
@@ -97,9 +98,7 @@ class GraphExtractor(ProgressUpdate):
             return
 
         self.update_status([50, "Making graph skeleton..."])
-        # px_size = self.imp.configs["pixel_width"]["value"]
-        # rho_val = float(self.imp.configs["resistivity"]["value"])
-        success = self.extract_graph(image_bin=image_bin, px_width_sz=px_size, rho_val=rho_val)
+        success = self.extract_graph(image_bin=image_bin, px_size=px_width_sz, rho_val=rho_val)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
@@ -127,12 +126,12 @@ class GraphExtractor(ProgressUpdate):
         self.nx_graph = None
         self.img_net = None
 
-    def extract_graph(self, image_bin: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
+    def extract_graph(self, image_bin: MatLike = None, px_size: float = 1.0, rho_val: float = 1.0):
         """
         Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
         :param image_bin: binary image from which skeleton will be built and graph drawn.
-        :param px_width_sz: width of a pixel in nano-meters.
+        :param px_size: width of a pixel in nano-meters.
         :param rho_val: resistivity coefficient/value of the material.
         :return:
         """
@@ -187,7 +186,7 @@ class GraphExtractor(ProgressUpdate):
 
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
-                                                                         pixel_dim=px_width_sz, rho_dim=rho_val)
+                                                                         pixel_dim=px_size, rho_dim=rho_val)
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt

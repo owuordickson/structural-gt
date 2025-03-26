@@ -244,7 +244,14 @@ class ImageProcessor(ProgressUpdate):
             if i not in self.selected_images:
                 img_obj.graph_obj.img_net = img_obj.graph_obj.draw_2d_graph_network()
                 continue
-            img_obj.graph_obj.add_listener(self.update_graph_progress)
+            try:
+                img_obj.graph_obj.add_listener(self.update_graph_progress)
+                px_size = float(img_obj.configs["pixel_width"]["value"])
+                rho_val = float(img_obj.configs["resistivity"]["value"])
+                img_obj.graph_obj.fit_graph(img_obj.img_bin, img_obj.img_2d, px_size, rho_val)
+                img_obj.graph_obj.remove_listener(self.update_graph_progress)
+            except Exception:
+                logging.exception(f"Error creating graph for image {i}.")
 
 
     def apply_img_scaling(self):
