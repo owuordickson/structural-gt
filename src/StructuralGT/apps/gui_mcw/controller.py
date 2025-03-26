@@ -513,6 +513,8 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
             for val in self.imgControlModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -527,6 +529,8 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
             for val in self.microscopyPropsModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -541,6 +545,8 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
             for val in self.imgBinFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -555,6 +561,8 @@ class MainController(QObject):
         """Retrieve settings from model and send to Python."""
         try:
             sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
             for val in self.imgFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
@@ -583,27 +591,41 @@ class MainController(QObject):
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
                                                                               "image. Try again."])
 
-    # Remember filename, out_dir
     @Slot()
     def export_graph(self):
-        """"""
+        """Export graph data and save as a file."""
         try:
+            sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
+
+            # 1. Get filename
             sgt_obj = self.get_current_obj()
+            out_dir, filename = sgt_obj.imp.create_filenames()
+            out_dir = out_dir if sgt_obj.imp.output_dir == '' else sgt_obj.imp.output_dir
+
+            # 2. Update values
             for val in self.exportGraphModel.list_data:
-                sgt_obj.g_obj.configs[val["id"]]["value"] = val["value"]
-            sgt_obj.g_obj.save_graph_to_file()
+                for img in sel_images:
+                    img.graph_obj.configs[val["id"]]["value"] = val["value"]
+
+            # 3. Save graph data to file
+            for i, img in enumerate(sel_images):
+                filename += f"_Frame{i}"
+                img.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
-    # Remember filename, out_dir
     @Slot()
     def save_img_files(self):
-        """"""
+        """Retrieve and save images to file."""
         try:
 
             sel_images = self.get_selected_images()
+            if len(sel_images) <= 0:
+                return
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]

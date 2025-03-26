@@ -66,7 +66,6 @@ class GraphExtractor(ProgressUpdate):
 
         """
         super(GraphExtractor, self).__init__()
-        self.terminal_app: bool = True
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
         self.img_net: ImageFile | None = None
