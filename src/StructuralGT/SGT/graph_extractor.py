@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 import scipy as sp
 import networkx as nx
+from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
 import matplotlib.pyplot as plt
 
@@ -69,19 +70,18 @@ class GraphExtractor(ProgressUpdate):
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> graph_obj = GraphExtractor()
-        >>> graph_obj.fit_graph()
+        >>> imp_obj.
         """
         super(GraphExtractor, self).__init__()
         self.terminal_app: bool = True
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
-        self.img_net: MatLike | None = None
+        self.img_net: ImageFile | None = None
         self.nx_graph = None
         self.graph_skeleton = None
         self.nx_components = []
 
-    def fit_graph(self):
+    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
@@ -90,7 +90,6 @@ class GraphExtractor(ProgressUpdate):
 
         :return:
         """
-        self.update_status([48, "Starting graph extraction..."])
 
         if self.abort:
             self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
@@ -100,7 +99,7 @@ class GraphExtractor(ProgressUpdate):
         self.update_status([50, "Making graph skeleton..."])
         # px_size = self.imp.configs["pixel_width"]["value"]
         # rho_val = float(self.imp.configs["resistivity"]["value"])
-        success = self.extract_graph(image_bin=image_bin)
+        success = self.extract_graph(image_bin=image_bin, px_width_sz=px_size, rho_val=rho_val)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
@@ -117,7 +116,8 @@ class GraphExtractor(ProgressUpdate):
 
         self.update_status([90, "Drawing graph network..."])
         graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
-        self.img_net = ImageBase.plot_to_img(graph_plt)
+        if graph_plt is not None:
+            self.img_net = ImageBase.plot_to_img(graph_plt)
 
     def reset_graph(self):
         """
@@ -138,7 +138,6 @@ class GraphExtractor(ProgressUpdate):
         """
 
         if image_bin is None:
-            print("a. Solve this for Graph Extractor")
             return False
 
         opt_gte = self.configs
@@ -227,8 +226,10 @@ class GraphExtractor(ProgressUpdate):
         """
 
         if image_2d is None:
-            print("1. Fix me at Graph Extractor")
-            return None
+            # return blank plot
+            fig = plt.Figure()
+            fig.add_axes((0, 0, 1, 1))  # span the whole figure
+            return fig
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -292,8 +293,10 @@ class GraphExtractor(ProgressUpdate):
         """
 
         if image_2d is None:
-            print("2. Fix me at Graph Extractor")
-            return None
+            # Return blank plot
+            fig = plt.Figure()
+            fig.add_axes((0, 0, 1, 1))  # span the whole figure
+            return fig
 
         opt_gte = self.configs
         nx_graph = self.nx_graph

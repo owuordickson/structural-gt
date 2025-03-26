@@ -579,6 +579,7 @@ class MainController(QObject):
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
                                                                               "image. Try again."])
 
+    # Remember filename, out_dir
     @Slot()
     def export_graph(self):
         """"""
@@ -586,12 +587,13 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.exportGraphModel.list_data:
                 sgt_obj.g_obj.configs[val["id"]]["value"] = val["value"]
-            sgt_obj.g_obj.save_files()
+            sgt_obj.g_obj.save_graph_to_file()
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
+    # Remember filename, out_dir
     @Slot()
     def save_img_files(self):
         """"""

@@ -194,6 +194,13 @@ class ImageProcessor(ProgressUpdate):
     def update_graph_progress(self, value, msg):
         self.update_status([value, msg])
 
+    def get_selected_images(self):
+        """
+        Get indices of selected images.
+        """
+        sel_images = [self.images[i] for i in self.selected_images]
+        return sel_images
+
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
         for img_obj in self.images:
@@ -212,7 +219,13 @@ class ImageProcessor(ProgressUpdate):
 
         self.update_status([10, "Processing image..."])
 
-        for img_obj in self.images:
+        for i in range(len(self.images)):
+            img_obj = self.images[i]
+            if i not in self.selected_images:
+                img_obj.img_mod = img_obj.img_2d
+                img_obj.img_bin = img_obj.img_2d
+                continue
+
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
 
@@ -222,7 +235,17 @@ class ImageProcessor(ProgressUpdate):
             img_obj.get_pixel_width()
 
         self.update_status([40, "Image processing complete..."])
-        # self.update_status([48, "Starting graph extraction..."])
+
+    def create_graphs(self):
+        """Generates or extracts graphs of selected images."""
+        self.update_status([48, "Starting graph extraction..."])
+        for i in range(len(self.images)):
+            img_obj = self.images[i]
+            if i not in self.selected_images:
+                img_obj.graph_obj.img_net = img_obj.graph_obj.draw_2d_graph_network()
+                continue
+            img_obj.graph_obj.add_listener(self.update_graph_progress)
+
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -417,8 +440,8 @@ class ImageProcessor(ProgressUpdate):
         if img.img_bin is not None:
             cv2.imwrite(str(bin_file), img.img_bin)
 
-        if img.img_net is not None:
-            graph_img = img.img_net.copy()
+        if img.graph_obj.img_net is not None:
+            graph_img = img.graph_obj.img_net.copy()
             if graph_img.mode == "JPEG":
                 graph_img.save(net_file, format='JPEG', quality=95)
             elif graph_img.mode in ["RGBA", "P"]:

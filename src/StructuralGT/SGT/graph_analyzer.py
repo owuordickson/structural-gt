@@ -583,11 +583,12 @@ class GraphAnalyzer(ProgressUpdate):
 
         # 2. plotting skeletal images
         fig = self.g_obj.draw_2d_skeletal_images()
-        out_figs.append(fig)
+        if fig is not None:
+            out_figs.append(fig)
 
         # 3. plotting sub-graph network
         fig = self.g_obj.draw_2d_graph_network(a4_size=True)
-        if fig:
+        if fig is not None:
             out_figs.append(fig)
 
         # 4. displaying all the GT calculations in Table  on entire page
