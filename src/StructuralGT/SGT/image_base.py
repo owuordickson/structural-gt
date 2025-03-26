@@ -4,7 +4,6 @@
 Processes of an image by applying filters to it and converting it to binary version.
 """
 
-import os
 import io
 import cv2
 import numpy as np
@@ -41,7 +40,6 @@ class ImageBase:
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
-        self.img_net: ImageFile | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
         self.init_image()
@@ -283,86 +281,6 @@ class ImageBase:
         run_info += f" || Scale Factor = {self.scale_factor}"
 
         return run_info
-
-    # Move to ImageProcessor
-    def display_images(self):
-        """
-        Create plot figures of original, processed, and binary image.
-
-        :return:
-        """
-        opt_img = self.configs
-        raw_img = self.img_2d
-        filtered_img = self.img_mod
-        img_bin = self.img_bin
-
-        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
-
-        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
-        ax_1 = fig.add_subplot(2, 2, 1)
-        ax_2 = fig.add_subplot(2, 2, 2)
-        ax_3 = fig.add_subplot(2, 2, 3)
-        ax_4 = fig.add_subplot(2, 2, 4)
-
-        ax_1.set_title("Original Image")
-        ax_1.set_axis_off()
-        ax_1.imshow(raw_img, cmap='gray')
-
-        ax_2.set_title("Processed Image")
-        ax_2.set_axis_off()
-        ax_2.imshow(filtered_img, cmap='gray')
-
-        ax_3.set_title("Binary Image")
-        ax_3.set_axis_off()
-        ax_3.imshow(img_bin, cmap='gray')
-
-        ax_4.set_title("Histogram of Processed Image")
-        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        ax_4.plot(img_histogram)
-        if opt_img["threshold_type"]["value"] == 0:
-            thresh_arr = np.array(
-                [[int(opt_img["global_threshold_value"]["value"]), int(opt_img["global_threshold_value"]["value"])],
-                 [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        elif opt_img["threshold_type"]["value"] == 2:
-            otsu_val = opt_img["otsu"]["value"]
-            thresh_arr = np.array([[otsu_val, otsu_val],
-                                   [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        return fig
-
-    # Move to ImageProcessor
-    def save_images_to_file(self, filename: str, out_dir: str):
-        """
-        Write images to file.
-
-        :param filename: the filename to save the image to.
-        :param out_dir: the directory to save the image to.
-        """
-
-        if self.configs["save_images"]["value"] == 0:
-            return
-
-        pr_filename = filename + "_processed.jpg"
-        bin_filename = filename + "_binary.jpg"
-        net_filename = filename + "_final.jpg"
-        img_file = os.path.join(out_dir, pr_filename)
-        bin_file = os.path.join(out_dir, bin_filename)
-        net_file = os.path.join(out_dir, net_filename)
-
-        if self.img_mod is not None:
-            cv2.imwrite(str(img_file), self.img_mod)
-
-        if self.img_bin is not None:
-            cv2.imwrite(str(bin_file), self.img_bin)
-
-        if self.img_net is not None:
-            graph_img = self.img_net.copy()
-            if graph_img.mode == "JPEG":
-                graph_img.save(net_file, format='JPEG', quality=95)
-            elif graph_img.mode in ["RGBA", "P"]:
-                img_net = graph_img.convert("RGB")
-                img_net.save(net_file, format='JPEG', quality=95)
 
     @staticmethod
     def apply_filter(filter_type: str, img: MatLike, grad_x, grad_y):

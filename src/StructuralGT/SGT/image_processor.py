@@ -13,7 +13,9 @@ import logging
 import numpy as np
 import nibabel as nib
 from PIL import Image
+import matplotlib.pyplot as plt
 
+from .progress_update import ProgressUpdate
 from .image_base import ImageBase
 
 logger = logging.getLogger("SGT App")
@@ -21,7 +23,9 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", str
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
-class ImageProcessor:
+
+
+class ImageProcessor(ProgressUpdate):
     """
     A class for processing and preparing 2D or 3D microscopy images for graph theory analysis.
 
@@ -45,6 +49,7 @@ class ImageProcessor:
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> imp_obj.apply_img_filters()
         """
+        super(ImageProcessor, self).__init__()
         self.img_path: str = img_path
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
@@ -186,6 +191,9 @@ class ImageProcessor:
         # self.selected_images.add(index)
         self.props = self.get_img_props()
 
+    def update_graph_progress(self, value, msg):
+        self.update_status([value, msg])
+
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
         for img_obj in self.images:
@@ -202,6 +210,8 @@ class ImageProcessor:
         :return: None
         """
 
+        self.update_status([10, "Processing image..."])
+
         for img_obj in self.images:
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
@@ -209,6 +219,10 @@ class ImageProcessor:
             if filter_type == 2:
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
+            img_obj.get_pixel_width()
+
+        self.update_status([40, "Image processing complete..."])
+        # self.update_status([48, "Starting graph extraction..."])
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -308,7 +322,7 @@ class ImageProcessor:
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
         else:
-            _, fmt = ImageBase.check_alpha_channel(self.images[0].img_raw) # first image
+            _, fmt = ImageBase.check_alpha_channel(self.images[0].img_raw)  # first image
             num_dim = 2
 
         slices = 0
@@ -325,6 +339,91 @@ class ImageProcessor:
             # ["Pixel Size", "2nm x 2nm"]
         ]
         return props
+
+    def display_images(self):
+        """
+        Create plot figures of original, processed, and binary image.
+
+        :return:
+        """
+
+        img = self.images[0]  # Test with first image
+
+        opt_img = img.configs
+        raw_img = img.img_2d
+        filtered_img = img.img_mod
+        img_bin = img.img_bin
+
+        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
+
+        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+        ax_1 = fig.add_subplot(2, 2, 1)
+        ax_2 = fig.add_subplot(2, 2, 2)
+        ax_3 = fig.add_subplot(2, 2, 3)
+        ax_4 = fig.add_subplot(2, 2, 4)
+
+        ax_1.set_title("Original Image")
+        ax_1.set_axis_off()
+        ax_1.imshow(raw_img, cmap='gray')
+
+        ax_2.set_title("Processed Image")
+        ax_2.set_axis_off()
+        ax_2.imshow(filtered_img, cmap='gray')
+
+        ax_3.set_title("Binary Image")
+        ax_3.set_axis_off()
+        ax_3.imshow(img_bin, cmap='gray')
+
+        ax_4.set_title("Histogram of Processed Image")
+        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+        ax_4.plot(img_histogram)
+        if opt_img["threshold_type"]["value"] == 0:
+            thresh_arr = np.array(
+                [[int(opt_img["global_threshold_value"]["value"]), int(opt_img["global_threshold_value"]["value"])],
+                 [0, max(img_histogram)]], dtype='object')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        elif opt_img["threshold_type"]["value"] == 2:
+            otsu_val = opt_img["otsu"]["value"]
+            thresh_arr = np.array([[otsu_val, otsu_val],
+                                   [0, max(img_histogram)]], dtype='object')
+            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        return fig
+
+        # Move to ImageProcessor
+
+    def save_images_to_file(self, filename: str, out_dir: str):
+        """
+        Write images to file.
+
+        :param filename: the filename to save the image to.
+        :param out_dir: the directory to save the image to.
+        """
+
+        img = self.images[0]  # Test with first image
+
+        if img.configs["save_images"]["value"] == 0:
+            return
+
+        pr_filename = filename + "_processed.jpg"
+        bin_filename = filename + "_binary.jpg"
+        net_filename = filename + "_final.jpg"
+        img_file = os.path.join(out_dir, pr_filename)
+        bin_file = os.path.join(out_dir, bin_filename)
+        net_file = os.path.join(out_dir, net_filename)
+
+        if img.img_mod is not None:
+            cv2.imwrite(str(img_file), img.img_mod)
+
+        if img.img_bin is not None:
+            cv2.imwrite(str(bin_file), img.img_bin)
+
+        if img.img_net is not None:
+            graph_img = img.img_net.copy()
+            if graph_img.mode == "JPEG":
+                graph_img.save(net_file, format='JPEG', quality=95)
+            elif graph_img.mode in ["RGBA", "P"]:
+                img_net = graph_img.convert("RGB")
+                img_net.save(net_file, format='JPEG', quality=95)
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):

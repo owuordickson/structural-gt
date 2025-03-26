@@ -599,7 +599,7 @@ class MainController(QObject):
             sgt_obj = self.get_current_obj()
             for val in self.saveImgModel.list_data:
                 sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
-            sgt_obj.g_obj.imp.save_files()
+            sgt_obj.g_obj.imp.save_images_to_file()
             self.taskTerminatedSignal.emit(True,
                                            ["Save Images", "Image files successfully saved in 'Output Dir'"])
         except Exception as err:
@@ -720,7 +720,8 @@ class MainController(QObject):
         try:
             sgt_obj = self.get_current_obj()
             sgt_obj.g_obj.imp.crop_image(x, y, width, height)
-            sgt_obj.g_obj.reset()
+            sgt_obj.g_obj.imp.reset_img_filters()
+            sgt_obj.g_obj.reset_graph()
 
             # Emit signal to update UI with new image
             self.select_img_type(None)
@@ -735,7 +736,8 @@ class MainController(QObject):
         if undo:
             sgt_obj = self.get_current_obj()
             sgt_obj.g_obj.imp.undo_cropping()
-            sgt_obj.g_obj.reset()
+            sgt_obj.g_obj.imp.reset_img_filters()
+            sgt_obj.g_obj.reset_graph()
 
             # Emit signal to update UI with new image
             self.select_img_type(None)

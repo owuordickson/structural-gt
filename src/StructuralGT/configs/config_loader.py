@@ -58,7 +58,6 @@ def load_img_configs():
         config_file = os.path.join(script_dir, config_path)
         config.read(config_file)
 
-        #options_img["image_dim"]["value"] = int(config.get('filter-settings', 'image_dim'))
         options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
         options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))

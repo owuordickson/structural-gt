@@ -54,7 +54,7 @@ class GraphAnalyzer(ProgressUpdate):
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> graph_obj = GraphExtractor(imp_obj)
-        >>> graph_obj.fit()
+        >>> graph_obj.fit_graph()
         >>> metrics_obj = GraphAnalyzer(graph_obj)
         >>> metrics_obj.compute_gt_metrics()
         >>> if graph_obj.configs["has_weights"]["value"]:
@@ -71,6 +71,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.weighted_output_data = pd.DataFrame([])
         self.histogram_data = {}
 
+    # Rename to update_img_progress
     def update_graph_progress(self, value, msg):
         self.update_status([value, msg])
 

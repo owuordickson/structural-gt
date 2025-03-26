@@ -70,7 +70,7 @@ class GraphExtractor(ProgressUpdate):
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> graph_obj = GraphExtractor()
-        >>> graph_obj.fit()
+        >>> graph_obj.fit_graph()
         """
         super(GraphExtractor, self).__init__()
         self.terminal_app: bool = True
@@ -81,35 +81,25 @@ class GraphExtractor(ProgressUpdate):
         self.graph_skeleton = None
         self.nx_components = []
 
-    def fit(self):
-        """
-        Execute functions that process image and builds a NetworkX graph from the image.
-
-        :return:
-        """
-        self.update_status([10, "Processing image..."])
-        self.imp.apply_img_filters()
-        self.imp.get_pixel_width()
-        self.update_status([40, "Image processing complete..."])
-        self.update_status([48, "Starting graph extraction..."])
-        self.fit_graph()
-
-
     def fit_graph(self):
         """
-        Execute a function that builds a NetworkX graph from the image.
+        Execute a function that builds a NetworkX graph from the binary image.
 
         :param image_bin: a binary image for building Graph Skeleton for the NetworkX graph.
         :param image_2d: the raw 2D image for creating a visual graph plot image.
 
         :return:
         """
+        self.update_status([48, "Starting graph extraction..."])
+
         if self.abort:
             self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
                                     "image/binary filters and graph options. OR change brightness/contrast"])
             return
 
         self.update_status([50, "Making graph skeleton..."])
+        # px_size = self.imp.configs["pixel_width"]["value"]
+        # rho_val = float(self.imp.configs["resistivity"]["value"])
         success = self.extract_graph(image_bin=image_bin)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
@@ -129,19 +119,21 @@ class GraphExtractor(ProgressUpdate):
         graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
         self.img_net = ImageBase.plot_to_img(graph_plt)
 
-    def reset(self):
+    def reset_graph(self):
         """
         Erase the existing data stored in the object.
         :return:
         """
-        self.imp.reset_img_filters()
         self.nx_graph = None
+        self.img_net = None
 
-    def extract_graph(self, image_bin: MatLike = None):
+    def extract_graph(self, image_bin: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
         """
         Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
         :param image_bin: binary image from which skeleton will be built and graph drawn.
+        :param px_width_sz: width of a pixel in nano-meters.
+        :param rho_val: resistivity coefficient/value of the material.
         :return:
         """
 
@@ -192,13 +184,11 @@ class GraphExtractor(ProgressUpdate):
                 if opt_gte["has_weights"]["value"] == 1:
                     # We modify 'weight'
                     wt_type = self.get_weight_type()
-                    px_size = self.imp.configs["pixel_width"]["value"]
-                    rho_val = float(self.imp.configs["resistivity"]["value"])
                     weight_options = GraphExtractor.get_weight_options()
 
                     ge = nx_graph[s][e]['pts']
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
-                                                                         pixel_dim=px_size, rho_dim=rho_val)
+                                                                         pixel_dim=px_width_sz, rho_dim=rho_val)
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
