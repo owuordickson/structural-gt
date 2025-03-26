@@ -260,8 +260,11 @@ class ImageProcessor(ProgressUpdate):
                 self.abort = img_obj.graph_obj.abort
                 if self.abort:
                     return
-            except Exception:
-                logging.exception(f"Error creating graph for image {i}.")
+            except Exception as err:
+                self.abort = True
+                logging.info(f"Error creating graph for image in Frame {i}.")
+                logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
+                return
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -379,7 +382,6 @@ class ImageProcessor(ProgressUpdate):
         ]
         return props
 
-    # Remember to update for 3D list
     def display_images(self):
         """
         Create plot figures of original, processed, and binary image.
@@ -387,84 +389,88 @@ class ImageProcessor(ProgressUpdate):
         :return:
         """
 
-        img = self.images[0]  # Test with first image
+        figs = []
+        sel_images = [self.images[i] for i in self.selected_images]
+        is_3d = True if len(sel_images) > 1 else False
 
-        opt_img = img.configs
-        raw_img = img.img_2d
-        filtered_img = img.img_mod
-        img_bin = img.img_bin
+        for i, img in enumerate(sel_images):
+            opt_img = img.configs
+            raw_img = img.img_2d
+            filtered_img = img.img_mod
+            img_bin = img.img_bin
 
-        img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
+            img_histogram = cv2.calcHist([filtered_img], [0], None, [256], [0, 256])
 
-        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
-        ax_1 = fig.add_subplot(2, 2, 1)
-        ax_2 = fig.add_subplot(2, 2, 2)
-        ax_3 = fig.add_subplot(2, 2, 3)
-        ax_4 = fig.add_subplot(2, 2, 4)
+            fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+            ax_1 = fig.add_subplot(2, 2, 1)
+            ax_2 = fig.add_subplot(2, 2, 2)
+            ax_3 = fig.add_subplot(2, 2, 3)
+            ax_4 = fig.add_subplot(2, 2, 4)
 
-        ax_1.set_title("Original Image")
-        ax_1.set_axis_off()
-        ax_1.imshow(raw_img, cmap='gray')
+            ax_1.set_title(f"Frame {i}: Original Image") if is_3d else ax_1.set_title(f"Original Image")
+            ax_1.set_axis_off()
+            ax_1.imshow(raw_img, cmap='gray')
 
-        ax_2.set_title("Processed Image")
-        ax_2.set_axis_off()
-        ax_2.imshow(filtered_img, cmap='gray')
+            ax_2.set_title(f"Frame {i}: Processed Image") if is_3d else ax_2.set_title(f"Processed Image")
+            ax_2.set_axis_off()
+            ax_2.imshow(filtered_img, cmap='gray')
 
-        ax_3.set_title("Binary Image")
-        ax_3.set_axis_off()
-        ax_3.imshow(img_bin, cmap='gray')
+            ax_3.set_title(f"Frame {i}: Binary Image") if is_3d else ax_3.set_title(f"Binary Image")
+            ax_3.set_axis_off()
+            ax_3.imshow(img_bin, cmap='gray')
 
-        ax_4.set_title("Histogram of Processed Image")
-        ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        ax_4.plot(img_histogram)
-        if opt_img["threshold_type"]["value"] == 0:
-            thresh_arr = np.array(
-                [[int(opt_img["global_threshold_value"]["value"]), int(opt_img["global_threshold_value"]["value"])],
-                 [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        elif opt_img["threshold_type"]["value"] == 2:
-            otsu_val = opt_img["otsu"]["value"]
-            thresh_arr = np.array([[otsu_val, otsu_val],
-                                   [0, max(img_histogram)]], dtype='object')
-            ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        return fig
+            ax_4.set_title(f"Frame {i}: Histogram of Processed Image") if is_3d else ax_4.set_title(f"Histogram of Processed Image")
+            ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+            ax_4.plot(img_histogram)
+            if opt_img["threshold_type"]["value"] == 0:
+                thresh_arr = np.array(
+                    [[int(opt_img["global_threshold_value"]["value"]), int(opt_img["global_threshold_value"]["value"])],
+                     [0, max(img_histogram)]], dtype='object')
+                ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            elif opt_img["threshold_type"]["value"] == 2:
+                otsu_val = opt_img["otsu"]["value"]
+                thresh_arr = np.array([[otsu_val, otsu_val],
+                                       [0, max(img_histogram)]], dtype='object')
+                ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            figs.append(fig)
+        return figs
 
-        # Move to ImageProcessor
-
-    # Remember to update for 3D list
     def save_images_to_file(self):
         """
         Write images to file.
         """
 
-        img = self.images[0]  # Test with first image
+        sel_images = [self.images[i] for i in self.selected_images]
+        is_3d = True if len(sel_images) > 1 else False
 
-        if img.configs["save_images"]["value"] == 0:
-            return
+        for i, img in enumerate(sel_images):
+            if img.configs["save_images"]["value"] == 0:
+                return
 
-        out_dir, filename = self.create_filenames()
-        out_dir = out_dir if self.output_dir == '' else self.output_dir
+            out_dir, filename = self.create_filenames()
+            out_dir = out_dir if self.output_dir == '' else self.output_dir
 
-        pr_filename = filename + "_processed.jpg"
-        bin_filename = filename + "_binary.jpg"
-        net_filename = filename + "_graph.jpg"
-        img_file = os.path.join(out_dir, pr_filename)
-        bin_file = os.path.join(out_dir, bin_filename)
-        net_file = os.path.join(out_dir, net_filename)
+            filename += f"_Frame{i}" if is_3d else ''
+            pr_filename = filename + "_processed.jpg"
+            bin_filename = filename + "_binary.jpg"
+            net_filename = filename + "_graph.jpg"
+            img_file = os.path.join(out_dir, pr_filename)
+            bin_file = os.path.join(out_dir, bin_filename)
+            net_file = os.path.join(out_dir, net_filename)
 
-        if img.img_mod is not None:
-            cv2.imwrite(str(img_file), img.img_mod)
+            if img.img_mod is not None:
+                cv2.imwrite(str(img_file), img.img_mod)
 
-        if img.img_bin is not None:
-            cv2.imwrite(str(bin_file), img.img_bin)
+            if img.img_bin is not None:
+                cv2.imwrite(str(bin_file), img.img_bin)
 
-        if img.graph_obj.img_net is not None:
-            graph_img = img.graph_obj.img_net.copy()
-            if graph_img.mode == "JPEG":
-                graph_img.save(net_file, format='JPEG', quality=95)
-            elif graph_img.mode in ["RGBA", "P"]:
-                img_net = graph_img.convert("RGB")
-                img_net.save(net_file, format='JPEG', quality=95)
+            if img.graph_obj.img_net is not None:
+                graph_img = img.graph_obj.img_net.copy()
+                if graph_img.mode == "JPEG":
+                    graph_img.save(net_file, format='JPEG', quality=95)
+                elif graph_img.mode in ["RGBA", "P"]:
+                    img_net = graph_img.convert("RGB")
+                    img_net.save(net_file, format='JPEG', quality=95)
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):

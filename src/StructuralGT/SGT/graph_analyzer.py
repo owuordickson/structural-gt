@@ -578,8 +578,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        fig = self.g_obj.imp.display_images()
-        out_figs.append(fig)
+        figs = self.g_obj.imp.display_images()
+        for fig in figs:
+            out_figs.append(fig)
 
         # 2. plotting skeletal images
         fig = self.g_obj.draw_2d_skeletal_images()

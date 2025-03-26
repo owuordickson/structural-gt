@@ -70,7 +70,7 @@ class GraphExtractor(ProgressUpdate):
         self.props: list = []
         self.img_net: ImageFile | None = None
         self.nx_graph = None
-        self.graph_skeleton = None
+        self.graph_skeleton: GraphSkeleton | None = None
         self.nx_components = []
 
     def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
@@ -227,7 +227,7 @@ class GraphExtractor(ProgressUpdate):
         nx_components = self.nx_components
 
         if blank:
-            w, h = image_2d.shape
+            w, h = image_2d.shape[:2]
             my_dpi = 96
             fig = plt.Figure(figsize=(h / my_dpi, w / my_dpi), dpi=my_dpi)
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
