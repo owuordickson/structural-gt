@@ -1,4 +1,5 @@
 import os
+import io
 import csv
 import base64
 import multiprocessing as mp
@@ -85,8 +86,8 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
     csvfile.close()
 
 
-def get_pixmap(img_cv):
-    """ Converts an OpenCV image to a QPixmap"""
+def get_cv_base64(img_cv):
+    """ Converts an OpenCV image to a base64 string."""
     img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
     pixmap = ImageQt.toqpixmap(img_pil)  # Convert to QPixmap
 
@@ -103,3 +104,14 @@ def get_pixmap(img_cv):
     q_image.save(buffer, "PNG")  # Save QImage to buffer as PNG
     base64_data = base64.b64encode(byte_array.data()).decode("utf-8")  # Encode to base64
     return base64_data
+
+
+
+def get_plt_base64(img_plt):
+    """ Converts a Matplotlib plt figure to a base64 string."""
+    buffer = io.BytesIO()
+    img_plt.savefig(buffer, format="png", bbox_inches="tight")
+    buffer.seek(0)
+    img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    buffer.close()
+    return img_base64

@@ -22,7 +22,7 @@ from ... import __version__
 from ...SGT.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
-from ...SGT.sgt_utils import get_pixmap
+from ...SGT.sgt_utils import get_cv_base64
 
 
 class MainController(QObject):
@@ -229,7 +229,7 @@ class MainController(QObject):
             sgt_obj = self.sgt_objs[key]
             im_obj = sgt_obj.imp
             img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
-            base64_data = get_pixmap(img_cv)
+            base64_data = get_cv_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
 
