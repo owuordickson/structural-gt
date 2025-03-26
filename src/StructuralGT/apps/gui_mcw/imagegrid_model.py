@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtCore import Qt, QAbstractListModel
 
-from ...SGT.sgt_utils import get_cv_base64, get_plt_base64
+from ...SGT.sgt_utils import get_cv_base64, pil_to_base64
 
 
 class ImageGridModel(QAbstractListModel):
@@ -18,7 +18,7 @@ class ImageGridModel(QAbstractListModel):
         if type(img_lst[0]) is np.ndarray:
             self._image_data = [{"id": i, "image": get_cv_base64(img_lst[i]), "selected": 0} for i in range(len(img_lst))]
         else:
-            self._image_data = [{"id": i, "image": get_plt_base64(img_lst[i]), "selected": 0} for i in range(len(img_lst))]
+            self._image_data = [{"id": i, "image": pil_to_base64(img_lst[i]), "selected": 0} for i in range(len(img_lst))]
 
     def rowCount(self, parent=None):
         return len(self._image_data)
@@ -58,7 +58,7 @@ class ImageGridModel(QAbstractListModel):
         if type(new_data[0]) is np.ndarray:
             self._image_data = [{"id": i, "image": get_cv_base64(new_data[i]), "selected": 0} for i in range(len(new_data))]
         else:
-            self._image_data = [{"id": i, "image": get_plt_base64(new_data[i]), "selected": 0} for i in range(len(new_data))]
+            self._image_data = [{"id": i, "image": pil_to_base64(new_data[i]), "selected": 0} for i in range(len(new_data))]
 
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),

@@ -4,9 +4,7 @@ import csv
 import base64
 import multiprocessing as mp
 from typing import LiteralString
-from PIL import Image, ImageQt  # Import ImageQt for conversion
-from PIL.ImageQt import QIODevice, QImage
-from PySide6.QtCore import QByteArray, QBuffer
+from PIL import Image
 
 
 
@@ -89,29 +87,13 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
 def get_cv_base64(img_cv):
     """ Converts an OpenCV image to a base64 string."""
     img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
-    pixmap = ImageQt.toqpixmap(img_pil)  # Convert to QPixmap
-
-    # Convert QPixmap to QImage
-    q_image = pixmap.toImage()
-
-    # Ensure the format is compatible with PNG saving
-    q_image = q_image.convertToFormat(QImage.Format_ARGB32)
-
-    # Convert QImage to base64 string
-    byte_array = QByteArray()
-    buffer = QBuffer(byte_array)
-    buffer.open(QIODevice.WriteOnly)
-    q_image.save(buffer, "PNG")  # Save QImage to buffer as PNG
-    base64_data = base64.b64encode(byte_array.data()).decode("utf-8")  # Encode to base64
-    return base64_data
+    return pil_to_base64(img_pil)
 
 
-
-def get_plt_base64(img_plt):
-    """ Converts a Matplotlib plt figure to a base64 string."""
+def pil_to_base64(img_pil):
+    """Convert a PIL Image to a base64 string."""
     buffer = io.BytesIO()
-    img_plt.savefig(buffer, format="png", bbox_inches="tight")
+    img_pil.save(buffer, format="PNG")  # Save image to buffer
     buffer.seek(0)
-    img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    buffer.close()
-    return img_base64
+    base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")  # Convert to Base64 string
+    return base64_data
