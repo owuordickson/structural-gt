@@ -284,6 +284,7 @@ class ImageBase:
 
         return run_info
 
+    # Move to ImageProcessor
     def display_images(self):
         """
         Create plot figures of original, processed, and binary image.
@@ -330,6 +331,7 @@ class ImageBase:
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
 
+    # Move to ImageProcessor
     def save_images_to_file(self, filename: str, out_dir: str):
         """
         Write images to file.

@@ -24,20 +24,20 @@ MenuBar {
         }
         MenuSeparator{}
 
-        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: mainController.display_image(); onTriggered: initiate_save() }
+        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: mainController.display_image(); onTriggered: save_project() }
         MenuSeparator{}
 
         Menu {
             id: mnuExportGraphAs
             title: "Export GT graph as..."
             enabled: true
-            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: initiate_export_graph(0) }
-            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: initiate_export_graph(2) }
-            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: initiate_export_graph(1) }
+            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
+            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: export_graph_data(2) }
+            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(1) }
         }
         MenuSeparator{}
 
-        MenuItem {id:mnuExportAll; text: "Save processed images"; enabled: false; onTriggered: initiate_export_graph(3) }
+        MenuItem {id:mnuExportAll; text: "Save processed images"; enabled: false; onTriggered: save_processed_images(0) }
 
     }
     Menu {
@@ -72,7 +72,7 @@ MenuBar {
         MenuItem { id:mnuHelp; text: "Structural GT Help"; enabled: true; onTriggered: dialogAbout.open() }
     }
 
-    function initiate_export_graph (row) {
+    function export_graph_data (row) {
 
         for (let i = 0; i < exportGraphModel.rowCount(); i++) {
             let val = i === row ? 1 : 0;
@@ -81,8 +81,21 @@ MenuBar {
         }
         mainController.export_graph();
     }
+    
+    
+    function save_processed_images (row) {
 
-    function initiate_save () {
+        for (let i = 0; i < saveImgModel.rowCount(); i++) {
+            let val = i === row ? 1 : 0;
+            var index = saveImgModel.index(i, 0);
+            saveImgModel.setData(index, val, valueRole);
+        }
+        mainController.save_img_files();
+    }
+    
+    
+
+    function save_project () {
 
         let is_open = mainController.is_project_open();
         if (is_open === false) {
