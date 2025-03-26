@@ -219,12 +219,18 @@ class ImageProcessor(ProgressUpdate):
 
         self.update_status([10, "Processing image..."])
 
+        progress = 10
+        incr = 90 / len(self.images)
         for i in range(len(self.images)):
             img_obj = self.images[i]
             if i not in self.selected_images:
                 img_obj.img_mod = img_obj.img_2d
                 img_obj.img_bin = img_obj.img_2d
                 continue
+
+            if progress < 100:
+                progress += incr
+                self.update_status([incr, "Image processing in progress..."])
 
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
@@ -234,7 +240,7 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
             img_obj.get_pixel_width()
 
-        self.update_status([40, "Image processing complete..."])
+        self.update_status([100, "Image processing complete..."])
 
     def create_graphs(self):
         """Generates or extracts graphs of selected images."""
@@ -252,7 +258,6 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.graph_obj.remove_listener(self.update_graph_progress)
             except Exception:
                 logging.exception(f"Error creating graph for image {i}.")
-
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""

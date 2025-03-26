@@ -42,11 +42,11 @@ class GraphAnalyzer(ProgressUpdate):
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
-    def __init__(self, g_obj: GraphExtractor, allow_multiprocessing: bool = True):
+    def __init__(self, imp: ImageProcessor, allow_multiprocessing: bool = True):
         """
         A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
-        :param g_obj: graph converter object.
+        :param imp: ImageProcessor object.
         :param allow_multiprocessing: allow multiprocessing computing.
 
         >>> i_path = "path/to/image"
@@ -65,7 +65,7 @@ class GraphAnalyzer(ProgressUpdate):
         super(GraphAnalyzer, self).__init__()
         self.configs = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp = allow_multiprocessing
-        self.g_obj = g_obj
+        self.imp: ImageProcessor = imp
         self.plot_figures = None
         self.output_data = pd.DataFrame([])
         self.weighted_output_data = pd.DataFrame([])

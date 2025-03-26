@@ -42,6 +42,7 @@ class ImageGridModel(QAbstractListModel):
 
     def reset_data(self, new_data):
         """ Resets the data to be displayed. """
+        print(type(new_data[0]))
         self._image_data = new_data
         if new_data is None:
             return

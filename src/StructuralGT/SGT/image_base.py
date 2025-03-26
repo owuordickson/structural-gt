@@ -4,11 +4,8 @@
 Processes of an image by applying filters to it and converting it to binary version.
 """
 
-import io
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
 from cv2.typing import MatLike
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
@@ -334,20 +331,6 @@ class ImageBase:
         # cv2.putText(new_img, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
         # 1, (0, 0, 255), 2)
         return img
-
-    @staticmethod
-    def plot_to_img(fig: plt.Figure):
-        """
-        Convert a Matplotlib figure to a PIL Image and return it
-
-        :param fig: Matplotlib figure.
-        """
-        if fig:
-            buf = io.BytesIO()
-            fig.savefig(buf)
-            buf.seek(0)
-            img = Image.open(buf)
-            return img
 
     @staticmethod
     def check_alpha_channel(img: MatLike):

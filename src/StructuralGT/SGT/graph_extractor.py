@@ -5,6 +5,8 @@ Builds a graph network from nano-scale microscopy images.
 """
 
 import os
+import io
+from PIL import Image
 import math
 import sknw
 import logging
@@ -18,8 +20,6 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
-from  .image_base import ImageBase
-from .image_processor import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
 
@@ -64,13 +64,6 @@ class GraphExtractor(ProgressUpdate):
         """
         A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
-
-        >>>
-        >>> i_path = "path/to/image"
-        >>> o_dir = ""
-        >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.create_graphs()
         """
         super(GraphExtractor, self).__init__()
         self.terminal_app: bool = True
@@ -116,7 +109,7 @@ class GraphExtractor(ProgressUpdate):
         self.update_status([90, "Drawing graph network..."])
         graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
-            self.img_net = ImageBase.plot_to_img(graph_plt)
+            self.img_net = GraphExtractor.plot_to_img(graph_plt)
 
     def reset_graph(self):
         """
@@ -248,7 +241,7 @@ class GraphExtractor(ProgressUpdate):
             gn = xp.array([nodes[i]['o'] for i in nodes])
             ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
-            img = xp.array(ImageBase.plot_to_img(fig))
+            img = xp.array(GraphExtractor.plot_to_img(fig))
             if len(img.shape) == 3:
                 img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
             return img
@@ -435,6 +428,20 @@ class GraphExtractor(ProgressUpdate):
                 for (s, e) in nx_graph.edges():
                     del nx_graph[s][e]['pts']
                 nx.write_gexf(nx_graph, gexf_file)
+
+    @staticmethod
+    def plot_to_img(fig: plt.Figure):
+        """
+        Convert a Matplotlib figure to a PIL Image and return it
+
+        :param fig: Matplotlib figure.
+        """
+        if fig:
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+            return img
 
     @staticmethod
     def get_weight_options():

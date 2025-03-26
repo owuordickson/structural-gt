@@ -73,9 +73,9 @@ class WorkerTask (QObject):
     def task_apply_img_filters(self, im_obj):
         """"""
         try:
-            self.update_progress(10, "applying filters...")
+            im_obj.add_listener(self.update_progress)
             im_obj.apply_img_filters()
-            self.update_progress(100, '')
+            im_obj.remove_listener(self.update_progress)
             self.taskFinishedSignal.emit(True, im_obj)
         except Exception as err:
             print(err)
@@ -87,19 +87,20 @@ class WorkerTask (QObject):
                                                                          "Change filter settings and try again; "
                                                                          "Or, Close the app and try again."])
 
-    def task_extract_graph(self, graph_obj):
+    def task_extract_graph(self, imp):
         """"""
         try:
-            graph_obj.abort = False
-            graph_obj.add_listener(self.update_progress)
-            graph_obj.fit()
-            self.is_aborted(graph_obj)
-            graph_obj.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, graph_obj)
+            imp.abort = False
+            imp.add_listener(self.update_progress)
+            imp.apply_img_filters()
+            imp.create_graphs()
+            self.is_aborted(imp)
+            imp.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(True, imp)
         except AbortException as err:
             print(f"Task aborted error: {err}")
             # Clean up listeners before exiting
-            graph_obj.remove_listener(self.update_progress)
+            imp.remove_listener(self.update_progress)
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, ["Extract Graph Aborted", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
@@ -110,8 +111,8 @@ class WorkerTask (QObject):
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.update_progress(-1, "Error encountered! Try again")
             # Clean up listeners before exiting
-            graph_obj.remove_listener(self.update_progress)
-            self.remove_thread_listener(graph_obj.abort_tasks)
+            imp.remove_listener(self.update_progress)
+            self.remove_thread_listener(imp.abort_tasks)
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
@@ -150,10 +151,10 @@ class WorkerTask (QObject):
                 num_cores = get_num_cores()
                 output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
                 output += "Number of cores: " + str(num_cores) + "\n"
-                output += "Results generated for: " + sgt_obj.g_obj.imp.img_path + "\n"
+                output += "Results generated for: " + sgt_obj.imp.img_path + "\n"
                 output += "Node Count: " + str(sgt_obj.g_obj.nx_graph.number_of_nodes()) + "\n"
                 output += "Edge Count: " + str(sgt_obj.g_obj.nx_graph.number_of_edges()) + "\n"
-                filename, out_dir = sgt_obj.g_obj.imp.create_filenames()
+                filename, out_dir = sgt_obj.imp.create_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
                 write_txt_file(output, out_file)
                 print(output)
@@ -183,7 +184,8 @@ class WorkerTask (QObject):
             self.add_thread_listener(sgt_obj.abort_tasks)
 
             # 1. Apply image filters and extract graph
-            sgt_obj.fit()
+            sgt_obj.imp.apply_img_filters()
+            sgt_obj.imp.create_graphs()
             self.is_aborted(sgt_obj)  # Check if function aborted
 
             # 2. Compute GT parameters
@@ -218,7 +220,7 @@ class WorkerTask (QObject):
             return False, None
 
     @staticmethod
-    def is_aborted(sgt_obj):
+    def is_aborted(active_obj):
         """Raise an exception if the process is aborted."""
-        if sgt_obj.abort:
+        if active_obj.abort:
             raise AbortException("Process aborted")
