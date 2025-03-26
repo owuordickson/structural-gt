@@ -602,9 +602,12 @@ class MainController(QObject):
     def save_img_files(self):
         """"""
         try:
-            sgt_obj = self.get_current_obj()
+
+            sel_images = self.get_selected_images()
             for val in self.saveImgModel.list_data:
-                sgt_obj.imp.configs[val["id"]]["value"] = val["value"]
+                for img in sel_images:
+                    img.configs[val["id"]]["value"] = val["value"]
+            sgt_obj = self.get_current_obj()
             sgt_obj.imp.save_images_to_file()
             self.taskTerminatedSignal.emit(True,
                                            ["Save Images", "Image files successfully saved in 'Output Dir'"])

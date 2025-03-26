@@ -375,6 +375,7 @@ class ImageProcessor(ProgressUpdate):
         ]
         return props
 
+    # Remember to update for 3D list
     def display_images(self):
         """
         Create plot figures of original, processed, and binary image.
@@ -426,18 +427,19 @@ class ImageProcessor(ProgressUpdate):
 
         # Move to ImageProcessor
 
-    def save_images_to_file(self, filename: str, out_dir: str):
+    # Remember to update for 3D list
+    def save_images_to_file(self):
         """
         Write images to file.
-
-        :param filename: the filename to save the image to.
-        :param out_dir: the directory to save the image to.
         """
 
         img = self.images[0]  # Test with first image
 
         if img.configs["save_images"]["value"] == 0:
             return
+
+        out_dir, filename = self.create_filenames()
+        out_dir = out_dir if self.output_dir == '' else self.output_dir
 
         pr_filename = filename + "_processed.jpg"
         bin_filename = filename + "_binary.jpg"
