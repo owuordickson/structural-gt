@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
@@ -40,6 +41,7 @@ class ImageBase:
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
+        self.img_net: ImageFile | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
         self.init_image()
@@ -328,16 +330,17 @@ class ImageBase:
             ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         return fig
 
-    def save_images_to_file(self, graph_img, filename, out_dir):
+    def save_images_to_file(self, filename: str, out_dir: str):
         """
         Write images to file.
 
-        :param graph_img: an image with GT graph ontop of it.
         :param filename: the filename to save the image to.
         :param out_dir: the directory to save the image to.
         """
-        # img_dir, filename = os.path.split(self.img_path)
-        # out_dir = self.output_dir if self.output_dir != '' else img_dir
+
+        if self.configs["save_images"]["value"] == 0:
+            return
+
         pr_filename = filename + "_processed.jpg"
         bin_filename = filename + "_binary.jpg"
         net_filename = filename + "_final.jpg"
@@ -345,15 +348,19 @@ class ImageBase:
         bin_file = os.path.join(out_dir, bin_filename)
         net_file = os.path.join(out_dir, net_filename)
 
-        cv2.imwrite(str(img_file), self.img_mod)
-        cv2.imwrite(str(bin_file), self.img_bin)
-        if graph_img is None:
-            return
-        if graph_img.mode == "JPEG":
-            graph_img.save(net_file, format='JPEG', quality=95)
-        elif graph_img.mode in ["RGBA", "P"]:
-            img_net = graph_img.convert("RGB")
-            img_net.save(net_file, format='JPEG', quality=95)
+        if self.img_mod is not None:
+            cv2.imwrite(str(img_file), self.img_mod)
+
+        if self.img_bin is not None:
+            cv2.imwrite(str(bin_file), self.img_bin)
+
+        if self.img_net is not None:
+            graph_img = self.img_net.copy()
+            if graph_img.mode == "JPEG":
+                graph_img.save(net_file, format='JPEG', quality=95)
+            elif graph_img.mode in ["RGBA", "P"]:
+                img_net = graph_img.convert("RGB")
+                img_net.save(net_file, format='JPEG', quality=95)
 
     @staticmethod
     def apply_filter(filter_type: str, img: MatLike, grad_x, grad_y):

@@ -70,6 +70,7 @@ class MainController(QObject):
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
+        self.saveImgModel = CheckBoxModel([])
         self.img3dGridModel = ImageGridModel([])
 
         # Create QThreadWorker for long tasks
@@ -93,12 +94,14 @@ class MainController(QObject):
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
+            file_options = [v for v in options_img.values() if v["type"] == "file-options"]
 
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
             self.microscopyPropsModel.reset_data(img_properties)
             self.imgScaleOptionModel.reset_data(options_scaling)
+            self.saveImgModel.reset_data(file_options)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
@@ -120,8 +123,8 @@ class MainController(QObject):
             file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
 
             self.gteTreeModel.reset_data(graph_options)
-            self.gtcListModel.reset_data(list(options_gtc.values()))
             self.exportGraphModel.reset_data(file_options)
+            self.gtcListModel.reset_data(list(options_gtc.values()))
 
             self.imagePropsModel.reset_data(sgt_obj.g_obj.imp.props)
             self.graphPropsModel.reset_data(sgt_obj.g_obj.props)
@@ -285,7 +288,6 @@ class MainController(QObject):
             with (PdfPages(pdf_file) as pdf):
                 for fig in sgt_obj.plot_figures:
                     pdf.savefig(fig)
-            sgt_obj.g_obj.save_files()
 
             self._handle_finished(True, sgt_obj)
         except Exception as err:
@@ -580,7 +582,6 @@ class MainController(QObject):
     @Slot()
     def export_graph(self):
         """"""
-        # updated_values = {val["id"]: val["value"] for val in self.exportGraphModel.list_data}
         try:
             sgt_obj = self.get_current_obj()
             for val in self.exportGraphModel.list_data:
@@ -590,6 +591,21 @@ class MainController(QObject):
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
+
+    @Slot()
+    def save_img_files(self):
+        """"""
+        try:
+            sgt_obj = self.get_current_obj()
+            for val in self.saveImgModel.list_data:
+                sgt_obj.g_obj.imp.configs[val["id"]]["value"] = val["value"]
+            sgt_obj.g_obj.imp.save_files()
+            self.taskTerminatedSignal.emit(True,
+                                           ["Save Images", "Image files successfully saved in 'Output Dir'"])
+        except Exception as err:
+            logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
+            self.taskTerminatedSignal.emit(False,
+                                           ["Unable to Save Image Files", "Error saving images to file. Try again."])
 
     @Slot()
     def run_extract_graph(self):

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
+from  .image_base import ImageBase
 from .image_processor import ImageProcessor
 from .sgt_utils import write_csv_file
 from ..configs.config_loader import load_gte_configs
@@ -56,28 +57,25 @@ class GraphExtractor(ProgressUpdate):
     """
     A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
-    :param img_obj: ImageProcessor object.
     """
 
-    def __init__(self, img_obj: ImageProcessor):
+    def __init__(self):
         """
         A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
-        :param img_obj: ImageProcessor object.
 
         >>>
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> graph_obj = GraphExtractor(imp_obj)
+        >>> graph_obj = GraphExtractor()
         >>> graph_obj.fit()
         """
         super(GraphExtractor, self).__init__()
         self.terminal_app: bool = True
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
-        self.imp: ImageProcessor = img_obj
         self.img_net: MatLike | None = None
         self.nx_graph = None
         self.graph_skeleton = None
@@ -91,18 +89,13 @@ class GraphExtractor(ProgressUpdate):
         """
         self.update_status([10, "Processing image..."])
         self.imp.apply_img_filters()
-        self.imp.update_pixel_width()
+        self.imp.get_pixel_width()
         self.update_status([40, "Image processing complete..."])
-        if self.imp.img_3d is None:
-            # This is a 2D image
-            self.update_status([48, "Starting 2D graph extraction..."])
-            self.fit_graph()
-        elif type(self.imp.img_3d) is list:
-            # This a 3D image
-            self.update_status([48, "Starting 3D graph extraction..."])
+        self.update_status([48, "Starting graph extraction..."])
+        self.fit_graph()
 
 
-    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None):
+    def fit_graph(self):
         """
         Execute a function that builds a NetworkX graph from the image.
 
@@ -134,7 +127,7 @@ class GraphExtractor(ProgressUpdate):
 
         self.update_status([90, "Drawing graph network..."])
         graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
-        self.img_net = ImageProcessor.plot_to_img(graph_plt)
+        self.img_net = ImageBase.plot_to_img(graph_plt)
 
     def reset(self):
         """
@@ -152,7 +145,9 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
 
-        image_bin = self.imp.img_bin if image_bin is None else image_bin
+        if image_bin is None:
+            print("a. Solve this for Graph Extractor")
+            return False
 
         opt_gte = self.configs
         if opt_gte is None:
@@ -241,7 +236,9 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
 
-        image_2d = self.imp.img_2d if image_2d is None else image_2d
+        if image_2d is None:
+            print("1. Fix me at Graph Extractor")
+            return None
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -261,7 +258,7 @@ class GraphExtractor(ProgressUpdate):
             gn = xp.array([nodes[i]['o'] for i in nodes])
             ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
-            img = xp.array(ImageProcessor.plot_to_img(fig))
+            img = xp.array(ImageBase.plot_to_img(fig))
             if len(img.shape) == 3:
                 img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
             return img
@@ -304,7 +301,9 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
 
-        image_2d = self.imp.img_2d if image_2d is None else image_2d
+        if image_2d is None:
+            print("2. Fix me at Graph Extractor")
+            return None
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -390,28 +389,24 @@ class GraphExtractor(ProgressUpdate):
                 wt_type = self.configs["has_weights"]["items"][i]["id"]
         return wt_type
 
-    def save_files(self, opt_gte: dict = None):
+    def save_graph_to_file(self, filename: str, out_dir: str):
         """
         Save graph data into files.
 
-        :param opt_gte:
+        :param filename: the filename to save the data to.
+        :param out_dir: the directory to save the data to.
         :return:
         """
 
         nx_graph = self.nx_graph.copy()
-        if opt_gte is None:
-            opt_gte = self.configs
+        opt_gte = self.configs
 
-        filename, output_location = self.imp.create_filenames()
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
         adj_filename = filename + "_adj.csv"
-        gexf_file = os.path.join(output_location, g_filename)
-        csv_file = os.path.join(output_location, el_filename)
-        adj_file = os.path.join(output_location, adj_filename)
-
-        if opt_gte["save_images"]["value"] == 1:
-            self.imp.save_images_to_file(self.img_net)
+        gexf_file = os.path.join(out_dir, g_filename)
+        csv_file = os.path.join(out_dir, el_filename)
+        adj_file = os.path.join(out_dir, adj_filename)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
             adj_mat = nx.adjacency_matrix(self.nx_graph).todense()

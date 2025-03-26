@@ -41,12 +41,12 @@ def load_img_configs():
         "brightness_level": {"id": "brightness_level", "type": "image-control", "text": "Brightness", "value": 0 },
         "contrast_level": {"id": "contrast_level", "type": "image-control", "text": "Contrast", "value": 0 },
 
-        #"image_dim": {"id": "image_dim", "type": "image-property", "text": "", "value": 2},
         "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "visible": 1, "value": 1.0 },
         "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "visible": 1, "value": 0 },
         "resistivity": {"id": "resistivity", "type": "image-property", "text": "Resistivity (<html>&Omega;</html>m)", "visible": 1, "value": 1.0 },
         "pixel_width": {"id": "pixel_width", "type": "image-property", "text": "", "visible": 0, "value": 1.0},  # * (10**-9)  # 1 nanometer
 
+        "save_images": {"id": "save_images", "type": "file-options", "text": "Save All Images", "visible": 1, "value": 0},
     }
 
     # Load configuration from file
@@ -86,6 +86,8 @@ def load_img_configs():
         options_img["scalebar_pixel_count"]["value"] = int(config.get('filter-settings', 'scalebar_pixel_count'))
         options_img["resistivity"]["value"] = float(config.get('filter-settings', 'resistivity'))
 
+        options_img["save_images"]["value"] = int(config.get('file-options', 'save_images'))
+
         return options_img
     except configparser.NoSectionError:
         return options_img
@@ -115,7 +117,6 @@ def load_gte_configs():
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "type": "file-options", "text": "Export as gexf", "value": 0},
         "export_adj_mat": {"id": "export_adj_mat", "type": "file-options", "text": "Export Adjacency Matrix", "value": 0},
-        "save_images": {"id": "save_images", "type": "file-options", "text": "Save All Images", "value": 0},
     }
 
     # Load configuration from file
@@ -142,7 +143,6 @@ def load_gte_configs():
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
         options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))
-        options_gte["save_images"]["value"] = int(config.get('extraction-settings', 'save_images'))
 
         return options_gte
     except configparser.NoSectionError:
