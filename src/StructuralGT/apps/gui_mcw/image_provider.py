@@ -66,7 +66,7 @@ class ImageProvider(QQuickImageProvider):
 
     def handle_change_image(self, cmd):
         # '0' - Original image
-        # '2' - Processing image
+        # '2' - Process image
         # '3' - Binarize image
         # '4' - Extract graph
         if cmd == 0:

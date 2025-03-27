@@ -57,6 +57,7 @@ class ImageProcessor(ProgressUpdate):
         self.props: list = []
         self.images: list[ImageBase] = []
         self.selected_images: set = set()
+        self.graph_extracted: bool = False
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
@@ -191,7 +192,7 @@ class ImageProcessor(ProgressUpdate):
         # self.selected_images.add(index)
         self.props = self.get_img_props()
 
-    def update_graph_progress(self, value, msg):
+    def track_graph_progress(self, value, msg):
         self.update_status([value, msg])
 
     def get_selected_images(self):
@@ -203,6 +204,7 @@ class ImageProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
+        self.graph_extracted = False
         for img_obj in self.images:
             img_obj.img_mod, img_obj.img_bin = None, None
             img_obj.graph_obj.reset_graph()
@@ -219,9 +221,11 @@ class ImageProcessor(ProgressUpdate):
         """
 
         self.update_status([10, "Processing image..."])
+        if filter_type == 2:
+            self.reset_img_filters()
 
         progress = 10
-        incr = 90 / len(self.images)
+        incr = 90 / len(self.images) - 1
         for i in range(len(self.images)):
             img_obj = self.images[i]
             if i not in self.selected_images:
@@ -231,7 +235,7 @@ class ImageProcessor(ProgressUpdate):
 
             if progress < 100:
                 progress += incr
-                self.update_status([incr, "Image processing in progress..."])
+                self.update_status([progress, "Image processing in progress..."])
 
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
@@ -252,12 +256,13 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.graph_obj.img_net = img_obj.graph_obj.draw_2d_graph_network()
                 continue
             try:
-                img_obj.graph_obj.add_listener(self.update_graph_progress)
+                img_obj.graph_obj.add_listener(self.track_graph_progress)
                 px_size = float(img_obj.configs["pixel_width"]["value"])
                 rho_val = float(img_obj.configs["resistivity"]["value"])
                 img_obj.graph_obj.fit_graph(img_obj.img_bin, img_obj.img_2d, px_size, rho_val)
-                img_obj.graph_obj.remove_listener(self.update_graph_progress)
+                img_obj.graph_obj.remove_listener(self.track_graph_progress)
                 self.abort = img_obj.graph_obj.abort
+                self.graph_extracted = not self.abort
                 if self.abort:
                     return
             except Exception as err:

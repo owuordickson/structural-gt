@@ -53,60 +53,76 @@ class GraphAnalyzer(ProgressUpdate):
         >>> o_dir = ""
         >>>
         >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> graph_obj = GraphExtractor(imp_obj)
-        >>> graph_obj.fit_graph()
-        >>> metrics_obj = GraphAnalyzer(graph_obj)
-        >>> metrics_obj.compute_gt_metrics()
-        >>> if graph_obj.configs["has_weights"]["value"]:
-        >>>     metrics_obj.compute_weighted_gt_metrics()
+        >>> metrics_obj = GraphAnalyzer(imp_obj)
+        >>> metrics_obj.run_analyzer()
         >>> metrics_obj.generate_pdf_output()
 
         """
         super(GraphAnalyzer, self).__init__()
-        self.configs = load_gtc_configs()  # graph theory computation parameters and options.
-        self.allow_mp = allow_multiprocessing
+        self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
+        self.allow_mp: bool = allow_multiprocessing
         self.imp: ImageProcessor = imp
         self.plot_figures = None
-        self.output_data = pd.DataFrame([])
-        self.weighted_output_data = pd.DataFrame([])
-        self.histogram_data = {}
+        self.output_data: pd.DataFrame = pd.DataFrame([])
+        self.weighted_output_data: pd.DataFrame = pd.DataFrame([])
+        self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
+                               "betweenness_distribution": [0], "closeness_distribution": [0],
+                               "eigenvector_distribution": [0], "ohms_distribution": [0],
+                               "percolation_distribution": [], "weighted_degree_distribution": [0],
+                               "weighted_clustering_coefficients": [0], "weighted_betweenness_distribution": [0],
+                               "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
+                               "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
 
     # Rename to update_img_progress
-    def update_graph_progress(self, value, msg):
+    def track_img_progress(self, value, msg):
         self.update_status([value, msg])
 
-    def fit(self):
+    def run_analyzer(self):
         """
             Execute functions that will process image filters and extract graph from the processed image
         """
-        if self.g_obj.nx_graph is None:
-            self.g_obj.add_listener(self.update_graph_progress)
-            # self.add_thread_listener(self.g_obj.abort_tasks)
-            self.g_obj.fit()
-            self.g_obj.remove_listener(self.update_graph_progress)
-            # self.add_thread_listener(self.g_obj.abort_tasks)
-        self.abort = self.g_obj.abort
-        self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
-        if not self.abort:
-            self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
-                                   "betweenness_distribution": [0], "closeness_distribution": [0],
-                                   "eigenvector_distribution": [0], "ohms_distribution": [0],
-                                   "percolation_distribution": [], "weighted_degree_distribution": [0],
-                                   "weighted_clustering_coefficients": [0], "weighted_betweenness_distribution": [0],
-                                   "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
-                                   "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
 
-    def compute_gt_metrics(self):
+        # 1. Apply image filters and extract graph (only if it has not been executed)
+        if not self.imp.graph_extracted:
+            self.imp.add_listener(self.track_img_progress)
+            self.imp.apply_img_filters()  # Apply image filters
+            self.imp.create_graphs()      # Extract graph from binary image
+            self.imp.remove_listener(self.track_img_progress)
+            self.abort = self.imp.abort
+        self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+
+        if self.abort:
+            return
+
+        # 2. Compute Unweighted GT parameters
+        # REMEMBER: output_data should be a list
+        self.output_data = self.compute_gt_metrics(graph_obj)
+
+        if self.abort:
+            self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
+            return
+
+        # 3. Compute Weighted GT parameters
+        # REMEMBER: weighted_output_data should be a list
+        self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
+
+    def compute_gt_metrics(self, graph_obj: GraphExtractor = None):
         """
         Compute un-weighted graph theory metrics.
 
-        :return:
+        :param graph_obj: GraphExtractor object.
+
+        :return: A Pandas DataFrame containing the un-weighted graph theory metrics.
         """
+
+        if graph_obj is None:
+            return
+
         self.update_status([1, "Performing un-weighted analysis..."])
 
-        graph = self.g_obj.nx_graph
+        graph = graph_obj.nx_graph
         opt_gtc = self.configs
-        opt_gte = self.g_obj.configs
+        opt_gte = graph_obj.configs
         data_dict = {"x": [], "y": []}
 
         node_count = int(nx.number_of_nodes(graph))
@@ -139,7 +155,8 @@ class GraphAnalyzer(ProgressUpdate):
             hist_label = "Average degree"
             data_dict = self._update_histogram_data(data_dict, deg_distribution, hist_name, hist_label)
 
-        if (opt_gtc["compute_network_diameter"]["value"] == 1) or (opt_gtc["compute_avg_node_connectivity"]["value"] == 1):
+        if (opt_gtc["compute_network_diameter"]["value"] == 1) or (
+                opt_gtc["compute_avg_node_connectivity"]["value"] == 1):
             try:
                 connected_graph = nx.is_connected(graph)
             except nx.exception.NetworkXPointlessConcept:
@@ -173,7 +190,7 @@ class GraphAnalyzer(ProgressUpdate):
                 else:
                     # Use NetworkX Lib in Python
                     self.update_status([15, "Using NetworkX library..."])
-                    if self.allow_mp: # Multi-processing
+                    if self.allow_mp:  # Multi-processing
                         avg_node_con = self.average_node_connectivity()
                     else:
                         avg_node_con = average_node_connectivity(graph)
@@ -228,7 +245,8 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict = self._update_histogram_data(data_dict, cl_coefficients, hist_name, hist_label)
 
         # calculating betweenness centrality histogram
-        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1):
+        if (opt_gte["is_multigraph"]["value"] == 0) and (
+                opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1):
             self.update_status([45, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
@@ -237,7 +255,8 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict = self._update_histogram_data(data_dict, b_distribution, hist_name, hist_label)
 
         # calculating eigenvector centrality
-        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
+        if (opt_gte["is_multigraph"]["value"] == 0) and (
+                opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
             self.update_status([50, "Computing eigenvector centrality..."])
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
@@ -308,19 +327,27 @@ class GraphAnalyzer(ProgressUpdate):
             hist_label = "Average percolation centrality"
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
 
-        self.output_data = pd.DataFrame(data_dict)
+        return pd.DataFrame(data_dict)
 
-    def compute_weighted_gt_metrics(self):
+    def compute_weighted_gt_metrics(self, graph_obj: GraphExtractor = None):
         """
         Compute weighted graph theory metrics.
 
-        :return:
+        :param graph_obj: GraphExtractor object.
+
+        :return: A Pandas DataFrame containing the weighted graph theory metrics.
         """
+        if graph_obj is None:
+            return
+
+        if not graph_obj.configs["has_weights"]["value"]:
+            return
+
         self.update_status([70, "Performing weighted analysis..."])
 
-        graph = self.g_obj.nx_graph
+        graph = graph_obj.nx_graph
         opt_gtc = self.configs
-        wt_type = self.g_obj.get_weight_type()
+        wt_type = graph_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
         data_dict = {"x": [], "y": []}
 
@@ -407,7 +434,7 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
 
         # calculate cross-sectional area of edges
-        wt_type = self.g_obj.get_weight_type()
+        wt_type = graph_obj.get_weight_type()
         if wt_type == 'AREA':
             self.update_status([68, "Computing average (edge) cross-sectional area..."])
             temp_distribution = []
@@ -419,11 +446,13 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["x"].append(f"Average edge cross-sectional area (nm\u00b2)")
             data_dict["y"].append(ae_val)
 
-        self.weighted_output_data = pd.DataFrame(data_dict)
+        return pd.DataFrame(data_dict)
 
-    def compute_ohms_centrality(self):
+    def compute_ohms_centrality(self, graph_obj: GraphExtractor = None):
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
+
+        :param graph_obj: Graph extractor object.
 
         Returns: Ohms centrality distribution
         """
@@ -431,7 +460,7 @@ class GraphAnalyzer(ProgressUpdate):
         lst_area = []
         lst_len = []
         lst_width = []
-        nx_graph = self.g_obj.nx_graph
+        nx_graph = graph_obj.nx_graph
         px_size = self.g_obj.imp.configs["pixel_width"]["value"]
         rho_dim = float(self.g_obj.imp.configs["resistivity"]["value"])
         pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
@@ -477,11 +506,11 @@ class GraphAnalyzer(ProgressUpdate):
         avg_len = np.average(np.array(lst_len, dtype=float))
         avg_width = np.average(np.array(lst_width, dtype=float))
         res = {'avg area': avg_area, 'avg length': avg_len, 'avg width': avg_width,
-               'g shape': g_shape, 'conductivity': round((1/rho_dim), 2)}
+               'g shape': g_shape, 'conductivity': round((1 / rho_dim), 2)}
 
         return ohms_dict, res
 
-    def average_node_connectivity(self, flow_func=None):
+    def average_node_connectivity(self, graph_obj: GraphExtractor = None, flow_func=None):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
@@ -491,6 +520,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         Parameters
         ----------
+        graph_obj: Graph extractor object.
 
         flow_func : function
             A function for computing the maximum flow among a pair of nodes.
@@ -515,7 +545,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         """
 
-        nx_graph = self.g_obj.nx_graph
+        nx_graph = graph_obj.nx_graph
         if nx_graph.is_directed():
             iter_func = itertools.permutations
         else:
@@ -545,14 +575,18 @@ class GraphAnalyzer(ProgressUpdate):
             return 0
         return num / den
 
-    def igraph_average_node_connectivity(self):
+    def igraph_average_node_connectivity(self, graph_obj: GraphExtractor = None):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
         of local node connectivity over all pairs of nodes of G.
+
+        Parameters
+        ---------
+        graph_obj: Graph extractor object.
         """
 
-        nx_graph = self.g_obj.nx_graph
+        nx_graph = graph_obj.nx_graph
         cpu_count = get_num_cores()
         anc = 0
 
@@ -566,7 +600,7 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def generate_pdf_output(self):
+    def generate_pdf_output(self, imp: ImageProcessor = None):
         """
         Generate results as graphs and plots which should be written in a PDF file.
         :return: list of results.
@@ -623,14 +657,16 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["y"].append(val)
         return data_dict
 
-    def display_gt_results(self):
+    def display_gt_results(self, graph_obj: GraphExtractor = None):
         """
         Create a table of weighted and un-weighted graph theory results.
 
-        :return:
+        :param graph_obj: Graph extractor object.
+
+        :return: Matplotlib figures of unweighted and weighted graph theory results.
         """
 
-        opt_gte = self.g_obj.configs
+        opt_gte = graph_obj.configs
         data = self.output_data
         w_data = self.weighted_output_data
 
@@ -653,18 +689,20 @@ class GraphAnalyzer(ProgressUpdate):
             fig_wt = None
         return fig, fig_wt
 
-    def display_histograms(self):
+    def display_histograms(self, graph_obj: GraphExtractor = None):
         """
         Create plot figures of graph theory histograms selected by the user.
 
-        :return:
+        :param graph_obj: Graph extractor object.
+
+        :return: a list of Matplotlib figures.
         """
 
-        opt_gte = self.g_obj.configs
+        opt_gte = graph_obj.configs
         opt_gtc = self.configs
         figs = []
 
-        wt_type = self.g_obj.get_weight_type()
+        wt_type = graph_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
         deg_distribution = self.histogram_data["degree_distribution"]
         w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
@@ -697,7 +735,8 @@ class GraphAnalyzer(ProgressUpdate):
 
         # Betweenness, Clustering, Eigenvector and Ohms
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1):
+        if (opt_gte["is_multigraph"]["value"] == 0) and (
+                opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1):
             bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
             GraphAnalyzer.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
@@ -712,7 +751,8 @@ class GraphAnalyzer(ProgressUpdate):
             ax_3 = fig.add_subplot(2, 2, 3)
             GraphAnalyzer.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
-        if (opt_gte["is_multigraph"]["value"] == 0) and (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
+        if (opt_gte["is_multigraph"]["value"] == 0) and (
+                opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
             GraphAnalyzer.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
@@ -739,7 +779,8 @@ class GraphAnalyzer(ProgressUpdate):
                 ax_1 = fig.add_subplot(2, 2, 1)
                 GraphAnalyzer.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
-            if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
+            if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
+                    opt_gte["is_multigraph"]["value"] == 0):
                 w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
                 GraphAnalyzer.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
@@ -749,7 +790,8 @@ class GraphAnalyzer(ProgressUpdate):
                 ax_3 = fig.add_subplot(2, 2, 3)
                 GraphAnalyzer.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
-            if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
+            if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
+                    opt_gte["is_multigraph"]["value"] == 0):
                 w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
                 GraphAnalyzer.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
@@ -765,18 +807,20 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def display_2d_heatmaps(self):
+    def display_2d_heatmaps(self, graph_obj: GraphExtractor = None):
         """
         Create plot figures of graph theory heatmaps.
 
-        :return:
+        :param graph_obj: GraphExtractor object.
+
+        :return: A list of Matplotlib figures.
         """
 
-        opt_gte = self.g_obj.configs
+        opt_gte = graph_obj.configs
         opt_gtc = self.configs
         img_2d = self.g_obj.imp.img_2d
 
-        wt_type = self.g_obj.get_weight_type()
+        wt_type = graph_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
         deg_distribution = self.histogram_data["degree_distribution"]
         w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
@@ -806,10 +850,12 @@ class GraphAnalyzer(ProgressUpdate):
         if (opt_gtc["compute_avg_clustering_coef"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
             fig = self.plot_heatmap(img_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
+        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
+                opt_gte["is_multigraph"]["value"] == 0):
             fig = self.plot_heatmap(img_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
+        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
+                opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
             fig = self.plot_heatmap(img_2d, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
@@ -820,10 +866,12 @@ class GraphAnalyzer(ProgressUpdate):
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             fig = self.plot_heatmap(img_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
+        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
+                opt_gte["is_multigraph"]["value"] == 0):
             fig = self.plot_heatmap(img_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
+        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
+                opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
             fig = self.plot_heatmap(img_2d, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
@@ -854,7 +902,7 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        _, filename = os.path.split(self.g_obj.imp.img_path)
+        _, filename = os.path.split(self.imp.img_path)
         now = datetime.datetime.now()
 
         run_info = ""
@@ -872,10 +920,12 @@ class GraphAnalyzer(ProgressUpdate):
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
 
-    def plot_heatmap(self, image: MatLike , distribution: list, title: str, size: float, line_width: float):
+    @staticmethod
+    def plot_heatmap(graph_obj: GraphExtractor, image: MatLike, distribution: list, title: str, size: float, line_width: float):
         """
         Create a heatmap from a distribution.
 
+        :param graph_obj: GraphExtractor object.
         :param image: image to plot.
         :param distribution: dataset to be plotted.
         :param title: title of the plot figure.
@@ -883,8 +933,8 @@ class GraphAnalyzer(ProgressUpdate):
         :param line_width: size of the plot line-width.
         :return: histogram plot figure.
         """
-        nx_graph = self.g_obj.nx_graph
-        opt_gte = self.g_obj.configs
+        nx_graph = graph_obj.nx_graph
+        opt_gte = graph_obj.configs
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)

@@ -751,7 +751,6 @@ class MainController(QObject):
         try:
             sgt_obj = self.get_current_obj()
             sgt_obj.imp.crop_image(x, y, width, height)
-            sgt_obj.imp.reset_img_filters()
 
             # Emit signal to update UI with new image
             self.select_img_type(2)
@@ -766,7 +765,6 @@ class MainController(QObject):
         if undo:
             sgt_obj = self.get_current_obj()
             sgt_obj.imp.undo_cropping()
-            sgt_obj.imp.reset_img_filters()
 
             # Emit signal to update UI with new image
             self.select_img_type(None)

@@ -98,7 +98,7 @@ class GraphExtractor(ProgressUpdate):
 
         self.update_status([75, "Verifying graph network..."])
         if self.nx_graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem generating graph (change image/binary filters)["])
+            self.update_status([-1, "Problem generating graph (change image/binary filters)"])
             self.abort = True
             return
 
