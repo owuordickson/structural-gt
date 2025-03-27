@@ -108,13 +108,21 @@ class GraphAnalyzer(ProgressUpdate):
             multi_graph = nx.MultiGraph()
             # Merge graphs, tracking layers
             for layer, G in enumerate(graphs):
+                nodes = G.nodes()
+                for i in G.nodes():
+                    o = nodes[i]['o']
+                    pts = nodes[i]['pts']
+                    multi_graph.add_node(i, pts=pts, o=o, layer=layer)
                 for u, v in G.edges():
+                    pts = G[u][v]['pts']
+                    length = G[u][v]['length']
                     width = G[u][v]['width']
                     angle = G[u][v]['angle']
                     weight = G[u][v]['weight']
-                    multi_graph.add_edge(u, v, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
+                    multi_graph.add_edge(u, v, pts=pts, length=length, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
             graph_obj.nx_graph = multi_graph
             graph_obj.configs["is_multigraph"]["value"] = 1
+            graph_obj.configs["has_weights"]["value"] = 0  # NetworkX has no support for computing weighted params for MultiGraph
 
         # 3. Compute Unweighted GT parameters
         self.output_data = self.compute_gt_metrics(graph_obj)
@@ -125,10 +133,8 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 4. Compute Weighted GT parameters (skip if MultiGraph)
-        if graph_obj.configs["is_multigraph"]["value"] == 0:
-            # NetworkX has no support for computing weighted params for MultiGraph
-            self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
-            print(self.weighted_output_data)
+        self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
+        print(self.weighted_output_data)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
@@ -994,6 +1000,7 @@ class GraphAnalyzer(ProgressUpdate):
         :param line_width: size of the plot line-width.
         :return: histogram plot figure.
         """
+        print(f"Heatmap: {distribution.shape}")
         nx_graph = graph_obj.nx_graph
         opt_gte = graph_obj.configs
         font_1 = {'fontsize': 9}

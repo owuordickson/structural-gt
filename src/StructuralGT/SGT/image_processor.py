@@ -190,7 +190,7 @@ class ImageProcessor(ProgressUpdate):
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.selected_images = set(range(len(self.images)))
         # Testing
-        self.selected_images = set(range(1))
+        self.selected_images = set(range(3))
         # self.selected_images.discard(index)
         # self.selected_images.add(index)
         self.props = self.get_img_props()
