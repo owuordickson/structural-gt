@@ -61,8 +61,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.allow_mp: bool = allow_multiprocessing
         self.imp: ImageProcessor = imp
         self.plot_figures: list | None = None
-        self.output_data: pd.DataFrame = pd.DataFrame([])
-        self.weighted_output_data: pd.DataFrame = pd.DataFrame([])
+        self.output_data: pd.DataFrame | None = None
+        self.weighted_output_data: pd.DataFrame | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -93,8 +93,12 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 2. Combine the nx_graphs of images Frames to form a 3D graph
-        # 2a. Collect adjacency matrices & find max dimensions
         sel_images = self.imp.get_selected_images()
+        if len(sel_images) <= 0:
+            self.update_status([-1, "No images selected! Select at least one image."])
+            self.abort = True
+            return
+
         graph_obj = sel_images[0].graph_obj
         if len(sel_images) > 0:
             # List of Graphs to Merge
@@ -111,8 +115,6 @@ class GraphAnalyzer(ProgressUpdate):
                     weight = G[u][v]['weight']
                     multi_graph.add_edge(u, v, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
             graph_obj.nx_graph = multi_graph
-            # Print edges with layer info
-            print(multi_graph.edges(data=True))
 
         # 3. Compute Unweighted GT parameters
         # REMEMBER: output_data should be a list
@@ -710,7 +712,7 @@ class GraphAnalyzer(ProgressUpdate):
         tab_1 = tbl.table(ax, cellText=data.values[:, :], loc='upper center', colWidths=col_width, cellLoc='left')
         tab_1.scale(1, 1.5)
 
-        if opt_gte["has_weights"]["value"] == 1:
+        if opt_gte["has_weights"]["value"] == 1 and w_data is not None:
             fig_wt = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = fig_wt.add_subplot(1, 1, 1)
             ax.set_axis_off()
