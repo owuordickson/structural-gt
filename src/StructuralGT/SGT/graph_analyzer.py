@@ -100,6 +100,7 @@ class GraphAnalyzer(ProgressUpdate):
         if len(sel_images) > 1:
             # List of Graphs to Merge
             graphs = [img.graph_obj.nx_graph for img in sel_images]
+            # graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]  # TESTING
             # Create a MultiGraph
             multi_graph = nx.MultiGraph()
             # Merge graphs, tracking layers
