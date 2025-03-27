@@ -184,8 +184,6 @@ class ImageProcessor(ProgressUpdate):
         else:
             img_obj = ImageBase(img_data, self.scale_factor)
             self.images.append(img_obj)
-            # TESTING 3D
-            # self.images = [img_obj for i in range(5)]
             if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             else:
@@ -252,22 +250,6 @@ class ImageProcessor(ProgressUpdate):
 
     def create_graphs(self):
         """Generates or extracts graphs of selected images."""
-        testing = False
-        if testing:
-            img_obj = self.images[0]
-            img_bin = [img.img_bin for img in self.images]
-            img_2d = [img.img_2d for img in self.images]
-            img_bin = np.array(img_bin)
-            img_2d = np.array(img_2d)
-            img_obj.graph_obj.add_listener(self.track_graph_progress)
-            px_size = float(img_obj.configs["pixel_width"]["value"])
-            rho_val = float(img_obj.configs["resistivity"]["value"])
-            img_obj.graph_obj.fit_graph(img_bin, img_2d, px_size, rho_val)
-            img_obj.graph_obj.remove_listener(self.track_graph_progress)
-            self.abort = img_obj.graph_obj.abort
-            self.graph_extracted = not self.abort
-            if self.abort:
-                return
 
         self.update_status([48, "Starting graph extraction..."])
         for i in range(len(self.images)):

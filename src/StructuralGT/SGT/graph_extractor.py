@@ -134,16 +134,9 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
         if opt_gte is None:
             return False
-        testing = False
-        if testing:
-            skel_objs = [GraphSkeleton(img, opt_gte) for img in image_bin]
-            img_skel = [g_skel.skeleton for g_skel in skel_objs]
-            img_skel = np.array(img_skel)
-            graph_skel = skel_objs[0]
-            graph_skel.skeleton = img_skel
-        else:
-            graph_skel = GraphSkeleton(image_bin, opt_gte)
-            img_skel = graph_skel.skeleton
+
+        graph_skel = GraphSkeleton(image_bin, opt_gte)
+        img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
 
         self.update_status([60, "Creating graph network..."])
