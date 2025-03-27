@@ -186,12 +186,12 @@ class GraphAnalyzer(ProgressUpdate):
                 if use_igraph:
                     # use iGraph Lib in C
                     self.update_status([15, "Using iGraph library..."])
-                    avg_node_con = self.igraph_average_node_connectivity()
+                    avg_node_con = self.igraph_average_node_connectivity(graph_obj)
                 else:
                     # Use NetworkX Lib in Python
                     self.update_status([15, "Using NetworkX library..."])
                     if self.allow_mp:  # Multi-processing
-                        avg_node_con = self.average_node_connectivity()
+                        avg_node_con = self.average_node_connectivity(graph_obj)
                     else:
                         avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
@@ -279,7 +279,7 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             self.update_status([60, "Computing Ohms centrality..."])
-            o_distribution_1, res = self.compute_ohms_centrality()
+            o_distribution_1, res = self.compute_ohms_centrality(graph_obj)
             o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
             hist_name = "ohms_distribution"
             hist_label = "Average Ohms centrality"
@@ -448,7 +448,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_ohms_centrality(self, graph_obj: GraphExtractor = None):
+    def compute_ohms_centrality(self, graph_obj: GraphExtractor):
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
@@ -510,7 +510,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def average_node_connectivity(self, graph_obj: GraphExtractor = None, flow_func=None):
+    def average_node_connectivity(self, graph_obj: GraphExtractor, flow_func=None):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
@@ -575,7 +575,7 @@ class GraphAnalyzer(ProgressUpdate):
             return 0
         return num / den
 
-    def igraph_average_node_connectivity(self, graph_obj: GraphExtractor = None):
+    def igraph_average_node_connectivity(self, graph_obj: GraphExtractor):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
@@ -591,7 +591,7 @@ class GraphAnalyzer(ProgressUpdate):
         anc = 0
 
         try:
-            filename, output_location = self.g_obj.imp.create_filenames()
+            filename, output_location = self.imp.create_filenames()
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
@@ -600,7 +600,7 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def generate_pdf_output(self, imp: ImageProcessor = None):
+    def generate_pdf_output(self, imp: ImageProcessor):
         """
         Generate results as graphs and plots which should be written in a PDF file.
         :return: list of results.
@@ -627,21 +627,21 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig)
 
         # 4. displaying all the GT calculations in Table  on entire page
-        fig, fig_wt = self.display_gt_results()
+        fig, fig_wt = self.display_gt_results(graph_obj)
         out_figs.append(fig)
         if fig_wt:
             out_figs.append(fig_wt)
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])
-        figs = self.display_histograms()
+        figs = self.display_histograms(graph_obj)
         for fig in figs:
             out_figs.append(fig)
 
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.display_2d_heatmaps()
+            figs = self.display_2d_heatmaps(graph_obj)
             for fig in figs:
                 out_figs.append(fig)
 
@@ -657,7 +657,7 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["y"].append(val)
         return data_dict
 
-    def display_gt_results(self, graph_obj: GraphExtractor = None):
+    def display_gt_results(self, graph_obj: GraphExtractor):
         """
         Create a table of weighted and un-weighted graph theory results.
 
@@ -689,7 +689,7 @@ class GraphAnalyzer(ProgressUpdate):
             fig_wt = None
         return fig, fig_wt
 
-    def display_histograms(self, graph_obj: GraphExtractor = None):
+    def display_histograms(self, graph_obj: GraphExtractor):
         """
         Create plot figures of graph theory histograms selected by the user.
 
@@ -807,7 +807,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def display_2d_heatmaps(self, graph_obj: GraphExtractor = None):
+    def display_2d_heatmaps(self, graph_obj: GraphExtractor):
         """
         Create plot figures of graph theory heatmaps.
 
@@ -842,50 +842,50 @@ class GraphAnalyzer(ProgressUpdate):
         figs = []
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(img_2d, deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = self.plot_heatmap(img_2d, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["compute_avg_clustering_coef"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                 opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, w_bet_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(img_2d, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = self.plot_heatmap(img_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                 opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, w_eig_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
-            fig = self.plot_heatmap(img_2d, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
 
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = self.plot_heatmap(img_2d, w_per_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_per_distribution,
                                     f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
