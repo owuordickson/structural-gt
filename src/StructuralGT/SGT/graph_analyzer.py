@@ -97,23 +97,24 @@ class GraphAnalyzer(ProgressUpdate):
         # 2. Combine the nx_graphs of images Frames to form a 3D graph
         # 2a. Collect adjacency matrices & find max dimensions
         sel_images = self.imp.get_selected_images()
-        adj_mats = []
-        max_w, max_h = 0, 0
-        for img in sel_images:
-            mat_2d = nx.adjacency_matrix(img.graph_obj.nx_graph).todense()
-            w, h = mat_2d.shape[:2]
-            max_w, max_h = max(max_w, w), max(max_h, h)
-            adj_mats.append(mat_2d)
+        if len(sel_images) > 1:
+            adj_mats = []
+            max_w, max_h = 0, 0
+            for img in sel_images:
+                mat_2d = nx.adjacency_matrix(img.graph_obj.nx_graph).todense()
+                w, h = mat_2d.shape[:2]
+                max_w, max_h = max(max_w, w), max(max_h, h)
+                adj_mats.append(mat_2d)
 
-        # 2b. Pad matrices & stack into 3D array (provide padding for small images - by filling it by 0s)
-        adj_mat_3d = np.stack([
-            np.pad(mat, ((0, max_w - mat.shape[0]), (0, max_h - mat.shape[1])), mode='constant')
-            for mat in adj_mats
-        ])
-        print(adj_mat_3d.shape)  # Expected shape: (num_graphs, max_w, max_h)
+            # 2b. Pad matrices & stack into 3D array (provide padding for small images - by filling it by 0s)
+            adj_mat_3d = np.stack([
+                np.pad(mat, ((0, max_w - mat.shape[0]), (0, max_h - mat.shape[1])), mode='constant')
+                for mat in adj_mats
+            ])
+            print(adj_mat_3d.shape)  # Expected shape: (num_graphs, max_w, max_h)
 
-        # 2c. Create 3D NetworkX graph
-        nx_graph = nx.from_numpy_array(adj_mat_3d)
+            # 2c. Create 3D NetworkX graph
+            nx_graph = nx.from_numpy_array(adj_mat_3d)  # ERROR NETWORKX ONLY WORKS WITH 2D NOT 3D!!
 
         # 3. Compute Unweighted GT parameters
         # REMEMBER: output_data should be a list

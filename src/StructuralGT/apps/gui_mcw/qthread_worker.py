@@ -182,18 +182,7 @@ class WorkerTask (QObject):
             # Add Listeners
             sgt_obj.add_listener(self.update_progress)
             self.add_thread_listener(sgt_obj.abort_tasks)
-
-            # 1. Apply image filters and extract graph
-            sgt_obj.imp.apply_img_filters()
-            sgt_obj.imp.create_graphs()
-            self.is_aborted(sgt_obj)  # Check if function aborted
-
-            # 2. Compute GT parameters
-            sgt_obj.compute_gt_metrics()
-            if sgt_obj.g_obj.configs["has_weights"]["value"]:
-                self.is_aborted(sgt_obj)
-                # 3. Compute weighted-GT parameters
-                sgt_obj.compute_weighted_gt_metrics()
+            sgt_obj.run_analyzer()
             self.is_aborted(sgt_obj)
 
             # 4. Generate results PDF
