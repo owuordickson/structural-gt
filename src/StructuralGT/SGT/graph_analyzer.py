@@ -55,8 +55,6 @@ class GraphAnalyzer(ProgressUpdate):
         >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> metrics_obj = GraphAnalyzer(imp_obj)
         >>> metrics_obj.run_analyzer()
-        >>> metrics_obj.generate_pdf_output()
-
         """
         super(GraphAnalyzer, self).__init__()
         self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
@@ -129,6 +127,12 @@ class GraphAnalyzer(ProgressUpdate):
         # REMEMBER: weighted_output_data should be a list
         self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
         print(self.weighted_output_data)
+
+        if self.abort:
+            self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
+            return
+
+        self.plot_figures = self.generate_pdf_output(graph_obj)
 
     def compute_gt_metrics(self, graph_obj: GraphExtractor = None):
         """
@@ -624,9 +628,12 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def generate_pdf_output(self, imp: ImageProcessor):
+    def generate_pdf_output(self, graph_obj: GraphExtractor):
         """
         Generate results as graphs and plots which should be written in a PDF file.
+
+        :param graph_obj: Graph extractor object.
+
         :return: list of results.
         """
 
@@ -636,17 +643,17 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = self.g_obj.imp.display_images()
+        figs = self.imp.display_images()
         for fig in figs:
             out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = self.g_obj.draw_2d_skeletal_images()
+        fig = graph_obj.draw_2d_skeletal_images()
         if fig is not None:
             out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = self.g_obj.draw_2d_graph_network(a4_size=True)
+        fig = graph_obj.draw_2d_graph_network(a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
@@ -934,7 +941,7 @@ class GraphAnalyzer(ProgressUpdate):
         run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
         # Image Configs
-        run_info += self.g_obj.imp.get_config_info()
+        run_info += self.imp.get_config_info()
         run_info += "\n\n"
 
         # Graph Configs

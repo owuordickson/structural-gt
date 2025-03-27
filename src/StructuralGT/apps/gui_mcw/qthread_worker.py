@@ -182,11 +182,9 @@ class WorkerTask (QObject):
             # Add Listeners
             sgt_obj.add_listener(self.update_progress)
             self.add_thread_listener(sgt_obj.abort_tasks)
+
             sgt_obj.run_analyzer()
             self.is_aborted(sgt_obj)
-
-            # 4. Generate results PDF
-            sgt_obj.plot_figures = sgt_obj.generate_pdf_output()
 
             # Cleanup - remove listeners
             sgt_obj.remove_listener(self.update_progress)
