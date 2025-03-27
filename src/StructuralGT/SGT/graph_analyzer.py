@@ -38,7 +38,7 @@ class GraphAnalyzer(ProgressUpdate):
     A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
     Args:
-        g_obj: graph converter object.
+        imp: Image Processor object.
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
@@ -71,7 +71,6 @@ class GraphAnalyzer(ProgressUpdate):
                                "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
                                "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
 
-    # Rename to update_img_progress
     def track_img_progress(self, value, msg):
         self.update_status([value, msg])
 
@@ -118,7 +117,6 @@ class GraphAnalyzer(ProgressUpdate):
             graph_obj.configs["is_multigraph"]["value"] = 1
 
         # 3. Compute Unweighted GT parameters
-        # REMEMBER: output_data should be a list
         self.output_data = self.compute_gt_metrics(graph_obj)
         print(self.output_data)
 
@@ -126,10 +124,11 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
             return
 
-        # 4. Compute Weighted GT parameters
-        # REMEMBER: weighted_output_data should be a list
-        self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
-        print(self.weighted_output_data)
+        # 4. Compute Weighted GT parameters (skip if MultiGraph)
+        if graph_obj.configs["is_multigraph"]["value"] == 0:
+            # NetworkX has no support for computing weighted params for MultiGraph
+            self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
+            print(self.weighted_output_data)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
@@ -493,8 +492,13 @@ class GraphAnalyzer(ProgressUpdate):
         lst_len = []
         lst_width = []
         nx_graph = graph_obj.nx_graph
-        px_size = self.g_obj.imp.configs["pixel_width"]["value"]
-        rho_dim = float(self.g_obj.imp.configs["resistivity"]["value"])
+
+        sel_images = self.imp.get_selected_images()
+        px_sizes = np.array([img.configs["pixel_width"]["value"] for img in sel_images])
+        rho_dims = np.array([img.configs["resistivity"]["value"] for img in sel_images])
+
+        px_size = np.average(px_sizes)
+        rho_dim = np.average(rho_dims)
         pixel_dim = px_size  # * (10 ** 9)  # Convert to nanometers
         g_shape = 1
 
@@ -853,7 +857,26 @@ class GraphAnalyzer(ProgressUpdate):
 
         opt_gte = graph_obj.configs
         opt_gtc = self.configs
-        img_2d = self.g_obj.imp.img_2d
+
+        sel_images = self.imp.get_selected_images()
+        if len(sel_images) > 1:
+            # Step 1: Collect 2d images & find max dimensions
+            max_w, max_h = 0, 0
+            images_2d = []
+            for img in sel_images:
+                w, h = img.img_2d.shape[:2]
+                max_x, max_h = max(w, h), max(w, h)
+                images_2d.append(img.img_2d)
+            # Step 2: Pad matrices & stack into 3D array
+            img_3d = np.stack([
+                np.pad(mat, ((0, max_w - mat.shape[0]), (0, max_h - mat.shape[1])), mode='constant')
+                for mat in images_2d
+            ])
+            print(img_3d.shape)  # Expected shape: (depth, w, h)
+            img = img_3d
+        else:
+            img_2d = sel_images[0].img_2d
+            img = img_2d
 
         wt_type = graph_obj.get_weight_type()
         weight_type = GraphExtractor.get_weight_options().get(wt_type)
@@ -877,50 +900,50 @@ class GraphAnalyzer(ProgressUpdate):
         figs = []
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["compute_avg_clustering_coef"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                 opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_bet_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                 opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_eig_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
 
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1) and \
                 (opt_gte["is_multigraph"]["value"] == 0):
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img_2d, w_per_distribution,
+            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_per_distribution,
                                     f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
@@ -948,7 +971,7 @@ class GraphAnalyzer(ProgressUpdate):
         run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
         # Image Configs
-        run_info += self.imp.get_config_info()
+        run_info += self.imp.images[0].get_config_info()  # Get configs of first image
         run_info += "\n\n"
 
         # Graph Configs
