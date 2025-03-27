@@ -134,8 +134,16 @@ class GraphExtractor(ProgressUpdate):
         opt_gte = self.configs
         if opt_gte is None:
             return False
-        graph_skel = GraphSkeleton(image_bin, opt_gte)
-        img_skel = graph_skel.skeleton
+        testing = False
+        if testing:
+            skel_objs = [GraphSkeleton(img, opt_gte) for img in image_bin]
+            img_skel = [g_skel.skeleton for g_skel in skel_objs]
+            img_skel = np.array(img_skel)
+            graph_skel = skel_objs[0]
+            graph_skel.skeleton = img_skel
+        else:
+            graph_skel = GraphSkeleton(image_bin, opt_gte)
+            img_skel = graph_skel.skeleton
         self.graph_skeleton = graph_skel
 
         self.update_status([60, "Creating graph network..."])
@@ -148,7 +156,7 @@ class GraphExtractor(ProgressUpdate):
                     if nx_graph[s][e][k]['weight'] == 0:
                         nx_graph[s][e][k]['length'] = 2
             # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
-            # if we want the actual weights we get it from GetWeights.py, otherwise we drop them
+            # if we want the actual weights we get it from graph_skeleton.py, otherwise we drop them
             for (s, e) in nx_graph.edges():
                 if opt_gte["has_weights"]["value"] == 1:
                     for k in range(int(len(nx_graph[s][e]))):

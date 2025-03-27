@@ -257,7 +257,6 @@ class GraphSkeleton:
                 unique_patterns.append(pattern)
 
         # Apply binary hit-or-miss for all unique patterns
-        print(f"Skeleton Check: {skeleton.shape} -- {unique_patterns[0].shape}")
         br = sum(ndimage.binary_hit_or_miss(skeleton, pattern) for pattern in unique_patterns)
         return br
 

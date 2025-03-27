@@ -185,7 +185,7 @@ class ImageProcessor(ProgressUpdate):
             img_obj = ImageBase(img_data, self.scale_factor)
             self.images.append(img_obj)
             # TESTING 3D
-            self.images = [img_obj for i in range(5)]
+            # self.images = [img_obj for i in range(5)]
             if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             else:
@@ -252,7 +252,7 @@ class ImageProcessor(ProgressUpdate):
 
     def create_graphs(self):
         """Generates or extracts graphs of selected images."""
-        testing = True
+        testing = False
         if testing:
             img_obj = self.images[0]
             img_bin = [img.img_bin for img in self.images]

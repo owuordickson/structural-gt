@@ -97,22 +97,29 @@ class GraphAnalyzer(ProgressUpdate):
         # 2. Combine the nx_graphs of images Frames to form a 3D graph
         # 2a. Collect adjacency matrices & find max dimensions
         sel_images = self.imp.get_selected_images()
+        graph_obj = sel_images[0].graph_obj
         if len(sel_images) > 1:
             # List of Graphs to Merge
-            graphs = [img.graph_obj.nx_graph for img in sel_images]
-            # graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]  # TESTING
+            # graphs = [img.graph_obj.nx_graph for img in sel_images]
+            # TESTING
+            graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]
             # Create a MultiGraph
             multi_graph = nx.MultiGraph()
             # Merge graphs, tracking layers
             for layer, G in enumerate(graphs):
                 for u, v in G.edges():
-                    multi_graph.add_edge(u, v, layer=layer)  # Store layer info
+                    width = G[u][v]['width']
+                    angle = G[u][v]['angle']
+                    weight = G[u][v]['weight']
+                    multi_graph.add_edge(u, v, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
+            graph_obj.nx_graph = multi_graph
             # Print edges with layer info
             print(multi_graph.edges(data=True))
 
         # 3. Compute Unweighted GT parameters
         # REMEMBER: output_data should be a list
         self.output_data = self.compute_gt_metrics(graph_obj)
+        print(self.output_data)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -121,6 +128,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 4. Compute Weighted GT parameters
         # REMEMBER: weighted_output_data should be a list
         self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
+        print(self.weighted_output_data)
 
     def compute_gt_metrics(self, graph_obj: GraphExtractor = None):
         """
