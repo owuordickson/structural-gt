@@ -256,9 +256,6 @@ class ImageProcessor(ProgressUpdate):
         self.update_status([0, "Starting graph extraction..."])
         for i in self.selected_images:
             img_obj = self.images[i]
-            """if i not in self.selected_images:
-                img_obj.graph_obj.img_net = None
-                continue"""
             try:
                 self.update_status([10, f"Processing Image {i + 1}/{len(self.selected_images)} "])
                 img_obj.graph_obj.add_listener(self.track_graph_progress)
