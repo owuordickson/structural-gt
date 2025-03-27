@@ -98,23 +98,17 @@ class GraphAnalyzer(ProgressUpdate):
         # 2a. Collect adjacency matrices & find max dimensions
         sel_images = self.imp.get_selected_images()
         if len(sel_images) > 1:
-            adj_mats = []
-            max_w, max_h = 0, 0
-            for img in sel_images:
-                mat_2d = nx.adjacency_matrix(img.graph_obj.nx_graph).todense()
-                w, h = mat_2d.shape[:2]
-                max_w, max_h = max(max_w, w), max(max_h, h)
-                adj_mats.append(mat_2d)
+            # List of Graphs to Merge
+            graphs = [img.graph_obj.nx_graph for img in sel_images]
+            # Create a MultiGraph
+            multi_graph = nx.MultiGraph()
+            # Merge graphs, tracking layers
+            for layer, G in enumerate(graphs):
+                for u, v in G.edges():
+                    multi_graph.add_edge(u, v, layer=layer)  # Store layer info
 
-            # 2b. Pad matrices & stack into 3D array (provide padding for small images - by filling it by 0s)
-            adj_mat_3d = np.stack([
-                np.pad(mat, ((0, max_w - mat.shape[0]), (0, max_h - mat.shape[1])), mode='constant')
-                for mat in adj_mats
-            ])
-            print(adj_mat_3d.shape)  # Expected shape: (num_graphs, max_w, max_h)
-
-            # 2c. Create 3D NetworkX graph
-            nx_graph = nx.from_numpy_array(adj_mat_3d)  # ERROR NETWORKX ONLY WORKS WITH 2D NOT 3D!!
+            # Print edges with layer info
+            print(multi_graph.edges(data=True))
 
         # 3. Compute Unweighted GT parameters
         # REMEMBER: output_data should be a list
