@@ -86,12 +86,16 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
 
 def get_cv_base64(img_cv):
     """ Converts an OpenCV image to a base64 string."""
+    if img_cv is None:
+        return None
     img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
     return pil_to_base64(img_pil)
 
 
 def pil_to_base64(img_pil):
     """Convert a PIL Image to a base64 string."""
+    if img_pil is None:
+        return None
     buffer = io.BytesIO()
     img_pil.save(buffer, format="PNG")  # Save image to buffer
     buffer.seek(0)

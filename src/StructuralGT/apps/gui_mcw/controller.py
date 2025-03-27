@@ -235,7 +235,7 @@ class MainController(QObject):
 
     def get_selected_images(self):
         """
-        Get indices of selected images.
+        Get selected images.
         """
         sgt_obj = self.get_current_obj()
         im_obj = sgt_obj.imp

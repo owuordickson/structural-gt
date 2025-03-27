@@ -27,12 +27,16 @@ class ImageGridModel(QAbstractListModel):
         if not index.isValid() or index.row() >= len(self._image_data):
             return None
 
+        item = self._image_data[index.row()]
+        if item["image"] is None:
+            return None
+
         if role == self.IdRole:
-            return self._image_data[index.row()]["id"]
+            return item["id"]
         elif role == self.ImageRole:
-            return self._image_data[index.row()]["image"]
+            return item["image"]
         elif role == self.SelectedRole:
-            return self._image_data[index.row()]["selected"]
+            return item["selected"]
         return None
 
     def setData(self, index, value, role=Qt.ItemDataRole.DisplayRole):

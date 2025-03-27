@@ -189,6 +189,8 @@ class ImageProcessor(ProgressUpdate):
             else:
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.selected_images = set(range(len(self.images)))
+        # Testing
+        self.selected_images = set(range(1))
         # self.selected_images.discard(index)
         # self.selected_images.add(index)
         self.props = self.get_img_props()
@@ -251,13 +253,14 @@ class ImageProcessor(ProgressUpdate):
     def create_graphs(self):
         """Generates or extracts graphs of selected images."""
 
-        self.update_status([48, "Starting graph extraction..."])
-        for i in range(len(self.images)):
+        self.update_status([0, "Starting graph extraction..."])
+        for i in self.selected_images:
             img_obj = self.images[i]
-            if i not in self.selected_images:
-                img_obj.graph_obj.img_net = img_obj.graph_obj.draw_2d_graph_network()
-                continue
+            """if i not in self.selected_images:
+                img_obj.graph_obj.img_net = None
+                continue"""
             try:
+                self.update_status([10, f"Processing Image {i + 1}/{len(self.selected_images)} "])
                 img_obj.graph_obj.add_listener(self.track_graph_progress)
                 px_size = float(img_obj.configs["pixel_width"]["value"])
                 rho_val = float(img_obj.configs["resistivity"]["value"])

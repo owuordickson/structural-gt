@@ -218,10 +218,7 @@ class GraphExtractor(ProgressUpdate):
         """
 
         if image_2d is None:
-            # return blank plot
-            fig = plt.Figure()
-            fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            return fig
+            return None
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
@@ -285,10 +282,7 @@ class GraphExtractor(ProgressUpdate):
         """
 
         if image_2d is None:
-            # Return blank plot
-            fig = plt.Figure()
-            fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            return fig
+            return None
 
         opt_gte = self.configs
         nx_graph = self.nx_graph

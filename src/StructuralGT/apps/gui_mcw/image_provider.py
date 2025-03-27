@@ -28,7 +28,8 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = mod_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
-                for img in im_obj.images:
+                sel_images = self.img_controller.get_selected_images()
+                for img in sel_images:
                     # If any is None, start task
                     if img.graph_obj.img_net is None:
                         self.img_controller.run_extract_graph()

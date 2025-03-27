@@ -98,7 +98,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 2a. Collect adjacency matrices & find max dimensions
         sel_images = self.imp.get_selected_images()
         graph_obj = sel_images[0].graph_obj
-        if len(sel_images) > 1:
+        if len(sel_images) > 0:
             # List of Graphs to Merge
             # graphs = [img.graph_obj.nx_graph for img in sel_images]
             # TESTING
