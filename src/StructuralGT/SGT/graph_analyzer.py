@@ -106,7 +106,6 @@ class GraphAnalyzer(ProgressUpdate):
             for layer, G in enumerate(graphs):
                 for u, v in G.edges():
                     multi_graph.add_edge(u, v, layer=layer)  # Store layer info
-
             # Print edges with layer info
             print(multi_graph.edges(data=True))
 
