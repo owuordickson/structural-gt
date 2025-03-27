@@ -60,7 +60,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp: bool = allow_multiprocessing
         self.imp: ImageProcessor = imp
-        self.plot_figures = None
+        self.plot_figures: list | None = None
         self.output_data: pd.DataFrame = pd.DataFrame([])
         self.weighted_output_data: pd.DataFrame = pd.DataFrame([])
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
@@ -132,6 +132,7 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
             return
 
+        # 5. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj)
 
     def compute_gt_metrics(self, graph_obj: GraphExtractor = None):
