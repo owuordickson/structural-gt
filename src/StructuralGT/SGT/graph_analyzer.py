@@ -100,11 +100,11 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         graph_obj = sel_images[0].graph_obj
-        if len(sel_images) > 0:
+        if len(sel_images) > 1:
             # List of Graphs to Merge
-            # graphs = [img.graph_obj.nx_graph for img in sel_images]
+            graphs = [img.graph_obj.nx_graph for img in sel_images]
             # TESTING
-            graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]
+            # graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]
             # Create a MultiGraph
             multi_graph = nx.MultiGraph()
             # Merge graphs, tracking layers
@@ -115,6 +115,7 @@ class GraphAnalyzer(ProgressUpdate):
                     weight = G[u][v]['weight']
                     multi_graph.add_edge(u, v, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
             graph_obj.nx_graph = multi_graph
+            graph_obj.configs["is_multigraph"]["value"] = 1
 
         # 3. Compute Unweighted GT parameters
         # REMEMBER: output_data should be a list
@@ -680,7 +681,7 @@ class GraphAnalyzer(ProgressUpdate):
                 out_figs.append(fig)
 
         # 8. displaying run information
-        fig = self.display_info()
+        fig = self.display_info(graph_obj)
         out_figs.append(fig)
         return out_figs
 
@@ -924,10 +925,13 @@ class GraphAnalyzer(ProgressUpdate):
             figs.append(fig)
         return figs
 
-    def display_info(self):
+    def display_info(self, graph_obj: GraphExtractor):
         """
         Create a page (as a figure) that show the user selected parameters and options.
-        :return:
+
+        :param graph_obj: GraphExtractor object.
+
+        :return: a Matplotlib figure object.
         """
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=300)
@@ -948,7 +952,7 @@ class GraphAnalyzer(ProgressUpdate):
         run_info += "\n\n"
 
         # Graph Configs
-        run_info += self.g_obj.get_config_info()
+        run_info += graph_obj.get_config_info()
         run_info += "\n\n"
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
