@@ -527,7 +527,8 @@ class GraphComponents:
 
         # 3a. Check connectivity of graph
         # It has less than two nodes or is not connected.
-        sub_graphs = GraphComponents.get_graph_components(eig_graph)
+        component_list = GraphComponents.get_graph_components(eig_graph)
+        sub_graphs = [graph.subgraph(c).copy() for c in component_list]
         if sub_graphs is None:
             return data_info, [], 0.0
 
@@ -560,7 +561,7 @@ class GraphComponents:
         data_info.append({"name": "Graph Conductance (min)", "value": val_min})
         ratio = eig_graph.number_of_nodes() / graph.number_of_nodes()
 
-        return data_info, sub_graphs, ratio
+        return data_info, component_list, ratio
 
     @staticmethod
     def remove_self_loops(graph: nx.Graph):
@@ -636,7 +637,7 @@ class GraphComponents:
     @staticmethod
     def get_graph_components(graph: nx.Graph):
         """
-        Retrieves the subcomponents that make up the entire NetworkX graph.
+        Retrieves the subcomponents (graph segments) that make up the entire NetworkX graph.
 
         :param graph:
         :return:
@@ -647,5 +648,4 @@ class GraphComponents:
         if not connected_components:  # In case the graph is empty
             return None
 
-        sub_graph_list = [graph.subgraph(c).copy() for c in connected_components]
-        return sub_graph_list
+        return connected_components

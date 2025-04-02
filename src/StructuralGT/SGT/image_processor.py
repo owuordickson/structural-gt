@@ -258,6 +258,7 @@ class ImageProcessor(ProgressUpdate):
             img_obj = self.images[i]
             try:
                 self.update_status([10, f"Processing Image {i + 1}/{len(self.selected_images)} "])
+                img_obj.graph_obj.abort = False
                 img_obj.graph_obj.add_listener(self.track_graph_progress)
                 px_size = float(img_obj.configs["pixel_width"]["value"])
                 rho_val = float(img_obj.configs["resistivity"]["value"])
