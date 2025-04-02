@@ -80,7 +80,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         # 1. Apply image filters and extract graph (only if it has not been executed)
-        if not self.imp.graph_extracted:
+        if not self.imp.is_graph_extracted:
             self.imp.add_listener(self.track_img_progress)
             self.imp.apply_img_filters()  # Apply image filters
             self.imp.create_graphs()      # Extract graph from binary image

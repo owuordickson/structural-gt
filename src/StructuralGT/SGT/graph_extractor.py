@@ -527,8 +527,13 @@ class GraphComponents:
 
         # 3a. Check connectivity of graph
         # It has less than two nodes or is not connected.
-        sub_graph_largest, sub_graph_smallest, size, sub_components = GraphComponents.get_graph_components(
-            eig_graph)
+        sub_graphs = GraphComponents.get_graph_components(eig_graph)
+        if sub_graphs is None:
+            return data_info, [], 0.0
+
+        sub_graph_largest = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        sub_graph_smallest = min(sub_graphs, key=lambda g: g.number_of_nodes())
+        size = len(sub_graphs)
         eig_graph = sub_graph_largest
         if size > 1:
             data_info.append({"name": "Subgraph Count", "value": size})
@@ -555,7 +560,7 @@ class GraphComponents:
         data_info.append({"name": "Graph Conductance (min)", "value": val_min})
         ratio = eig_graph.number_of_nodes() / graph.number_of_nodes()
 
-        return data_info, sub_components, ratio
+        return data_info, sub_graphs, ratio
 
     @staticmethod
     def remove_self_loops(graph: nx.Graph):
@@ -639,19 +644,8 @@ class GraphComponents:
 
         # 1. Identify connected components
         connected_components = list(nx.connected_components(graph))
+        if not connected_components:  # In case the graph is empty
+            return None
 
-        # 2. Find the largest/smallest connected component
-        largest_component = max(connected_components, key=len)
-        smallest_component = min(connected_components, key=len)
-
-        # 3. Create a new graph containing only the largest/smallest connected component
-        sub_graph_largest = graph.subgraph(largest_component).copy()
-        sub_graph_smallest = graph.subgraph(smallest_component).copy()
-
-        component_count = len(connected_components)
-        # large_subgraph_node_count = sub_graph_largest.number_of_nodes()
-        # small_subgraph_node_count = sub_graph_smallest.number_of_nodes()
-        # large_subgraph_edge_count = sub_graph_largest.number_of_edges()
-        # small_subgraph_edge_count = sub_graph_smallest.number_of_edges()
-
-        return sub_graph_largest, sub_graph_smallest, component_count, connected_components
+        sub_graph_list = [graph.subgraph(c).copy() for c in connected_components]
+        return sub_graph_list

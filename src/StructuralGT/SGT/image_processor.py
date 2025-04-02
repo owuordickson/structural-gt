@@ -57,7 +57,7 @@ class ImageProcessor(ProgressUpdate):
         self.props: list = []
         self.images: list[ImageBase] = []
         self.selected_images: set = set()
-        self.graph_extracted: bool = False
+        self.is_graph_extracted: bool = False
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
@@ -190,7 +190,7 @@ class ImageProcessor(ProgressUpdate):
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.selected_images = set(range(len(self.images)))
         # Testing
-        self.selected_images = set(range(3))
+        # self.selected_images = set(range(3))
         # self.selected_images.discard(index)
         # self.selected_images.add(index)
         self.props = self.get_img_props()
@@ -207,7 +207,7 @@ class ImageProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
-        self.graph_extracted = False
+        self.is_graph_extracted = False
         for img_obj in self.images:
             img_obj.img_mod, img_obj.img_bin = None, None
             img_obj.graph_obj.reset_graph()
@@ -264,7 +264,7 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.graph_obj.fit_graph(img_obj.img_bin, img_obj.img_2d, px_size, rho_val)
                 img_obj.graph_obj.remove_listener(self.track_graph_progress)
                 self.abort = img_obj.graph_obj.abort
-                self.graph_extracted = not self.abort
+                self.is_graph_extracted = not self.abort
                 if self.abort:
                     return
             except Exception as err:
