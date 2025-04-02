@@ -2,6 +2,9 @@
 # This file is from the StructuralGT project, released under the BSD 3-Clause
 # License.
 
+
+# TO BE DELETED --- ALREADY IN graph_skeleton
+
 import numpy as np
 from scipy import ndimage
 from skimage.morphology import binary_dilation as dilate

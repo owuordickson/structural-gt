@@ -14,6 +14,8 @@ from skimage.morphology import disk, skeletonize, remove_small_objects
 
 class GraphSkeleton:
 
+    temp_skeleton = None
+
     def __init__(self, img_bin: MatLike, configs: dict):
         """
         A class that builds a skeleton graph from an image.
@@ -35,16 +37,15 @@ class GraphSkeleton:
         """
         self.img_bin = img_bin
         self.configs = configs
-        # clean_skel, skel_int, Bp_coord_x, Bp_coord_y, Ep_coord_x, Ep_coord_y
         self.skeleton = None
         self.skel_int = None
         self.bp_coord_x = None
         self.bp_coord_y = None
         self.ep_coord_x = None
         self.ep_coord_y = None
-        self.make_skeleton()
+        self._build_skeleton()
 
-    def make_skeleton(self):
+    def _build_skeleton(self):
         """
         Creates a graph skeleton of the image.
 
@@ -55,26 +56,26 @@ class GraphSkeleton:
         img_bin = (self.img_bin * (1 / 255)).astype(bool)
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
-        skeleton = skeletonize(img_bin)
+        GraphSkeleton.temp_skeleton = skeletonize(img_bin)
 
         # calling the three functions for merging nodes, pruning edges, and removing disconnected segments
         if self.configs["merge_nearby_nodes"]["value"] == 1:
-            skeleton = GraphSkeleton.merge_nodes(skeleton)
+            GraphSkeleton.merge_nodes()
 
         if self.configs["remove_disconnected_segments"]["value"] == 1:
-            skeleton = remove_small_objects(skeleton, int(self.configs["remove_disconnected_segments"]["items"][0]["value"]) , connectivity=2)
+            GraphSkeleton.temp_skeleton = remove_small_objects(GraphSkeleton.temp_skeleton, min_size=int(self.configs["remove_disconnected_segments"]["items"][0]["value"]), connectivity=2)
 
-        skel_int = 1 * skeleton
         if self.configs["prune_dangling_edges"]["value"] == 1:
-            b_points_1 = GraphSkeleton.branched_points(skel_int)
-            skeleton = GraphSkeleton.pruning(skeleton, 500, b_points_1)
+            b_points_1 = GraphSkeleton.get_branched_points()
+            GraphSkeleton.prune_edges(500, b_points_1)
 
-        b_points = GraphSkeleton.branched_points(skel_int)
-        e_points = GraphSkeleton.end_points(skel_int)
+        b_points = GraphSkeleton.get_branched_points()
+        e_points = GraphSkeleton.get_end_points()
+
         self.bp_coord_y, self.bp_coord_x = np.where(b_points == 1)
         self.ep_coord_y, self.ep_coord_x = np.where(e_points == 1)
-        self.skeleton = skeleton
-        self.skel_int = 1 * skeleton
+        self.skeleton = GraphSkeleton.temp_skeleton
+        self.skel_int = 1 * GraphSkeleton.temp_skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
@@ -103,7 +104,7 @@ class GraphSkeleton:
             pix_angle = None
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
-            pix_width, pix_angle = self.estimate_edge_width(edge_pts)
+            pix_width, pix_angle = self._estimate_edge_width(edge_pts)
             pix_width += 0.5  # (normalization) to make it larger than empty widths
 
         if weight_type is None:
@@ -158,13 +159,13 @@ class GraphSkeleton:
             wt = 0.0001  # Smallest possible
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
-            pix_width, pix_angle = self.estimate_edge_width(ge)
+            pix_width, pix_angle = self._estimate_edge_width(ge)
             wt = pix_width / 10
 
         # returns the width in pixels; the weight which is the width normalized by 10
         return pix_width, wt
 
-    def estimate_edge_width(self, graph_edge_coords):
+    def _estimate_edge_width(self, graph_edge_coords):
         """Estimates the edge width of a graph edge."""
 
         # 1. Estimate orthogonal and mid-point
@@ -228,7 +229,9 @@ class GraphSkeleton:
         return edge_width, angle_deg
 
     @classmethod
-    def branched_points(cls, skeleton):
+    def get_branched_points(cls):
+        """Identify and retrieve the branched points from graph skeleton."""
+        skel_int = cls.temp_skeleton * 1
 
         # Define base patterns
         base_patterns = [
@@ -257,11 +260,13 @@ class GraphSkeleton:
                 unique_patterns.append(pattern)
 
         # Apply binary hit-or-miss for all unique patterns
-        br = sum(ndimage.binary_hit_or_miss(skeleton, pattern) for pattern in unique_patterns)
+        br = sum(ndimage.binary_hit_or_miss(skel_int, pattern) for pattern in unique_patterns)
         return br
 
-    @staticmethod
-    def end_points(skeleton):
+    @classmethod
+    def get_end_points(cls):
+        """Identify and retrieve the end points from graph skeleton."""
+        skel_int = cls.temp_skeleton * 1
 
         # List of endpoint patterns
         endpoints = [
@@ -277,7 +282,7 @@ class GraphSkeleton:
         ]
 
         # Apply binary hit-or-miss for each pattern and sum results
-        ep = sum(ndimage.binary_hit_or_miss(skeleton, np.array(pattern)) for pattern in endpoints)
+        ep = sum(ndimage.binary_hit_or_miss(skel_int, np.array(pattern)) for pattern in endpoints)
         return ep
 
     @classmethod
@@ -304,44 +309,43 @@ class GraphSkeleton:
             np.fliplr(np.flipud(pattern.T))
         ]
 
-    @staticmethod
-    def pruning(skeleton, size, b_points):
+    @classmethod
+    def prune_edges(cls, size, b_points):
+        """Prune dangling edges around b_points."""
         branch_points = b_points
         # remove iteratively end points "size" times from the skeleton
         for i in range(0, size):
-            end_points = GraphSkeleton.end_points(skeleton)
+            end_points = GraphSkeleton.get_end_points()
             points = np.logical_and(end_points, branch_points)
             end_points = np.logical_xor(end_points, points)
             end_points = np.logical_not(end_points)
-            skeleton = np.logical_and(skeleton, end_points)
-        return skeleton
+            cls.temp_skeleton = np.logical_and(cls.temp_skeleton, end_points)
 
-    @staticmethod
-    def merge_nodes(skeleton):
-
+    @classmethod
+    def merge_nodes(cls):
+        """Merge nearby nodes in the graph skeleton."""
         # overlay a disk over each branch point and find the overlaps to combine nodes
-        skeleton_integer = 1 * skeleton
+        skeleton_int = 1 * cls.temp_skeleton
         radius = 2
         mask_elem = disk(radius)
-        bp_skel = GraphSkeleton.branched_points(skeleton_integer)
+        bp_skel = GraphSkeleton.get_branched_points()
         bp_skel = 1 * (dilate(bp_skel, mask_elem))
 
         # wide-nodes is initially an empty image the same size as the skeleton image
-        sh = skeleton_integer.shape
-        wide_nodes = np.zeros(sh, dtype='int')
+        skel_shape = skeleton_int.shape
+        wide_nodes = np.zeros(skel_shape, dtype='int')
 
         # this overlays the two skeletons
         # skeleton_integer is the full map, bp_skel is just the branch points blown up to a larger size
-        for x in range(sh[0]):
-            for y in range(sh[1]):
-                if skeleton_integer[x, y] == 0 and bp_skel[x, y] == 0:
+        for x in range(skel_shape[0]):
+            for y in range(skel_shape[1]):
+                if skeleton_int[x, y] == 0 and bp_skel[x, y] == 0:
                     wide_nodes[x, y] = 0
                 else:
                     wide_nodes[x, y] = 1
 
         # re-skeletonizing wide-nodes and returning it, nearby nodes in radius 2 of each other should have been merged
-        new_skel = skeletonize(wide_nodes)
-        return new_skel
+        cls.temp_skeleton = skeletonize(wide_nodes)
 
     @staticmethod
     def find_orthogonal(u, v):

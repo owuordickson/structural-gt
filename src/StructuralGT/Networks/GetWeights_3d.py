@@ -2,6 +2,10 @@
 # This file is from the StructuralGT project, released under the BSD 3-Clause
 # License.
 
+
+# TO BE DELETED --- ALREADY IN graph_skeleton (Q: why 3D?, what is the modification?)
+
+
 import numpy as np
 
 

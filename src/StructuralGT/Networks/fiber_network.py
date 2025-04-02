@@ -42,14 +42,7 @@ class FiberNetwork:
             is not specified.
     """
 
-    def __init__(
-        self,
-        directory,
-        binarized_dir="Binarized",
-        depth=None,
-        prefix=None,
-        dim=2,
-    ):
+    def __init__(self, directory, binarized_dir="Binarized", depth=None, prefix=None, dim=2):
         if dim == 2 and depth is not None:
             raise error.InvalidArgumentsError(
                 "Cannot specify depth arguement for 2D networks. \
