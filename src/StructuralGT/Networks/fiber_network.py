@@ -23,17 +23,8 @@ from . import base, error, process_image
 from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
 
 
-def colorbar(mappable, ax, *args, **kwargs):
 
-    # ax = mappable.axes
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = Colorbar(cax, mappable)
-    ax.set(*args, **kwargs)
-    return cbar
-
-
-class Network:
+class FiberNetwork:
     """Generic class to represent networked image data.
 
     Args:
@@ -615,7 +606,7 @@ class Network:
         )
 
         if _parameter:
-            cb = colorbar(sp, ax)
+            cb = FiberNetwork.colorbar(sp, ax)
             cb.set_label("Value")
 
         return ax
@@ -678,7 +669,7 @@ class Network:
         norm = mpl.colors.Normalize(vmin=_min, vmax=_max)
         mappable = mpl.cm.ScalarMappable(norm=norm, cmap=edge_cmap)
         if _parameter:
-            cb = colorbar(mappable, ax)
+            cb = FiberNetwork.colorbar(mappable, ax)
             cb.set_label("Value")
 
         return fig, ax
@@ -822,3 +813,12 @@ class Network:
         N.Gr.vs["o"] = base.shift(centroid_pos, _2d=N._2d)[0].astype(int)
 
         return N
+
+    @staticmethod
+    def colorbar(mappable, ax, *args, **kwargs):
+        # ax = mappable.axes
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar = Colorbar(cax, mappable)
+        ax.set(*args, **kwargs)
+        return cbar
