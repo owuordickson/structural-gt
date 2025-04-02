@@ -229,6 +229,30 @@ class GraphSkeleton:
         return edge_width, angle_deg
 
     @classmethod
+    def _generate_transformations(cls, pattern):
+        """
+        Generate common transformations for a pattern.
+
+         * flipud is flipping them up-down
+         * t_branch_2 is t_branch_0 transposed, which permutes it in all directions (might not be using that word right)
+         * t_branch_3 is t_branch_2 flipped left right
+         * those 3 functions are used to create all possible branches with just a few starting arrays below
+
+        :param pattern: pattern of box as a numpy array.
+
+        """
+        return [
+            pattern,
+            np.flipud(pattern),
+            np.fliplr(pattern),
+            np.fliplr(np.flipud(pattern)),
+            pattern.T,
+            np.flipud(pattern.T),
+            np.fliplr(pattern.T),
+            np.fliplr(np.flipud(pattern.T))
+        ]
+
+    @classmethod
     def get_branched_points(cls):
         """Identify and retrieve the branched points from graph skeleton."""
         skel_int = cls.temp_skeleton * 1
@@ -284,30 +308,6 @@ class GraphSkeleton:
         # Apply binary hit-or-miss for each pattern and sum results
         ep = sum(ndimage.binary_hit_or_miss(skel_int, np.array(pattern)) for pattern in endpoints)
         return ep
-
-    @classmethod
-    def _generate_transformations(cls, pattern):
-        """
-        Generate common transformations for a pattern.
-
-         * flipud is flipping them up-down
-         * t_branch_2 is t_branch_0 transposed, which permutes it in all directions (might not be using that word right)
-         * t_branch_3 is t_branch_2 flipped left right
-         * those 3 functions are used to create all possible branches with just a few starting arrays below
-
-        :param pattern: pattern of box as a numpy array.
-
-        """
-        return [
-            pattern,
-            np.flipud(pattern),
-            np.fliplr(pattern),
-            np.fliplr(np.flipud(pattern)),
-            pattern.T,
-            np.flipud(pattern.T),
-            np.fliplr(pattern.T),
-            np.fliplr(np.flipud(pattern.T))
-        ]
 
     @classmethod
     def prune_edges(cls, size, b_points):
