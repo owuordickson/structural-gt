@@ -7,10 +7,8 @@ import json
 import os
 import time
 import warnings
-from collections.abc import Sequence
 
 import cv2 as cv
-import freud
 import gsd.hoomd
 import igraph as ig
 import matplotlib as mpl
@@ -202,8 +200,7 @@ class Network:
         # 3d for 3d images, 2d otherwise
         self._img_bin = np.squeeze(self._img_bin)
 
-    def set_graph(self, sub=True, weight_type=None, write="network.gsd",
-                  **kwargs):
+    def set_graph(self, sub=True, weight_type=None, write="network.gsd", **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
         skeleton file written by :meth:`img_to_skel`.
 
@@ -299,18 +296,7 @@ class Network:
         if write:
             self.node_labelling([], [], write)
 
-    def img_to_skel(
-        self,
-        name="skel.gsd",
-        crop=None,
-        skeleton=True,
-        rotate=None,
-        debubble=None,
-        box=False,
-        merge_nodes=None,
-        prune=None,
-        remove_objects=None,
-    ):
+    def img_to_skel( self, name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
 
         Note: if the rotation argument is given, this writes the union of all
@@ -446,8 +432,7 @@ class Network:
         else:
             self.rotate = None
 
-    def node_labelling(self, attributes, labels, filename, edge_weight=None,
-                       mode="w"):
+    def node_labelling(self, attributes, labels, filename, edge_weight=None, mode="w"):
         """Method saves a new :code:`.gsd` which labels the :attr:`graph`
         attribute with the given node attribute values. Method saves the
         :attr:`graph`  attribute in the :code:`.gsd` file in the form of a
@@ -635,15 +620,7 @@ class Network:
 
         return ax
 
-    def edge_plot(
-        self,
-        parameter=None,
-        ax=None,
-        depth=0,
-        edge_cmap="plasma",
-        plot_img=True,
-        **kwargs,
-    ):
+    def edge_plot(self, parameter=None, ax=None, depth=0, edge_cmap="plasma", plot_img=True, **kwargs, ):
         """Superimpose the skeleton, image, and nodal graph theory parameters.
         If no parameter provided, simply imposes skeleton and image.
 
@@ -845,217 +822,3 @@ class Network:
         N.Gr.vs["o"] = base.shift(centroid_pos, _2d=N._2d)[0].astype(int)
 
         return N
-
-
-def Graph(filename, frame=0):
-    """Functions which returns an `igraph.Graph` object from a gsd, with
-    node and edge position attributes. Useful when a `Network` object is not
-    required. Unlike `Network.from_gsd`, it makes no assumptions about the
-    path of the `gsd` file.
-
-    Args:
-        filename (str):
-            The file name to read.
-
-    Returns:
-        (`igraph.Graph`): igraph Graph object.
-    """
-
-    f = gsd.hoomd.open(name=filename, mode="r")[frame]
-    rows = f.log["Adj_rows"]
-    cols = f.log["Adj_cols"]
-    values = f.log["Adj_values"]
-    S = scipy.sparse.csr_matrix((values, (rows, cols)))
-    Gr = ig.Graph.Weighted_Adjacency(S, mode="upper")
-
-    edge_pos = f.particles.position[f.particles.typeid == 0]
-    node_pos = f.particles.position[f.particles.typeid == 1]
-    centroid_pos = f.particles.position[f.particles.typeid == 2]
-
-    Gr.es["pts"] = edge_pos
-    Gr.vs["pts"] = node_pos
-    Gr.vs["o"] = centroid_pos
-
-    return Gr
-
-
-class Regions:
-    def __init__(self, partition, box):
-        if partition == 0:
-            self.regions = [
-                [
-                    (-box[0] / 2, box[0] / 2),
-                    (-box[1] / 2, box[1] / 2),
-                    (-box[2] / 2, box[2] / 2),
-                ]
-            ]
-        elif partition == 1:
-            self.regions = [
-                [(-box[0] / 2, 0), (-box[1] / 2, 0), (-box[2] / 2, 0)],
-                [(-box[0] / 2, 0), (-box[1] / 2, 0), (0, box[2] / 2)],
-                [(-box[0] / 2, 0), (0, box[1] / 2), (-box[2] / 2, 0)],
-                [(-box[0] / 2, 0), (0, box[1] / 2), (0, box[2] / 2)],
-                [(0, box[0] / 2), (-box[1] / 2, 0), (-box[2] / 2, 0)],
-                [(0, box[0] / 2), (-box[1] / 2, 0), (0, box[2] / 2)],
-                [(0, box[0] / 2), (0, box[1] / 2), (-box[2] / 2, 0)],
-                [(0, box[0] / 2), (0, box[1] / 2), (0, box[2] / 2)],
-            ]
-
-    def inregion(self, region, p):
-        mask = (
-            np.array(p.T[0] > region[0][0])
-            & np.array(p.T[0] < region[0][1])
-            & np.array(p.T[1] > region[1][0])
-            & np.array(p.T[1] < region[1][1])
-            & np.array(p.T[2] > region[2][0])
-            & np.array(p.T[2] < region[2][1])
-        )
-
-        return p[mask]
-
-
-class ParticleNetwork(Sequence):
-    def __init__(self, trajectory, cutoff, partition=0, periodic=False):
-        self.traj = gsd.hoomd.open(trajectory)
-        self.cutoff = cutoff
-        self.periodic = periodic
-        self.partition = partition
-
-        self.regions = Regions(partition, self.traj[0].configuration.box)
-
-    def __getitem__(self, key):
-        self._graph_list = []
-        if isinstance(key, int):
-            _iter = [self.traj[key]]
-        else:
-            _iter = self.traj[key]
-        for frame in _iter:
-            _first = True
-            for region in self.regions.regions:
-                positions = self.regions.inregion(region,
-                                                  frame.particles.position)
-                box = frame.configuration.box * {False: 2, True: 1}[
-                        self.periodic]
-                aq = freud.locality.AABBQuery(box, positions)
-                nlist = aq.query(
-                    positions,
-                    {"r_max": self.cutoff, "exclude_ii": True},
-                ).toNeighborList()
-                nlist.filter(nlist.query_point_indices < nlist.point_indices)
-                if _first:
-                    _graph = ig.Graph.TupleList(nlist[:], directed=False)
-                    _first = False
-                else:
-                    nlist = nlist[:] + _graph.vcount()
-                    __graph = ig.Graph.TupleList(nlist[:], directed=False)
-                    _graph = ig.operators.union([_graph, __graph])
-
-            self._graph_list.append(_graph)
-
-        return self._graph_list
-
-    def __len__(self):
-        return len(self._graph_list)
-
-
-class PointNetwork:
-    """Class for creating graphs from point cloud data.
-
-    Args:
-        positions (:class:`numpy.ndarray`):
-            The coordinates of the points in the point cloud.
-        cutoff (float):
-            The cutoff distance for creating edges between points.
-        periodic (bool):
-            Whether to use periodic boundary conditions. Default is False.
-    """
-
-    def __init__(self, positions, cutoff, periodic=False):
-        self.cutoff = cutoff
-        self.periodic = periodic
-        self.dim = positions.shape[1]
-
-        for dim in range(self.dim):
-            positions[:, dim] = (positions[:, dim] - positions[:, dim].min())
-        L = list(max(positions.T[i]) for i in range(self.dim))
-        positions, _ = base.shift(positions,
-                                  _shift=(L[0] / 2, L[1] / 2, L[2] / 2))
-        box = [L[0], L[1], L[2], 0, 0, 0]
-
-        self.positions = positions
-        self.box = box
-
-        aq = freud.locality.AABBQuery(self.box, positions)
-        nlist = aq.query(
-            positions,
-            {"r_max": self.cutoff, "exclude_ii": True},
-        ).toNeighborList()
-        nlist.filter(nlist.query_point_indices < nlist.point_indices)
-        self.graph = ig.Graph()
-        self.graph.add_vertices(len(positions))
-        # Create edges based on the neighbor list
-        for i in range(len(nlist.point_indices)):
-            self.graph.add_edge(
-                nlist.point_indices[i],
-                nlist.query_point_indices[i],
-            )
-
-    def point_to_skel(self, filename='skel.gsd'):
-        """Method saves a new :code:`.gsd` with the graph
-        structure.
-
-        Args:
-            filename (str):
-               The filename to save the :code:`.gsd` file to.
-        """
-
-        N = self.graph.vcount()
-        bonds = np.array(self.graph.get_edgelist())
-        bond_types = ['0']
-
-        snapshot = gsd.hoomd.Frame()
-        snapshot.particles.N = N
-        snapshot.particles.types = ['A']
-        snapshot.particles.position = self.positions
-        snapshot.particles.typeid = [0] * N
-        snapshot.particles.bond_types = bond_types
-        snapshot.particles.bonds = bonds
-        snapshot.configuration.box = self.box
-        snapshot.bonds.N = len(bonds)
-        snapshot.bonds.group = bonds
-        snapshot.bonds.types = bond_types
-        snapshot.bonds.typeid = np.zeros(len(bonds), dtype=np.uint32)
-
-        with gsd.hoomd.open(name=filename, mode='w') as f:
-            f.append(snapshot)
-
-        self.filename = filename
-
-    def node_labelling(self, attributes, labels, filename='labelled.gsd'):
-        """Method saves a new :code:`.gsd` which labels the :attr:`graph`
-        attribute with the given node attribute values.
-
-        Args:
-            attribute (:class:`numpy.ndarray`):
-                An array of attribute values in ascending order of node id.
-            label (str):
-                The label to give the attribute in the file.
-        """
-
-        if not isinstance(labels, list):
-            labels = [labels,]
-            attributes = [attributes,]
-
-        with gsd.hoomd.open(name=self.filename, mode='r') as f:
-            s = f[0]
-            for attribute, label in zip(attributes, labels):
-                if len(attribute) != s.particles.N:
-                    raise ValueError(
-                            f"Attribute length {len(attribute)} "
-                            "does not match number of particles "
-                            "{s.particles.N}."
-                            )
-                s.log["particles/" + label] = attribute
-
-        with gsd.hoomd.open(name=filename, mode='w') as f_mod:
-            f_mod.append(s)
