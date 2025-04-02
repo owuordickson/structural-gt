@@ -227,8 +227,8 @@ class GraphSkeleton:
         edge_width = np.linalg.norm(l1 - l2)
         return edge_width, angle_deg
 
-    @staticmethod
-    def branched_points(skeleton):
+    @classmethod
+    def branched_points(cls, skeleton):
 
         # Define base patterns
         base_patterns = [
@@ -248,7 +248,7 @@ class GraphSkeleton:
         # Generate all transformations
         all_patterns = []
         for pattern in base_patterns:
-            all_patterns.extend(GraphSkeleton.generate_transformations(np.array(pattern)))
+            all_patterns.extend(cls._generate_transformations(np.array(pattern)))
 
         # Remove duplicate patterns (if any)
         unique_patterns = []
@@ -259,24 +259,6 @@ class GraphSkeleton:
         # Apply binary hit-or-miss for all unique patterns
         br = sum(ndimage.binary_hit_or_miss(skeleton, pattern) for pattern in unique_patterns)
         return br
-
-    @staticmethod
-    def generate_transformations(pattern):
-        """Generate common transformations for a pattern."""
-        # flipud is flipping them up-down
-        # t_branch_2 is t_branch_0 transposed, which permutes it in all directions (might not be using that word right)
-        # t_branch_3 is t_branch_2 flipped left right
-        # those 3 functions are used to create all possible branches with just a few starting arrays below
-        return [
-            pattern,
-            np.flipud(pattern),
-            np.fliplr(pattern),
-            np.fliplr(np.flipud(pattern)),
-            pattern.T,
-            np.flipud(pattern.T),
-            np.fliplr(pattern.T),
-            np.fliplr(np.flipud(pattern.T))
-        ]
 
     @staticmethod
     def end_points(skeleton):
@@ -297,6 +279,30 @@ class GraphSkeleton:
         # Apply binary hit-or-miss for each pattern and sum results
         ep = sum(ndimage.binary_hit_or_miss(skeleton, np.array(pattern)) for pattern in endpoints)
         return ep
+
+    @classmethod
+    def _generate_transformations(cls, pattern):
+        """
+        Generate common transformations for a pattern.
+
+         * flipud is flipping them up-down
+         * t_branch_2 is t_branch_0 transposed, which permutes it in all directions (might not be using that word right)
+         * t_branch_3 is t_branch_2 flipped left right
+         * those 3 functions are used to create all possible branches with just a few starting arrays below
+
+        :param pattern: pattern of box as a numpy array.
+
+        """
+        return [
+            pattern,
+            np.flipud(pattern),
+            np.fliplr(pattern),
+            np.fliplr(np.flipud(pattern)),
+            pattern.T,
+            np.flipud(pattern.T),
+            np.fliplr(pattern.T),
+            np.fliplr(np.flipud(pattern.T))
+        ]
 
     @staticmethod
     def pruning(skeleton, size, b_points):
