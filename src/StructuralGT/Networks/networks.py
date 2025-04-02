@@ -19,14 +19,13 @@ import numpy as np
 import scipy
 from matplotlib.colorbar import Colorbar
 from skimage.morphology import skeletonize
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from StructuralGT import base, error, process_image
-from StructuralGT.util import (_abs_path, _cropper, _domain, _fname,
-                               _image_stack)
+from . import base, error, process_image
+from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
 
 
 def colorbar(mappable, ax, *args, **kwargs):
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     # ax = mappable.axes
     divider = make_axes_locatable(ax)
