@@ -8,10 +8,9 @@ import time
 import cv2 as cv
 import gsd.hoomd
 import numpy as np
-from skimage.morphology import (binary_closing, remove_small_objects,
-                                skeletonize)
+from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
-from StructuralGT import GetWeights_3d, error, skel_ID, sknwEdits
+from . import GetWeights_3d, error, skel_ID, sknwEdits
 
 
 def read(name, read_type):

@@ -6,8 +6,8 @@ import os
 
 import numpy as np
 
-from StructuralGT import base
-from StructuralGT.util import _Compute
+from . import base
+from .util import _Compute
 
 
 class Electronic(_Compute):
