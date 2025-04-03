@@ -63,7 +63,7 @@ def load_img_configs():
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
         options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
 
-        options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))
+        options_img["apply_gamma"]["value"] = float(config.get('filter-settings', 'apply_gamma'))
         options_img["apply_gamma"]["dataValue"] = float(config.get('filter-settings', 'adjust_gamma'))
         options_img["apply_autolevel"]["value"] = int(config.get('filter-settings', 'apply_autolevel'))
         options_img["apply_autolevel"]["dataValue"] = int(config.get('filter-settings', 'blurring_window_size'))

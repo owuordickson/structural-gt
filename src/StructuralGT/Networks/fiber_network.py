@@ -19,9 +19,9 @@ from matplotlib.colorbar import Colorbar
 from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from . import base, error, process_image
+from . import base, error
 from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
-
+from ..SGT.image_base import ImageBase
 
 
 class FiberNetwork:
@@ -127,7 +127,13 @@ class FiberNetwork:
         for _, name in self.image_stack:
             fname = _fname(self.dir + "/" + name, _2d=self._2d)
             gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
-            _, img_bin, _ = process_image.binarize(gray_image, options)
+            # _, img_bin, _ = process_image.binarize(gray_image, options)
+            img_obj = ImageBase(gray_image)
+            img_data = img_obj.img_2d.copy()
+            img_obj.img_mod = img_obj.process_img(image=img_data)
+            img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
+            img_bin = img_obj.img_bin
+            print(img_bin.shape)
             if self._2d:
                 fname.num = "0000"
             plt.imsave(
