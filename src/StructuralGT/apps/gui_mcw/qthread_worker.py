@@ -8,7 +8,7 @@ from ...SGT.sgt_utils import get_num_cores, write_txt_file
 
 
 class AbortException(Exception):
-    """Custom exception to handle task abortion."""
+    """Custom exception to handle task cancellation initiated by user or an error."""
     pass
 
 
@@ -21,6 +21,7 @@ class QThreadWorker(QThread):
     def run(self):
         if self.func:
             self.func(*self.args)  # Call function with arguments
+
 
 class WorkerTask (QObject):
 

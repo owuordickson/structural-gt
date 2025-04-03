@@ -10,7 +10,7 @@ import gsd.hoomd
 import numpy as np
 from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
-from . import error, sknwEdits
+from . import exceptions, sknwEdits
 
 from ..SGT.graph_skeleton import GraphSkeleton
 
@@ -334,7 +334,7 @@ def sub_G(G):
 
 def debubble(g, elements):
     if not isinstance(elements, list):
-        raise error.StructuralElementError
+        raise exceptions.StructuralElementError
 
     start = time.time()
     g.gsd_name = g.gsd_dir + "/debubbled_" + os.path.split(g.gsd_name)[1]

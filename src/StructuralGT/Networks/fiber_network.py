@@ -19,7 +19,7 @@ from matplotlib.colorbar import Colorbar
 from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from . import base, error
+from . import base, exceptions
 from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
 
 from ..SGT.image_base import ImageBase
@@ -45,8 +45,8 @@ class FiberNetwork:
 
     def __init__(self, directory, binarized_dir="Binarized", depth=None, prefix=None, dim=2):
         if dim == 2 and depth is not None:
-            raise error.InvalidArgumentsError(
-                "Cannot specify depth arguement for 2D networks. \
+            raise exceptions.InvalidArgumentsError(
+                "Cannot specify depth argument for 2D networks. \
                 Change dim to 3 if you would like a single slice of a 3D \
                 network."
             )
@@ -91,7 +91,7 @@ class FiberNetwork:
         self.image_stack = image_stack
         self.image_stack.package()
         if len(self.image_stack) == 0:
-            raise error.ImageDirectoryError(
+            raise exceptions.ImageDirectoryError(
                 "There are no suitable images in the given directory. You \
                 may need to specify the prefix argument."
             )

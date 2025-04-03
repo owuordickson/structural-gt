@@ -15,13 +15,11 @@ class ImageDirectoryError(ValueError):
 
 
 class StructuralElementError(TypeError):
-    """Raised when single structural element is passed to a deubbling \
+    """Raised when single structural element is passed to a debubbling \
     function without parentheses."""
-
     pass
 
 
 class InvalidArgumentsError(ValueError):
     """Raised when incompatible combination of arguments is passed."""
-
     pass

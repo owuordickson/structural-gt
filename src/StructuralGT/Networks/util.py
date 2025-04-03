@@ -7,7 +7,7 @@ from functools import wraps
 
 import numpy as np
 
-from . import base, error
+from . import base, exceptions
 
 
 class _Compute:
@@ -161,7 +161,7 @@ class _cropper:
             else:
                 depth = domain[5] - domain[4]
             if depth == 0:
-                raise error.ImageDirectoryError(Network.stack_dir)
+                raise exceptions.ImageDirectoryError(Network.stack_dir)
         self.depths = Network.depth
 
         if domain is None:
