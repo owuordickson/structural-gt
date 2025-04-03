@@ -205,9 +205,9 @@ class GraphSkeleton:
         while check == 0:             # iteratively check along orthogonal vector to see if the coordinate is either...
             pt_check = m + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
             pt_check = pt_check.astype(int)
-            q_edge = GraphSkeleton.point_check(img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(img_bin, pt_check)
 
-            if q_edge:
+            if is_in_edge:
                 edge = m + (i - 1) * ortho
                 edge = edge.astype(int)
                 l1 = edge  # When the check indicates oob or black space, assign width to l1
@@ -220,9 +220,9 @@ class GraphSkeleton:
         while check == 0:  # Repeat, but following the negative orthogonal vector
             pt_check = m - i * ortho
             pt_check = pt_check.astype(int)
-            q_edge = GraphSkeleton.point_check(img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(img_bin, pt_check)
 
-            if q_edge:
+            if is_in_edge:
                 edge = m - (i - 1) * ortho
                 edge = edge.astype(int)
                 l2 = edge  # When the check indicates oob or black space, assign width to l2
@@ -418,9 +418,9 @@ class GraphSkeleton:
 
         if is_2d:
             oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
-            q_edge = (img_bin[pt_check[0], pt_check[1]] == 0 or oob == 1)  # Checks if point in fibre
+            is_in_edge = (img_bin[pt_check[0], pt_check[1]] == 0 or oob == 1)  # Checks if point in fiber
         else:
             oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h, d=d)
-            q_edge = (img_bin[pt_check[0], pt_check[1], pt_check[2]] == 0 or oob == 1)
+            is_in_edge = (img_bin[pt_check[0], pt_check[1], pt_check[2]] == 0 or oob == 1)
 
-        return q_edge
+        return is_in_edge

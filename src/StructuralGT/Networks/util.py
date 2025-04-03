@@ -203,11 +203,9 @@ class _fname:
         if not os.path.exists(name):
             raise ValueError("File does not exist.")
         self.name = name
-        if depth is None:
-            # returns an infinitely large space when None
-            self.domain = [-np.inf, np.inf]
-        else:
-            self.domain = depth
+
+        # self.domain is an infinitely large space when depth is None
+        self.domain = [-np.inf, np.inf] if depth is None else depth
         self._2d = _2d
 
         if self._2d:
@@ -216,16 +214,12 @@ class _fname:
             base_name = os.path.splitext(os.path.split(self.name)[1])[0]
             if len(base_name) < 4:
                 raise ValueError(
-                    "For 3D networks, filenames must end in 4 digits, \
-                    indicating the depth of the slice."
-                )
+                    "For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
             self.num = base_name[-4::]
 
             if not self.num.isnumeric():
                 raise ValueError(
-                    "For 3D networks, filenames must end in 4 digits, \
-                    indicating the depth of the slice."
-                )
+                    "For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
 
     @property
     def isinrange(self):
@@ -238,10 +232,7 @@ class _fname:
         if self._2d:
             return True
         else:
-            return (
-                int(self.num) > self.domain.domain[0]
-                and int(self.num) < self.domain.domain[1]
-            )
+            return (int(self.num) > self.domain[0] and int(self.num) < self.domain[1])
 
     @property
     def isimg(self):

@@ -69,7 +69,7 @@ class FiberNetwork:
                 # image_stack.append(_slice, slice_name)
                 image_stack[slice_name] = _slice
             if dim == 3:
-                if fname.isinrange and fname.isimg and prefix in fname:
+                if fname.isinrange and prefix in fname:
                     _slice = plt.imread(self.dir + "/" + slice_name)
                     # image_stack.append(_slice, slice_name)
                     image_stack[slice_name] = _slice
@@ -121,8 +121,6 @@ class FiberNetwork:
             img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
             img_bin = img_obj.img_bin
 
-            if self._2d:
-                fname.num = "0000"
             plt.imsave(
                 self.stack_dir + "/" + self.prefix + fname.num + ".tiff",
                 img_bin,
@@ -149,9 +147,9 @@ class FiberNetwork:
             img_bin = np.swapaxes(img_bin, 1, 2)
 
         i = self.cropper.surface
-        for fname in sorted(os.listdir(self.stack_dir)):
-            fname = _fname( self.stack_dir + "/" + fname, depth=self.cropper._3d, _2d=self._2d)
-            if fname.isimg and fname.isinrange:
+        for name in sorted(os.listdir(self.stack_dir)):
+            fname = _fname( self.stack_dir + "/" + name, depth=self.cropper._3d, _2d=self._2d)
+            if fname.isinrange:
                 img_bin[i - self.cropper.surface] = (
                     base.read(
                         self.stack_dir + "/" + self.prefix + fname.num +
@@ -311,10 +309,7 @@ class FiberNetwork:
             raise ValueError("If rotating a graph, crop must be specified")
         if crop is not None and self.depth is not None:
             if crop[4] < self.depth[0] or crop[5] > self.depth[1]:
-                raise ValueError(
-                    "crop argument cannot be outwith the bounds of \
-                    the network's depth"
-                )
+                raise ValueError("crop argument cannot be outwith the bounds of the network's depth")
         if crop is not None and self.depth is None and not self._2d:
             # if len(self.image_stack) < crop[5] - crop[4]:
             if len(self.image_stack.items()) < crop[5] - crop[4]:
@@ -339,21 +334,15 @@ class FiberNetwork:
         self.set_img_bin(crop)
 
         if skeleton:
-            self._skeleton = skeletonize(
-                np.asarray(self._img_bin, dtype=np.dtype("uint8"))
-            )
-            self.skeleton_3d = skeletonize(
-                np.asarray(self._img_bin_3d, dtype=np.dtype("uint8"))
-            )
+            self._skeleton = skeletonize(np.asarray(self._img_bin, dtype=np.dtype("uint8")))
+            self.skeleton_3d = skeletonize(np.asarray(self._img_bin_3d, dtype=np.dtype("uint8")))
         else:
             self._img_bin = np.asarray(self._img_bin)
             self.skeleton_3d = self._img_bin_3d
             self._skeleton = self._img_bin
 
         positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
-        self.shape = np.asarray(
-            list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim])
-        )
+        self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
         self.positions = positions
 
         with gsd.hoomd.open(name=self.gsd_name, mode="w") as f:
@@ -372,13 +361,7 @@ class FiberNetwork:
             f.append(s)
 
         end = time.time()
-        print(
-            "Ran img_to_skel() in ",
-            end - start,
-            "for skeleton with ",
-            len(positions),
-            "voxels",
-        )
+        print("Ran img_to_skel() in ", end - start, "for skeleton with ", len(positions), "voxels")
 
         if debubble is not None:
             self = base.debubble(self, debubble)
