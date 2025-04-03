@@ -21,6 +21,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from . import base, error
 from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
+
 from ..SGT.image_base import ImageBase
 
 

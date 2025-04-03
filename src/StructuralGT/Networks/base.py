@@ -11,6 +11,7 @@ import numpy as np
 from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
 from . import error, sknwEdits
+
 from ..SGT.graph_skeleton import GraphSkeleton
 
 
