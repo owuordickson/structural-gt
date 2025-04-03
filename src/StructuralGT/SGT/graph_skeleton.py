@@ -13,6 +13,7 @@ from skimage.morphology import disk, skeletonize, remove_small_objects
 
 
 class GraphSkeleton:
+    """A class that is used to get estimate the width of edges and compute their weights using binerized 2D/3D images."""
 
     temp_skeleton = None
 
@@ -174,6 +175,8 @@ class GraphSkeleton:
         pt1 = graph_edge_coords[0]
         pt2 = graph_edge_coords[end_index]
         m = graph_edge_coords[mid_index]
+        m = m.astype(int)
+
         mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
         m[0] = int(m[0])
         m[1] = int(m[1])
@@ -194,32 +197,34 @@ class GraphSkeleton:
 
         # 3. Estimate width
         img_bin = self.img_bin
-        w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
         check = 0  # initializing boolean check
-        i = 0  # initializing iterative variable
+        i = 0      # initializing iterative variable
         l1 = np.nan
         l2 = np.nan
-        while check == 0:  # iteratively check along orthogonal vector to see if the coordinate is either...
+        while check == 0:             # iteratively check along orthogonal vector to see if the coordinate is either...
             pt_check = m + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
-            pt_check[0], pt_check[1] = int(pt_check[0]), int(pt_check[1])
-            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
-            if img_bin[int(pt_check[0])][int(pt_check[1])] == 0 or oob == 1:
+            pt_check = pt_check.astype(int)
+            q_edge = GraphSkeleton.point_check(img_bin, pt_check)
+
+            if q_edge:
                 edge = m + (i - 1) * ortho
-                edge[0], edge[1] = int(edge[0]), int(edge[1])
+                edge = edge.astype(int)
                 l1 = edge  # When the check indicates oob or black space, assign width to l1
                 check = 1
             else:
                 i += 1
+
         check = 0
         i = 0
         while check == 0:  # Repeat, but following the negative orthogonal vector
             pt_check = m - i * ortho
-            pt_check[0], pt_check[1] = int(pt_check[0]), int(pt_check[1])
-            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
-            if img_bin[int(pt_check[0])][int(pt_check[1])] == 0 or oob == 1:
+            pt_check = pt_check.astype(int)
+            q_edge = GraphSkeleton.point_check(img_bin, pt_check)
+
+            if q_edge:
                 edge = m - (i - 1) * ortho
-                edge[0], edge[1] = int(edge[0]), int(edge[1])
-                l2 = edge  # When the check indicates oob or black space, assign width to l1
+                edge = edge.astype(int)
+                l2 = edge  # When the check indicates oob or black space, assign width to l2
                 check = 1
             else:
                 i += 1
@@ -354,7 +359,8 @@ class GraphSkeleton:
         vec = u - v  # find the vector between u and v
 
         if np.count_nonzero(vec) == 0:  # prevents divide by zero
-            n = vec
+            # n = vec
+            n = np.array([0,] * len(u), dtype=np.float16)
         else:
             n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
         if np.isnan(n[0]) or np.isnan(n[1]):
@@ -368,16 +374,53 @@ class GraphSkeleton:
         return (v + n * hl), ortho
 
     @staticmethod
-    def boundary_check(coord, w, h):
-        # Inputs:
-        # coord: the coordinate (x,y) to check; no (x,y,z) compatibility yet
-        # w,h: the width and height of the image to set the boundaries
+    def boundary_check(coord, w, h, d=None):
+        """
+
+        Args:
+            coord: the coordinate (x,y) to check; no (x,y,z) compatibility yet.
+            w: width of the image to set the boundaries.
+            h: the height of the image to set the boundaries.
+            d: the depth of the image to set the boundaries.
+        Returns:
+
+        """
+
+        # Check if image is 2D
+        is_2d = len(coord) == 2
 
         oob = 0  # Generate a boolean check for out-of-boundary
         # Check if coordinate is within the boundary
-        if coord[0] < 0 or coord[1] < 0 or coord[0] > (w - 1) or coord[1] > (h - 1):
-            oob = 1
-            coord[0], coord[1] = 1, 1
+        if is_2d:
+            if coord[0] < 0 or coord[1] < 0 or coord[0] > (w - 1) or coord[1] > (h - 1):
+                oob = 1
+                coord[0], coord[1] = 1, 1
+        else:
+            if sum(coord < 0) > 0 or sum(coord > [w - 1, h - 1, d - 1]) > 0:
+                oob = 1
+                coord = np.array([1, 1, 1])
 
         # returns the boolean oob (1 if boundary error); coordinates (reset to (1,1) if boundary error)
-        return oob, coord
+        return oob, coord.astype(int)
+
+    @staticmethod
+    def point_check(img_bin, pt_check):
+        """Checks and verifies that a point is on a graph edge."""
+
+        # Check if the image is 2D
+        if len(img_bin.shape) == 2:
+            is_2d = True
+            w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
+            d = 0
+        else:
+            is_2d = False
+            w, h, d = img_bin.shape
+
+        if is_2d:
+            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
+            q_edge = (img_bin[pt_check[0], pt_check[1]] == 0 or oob == 1)  # Checks if point in fibre
+        else:
+            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h, d=d)
+            q_edge = (img_bin[pt_check[0], pt_check[1], pt_check[2]] == 0 or oob == 1)
+
+        return q_edge

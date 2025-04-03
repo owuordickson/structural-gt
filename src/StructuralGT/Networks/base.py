@@ -10,7 +10,7 @@ import gsd.hoomd
 import numpy as np
 from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
-from . import GetWeights_3d, error, skel_ID, sknwEdits
+from . import error, sknwEdits
 
 
 def read(name, read_type):
