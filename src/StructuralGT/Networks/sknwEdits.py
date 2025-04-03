@@ -103,7 +103,7 @@ def trace(img, p, nbs, acc, buf):
             break
 
         # returns (node id1, node id2, pts)
-    return (c1 - 10, c2 - 10, idx2rc(buf[: cur + 1], acc))
+    return c1 - 10, c2 - 10, idx2rc(buf[: cur + 1], acc)
 
 
 def parse_struc(img, nbs, acc, iso, ring):
@@ -204,39 +204,3 @@ def draw_graph(img, graph, cn=255, ce=128):
     for idx in graph.nodes():
         pts = graph.nodes[idx]["pts"]
         img[np.dot(pts, acc)] = cn
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    img = np.array(
-        [
-            [0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0, 1, 0],
-            [0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 1, 0, 0, 0],
-            [1, 0, 1, 0, 0, 1, 1, 1, 1],
-            [0, 1, 0, 0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0, 0, 0],
-        ]
-    )
-
-    node_img = mark_node(img)
-    graph = build_sknw(img, False, iso=True, ring=True)
-    plt.imshow(node_img[1:-1, 1:-1], cmap="gray")
-
-    # draw edges by pts
-    for s, e in graph.edges():
-        ps = graph[s][e]["pts"]
-        plt.plot(ps[:, 1], ps[:, 0], "green")
-
-    # draw node by o
-    nodes = graph.nodes()
-    ps = np.array([nodes[i]["o"] for i in nodes])
-    plt.plot(ps[:, 1], ps[:, 0], "r.")
-
-    # title and show
-    plt.title("Build Graph")
-    plt.show()
