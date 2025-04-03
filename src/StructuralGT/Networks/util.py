@@ -10,39 +10,6 @@ from . import base, exceptions
 
 
 
-class _image_stack:
-    """Class for holding images and the names of their respective files"""
-
-    def __init__(self):
-        self._images = []
-        self._slice_names = []
-        self._index = -1
-
-    def append(self, _slice, _slice_name):
-        self._images.append(_slice)
-        self._slice_names.append(_slice_name)
-
-    def __getitem__(self, key):
-        return (self._images[key], self._slice_names[key])
-
-    def package(self):
-        self._images = np.asarray(self._images)
-
-    def __len__(self):
-        return len(self._images)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self._index += 1
-        if self._index >= len(self):
-            self._index = -1
-            raise StopIteration
-        else:
-            return self._images[self._index], self._slice_names[self._index]
-
-
 class _cropper:
     """Cropper class contains methods to deal with images of different
     dimensions and their geometric modificaitons. Generally there is no need
@@ -62,8 +29,10 @@ class _cropper:
         if Network._2d:
             self.surface = 0
         elif domain is None:
+            slice_name = next(iter(Network.image_stack.keys()))  # Only first item
             self.surface = int(
-                _fname(Network.dir + "/" + Network.image_stack[0][1]).num
+                # _fname(Network.dir + "/" + Network.image_stack[0][1]).num
+                _fname(Network.dir + "/" + slice_name).num
             )  # Strip file type and 'slice' then convert to int
         else:
             self.surface = domain[4]
@@ -71,7 +40,8 @@ class _cropper:
             depth = 1
         else:
             if domain is None:
-                depth = len(Network.image_stack)
+                # depth = len(Network.image_stack)
+                depth = len(Network.image_stack.items())
             else:
                 depth = domain[5] - domain[4]
             if depth == 0:
@@ -81,7 +51,9 @@ class _cropper:
         if domain is None:
             self.domain = None
             self.crop = slice(None)
-            planar_dims = Network.image_stack[0][0].shape[0:2]
+            img_arr = next(iter(Network.image_stack.values()))  # Only first item
+            # planar_dims = Network.image_stack[0][0].shape[0:2]
+            planar_dims = img_arr.shape[0:2]
             if self.dim == 2:
                 self.dims = (1,) + planar_dims
             else:

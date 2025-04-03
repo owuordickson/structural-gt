@@ -19,7 +19,7 @@ from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from . import base, exceptions
-from .util import (_cropper, _fname, _image_stack)
+from .util import (_cropper, _fname)
 
 from ..SGT.image_base import ImageBase
 
@@ -55,28 +55,29 @@ class FiberNetwork:
         self._2d = True if self.dim == 2 else False
         self.prefix = "slice" if prefix is None else prefix
 
-        image_stack = _image_stack()
+        # image_stack = _image_stack()
+        image_stack = {}
         for slice_name in sorted(os.listdir(self.dir)):
             fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
             if dim == 2 and fname.isimg and prefix in fname:
-                if len(image_stack) != 0:
-                    warnings.warn(
-                        "You have specified a 2D network but there are \
-                        several suitable images in the given directory. \
-                        By default, StructuralGT will take the first image.\
-                        To override, specify the prefix argument."
-                    )
+                if len(image_stack.items()) != 0:
+                    warnings.warn( "You have specified a 2D network but there are several suitable images in the given "
+                                   "directory. By default, StructuralGT will take the first image. To override, "
+                                   "specify the prefix argument.")
                     break
                 _slice = plt.imread(self.dir + "/" + slice_name)
-                image_stack.append(_slice, slice_name)
+                # image_stack.append(_slice, slice_name)
+                image_stack[slice_name] = _slice
             if dim == 3:
                 if fname.isinrange and fname.isimg and prefix in fname:
                     _slice = plt.imread(self.dir + "/" + slice_name)
-                    image_stack.append(_slice, slice_name)
+                    # image_stack.append(_slice, slice_name)
+                    image_stack[slice_name] = _slice
 
         self.image_stack = image_stack
-        self.image_stack.package()
-        if len(self.image_stack) == 0:
+        # self.image_stack.package()
+        # if len(self.image_stack) == 0:
+        if len(self.image_stack.items()) == 0:
             raise exceptions.ImageDirectoryError("There are no suitable images in the given directory. You may need to "
                                                  "specify the prefix argument." )
 
@@ -109,7 +110,8 @@ class FiberNetwork:
                     "tensorflow installed."
                     )
 
-        for _, name in self.image_stack:
+        # for _, name in self.image_stack:
+        for name in self.image_stack.keys():
             fname = _fname(self.dir + "/" + name, _2d=self._2d)
             gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
             # _, img_bin, _ = process_image.binarize(gray_image, options)
@@ -314,7 +316,8 @@ class FiberNetwork:
                     the network's depth"
                 )
         if crop is not None and self.depth is None and not self._2d:
-            if len(self.image_stack) < crop[5] - crop[4]:
+            # if len(self.image_stack) < crop[5] - crop[4]:
+            if len(self.image_stack.items()) < crop[5] - crop[4]:
                 raise ValueError("Crop too large for image stack")
             else:
                 self.depth = [crop[4], crop[5]]
@@ -572,7 +575,11 @@ class FiberNetwork:
 
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.imshow(self.image_stack[depth][0][self.cropper._2d], cmap="gray")
+        # img = self.image_stack[depth][0][self.cropper._2d]
+        key_list = list(self.image_stack.keys())
+        key_at_index = key_list[depth]
+        img = self.image_stack[key_at_index][self.cropper._2d]
+        ax.imshow(img, cmap="gray")
 
         e = np.empty((0, 2))
         for edge in self.graph.es:
@@ -625,8 +632,11 @@ class FiberNetwork:
         ax.set_xticks([])
         ax.set_yticks([])
         if plot_img:
-            ax.imshow(self.image_stack[depth][0][self.cropper._2d],
-                      cmap="gray")
+            # img = self.image_stack[depth][0][self.cropper._2d]
+            key_list = list(self.image_stack.keys())
+            key_at_index = key_list[depth]
+            img = self.image_stack[key_at_index][self.cropper._2d]
+            ax.imshow(img, cmap="gray")
         _max = np.max(parameter)
         _min = np.min(parameter)
 
@@ -736,10 +746,14 @@ class FiberNetwork:
     @property
     def image(self):
         """:class:`np.ndarray`: The original image used to obtain the graph."""
-        if self._2d:
-            return self.image_stack[0][0]
+        img_arr = list(self.image_stack.values())
+        img_arr = np.asarray(img_arr)
+        if not self._2d:
+            # return self.image_stack[0][0]
+            return img_arr[0]
         else:
-            return self.image_stack[:][0]
+            # return self.image_stack[:][0]
+            return img_arr
 
     @property
     def skeleton(self):
