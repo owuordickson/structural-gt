@@ -18,9 +18,7 @@ from matplotlib.colorbar import Colorbar
 from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from . import base, exceptions
-from .util import (_cropper, _fname)
-
+from . import base
 from ..SGT.image_base import ImageBase
 
 
@@ -44,7 +42,8 @@ class FiberNetwork:
 
     def __init__(self, directory, binarized_dir="Binarized", depth=None, prefix=None, dim=2):
         if dim == 2 and depth is not None:
-            raise exceptions.InvalidArgumentsError( "Cannot specify depth argument for 2D networks. Change dim to 3 if "
+            """Raised when incompatible combination of arguments is passed."""
+            raise ValueError( "Cannot specify depth argument for 2D networks. Change dim to 3 if "
                                                     "you would like a single slice of a 3D network.")
 
         self.dir = directory
@@ -58,8 +57,16 @@ class FiberNetwork:
         # image_stack = _image_stack()
         image_stack = {}
         for slice_name in sorted(os.listdir(self.dir)):
-            fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
-            if dim == 2 and fname.isimg and prefix in fname:
+            # fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
+            img_path = self.dir + "/" + slice_name
+            slice_num = verify_slice_number(img_path, self._2d)
+            is_img = base.Q_img(img_path)
+            contains_prefix = True if prefix is None else prefix in os.path.splitext(os.path.basename(img_path))[0]
+            is_in_range = True if (is_img and self._2d) else False
+            if not is_in_range and depth is not None:
+                is_in_range = (depth[0] < int(slice_num) < depth[1])
+
+            if dim == 2 and is_img and contains_prefix:
                 if len(image_stack.items()) != 0:
                     warnings.warn( "You have specified a 2D network but there are several suitable images in the given "
                                    "directory. By default, StructuralGT will take the first image. To override, "
@@ -69,7 +76,7 @@ class FiberNetwork:
                 # image_stack.append(_slice, slice_name)
                 image_stack[slice_name] = _slice
             if dim == 3:
-                if fname.isinrange and prefix in fname:
+                if is_in_range and contains_prefix:
                     _slice = plt.imread(self.dir + "/" + slice_name)
                     # image_stack.append(_slice, slice_name)
                     image_stack[slice_name] = _slice
@@ -78,19 +85,22 @@ class FiberNetwork:
         # self.image_stack.package()
         # if len(self.image_stack) == 0:
         if len(self.image_stack.items()) == 0:
-            raise exceptions.ImageDirectoryError("There are no suitable images in the given directory. You may need to "
-                                                 "specify the prefix argument." )
+            raise ImageDirectoryError(self.stack_dir)
 
-    def binarize(self, options="img_options.json"):
+    def binarize(self, options="img_options.json", crop: list=None):
         """Binarizes stack of experimental images using a set of image
         processing parameters.
 
         Args:
             options (dict, optional):
                 A dictionary of option-value pairs for image processing. All
-                options must be specified. When this arguement is not
+                options must be specified. When this argument is not
                 specified, the network's parent directory will be searched for
                 a file called img_options.json, containing the options.
+            crop (list):
+                The x, y and (optionally) z coordinates of the cuboid/
+                rectangle which encloses the :class:`Network` region of
+                interest.
         """
         if not os.path.isdir(self.dir + self.binarized_dir):
             os.mkdir(self.dir + self.binarized_dir)
@@ -104,40 +114,9 @@ class FiberNetwork:
                 options.predict(self)
                 return
             except ImportError:
-                raise TypeError(
-                    "The options argument must be a str, dict, or "
-                    "deeplearner. If it is a deeplearner, you must have "
-                    "tensorflow installed."
-                    )
+                raise TypeError("The options argument must be a str, dict, or deeplearner. If it is a deeplearner, "
+                                "you must have tensorflow installed.")
 
-        # for _, name in self.image_stack:
-        for name in self.image_stack.keys():
-            fname = _fname(self.dir + "/" + name, _2d=self._2d)
-            gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
-            # _, img_bin, _ = process_image.binarize(gray_image, options)
-            img_obj = ImageBase(gray_image)
-            img_data = img_obj.img_2d.copy()
-            img_obj.img_mod = img_obj.process_img(image=img_data)
-            img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
-            img_bin = img_obj.img_bin
-
-            plt.imsave(
-                self.stack_dir + "/" + self.prefix + fname.num + ".tiff",
-                img_bin,
-                cmap=mpl.cm.gray,
-            )
-
-    def set_img_bin(self, crop):
-        """Sets the :attr:`img_bin` and :attr:`img_bin_3d` attributes, which
-        are numpy arrays of pixels and voxels which represent the binarized
-        image. Called internally by subclasses of :class:`Network`.
-
-        Args:
-            crop (list):
-                The x, y and (optionally) z coordinates of the cuboid/
-                rectangle which encloses the :class:`Network` region of
-                interest.
-        """
         self.cropper = _cropper(self, domain=crop)
         if self._2d:
             img_bin = np.zeros(self.cropper.dims)
@@ -146,30 +125,30 @@ class FiberNetwork:
             img_bin = np.swapaxes(img_bin, 0, 2)
             img_bin = np.swapaxes(img_bin, 1, 2)
 
+
+        # for _, name in self.image_stack:
         i = self.cropper.surface
-        for name in sorted(os.listdir(self.stack_dir)):
-            fname = _fname( self.stack_dir + "/" + name, depth=self.cropper._3d, _2d=self._2d)
-            if fname.isinrange:
-                img_bin[i - self.cropper.surface] = (
-                    base.read(
-                        self.stack_dir + "/" + self.prefix + fname.num +
-                        ".tiff",
-                        cv.IMREAD_GRAYSCALE,
-                    )[self.cropper._2d]
-                    / 255
-                )
-                i = i + 1
-            else:
-                continue
+        for name in self.image_stack.keys():
+            # fname = _fname(self.dir + "/" + name, _2d=self._2d)
+            img_path = self.dir + "/" + name
+            slice_num = verify_slice_number(img_path, self._2d)
+            gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
+            # _, img_bin, _ = process_image.binarize(gray_image, options)
+            img_obj = ImageBase(gray_image)
+            img_data = img_obj.img_2d.copy()
+            img_obj.img_mod = img_obj.process_img(image=img_data)
+            img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
+
+            plt.imsave(self.stack_dir + "/" + self.prefix + slice_num + ".tiff", img_obj.img_bin, cmap=mpl.cm.gray)
+
+            img_bin[i - self.cropper.surface] = img_obj.img_bin[self.cropper._2d] / 255
+            i += 1
 
         # For 2D images, img_bin_3d.shape[0] == 1
-        self._img_bin_3d = img_bin
-        self._img_bin = img_bin
-
         # Always 3d, even for 2d images
-        self._img_bin_3d = self._img_bin
+        self._img_bin_3d = img_bin
         # 3d for 3d images, 2d otherwise
-        self._img_bin = np.squeeze(self._img_bin)
+        self._img_bin = np.squeeze(img_bin)
 
     def set_graph(self, sub=True, weight_type=None, write="network.gsd", **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
@@ -267,7 +246,7 @@ class FiberNetwork:
         if write:
             self.node_labelling([], [], write)
 
-    def img_to_skel( self, name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
+    def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
 
         Note: if the rotation argument is given, this writes the union of all
@@ -276,6 +255,11 @@ class FiberNetwork:
         attribute has been set.
 
         Args:
+            img_options (dict, optional):
+                A dictionary of option-value pairs for image processing. All
+                options must be specified. When this argument is not
+                specified, the network's parent directory will be searched for
+                a file called img_options.json, containing the options.
             name (str):
                 File name to write.
             crop (list):
@@ -331,7 +315,8 @@ class FiberNetwork:
             self.inner_cropper = _cropper(self, domain=crop)
             crop = self.inner_cropper._outer_crop
 
-        self.set_img_bin(crop)
+        # self.set_img_bin(crop)
+        self.binarize(img_options, crop)
 
         if skeleton:
             self._skeleton = skeletonize(np.asarray(self._img_bin, dtype=np.dtype("uint8")))
@@ -350,9 +335,7 @@ class FiberNetwork:
             s.particles.N = len(positions)
             if box:
                 L = list(max(positions.T[i]) for i in (0, 1, 2))
-                s.particles.position, self.shift = base.shift(
-                    positions, _shift=(L[0] / 2, L[1] / 2, L[2] / 2)
-                )
+                s.particles.position, self.shift = base.shift(positions, _shift=(L[0] / 2, L[1] / 2, L[2] / 2))
                 s.configuration.box = [L[0], L[1], L[2], 0, 0, 0]
             else:
                 s.particles.position, self.shift = base.shift(positions)
@@ -804,3 +787,208 @@ class FiberNetwork:
         cbar = Colorbar(cax, mappable)
         ax.set(*args, **kwargs)
         return cbar
+
+
+
+class _cropper:
+    """Cropper class contains methods to deal with images of different
+    dimensions and their geometric modificaitons. Generally there is no need
+    for the user to instantiate this directly.
+
+    Args:
+        Network (:class:`Network`:):
+            The :class:`Network` object to which the cropper is associated
+            with
+        domain (list):
+            The corners of the cuboid/rectangle which enclose the network's
+            region of interest
+    """
+
+    def __init__(self, Network, domain=None):
+        self.dim = Network.dim
+        if Network._2d:
+            self.surface = 0
+        elif domain is None:
+            # Strip file type and 'slice' then convert to int
+            slice_name = next(iter(Network.image_stack.keys()))  # Only first item
+            img_path = Network.dir + "/" + slice_name
+            slice_num = verify_slice_number(img_path)
+            self.surface = int(slice_num)
+        else:
+            self.surface = domain[4]
+        if Network._2d:
+            depth = 1
+        else:
+            if domain is None:
+                # depth = len(Network.image_stack)
+                depth = len(Network.image_stack.items())
+            else:
+                depth = domain[5] - domain[4]
+            if depth == 0:
+                raise ImageDirectoryError(Network.stack_dir)
+        self.depths = Network.depth
+
+        if domain is None:
+            self.domain = None
+            self.crop = slice(None)
+            img_arr = next(iter(Network.image_stack.values()))  # Only first item
+            # planar_dims = Network.image_stack[0][0].shape[0:2]
+            planar_dims = img_arr.shape[0:2]
+            if self.dim == 2:
+                self.dims = (1,) + planar_dims
+            else:
+                self.dims = planar_dims + (depth,)
+
+        else:
+            if self.dim == 2:
+                self.crop = (slice(domain[2], domain[3]),
+                             slice(domain[0], domain[1]))
+                self.dims = (1, domain[3] - domain[2], domain[1] - domain[0])
+                self.domain = (domain[2], domain[3], domain[0], domain[1])
+
+            else:
+                self.crop = (
+                    slice(domain[0], domain[1]),
+                    slice(domain[2], domain[3]),
+                    slice(domain[4], domain[5]),
+                )
+                self.dims = (
+                    domain[1] - domain[0],
+                    domain[3] - domain[2],
+                    domain[5] - domain[4],
+                )
+                self.domain = (
+                    domain[0],
+                    domain[1],
+                    domain[2],
+                    domain[3],
+                    domain[4],
+                    domain[5],
+                )
+
+    @classmethod
+    def from_string(cls, Network, domain):
+        if domain == "None":
+            return cls(Network, domain=None)
+        else:
+            domain = domain.split(",")
+        if len(domain) == 4:
+            _0 = int(domain[0][1:])
+            _1 = int(domain[1])
+            _2 = int(domain[2])
+            _3 = int(domain[3][:-1])
+            return cls(Network, domain=[_0, _1, _2, _3])
+
+    def intergerise(self):
+        """Method casts decimal values in the _croppers crop attribute to
+        integers such that the new crop contains at least all the space
+        enclosed by the old crop
+        """
+        first_x = np.floor(self.crop[0].start).astype(int)
+        last_x = np.ceil(self.crop[0].stop).astype(int)
+
+        first_y = np.floor(self.crop[1].start).astype(int)
+        last_y = np.ceil(self.crop[1].stop).astype(int)
+
+        if self.dim == 2:
+            self.crop = slice(first_x, last_x), slice(first_y, last_y)
+            self.dims = (1, last_x - first_x, last_y - first_y)
+        else:
+            first_z = np.floor(self.crop[2].start).astype(int)
+            last_z = np.ceil(self.crop[2].stop).astype(int)
+            self.crop = (
+                slice(first_x, last_x),
+                slice(first_y, last_y),
+                slice(first_z, last_z),
+            )
+
+    def __str__(self):
+        return str(self.domain)
+
+    @property
+    def _3d(self):
+        if self.dim == 2:
+            return None
+        elif self.crop == slice(None):
+            return self.depths
+        else:
+            return [self.crop[2].start, self.crop[2].stop]
+
+    @property
+    def _2d(self):
+        """list: If a crop is associated with the object, return the component
+        which crops the rectangle associated with the :class:`Network` space.
+        """
+        if self.crop == slice(None):
+            return slice(None)
+        else:
+            return self.crop[0:2]
+
+    @property
+    def _outer_crop(self):
+        """Method supports square 2D crops only. It calculates the crop which
+        could contain any rotation about the origin of the _cropper's crop
+        attribute.
+
+        Returns:
+            (list): The outer crop
+        """
+
+        if self.dim != 2:
+            raise ValueError("Only 2D crops are supported")
+        if self.crop == slice(None):
+            raise ValueError("No crop associated with this _cropper")
+
+        centre = (
+            self.crop[0].start + 0.5 *
+            (self.crop[0].stop - self.crop[0].start),
+            self.crop[1].start + 0.5 *
+            (self.crop[1].stop - self.crop[1].start),
+        )
+
+        diagonal = (
+            (self.crop[0].stop - self.crop[0].start) ** 2
+            + (self.crop[1].stop - self.crop[1].start) ** 2
+        ) ** 0.5
+
+        outer_crop = np.array(
+            [
+                centre[0] - diagonal * 0.5,
+                centre[0] + diagonal * 0.5,
+                centre[1] - diagonal * 0.5,
+                centre[1] + diagonal * 0.5,
+            ],
+            dtype=int,
+        )
+
+        return outer_crop
+
+
+class ImageDirectoryError(ValueError):
+    """Raised when a directory is accessed but does not have any images"""
+
+    def __init__(self, directory_name):
+        self.directory_name = directory_name
+
+    def __str__(self):
+        """Returns the error message"""
+        return f"The directory {self.directory_name} has no suitable images. You may need to specify the prefix argument."
+
+
+
+def verify_slice_number(f_name, is_2d=False):
+    """Slice filenames must end in 4 digits, indicating the depth of the slice."""
+    if not os.path.exists(f_name):
+        raise ValueError("File does not exist.")
+
+    if is_2d:
+        num = "0000"
+    else:
+        base_name = os.path.splitext(os.path.split(f_name)[1])[0]
+        if len(base_name) < 4:
+            raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
+        num = base_name[-4::]
+
+        if not num.isnumeric():
+            raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
+    return num
