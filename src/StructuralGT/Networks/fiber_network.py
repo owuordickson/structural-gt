@@ -7,7 +7,6 @@ import json
 import os
 import time
 import warnings
-
 import cv2 as cv
 import gsd.hoomd
 import igraph as ig
@@ -45,33 +44,20 @@ class FiberNetwork:
 
     def __init__(self, directory, binarized_dir="Binarized", depth=None, prefix=None, dim=2):
         if dim == 2 and depth is not None:
-            raise exceptions.InvalidArgumentsError(
-                "Cannot specify depth argument for 2D networks. \
-                Change dim to 3 if you would like a single slice of a 3D \
-                network."
-            )
+            raise exceptions.InvalidArgumentsError( "Cannot specify depth argument for 2D networks. Change dim to 3 if "
+                                                    "you would like a single slice of a 3D network.")
 
         self.dir = directory
         self.binarized_dir = "/" + binarized_dir
         self.stack_dir = os.path.normpath(self.dir + self.binarized_dir)
         self.depth = depth
         self.dim = 2
-        if self.dim == 2:
-            self._2d = True
-        else:
-            self._2d = False
-        if prefix is None:
-            self.prefix = "slice"
-        else:
-            self.prefix = prefix
+        self._2d = True if self.dim == 2 else False
+        self.prefix = "slice" if prefix is None else prefix
 
         image_stack = _image_stack()
         for slice_name in sorted(os.listdir(self.dir)):
-            fname = _fname(
-                self.dir + "/" + slice_name,
-                depth=depth,
-                _2d=self._2d,
-            )
+            fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
             if dim == 2 and fname.isimg and prefix in fname:
                 if len(image_stack) != 0:
                     warnings.warn(
@@ -91,10 +77,8 @@ class FiberNetwork:
         self.image_stack = image_stack
         self.image_stack.package()
         if len(self.image_stack) == 0:
-            raise exceptions.ImageDirectoryError(
-                "There are no suitable images in the given directory. You \
-                may need to specify the prefix argument."
-            )
+            raise exceptions.ImageDirectoryError("There are no suitable images in the given directory. You may need to "
+                                                 "specify the prefix argument." )
 
     def binarize(self, options="img_options.json"):
         """Binarizes stack of experimental images using a set of image
@@ -164,11 +148,7 @@ class FiberNetwork:
 
         i = self.cropper.surface
         for fname in sorted(os.listdir(self.stack_dir)):
-            fname = _fname(
-                self.stack_dir + "/" + fname,
-                depth=self.cropper._3d,
-                _2d=self._2d,
-            )
+            fname = _fname( self.stack_dir + "/" + fname, depth=self.cropper._3d, _2d=self._2d)
             if fname.isimg and fname.isinrange:
                 img_bin[i - self.cropper.surface] = (
                     base.read(

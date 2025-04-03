@@ -4,7 +4,6 @@
 
 import os
 import time
-
 import cv2 as cv
 import gsd.hoomd
 import numpy as np

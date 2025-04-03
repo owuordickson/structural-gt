@@ -129,7 +129,7 @@ class _cropper:
 
     def intergerise(self):
         """Method casts decimal values in the _croppers crop attribute to
-        integers such that the new crop contains at least all of the space
+        integers such that the new crop contains at least all the space
         enclosed by the old crop
         """
         first_x = np.floor(self.crop[0].start).astype(int)
