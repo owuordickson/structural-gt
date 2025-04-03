@@ -134,7 +134,7 @@ class FiberNetwork:
             img_obj.img_mod = img_obj.process_img(image=img_data)
             img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
             img_bin = img_obj.img_bin
-            print(img_bin.shape)
+
             if self._2d:
                 fname.num = "0000"
             plt.imsave(
