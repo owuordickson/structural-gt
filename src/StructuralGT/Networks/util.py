@@ -3,97 +3,11 @@
 # License.
 
 import os
-from functools import wraps
-
 import numpy as np
 
 from . import base, exceptions
 
 
-class _Compute:
-    r"""Parent class for all compute classes in StructuralGT. Modelled after
-    the :class:`_Compute` class used in **freud** :cite:`Ramasubramani2020`.
-
-    The primary purpose of this class is to prevent access of uncomputed
-    values. This is accomplished by maintaining a boolean flag to track whether
-    the compute method in a class has been called and decorating class
-    properties that rely on compute having been called.
-
-    To use this class, one would write, for example,
-
-    .. code-block:: python
-        class Electronic(_Compute):
-
-            def compute(...)
-                ...
-
-            @_Compute._computed_property
-            def effectice_resistance(self):
-                return ...
-
-    Attributes:
-        _called_compute (bool):
-            Flag representing whether the compute method has been called.
-    """
-
-    def __init__(self, node_weight=None, edge_weight=None):
-        self._called_compute = False
-        self.node_weight = node_weight
-        self.edge_weight = edge_weight
-
-    def __getattribute__(self, attr):
-        """Compute methods set a flag to indicate that quantities have been
-        computed. Compute must be called before plotting."""
-        attribute = object.__getattribute__(self, attr)
-        if attr == "compute":
-            # Set the attribute *after* computing. This enables
-            # self._called_compute to be used in the compute method itself.
-            compute = attribute
-
-            @wraps(compute)
-            def compute_wrapper(*args, **kwargs):
-                return_value = compute(*args, **kwargs)
-                self._called_compute = True
-                return return_value
-
-            return compute_wrapper
-        elif attr == "plot":
-            if not self._called_compute:
-                raise AttributeError(
-                    "The compute method must be called before calling plot."
-                )
-        return attribute
-
-    @staticmethod
-    def _computed_property(prop):
-        r"""Decorator that makes a class method to be a property with limited
-        access.
-
-        Args:
-            prop (callable): The property function.
-
-        Returns:
-            Decorator decorating appropriate property method.
-        """
-
-        @property
-        @wraps(prop)
-        def wrapper(self, *args, **kwargs):
-            if not self._called_compute:
-                raise AttributeError(
-                    "Property not computed. Call compute \
-                                     first."
-                )
-            return prop(self, *args, **kwargs)
-
-        return wrapper
-
-
-def _abs_path(network, name):
-    if name[0] == "/":
-        return name
-    else:
-        return network.stack_dir + "/" + name
 
 
 class _image_stack:
@@ -298,17 +212,6 @@ class _cropper:
         return outer_crop
 
 
-class _domain:
-    """Helper class which returns an infinitely large space when no explicit
-    space is associated with the :class:`_domain`
-    """
-
-    def __init__(self, domain):
-        if domain is None:
-            self.domain = [-np.inf, np.inf]
-        else:
-            self.domain = domain
-
 
 class _fname:
     """Class to represent file names of 2D image slices, with helper
@@ -320,15 +223,19 @@ class _fname:
     Args:
         name (str):
             The name of the file.
-        domain (_domain):
+        depth :
             The spatial dimensions of the associated Network object.
     """
 
-    def __init__(self, name, domain=_domain(None), _2d=False):
+    def __init__(self, name, depth=None, _2d=False):
         if not os.path.exists(name):
             raise ValueError("File does not exist.")
         self.name = name
-        self.domain = domain
+        if depth is None:
+            # returns an infinitely large space when None
+            self.domain = [-np.inf, np.inf]
+        else:
+            self.domain = depth
         self._2d = _2d
 
         if self._2d:

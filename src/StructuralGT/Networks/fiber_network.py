@@ -20,7 +20,7 @@ from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from . import base, exceptions
-from .util import (_abs_path, _cropper, _domain, _fname, _image_stack)
+from .util import (_cropper, _fname, _image_stack)
 
 from ..SGT.image_base import ImageBase
 
@@ -69,7 +69,7 @@ class FiberNetwork:
         for slice_name in sorted(os.listdir(self.dir)):
             fname = _fname(
                 self.dir + "/" + slice_name,
-                domain=_domain(depth),
+                depth=depth,
                 _2d=self._2d,
             )
             if dim == 2 and fname.isimg and prefix in fname:
@@ -166,7 +166,7 @@ class FiberNetwork:
         for fname in sorted(os.listdir(self.stack_dir)):
             fname = _fname(
                 self.stack_dir + "/" + fname,
-                domain=_domain(self.cropper._3d),
+                depth=self.cropper._3d,
                 _2d=self._2d,
             )
             if fname.isimg and fname.isinrange:
@@ -341,7 +341,12 @@ class FiberNetwork:
 
         start = time.time()
 
-        self.gsd_name = _abs_path(self, name)
+        # self.gsd_name = _abs_path(self, name)
+        if name[0] == "/":
+            self.gsd_name = name
+        else:
+            self.gsd_name = self.stack_dir + "/" + name
+
         self.gsd_dir = os.path.split(self.gsd_name)[0]
 
         if rotate is not None:
