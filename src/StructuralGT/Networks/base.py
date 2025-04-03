@@ -11,6 +11,7 @@ import numpy as np
 from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
 from . import error, sknwEdits
+from ..SGT.graph_skeleton import GraphSkeleton
 
 
 def read(name, read_type):
@@ -373,7 +374,10 @@ def merge_nodes(g, disk_size):
     g.gsd_name = g.gsd_dir + "/merged_" + os.path.split(g.gsd_name)[1]
 
     canvas = g._skeleton
-    g._skeleton = skel_ID.merge_nodes(canvas, disk_size)
+    # g._skeleton = skel_ID.merge_nodes(canvas, disk_size)
+    GraphSkeleton.temp_skeleton = canvas.copy()
+    GraphSkeleton.merge_nodes()
+    g._skeleton = GraphSkeleton.temp_skeleton
 
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
@@ -403,7 +407,11 @@ def prune(g, size):
     g.gsd_name = g.gsd_dir + "/pruned_" + os.path.split(g.gsd_name)[1]
 
     canvas = g._skeleton
-    g._skeleton = skel_ID.pruning(canvas, size)
+    # g._skeleton = skel_ID.pruning(canvas, size)
+    GraphSkeleton.temp_skeleton = canvas.copy()
+    b_points = GraphSkeleton.get_branched_points()
+    GraphSkeleton.prune_edges(size, b_points)
+    g._skeleton = GraphSkeleton.temp_skeleton
 
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
@@ -465,12 +473,11 @@ def add_weights(g, weight_type=None, R_j=0, rho_dim=1):
     for _type in weight_type:
         for i, edge in enumerate(g.Gr.es()):
             ge = edge["pts"]
-            pix_width, wt = GetWeights_3d.assignweights(
-                ge, _img_bin, weight_type=_type, R_j=R_j, rho_dim=rho_dim
-            )
+            # pix_width, wt = GetWeights_3d.assignweights(ge, _img_bin, weight_type=_type, R_j=R_j, rho_dim=rho_dim)
+            graph_skel = GraphSkeleton(img_bin=_img_bin)
+            pix_width, pix_angle, wt = graph_skel.assign_weights(ge, rho_dim=rho_dim)
             edge["pixel width"] = pix_width
-            if (_type == "VariableWidthConductance"
-                    or _type == "FixedWidthConductance"):
+            if _type == "VariableWidthConductance" or _type == "FixedWidthConductance":
                 _type_name = "Conductance"
             else:
                 _type_name = _type

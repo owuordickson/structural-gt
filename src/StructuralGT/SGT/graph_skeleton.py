@@ -17,7 +17,7 @@ class GraphSkeleton:
 
     temp_skeleton = None
 
-    def __init__(self, img_bin: MatLike, configs: dict):
+    def __init__(self, img_bin: MatLike, configs: dict = None):
         """
         A class that builds a skeleton graph from an image.
 
@@ -44,7 +44,8 @@ class GraphSkeleton:
         self.bp_coord_y = None
         self.ep_coord_x = None
         self.ep_coord_y = None
-        self._build_skeleton()
+        if configs is not None:
+            self._build_skeleton()
 
     def _build_skeleton(self):
         """
@@ -67,8 +68,8 @@ class GraphSkeleton:
             GraphSkeleton.temp_skeleton = remove_small_objects(GraphSkeleton.temp_skeleton, min_size=int(self.configs["remove_disconnected_segments"]["items"][0]["value"]), connectivity=2)
 
         if self.configs["prune_dangling_edges"]["value"] == 1:
-            b_points_1 = GraphSkeleton.get_branched_points()
-            GraphSkeleton.prune_edges(500, b_points_1)
+            b_points = GraphSkeleton.get_branched_points()
+            GraphSkeleton.prune_edges(500, b_points)
 
         b_points = GraphSkeleton.get_branched_points()
         e_points = GraphSkeleton.get_end_points()
@@ -315,10 +316,9 @@ class GraphSkeleton:
         return ep
 
     @classmethod
-    def prune_edges(cls, size, b_points):
-        """Prune dangling edges around b_points."""
-        branch_points = b_points
-        # remove iteratively end points "size" times from the skeleton
+    def prune_edges(cls, size, branch_points):
+        """Prune dangling edges around b_points. Remove iteratively end points 'size' times from the skeleton"""
+
         for i in range(0, size):
             end_points = GraphSkeleton.get_end_points()
             points = np.logical_and(end_points, branch_points)
