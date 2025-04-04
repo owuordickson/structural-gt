@@ -19,7 +19,7 @@ from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ...SGT.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+from ...SGT.network_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
 from ...SGT.sgt_utils import get_cv_base64

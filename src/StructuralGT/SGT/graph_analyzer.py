@@ -26,7 +26,7 @@ from networkx.algorithms.wiener import wiener_index
 
 from .progress_update import ProgressUpdate
 from .graph_extractor import GraphExtractor
-from .image_processor import ImageProcessor
+from .network_processor import ImageProcessor
 
 import sgt_c_module as sgt
 from .sgt_utils import get_num_cores
