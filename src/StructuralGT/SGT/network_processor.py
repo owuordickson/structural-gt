@@ -26,7 +26,7 @@ Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
 
 
-class ImageProcessor(ProgressUpdate):
+class NetworkProcessor(ProgressUpdate):
     """
     A class for processing and preparing 2D or 3D microscopy images for building a fiber graph network.
 
@@ -47,10 +47,10 @@ class ImageProcessor(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir)
+        >>> imp_obj = NetworkProcessor(i_path, o_dir)
         >>> imp_obj.apply_img_filters()
         """
-        super(ImageProcessor, self).__init__()
+        super(NetworkProcessor, self).__init__()
         self.img_path: str = img_path
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
@@ -93,8 +93,8 @@ class ImageProcessor(ProgressUpdate):
                 scaling_opts = []
                 img_px_size = max(image.shape[0], image.shape[1])
                 if img_px_size > 0 and self.auto_scale:
-                    scaling_opts = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                    image, scale_factor = ImageProcessor.rescale_img(image, scaling_opts)
+                    scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
+                    image, scale_factor = NetworkProcessor.rescale_img(image, scaling_opts)
 
                 return image, scaling_opts, scale_factor
             elif ext in ['.tif', '.tiff', '.qptiff']:
@@ -119,8 +119,8 @@ class ImageProcessor(ProgressUpdate):
 
                 images_small = []
                 if img_px_size > 0 and self.auto_scale:
-                    scaling_opts = ImageProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                    images_small, scale_factor = ImageProcessor.rescale_img(images, scaling_opts)
+                    scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
+                    images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
 
                 # Convert back to numpy arrays
                 images = images_small if len(images_small) > 0 else images

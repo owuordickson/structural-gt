@@ -19,7 +19,7 @@ from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ...SGT.network_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+from ...SGT.network_processor import NetworkProcessor, ALLOWED_IMG_EXTENSIONS
 from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
 from ...SGT.sgt_utils import get_cv_base64
@@ -84,11 +84,11 @@ class MainController(QObject):
             :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
-            im_obj = sgt_obj.imp
-            first_index = next(iter(im_obj.selected_images), None)  # 1st selected image
+            ntwk_p = sgt_obj.imp
+            first_index = next(iter(ntwk_p.selected_images), None)  # 1st selected image
             first_index = first_index if first_index is not None else 0  # first image if None
-            options_img = im_obj.images[first_index].configs
-            options_scaling = im_obj.scaling_options
+            options_img = ntwk_p.images[first_index].configs
+            options_scaling = ntwk_p.scaling_options
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
@@ -116,10 +116,8 @@ class MainController(QObject):
 
         """
         try:
-            im_obj = sgt_obj.imp
-            first_index = next(iter(im_obj.selected_images), None)  # 1st selected image
-            first_index = first_index if first_index is not None else 0  # first image if None
-            graph_obj = im_obj.images[first_index].graph_obj
+            ntwk_p = sgt_obj.imp
+            graph_obj = ntwk_p.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
 
@@ -169,8 +167,8 @@ class MainController(QObject):
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
-            im_obj = ImageProcessor(str(img_path), out_dir, self.allow_auto_scale)
-            sgt_obj = GraphAnalyzer(im_obj)
+            ntwk_p = NetworkProcessor(str(img_path), out_dir, self.allow_auto_scale)
+            sgt_obj = GraphAnalyzer(ntwk_p)
             self.sgt_objs[filename] = sgt_obj
             self.update_img_models(sgt_obj)
             self.update_graph_models(sgt_obj)
@@ -227,8 +225,8 @@ class MainController(QObject):
         for key in keys_list:
             item_data.append([key])  # Store the key
             sgt_obj = self.sgt_objs[key]
-            im_obj = sgt_obj.imp
-            img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
+            ntwk_p = sgt_obj.imp
+            img_cv = ntwk_p.images[0].img_2d  # First image, assuming OpenCV image format
             base64_data = get_cv_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
@@ -238,8 +236,8 @@ class MainController(QObject):
         Get selected images.
         """
         sgt_obj = self.get_current_obj()
-        im_obj = sgt_obj.imp
-        sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+        ntwk_p = sgt_obj.imp
+        sel_images = [ntwk_p.images[i] for i in ntwk_p.selected_images]
         return sel_images
 
     def verify_path(self, a_path):
@@ -333,7 +331,7 @@ class MainController(QObject):
             elif type(result) is GraphAnalyzer:
                 self.write_to_pdf(result)
         else:
-            if type(result) is ImageProcessor:
+            if type(result) is NetworkProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_current_obj()
                 sgt_obj.imp = result
@@ -605,14 +603,12 @@ class MainController(QObject):
             out_dir = out_dir if sgt_obj.imp.output_dir == '' else sgt_obj.imp.output_dir
 
             # 2. Update values
+            ntwk_p = sgt_obj.imp
             for val in self.exportGraphModel.list_data:
-                for img in sel_images:
-                    img.graph_obj.configs[val["id"]]["value"] = val["value"]
+                ntwk_p.graph_obj.configs[val["id"]]["value"] = val["value"]
 
             # 3. Save graph data to file
-            for i, img in enumerate(sel_images):
-                filename += f"_Frame{i}"
-                img.graph_obj.save_graph_to_file(filename, out_dir)
+            ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})

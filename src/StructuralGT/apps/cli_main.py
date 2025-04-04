@@ -9,7 +9,7 @@ import os
 import logging
 
 from ..SGT.sgt_utils import get_num_cores
-from ..SGT.network_processor import ImageProcessor
+from ..SGT.network_processor import NetworkProcessor
 from ..SGT.graph_extractor import GraphExtractor
 from ..SGT.graph_analyzer import GraphAnalyzer
 
@@ -101,7 +101,7 @@ def produce_metrics(img_path, out_dir):
     Returns:
         None:
     """
-    imp_obj = ImageProcessor(img_path, out_dir)
+    imp_obj = NetworkProcessor(img_path, out_dir)
     graph_obj = GraphExtractor(imp_obj)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()

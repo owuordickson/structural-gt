@@ -26,7 +26,7 @@ from networkx.algorithms.wiener import wiener_index
 
 from .progress_update import ProgressUpdate
 from .graph_extractor import GraphExtractor
-from .network_processor import ImageProcessor
+from .network_processor import NetworkProcessor
 
 import sgt_c_module as sgt
 from .sgt_utils import get_num_cores
@@ -38,28 +38,28 @@ class GraphAnalyzer(ProgressUpdate):
     A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
     Args:
-        imp: Image Processor object.
+        ntwk_p: Network Processor object.
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
-    def __init__(self, imp: ImageProcessor, allow_multiprocessing: bool = True):
+    def __init__(self, ntwk_p: NetworkProcessor, allow_multiprocessing: bool = True):
         """
         A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
 
-        :param imp: ImageProcessor object.
+        :param ntwk_p: Network Processor object.
         :param allow_multiprocessing: allow multiprocessing computing.
 
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> metrics_obj = GraphAnalyzer(imp_obj)
+        >>> ntwk_obj = NetworkProcessor(i_path, o_dir)
+        >>> metrics_obj = GraphAnalyzer(ntwk_obj)
         >>> metrics_obj.run_analyzer()
         """
         super(GraphAnalyzer, self).__init__()
         self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp: bool = allow_multiprocessing
-        self.imp: ImageProcessor = imp
+        self.ntwk_p: NetworkProcessor = ntwk_p
         self.plot_figures: list | None = None
         self.output_data: pd.DataFrame | None = None
         self.weighted_output_data: pd.DataFrame | None = None
@@ -80,19 +80,19 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         # 1. Apply image filters and extract graph (only if it has not been executed)
-        if not self.imp.is_graph_extracted:
-            self.imp.add_listener(self.track_img_progress)
-            self.imp.apply_img_filters()  # Apply image filters
-            self.imp.build_graph_network()      # Extract graph from binary image
-            self.imp.remove_listener(self.track_img_progress)
-            self.abort = self.imp.abort
+        if not self.ntwk_p.is_graph_extracted:
+            self.ntwk_p.add_listener(self.track_img_progress)
+            self.ntwk_p.apply_img_filters()  # Apply image filters
+            self.ntwk_p.build_graph_network()      # Extract graph from binary image
+            self.ntwk_p.remove_listener(self.track_img_progress)
+            self.abort = self.ntwk_p.abort
         self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
 
         if self.abort:
             return
 
         # 2. Combine the nx_graphs of images Frames to form a 3D graph
-        sel_images = self.imp.get_selected_images()
+        sel_images = self.ntwk_p.get_selected_images()
         if len(sel_images) <= 0:
             self.update_status([-1, "No images selected! Select at least one image."])
             self.abort = True
@@ -499,7 +499,7 @@ class GraphAnalyzer(ProgressUpdate):
         lst_width = []
         nx_graph = graph_obj.nx_graph
 
-        sel_images = self.imp.get_selected_images()
+        sel_images = self.ntwk_p.get_selected_images()
         px_sizes = np.array([img.configs["pixel_width"]["value"] for img in sel_images])
         rho_dims = np.array([img.configs["resistivity"]["value"] for img in sel_images])
 
@@ -633,7 +633,7 @@ class GraphAnalyzer(ProgressUpdate):
         anc = 0
 
         try:
-            filename, output_location = self.imp.create_filenames()
+            filename, output_location = self.ntwk_p.create_filenames()
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
@@ -657,7 +657,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = self.imp.display_images()
+        figs = self.ntwk_p.display_images()
         for fig in figs:
             out_figs.append(fig)
 
@@ -864,7 +864,7 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gte = graph_obj.configs
         opt_gtc = self.configs
 
-        sel_images = self.imp.get_selected_images()
+        sel_images = self.ntwk_p.get_selected_images()
         if len(sel_images) > 1:
             # Step 1: Collect 2d images & find max dimensions
             max_w, max_h = 0, 0
@@ -969,7 +969,7 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title("Run Info")
 
         # similar to the start of the csv file, this is just getting all the relevant settings to display in the pdf
-        _, filename = os.path.split(self.imp.img_path)
+        _, filename = os.path.split(self.ntwk_p.img_path)
         now = datetime.datetime.now()
 
         run_info = ""
@@ -977,7 +977,7 @@ class GraphAnalyzer(ProgressUpdate):
         run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
         # Image Configs
-        run_info += self.imp.images[0].get_config_info()  # Get configs of first image
+        run_info += self.ntwk_p.images[0].get_config_info()  # Get configs of first image
         run_info += "\n\n"
 
         # Graph Configs

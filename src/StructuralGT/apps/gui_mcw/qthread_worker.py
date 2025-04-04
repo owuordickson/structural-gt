@@ -71,13 +71,13 @@ class WorkerTask (QObject):
         """
         self.inProgressSignal.emit(value, msg)
 
-    def task_apply_img_filters(self, im_obj):
+    def task_apply_img_filters(self, ntwk_p):
         """"""
         try:
-            im_obj.add_listener(self.update_progress)
-            im_obj.apply_img_filters()
-            im_obj.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, im_obj)
+            ntwk_p.add_listener(self.update_progress)
+            ntwk_p.apply_img_filters()
+            ntwk_p.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(True, ntwk_p)
         except Exception as err:
             print(err)
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
