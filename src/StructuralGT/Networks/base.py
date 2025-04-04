@@ -4,7 +4,6 @@
 
 import os
 import time
-import cv2 as cv
 import gsd.hoomd
 import numpy as np
 from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
@@ -12,16 +11,6 @@ from skimage.morphology import (binary_closing, remove_small_objects, skeletoniz
 from . import sknwEdits
 from ..SGT.graph_skeleton import GraphSkeleton
 
-
-def read(name, read_type):
-    """For raising an error when a file does not exist because cv.imread does
-    not do this.
-    """
-    out = cv.imread(name, read_type)
-    if out is None:
-        raise ValueError(name + " does not exist")
-    else:
-        return out
 
 
 def Q_img(name):
@@ -47,30 +36,6 @@ def Q_img(name):
     else:
         return False
 
-
-def connector(point1, point2):
-    """For 2 points on a lattice, this function returns the lattice points
-    which join them
-
-    Args:
-        point1 (list[int]):
-            Coordinates of the first point.
-        point2 (list[int]):
-            Coordinates of the second point.
-
-    Returns:
-        :class:`numpy.ndarray`: Array of lattice points connecting point1
-        and point2
-    """
-    vec = point2 - point1
-    edge = np.array([point1])
-    for i in np.linspace(0, 1):
-        edge = np.append(edge,
-                         np.array([point1 + np.multiply(i, vec)]), axis=0)
-    edge = edge.astype(int)
-    edge = np.unique(edge, axis=0)
-
-    return edge
 
 
 def split(array, splitpoints):
@@ -199,58 +164,6 @@ def isinside(points, crop):
             return True
 
 
-def dim_red(positions):
-    """For lists of positions where all elements along one axis have the same
-    value, this returns the same list of positions but with the redundant
-    dimension(s) removed.
-
-    Args:
-        positions (:class:`numpy.ndarray`):
-            The positions to reduce.
-
-    Returns:
-        :class:`numpy.ndarray`: The reduced positions
-    """
-
-    unique_positions = np.asarray(
-        list(len(np.unique(positions.T[i])) for i in range(len(positions.T)))
-    )
-    redundant = unique_positions == 1
-    positions = positions.T[~redundant].T
-
-    return positions
-
-
-def G_to_gsd(G, gsd_name, box=False):
-    """Remove?"""
-    dim = len(G.vs[0]["o"])
-
-    positions = np.asarray(list(G.vs[i]["o"] for i in range(G.vcount())))
-    for i in range(G.ecount()):
-        positions = np.append(positions, G.es[i]["pts"], axis=0)
-
-    N = len(positions)
-    if dim == 2:
-        positions = np.append([np.zeros(N)], positions.T, axis=0).T
-
-    s = gsd.hoomd.Frame()
-    s.particles.N = N
-    s.particles.types = ["A"]
-    s.particles.typeid = ["0"] * N
-
-    if box:
-        L = list(max(positions.T[i]) for i in (0, 1, 2))
-        s.particles.position, _ = shift(
-            positions, _shift=(L[0] / 2, L[1] / 2, L[2] / 2)
-        )
-        s.configuration.box = [L[0], L[1], L[2], 0, 0, 0]
-    else:
-        s.particles.position, _ = shift(positions)
-
-    with gsd.hoomd.open(name=gsd_name, mode="w") as f:
-        f.append(s)
-
-
 def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
     """Function takes gsd rendering of a skeleton and returns the list of
     nodes and edges, as calculated by sknw.
@@ -293,7 +206,14 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
         positions = shift(positions)[0]
 
     if _2d:
-        positions = dim_red(positions)
+        # positions = dim_red(positions)
+        # For lists of positions where all elements along one axis have the same value, this returns the same list of
+        # positions but with the redundant dimension(s) removed.
+        unique_positions = [len(np.unique(positions.T[i])) for i in range(len(positions.T))]
+        unique_positions = np.asarray(unique_positions)
+        redundant = unique_positions == 1
+        positions = positions.T[~redundant].T
+
         new_pos = np.zeros(positions.T.shape)
         new_pos[0] = positions.T[0]
         new_pos[1] = positions.T[1]
@@ -309,23 +229,13 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
     G = sknwEdits.build_sknw(canvas)
 
     if sub:
-        G = sub_G(G)
-
-    return G
-
-
-def sub_G(G):
-    """Function generates largest connected induced subgraph. Node and edge
-    numbers are reset such that they are consecutive integers, starting
-    from 0."""
-
-    print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
-    components = G.connected_components()
-    G = components.giant()
-    print(f"After removing smaller components, graph has {G.vcount()}  nodes")
-
-    # G_sub  = G.subgraph(max(nx.connected_components(G), key=len).copy())
-    # G = nx.relabel.convert_node_labels_to_integers(G_sub)
+        # G = sub_G(G)
+        # Function generates the largest connected induced subgraph. Node and edge numbers are reset such that they
+        # are consecutive integers, starting from 0.
+        print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
+        components = G.connected_components()
+        G = components.giant()
+        print(f"After removing smaller components, graph has {G.vcount()}  nodes")
 
     return G
 
@@ -336,7 +246,7 @@ def debubble(g, elements):
         raise TypeError
 
     start = time.time()
-    g.gsd_name = g.gsd_dir + "/debubbled_" + os.path.split(g.gsd_name)[1]
+    gsd_name = g.gsd_dir + "/debubbled_" + os.path.split(g.gsd_name)[1]
 
     canvas = g.img_bin
     for elem in elements:
@@ -344,21 +254,14 @@ def debubble(g, elements):
         canvas = binary_closing(canvas, footprint=elem)
 
     g._skeleton = skeletonize(canvas) / 255
-
+    g._skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
         g._skeleton_3d = np.asarray([g._skeleton])
-    else:
-        g._skeleton_3d = np.asarray(g._skeleton)
 
-    positions = np.asarray(np.where(g._skeleton_3d != 0)).T
-    with gsd.hoomd.open(name=g.gsd_name, mode="w") as f:
-        s = gsd.hoomd.Frame()
-        s.particles.N = int(sum(g._skeleton_3d.ravel()))
-        s.particles.position = positions
-        s.particles.types = ["A"]
-        s.particles.typeid = ["0"] * s.particles.N
-        f.append(s)
+    pos_count = int(sum(g._skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran debubble in {end - start} for an image with shape \
@@ -371,28 +274,21 @@ def debubble(g, elements):
 # Currently works for 2D only (Is just a reproduction of Drew's method)
 def merge_nodes(g, disk_size):
     start = time.time()
-    g.gsd_name = g.gsd_dir + "/merged_" + os.path.split(g.gsd_name)[1]
+    gsd_name = g.gsd_dir + "/merged_" + os.path.split(g.gsd_name)[1]
 
     canvas = g._skeleton
     # g._skeleton = skel_ID.merge_nodes(canvas, disk_size)
     GraphSkeleton.temp_skeleton = canvas.copy()
     GraphSkeleton.merge_nodes()
     g._skeleton = GraphSkeleton.temp_skeleton
-
+    g._skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
         g._skeleton_3d = np.asarray([g._skeleton])
-    else:
-        g._skeleton_3d = np.asarray(g._skeleton)
 
-    positions = np.asarray(np.where(g._skeleton_3d != 0)).T
-    with gsd.hoomd.open(name=g.gsd_name, mode="w") as f:
-        s = gsd.hoomd.Frame()
-        s.particles.N = int(sum(g._skeleton_3d.ravel()))
-        s.particles.position = positions
-        s.particles.types = ["A"]
-        s.particles.typeid = ["0"] * s.particles.N
-        f.append(s)
+    pos_count = int(sum(g._skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran merge in {end - start} for an image with shape \
@@ -404,7 +300,7 @@ def merge_nodes(g, disk_size):
 
 def prune(g, size):
     start = time.time()
-    g.gsd_name = g.gsd_dir + "/pruned_" + os.path.split(g.gsd_name)[1]
+    gsd_name = g.gsd_dir + "/pruned_" + os.path.split(g.gsd_name)[1]
 
     canvas = g._skeleton
     # g._skeleton = skel_ID.pruning(canvas, size)
@@ -412,21 +308,14 @@ def prune(g, size):
     b_points = GraphSkeleton.get_branched_points()
     GraphSkeleton.prune_edges(size, b_points)
     g._skeleton = GraphSkeleton.temp_skeleton
-
+    g._skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
         g._skeleton_3d = np.asarray([g._skeleton])
-    else:
-        g._skeleton_3d = np.asarray(g._skeleton)
 
-    positions = np.asarray(np.where(g._skeleton_3d != 0)).T
-    with gsd.hoomd.open(name=g.gsd_name, mode="w") as f:
-        s = gsd.hoomd.Frame()
-        s.particles.N = int(sum(g._skeleton_3d.ravel()))
-        s.particles.position = positions
-        s.particles.types = ["A"]
-        s.particles.typeid = ["0"] * s.particles.N
-        f.append(s)
+    pos_count = int(sum(g._skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran prune in {end - start} for an image with shape \
@@ -438,25 +327,18 @@ def prune(g, size):
 
 def remove_objects(g, size):
     start = time.time()
-    g.gsd_name = g.gsd_dir + "/cleaned_" + os.path.split(g.gsd_name)[1]
+    gsd_name = g.gsd_dir + "/cleaned_" + os.path.split(g.gsd_name)[1]
 
     canvas = g._skeleton
     g._skeleton = remove_small_objects(canvas, size, connectivity=2)
-
+    g._skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
         g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
         g._skeleton_3d = np.asarray([g._skeleton])
-    else:
-        g._skeleton_3d = np.asarray(g._skeleton)
 
-    positions = np.asarray(np.where(g._skeleton_3d != 0)).T
-    with gsd.hoomd.open(name=g.gsd_name, mode="w") as f:
-        s = gsd.hoomd.Frame()
-        s.particles.N = int(sum(g._skeleton_3d.ravel()))
-        s.particles.position = positions
-        s.particles.types = ["A"]
-        s.particles.typeid = ["0"] * s.particles.N
-        f.append(s)
+    pos_count = int(sum(g._skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran remove objects in {end - start} for an image with shape \
@@ -464,6 +346,18 @@ def remove_objects(g, size):
     )
 
     return g
+
+
+def write_to_gsd(f_name: str, particle_num: int, particle_pos: np.ndarray):
+    """A function that writes graph particles to a GSD file. Visualize with OVITO software."""
+
+    with gsd.hoomd.open(name=f_name, mode="w") as f:
+        s = gsd.hoomd.Frame()
+        s.particles.N = particle_num
+        s.particles.position = particle_pos
+        s.particles.types = ["A"]
+        s.particles.typeid = ["0"] * s.particles.N
+        f.append(s)
 
 
 def add_weights(g, weight_type=None, R_j=0, rho_dim=1):
@@ -485,25 +379,3 @@ def add_weights(g, weight_type=None, R_j=0, rho_dim=1):
 
     return g.Gr
 
-
-def quadrupletise(i):
-    if len(str(i)) == 4:
-        return str(i)
-    elif len(str(i)) == 3:
-        return "0" + str(i)
-    elif len(str(i)) == 2:
-        return "00" + str(i)
-    elif len(str(i)) == 1:
-        return "000" + str(i)
-    else:
-        raise ValueError
-
-
-# 1-2-3 and 3-2-1 not double counted
-# but 1-2-3 and 1-3-2 are double counted
-def loops(Gr, n):
-    A = np.array(Gr.get_adjacency().data, dtype=np.single)
-    for _ in range(n):
-        A = np.power(A, A)
-
-    return np.trace(A) / 2
