@@ -1,7 +1,10 @@
+
 import os
 import io
 import csv
 import base64
+import gsd.hoomd
+import numpy as np
 import multiprocessing as mp
 from typing import LiteralString
 from PIL import Image
@@ -82,6 +85,21 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
             except csv.Error:
                 pass
     csvfile.close()
+
+
+def write_gsd_file(f_name: str, particle_num: int, particle_pos: np.ndarray):
+    """
+    A function that writes graph particles to a GSD file. Visualize with OVITO software.
+
+    """
+
+    with gsd.hoomd.open(name=f_name, mode="w") as f:
+        s = gsd.hoomd.Frame()
+        s.particles.N = particle_num
+        s.particles.position = particle_pos
+        s.particles.types = ["A"]
+        s.particles.typeid = ["0"] * s.particles.N
+        f.append(s)
 
 
 def get_cv_base64(img_cv):

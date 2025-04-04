@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from .graph_extractor import GraphExtractor
 from .progress_update import ProgressUpdate
 from .image_base import ImageBase
+from .sgt_utils import write_gsd_file
 
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
@@ -53,6 +54,7 @@ class NetworkProcessor(ProgressUpdate):
         super(NetworkProcessor, self).__init__()
         self.img_path: str = img_path
         self.output_dir: str = out_dir
+        self.is_2d: bool = True
         self.auto_scale: bool = auto_scale
         img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props: list = []
@@ -62,6 +64,7 @@ class NetworkProcessor(ProgressUpdate):
         self.is_graph_extracted: bool = False
         self._initialize_members(img_raw)
 
+    # MAKE SURE ALL IMAGES ARE THE SAME SIZE
     def _load_img_from_file(self, file: str):
         """
         Read image and save it as an OpenCV object.
@@ -183,10 +186,12 @@ class NetworkProcessor(ProgressUpdate):
         self.graph_obj = GraphExtractor()
         if type(img_data) is list:
             self.images = [ImageBase(img, self.scale_factor) for img in img_data]
+            self.is_2d = False
             logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
         else:
             img_obj = ImageBase(img_data, self.scale_factor)
             self.images.append(img_obj)
+            self.is_2d = True
             if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             else:
@@ -261,6 +266,8 @@ class NetworkProcessor(ProgressUpdate):
         try:
             # sel_images = self.get_selected_images()
             # img_bin = [img.img_bin for img in sel_images]
+            # MAKE SURE ALL IMAGES ARE THE SAME SIZE
+            # img_bin = np.asarray(img_bin)
 
             self.graph_obj.abort = False
             self.graph_obj.add_listener(self.track_graph_progress)
@@ -272,6 +279,13 @@ class NetworkProcessor(ProgressUpdate):
             self.is_graph_extracted = not self.abort
             if self.abort:
                 return
+            else:  # TO BE DELETED
+                pos_count = int(sum(self.graph_obj.skel_obj.skeleton.ravel()))
+                pos_arr = np.asarray(np.where(self.graph_obj.skel_obj.skeleton != 0)).T
+                out_dir, f_name = self.create_filenames()
+                gsd_name = out_dir + "/cleaned_" + f_name
+                write_gsd_file(gsd_name, pos_count, pos_arr)
+                print(f"Cleaned skeleton for an image with shape {self.graph_obj.skel_obj.skeleton.shape}")
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")

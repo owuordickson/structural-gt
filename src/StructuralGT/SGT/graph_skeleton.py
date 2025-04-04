@@ -8,8 +8,10 @@ import numpy as np
 import math
 from scipy import ndimage
 from cv2.typing import MatLike
-from skimage.morphology import binary_dilation as dilate
+from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
+
+from src.StructuralGT.SGT.sgt_utils import write_gsd_file
 
 
 class GraphSkeleton:
@@ -17,7 +19,11 @@ class GraphSkeleton:
 
     temp_skeleton = None
 
-    def __init__(self, img_bin: MatLike, configs: dict = None):
+    # TO DELETE
+    g_2d = True
+    gsd_name = ""
+
+    def __init__(self, img_bin: MatLike, configs: dict = None, is_2d: bool = True):
         """
         A class that builds a skeleton graph from an image.
         The skeleton will be 3D so that it can be analyzed with OVITO
@@ -39,6 +45,7 @@ class GraphSkeleton:
         """
         self.img_bin = img_bin
         self.configs = configs
+        self.is_2d = is_2d
         self.skeleton = None        # will always be a 3D skeleton
         self.skel_int = None
         self.bp_coord_x = None
@@ -78,8 +85,9 @@ class GraphSkeleton:
 
         self.bp_coord_y, self.bp_coord_x = np.where(b_points == 1)
         self.ep_coord_y, self.ep_coord_x = np.where(e_points == 1)
-        self.skeleton = GraphSkeleton.temp_skeleton
-        self.skel_int = 1 * GraphSkeleton.temp_skeleton
+        clean_skel = GraphSkeleton.temp_skeleton
+        self.skel_int = 1 * clean_skel
+        self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
@@ -328,6 +336,16 @@ class GraphSkeleton:
             end_points = np.logical_not(end_points)
             cls.temp_skeleton = np.logical_and(cls.temp_skeleton, end_points)
 
+        # TO BE DELETED
+        skeleton_3d = np.asarray(cls.temp_skeleton)
+        if cls.g_2d:
+            skeleton_3d = np.asarray([cls.temp_skeleton])
+        pos_count = int(sum(skeleton_3d.ravel()))
+        pos_arr = np.asarray(np.where(skeleton_3d != 0)).T
+        write_gsd_file(cls.gsd_name, pos_count, pos_arr)
+        print(f"Ran prune for an image with shape {skeleton_3d.shape}")
+        return skeleton_3d
+
     @classmethod
     def merge_nodes(cls):
         """Merge nearby nodes in the graph skeleton."""
@@ -353,6 +371,39 @@ class GraphSkeleton:
 
         # re-skeletonizing wide-nodes and returning it, nearby nodes in radius 2 of each other should have been merged
         cls.temp_skeleton = skeletonize(wide_nodes)
+
+        # TO BE DELETED
+        skeleton_3d = np.asarray(cls.temp_skeleton)
+        if cls.g_2d:
+            skeleton_3d = np.asarray([cls.temp_skeleton])
+        pos_count = int(sum(skeleton_3d.ravel()))
+        pos_arr = np.asarray(np.where(skeleton_3d != 0)).T
+        write_gsd_file(cls.gsd_name, pos_count, pos_arr)
+        print(f"Ran merge for an image with shape {skeleton_3d.shape}")
+        return skeleton_3d
+
+    @classmethod
+    def remove_bubbles(cls, img_bin, mask_elements: list):
+        """Remove bubbles from graph skeleton."""
+        if not isinstance(mask_elements, list):
+            return
+
+        canvas = img_bin.copy()
+        for mask_elem in mask_elements:
+            canvas = skeletonize(mask_elem)
+            canvas = binary_closing(canvas, footprint=mask_elem)
+
+        cls.temp_skeleton = skeletonize(canvas)
+
+        # TO BE DELETED
+        skeleton_3d = np.asarray(cls.temp_skeleton)
+        if cls.g_2d:
+            skeleton_3d = np.asarray([cls.temp_skeleton])
+        pos_count = int(sum(skeleton_3d.ravel()))
+        pos_arr = np.asarray(np.where(skeleton_3d != 0)).T
+        write_gsd_file(cls.gsd_name, pos_count, pos_arr)
+        print(f"Ran de-bubble for an image with shape {skeleton_3d.shape}")
+        return skeleton_3d
 
     @staticmethod
     def find_orthogonal(u, v):
