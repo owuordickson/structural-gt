@@ -310,7 +310,7 @@ def prune(g, size):
     g._skeleton = GraphSkeleton.temp_skeleton
     g._skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
-        g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
+        # g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
         g._skeleton_3d = np.asarray([g._skeleton])
 
     pos_count = int(sum(g._skeleton_3d.ravel()))

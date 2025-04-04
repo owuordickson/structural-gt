@@ -65,7 +65,8 @@ class GraphSkeleton:
             GraphSkeleton.merge_nodes()
 
         if self.configs["remove_disconnected_segments"]["value"] == 1:
-            GraphSkeleton.temp_skeleton = remove_small_objects(GraphSkeleton.temp_skeleton, min_size=int(self.configs["remove_disconnected_segments"]["items"][0]["value"]), connectivity=2)
+            min_size = int(self.configs["remove_disconnected_segments"]["items"][0]["value"])
+            GraphSkeleton.temp_skeleton = remove_small_objects(GraphSkeleton.temp_skeleton, min_size=min_size, connectivity=2)
 
         if self.configs["prune_dangling_edges"]["value"] == 1:
             b_points = GraphSkeleton.get_branched_points()
