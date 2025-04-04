@@ -57,7 +57,7 @@ class ImageProcessor(ProgressUpdate):
         self.props: list = []
         self.images: list[ImageBase] = []
         self.selected_images: set = set()
-        self.is_graph_extracted: bool = False
+        # self.is_graph_extracted: bool = False
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
@@ -207,10 +207,8 @@ class ImageProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
-        self.is_graph_extracted = False
         for img_obj in self.images:
             img_obj.img_mod, img_obj.img_bin = None, None
-            img_obj.graph_obj.reset_graph()
 
     def apply_img_filters(self, filter_type=2):
         """
@@ -249,30 +247,8 @@ class ImageProcessor(ProgressUpdate):
             img_obj.get_pixel_width()
 
         self.update_status([100, "Image processing complete..."])
-
-    def create_graphs(self):
-        """Generates or extracts graphs of selected images."""
-
-        self.update_status([0, "Starting graph extraction..."])
-        for i in self.selected_images:
-            img_obj = self.images[i]
-            try:
-                self.update_status([10, f"Processing Image {i + 1}/{len(self.selected_images)} "])
-                img_obj.graph_obj.abort = False
-                img_obj.graph_obj.add_listener(self.track_graph_progress)
-                px_size = float(img_obj.configs["pixel_width"]["value"])
-                rho_val = float(img_obj.configs["resistivity"]["value"])
-                img_obj.graph_obj.fit_graph(img_obj.img_bin, img_obj.img_2d, px_size, rho_val)
-                img_obj.graph_obj.remove_listener(self.track_graph_progress)
-                self.abort = img_obj.graph_obj.abort
-                self.is_graph_extracted = not self.abort
-                if self.abort:
-                    return
-            except Exception as err:
-                self.abort = True
-                logging.info(f"Error creating graph for image in Frame {i}.")
-                logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-                return
+        # px_size = float(img_obj.configs["pixel_width"]["value"])
+        # rho_val = float(img_obj.configs["resistivity"]["value"])
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -461,10 +437,10 @@ class ImageProcessor(ProgressUpdate):
             filename += f"_Frame{i}" if is_3d else ''
             pr_filename = filename + "_processed.jpg"
             bin_filename = filename + "_binary.jpg"
-            net_filename = filename + "_graph.jpg"
+            # ntwk_filename = filename + "_graph.jpg"
             img_file = os.path.join(out_dir, pr_filename)
             bin_file = os.path.join(out_dir, bin_filename)
-            net_file = os.path.join(out_dir, net_filename)
+            # ntwk_file = os.path.join(out_dir, net_filename)
 
             if img.img_mod is not None:
                 cv2.imwrite(str(img_file), img.img_mod)
@@ -472,13 +448,13 @@ class ImageProcessor(ProgressUpdate):
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
 
-            if img.graph_obj.img_net is not None:
+            """if img.graph_obj.img_net is not None:
                 graph_img = img.graph_obj.img_net.copy()
                 if graph_img.mode == "JPEG":
-                    graph_img.save(net_file, format='JPEG', quality=95)
+                    graph_img.save(ntwk_file, format='JPEG', quality=95)
                 elif graph_img.mode in ["RGBA", "P"]:
                     img_net = graph_img.convert("RGB")
-                    img_net.save(net_file, format='JPEG', quality=95)
+                    img_net.save(ntwk_file, format='JPEG', quality=95)"""
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):

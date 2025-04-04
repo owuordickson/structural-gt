@@ -94,7 +94,7 @@ class WorkerTask (QObject):
             imp.abort = False
             imp.add_listener(self.update_progress)
             imp.apply_img_filters()
-            imp.create_graphs()
+            # imp.create_graphs()
             self.is_aborted(imp)
             imp.remove_listener(self.update_progress)
             self.taskFinishedSignal.emit(True, imp)

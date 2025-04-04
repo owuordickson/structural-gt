@@ -10,7 +10,6 @@ from cv2.typing import MatLike
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
-from .graph_extractor import GraphExtractor
 from ..configs.config_loader import load_img_configs
 
 
@@ -37,7 +36,6 @@ class ImageBase:
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
-        self.graph_obj: GraphExtractor | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
         self.init_image()
@@ -54,7 +52,6 @@ class ImageBase:
 
         self.has_alpha_channel, _ = ImageBase.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
-        self.graph_obj = GraphExtractor()
 
     def get_pixel_width(self):
         """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""

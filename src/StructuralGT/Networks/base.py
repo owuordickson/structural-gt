@@ -254,18 +254,18 @@ def debubble(g, elements):
         canvas = binary_closing(canvas, footprint=elem)
 
     g._skeleton = skeletonize(canvas) / 255
-    g._skeleton_3d = np.asarray(g._skeleton)
+    g.skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
-        g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
-        g._skeleton_3d = np.asarray([g._skeleton])
+        # g.skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
+        g.skeleton_3d = np.asarray([g._skeleton])
 
-    pos_count = int(sum(g._skeleton_3d.ravel()))
-    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    pos_count = int(sum(g.skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g.skeleton_3d != 0)).T
     write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran debubble in {end - start} for an image with shape \
-        {g._skeleton_3d.shape}"
+        {g.skeleton_3d.shape}"
     )
 
     return g
@@ -281,18 +281,18 @@ def merge_nodes(g, disk_size):
     GraphSkeleton.temp_skeleton = canvas.copy()
     GraphSkeleton.merge_nodes()
     g._skeleton = GraphSkeleton.temp_skeleton
-    g._skeleton_3d = np.asarray(g._skeleton)
+    g.skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
-        g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
-        g._skeleton_3d = np.asarray([g._skeleton])
+        # g.skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
+        g.skeleton_3d = np.asarray([g._skeleton])
 
-    pos_count = int(sum(g._skeleton_3d.ravel()))
-    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    pos_count = int(sum(g.skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g.skeleton_3d != 0)).T
     write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran merge in {end - start} for an image with shape \
-        {g._skeleton_3d.shape}"
+        {g.skeleton_3d.shape}"
     )
 
     return g
@@ -308,18 +308,18 @@ def prune(g, size):
     b_points = GraphSkeleton.get_branched_points()
     GraphSkeleton.prune_edges(size, b_points)
     g._skeleton = GraphSkeleton.temp_skeleton
-    g._skeleton_3d = np.asarray(g._skeleton)
+    g.skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
-        # g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
-        g._skeleton_3d = np.asarray([g._skeleton])
+        # g.skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
+        g.skeleton_3d = np.asarray([g._skeleton])
 
-    pos_count = int(sum(g._skeleton_3d.ravel()))
-    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    pos_count = int(sum(g.skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g.skeleton_3d != 0)).T
     write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran prune in {end - start} for an image with shape \
-        {g._skeleton_3d.shape}"
+        {g.skeleton_3d.shape}"
     )
 
     return g
@@ -331,18 +331,18 @@ def remove_objects(g, size):
 
     canvas = g._skeleton
     g._skeleton = remove_small_objects(canvas, size, connectivity=2)
-    g._skeleton_3d = np.asarray(g._skeleton)
+    g.skeleton_3d = np.asarray(g._skeleton)
     if g._2d:
-        g._skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
-        g._skeleton_3d = np.asarray([g._skeleton])
+        # g.skeleton_3d = np.swapaxes(np.array([g._skeleton]), 2, 1)
+        g.skeleton_3d = np.asarray([g._skeleton])
 
-    pos_count = int(sum(g._skeleton_3d.ravel()))
-    pos_arr = np.asarray(np.where(g._skeleton_3d != 0)).T
+    pos_count = int(sum(g.skeleton_3d.ravel()))
+    pos_arr = np.asarray(np.where(g.skeleton_3d != 0)).T
     write_to_gsd(gsd_name, pos_count, pos_arr)
     end = time.time()
     print(
         f"Ran remove objects in {end - start} for an image with shape \
-        {g._skeleton_3d.shape}"
+        {g.skeleton_3d.shape}"
     )
 
     return g
