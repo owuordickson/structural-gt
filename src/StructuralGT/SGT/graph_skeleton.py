@@ -20,6 +20,7 @@ class GraphSkeleton:
     def __init__(self, img_bin: MatLike, configs: dict = None):
         """
         A class that builds a skeleton graph from an image.
+        The skeleton will be 3D so that it can be analyzed with OVITO
 
         :param img_bin: OpenCV image in binary format.
         :param configs: options and parameters.
@@ -38,7 +39,7 @@ class GraphSkeleton:
         """
         self.img_bin = img_bin
         self.configs = configs
-        self.skeleton = None
+        self.skeleton = None        # will always be a 3D skeleton
         self.skel_int = None
         self.bp_coord_x = None
         self.bp_coord_y = None

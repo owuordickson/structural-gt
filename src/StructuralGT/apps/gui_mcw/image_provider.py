@@ -31,12 +31,12 @@ class ImageProvider(QQuickImageProvider):
                 sel_images = self.img_controller.get_selected_images()
                 for img in sel_images:
                     # If any is None, start task
-                    if img.graph_obj.img_net is None:
+                    if img.graph_obj.img_ntwk is None:
                         self.img_controller.run_extract_graph()
                         # Wait for task to finish
                         return
                 else:
-                    net_images = [obj.graph_obj.img_net for obj in im_obj.images]
+                    net_images = [obj.graph_obj.img_ntwk for obj in im_obj.images]
                     self.img_controller.img3dGridModel.reset_data(net_images)
                     img = net_images[0]
             else:

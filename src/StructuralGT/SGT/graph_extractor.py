@@ -68,9 +68,9 @@ class GraphExtractor(ProgressUpdate):
         super(GraphExtractor, self).__init__()
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
-        self.img_net: ImageFile | None = None
+        self.img_ntwk: ImageFile | None = None
         self.nx_graph = None
-        self.graph_skeleton: GraphSkeleton | None = None
+        self.skel_obj: GraphSkeleton | None = None
         self.nx_components = []
 
     def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
@@ -108,7 +108,7 @@ class GraphExtractor(ProgressUpdate):
         self.update_status([90, "Drawing graph network..."])
         graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
-            self.img_net = GraphExtractor.plot_to_img(graph_plt)
+            self.img_ntwk = GraphExtractor.plot_to_img(graph_plt)
 
     def reset_graph(self):
         """
@@ -116,7 +116,7 @@ class GraphExtractor(ProgressUpdate):
         :return:
         """
         self.nx_graph = None
-        self.img_net = None
+        self.img_ntwk = None
 
     def extract_graph(self, image_bin: MatLike = None, px_size: float = 1.0, rho_val: float = 1.0):
         """
@@ -137,7 +137,7 @@ class GraphExtractor(ProgressUpdate):
 
         graph_skel = GraphSkeleton(image_bin, opt_gte)
         img_skel = graph_skel.skeleton
-        self.graph_skeleton = graph_skel
+        self.skel_obj = graph_skel
 
         self.update_status([60, "Creating graph network..."])
         # skeleton analysis object with sknw
@@ -286,7 +286,7 @@ class GraphExtractor(ProgressUpdate):
 
         opt_gte = self.configs
         nx_graph = self.nx_graph
-        g_skel = self.graph_skeleton
+        g_skel = self.skel_obj
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
         ax_1 = fig.add_subplot(2, 1, 1)

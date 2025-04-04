@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GNU GPL v3
 
 """
-Processes 2D or 3D images.
+Processes 2D or 3D images and generate a fiber graph network.
 """
 
 import re
@@ -15,6 +15,7 @@ import nibabel as nib
 from PIL import Image
 import matplotlib.pyplot as plt
 
+from .graph_extractor import GraphExtractor
 from .progress_update import ProgressUpdate
 from .image_base import ImageBase
 
@@ -27,7 +28,7 @@ ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qpti
 
 class ImageProcessor(ProgressUpdate):
     """
-    A class for processing and preparing 2D or 3D microscopy images for graph theory analysis.
+    A class for processing and preparing 2D or 3D microscopy images for building a fiber graph network.
 
     Args:
         img_path (str): input image path.
@@ -36,7 +37,7 @@ class ImageProcessor(ProgressUpdate):
 
     def __init__(self, img_path, out_dir, auto_scale=True):
         """
-        A class for processing and preparing microscopy images for graph theory analysis.
+        A class for processing and preparing microscopy images for building a fiber graph network.
 
         Args:
             img_path (str): input image path.
@@ -56,8 +57,9 @@ class ImageProcessor(ProgressUpdate):
         img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props: list = []
         self.images: list[ImageBase] = []
+        self.graph_obj: GraphExtractor | None = None
         self.selected_images: set = set()
-        # self.is_graph_extracted: bool = False
+        self.is_graph_extracted: bool = False
         self._initialize_members(img_raw)
 
     def _load_img_from_file(self, file: str):
@@ -178,6 +180,7 @@ class ImageProcessor(ProgressUpdate):
         if img_data is None:
             return
 
+        self.graph_obj = GraphExtractor()
         if type(img_data) is list:
             self.images = [ImageBase(img, self.scale_factor) for img in img_data]
             logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
@@ -207,8 +210,10 @@ class ImageProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
+        self.is_graph_extracted = False
         for img_obj in self.images:
             img_obj.img_mod, img_obj.img_bin = None, None
+            self.graph_obj.reset_graph()
 
     def apply_img_filters(self, filter_type=2):
         """
@@ -247,8 +252,31 @@ class ImageProcessor(ProgressUpdate):
             img_obj.get_pixel_width()
 
         self.update_status([100, "Image processing complete..."])
-        # px_size = float(img_obj.configs["pixel_width"]["value"])
-        # rho_val = float(img_obj.configs["resistivity"]["value"])
+
+    def build_graph_network(self):
+        """Generates or extracts graphs of selected images."""
+
+        self.update_status([0, "Starting graph extraction..."])
+
+        try:
+            # sel_images = self.get_selected_images()
+            # img_bin = [img.img_bin for img in sel_images]
+
+            self.graph_obj.abort = False
+            self.graph_obj.add_listener(self.track_graph_progress)
+            # px_size = float(img_obj.configs["pixel_width"]["value"])
+            # rho_val = float(img_obj.configs["resistivity"]["value"])
+            # self.graph_obj.fit_graph(img_bin, img_obj.img_2d, px_size, rho_val)
+            self.graph_obj.remove_listener(self.track_graph_progress)
+            self.abort = self.graph_obj.abort
+            self.is_graph_extracted = not self.abort
+            if self.abort:
+                return
+        except Exception as err:
+            self.abort = True
+            logging.info(f"Error creating graph from image binary.")
+            logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
+            return
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -374,7 +402,7 @@ class ImageProcessor(ProgressUpdate):
         """
 
         figs = []
-        sel_images = [self.images[i] for i in self.selected_images]
+        sel_images = self.get_selected_images()
         is_3d = True if len(sel_images) > 1 else False
 
         for i, img in enumerate(sel_images):
@@ -424,7 +452,7 @@ class ImageProcessor(ProgressUpdate):
         Write images to file.
         """
 
-        sel_images = [self.images[i] for i in self.selected_images]
+        sel_images = self.get_selected_images()
         is_3d = True if len(sel_images) > 1 else False
 
         for i, img in enumerate(sel_images):
