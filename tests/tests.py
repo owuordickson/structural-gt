@@ -18,10 +18,14 @@ from src.StructuralGT.Networks.structural import Degree
 # 2. GRAPH EXTRACTION
 GaussianBlur = {"Thresh_method": 0, "gamma": 1.001, "md_filter": 0, "g_blur": 1, "autolvl": 0, "fg_color": 0, "laplacian": 0, "scharr": 0, "sobel": 0,"lowpass": 0, "asize": 3, "bsize": 11, "wsize": 1, "thresh": 128.0}
 Nanowires = FiberNetwork('../datasets/Nanowires', binarized_dir='GaussianBlur')
+
+# 2a. Image Processing
 # Nanowires.img_to_skel(img_options=GaussianBlur, merge_nodes=True, prune=500, remove_objects=500)
 Nanowires.img_to_skel(img_options=GaussianBlur)
 plt.imshow(Nanowires.skeleton, cmap='gray')
+# plt.show()
 
+# 2b. Build graph
 Nanowires.set_graph()
 A = Nanowires.graph.get_adjacency()
 Nanowires.graph_plot()
