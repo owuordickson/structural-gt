@@ -155,7 +155,7 @@ class FiberNetwork:
         # 3d for 3d images, 2d otherwise
         self._img_bin = np.squeeze(img_bin)
 
-    def set_graph(self, sub=True, weight_type=None, write="network.gsd", **kwargs):
+    def set_graph(self, sub=True, weight_type=None, **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
         skeleton file written by :meth:`img_to_skel`.
 
@@ -178,7 +178,7 @@ class FiberNetwork:
         G = base.gsd_to_G(self.gsd_name, _2d=self._2d, sub=sub)
 
         self.Gr = G
-        self.write_name = write
+        # self.write_name = write
 
         if self.rotate is not None:
             centre = np.asarray(self.shape) / 2
@@ -262,9 +262,6 @@ class FiberNetwork:
             max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
             for j in (0, 1, 2)[0: self.dim]
         )
-
-        if write:
-            self.node_labelling([], [], write)
 
     def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
@@ -420,142 +417,6 @@ class FiberNetwork:
             self.crop = np.asarray(crop) - min(crop)
         else:
             self.rotate = None
-
-    def node_labelling(self, attributes, labels, filename, edge_weight=None, mode="w"):
-        """Method saves a new :code:`.gsd` which labels the :attr:`graph`
-        attribute with the given node attribute values. Method saves the
-        :attr:`graph`  attribute in the :code:`.gsd` file in the form of a
-        sparse adjacency matrix (therefore edge/node attributes are not saved).
-
-        Args:
-            attribute (:class:`numpy.ndarray`):
-                An array of attribute values in ascending order of node id.
-            label (str):
-                The label to give the attribute in the file.
-            filename (str):
-                The file name to write.
-            edge_weight (optional, :class:`numpy.ndarray`):
-                Any edge weights to store in the adjacency matrix.
-            mode (optional, str):
-                The writing mode. See  for details.
-        """
-        if isinstance(self.Gr, list):
-            self.Gr = self.Gr[0]
-
-        if not isinstance(labels, list):
-            labels = [
-                labels,
-            ]
-            attributes = [
-                attributes,
-            ]
-
-        if filename[0] == "/":
-            save_name = filename
-        else:
-            save_name = self.stack_dir + "/" + filename
-        if mode == "r+" and os.path.exists(save_name):
-            _mode = "r+"
-        else:
-            _mode = "w"
-
-        f = gsd.hoomd.open(name=save_name, mode=_mode)
-        self.labelled_name = save_name
-
-        centroid_positions = np.empty((0, self.dim))
-        node_positions = np.empty((0, self.dim))
-        edge_positions = np.empty((0, self.dim))
-        for i in range(len(self.Gr.vs())):
-            node_positions = np.vstack((node_positions,
-                                        self.Gr.vs()[i]["pts"]))
-            centroid_positions = np.vstack((centroid_positions,
-                                            self.Gr.vs()[i]["o"]))
-        for i in range(len(self.Gr.es())):
-            edge_positions = np.vstack((edge_positions,
-                                        self.Gr.es()[i]["pts"]))
-
-        if self._2d:
-            node_positions = np.hstack(
-                (np.zeros((len(node_positions), 1)), node_positions)
-            )
-            edge_positions = np.hstack(
-                (np.zeros((len(edge_positions), 1)), edge_positions)
-            )
-            centroid_positions = np.hstack(
-                (np.zeros((len(centroid_positions), 1)), centroid_positions)
-            )
-
-        positions = np.vstack((edge_positions,
-                               node_positions,
-                               centroid_positions))
-
-        self.positions = positions
-
-        L = list(max(positions.T[i]) * 2 for i in (0, 1, 2))
-        node_positions = base.shift(
-            node_positions, _shift=(L[0] / 4, L[1] / 4, L[2] / 4)
-        )[0]
-        edge_positions = base.shift(
-            edge_positions, _shift=(L[0] / 4, L[1] / 4, L[2] / 4)
-        )[0]
-        centroid_positions = base.shift(
-            centroid_positions, _shift=(L[0] / 4, L[1] / 4, L[2] / 4)
-        )[0]
-        positions = base.shift(positions,
-                               _shift=(L[0] / 4, L[1] / 4, L[2] / 4))[0]
-
-        s = gsd.hoomd.Frame()
-        N = len(positions)
-        s.particles.N = N
-        s.particles.position = positions
-        s.particles.types = ["Edge", "Node", "Centroid"]
-        # s.particles.typeid = [0] * N
-        s.particles.typeid = np.array(
-            [
-                0,
-            ]
-            * len(edge_positions)
-            + [
-                1,
-            ]
-            * len(node_positions)
-            + [
-                2,
-            ]
-            * len(centroid_positions)
-        )
-        s.configuration.box = [L[0] / 2, L[1] / 2, L[2] / 2, 0, 0, 0]
-        for label in labels:
-            s.log["particles/" + label] = [np.NaN] * N
-
-        # Store adjacency matrix in CSR format
-        matrix = self.Gr.get_adjacency_sparse(attribute=edge_weight)
-        rows, columns = matrix.nonzero()
-        values = matrix.data
-
-        s.log["Adj_rows"] = rows
-        s.log["Adj_cols"] = columns
-        s.log["Adj_values"] = values
-        s.log["Edge_lens"] = list(map(lambda edge: len(edge),
-                                      self.Gr.es["pts"]))
-        s.log["Node_lens"] = list(map(lambda node: len(node),
-                                      self.Gr.vs["pts"]))
-
-        for i in range(len(centroid_positions)):
-            for attribute, label in zip(attributes, labels):
-                s.log["particles/" + label][
-                    len(node_positions) + len(edge_positions) + i
-                ] = attribute[i]
-
-        f.append(s)
-
-        _dict = {}
-        for attr in ("stack_dir", "_2d", "dim", "cropper"):
-            _dict[attr] = str(getattr(self, attr))
-
-        name = os.path.splitext(os.path.basename(filename))[0]
-        with open(self.stack_dir + "/" + name + ".json", "w") as json_file:
-            json.dump(_dict, json_file)
 
     def node_plot(self, parameter=None, ax=None, depth=0):
         """Superimpose the skeleton, image, and nodal graph theory parameters.
@@ -769,59 +630,6 @@ class FiberNetwork:
     def skeleton(self):
         """:class:`np.ndarray`: The original skeleton."""
         return self._skeleton
-
-    @classmethod
-    def from_gsd(cls, filename, frame=0, depth=None, dim=2):
-        """
-        Alternative constructor for returning a Network object that was
-        previously stored in a `.gsd` and `.json` file. Assumes file is stored
-        in the same directory as *StructuralGT* wrote it to. I.e. assumed name
-        given as `.../dir/Binarized/name.gsd`.
-        """
-
-        assert os.path.exists(filename)
-        _dir = os.path.abspath(filename)
-        _dir = os.path.split(os.path.split(filename)[0])[0]
-        binarized_dir = os.path.split(os.path.split(filename)[0])[-1]
-        N = cls(_dir, depth=depth, dim=dim, binarized_dir=binarized_dir)
-        if dim == 2:
-            N._2d = True
-        else:
-            N._2d = False
-
-        name = os.path.splitext(os.path.basename(filename))[0]
-        _json = N.stack_dir + "/" + name + ".json"
-        with open(_json) as json_file:
-            data = json.load(json_file)
-        N.cropper = _cropper.from_string(N, domain=data["cropper"])
-        N._2d = bool(data["cropper"])
-        N.dim = int(data["dim"])
-
-        f = gsd.hoomd.open(name=filename, mode="r")[frame]
-        rows = f.log["Adj_rows"]
-        cols = f.log["Adj_cols"]
-        values = f.log["Adj_values"]
-        S = scipy.sparse.csr_matrix((values, (rows, cols)))
-        G = ig.Graph()
-        N.Gr = G.Weighted_Adjacency(S, mode="upper")
-
-        first_axis = {2: 1, 3: 0}[N.dim]
-        edge_pos = f.particles.position[f.particles.typeid == 0].T[
-                first_axis:3].T
-        node_pos = f.particles.position[f.particles.typeid == 1].T[
-                first_axis:3].T
-        centroid_pos = f.particles.position[f.particles.typeid == 2].T[
-                first_axis:3].T
-
-        N.Gr.es["pts"] = base.split(
-            base.shift(edge_pos, _2d=N._2d)[0].astype(int), f.log["Edge_lens"]
-        )
-        N.Gr.vs["pts"] = base.split(
-            base.shift(node_pos, _2d=N._2d)[0].astype(int), f.log["Node_lens"]
-        )
-        N.Gr.vs["o"] = base.shift(centroid_pos, _2d=N._2d)[0].astype(int)
-
-        return N
 
     @staticmethod
     def colorbar(mappable, ax, *args, **kwargs):
