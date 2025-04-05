@@ -366,38 +366,35 @@ class FiberNetwork:
         if debubble is not None:
             # self = base.debubble(self, debubble)
             GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.gsd_name = self.gsd_dir + "/merged_" + os.path.split(self.gsd_name)[1]
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
             self.skeleton_3d = GraphSkeleton.remove_bubbles(self.img_bin, debubble)
 
         if merge_nodes is not None:
             # self = base.merge_nodes(self, merge_nodes)
             GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.gsd_name = self.gsd_dir + "/merged_" + os.path.split(self.gsd_name)[1]
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
             self.skeleton_3d = GraphSkeleton.merge_nodes()
 
         if prune is not None:
             # self = base.prune(self, prune)
             GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.gsd_name = self.gsd_dir + "/pruned_" + os.path.split(self.gsd_name)[1]
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
             b_points = GraphSkeleton.get_branched_points()
             self.skeleton_3d = GraphSkeleton.prune_edges(500, b_points)
 
         if remove_objects is not None:
             # self = base.remove_objects(self, remove_objects)
-            gsd_name = self.gsd_dir + "/cleaned_" + os.path.split(self.gsd_name)[1]
             canvas = self._skeleton
             self._skeleton = remove_small_objects(canvas, remove_objects, connectivity=2)
             self.skeleton_3d = np.asarray(self._skeleton)
             if self._2d:
                 self.skeleton_3d = np.asarray([self._skeleton])
-
-            pos_count = int(sum(self.skeleton_3d.ravel()))
-            pos_arr = np.asarray(np.where(self.skeleton_3d != 0)).T
-            write_gsd_file(gsd_name, pos_count, pos_arr)
             print(f"Ran remove objects in for an image with shape {self.skeleton_3d.shape}")
+
+        gsd_file = self.gsd_dir + "/cleaned_" + os.path.split(self.gsd_name)[1]
+        pos_count = int(sum(self.skeleton_3d.ravel()))
+        pos_arr = np.asarray(np.where(self.skeleton_3d != 0)).T
+        write_gsd_file(gsd_file, pos_count, pos_arr)
 
         # Until now, the rotation arguement has not been used; the image and
         # writted .gsds are all unrotated. The final block of this method is
