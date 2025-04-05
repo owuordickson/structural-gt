@@ -793,10 +793,10 @@ class FiberNetwork:
         _json = N.stack_dir + "/" + name + ".json"
         with open(_json) as json_file:
             data = json.load(json_file)
-
         N.cropper = _cropper.from_string(N, domain=data["cropper"])
         N._2d = bool(data["cropper"])
         N.dim = int(data["dim"])
+
         f = gsd.hoomd.open(name=filename, mode="r")[frame]
         rows = f.log["Adj_rows"]
         cols = f.log["Adj_cols"]

@@ -28,8 +28,6 @@ Nanowires.graph_plot()
 
 
 # 3. GRAPH ANALYSIS
-Nanowires = FiberNetwork.from_gsd('../datasets/Nanowires/Original/GaussianBlur/network.gsd')
-
 D = Degree()
 D.compute(Nanowires)
 print(f'Average degree is {D.average_degree}')
