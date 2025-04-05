@@ -257,11 +257,9 @@ class FiberNetwork:
                     edge["pixel width"] = pix_width
                     edge[_type_name] = wt
 
-
         self.shape = list(
             max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
-            for j in (0, 1, 2)[0: self.dim]
-        )
+            for j in (0, 1, 2)[0: self.dim])
 
     def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
@@ -343,26 +341,6 @@ class FiberNetwork:
             self.skeleton_3d = self._img_bin_3d
             self._skeleton = self._img_bin
 
-        positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
-        self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
-        self.positions = positions
-
-        with gsd.hoomd.open(name=self.gsd_name, mode="w") as f:
-            s = gsd.hoomd.Frame()
-            s.particles.N = len(positions)
-            if box:
-                L = list(max(positions.T[i]) for i in (0, 1, 2))
-                s.particles.position, self.shift = base.shift(positions, _shift=(L[0] / 2, L[1] / 2, L[2] / 2))
-                s.configuration.box = [L[0], L[1], L[2], 0, 0, 0]
-            else:
-                s.particles.position, self.shift = base.shift(positions)
-            s.particles.types = ["A"]
-            s.particles.typeid = ["0"] * s.particles.N
-            f.append(s)
-
-        end = time.time()
-        print("Ran img_to_skel() in ", end - start, "for skeleton with ", len(positions), "voxels")
-
         if debubble is not None:
             # self = base.debubble(self, debubble)
             GraphSkeleton.g_2d = self._2d
@@ -391,12 +369,25 @@ class FiberNetwork:
                 self.skeleton_3d = np.asarray([self._skeleton])
             print(f"Ran remove objects in for an image with shape {self.skeleton_3d.shape}")
 
-        gsd_file = self.gsd_dir + "/cleaned_" + os.path.split(self.gsd_name)[1]
-        pos_count = int(sum(self.skeleton_3d.ravel()))
-        pos_arr = np.asarray(np.where(self.skeleton_3d != 0)).T
-        write_gsd_file(gsd_file, pos_count, pos_arr)
+        positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
+        self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
+        self.positions = positions
+        with gsd.hoomd.open(name=self.gsd_name, mode="w") as f:
+            s = gsd.hoomd.Frame()
+            s.particles.N = len(positions)
+            if box:
+                L = list(max(positions.T[i]) for i in (0, 1, 2))
+                s.particles.position, self.shift = base.shift(positions, _shift=(L[0] / 2, L[1] / 2, L[2] / 2))
+                s.configuration.box = [L[0], L[1], L[2], 0, 0, 0]
+            else:
+                s.particles.position, self.shift = base.shift(positions)
+            s.particles.types = ["A"]
+            s.particles.typeid = ["0"] * s.particles.N
+            f.append(s)
+        end = time.time()
+        print("Ran img_to_skel() and cleaned in ", end - start, "for skeleton with ", len(positions), "voxels")
 
-        # Until now, the rotation arguement has not been used; the image and
+        # Until now, the rotation argument has not been used; the image and
         # writted .gsds are all unrotated. The final block of this method is
         # for reassigning the image attribute, as well as setting the rotate
         # attribute for later. Only the img_bin attribute is altered because
@@ -550,7 +541,6 @@ class FiberNetwork:
         Returns:
             (:class:`matplotlib.axes.Axes`): Axis with the plot.
         """
-
         return self.node_plot(ax=ax, depth=depth)
 
     def recon(self, axis, surface, depth):

@@ -32,6 +32,7 @@ Nanowires.graph_plot()
 
 
 # 3. GRAPH ANALYSIS
+# Nanowires = Network.from_gsd('Nanowires/GaussianBlur/network.gsd')
 D = Degree()
 D.compute(Nanowires)
 print(f'Average degree is {D.average_degree}')
