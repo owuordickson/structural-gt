@@ -28,7 +28,7 @@ plt.imshow(Nanowires.skeleton, cmap='gray')
 # 2b. Build graph
 Nanowires.set_graph()
 Nanowires.graph_plot()
-plt.show()
+#plt.show()
 
 
 # 3. GRAPH ANALYSIS
