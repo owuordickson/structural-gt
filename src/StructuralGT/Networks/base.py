@@ -2,39 +2,10 @@
 # This file is from the StructuralGT project, released under the BSD 3-Clause
 # License.
 
-import os
-import time
 import gsd.hoomd
 import numpy as np
-from skimage.morphology import (binary_closing, remove_small_objects, skeletonize)
 
 from . import sknwEdits
-from ..SGT.graph_skeleton import GraphSkeleton
-
-
-
-def Q_img(name):
-    """Returns True if name is a supported image file type.
-
-    Args:
-        name (str):
-            Name of file.
-
-    Returns:
-        bool: Whether the extension type is a supported image file.
-    """
-    if (
-        name.endswith(".tiff")
-        or name.endswith(".tif")
-        or name.endswith(".jpg")
-        or name.endswith(".jpeg")
-        or name.endswith(".png")
-        or name.endswith(".bmp")
-        or name.endswith(".gif")
-    ):
-        return True
-    else:
-        return False
 
 
 
@@ -239,23 +210,4 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
 
     return G
 
-
-def add_weights(g, weight_type=None, R_j=0, rho_dim=1):
-    _img_bin = g.img_bin[g.shift[0][1]::, g.shift[0][2]::]
-    if not isinstance(weight_type, list) and weight_type is not None:
-        raise TypeError("weight_type must be list, even if single element")
-    for _type in weight_type:
-        for i, edge in enumerate(g.Gr.es()):
-            ge = edge["pts"]
-            # pix_width, wt = GetWeights_3d.assignweights(ge, _img_bin, weight_type=_type, R_j=R_j, rho_dim=rho_dim)
-            graph_skel = GraphSkeleton(img_bin=_img_bin)
-            pix_width, pix_angle, wt = graph_skel.assign_weights(ge, rho_dim=rho_dim)
-            edge["pixel width"] = pix_width
-            if _type == "VariableWidthConductance" or _type == "FixedWidthConductance":
-                _type_name = "Conductance"
-            else:
-                _type_name = _type
-            edge[_type_name] = wt
-
-    return g.Gr
 

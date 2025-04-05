@@ -140,7 +140,6 @@ class GraphExtractor(ProgressUpdate):
         self.skel_obj = graph_skel
 
         self.update_status([60, "Creating graph network..."])
-        # skeleton analysis object with sknw
         if opt_gte["is_multigraph"]["value"]:
             nx_graph = sknw.build_sknw(img_skel, multi=True)
             for (s, e) in nx_graph.edges():
@@ -148,8 +147,6 @@ class GraphExtractor(ProgressUpdate):
                     nx_graph[s][e][k]['length'] = nx_graph[s][e][k]['weight']
                     if nx_graph[s][e][k]['weight'] == 0:
                         nx_graph[s][e][k]['length'] = 2
-            # since the skeleton is already built by skel_ID.py the weight that sknw finds will be the length
-            # if we want the actual weights we get it from graph_skeleton.py, otherwise we drop them
             for (s, e) in nx_graph.edges():
                 if opt_gte["has_weights"]["value"] == 1:
                     for k in range(int(len(nx_graph[s][e]))):

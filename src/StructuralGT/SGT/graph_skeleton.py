@@ -68,7 +68,9 @@ class GraphSkeleton:
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
         GraphSkeleton.temp_skeleton = skeletonize(img_bin)
 
-        # calling the three functions for merging nodes, pruning edges, and removing disconnected segments
+        # if self.configs["remove_bubbles"]["value"] == 1:
+        #    GraphSkeleton.remove_bubbles(self.img_bin, mask_elements)
+
         if self.configs["merge_nearby_nodes"]["value"] == 1:
             GraphSkeleton.merge_nodes()
 

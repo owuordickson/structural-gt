@@ -84,7 +84,7 @@ class MainController(QObject):
             :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
-            ntwk_p = sgt_obj.imp
+            ntwk_p = sgt_obj.ntwk_p
             first_index = next(iter(ntwk_p.selected_images), None)  # 1st selected image
             first_index = first_index if first_index is not None else 0  # first image if None
             options_img = ntwk_p.images[first_index].configs
@@ -116,7 +116,7 @@ class MainController(QObject):
 
         """
         try:
-            ntwk_p = sgt_obj.imp
+            ntwk_p = sgt_obj.ntwk_p
             graph_obj = ntwk_p.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
@@ -128,7 +128,7 @@ class MainController(QObject):
             self.exportGraphModel.reset_data(file_options)
             self.gtcListModel.reset_data(list(options_gtc.values()))
 
-            self.imagePropsModel.reset_data(sgt_obj.imp.props)
+            self.imagePropsModel.reset_data(sgt_obj.ntwk_p.props)
             self.graphPropsModel.reset_data(graph_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -225,7 +225,7 @@ class MainController(QObject):
         for key in keys_list:
             item_data.append([key])  # Store the key
             sgt_obj = self.sgt_objs[key]
-            ntwk_p = sgt_obj.imp
+            ntwk_p = sgt_obj.ntwk_p
             img_cv = ntwk_p.images[0].img_2d  # First image, assuming OpenCV image format
             base64_data = get_cv_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
@@ -236,7 +236,7 @@ class MainController(QObject):
         Get selected images.
         """
         sgt_obj = self.get_current_obj()
-        ntwk_p = sgt_obj.imp
+        ntwk_p = sgt_obj.ntwk_p
         sel_images = [ntwk_p.images[i] for i in ntwk_p.selected_images]
         return sel_images
 
@@ -284,7 +284,7 @@ class MainController(QObject):
         try:
             self._handle_progress_update(98, "Writing PDF...")
 
-            filename, output_location = sgt_obj.imp.create_filenames()
+            filename, output_location = sgt_obj.ntwk_p.create_filenames()
             pdf_filename = filename + "_SGT_results.pdf"
             pdf_file = os.path.join(output_location, pdf_filename)
             with (PdfPages(pdf_file) as pdf):
@@ -334,7 +334,7 @@ class MainController(QObject):
             if type(result) is NetworkProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_current_obj()
-                sgt_obj.imp = result
+                sgt_obj.ntwk_p = result
                 # Load image superimposed with graph
                 self.select_img_type(4)
                 # Send task termination signal to QML
@@ -397,7 +397,7 @@ class MainController(QObject):
         sgt_obj = self.get_current_obj()
         if sgt_obj is None:
             return False
-        is_3d = True if len(sgt_obj.imp.images) > 1 else False
+        is_3d = True if len(sgt_obj.ntwk_p.images) > 1 else False
         return is_3d
 
     @Slot(result=int)
@@ -413,7 +413,7 @@ class MainController(QObject):
         sgt_obj = self.get_current_obj()
         if sgt_obj is None:
             return ""
-        return f"{sgt_obj.imp.output_dir}"
+        return f"{sgt_obj.ntwk_p.output_dir}"
 
     @Slot(result=bool)
     def get_auto_scale(self):
@@ -444,7 +444,7 @@ class MainController(QObject):
         key_list = list(self.sgt_objs.keys())
         for key in key_list:
             sgt_obj = self.sgt_objs[key]
-            sgt_obj.imp.output_dir = folder_path
+            sgt_obj.ntwk_p.output_dir = folder_path
         self.imageChangedSignal.emit()
 
     @Slot(bool)
@@ -580,9 +580,9 @@ class MainController(QObject):
         try:
             self.set_auto_scale(True)
             sgt_obj = self.get_current_obj()
-            sgt_obj.imp.auto_scale = self.allow_auto_scale
-            sgt_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
-            sgt_obj.imp.apply_img_scaling()
+            sgt_obj.ntwk_p.auto_scale = self.allow_auto_scale
+            sgt_obj.ntwk_p.scaling_options = self.imgScaleOptionModel.list_data
+            sgt_obj.ntwk_p.apply_img_scaling()
             self.select_img_type()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
@@ -599,11 +599,11 @@ class MainController(QObject):
 
             # 1. Get filename
             sgt_obj = self.get_current_obj()
-            out_dir, filename = sgt_obj.imp.create_filenames()
-            out_dir = out_dir if sgt_obj.imp.output_dir == '' else sgt_obj.imp.output_dir
+            out_dir, filename = sgt_obj.ntwk_p.create_filenames()
+            out_dir = out_dir if sgt_obj.ntwk_p.output_dir == '' else sgt_obj.ntwk_p.output_dir
 
             # 2. Update values
-            ntwk_p = sgt_obj.imp
+            ntwk_p = sgt_obj.ntwk_p
             for val in self.exportGraphModel.list_data:
                 ntwk_p.graph_obj.configs[val["id"]]["value"] = val["value"]
 
@@ -626,7 +626,7 @@ class MainController(QObject):
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
             sgt_obj = self.get_current_obj()
-            sgt_obj.imp.save_images_to_file()
+            sgt_obj.ntwk_p.save_images_to_file()
             self.taskTerminatedSignal.emit(True,
                                            ["Save Images", "Image files successfully saved in 'Output Dir'"])
         except Exception as err:
@@ -647,7 +647,7 @@ class MainController(QObject):
             self.wait_flag = True
             sgt_obj = self.get_current_obj()
 
-            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.imp,))
+            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.ntwk_p,))
             self.worker_task.inProgressSignal.connect(self._handle_progress_update)
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
@@ -746,7 +746,7 @@ class MainController(QObject):
         """Crop image using PIL and save it."""
         try:
             sgt_obj = self.get_current_obj()
-            sgt_obj.imp.crop_image(x, y, width, height)
+            sgt_obj.ntwk_p.crop_image(x, y, width, height)
 
             # Emit signal to update UI with new image
             self.select_img_type(2)
@@ -760,7 +760,7 @@ class MainController(QObject):
     def undo_cropping(self, undo: bool = True):
         if undo:
             sgt_obj = self.get_current_obj()
-            sgt_obj.imp.undo_cropping()
+            sgt_obj.ntwk_p.undo_cropping()
 
             # Emit signal to update UI with new image
             self.select_img_type(None)
@@ -884,7 +884,7 @@ class MainController(QObject):
             if self.sgt_objs:
                 key_list = list(self.sgt_objs.keys())
                 for key in key_list:
-                    self.sgt_objs[key].imp.output_dir = img_dir
+                    self.sgt_objs[key].ntwk_p.output_dir = img_dir
 
             # Update and notify QML
             self.project_data["name"] = proj_name

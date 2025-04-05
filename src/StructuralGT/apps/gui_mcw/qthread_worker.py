@@ -88,20 +88,20 @@ class WorkerTask (QObject):
                                                                          "Change filter settings and try again; "
                                                                          "Or, Close the app and try again."])
 
-    def task_extract_graph(self, imp):
+    def task_extract_graph(self, ntwk_p):
         """"""
         try:
-            imp.abort = False
-            imp.add_listener(self.update_progress)
-            imp.apply_img_filters()
-            # imp.create_graphs()
-            self.is_aborted(imp)
-            imp.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, imp)
+            ntwk_p.abort = False
+            ntwk_p.add_listener(self.update_progress)
+            ntwk_p.apply_img_filters()
+            # ntwk_p.create_graphs()
+            self.is_aborted(ntwk_p)
+            ntwk_p.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(True, ntwk_p)
         except AbortException as err:
             print(f"Task aborted error: {err}")
             # Clean up listeners before exiting
-            imp.remove_listener(self.update_progress)
+            ntwk_p.remove_listener(self.update_progress)
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, ["Extract Graph Aborted", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
@@ -112,8 +112,8 @@ class WorkerTask (QObject):
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.update_progress(-1, "Error encountered! Try again")
             # Clean up listeners before exiting
-            imp.remove_listener(self.update_progress)
-            self.remove_thread_listener(imp.abort_tasks)
+            ntwk_p.remove_listener(self.update_progress)
+            self.remove_thread_listener(ntwk_p.abort_tasks)
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
@@ -152,10 +152,10 @@ class WorkerTask (QObject):
                 num_cores = get_num_cores()
                 output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
                 output += "Number of cores: " + str(num_cores) + "\n"
-                output += "Results generated for: " + sgt_obj.imp.img_path + "\n"
+                output += "Results generated for: " + sgt_obj.ntwk_p.img_path + "\n"
                 output += "Node Count: " + str(sgt_obj.g_obj.nx_graph.number_of_nodes()) + "\n"
                 output += "Edge Count: " + str(sgt_obj.g_obj.nx_graph.number_of_edges()) + "\n"
-                filename, out_dir = sgt_obj.imp.create_filenames()
+                filename, out_dir = sgt_obj.ntwk_p.create_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
                 write_txt_file(output, out_file)
                 print(output)

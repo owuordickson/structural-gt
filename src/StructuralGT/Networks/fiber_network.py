@@ -22,6 +22,7 @@ from skimage.morphology import remove_small_objects
 from . import base
 from ..SGT.image_base import ImageBase
 from ..SGT.graph_skeleton import GraphSkeleton
+from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
 from ..SGT.sgt_utils import write_gsd_file
 
 
@@ -59,11 +60,12 @@ class FiberNetwork:
 
         # image_stack = _image_stack()
         image_stack = {}
+        allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
         for slice_name in sorted(os.listdir(self.dir)):
             # fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
             img_path = self.dir + "/" + slice_name
             slice_num = verify_slice_number(img_path, self._2d)
-            is_img = base.Q_img(img_path)
+            is_img = slice_name.endswith(allowed_extensions)
             contains_prefix = True if prefix is None else prefix in os.path.splitext(os.path.basename(img_path))[0]
             is_in_range = True if (is_img and self._2d) else False
             if not is_in_range and depth is not None:
@@ -239,7 +241,23 @@ class FiberNetwork:
                 self.Gr.vs[i]["pts"] = node_positions[i]
 
         if weight_type is not None:
-            self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
+            # self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
+            _img_bin = self.img_bin[self.shift[0][1]::, self.shift[0][2]::]
+            if not isinstance(weight_type, list):
+                raise TypeError("weight_type must be list, even if single element")
+
+            for _type in weight_type:
+                for i, edge in enumerate(self.Gr.es()):
+                    ge = edge["pts"]
+                    graph_skel = GraphSkeleton(img_bin=_img_bin)
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge)
+                    if _type == "VariableWidthConductance" or _type == "FixedWidthConductance":
+                        _type_name = "Conductance"
+                    else:
+                        _type_name = _type
+                    edge["pixel width"] = pix_width
+                    edge[_type_name] = wt
+
 
         self.shape = list(
             max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
