@@ -27,8 +27,8 @@ plt.imshow(Nanowires.skeleton, cmap='gray')
 
 # 2b. Build graph
 Nanowires.set_graph()
-A = Nanowires.graph.get_adjacency()
 Nanowires.graph_plot()
+plt.show()
 
 
 # 3. GRAPH ANALYSIS
