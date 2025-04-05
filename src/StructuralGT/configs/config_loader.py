@@ -110,7 +110,6 @@ def load_gte_configs():
         "prune_dangling_edges": {"id": "prune_dangling_edges", "type": "graph-extraction", "text": "Prune Dangling Edges", "value": 1},
         "remove_disconnected_segments": {"id": "remove_disconnected_segments", "type": "graph-extraction", "text": "Remove Disconnected Segments", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
         "remove_self_loops": {"id": "remove_self_loops", "type": "graph-extraction", "text": "Remove Self Loops", "value": 1},
-        "is_multigraph": {"id": "is_multigraph", "type": "graph-extraction", "text": "Is Multigraph?", "value": 0},
         "display_node_id": {"id": "display_node_id", "type": "graph-extraction", "text": "Display Node ID", "value": 0},
 
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
@@ -133,7 +132,6 @@ def load_gte_configs():
             config.get('extraction-settings', 'remove_disconnected_segments'))
         options_gte["remove_disconnected_segments"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
-        options_gte["is_multigraph"]["value"] = int(config.get('extraction-settings', 'is_multigraph'))
         options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
         weight_type = str(config.get('extraction-settings', 'weight_type'))
         for i in range(len(options_gte["has_weights"]["items"])):

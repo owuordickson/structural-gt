@@ -140,67 +140,41 @@ class GraphExtractor(ProgressUpdate):
         self.skel_obj = graph_skel
 
         self.update_status([60, "Creating graph network..."])
-        if opt_gte["is_multigraph"]["value"]:
-            nx_graph = sknw.build_sknw(img_skel, multi=True)
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    nx_graph[s][e][k]['length'] = nx_graph[s][e][k]['weight']
-                    if nx_graph[s][e][k]['weight'] == 0:
-                        nx_graph[s][e][k]['length'] = 2
-            for (s, e) in nx_graph.edges():
-                if opt_gte["has_weights"]["value"] == 1:
-                    for k in range(int(len(nx_graph[s][e]))):
-                        ge = nx_graph[s][e][k]['pts']
-                        pix_width, wt = graph_skel.assign_weights_by_width(ge)
-                        nx_graph[s][e][k]['width'] = pix_width
-                        nx_graph[s][e][k]['weight'] = wt
-                else:
-                    for k in range(int(len(nx_graph[s][e]))):
-                        try:
-                            del nx_graph[s][e][k]['weight']
-                        except KeyError:
-                            pass
-        else:
-            nx_graph = sknw.build_sknw(img_skel)
-            for (s, e) in nx_graph.edges():
-                # 'sknw' library stores length of edge and calls it weight, we reverse this
-                # we create a new attribute 'length', later delete/modify 'weight'
-                nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-                #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
-                #        nx_graph[s][e]['length'] = 2
+        nx_graph = sknw.build_sknw(img_skel)
+        for (s, e) in nx_graph.edges():
+            # 'sknw' library stores length of edge and calls it weight, we reverse this
+            # we create a new attribute 'length', later delete/modify 'weight'
+            nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
+            #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
+            #        nx_graph[s][e]['length'] = 2
 
-                if opt_gte["has_weights"]["value"] == 1:
-                    # We modify 'weight'
-                    wt_type = self.get_weight_type()
-                    weight_options = GraphExtractor.get_weight_options()
+            if opt_gte["has_weights"]["value"] == 1:
+                # We modify 'weight'
+                wt_type = self.get_weight_type()
+                weight_options = GraphExtractor.get_weight_options()
 
-                    ge = nx_graph[s][e]['pts']
-                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
+                ge = nx_graph[s][e]['pts']
+                pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                                          pixel_dim=px_size, rho_dim=rho_val)
-                    nx_graph[s][e]['width'] = pix_width
-                    nx_graph[s][e]['angle'] = pix_angle
-                    nx_graph[s][e]['weight'] = wt
-                else:
-                    ge = nx_graph[s][e]['pts']
-                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
-                    nx_graph[s][e]['width'] = pix_width
-                    nx_graph[s][e]['angle'] = pix_angle
-                    nx_graph[s][e]['weight'] = wt
-                    # delete 'weight'
-                    del nx_graph[s][e]['weight']
-                # print(f"{nx_graph[s][e]}\n")
+                nx_graph[s][e]['width'] = pix_width
+                nx_graph[s][e]['angle'] = pix_angle
+                nx_graph[s][e]['weight'] = wt
+            else:
+                ge = nx_graph[s][e]['pts']
+                pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
+                nx_graph[s][e]['width'] = pix_width
+                nx_graph[s][e]['angle'] = pix_angle
+                nx_graph[s][e]['weight'] = wt
+                # delete 'weight'
+                del nx_graph[s][e]['weight']
+            # print(f"{nx_graph[s][e]}\n")
         self.nx_graph = nx_graph
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
         if opt_gte["remove_self_loops"]["value"]:
-            if opt_gte["is_multigraph"]["value"]:
-                for (s, e) in list(self.nx_graph.edges()):
-                    if s == e:
-                        self.nx_graph.remove_edge(s, e)
-            else:
-                for (s, e) in self.nx_graph.edges():
-                    if s == e:
-                        self.nx_graph.remove_edge(s, e)
+            for (s, e) in self.nx_graph.edges():
+                if s == e:
+                    self.nx_graph.remove_edge(s, e)
         return True
 
     def draw_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
@@ -217,7 +191,6 @@ class GraphExtractor(ProgressUpdate):
         if image_2d is None:
             return None
 
-        opt_gte = self.configs
         nx_graph = self.nx_graph
         nx_components = self.nx_components
 
@@ -265,7 +238,7 @@ class GraphExtractor(ProgressUpdate):
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
-            GraphExtractor.superimpose_graph_to_img(ax, image_2d, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+            GraphExtractor.superimpose_graph_to_img(ax, image_2d, nx_graph)
 
         return fig
 
@@ -297,7 +270,7 @@ class GraphExtractor(ProgressUpdate):
 
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
-        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image_2d, bool(opt_gte["is_multigraph"]["value"]), nx_graph)
+        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image_2d, nx_graph)
 
         nodes = nx_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
@@ -333,8 +306,6 @@ class GraphExtractor(ProgressUpdate):
             run_info += f"Remove Objects of Size = {opt_gte["remove_disconnected_segments"]["items"][0]["value"]} || "
         if opt_gte["remove_self_loops"]["value"]:
             run_info += "Remove Self Loops || "
-        if opt_gte["is_multigraph"]["value"]:
-            run_info += "Multi-graph allowed "
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
 
         return run_info
@@ -399,26 +370,13 @@ class GraphExtractor(ProgressUpdate):
                 write_csv_file(csv_file, fields, el)
 
         if opt_gte["export_as_gexf"]["value"] == 1:
-            if opt_gte["is_multigraph"]["value"]:
-                # deleting extraneous info and then exporting the final skeleton
-                for (x) in nx_graph.nodes():
-                    del nx_graph.nodes[x]['pts']
-                    del nx_graph.nodes[x]['o']
-                for (s, e) in nx_graph.edges():
-                    for k in range(int(len(nx_graph[s][e]))):
-                        try:
-                            del nx_graph[s][e][k]['pts']
-                        except KeyError:
-                            pass
-                nx.write_gexf(nx_graph, gexf_file)
-            else:
-                # deleting extraneous info and then exporting the final skeleton
-                for (x) in nx_graph.nodes():
-                    del nx_graph.nodes[x]['pts']
-                    del nx_graph.nodes[x]['o']
-                for (s, e) in nx_graph.edges():
-                    del nx_graph[s][e]['pts']
-                nx.write_gexf(nx_graph, gexf_file)
+            # deleting extraneous info and then exporting the final skeleton
+            for (x) in nx_graph.nodes():
+                del nx_graph.nodes[x]['pts']
+                del nx_graph.nodes[x]['o']
+            for (s, e) in nx_graph.edges():
+                del nx_graph[s][e]['pts']
+            nx.write_gexf(nx_graph, gexf_file)
 
     @staticmethod
     def plot_to_img(fig: plt.Figure):
@@ -455,26 +413,19 @@ class GraphExtractor(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def superimpose_graph_to_img(axis, image: MatLike, is_multi_graph: bool, nx_graph: nx.Graph):
+    def superimpose_graph_to_img(axis, image: MatLike, nx_graph: nx.Graph):
         """
         Plot graph edges on top of the image.
         :param axis: matplotlib axis
         :param image: image to be superimposed with graph edges
-        :param is_multi_graph: is the graph edges multigraph?
         :param nx_graph: a NetworkX graph
         :return:
         """
         # axis.set_axis_off()
         axis.imshow(image, cmap='gray')
-        if is_multi_graph:
-            for (s, e) in nx_graph.edges():
-                for k in range(int(len(nx_graph[s][e]))):
-                    ge = nx_graph[s][e][k]['pts']
-                    axis.plot(ge[:, 1], ge[:, 0], 'red')
-        else:
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                axis.plot(ge[:, 1], ge[:, 0], 'red')
+        for (s, e) in nx_graph.edges():
+            ge = nx_graph[s][e]['pts']
+            axis.plot(ge[:, 1], ge[:, 0], 'red')
         return axis
 
 

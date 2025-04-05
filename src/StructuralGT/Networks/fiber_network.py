@@ -206,8 +206,7 @@ class FiberNetwork:
 
             drop_list = []
             for i in range(self.Gr.vcount()):
-                if not base.isinside(np.asarray([node_positions[i]]),
-                                     inner_crop):
+                if not base.isinside(np.asarray([node_positions[i]]), inner_crop):
                     drop_list.append(i)
                     continue
 

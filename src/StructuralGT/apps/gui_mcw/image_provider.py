@@ -14,7 +14,7 @@ class ImageProvider(QQuickImageProvider):
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
             sgt_obj = self.img_controller.get_current_obj()
-            ntwk_p = sgt_obj.imp
+            ntwk_p = sgt_obj.ntwk_p
             if option == "binary":
                 ntwk_p.apply_img_filters(filter_type=2)
                 bin_images = [obj.img_bin for obj in ntwk_p.images]
@@ -28,15 +28,14 @@ class ImageProvider(QQuickImageProvider):
                 img_cv = mod_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
-                sel_images = self.img_controller.get_selected_images()
-                for img in sel_images:
-                    # If any is None, start task
-                    if img.graph_obj.img_ntwk is None:
-                        self.img_controller.run_extract_graph()
-                        # Wait for task to finish
-                        return
+
+                # If any is None, start task
+                if ntwk_p.graph_obj.img_ntwk is None:
+                    self.img_controller.run_extract_graph()
+                    # Wait for task to finish
+                    return
                 else:
-                    net_images = [obj.graph_obj.img_ntwk for obj in ntwk_p.images]
+                    net_images = [ntwk_p.graph_obj.img_ntwk]
                     self.img_controller.img3dGridModel.reset_data(net_images)
                     img = net_images[0]
             else:
