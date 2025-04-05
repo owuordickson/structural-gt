@@ -12,7 +12,7 @@ from . import sknwEdits
 def split(array, splitpoints):
     """Function which splits numpy array into list of arrays, according to
     the split points specified in splitpoints (which is a list of the array
-    lengths."""
+    lengths)."""
     splitpoints = np.pad(splitpoints, (1, 1), "constant",
                          constant_values=(0, 0))
     L = []
