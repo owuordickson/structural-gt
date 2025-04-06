@@ -87,16 +87,19 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
     csvfile.close()
 
 
-def write_gsd_file(f_name: str, particle_num: int, particle_pos: np.ndarray):
+def write_gsd_file(f_name: str, skeleton: np.ndarray):
     """
     A function that writes graph particles to a GSD file. Visualize with OVITO software.
 
+    :param f_name: gsd.hoomd file name
+    :param skeleton: skimage.morphology skeleton
     """
-
+    # pos_count = int(sum(skeleton.ravel()))
+    particle_positions = np.asarray(np.where(skeleton != 0)).T
     with gsd.hoomd.open(name=f_name, mode="w") as f:
         s = gsd.hoomd.Frame()
-        s.particles.N = particle_num
-        s.particles.position = particle_pos
+        s.particles.N = len(particle_positions)  # OR pos_count
+        s.particles.position = particle_positions
         s.particles.types = ["A"]
         s.particles.typeid = ["0"] * s.particles.N
         f.append(s)

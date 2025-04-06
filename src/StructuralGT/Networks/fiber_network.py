@@ -9,21 +9,26 @@ import time
 import warnings
 import cv2 as cv
 import gsd.hoomd
-import igraph as ig
+# import igraph as ig
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
+# import scipy
 from matplotlib.colorbar import Colorbar
 from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from skimage.morphology import remove_small_objects
 
 from . import base
+from . import sknwEdits
+
 from ..SGT.image_base import ImageBase
 from ..SGT.graph_skeleton import GraphSkeleton
 from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
 from ..SGT.sgt_utils import write_gsd_file
+
+
+# from ..SGT.sgt_utils import write_gsd_file
 
 
 class FiberNetwork:
@@ -172,13 +177,19 @@ class FiberNetwork:
         """
 
         if not hasattr(self, '_skeleton'):
-            raise AttributeError("Network has no skeleton. You should call \
-                                 img_to_skel before calling set_graph.")
+            raise AttributeError("Network has no skeleton. You should call img_to_skel before calling set_graph.")
 
-        G = base.gsd_to_G(self.gsd_name, _2d=self._2d, sub=sub)
-
-        self.Gr = G
+        # self.Gr = base.gsd_to_G(self.gsd_name, _2d=self._2d, sub=sub)
         # self.write_name = write
+
+        print("Running build_sknw ...")
+        G = sknwEdits.build_sknw(GraphSkeleton.temp_skeleton)
+        if sub:
+            print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
+            components = G.connected_components()
+            G = components.giant()
+            print(f"After removing smaller components, graph has {G.vcount()}  nodes")
+        self.Gr = G
 
         if self.rotate is not None:
             centre = np.asarray(self.shape) / 2
@@ -257,8 +268,7 @@ class FiberNetwork:
                     edge["pixel width"] = pix_width
                     edge[_type_name] = wt
 
-        self.shape = list(
-            max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
+        self.shape = list(max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
             for j in (0, 1, 2)[0: self.dim])
 
     def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
@@ -367,6 +377,8 @@ class FiberNetwork:
             self.skeleton_3d = np.asarray(self._skeleton)
             if self._2d:
                 self.skeleton_3d = np.asarray([self._skeleton])
+            # gsd_file = self.gsd_dir + "/cleaned_" + os.path.split(self.gsd_name)[1]
+            # write_gsd_file(gsd_file, self.skeleton_3d)
             print(f"Ran remove objects in for an image with shape {self.skeleton_3d.shape}")
 
         positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T

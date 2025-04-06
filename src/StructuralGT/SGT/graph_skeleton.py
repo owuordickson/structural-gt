@@ -11,6 +11,9 @@ from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
+from src.StructuralGT.SGT.sgt_utils import write_gsd_file
+
+
 # from src.StructuralGT.SGT.sgt_utils import write_gsd_file
 
 
@@ -89,10 +92,7 @@ class GraphSkeleton:
         clean_skel = GraphSkeleton.temp_skeleton
         self.skel_int = 1 * clean_skel
         self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
-
-        # pos_count = int(sum(self.skeleton.ravel()))
-        # pos_arr = np.asarray(np.where(self.skeleton != 0)).T
-        # write_gsd_file(gsd_file, pos_count, pos_arr)
+        # write_gsd_file(gsd_file, self.skeleton)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
