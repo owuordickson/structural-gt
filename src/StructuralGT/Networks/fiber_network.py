@@ -27,9 +27,11 @@ from ..SGT.graph_skeleton import GraphSkeleton
 from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
 from ..SGT.sgt_utils import write_gsd_file
 
-
-# from ..SGT.sgt_utils import write_gsd_file
-
+"""
+Questions for Alain:
+    1. How do you make node_plots of 3D (your code crashes)?
+    2. What is rotate (in set_graph)? It is created in img_to_skel.
+"""
 
 class FiberNetwork:
     """Generic class to represent networked image data.
