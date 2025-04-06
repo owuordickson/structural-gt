@@ -456,11 +456,11 @@ class FiberNetwork:
         ax.imshow(img, cmap="gray")
 
         e = np.empty((0, 2))
-        for edge in self.graph.es:
+        for edge in self.Gr.es:
             e = np.vstack((e, edge["pts"]))
         ax.scatter(e.T[1], e.T[0], c="k", s=3, marker="s", edgecolors="none")
 
-        y, x = np.array(self.graph.vs["o"]).T
+        y, x = np.array(self.Gr.vs["o"]).T
         sp = ax.scatter(
             x,
             y,
@@ -514,7 +514,7 @@ class FiberNetwork:
         _max = np.max(parameter)
         _min = np.min(parameter)
 
-        for param, edge in zip(parameter, self.graph.es):
+        for param, edge in zip(parameter, self.Gr.es):
             e = edge["pts"].T
             ax.scatter(
                 e[1],
@@ -532,7 +532,7 @@ class FiberNetwork:
                 **kwargs,
             )
 
-        y, x = np.array(self.graph.vs["o"]).T
+        y, x = np.array(self.Gr.vs["o"]).T
         ax.scatter(x, y, s=10, marker="o", edgecolors="none", c="red")
 
         norm = mpl.colors.Normalize(vmin=_min, vmax=_max)
@@ -581,42 +581,6 @@ class FiberNetwork:
         plt.show()
 
         self.Gr = Gr_copy
-
-    @property
-    def img_bin(self):
-        """:class:`np.ndarray`: The binary image from which the graph was
-        extracted"""
-        return self._img_bin
-
-    @img_bin.setter
-    def img_bin(self, value):
-        warnings.warn(
-            "Setting the binary image should not be necessary if \
-                      the raw data has been binarized."
-        )
-
-    @property
-    def graph(self):
-        """:class:`igraph.Graph`: The Graph object extracted from the
-        skeleton"""
-        return self.Gr
-
-    @property
-    def image(self):
-        """:class:`np.ndarray`: The original image used to obtain the graph."""
-        img_arr = list(self.image_stack.values())
-        img_arr = np.asarray(img_arr)
-        if not self._2d:
-            # return self.image_stack[0][0]
-            return img_arr[0]
-        else:
-            # return self.image_stack[:][0]
-            return img_arr
-
-    @property
-    def skeleton(self):
-        """:class:`np.ndarray`: The original skeleton."""
-        return self._skeleton
 
     @staticmethod
     def colorbar(mappable, ax, *args, **kwargs):

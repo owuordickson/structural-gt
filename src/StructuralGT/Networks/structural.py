@@ -101,10 +101,10 @@ class Size(_Compute):
                 The :class:`Network` object.
         """
 
-        self._number_of_nodes = network.graph.vcount()
-        self._number_of_edges = network.graph.ecount()
-        self._diameter = network.graph.diameter(weights=self.edge_weight)
-        self._density = network.graph.density()
+        self._number_of_nodes = network.Gr.vcount()
+        self._number_of_edges = network.Gr.ecount()
+        self._diameter = network.Gr.diameter(weights=self.edge_weight)
+        self._density = network.Gr.density()
 
     @_Compute._computed_property
     def number_of_nodes(self):
@@ -151,7 +151,7 @@ class Clustering(_Compute):
                 The :class:`Network` object.
         """
 
-        self._cc = network.graph.transitivity_local_undirected(mode="zero")
+        self._cc = network.Gr.transitivity_local_undirected(mode="zero")
         self._acc = np.mean(self._cc)
 
     @_Compute._computed_property
@@ -199,7 +199,7 @@ class Assortativity(_Compute):
                 The :class:`Network` object.
         """
 
-        self._assortativity = network.graph.assortativity_degree()
+        self._assortativity = network.Gr.assortativity_degree()
 
     @_Compute._computed_property
     def assortativity(self):
@@ -236,7 +236,7 @@ class Closeness(_Compute):
                 The :class:`Network` object.
         """
 
-        self._closeness = network.graph.closeness(weights=self.edge_weight)
+        self._closeness = network.Gr.closeness(weights=self.edge_weight)
         self._ac = np.mean(self._closeness)
 
     @_Compute._computed_property
@@ -282,7 +282,7 @@ class Degree(_Compute):
                 The :class:`Network` object.
         """
 
-        self._degree = network.graph.strength(weights=self.node_weight)
+        self._degree = network.Gr.strength(weights=self.node_weight)
         self._ad = np.mean(self._degree)
 
     @_Compute._computed_property
