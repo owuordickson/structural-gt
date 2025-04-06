@@ -20,10 +20,10 @@ GaussianBlur = {"Thresh_method": 0, "gamma": 1.001, "md_filter": 0, "g_blur": 1,
 Nanowires = FiberNetwork('../datasets/Nanowires', binarized_dir='GaussianBlur')
 
 # 2a. Image Processing
-#Nanowires.img_to_skel(img_options=GaussianBlur, merge_nodes=True, prune=500, remove_objects=500)
+# Nanowires.img_to_skel(img_options=GaussianBlur, merge_nodes=True, prune=500, remove_objects=500)
 # Nanowires.img_to_skel(img_options=GaussianBlur, remove_objects=500)
 Nanowires.img_to_skel(img_options=GaussianBlur)
-# plt.imshow(Nanowires.skeleton, cmap='gray')
+plt.imshow(Nanowires.skeleton, cmap='gray')
 
 # 2b. Build graph
 Nanowires.set_graph()
@@ -36,5 +36,5 @@ D = Degree()
 D.compute(Nanowires)
 print(f'Average degree is {D.average_degree}')
 
-# Nanowires.node_plot(parameter=D.degree)
-plt.show()
+Nanowires.node_plot(parameter=D.degree)
+# plt.show()
