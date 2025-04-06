@@ -8,7 +8,7 @@ import numpy as np
 from . import sknwEdits
 
 
-
+# USED IN "ROTATE"?
 def shift(points, _2d=False, _shift=None):
     """
     Translates all points such that the minimum coordinate in points is the origin.
@@ -46,6 +46,7 @@ def shift(points, _2d=False, _shift=None):
     return points, _shift
 
 
+# USED IN "ROTATE"?
 def oshift(points, _2d=False, _shift=None):
     """Translates all points such that the points become approximately centred
     at the origin.
@@ -82,6 +83,7 @@ def oshift(points, _2d=False, _shift=None):
     return points
 
 
+# USED IN "ROTATE"?
 def isinside(points, crop):
     """Determines whether the given points are all within the given crop.
 
@@ -118,86 +120,3 @@ def isinside(points, crop):
             ):
                 return False
             return True
-
-
-def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
-    """Function takes gsd rendering of a skeleton and returns the list of
-    nodes and edges, as calculated by sknw.
-
-    Args:
-        gsd_name (str):
-            The file name to write.
-        sub (optional, bool):
-            Whether to return only to largest connected component. If True, it
-            will reduce the returned graph to the largest connected induced
-            subgraph, resetting node numbers to consecutive integers,
-            starting from 0.
-        _2d (optional, bool):
-            Whether the skeleton is 2D. If True it only ensures additional
-            redundant axes from the position array is removed. It does not
-            guarantee a 3d graph.
-        crop (list):
-            The x, y and (optionally) z coordinates of the cuboid/shape
-            enclosing the skeleton from which a :class:`igraph.Graph` object
-            should be extracted.
-
-    Returns:
-        (:class:`igraph.Graph`): The extracted :class:`igraph.Graph` object.
-    """
-    frame = gsd.hoomd.open(name=gsd_name, mode="r")[0]
-    positions = shift(frame.particles.position.astype(int))[0]
-    print(f"\n\n1. Pos in func (b4 shift): {frame.particles.position.shape}")
-    print(f"2. Pos in func (after shift): {positions.shape}")
-    if crop is not None:
-        from numpy import logical_and as a
-
-        p = positions.T
-        positions = p.T[
-            a(
-                a(a(p[1] >= crop[0], p[1] <= crop[1]), p[2] >= crop[2]),
-                p[2] <= crop[3],
-            )
-        ]
-        positions = shift(positions)[0]
-
-    if sum((positions < 0).ravel()) != 0:
-        positions = shift(positions)[0]
-    print(f"3. Pos in func (after ravel): {positions.shape}")
-
-    if not _2d:
-        # positions = dim_red(positions)
-        # For lists of positions where all elements along one axis have the same value, this returns the same list of
-        # positions but with the redundant dimension(s) removed.
-        unique_positions = [len(np.unique(positions.T[i])) for i in range(len(positions.T))]
-        unique_positions = np.asarray(unique_positions)
-        redundant = unique_positions == 1
-        positions = positions.T[~redundant].T
-
-        new_pos = np.zeros(positions.T.shape)
-        new_pos[0] = positions.T[0]
-        new_pos[1] = positions.T[1]
-        positions = new_pos.T.astype(int)
-
-    print(f"3. Pos in func (after 2D): {positions.shape}")
-    canvas = np.zeros(
-        list((max(positions.T[i]) + 1) for i in list(
-            range(min(positions.shape))))
-    )
-    canvas[tuple(list(positions.T))] = 1
-    canvas = canvas.astype(int)
-    print(f"3. Canvas shape: {canvas.shape}\n\n")
-
-    G = sknwEdits.build_sknw(canvas)
-
-    if sub:
-        # G = sub_G(G)
-        # Function generates the largest connected induced subgraph. Node and edge numbers are reset such that they
-        # are consecutive integers, starting from 0.
-        print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
-        components = G.connected_components()
-        G = components.giant()
-        print(f"After removing smaller components, graph has {G.vcount()}  nodes")
-
-    return G
-
-

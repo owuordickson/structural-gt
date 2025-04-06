@@ -178,6 +178,7 @@ class FiberNetwork:
 
         if not hasattr(self, '_skeleton'):
             raise AttributeError("Network has no skeleton. You should call img_to_skel before calling set_graph.")
+        # self.Gr = base.gsd_to_G(self.gsd_name)
 
         print("Running build_sknw ...")
         skel = self.skeleton_3d.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
