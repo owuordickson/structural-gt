@@ -10,8 +10,8 @@ from . import sknwEdits
 
 
 def shift(points, _2d=False, _shift=None):
-    """Translates all points such that the minimum coordinate in points is
-    the origin.
+    """
+    Translates all points such that the minimum coordinate in points is the origin.
 
     Args:
         points (:class:`numpy.ndarray`):
@@ -146,6 +146,8 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
     """
     frame = gsd.hoomd.open(name=gsd_name, mode="r")[0]
     positions = shift(frame.particles.position.astype(int))[0]
+    print(f"\n\n1. Pos in func (b4 shift): {frame.particles.position.shape}")
+    print(f"2. Pos in func (after shift): {positions.shape}")
     if crop is not None:
         from numpy import logical_and as a
 
@@ -160,8 +162,9 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
 
     if sum((positions < 0).ravel()) != 0:
         positions = shift(positions)[0]
+    print(f"3. Pos in func (after ravel): {positions.shape}")
 
-    if _2d:
+    if not _2d:
         # positions = dim_red(positions)
         # For lists of positions where all elements along one axis have the same value, this returns the same list of
         # positions but with the redundant dimension(s) removed.
@@ -175,12 +178,14 @@ def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
         new_pos[1] = positions.T[1]
         positions = new_pos.T.astype(int)
 
+    print(f"3. Pos in func (after 2D): {positions.shape}")
     canvas = np.zeros(
         list((max(positions.T[i]) + 1) for i in list(
             range(min(positions.shape))))
     )
     canvas[tuple(list(positions.T))] = 1
     canvas = canvas.astype(int)
+    print(f"3. Canvas shape: {canvas.shape}\n\n")
 
     G = sknwEdits.build_sknw(canvas)
 

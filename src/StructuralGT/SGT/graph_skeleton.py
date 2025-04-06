@@ -92,6 +92,7 @@ class GraphSkeleton:
         clean_skel = GraphSkeleton.temp_skeleton
         self.skel_int = 1 * clean_skel
         self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
+        self.skeleton = self.skeleton.astype(int)
         # write_gsd_file(gsd_file, self.skeleton)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,

@@ -179,11 +179,10 @@ class FiberNetwork:
         if not hasattr(self, '_skeleton'):
             raise AttributeError("Network has no skeleton. You should call img_to_skel before calling set_graph.")
 
-        # self.Gr = base.gsd_to_G(self.gsd_name, _2d=self._2d, sub=sub)
-        # self.write_name = write
-
         print("Running build_sknw ...")
-        G = sknwEdits.build_sknw(GraphSkeleton.temp_skeleton)
+        skel = self.skeleton_3d.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
+        selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
+        G = sknwEdits.build_sknw(skel[selected_slice])
         if sub:
             print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
             components = G.connected_components()
@@ -382,7 +381,7 @@ class FiberNetwork:
             print(f"Ran remove objects in for an image with shape {self.skeleton_3d.shape}")
 
         positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
-        self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
+        """self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
         self.positions = positions
         with gsd.hoomd.open(name=self.gsd_name, mode="w") as f:
             s = gsd.hoomd.Frame()
@@ -395,7 +394,7 @@ class FiberNetwork:
                 s.particles.position, self.shift = base.shift(positions)
             s.particles.types = ["A"]
             s.particles.typeid = ["0"] * s.particles.N
-            f.append(s)
+            f.append(s)"""
         end = time.time()
         print("Ran img_to_skel() and cleaned in ", end - start, "for skeleton with ", len(positions), "voxels")
 
@@ -428,6 +427,7 @@ class FiberNetwork:
             ax (:class:`matplotlib.axes.Axes`, optional):
                 Axis to plot on. If :code:`None`, make a new figure and axis.
                 (Default value = :code:`None`)
+            depth (int, optional): If the network is 3D, which slice to plot.
 
         Returns:
             (:class:`matplotlib.axes.Axes`): Axis with the plot.
@@ -539,21 +539,6 @@ class FiberNetwork:
             cb.set_label("Value")
 
         return fig, ax
-
-    def graph_plot(self, ax=None, depth=0):
-        """Superimpose the graph and original image.
-
-        Args:
-            ax (:class:`matplotlib.axes.Axes`, optional):
-                Axis to plot on. If :code:`None`, make a new figure and axis.
-                (Default value = :code:`None`)
-
-            depth (int, optional): If the network is 3D, which slice to plot.
-
-        Returns:
-            (:class:`matplotlib.axes.Axes`): Axis with the plot.
-        """
-        return self.node_plot(ax=ax, depth=depth)
 
     def recon(self, axis, surface, depth):
         """Method displays 2D slice of binary image and
