@@ -8,7 +8,7 @@ import os
 import time
 import warnings
 import cv2 as cv
-# import gsd.hoomd
+import gsd.hoomd
 # import igraph as ig
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -71,7 +71,7 @@ class FiberNetwork:
         for slice_name in sorted(os.listdir(self.dir)):
             # fname = _fname(self.dir + "/" + slice_name, depth=depth, _2d=self._2d)
             img_path = self.dir + "/" + slice_name
-            slice_num = verify_slice_number(img_path, self._2d)
+            slice_num = FiberNetwork.verify_slice_number(img_path, self._2d)
             is_img = slice_name.endswith(allowed_extensions)
             contains_prefix = True if prefix is None else prefix in os.path.splitext(os.path.basename(img_path))[0]
             is_in_range = True if (is_img and self._2d) else False
@@ -143,7 +143,7 @@ class FiberNetwork:
         for name in self.image_stack.keys():
             # fname = _fname(self.dir + "/" + name, _2d=self._2d)
             img_path = self.dir + "/" + name
-            slice_num = verify_slice_number(img_path, self._2d)
+            slice_num = FiberNetwork.verify_slice_number(img_path, self._2d)
             gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
             # _, img_bin, _ = process_image.binarize(gray_image, options)
             img_obj = ImageBase(gray_image)
@@ -591,11 +591,28 @@ class FiberNetwork:
         ax.set(*args, **kwargs)
         return cbar
 
+    @staticmethod
+    def verify_slice_number(f_name, is_2d=False):
+        """Slice filenames must end in 4 digits, indicating the depth of the slice."""
+        if not os.path.exists(f_name):
+            raise ValueError("File does not exist.")
+
+        if is_2d:
+            num = "0000"
+        else:
+            base_name = os.path.splitext(os.path.split(f_name)[1])[0]
+            if len(base_name) < 4:
+                raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
+            num = base_name[-4::]
+
+            if not num.isnumeric():
+                raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
+        return num
 
 
 class _cropper:
     """Cropper class contains methods to deal with images of different
-    dimensions and their geometric modificaitons. Generally there is no need
+    dimensions and their geometric modifications. Generally there is no need
     for the user to instantiate this directly.
 
     Args:
@@ -615,7 +632,7 @@ class _cropper:
             # Strip file type and 'slice' then convert to int
             slice_name = next(iter(Network.image_stack.keys()))  # Only first item
             img_path = Network.dir + "/" + slice_name
-            slice_num = verify_slice_number(img_path)
+            slice_num = FiberNetwork.verify_slice_number(img_path)
             self.surface = int(slice_num)
         else:
             self.surface = domain[4]
@@ -767,6 +784,7 @@ class _cropper:
         return outer_crop
 
 
+
 class ImageDirectoryError(ValueError):
     """Raised when a directory is accessed but does not have any images"""
 
@@ -779,19 +797,4 @@ class ImageDirectoryError(ValueError):
 
 
 
-def verify_slice_number(f_name, is_2d=False):
-    """Slice filenames must end in 4 digits, indicating the depth of the slice."""
-    if not os.path.exists(f_name):
-        raise ValueError("File does not exist.")
 
-    if is_2d:
-        num = "0000"
-    else:
-        base_name = os.path.splitext(os.path.split(f_name)[1])[0]
-        if len(base_name) < 4:
-            raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
-        num = base_name[-4::]
-
-        if not num.isnumeric():
-            raise ValueError("For 3D networks, filenames must end in 4 digits, indicating the depth of the slice.")
-    return num
