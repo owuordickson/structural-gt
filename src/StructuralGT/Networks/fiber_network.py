@@ -6,10 +6,12 @@ import copy
 import json
 import os
 import time
+import sknw
 import warnings
 import cv2 as cv
 import gsd.hoomd
 # import igraph as ig
+import networkx as nx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -162,117 +164,6 @@ class FiberNetwork:
         # 3d for 3d images, 2d otherwise
         self._img_bin = np.squeeze(img_bin)
 
-    def set_graph(self, sub=True, weight_type=None, **kwargs):
-        """Sets :class:`Graph` object as an attribute by reading the
-        skeleton file written by :meth:`img_to_skel`.
-
-        Args:
-            sub (optional, bool):
-                Whether to onlyh assign the largest connected component as the
-                :class:`igraph.Graph` object.
-            weight_type (optional, str):
-                How to weight the edges. Options include :code:`Length`,
-                :code:`Width`, :code:`Area`,
-                :code:`FixedWidthConductance`,
-                :code:`VariableWidthConductance`,
-                :code:`PerpBisector`.
-        """
-
-        if not hasattr(self, '_skeleton'):
-            raise AttributeError("Network has no skeleton. You should call img_to_skel before calling set_graph.")
-        # self.Gr = base.gsd_to_G(self.gsd_name)
-
-        print("Running build_sknw ...")
-        skel = self.skeleton_3d.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
-        selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
-        G = sknwEdits.build_sknw(skel[selected_slice])
-        if sub:
-            print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
-            components = G.connected_components()
-            G = components.giant()
-            print(f"After removing smaller components, graph has {G.vcount()}  nodes")
-        self.Gr = G
-
-        if self.rotate is not None:
-            centre = np.asarray(self.shape) / 2
-            inner_length_x = (self.inner_cropper.dims[2]) * 0.5
-            inner_length_y = (self.inner_cropper.dims[1]) * 0.5
-            inner_crop = np.array(
-                [
-                    centre[0] - inner_length_x,
-                    centre[0] + inner_length_x,
-                    centre[1] - inner_length_y,
-                    centre[1] + inner_length_y,
-                ],
-                dtype=int,
-            )
-
-            node_positions = np.asarray(
-                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
-            )
-            node_positions = base.oshift(node_positions, _shift=centre)
-            node_positions = np.vstack(
-                (node_positions.T, np.zeros(len(node_positions)))
-            ).T
-            node_positions = np.matmul(node_positions, self.rotate).T[0:2].T
-            node_positions = base.shift(node_positions, _shift=-centre)[0]
-
-            drop_list = []
-            for i in range(self.Gr.vcount()):
-                if not base.isinside(np.asarray([node_positions[i]]), inner_crop):
-                    drop_list.append(i)
-                    continue
-
-                self.Gr.vs[i]["o"] = node_positions[i]
-                self.Gr.vs[i]["pts"] = node_positions[i]
-            self.Gr.delete_vertices(drop_list)
-
-            node_positions = np.asarray(
-                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
-            )
-            final_shift = np.asarray(
-                list(min(node_positions.T[i]) for i in (0, 1, 2)[0: self.dim])
-            )
-            edge_positions_list = np.asarray(
-                list(
-                    base.oshift(self.Gr.es[i]["pts"], _shift=centre)
-                    for i in range(self.Gr.ecount())
-                ),
-                dtype=object,
-            )
-            for i, edge in enumerate(edge_positions_list):
-                edge_position = np.vstack((edge.T, np.zeros(len(edge)))).T
-                edge_position = np.matmul(edge_position, self.rotate).T[0:2].T
-                edge_position = base.shift(edge_position,
-                                           _shift=-centre + final_shift)[0]
-                self.Gr.es[i]["pts"] = edge_position
-
-            node_positions = base.shift(node_positions, _shift=final_shift)[0]
-            for i in range(self.Gr.vcount()):
-                self.Gr.vs[i]["o"] = node_positions[i]
-                self.Gr.vs[i]["pts"] = node_positions[i]
-
-        if weight_type is not None:
-            # self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
-            _img_bin = self.img_bin[self.shift[0][1]::, self.shift[0][2]::]
-            if not isinstance(weight_type, list):
-                raise TypeError("weight_type must be list, even if single element")
-
-            for _type in weight_type:
-                for i, edge in enumerate(self.Gr.es()):
-                    ge = edge["pts"]
-                    graph_skel = GraphSkeleton(img_bin=_img_bin)
-                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge)
-                    if _type == "VariableWidthConductance" or _type == "FixedWidthConductance":
-                        _type_name = "Conductance"
-                    else:
-                        _type_name = _type
-                    edge["pixel width"] = pix_width
-                    edge[_type_name] = wt
-
-        self.shape = list(max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
-            for j in (0, 1, 2)[0: self.dim])
-
     def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
 
@@ -419,6 +310,125 @@ class FiberNetwork:
             self.crop = np.asarray(crop) - min(crop)
         else:
             self.rotate = None
+
+    def set_graph(self, sub=True, weight_type=None, **kwargs):
+        """Sets :class:`Graph` object as an attribute by reading the
+        skeleton file written by :meth:`img_to_skel`.
+
+        Args:
+            sub (optional, bool):
+                Whether to onlyh assign the largest connected component as the
+                :class:`igraph.Graph` object.
+            weight_type (optional, str):
+                How to weight the edges. Options include :code:`Length`,
+                :code:`Width`, :code:`Area`,
+                :code:`FixedWidthConductance`,
+                :code:`VariableWidthConductance`,
+                :code:`PerpBisector`.
+        """
+
+        if not hasattr(self, '_skeleton'):
+            raise AttributeError("Network has no skeleton. You should call img_to_skel before calling set_graph.")
+        # self.Gr = base.gsd_to_G(self.gsd_name)
+
+        print("Running build_sknw ...")
+        img_skel = self.skeleton_3d.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
+        selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
+
+        G = sknwEdits.build_sknw(img_skel[selected_slice])
+        nx_graph = sknw.build_sknw(img_skel[selected_slice])
+
+        # Compute avg. degree from nx
+        degree_arr = np.array(list(dict(nx.degree(nx_graph)).values()))
+        print(f"NetworkX Avg. Degree: {np.mean(degree_arr)}")
+
+        # self.Gr = G   # For Testing
+        if sub:
+            print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
+            components = G.connected_components()
+            G = components.giant()
+            print(f"After removing smaller components, graph has {G.vcount()}  nodes")
+        self.Gr = G
+
+        if self.rotate is not None:
+            centre = np.asarray(self.shape) / 2
+            inner_length_x = (self.inner_cropper.dims[2]) * 0.5
+            inner_length_y = (self.inner_cropper.dims[1]) * 0.5
+            inner_crop = np.array(
+                [
+                    centre[0] - inner_length_x,
+                    centre[0] + inner_length_x,
+                    centre[1] - inner_length_y,
+                    centre[1] + inner_length_y,
+                ],
+                dtype=int,
+            )
+
+            node_positions = np.asarray(
+                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
+            )
+            node_positions = base.oshift(node_positions, _shift=centre)
+            node_positions = np.vstack(
+                (node_positions.T, np.zeros(len(node_positions)))
+            ).T
+            node_positions = np.matmul(node_positions, self.rotate).T[0:2].T
+            node_positions = base.shift(node_positions, _shift=-centre)[0]
+
+            drop_list = []
+            for i in range(self.Gr.vcount()):
+                if not base.isinside(np.asarray([node_positions[i]]), inner_crop):
+                    drop_list.append(i)
+                    continue
+
+                self.Gr.vs[i]["o"] = node_positions[i]
+                self.Gr.vs[i]["pts"] = node_positions[i]
+            self.Gr.delete_vertices(drop_list)
+
+            node_positions = np.asarray(
+                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
+            )
+            final_shift = np.asarray(
+                list(min(node_positions.T[i]) for i in (0, 1, 2)[0: self.dim])
+            )
+            edge_positions_list = np.asarray(
+                list(
+                    base.oshift(self.Gr.es[i]["pts"], _shift=centre)
+                    for i in range(self.Gr.ecount())
+                ),
+                dtype=object,
+            )
+            for i, edge in enumerate(edge_positions_list):
+                edge_position = np.vstack((edge.T, np.zeros(len(edge)))).T
+                edge_position = np.matmul(edge_position, self.rotate).T[0:2].T
+                edge_position = base.shift(edge_position,
+                                           _shift=-centre + final_shift)[0]
+                self.Gr.es[i]["pts"] = edge_position
+
+            node_positions = base.shift(node_positions, _shift=final_shift)[0]
+            for i in range(self.Gr.vcount()):
+                self.Gr.vs[i]["o"] = node_positions[i]
+                self.Gr.vs[i]["pts"] = node_positions[i]
+
+        if weight_type is not None:
+            # self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
+            _img_bin = self.img_bin[self.shift[0][1]::, self.shift[0][2]::]
+            if not isinstance(weight_type, list):
+                raise TypeError("weight_type must be list, even if single element")
+
+            for _type in weight_type:
+                for i, edge in enumerate(self.Gr.es()):
+                    ge = edge["pts"]
+                    graph_skel = GraphSkeleton(img_bin=_img_bin)
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge)
+                    if _type == "VariableWidthConductance" or _type == "FixedWidthConductance":
+                        _type_name = "Conductance"
+                    else:
+                        _type_name = _type
+                    edge["pixel width"] = pix_width
+                    edge[_type_name] = wt
+
+        self.shape = list(max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
+            for j in (0, 1, 2)[0: self.dim])
 
     def node_plot(self, parameter=None, ax=None, depth=0):
         """Superimpose the skeleton, image, and nodal graph theory parameters.
