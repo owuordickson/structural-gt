@@ -7,12 +7,10 @@ Builds a graph network from nano-scale microscopy images.
 import os
 import io
 from PIL import Image
-import math
 import sknw
 import logging
 import itertools
 import numpy as np
-import scipy as sp
 import networkx as nx
 from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
@@ -70,6 +68,7 @@ class GraphExtractor(ProgressUpdate):
         self.props: list = []
         self.img_ntwk: ImageFile | None = None
         self.nx_graph = None
+        self.ig_graph = None
         self.skel_obj: GraphSkeleton | None = None
         self.nx_components = []
 
@@ -102,7 +101,7 @@ class GraphExtractor(ProgressUpdate):
             self.abort = True
             return
 
-        self.update_status([80, "Retrieving graph properties..."])
+        self.update_status([77, "Retrieving graph properties..."])
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
@@ -316,14 +315,29 @@ class GraphExtractor(ProgressUpdate):
 
         Returns: list of graph properties
         """
-        nx_info = []
-        nx_info, self.nx_components, connect_ratio = (GraphComponents.compute_conductance(self.nx_graph, nx_info))
+
+        graph = self.nx_graph
+
+        # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
+        self.update_status([78, "Identifying graph subcomponents..."])
+        connected_components = list(nx.connected_components(graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
+        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        num_graphs = len(sub_graphs)
+        self.nx_components = connected_components
+        connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
+
+        # 2. Populate graph properties
+        self.update_status([80, "Storing graph properties..."])
         props = [
             ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
-            ["Edge Count", str(self.nx_graph.number_of_edges())],
-            ["Node Count", str(self.nx_graph.number_of_nodes())],
+            ["Edge Count", str(graph.number_of_edges())],
+            ["Node Count", str(graph.number_of_nodes())],
             ["Graph Count", str(len(self.nx_components))],
-            ["Largest-to-Entire graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
+            ["Sub-graph Count", str(num_graphs)],
+            ["Giant-to-Entire graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
         return props
 
     def get_weight_type(self):
@@ -427,173 +441,3 @@ class GraphExtractor(ProgressUpdate):
             ge = nx_graph[s][e]['pts']
             axis.plot(ge[:, 1], ge[:, 0], 'red')
         return axis
-
-
-class GraphComponents:
-
-    @staticmethod
-    def compute_conductance(graph: nx.Graph, data_info: list, weighted: bool = False):
-        """
-        Computes graph conductance through an approach based on eigenvectors or spectral frequency.\
-        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
-
-        Conductance can closely be approximated via eigenvalue computation,\
-        a fact which has been well-known and well-used in the graph theory community.
-
-        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
-        while, e.g., traditional spectral clustering is primarily developed for undirected\
-        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
-        techniques requiring the symmetry is to turn the original directed graph into an\
-        undirected graph and build the Laplacian matrix for the latter.
-
-        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
-        The degree of a node is the number of edges incident to that node.\
-        When a node has a degree of zero, it means that there are no edges\
-        connected to that node. In other words, the node is isolated from\
-        the rest of the graph.
-
-        :param graph: NetworkX graph
-        :param data_info: list of tuples containing information about the graph
-        :param weighted: is graph a weighted graph?
-
-        """
-
-        # It is important to notice our graph is (mostly) a directed graph,
-        # meaning that it is: (asymmetric) with self-looping nodes
-
-        # 1. Make a copy of the graph
-        # eig_graph = graph.copy()
-
-        # 2a. Remove self-looping edges
-        eig_graph = GraphComponents.remove_self_loops(graph)
-
-        # 2b. Identify isolated nodes
-        isolated_nodes = list(nx.isolates(eig_graph))
-
-        # 2c. Remove isolated nodes
-        eig_graph.remove_nodes_from(isolated_nodes)
-
-        # 3a. Check connectivity of graph
-        # It has less than two nodes or is not connected.
-        component_list = GraphComponents.get_graph_components(eig_graph)
-        sub_graphs = [graph.subgraph(c).copy() for c in component_list]
-        if sub_graphs is None:
-            return data_info, [], 0.0
-
-        sub_graph_largest = max(sub_graphs, key=lambda g: g.number_of_nodes())
-        sub_graph_smallest = min(sub_graphs, key=lambda g: g.number_of_nodes())
-        size = len(sub_graphs)
-        eig_graph = sub_graph_largest
-        if size > 1:
-            data_info.append({"name": "Subgraph Count", "value": size})
-            data_info.append({"name": "Large Subgraph Node Count", "value": sub_graph_largest.number_of_nodes()})
-            data_info.append({"name": "Large Subgraph Edge Count", "value": sub_graph_largest.number_of_edges()})
-            data_info.append({"name": "Small Subgraph Node Count", "value": sub_graph_smallest.number_of_nodes()})
-            data_info.append({"name": "Small Subgraph Edge Count", "value": sub_graph_smallest.number_of_edges()})
-
-        # 4. Compute normalized-laplacian matrix
-        if weighted:
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph, weight='weight').toarray()
-        else:
-            # norm_laplacian_matrix = compute_norm_laplacian_matrix(eig_graph)
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(eig_graph).toarray()
-
-        # 5. Compute eigenvalues
-        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
-        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
-
-        # 6. Approximate conductance using the 2nd smallest eigenvalue
-        eigenvalues = e_vals.real
-        val_max, val_min = GraphComponents.compute_conductance_range(eigenvalues)
-        data_info.append({"name": "Graph Conductance (max)", "value": val_max})
-        data_info.append({"name": "Graph Conductance (min)", "value": val_min})
-        ratio = eig_graph.number_of_nodes() / graph.number_of_nodes()
-
-        return data_info, component_list, ratio
-
-    @staticmethod
-    def remove_self_loops(graph: nx.Graph):
-        """
-        Remove self-loops from graph, they cause zero values in Degree matrix.
-
-        :param graph:
-        :return:
-        """
-
-        # 1. Get Adjacency matrix
-        adj_mat = nx.adjacency_matrix(graph).todense()
-
-        # 2. Symmetric-ize the Adjacency matrix
-        # adj_mat = xp.maximum(adj_mat, adj_mat.transpose())
-
-        # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        xp.fill_diagonal(adj_mat, 0)
-
-        # 4. Create new graph
-        new_graph = nx.from_numpy_array(adj_mat)
-
-        return new_graph
-
-    @staticmethod
-    def make_graph_symmetrical(graph: nx.Graph):
-        """
-        Deletes diagonal items to make the adjacency matrix of a graph symmetrical. It removes self-loops.
-
-        :param graph:
-        :return:
-        """
-
-        # 1. Get Adjacency matrix
-        adj_mat = nx.adjacency_matrix(graph).todense()
-
-        # 2. Symmetric-ize the Adjacency matrix
-        adj_mat = xp.maximum(adj_mat, adj_mat.transpose())
-
-        # 3. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        xp.fill_diagonal(adj_mat, 0)
-
-        # 4. Create new graph
-        new_graph = nx.from_numpy_array(adj_mat)
-
-        return new_graph
-
-    @staticmethod
-    def compute_conductance_range(eig_vals: xp.ndarray):
-        """
-        Computes the minimum and maximum values of graph conductance.
-
-        :param eig_vals:
-        :return:
-        """
-
-        # Sort the eigenvalues in ascending order
-        sorted_vals = xp.array(eig_vals)
-        sorted_vals.sort()
-
-        # Sort the eigenvalues in descending order
-        # eigenvalues[::-1].sort()
-
-        # approximate conductance using the 2nd smallest eigenvalue
-        try:
-            conductance_max = math.sqrt((2 * sorted_vals[1]))
-        except ValueError:
-            conductance_max = None
-        conductance_min = sorted_vals[1] / 2
-
-        return conductance_max, conductance_min
-
-    @staticmethod
-    def get_graph_components(graph: nx.Graph):
-        """
-        Retrieves the subcomponents (graph segments) that make up the entire NetworkX graph.
-
-        :param graph:
-        :return:
-        """
-
-        # 1. Identify connected components
-        connected_components = list(nx.connected_components(graph))
-        if not connected_components:  # In case the graph is empty
-            return None
-
-        return connected_components

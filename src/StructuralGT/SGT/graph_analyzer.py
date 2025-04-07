@@ -5,11 +5,13 @@ Compute graph theory metrics
 """
 
 import os
+import math
 import datetime
 import itertools
 import multiprocessing
-import pandas as pd
 import numpy as np
+import scipy as sp
+import pandas as pd
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
@@ -629,6 +631,89 @@ class GraphAnalyzer(ProgressUpdate):
         except Exception as err:
             print(err)
         return anc
+
+    def compute_graph_conductance(self, graph_obj):
+        """
+        Computes graph conductance through an approach based on eigenvectors or spectral frequency.\
+        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
+
+        Conductance can closely be approximated via eigenvalue computation,\
+        a fact which has been well-known and well-used in the graph theory community.
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+        while, e.g., traditional spectral clustering is primarily developed for undirected\
+        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+        techniques requiring the symmetry is to turn the original directed graph into an\
+        undirected graph and build the Laplacian matrix for the latter.
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+        The degree of a node is the number of edges incident to that node.\
+        When a node has a degree of zero, it means that there are no edges\
+        connected to that node. In other words, the node is isolated from\
+        the rest of the graph.
+
+        :param graph_obj: Graph Extractor object.
+
+        """
+
+        # Make a copy of the graph
+        graph = graph_obj.nx_graph.copy()
+        weighted = graph_obj.configs["has_weights"]["value"]
+
+        # It is important to notice our graph is (mostly) a directed graph,
+        # meaning that it is: (asymmetric) with self-looping nodes
+
+        # 1. Remove self-looping edges from graph, they cause zero values in Degree matrix.
+        # 1a. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 1b. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+        np.fill_diagonal(adj_mat, 0)
+
+        # 1c. Create new graph
+        giant_graph = nx.from_numpy_array(adj_mat)
+
+        # 2a. Identify isolated nodes
+        isolated_nodes = list(nx.isolates(giant_graph))
+
+        # 2b. Remove isolated nodes
+        giant_graph.remove_nodes_from(isolated_nodes)
+
+        # 3a. Check connectivity of graph
+        # It has less than two nodes or is not connected.
+        # Identify connected components
+        connected_components = list(nx.connected_components(graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
+
+        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+
+        # 4. Compute normalized-laplacian matrix
+        if weighted:
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph, weight='weight').toarray()
+        else:
+            # norm_laplacian_matrix = compute_norm_laplacian_matrix(giant_graph)
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph).toarray()
+
+        # 5. Compute eigenvalues
+        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
+        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
+
+        # 6. Approximate conductance using the 2nd smallest eigenvalue
+        # 6a. Compute the minimum and maximum values of graph conductance.
+        sorted_vals = np.array(e_vals.real)
+        sorted_vals.sort()
+        # approximate conductance using the 2nd smallest eigenvalue
+        try:
+            # Maximum Conductance
+            val_max = math.sqrt((2 * sorted_vals[1]))
+        except ValueError:
+            val_max = None
+        # Minimum Graph Conductance
+        val_min = sorted_vals[1] / 2
+
+        return val_max, val_min
 
     def generate_pdf_output(self, graph_obj: GraphExtractor):
         """

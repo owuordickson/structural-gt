@@ -336,19 +336,20 @@ class FiberNetwork:
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         G = sknwEdits.build_sknw(img_skel[selected_slice])
-        nx_graph = sknw.build_sknw(img_skel[selected_slice])
+        # nx_graph = sknw.build_sknw(img_skel[selected_slice]))
+        nx_graph = G.to_networkx()
 
         # Compute avg. degree from nx
         degree_arr = np.array(list(dict(nx.degree(nx_graph)).values()))
         print(f"NetworkX Avg. Degree: {np.mean(degree_arr)}")
 
-        # self.Gr = G   # For Testing
+        self.Gr = G   # For Testing
         if sub:
             print(f"Before removing smaller components, graph has {G.vcount()}  nodes")
             components = G.connected_components()
             G = components.giant()
             print(f"After removing smaller components, graph has {G.vcount()}  nodes")
-        self.Gr = G
+        # self.Gr = G
 
         if self.rotate is not None:
             centre = np.asarray(self.shape) / 2
