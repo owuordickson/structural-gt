@@ -389,7 +389,7 @@ Rectangle {
             drpDownRescale.height = mainController.display_image() ? 180 : 50;
             //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
-            let curr_type = mainController.get_current_img_type();
+            let curr_type = mainController.get_selected_img_type();
             for (let i=0; i < cbImageType.model.count; i++) {
                 if (cbImageType.model.get(i).value === curr_type){
                     cbImageType.currentIndex = i;

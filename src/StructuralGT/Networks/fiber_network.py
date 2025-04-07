@@ -6,6 +6,8 @@ import copy
 import json
 import os
 import time
+
+import igraph
 import sknw
 import warnings
 import cv2 as cv
@@ -335,9 +337,10 @@ class FiberNetwork:
         img_skel = self.skeleton_3d.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
-        G = sknwEdits.build_sknw(img_skel[selected_slice])
-        # nx_graph = sknw.build_sknw(img_skel[selected_slice]))
-        nx_graph = G.to_networkx()
+        # G = sknwEdits.build_sknw(img_skel[selected_slice])
+        # nx_graph = G.to_networkx()
+        nx_graph = sknw.build_sknw(img_skel[selected_slice])
+        G = igraph.Graph.from_networkx(nx_graph)
 
         # Compute avg. degree from nx
         degree_arr = np.array(list(dict(nx.degree(nx_graph)).values()))

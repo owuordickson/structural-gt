@@ -13,7 +13,7 @@ class ImageProvider(QQuickImageProvider):
 
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
-            sgt_obj = self.img_controller.get_current_obj()
+            sgt_obj = self.img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             if option == "binary":
                 ntwk_p.apply_img_filters(filter_type=2)

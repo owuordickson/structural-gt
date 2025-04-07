@@ -13,6 +13,7 @@ import logging
 import numpy as np
 import nibabel as nib
 from PIL import Image
+from collections import defaultdict
 import matplotlib.pyplot as plt
 
 from .graph_extractor import GraphExtractor
@@ -56,13 +57,13 @@ class NetworkProcessor(ProgressUpdate):
         self.output_dir: str = out_dir
         self.is_2d: bool = True
         self.auto_scale: bool = auto_scale
-        img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
         self.props: list = []
         self.images: list[ImageBase] = []
         self.graph_obj: GraphExtractor | None = None
         self.selected_images: set = set()
         self.is_graph_extracted: bool = False
-        self._initialize_members(img_raw)
+        # img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
+        # self._initialize_members(img_raw)
 
     # MAKE SURE ALL IMAGES ARE THE SAME SIZE
     def _load_img_from_file(self, file: str):
@@ -104,16 +105,14 @@ class NetworkProcessor(ProgressUpdate):
                 # Try load multi-page TIFF using PIL
                 img = Image.open(file)
 
-                images = []
-                max_img_shape = [0, 0]
+                image_groups = defaultdict(list)
                 scale_factor = 1
                 scaling_opts = []
                 while True:
+                    # Create clusters/groups of similar size images
                     frame = np.array(img)  # Convert the current frame to numpy array
-                    images.append(frame)
-                    img_shape = frame.shape
-                    max_img_shape[0] = img_shape[0] if img_shape[0] > max_img_shape[0] else max_img_shape[0]
-                    max_img_shape[1] = img_shape[1] if img_shape[1] > max_img_shape[1] else max_img_shape[1]
+                    h, w = frame.shape[:2]
+                    image_groups[(h, w)].append(frame)
                     try:
                         # Move to next frame
                         img.seek(img.tell() + 1)
@@ -121,24 +120,8 @@ class NetworkProcessor(ProgressUpdate):
                         # Stop when all frames are read
                         break
 
-                # Pad small images with zeros to ensure same size for all images
-                # Pad each array to the max shape, such that padded_images contains all arrays of shape (max_h, max_w)
-                padded_images = []
-                max_h = max_img_shape[0]
-                max_w = max_img_shape[1]
-
-                for frame in images:
-                    h, w = frame.shape[:2]
-                    pad_h = max_h - h
-                    pad_w = max_w - w
-                    if frame.ndim == 2:
-                        # Grayscale image
-                        # ((top, bottom), (left, right)) padding
-                        padded = np.pad(frame, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
-                    else:
-                        # Color or RGBA image
-                        padded = np.pad(frame, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant', constant_values=0)
-                    padded_images.append(padded)
+                print(f"Group size: {len(image_groups)}")
+                print(image_groups.keys())
 
                 images_small = []
                 max_size = max(max_img_shape[0], max_img_shape[1])
