@@ -8,7 +8,7 @@ import os
 import time
 import warnings
 import cv2 as cv
-import gsd.hoomd
+# import gsd.hoomd
 # import igraph as ig
 import matplotlib as mpl
 import matplotlib.pyplot as plt

@@ -2,10 +2,7 @@
 # This file is from the StructuralGT project, released under the BSD 3-Clause
 # License.
 
-import gsd.hoomd
 import numpy as np
-
-from . import sknwEdits
 
 
 # USED IN "ROTATE"?
