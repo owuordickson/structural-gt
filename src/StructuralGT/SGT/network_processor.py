@@ -105,14 +105,15 @@ class NetworkProcessor(ProgressUpdate):
                 img = Image.open(file)
 
                 images = []
-                img_px_size = 0
+                max_img_shape = [0, 0]
                 scale_factor = 1
                 scaling_opts = []
                 while True:
                     frame = np.array(img)  # Convert the current frame to numpy array
                     images.append(frame)
-                    temp_px = max(frame.shape[0], frame.shape[1])
-                    img_px_size = temp_px if temp_px > img_px_size else img_px_size
+                    img_shape = frame.shape
+                    max_img_shape[0] = img_shape[0] if img_shape[0] > max_img_shape[0] else max_img_shape[0]
+                    max_img_shape[1] = img_shape[1] if img_shape[1] > max_img_shape[1] else max_img_shape[1]
                     try:
                         # Move to next frame
                         img.seek(img.tell() + 1)
@@ -120,14 +121,34 @@ class NetworkProcessor(ProgressUpdate):
                         # Stop when all frames are read
                         break
 
+                # Pad small images with zeros to ensure same size for all images
+                # Pad each array to the max shape, such that padded_images contains all arrays of shape (max_h, max_w)
+                padded_images = []
+                max_h = max_img_shape[0]
+                max_w = max_img_shape[1]
+
+                for frame in images:
+                    h, w = frame.shape[:2]
+                    pad_h = max_h - h
+                    pad_w = max_w - w
+                    if frame.ndim == 2:
+                        # Grayscale image
+                        # ((top, bottom), (left, right)) padding
+                        padded = np.pad(frame, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
+                    else:
+                        # Color or RGBA image
+                        padded = np.pad(frame, ((0, pad_h), (0, pad_w), (0, 0)), mode='constant', constant_values=0)
+                    padded_images.append(padded)
+
                 images_small = []
-                if img_px_size > 0 and self.auto_scale:
-                    scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                    images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
+                max_size = max(max_img_shape[0], max_img_shape[1])
+                if max_size > 0 and self.auto_scale:
+                    scaling_opts = NetworkProcessor.get_scaling_options(max_size, self.auto_scale)
+                    images_small, scale_factor = NetworkProcessor.rescale_img(padded_images, scaling_opts)
 
                 # Convert back to numpy arrays
-                images = images_small if len(images_small) > 0 else images
-                images_lst = [np.array(f) for f in images]
+                padded_images = images_small if len(images_small) > 0 else padded_images
+                images_lst = [np.array(f) for f in padded_images]
 
                 """
                 # Plot all frames
@@ -552,17 +573,9 @@ class NetworkProcessor(ProgressUpdate):
             return img_2d, scale_factor
 
         if type(image_data) is list:
-            img_px_size = 1
             images = image_data
-            for img in images:
-                temp_px = max(img.shape[0], img.shape[1])
-                img_px_size = temp_px if temp_px > img_px_size else img_px_size
-            scale_factor = scale_size / img_px_size
-
-            # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
             img_3d = []
             for img in images:
-                scale_size = scale_factor * max(img.shape[0], img.shape[1])
-                img_small, _ = ImageBase.resize_img(scale_size, img)
+                img_small, scale_factor = ImageBase.resize_img(scale_size, img)
                 img_3d.append(img_small)
         return img_3d, scale_factor
