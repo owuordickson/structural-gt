@@ -95,6 +95,12 @@ class MainController(QObject):
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
+            options_scaling = ntwk_p.scaling_options
+            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
+                          for i in range(len(sgt_obj.ntwk_p.image_batches))]
+
+            self.imgBatchModel.reset_data(batch_list)
+            self.imgScaleOptionModel.reset_data(options_scaling)
 
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
@@ -122,12 +128,6 @@ class MainController(QObject):
 
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
             file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
-            options_scaling = ntwk_p.scaling_options
-            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
-                          for i in range(len(sgt_obj.ntwk_p.image_batches))]
-
-            self.imgBatchModel.reset_data(batch_list)
-            self.imgScaleOptionModel.reset_data(options_scaling)
 
             self.gteTreeModel.reset_data(graph_options)
             self.exportGraphModel.reset_data(file_options)
@@ -470,6 +470,7 @@ class MainController(QObject):
         try:
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.select_image_batch(batch_index)
+            self.update_img_models(sgt_obj)
             self.select_img_type()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})

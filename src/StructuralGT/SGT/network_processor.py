@@ -221,6 +221,7 @@ class NetworkProcessor(ProgressUpdate):
             else:
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
         self.props = self.get_image_props()
+        self.reset_img_filters()
 
     def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
         """
