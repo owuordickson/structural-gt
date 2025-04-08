@@ -163,7 +163,7 @@ ColumnLayout {
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
-        visible: true  // mainController.display_image()
+        visible: mainController.image_batches_exist()
 
         RowLayout {
             anchors.fill: parent
@@ -174,12 +174,12 @@ ColumnLayout {
                 Layout.alignment: Qt.AlignCenter
                 model: imgBatchModel
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
-                textRole: imgBatchModel.text
-                valueRole: imgBatchModel.value
+                textRole: "text"
+                valueRole: "value"
                 ToolTip.text: "Change image batch"
                 ToolTip.visible: cbBatchSelector.hovered
-                enabled: true  // mainController.display_image()
-                //onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
+                //enabled: image_batches_exist.display_image()
+                onCurrentIndexChanged: mainController.select_img_batch(valueAt(currentIndex))
             }
         }
     }
@@ -430,6 +430,7 @@ ColumnLayout {
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
             imgContainer.visible = mainController.display_image();
             imgNavControls.visible = mainController.display_image();
+            imgBatchSelector.visible = mainController.image_batches_exist();
 
             zoomFactor = 1.0;
 
@@ -437,6 +438,13 @@ ColumnLayout {
             btnNext.enabled = mainController.enable_next_nav_btn();
             lblNavInfo.text = mainController.get_img_nav_location();
             //console.log(src);
+
+            let curr_batch = mainController.get_selected_img_batch();
+            for (let i=0; i < cbBatchSelector.model.count; i++) {
+                if (cbBatchSelector.model.get(i).value === curr_batch){
+                    cbBatchSelector.currentIndex = i;
+                }
+            }
         }
 
         function onProjectOpenedSignal(name) {

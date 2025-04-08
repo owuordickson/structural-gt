@@ -66,6 +66,7 @@ class MainController(QObject):
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
         self.exportGraphModel = CheckBoxModel([])
+        self.imgBatchModel = CheckBoxModel([])
         self.imgControlModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
@@ -88,7 +89,6 @@ class MainController(QObject):
             first_index = next(iter(ntwk_p.selected_images), None)  # 1st selected image
             first_index = first_index if first_index is not None else 0  # first image if None
             options_img = ntwk_p.images[first_index].configs
-            options_scaling = ntwk_p.scaling_options
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
@@ -100,7 +100,6 @@ class MainController(QObject):
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
             self.microscopyPropsModel.reset_data(img_properties)
-            self.imgScaleOptionModel.reset_data(options_scaling)
             self.saveImgModel.reset_data(file_options)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -123,6 +122,12 @@ class MainController(QObject):
 
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
             file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+            options_scaling = ntwk_p.scaling_options
+            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
+                          for i in range(len(sgt_obj.ntwk_p.image_batches))]
+
+            self.imgBatchModel.reset_data(batch_list)
+            self.imgScaleOptionModel.reset_data(options_scaling)
 
             self.gteTreeModel.reset_data(graph_options)
             self.exportGraphModel.reset_data(file_options)
@@ -401,6 +406,11 @@ class MainController(QObject):
         return is_3d
 
     @Slot(result=int)
+    def get_selected_img_batch(self):
+        sgt_obj = self.get_selected_sgt_obj()
+        return sgt_obj.ntwk_p.selected_image_batch
+
+    @Slot(result=int)
     def get_selected_img_type(self):
         return self.selected_img_type
 
@@ -451,6 +461,20 @@ class MainController(QObject):
     def set_auto_scale(self, auto_scale):
         """Set the auto-scale parameter for each image."""
         self.allow_auto_scale = auto_scale
+
+    @Slot(int)
+    def select_img_batch(self, batch_index=-1):
+        if batch_index < 0:
+            return
+
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.select_image_batch(batch_index)
+            self.select_img_type()
+        except Exception as err:
+            logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
+                                                           f"{batch_index}. Restart app and try again.")
 
     @Slot(int)
     def select_img_type(self, choice=None):
@@ -724,6 +748,16 @@ class MainController(QObject):
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded
+
+    @Slot(result=bool)
+    def image_batches_exist(self):
+        if not self.img_loaded:
+            return False
+
+        sgt_obj = self.get_selected_sgt_obj()
+        batch_count = len(sgt_obj.ntwk_p.image_batches)
+        batches_exist = True if batch_count > 1 else False
+        return batches_exist
 
     @Slot(result=bool)
     def is_project_open(self):

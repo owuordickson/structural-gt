@@ -38,6 +38,7 @@ class MainWindow(QObject):
         self.ui_engine.rootContext().setContextProperty("gteTreeModel", controller.gteTreeModel)
         self.ui_engine.rootContext().setContextProperty("gtcListModel", controller.gtcListModel)
         self.ui_engine.rootContext().setContextProperty("exportGraphModel", controller.exportGraphModel)
+        self.ui_engine.rootContext().setContextProperty("imgBatchModel", controller.imgBatchModel)
         self.ui_engine.rootContext().setContextProperty("imgControlModel", controller.imgControlModel)
         self.ui_engine.rootContext().setContextProperty("imgBinFilterModel", controller.imgBinFilterModel)
         self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)
