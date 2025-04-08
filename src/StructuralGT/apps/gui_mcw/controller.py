@@ -284,7 +284,7 @@ class MainController(QObject):
         try:
             self._handle_progress_update(98, "Writing PDF...")
 
-            filename, output_location = sgt_obj.ntwk_p.create_filenames()
+            filename, output_location = sgt_obj.ntwk_p.get_filenames()
             pdf_filename = filename + "_SGT_results.pdf"
             pdf_file = os.path.join(output_location, pdf_filename)
             with (PdfPages(pdf_file) as pdf):
@@ -599,7 +599,7 @@ class MainController(QObject):
 
             # 1. Get filename
             sgt_obj = self.get_selected_sgt_obj()
-            out_dir, filename = sgt_obj.ntwk_p.create_filenames()
+            out_dir, filename = sgt_obj.ntwk_p.get_filenames()
             out_dir = out_dir if sgt_obj.ntwk_p.output_dir == '' else sgt_obj.ntwk_p.output_dir
 
             # 2. Update values

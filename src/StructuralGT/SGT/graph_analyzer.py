@@ -623,7 +623,7 @@ class GraphAnalyzer(ProgressUpdate):
         anc = 0
 
         try:
-            filename, output_location = self.ntwk_p.create_filenames()
+            filename, output_location = self.ntwk_p.get_filenames()
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
@@ -730,7 +730,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = self.ntwk_p.display_images()
+        figs = self.ntwk_p.get_image_plots()
         for fig in figs:
             out_figs.append(fig)
 

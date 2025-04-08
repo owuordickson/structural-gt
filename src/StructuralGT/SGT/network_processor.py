@@ -68,7 +68,6 @@ class NetworkProcessor(ProgressUpdate):
         self.selected_image_batch: int = 0
         self._initialize_selected_batch()
 
-    # Cluster images into batches based on (h, w) size
     def _load_img_from_file(self, file: str):
         """
         Read image and save it as an OpenCV object.
@@ -87,6 +86,7 @@ class NetworkProcessor(ProgressUpdate):
         :param file: file path.
         :return:
         """
+        # Cluster images into batches based on (h, w) size
 
         ext = os.path.splitext(file)[1].lower()
         try:
@@ -220,24 +220,34 @@ class NetworkProcessor(ProgressUpdate):
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             else:
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-        self.props = self.get_img_props()
+        self.props = self.get_image_props()
 
-    def track_graph_progress(self, value, msg):
+    def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
+        """
+        Update the selected image batch and the selected image slices.
+
+        Args:
+            sel_batch_idx: index of the selected image batch
+            selected_images: indices of the selected image slices.
+
+        Returns:
+
+        """
+
+        if sel_batch_idx >= len(self.image_batches):
+            return
+        self.selected_image_batch = sel_batch_idx
+
+        if selected_images is None:
+            return
+
+        if type(selected_images) is set:
+            self.image_batches[sel_batch_idx]["selected_images"] = selected_images
+
+
+
+    def track_progress(self, value, msg):
         self.update_status([value, msg])
-
-    def get_selected_images(self):
-        """
-        Get indices of selected images.
-        """
-        sel_images = [self.images[i] for i in self.selected_images]
-        return sel_images
-
-    def reset_img_filters(self):
-        """Delete existing filters that have been applied on image."""
-        self.is_graph_extracted = False
-        for img_obj in self.images:
-            img_obj.img_mod, img_obj.img_bin = None, None
-            self.graph_obj.reset_graph()
 
     def apply_img_filters(self, filter_type=2):
         """
@@ -277,38 +287,12 @@ class NetworkProcessor(ProgressUpdate):
 
         self.update_status([100, "Image processing complete..."])
 
-    def build_graph_network(self):
-        """Generates or extracts graphs of selected images."""
-
-        self.update_status([0, "Starting graph extraction..."])
-
-        try:
-            # sel_images = self.get_selected_images()
-            # img_bin = [img.img_bin for img in sel_images]
-            # MAKE SURE ALL IMAGES ARE THE SAME SIZE
-            # img_bin = np.asarray(img_bin)
-
-            self.graph_obj.abort = False
-            self.graph_obj.add_listener(self.track_graph_progress)
-            # px_size = float(img_obj.configs["pixel_width"]["value"])
-            # rho_val = float(img_obj.configs["resistivity"]["value"])
-            # self.graph_obj.fit_graph(img_bin, img_obj.img_2d, px_size, rho_val)
-            self.graph_obj.remove_listener(self.track_graph_progress)
-            self.abort = self.graph_obj.abort
-            self.is_graph_extracted = not self.abort
-            if self.abort:
-                return
-            else:  # TO BE DELETED
-                pos_arr = np.asarray(np.where(self.graph_obj.skel_obj.skeleton != 0)).T
-                out_dir, f_name = self.create_filenames()
-                gsd_name = out_dir + "/cleaned_" + f_name
-                write_gsd_file(gsd_name, pos_arr)
-                print(f"Cleaned skeleton for an image with shape {self.graph_obj.skel_obj.skeleton.shape}")
-        except Exception as err:
-            self.abort = True
-            logging.info(f"Error creating graph from image binary.")
-            logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-            return
+    def reset_img_filters(self):
+        """Delete existing filters that have been applied on image."""
+        self.is_graph_extracted = False
+        for img_obj in self.images:
+            img_obj.img_mod, img_obj.img_bin = None, None
+            self.graph_obj.reset_graph()
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -344,7 +328,7 @@ class NetworkProcessor(ProgressUpdate):
                 return
             img_obj.img_2d = img_small
             img_obj.scale_factor = scale_factor
-        self.props = self.get_img_props()
+        self.props = self.get_image_props()
 
     def crop_image(self, x: float, y: float, width: float, height: float):
         """
@@ -358,7 +342,7 @@ class NetworkProcessor(ProgressUpdate):
 
         if len(self.selected_images) > 0:
             [self.images[i].apply_img_crop(x, y, width, height) for i in self.selected_images]
-        self.props = self.get_img_props()
+        self.props = self.get_image_props()
 
     def undo_cropping(self):
         """
@@ -366,9 +350,42 @@ class NetworkProcessor(ProgressUpdate):
         """
         if len(self.selected_images) > 0:
             [self.images[i].init_image() for i in self.selected_images]
-        self.props = self.get_img_props()
+        self.props = self.get_image_props()
 
-    def create_filenames(self, image_path: str = None):
+    def build_graph_network(self):
+        """Generates or extracts graphs of selected images."""
+
+        self.update_status([0, "Starting graph extraction..."])
+
+        try:
+            # sel_images = self.get_selected_images()
+            # img_bin = [img.img_bin for img in sel_images]
+            # MAKE SURE ALL IMAGES ARE THE SAME SIZE
+            # img_bin = np.asarray(img_bin)
+
+            self.graph_obj.abort = False
+            self.graph_obj.add_listener(self.track_progress)
+            # px_size = float(img_obj.configs["pixel_width"]["value"])
+            # rho_val = float(img_obj.configs["resistivity"]["value"])
+            # self.graph_obj.fit_graph(img_bin, img_obj.img_2d, px_size, rho_val)
+            self.graph_obj.remove_listener(self.track_progress)
+            self.abort = self.graph_obj.abort
+            self.is_graph_extracted = not self.abort
+            if self.abort:
+                return
+            else:  # TO BE DELETED
+                pos_arr = np.asarray(np.where(self.graph_obj.skel_obj.skeleton != 0)).T
+                out_dir, f_name = self.get_filenames()
+                gsd_name = out_dir + "/cleaned_" + f_name
+                write_gsd_file(gsd_name, pos_arr)
+                print(f"Cleaned skeleton for an image with shape {self.graph_obj.skel_obj.skeleton.shape}")
+        except Exception as err:
+            self.abort = True
+            logging.info(f"Error creating graph from image binary.")
+            logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
+            return
+
+    def get_filenames(self, image_path: str = None):
         """
         Splits image path into file name and image directory.
 
@@ -393,7 +410,14 @@ class NetworkProcessor(ProgressUpdate):
             filename = re.sub(pattern, '', filename)
         return filename, output_dir
 
-    def get_img_props(self):
+    def get_selected_images(self):
+        """
+        Get indices of selected images.
+        """
+        sel_images = [self.images[i] for i in self.selected_images]
+        return sel_images
+
+    def get_image_props(self):
         """
         A method that retrieves image properties and stores them in a list-array.
 
@@ -401,7 +425,7 @@ class NetworkProcessor(ProgressUpdate):
 
         """
 
-        f_name, _ = self.create_filenames()
+        f_name, _ = self.get_filenames()
         if len(self.images) > 1:
             # (Depth, Height, Width, Channels)
             alpha_channel = self.images[0].has_alpha_channel  # first image
@@ -426,7 +450,7 @@ class NetworkProcessor(ProgressUpdate):
         ]
         return props
 
-    def display_images(self):
+    def get_image_plots(self):
         """
         Create plot figures of original, processed, and binary image.
 
@@ -491,7 +515,7 @@ class NetworkProcessor(ProgressUpdate):
             if img.configs["save_images"]["value"] == 0:
                 return
 
-            out_dir, filename = self.create_filenames()
+            out_dir, filename = self.get_filenames()
             out_dir = out_dir if self.output_dir == '' else self.output_dir
 
             filename += f"_Frame{i}" if is_3d else ''
