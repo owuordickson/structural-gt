@@ -439,12 +439,13 @@ ColumnLayout {
             lblNavInfo.text = mainController.get_img_nav_location();
             //console.log(src);
 
-            let curr_batch = mainController.get_selected_img_batch();
-            for (let i=0; i < cbBatchSelector.model.count; i++) {
+            const curr_batch = mainController.get_selected_img_batch();
+            cbBatchSelector.currentIndex = curr_batch;
+            /*for (let i=0; i < cbBatchSelector.model.count; i++) {
                 if (cbBatchSelector.model.get(i).value === curr_batch){
                     cbBatchSelector.currentIndex = i;
                 }
-            }
+            }*/
         }
 
         function onProjectOpenedSignal(name) {
