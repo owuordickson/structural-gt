@@ -55,20 +55,20 @@ class NetworkProcessor(ProgressUpdate):
         super(NetworkProcessor, self).__init__()
         self.img_path: str = img_path
         self.output_dir: str = out_dir
-        self.is_2d: bool = True
         self.auto_scale: bool = auto_scale
         self.scale_factor: float = 1.0
         self.scaling_options: list = []
+        self.is_2d: bool = True
         self.props: list = []
         self.images: list[ImageBase] = []
         self.selected_images: set = set()
         self.graph_obj: GraphExtractor | None = None
         self.is_graph_extracted: bool = False
-        self.image_groups: list = self._load_img_from_file(img_path)
-        self.selected_image_group: int = 0
-        # self._initialize_members(img_raw)
+        self.image_batches: list = self._load_img_from_file(img_path)
+        self.selected_image_batch: int = 0
+        self._initialize_selected_batch()
 
-    # MAKE SURE ALL IMAGES ARE THE SAME SIZE
+    # Cluster images into batches based on (h, w) size
     def _load_img_from_file(self, file: str):
         """
         Read image and save it as an OpenCV object.
@@ -103,8 +103,8 @@ class NetworkProcessor(ProgressUpdate):
                     scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
                     image, scale_factor = NetworkProcessor.rescale_img(image, scaling_opts)
 
-                img_info = {"img_data": image, "shape": [image.shape[0], image.shape[1]], "scale_factor": scale_factor, "scaling_opts": scaling_opts}
-                print(f"Group: {[image.shape[0], image.shape[1]]}, Image Type: {type(image)}, Size: {len(image)}, Scale: {scale_factor}")
+                img_info = {"img_data": image, "shape": [image.shape[0], image.shape[1]], "scale_factor": scale_factor,
+                            "scaling_opts": scaling_opts, "selected_images": {0}}
                 return [img_info]
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
@@ -137,9 +137,8 @@ class NetworkProcessor(ProgressUpdate):
                     images = images_small if len(images_small) > 0 else images
                     # images_lst = [np.array(f) for f in images]
                     img_info = {"img_data": images, "shape": [h, w], "scale_factor": scale_factor,
-                                "scaling_opts": scaling_opts}
+                                "scaling_opts": scaling_opts, "selected_images": set(range(len(images)))}
                     img_info_list.append(img_info)
-                    print(f"Group: {(h, w)}, Image Type: {type(images)}, Size: {len(images)}, Scale: {scale_factor}")
 
                 """
                 # Plot all frames
@@ -181,22 +180,32 @@ class NetworkProcessor(ProgressUpdate):
             logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
             return None
 
-    def _initialize_members(self, img_data):
-        """
+    def _initialize_selected_batch(self):
+        """Retrieve all image slices of the selected image batch. If the image is 2D only one slice exists,
+        if it is 3D multiple slices exist."""
 
-        Reads all slices of a 3D image and loads them as separate images if it is 3D, or image itself if 2D.
+        # Check if image batches exist
+        if len(self.image_batches) == 0:
+            raise ValueError("No images available! Please add at least one image.")
 
-        Args:
-            img_data: image data.
+        # Verify selected batch (default is first batch)
+        selected_batch = self.selected_image_batch if self.selected_image_batch >= 0 else 0
+        if selected_batch >= len(self.image_batches):
+            raise ValueError(f"Selected image batch out of range! Select in range 0-{len(self.image_batches)}")
 
-        Returns:
+        # Get selected image batch and retrieve its data
+        sel_img_batch = self.image_batches[selected_batch]
+        self.scale_factor = sel_img_batch["scale_factor"]
+        self.scaling_opts = sel_img_batch["scaling_opts"]
+        self.selected_images = sel_img_batch["selected_images"]
+        img_data = sel_img_batch["img_data"]
+        # grp_shape = sel_img_batch.shape
 
-        """
+        # Load images for processing
         if img_data is None:
-            return
+            raise ValueError(f"Problem with images in batch {selected_batch}!")
 
         self.graph_obj = GraphExtractor()
-        # if type(img_data) is list:
         has_alpha, _ = ImageBase.check_alpha_channel(img_data)
         if (len(img_data.shape) >= 3) and (not has_alpha):
             # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
@@ -211,11 +220,6 @@ class NetworkProcessor(ProgressUpdate):
                 logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
             else:
                 logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-        self.selected_images = set(range(len(self.images)))
-        # Testing
-        # self.selected_images = set(range(3))
-        # self.selected_images.discard(index)
-        # self.selected_images.add(index)
         self.props = self.get_img_props()
 
     def track_graph_progress(self, value, msg):
