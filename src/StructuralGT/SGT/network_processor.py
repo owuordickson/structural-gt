@@ -244,8 +244,6 @@ class NetworkProcessor(ProgressUpdate):
         if type(selected_images) is set:
             self.image_batches[sel_batch_idx]["selected_images"] = selected_images
 
-
-
     def track_progress(self, value, msg):
         self.update_status([value, msg])
 
