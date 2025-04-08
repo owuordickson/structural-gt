@@ -57,12 +57,15 @@ class NetworkProcessor(ProgressUpdate):
         self.output_dir: str = out_dir
         self.is_2d: bool = True
         self.auto_scale: bool = auto_scale
+        self.scale_factor: float = 1.0
+        self.scaling_options: list = []
         self.props: list = []
         self.images: list[ImageBase] = []
-        self.graph_obj: GraphExtractor | None = None
         self.selected_images: set = set()
+        self.graph_obj: GraphExtractor | None = None
         self.is_graph_extracted: bool = False
-        # img_raw, self.scaling_options, self.scale_factor = self._load_img_from_file(img_path)
+        self.image_groups: list = self._load_img_from_file(img_path)
+        self.selected_image_group: int = 0
         # self._initialize_members(img_raw)
 
     # MAKE SURE ALL IMAGES ARE THE SAME SIZE
@@ -100,14 +103,14 @@ class NetworkProcessor(ProgressUpdate):
                     scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
                     image, scale_factor = NetworkProcessor.rescale_img(image, scaling_opts)
 
-                return image, scaling_opts, scale_factor
+                img_info = {"img_data": image, "shape": [image.shape[0], image.shape[1]], "scale_factor": scale_factor, "scaling_opts": scaling_opts}
+                print(f"Group: {[image.shape[0], image.shape[1]]}, Image Type: {type(image)}, Size: {len(image)}, Scale: {scale_factor}")
+                return [img_info]
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
                 img = Image.open(file)
 
                 image_groups = defaultdict(list)
-                scale_factor = 1
-                scaling_opts = []
                 while True:
                     # Create clusters/groups of similar size images
                     frame = np.array(img)  # Convert the current frame to numpy array
@@ -120,18 +123,23 @@ class NetworkProcessor(ProgressUpdate):
                         # Stop when all frames are read
                         break
 
-                print(f"Group size: {len(image_groups)}")
-                print(image_groups.keys())
-
-                images_small = []
-                max_size = max(max_img_shape[0], max_img_shape[1])
-                if max_size > 0 and self.auto_scale:
-                    scaling_opts = NetworkProcessor.get_scaling_options(max_size, self.auto_scale)
-                    images_small, scale_factor = NetworkProcessor.rescale_img(padded_images, scaling_opts)
-
-                # Convert back to numpy arrays
-                padded_images = images_small if len(images_small) > 0 else padded_images
-                images_lst = [np.array(f) for f in padded_images]
+                img_info_list = []
+                for (h, w), images in image_groups.items():
+                    images_small = []
+                    scale_factor = 1
+                    scaling_opts = []
+                    images  = np.array(images)
+                    max_size = max(h, w)
+                    if max_size > 0 and self.auto_scale:
+                        scaling_opts = NetworkProcessor.get_scaling_options(max_size, self.auto_scale)
+                        images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
+                    # Convert back to numpy arrays
+                    images = images_small if len(images_small) > 0 else images
+                    # images_lst = [np.array(f) for f in images]
+                    img_info = {"img_data": images, "shape": [h, w], "scale_factor": scale_factor,
+                                "scaling_opts": scaling_opts}
+                    img_info_list.append(img_info)
+                    print(f"Group: {(h, w)}, Image Type: {type(images)}, Size: {len(images)}, Scale: {scale_factor}")
 
                 """
                 # Plot all frames
@@ -152,7 +160,7 @@ class NetworkProcessor(ProgressUpdate):
                                     ax.axis("off")
                                 plt.tight_layout()
                                 plt.show()"""
-                return images_lst, scaling_opts, scale_factor
+                return img_info_list
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
                 img_nib = nib.load(file)
@@ -188,7 +196,10 @@ class NetworkProcessor(ProgressUpdate):
             return
 
         self.graph_obj = GraphExtractor()
-        if type(img_data) is list:
+        # if type(img_data) is list:
+        has_alpha, _ = ImageBase.check_alpha_channel(img_data)
+        if (len(img_data.shape) >= 3) and (not has_alpha):
+            # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
             self.images = [ImageBase(img, self.scale_factor) for img in img_data]
             self.is_2d = False
             logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
@@ -284,11 +295,10 @@ class NetworkProcessor(ProgressUpdate):
             if self.abort:
                 return
             else:  # TO BE DELETED
-                pos_count = int(sum(self.graph_obj.skel_obj.skeleton.ravel()))
                 pos_arr = np.asarray(np.where(self.graph_obj.skel_obj.skeleton != 0)).T
                 out_dir, f_name = self.create_filenames()
                 gsd_name = out_dir + "/cleaned_" + f_name
-                write_gsd_file(gsd_name, pos_count, pos_arr)
+                write_gsd_file(gsd_name, pos_arr)
                 print(f"Cleaned skeleton for an image with shape {self.graph_obj.skel_obj.skeleton.shape}")
         except Exception as err:
             self.abort = True
@@ -551,14 +561,19 @@ class NetworkProcessor(ProgressUpdate):
         if scale_size <= 0:
             return None, scale_factor
 
-        if type(image_data) is np.ndarray:
+        # if type(image_data) is np.ndarray:
+        has_alpha, _ = ImageBase.check_alpha_channel(image_data)
+        if (len(image_data.shape) == 2) or has_alpha:
+            # If image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
             img_2d, scale_factor = ImageBase.resize_img(scale_size, image_data)
             return img_2d, scale_factor
 
-        if type(image_data) is list:
+        # if type(image_data) is list:
+        if (len(image_data.shape) >= 3) and (not has_alpha):
+            # If image has shape (d, h, w) and third is not alpha channel
             images = image_data
             img_3d = []
             for img in images:
                 img_small, scale_factor = ImageBase.resize_img(scale_size, img)
                 img_3d.append(img_small)
-        return img_3d, scale_factor
+        return np.array(img_3d), scale_factor
