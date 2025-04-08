@@ -158,6 +158,34 @@ ColumnLayout {
 
 
     Rectangle {
+        id: imgBatchSelector
+        height: 32
+        Layout.fillHeight: false
+        Layout.fillWidth: true
+        color: "transparent"
+        visible: true  // mainController.display_image()
+
+        RowLayout {
+            anchors.fill: parent
+
+            ComboBox {
+                id: cbBatchSelector
+                Layout.minimumWidth: 125
+                Layout.alignment: Qt.AlignCenter
+                model: imgBatchModel
+                implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+                textRole: imgBatchModel.text
+                valueRole: imgBatchModel.value
+                ToolTip.text: "Change image batch"
+                ToolTip.visible: cbBatchSelector.hovered
+                enabled: true  // mainController.display_image()
+                //onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
+            }
+        }
+    }
+
+
+    Rectangle {
         id: imgContainer
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -339,13 +367,12 @@ ColumnLayout {
 
 
     Rectangle {
-        id: navControls
+        id: imgNavControls
         height: 32
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
         visible: mainController.display_image()
-
 
         RowLayout {
             anchors.fill: parent
@@ -402,7 +429,7 @@ ColumnLayout {
             imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
             imgContainer.visible = mainController.display_image();
-            navControls.visible = mainController.display_image();
+            imgNavControls.visible = mainController.display_image();
 
             zoomFactor = 1.0;
 

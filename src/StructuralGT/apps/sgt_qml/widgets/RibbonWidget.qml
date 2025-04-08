@@ -256,6 +256,8 @@ Rectangle {
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
                 valueRole: "value"
+                ToolTip.text: "Change image type"
+                ToolTip.visible: cbImageType.hovered
                 enabled: mainController.display_image()
                 onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
             }
