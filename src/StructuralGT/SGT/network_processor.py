@@ -205,6 +205,7 @@ class NetworkProcessor(ProgressUpdate):
         if img_data is None:
             raise ValueError(f"Problem with images in batch {selected_batch}!")
 
+        # Move this to load_img so that it is done once (no re-writes)
         self.graph_obj = GraphExtractor()
         has_alpha, _ = ImageBase.check_alpha_channel(img_data)
         if (len(img_data.shape) >= 3) and (not has_alpha):
