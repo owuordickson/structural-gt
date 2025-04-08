@@ -196,7 +196,7 @@ class NetworkProcessor(ProgressUpdate):
         # Get selected image batch and retrieve its data
         sel_img_batch = self.image_batches[selected_batch]
         self.scale_factor = sel_img_batch["scale_factor"]
-        self.scaling_opts = sel_img_batch["scaling_opts"]
+        self.scaling_options = sel_img_batch["scaling_opts"]
         self.selected_images = sel_img_batch["selected_images"]
         img_data = sel_img_batch["img_data"]
         # grp_shape = sel_img_batch.shape
@@ -239,10 +239,12 @@ class NetworkProcessor(ProgressUpdate):
         self.selected_image_batch = sel_batch_idx
 
         if selected_images is None:
+            self._initialize_selected_batch()
             return
 
         if type(selected_images) is set:
             self.image_batches[sel_batch_idx]["selected_images"] = selected_images
+        self._initialize_selected_batch()
 
     def track_progress(self, value, msg):
         self.update_status([value, msg])
