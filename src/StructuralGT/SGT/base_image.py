@@ -14,7 +14,7 @@ from ..configs.config_loader import load_img_configs
 
 
 
-class ImageBase:
+class BaseImage:
     """
     A class that is used to binarize an image by applying filters to it and converting it to binary version.
 
@@ -50,7 +50,7 @@ class ImageBase:
         if img_data is None:
             return
 
-        self.has_alpha_channel, _ = ImageBase.check_alpha_channel(self.img_raw)
+        self.has_alpha_channel, _ = BaseImage.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
 
     def get_pixel_width(self):
@@ -59,7 +59,7 @@ class ImageBase:
         pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
         scale_val = float(opt_img["scale_value_nanometers"]["value"])
         if (scale_val > 0) and (pixel_count > 0):
-            px_width = ImageBase.compute_pixel_width(scale_val, pixel_count)
+            px_width = BaseImage.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width / self.scale_factor
 
     def apply_img_crop(self, x: float, y: float, width: float, height: float):
@@ -93,13 +93,13 @@ class ImageBase:
         if image is None:
             return None
 
-        alpha_channel, _ = ImageBase.check_alpha_channel(image)
+        alpha_channel, _ = BaseImage.check_alpha_channel(image)
         if alpha_channel:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         opt_img = self.configs
-        filtered_img = ImageBase.control_brightness(image, opt_img["brightness_level"]["value"],
-                                                         opt_img["contrast_level"]["value"])
+        filtered_img = BaseImage.control_brightness(image, opt_img["brightness_level"]["value"],
+                                                    opt_img["contrast_level"]["value"])
 
         if float(opt_img["apply_gamma"]["dataValue"]) != 1.00:
             inv_gamma = 1.00 / float(opt_img["apply_gamma"]["dataValue"])
@@ -149,7 +149,7 @@ class ImageBase:
             d_depth = cv2.CV_16S
             grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
             grad_y = cv2.Scharr(filtered_img, d_depth, 0, 1)
-            filtered_img = ImageBase.apply_filter('scharr', filtered_img, grad_x, grad_y)
+            filtered_img = BaseImage.apply_filter('scharr', filtered_img, grad_x, grad_y)
 
         # applying sobel filter
         if opt_img["apply_sobel_gradient"]["value"] == 1:
@@ -162,7 +162,7 @@ class ImageBase:
             grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]),
                                scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
-            filtered_img = ImageBase.apply_filter('sobel', filtered_img, grad_x, grad_y)
+            filtered_img = BaseImage.apply_filter('sobel', filtered_img, grad_x, grad_y)
 
         # applying laplacian filter
         if opt_img["apply_laplacian_gradient"]["value"] == 1:

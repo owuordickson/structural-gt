@@ -87,16 +87,16 @@ class MainController(QObject):
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            first_index = next(iter(sel_img_batch["selected_images"]), None)  # 1st selected image
+            first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
             first_index = first_index if first_index is not None else 0  # first image if None
-            options_img = sel_img_batch["images"][first_index].configs
+            options_img = sel_img_batch.images[first_index].configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
-            options_scaling = sel_img_batch["scaling_opts"]
+            options_scaling = sel_img_batch.scaling_options
             batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
 
@@ -135,7 +135,7 @@ class MainController(QObject):
             self.gtcListModel.reset_data(list(options_gtc.values()))
 
             sel_img_batch = ntwk_p.get_selected_batch()
-            self.imagePropsModel.reset_data(sel_img_batch["img_props"])
+            self.imagePropsModel.reset_data(sel_img_batch.props)
             self.graphPropsModel.reset_data(graph_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -234,7 +234,7 @@ class MainController(QObject):
             sgt_obj = self.sgt_objs[key]
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            img_cv = sel_img_batch["images"][0].img_2d  # First image, assuming OpenCV image format
+            img_cv = sel_img_batch.images[0].img_2d  # First image, assuming OpenCV image format
             base64_data = get_cv_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
@@ -246,7 +246,7 @@ class MainController(QObject):
         sgt_obj = self.get_selected_sgt_obj()
         ntwk_p = sgt_obj.ntwk_p
         sel_img_batch = ntwk_p.get_selected_batch()
-        sel_images = [sel_img_batch["images"][i] for i in sel_img_batch["selected_images"]]
+        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
         return sel_images
 
     def verify_path(self, a_path):
@@ -407,7 +407,7 @@ class MainController(QObject):
         if sgt_obj is None:
             return False
         sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-        is_3d = not sel_img_batch["is_2d"]
+        is_3d = not sel_img_batch.is_2d
         return is_3d
 
     @Slot(result=int)
@@ -612,7 +612,7 @@ class MainController(QObject):
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.auto_scale = self.allow_auto_scale
             sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-            sel_img_batch["scaling_opts"] = self.imgScaleOptionModel.list_data
+            sel_img_batch.scaling_options = self.imgScaleOptionModel.list_data
             sgt_obj.ntwk_p.apply_img_scaling()
             self.select_img_type()
         except Exception as err:

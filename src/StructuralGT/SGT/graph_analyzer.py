@@ -1040,7 +1040,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # Image Configs
         sel_img_batch = self.ntwk_p.get_selected_batch()
-        run_info += sel_img_batch["images"][0].get_config_info()  # Get configs of first image
+        run_info += sel_img_batch.images[0].get_config_info()  # Get configs of first image
         run_info += "\n\n"
 
         # Graph Configs

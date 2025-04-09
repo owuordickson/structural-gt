@@ -18,13 +18,13 @@ class ImageProvider(QQuickImageProvider):
             sel_img_batch = ntwk_p.get_selected_batch()
             if option == "binary":
                 ntwk_p.apply_img_filters(filter_type=2)
-                bin_images = [obj.img_bin for obj in sel_img_batch["images"]]
+                bin_images = [obj.img_bin for obj in sel_img_batch.images]
                 self.img_controller.img3dGridModel.reset_data(bin_images)
                 img_cv = bin_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "processed":
                 ntwk_p.apply_img_filters(filter_type=1)
-                mod_images = [obj.img_mod for obj in sel_img_batch["images"]]
+                mod_images = [obj.img_mod for obj in sel_img_batch.images]
                 self.img_controller.img3dGridModel.reset_data(mod_images)
                 img_cv = mod_images[0]
                 img = Image.fromarray(img_cv)
@@ -41,7 +41,7 @@ class ImageProvider(QQuickImageProvider):
                     img = net_images[0]
             else:
                 # Original
-                images = [obj.img_2d for obj in sel_img_batch["images"]]
+                images = [obj.img_2d for obj in sel_img_batch.images]
                 self.img_controller.img3dGridModel.reset_data(images)
                 img_cv = images[0]
                 img = Image.fromarray(img_cv)

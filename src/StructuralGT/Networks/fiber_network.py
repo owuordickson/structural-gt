@@ -26,7 +26,7 @@ from skimage.morphology import remove_small_objects
 from . import base
 from . import sknwEdits
 
-from ..SGT.image_base import ImageBase
+from ..SGT.base_image import BaseImage
 from ..SGT.graph_skeleton import GraphSkeleton
 from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
 from ..SGT.sgt_utils import write_gsd_file
@@ -150,7 +150,7 @@ class FiberNetwork:
             slice_num = FiberNetwork.verify_slice_number(img_path, self._2d)
             gray_image = cv.imread(self.dir + "/" + name, cv.IMREAD_GRAYSCALE)
             # _, img_bin, _ = process_image.binarize(gray_image, options)
-            img_obj = ImageBase(gray_image)
+            img_obj = BaseImage(gray_image)
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
             img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
