@@ -56,17 +56,11 @@ class NetworkProcessor(ProgressUpdate):
         self.img_path: str = img_path
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
-        self.scale_factor: float = 1.0
-        self.scaling_options: list = []
-        self.is_2d: bool = True
-        self.props: list = []
-        self.images: list[ImageBase] = []
-        self.selected_images: set = set()
         self.graph_obj: GraphExtractor | None = None
         self.is_graph_extracted: bool = False
-        self.image_batches: list = self._load_img_from_file(img_path)
-        self.selected_image_batch: int = 0
-        self._initialize_selected_batch()
+        self.image_batches: list = []
+        self.selected_batch: int = 0
+        self._initialize_image_batches(self._load_img_from_file(img_path))
 
     def _load_img_from_file(self, file: str):
         """
@@ -103,7 +97,7 @@ class NetworkProcessor(ProgressUpdate):
                     scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
                     image, scale_factor = NetworkProcessor.rescale_img(image, scaling_opts)
 
-                img_info = {"img_data": image, "shape": [image.shape[0], image.shape[1]], "scale_factor": scale_factor,
+                img_info = {"images": image, "shape": [image.shape[0], image.shape[1]], "scale_factor": scale_factor,
                             "scaling_opts": scaling_opts, "selected_images": {0}}
                 return [img_info]
             elif ext in ['.tif', '.tiff', '.qptiff']:
@@ -136,7 +130,7 @@ class NetworkProcessor(ProgressUpdate):
                     # Convert back to numpy arrays
                     images = images_small if len(images_small) > 0 else images
                     # images_lst = [np.array(f) for f in images]
-                    img_info = {"img_data": images, "shape": [h, w], "scale_factor": scale_factor,
+                    img_info = {"images": images, "shape": [h, w], "scale_factor": scale_factor,
                                 "scaling_opts": scaling_opts, "selected_images": set(range(len(images)))}
                     img_info_list.append(img_info)
 
@@ -180,49 +174,45 @@ class NetworkProcessor(ProgressUpdate):
             logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
             return None
 
-    def _initialize_selected_batch(self):
-        """Retrieve all image slices of the selected image batch. If the image is 2D only one slice exists,
-        if it is 3D multiple slices exist."""
+    def _initialize_image_batches(self, img_batches: list):
+        """
+        Retrieve all image slices of the selected image batch. If the image is 2D only one slice exists,
+        if it is 3D multiple slices exist.
+        """
 
         # Check if image batches exist
-        if len(self.image_batches) == 0:
+        if len(img_batches) == 0:
             raise ValueError("No images available! Please add at least one image.")
+        
+        for i, img_batch in enumerate(img_batches):
+            img_data = img_batch["images"]
+            scale_factor = img_batch["scale_factor"]
+            
+            # Load images for processing
+            if img_data is None:
+                raise ValueError(f"Problem with images in batch {i}!")
 
-        # Verify selected batch (default is first batch)
-        selected_batch = self.selected_image_batch if self.selected_image_batch >= 0 else 0
-        if selected_batch >= len(self.image_batches):
-            raise ValueError(f"Selected image batch out of range! Select in range 0-{len(self.image_batches)}")
-
-        # Get selected image batch and retrieve its data
-        sel_img_batch = self.image_batches[selected_batch]
-        self.scale_factor = sel_img_batch["scale_factor"]
-        self.scaling_options = sel_img_batch["scaling_opts"]
-        self.selected_images = sel_img_batch["selected_images"]
-        img_data = sel_img_batch["img_data"]
-        # grp_shape = sel_img_batch.shape
-
-        # Load images for processing
-        if img_data is None:
-            raise ValueError(f"Problem with images in batch {selected_batch}!")
-
-        # Move this to load_img so that it is done once (no re-writes)
-        self.graph_obj = GraphExtractor()
-        has_alpha, _ = ImageBase.check_alpha_channel(img_data)
-        if (len(img_data.shape) >= 3) and (not has_alpha):
-            # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
-            self.images = [ImageBase(img, self.scale_factor) for img in img_data]
-            self.is_2d = False
-            logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
-        else:
-            img_obj = ImageBase(img_data, self.scale_factor)
-            self.images.append(img_obj)
-            self.is_2d = True
-            if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
-                logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+            has_alpha, _ = ImageBase.check_alpha_channel(img_data)
+            image_list = []
+            if (len(img_data.shape) >= 3) and (not has_alpha):
+                # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
+                image_list = [ImageBase(img, scale_factor) for img in img_data]
+                is_2d = False
+                logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
             else:
-                logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-        self.props = self.get_image_props()
-        self.reset_img_filters()
+                img_obj = ImageBase(img_data, scale_factor)
+                image_list.append(img_obj)
+                is_2d = True
+                if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
+                    logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+                else:
+                    logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+
+            img_batch["images"] = image_list
+            img_batch["is_2d"] = is_2d
+            self.update_image_props(img_batch)
+        self.image_batches = img_batches
+        self.graph_obj = GraphExtractor()
 
     def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
         """
@@ -237,16 +227,17 @@ class NetworkProcessor(ProgressUpdate):
         """
 
         if sel_batch_idx >= len(self.image_batches):
+            # raise ValueError(f"Selected image batch out of range! Select in range 0-{len(self.image_batches)}")
             return
-        self.selected_image_batch = sel_batch_idx
+        self.selected_batch = sel_batch_idx
+        self.update_image_props(self.image_batches[sel_batch_idx])
+        self.reset_img_filters()
 
         if selected_images is None:
-            self._initialize_selected_batch()
             return
 
         if type(selected_images) is set:
             self.image_batches[sel_batch_idx]["selected_images"] = selected_images
-        self._initialize_selected_batch()
 
     def track_progress(self, value, msg):
         self.update_status([value, msg])
@@ -265,12 +256,13 @@ class NetworkProcessor(ProgressUpdate):
         self.update_status([10, "Processing image..."])
         if filter_type == 2:
             self.reset_img_filters()
-
+        
+        sel_batch = self.get_selected_batch()
         progress = 10
-        incr = 90 / len(self.images) - 1
-        for i in range(len(self.images)):
-            img_obj = self.images[i]
-            if i not in self.selected_images:
+        incr = 90 / len(sel_batch["images"]) - 1
+        for i in range(len(sel_batch["images"])):
+            img_obj = sel_batch["images"][i]
+            if i not in sel_batch["selected_images"]:
                 img_obj.img_mod = img_obj.img_2d
                 img_obj.img_bin = img_obj.img_2d
                 continue
@@ -292,7 +284,8 @@ class NetworkProcessor(ProgressUpdate):
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
         self.is_graph_extracted = False
-        for img_obj in self.images:
+        sel_batch = self.get_selected_batch()
+        for img_obj in sel_batch["images"]:
             img_obj.img_mod, img_obj.img_bin = None, None
             self.graph_obj.reset_graph()
 
@@ -300,11 +293,12 @@ class NetworkProcessor(ProgressUpdate):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
 
         scale_factor = 1
-        if len(self.images) <= 0:
+        sel_batch = self.get_selected_batch()
+        if len(sel_batch["images"]) <= 0:
             return None, scale_factor
 
         scale_size = 0
-        for scale_item in self.scaling_options:
+        for scale_item in sel_batch["scaling_opts"]:
             try:
                 scale_size = scale_item["dataValue"] if scale_item["value"] == 1 else scale_size
             except KeyError:
@@ -314,14 +308,14 @@ class NetworkProcessor(ProgressUpdate):
             return None, scale_factor
 
         img_px_size = 1
-        for img_obj in self.images:
+        for img_obj in sel_batch["images"]:
             img = img_obj.img_raw
             temp_px = max(img.shape[0], img.shape[1])
             img_px_size = temp_px if temp_px > img_px_size else img_px_size
         scale_factor = scale_size / img_px_size
 
         # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
-        for img_obj in self.images:
+        for img_obj in sel_batch["images"]:
             img = img_obj.img_raw.copy()
             scale_size = scale_factor * max(img.shape[0], img.shape[1])
             img_small, _ = ImageBase.resize_img(scale_size, img)
@@ -330,7 +324,7 @@ class NetworkProcessor(ProgressUpdate):
                 return
             img_obj.img_2d = img_small
             img_obj.scale_factor = scale_factor
-        self.props = self.get_image_props()
+        self.update_image_props(sel_batch)
 
     def crop_image(self, x: float, y: float, width: float, height: float):
         """
@@ -342,17 +336,19 @@ class NetworkProcessor(ProgressUpdate):
         :param height: height of cropping box.
         """
 
-        if len(self.selected_images) > 0:
-            [self.images[i].apply_img_crop(x, y, width, height) for i in self.selected_images]
-        self.props = self.get_image_props()
+        sel_batch = self.get_selected_batch()
+        if len(sel_batch["selected_images"]) > 0:
+            [sel_batch["images"][i].apply_img_crop(x, y, width, height) for i in sel_batch["selected_images"]]
+        self.update_image_props(sel_batch)
 
     def undo_cropping(self):
         """
         A function that restores image to its original size.
         """
-        if len(self.selected_images) > 0:
-            [self.images[i].init_image() for i in self.selected_images]
-        self.props = self.get_image_props()
+        sel_batch = self.get_selected_batch()
+        if len(sel_batch["selected_images"]) > 0:
+            [sel_batch["images"][i].init_image() for i in sel_batch["selected_images"]]
+        self.update_image_props(sel_batch)
 
     def build_graph_network(self):
         """Generates or extracts graphs of selected images."""
@@ -412,14 +408,21 @@ class NetworkProcessor(ProgressUpdate):
             filename = re.sub(pattern, '', filename)
         return filename, output_dir
 
+    def get_selected_batch(self):
+        """
+        Retrieved data of the current selected batch.
+        """
+        return self.image_batches[self.selected_batch]
+
     def get_selected_images(self):
         """
         Get indices of selected images.
         """
-        sel_images = [self.images[i] for i in self.selected_images]
+        sel_batch = self.get_selected_batch()
+        sel_images = [sel_batch["images"][i] for i in sel_batch["selected_images"]]
         return sel_images
 
-    def get_image_props(self):
+    def update_image_props(self, selected_batch: dict = None):
         """
         A method that retrieves image properties and stores them in a list-array.
 
@@ -427,20 +430,23 @@ class NetworkProcessor(ProgressUpdate):
 
         """
 
+        if selected_batch is None:
+            return
+
         f_name, _ = self.get_filenames()
-        if len(self.images) > 1:
+        if len(selected_batch["images"]) > 1:
             # (Depth, Height, Width, Channels)
-            alpha_channel = self.images[0].has_alpha_channel  # first image
+            alpha_channel = selected_batch["images"][0].has_alpha_channel  # first image
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
         else:
-            _, fmt = ImageBase.check_alpha_channel(self.images[0].img_raw)  # first image
+            _, fmt = ImageBase.check_alpha_channel(selected_batch["images"][0].img_raw)  # first image
             num_dim = 2
 
         slices = 0
-        height, width = self.images[0].img_2d.shape[:2]  # first image
+        height, width = selected_batch["images"][0].img_2d.shape[:2]  # first image
         if num_dim >= 3:
-            slices = len(self.images)
+            slices = len(selected_batch["images"])
 
         props = [
             ["Name", f_name],
@@ -450,7 +456,7 @@ class NetworkProcessor(ProgressUpdate):
             ["Format", f"{fmt}"],
             # ["Pixel Size", "2nm x 2nm"]
         ]
-        return props
+        selected_batch["img_props"] = props
 
     def get_image_plots(self):
         """
