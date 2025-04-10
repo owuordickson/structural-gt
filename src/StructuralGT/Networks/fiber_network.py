@@ -288,7 +288,7 @@ class FiberNetwork:
         end = time.time()
         print("Ran img_to_skel() and cleaned in ", end - start, "for skeleton with ", len(positions), "voxels")
 
-    def set_graph(self, sub=True, weight_type=["FixedWidthConductance"], **kwargs):
+    def set_graph(self, sub=True, weight_type=None, **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
         skeleton file written by :meth:`img_to_skel`.
 
