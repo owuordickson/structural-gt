@@ -135,37 +135,33 @@ class GraphExtractor(ProgressUpdate):
             return False
 
         graph_skel = GraphSkeleton(image_bin, opt_gte)
-        img_skel = graph_skel.skeleton
         self.skel_obj = graph_skel
+        img_skel = graph_skel.skeleton  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
+        selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])
-        nx_graph = sknw.build_sknw(img_skel)
+        nx_graph = sknw.build_sknw(img_skel[selected_slice])
         for (s, e) in nx_graph.edges():
             # 'sknw' library stores length of edge and calls it weight, we reverse this
             # we create a new attribute 'length', later delete/modify 'weight'
             nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
             #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
             #        nx_graph[s][e]['length'] = 2
+            ge = nx_graph[s][e]['pts']
 
             if opt_gte["has_weights"]["value"] == 1:
                 # We modify 'weight'
                 wt_type = self.get_weight_type()
                 weight_options = GraphExtractor.get_weight_options()
-
-                ge = nx_graph[s][e]['pts']
                 pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                                          pixel_dim=px_size, rho_dim=rho_val)
-                nx_graph[s][e]['width'] = pix_width
-                nx_graph[s][e]['angle'] = pix_angle
-                nx_graph[s][e]['weight'] = wt
             else:
-                ge = nx_graph[s][e]['pts']
                 pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
-                nx_graph[s][e]['width'] = pix_width
-                nx_graph[s][e]['angle'] = pix_angle
-                nx_graph[s][e]['weight'] = wt
                 # delete 'weight'
-                del nx_graph[s][e]['weight']
+                # del nx_graph[s][e]['weight']
+            nx_graph[s][e]['width'] = pix_width
+            nx_graph[s][e]['angle'] = pix_angle
+            nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
         self.nx_graph = nx_graph
 

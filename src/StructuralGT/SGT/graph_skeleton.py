@@ -66,7 +66,6 @@ class GraphSkeleton:
 
         # rebuilding the binary image as a boolean for skeletonizing
         img_bin = self.img_bin / 255
-        print(f"{img_bin.shape} and {type(img_bin)}")
         self.img_bin = np.squeeze(img_bin)
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
@@ -110,8 +109,7 @@ class GraphSkeleton:
         :return: width pixel count of edge, computed weight.
         """
 
-        # Initialize parameters
-        # Idea copied from 'sknw' library
+        # Initialize parameters: Idea copied from 'sknw' library
         pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
         epsilon = 0.001  # to avoid division by zero
         pix_length += epsilon

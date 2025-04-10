@@ -288,7 +288,7 @@ class FiberNetwork:
         end = time.time()
         print("Ran img_to_skel() and cleaned in ", end - start, "for skeleton with ", len(positions), "voxels")
 
-    def set_graph(self, sub=True, weight_type=None, **kwargs):
+    def set_graph(self, sub=True, weight_type=["FixedWidthConductance"], **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
         skeleton file written by :meth:`img_to_skel`.
 
@@ -329,72 +329,14 @@ class FiberNetwork:
             print(f"After removing smaller components, graph has {G.vcount()}  nodes")
         # self.Gr = G
 
-        if self.rotate is not None:
-            centre = np.asarray(self.shape) / 2
-            inner_length_x = (self.inner_cropper.dims[2]) * 0.5
-            inner_length_y = (self.inner_cropper.dims[1]) * 0.5
-            inner_crop = np.array(
-                [
-                    centre[0] - inner_length_x,
-                    centre[0] + inner_length_x,
-                    centre[1] - inner_length_y,
-                    centre[1] + inner_length_y,
-                ],
-                dtype=int,
-            )
-
-            node_positions = np.asarray(
-                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
-            )
-            node_positions = base.oshift(node_positions, _shift=centre)
-            node_positions = np.vstack(
-                (node_positions.T, np.zeros(len(node_positions)))
-            ).T
-            node_positions = np.matmul(node_positions, self.rotate).T[0:2].T
-            node_positions = base.shift(node_positions, _shift=-centre)[0]
-
-            drop_list = []
-            for i in range(self.Gr.vcount()):
-                if not base.isinside(np.asarray([node_positions[i]]), inner_crop):
-                    drop_list.append(i)
-                    continue
-
-                self.Gr.vs[i]["o"] = node_positions[i]
-                self.Gr.vs[i]["pts"] = node_positions[i]
-            self.Gr.delete_vertices(drop_list)
-
-            node_positions = np.asarray(
-                list(self.Gr.vs[i]["o"] for i in range(self.Gr.vcount()))
-            )
-            final_shift = np.asarray(
-                list(min(node_positions.T[i]) for i in (0, 1, 2)[0: self.dim])
-            )
-            edge_positions_list = np.asarray(
-                list(
-                    base.oshift(self.Gr.es[i]["pts"], _shift=centre)
-                    for i in range(self.Gr.ecount())
-                ),
-                dtype=object,
-            )
-            for i, edge in enumerate(edge_positions_list):
-                edge_position = np.vstack((edge.T, np.zeros(len(edge)))).T
-                edge_position = np.matmul(edge_position, self.rotate).T[0:2].T
-                edge_position = base.shift(edge_position,
-                                           _shift=-centre + final_shift)[0]
-                self.Gr.es[i]["pts"] = edge_position
-
-            node_positions = base.shift(node_positions, _shift=final_shift)[0]
-            for i in range(self.Gr.vcount()):
-                self.Gr.vs[i]["o"] = node_positions[i]
-                self.Gr.vs[i]["pts"] = node_positions[i]
-
         if weight_type is not None:
             # self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
-            _img_bin = self._img_bin[self.shift[0][1]::, self.shift[0][2]::]
+            _img_bin = self._img_bin  # [self.shift[0][1]::, self.shift[0][2]::]
             if not isinstance(weight_type, list):
                 raise TypeError("weight_type must be list, even if single element")
 
             for _type in weight_type:
+                print(_type)
                 for i, edge in enumerate(self.Gr.es()):
                     ge = edge["pts"]
                     graph_skel = GraphSkeleton(img_bin=_img_bin)
@@ -405,6 +347,7 @@ class FiberNetwork:
                         _type_name = _type
                     edge["pixel width"] = pix_width
                     edge[_type_name] = wt
+            print("Finished with weight_type ", weight_type)
 
         self.shape = list(max(list(self.Gr.vs[i]["o"][j] for i in range(self.Gr.vcount())))
             for j in (0, 1, 2)[0: self.dim])

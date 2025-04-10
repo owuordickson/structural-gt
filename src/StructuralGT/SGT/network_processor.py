@@ -382,14 +382,11 @@ class NetworkProcessor(ProgressUpdate):
             sel_batch.graph_obj.fit_graph(img_bin, img_2d, px_size, rho_val)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
+            print(f"Graph complete {self.abort}")
             if self.abort:
                 return
             else:  # TO BE DELETED  (MOVE to SAVE-Files)
-                pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
-                out_dir, f_name = self.get_filenames()
-                gsd_name = out_dir + "/cleaned_" + f_name + ".gsd"
-                write_gsd_file(gsd_name, pos_arr)
-                print(f"Cleaned skeleton for an image with shape {sel_batch.graph_obj.skel_obj.skeleton.shape}")
+                self.save_images_to_file()
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
@@ -533,21 +530,18 @@ class NetworkProcessor(ProgressUpdate):
 
         sel_images = self.get_selected_images()
         is_3d = True if len(sel_images) > 1 else False
+        out_dir, img_file_name = self.get_filenames()
+        out_dir = out_dir if self.output_dir == '' else self.output_dir
 
         for i, img in enumerate(sel_images):
             if img.configs["save_images"]["value"] == 0:
-                return
+                continue
 
-            out_dir, filename = self.get_filenames()
-            out_dir = out_dir if self.output_dir == '' else self.output_dir
-
-            filename += f"_Frame{i}" if is_3d else ''
+            filename = f"{img_file_name}_Frame{i}" if is_3d else ''
             pr_filename = filename + "_processed.jpg"
             bin_filename = filename + "_binary.jpg"
-            gsd_filename = filename + "_skel.gsd"
             img_file = os.path.join(out_dir, pr_filename)
             bin_file = os.path.join(out_dir, bin_filename)
-            gsd_file = os.path.join(out_dir, gsd_filename)
 
             if img.img_mod is not None:
                 cv2.imwrite(str(img_file), img.img_mod)
@@ -555,10 +549,13 @@ class NetworkProcessor(ProgressUpdate):
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
 
-            sel_batch = self.get_selected_batch()
-            if sel_batch.graph_obj.skel_obj.skeleton is not None:
-                pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
-                write_gsd_file(gsd_file, pos_arr)
+        sel_batch = self.get_selected_batch()
+        gsd_filename = img_file_name + "_skel.gsd"
+        gsd_file = os.path.join(out_dir, gsd_filename)
+        if sel_batch.graph_obj.skel_obj.skeleton is not None:
+            pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
+            write_gsd_file(gsd_file, pos_arr)
+        print("successfully saved in file!!!")
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):
