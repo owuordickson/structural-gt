@@ -166,7 +166,7 @@ class FiberNetwork:
         # 3d for 3d images, 2d otherwise
         self._img_bin = np.squeeze(img_bin)
 
-    def img_to_skel( self, img_options="img_options.json", name="skel.gsd", crop=None, skeleton=True, rotate=None, debubble=None, box=False, merge_nodes=None, prune=None, remove_objects=None):
+    def img_to_skel( self, graph_options, img_options="img_options.json" ):
         """Writes calculates and writes the skeleton to a :code:`.gsd` file.
 
         Note: if the rotation argument is given, this writes the union of all
@@ -207,38 +207,32 @@ class FiberNetwork:
                 The size of objects to remove from the skeleton, using the
                 algorithm in :cite:`Vecchio2021`.
         """
-        if not self._2d and rotate is not None:
-            raise ValueError("Cannot rotate 3D graphs.")
-        if crop is None and rotate is not None:
-            raise ValueError("If rotating a graph, crop must be specified")
-        if crop is not None and self.depth is not None:
-            if crop[4] < self.depth[0] or crop[5] > self.depth[1]:
+
+        if graph_options["crop"] is not None and self.depth is not None:
+            if graph_options["crop"][4] < self.depth[0] or graph_options["crop"][5] > self.depth[1]:
                 raise ValueError("crop argument cannot be outwith the bounds of the network's depth")
-        if crop is not None and self.depth is None and not self._2d:
+        if graph_options["crop"] is not None and self.depth is None and not self._2d:
             # if len(self.image_stack) < crop[5] - crop[4]:
-            if len(self.image_stack.items()) < crop[5] - crop[4]:
+            if len(self.image_stack.items()) < graph_options["crop"][5] - graph_options["crop"][4]:
                 raise ValueError("Crop too large for image stack")
             else:
-                self.depth = [crop[4], crop[5]]
+                self.depth = [graph_options["crop"][4], graph_options["crop"][5]]
 
         start = time.time()
 
         # self.gsd_name = _abs_path(self, name)
-        if name[0] == "/":
-            self.gsd_name = name
+        if graph_options["file"][0] == "/":
+            self.gsd_name = graph_options["file"]
         else:
-            self.gsd_name = self.stack_dir + "/" + name
+            self.gsd_name = self.stack_dir + "/" + graph_options["file"]
 
         self.gsd_dir = os.path.split(self.gsd_name)[0]
 
-        if rotate is not None:
-            self.inner_cropper = _cropper(self, domain=crop)
-            crop = self.inner_cropper._outer_crop
-
         # self.set_img_bin(crop)
-        self.binarize(img_options, crop)
+        self.binarize(img_options, graph_options["crop"])
+        print(f"{self._img_bin_3d.shape} and {type(self._img_bin_3d)}")
 
-        if skeleton:
+        if graph_options["skeleton"]:
             self._skeleton = skeletonize(np.asarray(self._img_bin, dtype=np.dtype("uint8")))
             self.skeleton_3d = skeletonize(np.asarray(self._img_bin_3d, dtype=np.dtype("uint8")))
         else:
@@ -246,29 +240,29 @@ class FiberNetwork:
             self.skeleton_3d = self._img_bin_3d
             self._skeleton = self._img_bin
 
-        if debubble is not None:
+        if graph_options["debubble"] is not None:
             # self = base.debubble(self, debubble)
             GraphSkeleton.g_2d = self._2d
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
-            self.skeleton_3d = GraphSkeleton.remove_bubbles(self.img_bin, debubble)
+            self.skeleton_3d = GraphSkeleton.remove_bubbles(self._img_bin, graph_options["debubble"])
 
-        if merge_nodes is not None:
+        if graph_options["merge_nodes"] is not None:
             # self = base.merge_nodes(self, merge_nodes)
             GraphSkeleton.g_2d = self._2d
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
             self.skeleton_3d = GraphSkeleton.merge_nodes()
 
-        if prune is not None:
+        if graph_options["prune"] is not None:
             # self = base.prune(self, prune)
             GraphSkeleton.g_2d = self._2d
             GraphSkeleton.temp_skeleton = self._skeleton.copy()
             b_points = GraphSkeleton.get_branched_points()
             self.skeleton_3d = GraphSkeleton.prune_edges(500, b_points)
 
-        if remove_objects is not None:
+        if graph_options["remove_objects"] is not None:
             # self = base.remove_objects(self, remove_objects)
             canvas = self._skeleton
-            self._skeleton = remove_small_objects(canvas, remove_objects, connectivity=2)
+            self._skeleton = remove_small_objects(canvas, graph_options["remove_objects"], connectivity=2)
             self.skeleton_3d = np.asarray(self._skeleton)
             if self._2d:
                 self.skeleton_3d = np.asarray([self._skeleton])
@@ -293,25 +287,6 @@ class FiberNetwork:
             f.append(s)"""
         end = time.time()
         print("Ran img_to_skel() and cleaned in ", end - start, "for skeleton with ", len(positions), "voxels")
-
-        # Until now, the rotation argument has not been used; the image and
-        # writted .gsds are all unrotated. The final block of this method is
-        # for reassigning the image attribute, as well as setting the rotate
-        # attribute for later. Only the img_bin attribute is altered because
-        # the image_stack attribute exists to expose the unprocessed image to
-        # the user.
-        #
-        # Also note that this only applies to 2D graphs, because 3D graphs
-        # cannot be rotated.
-        if rotate is not None:
-            # Set the rotate attribute
-            from scipy.spatial.transform import Rotation as R
-
-            r = R.from_rotvec(rotate / 180 * np.pi * np.array([0, 0, 1]))
-            self.rotate = r.as_matrix()
-            self.crop = np.asarray(crop) - min(crop)
-        else:
-            self.rotate = None
 
     def set_graph(self, sub=True, weight_type=None, **kwargs):
         """Sets :class:`Graph` object as an attribute by reading the
@@ -415,7 +390,7 @@ class FiberNetwork:
 
         if weight_type is not None:
             # self.Gr = base.add_weights(self, weight_type=weight_type, **kwargs)
-            _img_bin = self.img_bin[self.shift[0][1]::, self.shift[0][2]::]
+            _img_bin = self._img_bin[self.shift[0][1]::, self.shift[0][2]::]
             if not isinstance(weight_type, list):
                 raise TypeError("weight_type must be list, even if single element")
 

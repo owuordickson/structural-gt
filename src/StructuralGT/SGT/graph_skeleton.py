@@ -65,10 +65,12 @@ class GraphSkeleton:
         """
 
         # rebuilding the binary image as a boolean for skeletonizing
-        img_bin = (self.img_bin * (1 / 255)).astype(bool)
+        img_bin = self.img_bin / 255
+        print(f"{img_bin.shape} and {type(img_bin)}")
+        self.img_bin = np.squeeze(img_bin)
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
-        GraphSkeleton.temp_skeleton = skeletonize(img_bin)
+        GraphSkeleton.temp_skeleton = skeletonize(np.asarray(self.img_bin, dtype=np.dtype("uint8")))
 
         # if self.configs["remove_bubbles"]["value"] == 1:
         #    GraphSkeleton.remove_bubbles(self.img_bin, mask_elements)
