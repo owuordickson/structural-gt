@@ -366,14 +366,16 @@ class NetworkProcessor(ProgressUpdate):
         self.update_status([0, "Starting graph extraction..."])
 
         try:
+            # Get selected batch
+            sel_batch = self.get_selected_batch()
+
             # Get binary image
-            sel_images = self.get_selected_images()
+            sel_images = self.get_selected_images(sel_batch)
             img_bin = [img.img_bin for img in sel_images]
             img_bin = np.asarray(img_bin)
 
             # Get selected batch's graph object and generate graph
-            sel_batch = self.get_selected_batch()
-            img_2d = sel_batch.images[0].img_2d  # First image (TO BE CORRECTED/UPDATED - 3D?)
+            img_2d = sel_batch.images[0].img_2d  # First image (TO BE CORRECTED/UPDATED - Ovito?)
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
             rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
 
@@ -417,12 +419,15 @@ class NetworkProcessor(ProgressUpdate):
         """
         return self.image_batches[self.selected_batch]
 
-    def get_selected_images(self):
+    def get_selected_images(self, selected_batch: ImageBatch):
         """
         Get indices of selected images.
+        :param selected_batch: selected batch ImageBatch object.
         """
-        sel_batch = self.get_selected_batch()
-        sel_images = [sel_batch.images[i] for i in sel_batch.selected_images]
+        if selected_batch is None:
+           selected_batch = self.get_selected_batch()
+
+        sel_images = [selected_batch.images[i] for i in selected_batch.selected_images]
         return sel_images
 
     def update_image_props(self, selected_batch: ImageBatch = None):
@@ -471,7 +476,8 @@ class NetworkProcessor(ProgressUpdate):
         """
 
         figs = []
-        sel_images = self.get_selected_images()
+        sel_batch = self.get_selected_batch()
+        sel_images = self.get_selected_images(sel_batch)
         is_3d = True if len(sel_images) > 1 else False
 
         for i, img in enumerate(sel_images):
@@ -521,7 +527,8 @@ class NetworkProcessor(ProgressUpdate):
         Write images to file.
         """
 
-        sel_images = self.get_selected_images()
+        sel_batch = self.get_selected_batch()
+        sel_images = self.get_selected_images(sel_batch)
         is_3d = True if len(sel_images) > 1 else False
         img_file_name, out_dir = self.get_filenames()
 

@@ -11,11 +11,6 @@ from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
-from src.StructuralGT.SGT.sgt_utils import write_gsd_file
-
-
-# from src.StructuralGT.SGT.sgt_utils import write_gsd_file
-
 
 class GraphSkeleton:
     """A class that is used to get estimate the width of edges and compute their weights using binerized 2D/3D images."""
@@ -93,7 +88,6 @@ class GraphSkeleton:
         clean_skel = GraphSkeleton.temp_skeleton
         self.skel_int = 1 * clean_skel
         self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
-        # write_gsd_file(gsd_file, self.skeleton)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
@@ -209,7 +203,6 @@ class GraphSkeleton:
         angle_deg = math.degrees(angle_rad)
         if angle_deg < 0:
             angle_deg += 360
-        # print(f"Edge Pts: {graph_edge_coords}, Angle Deg: {angle_deg}\n")
 
         # 3. Estimate width
         img_bin = self.img_bin
@@ -345,7 +338,6 @@ class GraphSkeleton:
         skeleton_3d = np.asarray(cls.temp_skeleton)
         if cls.g_2d:
             skeleton_3d = np.asarray([cls.temp_skeleton])
-        print(f"Ran prune for an image with shape {skeleton_3d.shape}")
         return skeleton_3d
 
     @classmethod
@@ -378,7 +370,6 @@ class GraphSkeleton:
         skeleton_3d = np.asarray(cls.temp_skeleton)
         if cls.g_2d:
             skeleton_3d = np.asarray([cls.temp_skeleton])
-        print(f"Ran merge for an image with shape {skeleton_3d.shape}")
         return skeleton_3d
 
     @classmethod
@@ -398,7 +389,6 @@ class GraphSkeleton:
         skeleton_3d = np.asarray(cls.temp_skeleton)
         if cls.g_2d:
             skeleton_3d = np.asarray([cls.temp_skeleton])
-        print(f"Ran de-bubble for an image with shape {skeleton_3d.shape}")
         return skeleton_3d
 
     @staticmethod

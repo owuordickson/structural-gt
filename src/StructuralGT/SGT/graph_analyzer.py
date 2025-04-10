@@ -82,47 +82,19 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         # 1. Apply image filters and extract graph (only if it has not been executed)
-        if not self.ntwk_p.is_graph_extracted:
-            self.ntwk_p.add_listener(self.track_img_progress)
-            self.ntwk_p.apply_img_filters()  # Apply image filters
-            self.ntwk_p.build_graph_network()      # Extract graph from binary image
-            self.ntwk_p.remove_listener(self.track_img_progress)
-            self.abort = self.ntwk_p.abort
+        self.ntwk_p.add_listener(self.track_img_progress)
+        self.ntwk_p.apply_img_filters()                     # Apply image filters
+        self.ntwk_p.build_graph_network()                   # Extract graph from binary image
+        self.ntwk_p.remove_listener(self.track_img_progress)
+        self.abort = self.ntwk_p.abort
         self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
 
         if self.abort:
             return
 
         # 2. Combine the nx_graphs of images Frames to form a 3D graph
-        sel_images = self.ntwk_p.get_selected_images()
-        if len(sel_images) <= 0:
-            self.update_status([-1, "No images selected! Select at least one image."])
-            self.abort = True
-            return
-
-        graph_obj = sel_images[0].graph_obj
-        if len(sel_images) > 1:
-            # List of Graphs to Merge
-            graphs = [img.graph_obj.nx_graph for img in sel_images]
-            # TESTING
-            # graphs = [sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph, sel_images[0].graph_obj.nx_graph]
-            # Create a MultiGraph
-            multi_graph = nx.MultiGraph()
-            # Merge graphs, tracking layers
-            for layer, G in enumerate(graphs):
-                nodes = G.nodes()
-                for i in G.nodes():
-                    o = nodes[i]['o']
-                    pts = nodes[i]['pts']
-                    multi_graph.add_node(i, pts=pts, o=o, layer=layer)
-                for u, v in G.edges():
-                    pts = G[u][v]['pts']
-                    length = G[u][v]['length']
-                    width = G[u][v]['width']
-                    angle = G[u][v]['angle']
-                    weight = G[u][v]['weight']
-                    multi_graph.add_edge(u, v, pts=pts, length=length, width=width, angle=angle, weight=weight, layer=layer)  # Store layer info
-            graph_obj.nx_graph = multi_graph
+        sel_batch = self.ntwk_p.get_selected_batch()
+        graph_obj = sel_batch.graph_obj
 
         # 3. Compute Unweighted GT parameters
         self.output_data = self.compute_gt_metrics(graph_obj)
@@ -496,7 +468,8 @@ class GraphAnalyzer(ProgressUpdate):
         lst_width = []
         nx_graph = graph_obj.nx_graph
 
-        sel_images = self.ntwk_p.get_selected_images()
+        sel_batch = self.ntwk_p.get_selected_batch()
+        sel_images = self.ntwk_p.get_selected_images(sel_batch)
         px_sizes = np.array([img.configs["pixel_width"]["value"] for img in sel_images])
         rho_dims = np.array([img.configs["resistivity"]["value"] for img in sel_images])
 
@@ -513,7 +486,7 @@ class GraphAnalyzer(ProgressUpdate):
             if b_val == 0:
                 ohms_val = 0
             else:
-                connected_nodes = dict(nx_graph[n])  # all nodes connected to node n
+                connected_nodes = nx_graph[n]  # all nodes connected to node n
                 arr_len = []
                 arr_dia = []
                 for idx, val in connected_nodes.items():
@@ -632,89 +605,6 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def compute_graph_conductance(self, graph_obj):
-        """
-        Computes graph conductance through an approach based on eigenvectors or spectral frequency.\
-        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
-
-        Conductance can closely be approximated via eigenvalue computation,\
-        a fact which has been well-known and well-used in the graph theory community.
-
-        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
-        while, e.g., traditional spectral clustering is primarily developed for undirected\
-        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
-        techniques requiring the symmetry is to turn the original directed graph into an\
-        undirected graph and build the Laplacian matrix for the latter.
-
-        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
-        The degree of a node is the number of edges incident to that node.\
-        When a node has a degree of zero, it means that there are no edges\
-        connected to that node. In other words, the node is isolated from\
-        the rest of the graph.
-
-        :param graph_obj: Graph Extractor object.
-
-        """
-
-        # Make a copy of the graph
-        graph = graph_obj.nx_graph.copy()
-        weighted = graph_obj.configs["has_weights"]["value"]
-
-        # It is important to notice our graph is (mostly) a directed graph,
-        # meaning that it is: (asymmetric) with self-looping nodes
-
-        # 1. Remove self-looping edges from graph, they cause zero values in Degree matrix.
-        # 1a. Get Adjacency matrix
-        adj_mat = nx.adjacency_matrix(graph).todense()
-
-        # 1b. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        np.fill_diagonal(adj_mat, 0)
-
-        # 1c. Create new graph
-        giant_graph = nx.from_numpy_array(adj_mat)
-
-        # 2a. Identify isolated nodes
-        isolated_nodes = list(nx.isolates(giant_graph))
-
-        # 2b. Remove isolated nodes
-        giant_graph.remove_nodes_from(isolated_nodes)
-
-        # 3a. Check connectivity of graph
-        # It has less than two nodes or is not connected.
-        # Identify connected components
-        connected_components = list(nx.connected_components(graph))
-        if not connected_components:  # In case the graph is empty
-            connected_components = []
-        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
-
-        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-
-        # 4. Compute normalized-laplacian matrix
-        if weighted:
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph, weight='weight').toarray()
-        else:
-            # norm_laplacian_matrix = compute_norm_laplacian_matrix(giant_graph)
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph).toarray()
-
-        # 5. Compute eigenvalues
-        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
-        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
-
-        # 6. Approximate conductance using the 2nd smallest eigenvalue
-        # 6a. Compute the minimum and maximum values of graph conductance.
-        sorted_vals = np.array(e_vals.real)
-        sorted_vals.sort()
-        # approximate conductance using the 2nd smallest eigenvalue
-        try:
-            # Maximum Conductance
-            val_max = math.sqrt((2 * sorted_vals[1]))
-        except ValueError:
-            val_max = None
-        # Minimum Graph Conductance
-        val_min = sorted_vals[1] / 2
-
-        return val_max, val_min
-
     def generate_pdf_output(self, graph_obj: GraphExtractor):
         """
         Generate results as graphs and plots which should be written in a PDF file.
@@ -820,32 +710,17 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gtc = self.configs
         figs = []
 
-        wt_type = graph_obj.get_weight_type()
-        weight_type = GraphExtractor.get_weight_options().get(wt_type)
-        deg_distribution = self.histogram_data["degree_distribution"]
-        w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
-        cluster_coefs = self.histogram_data["clustering_coefficients"]
-        # w_cluster_coefs = self.histogram_data["weighted_clustering_coefficients"]
-        bet_distribution = self.histogram_data["betweenness_distribution"]
-        w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
-        clo_distribution = self.histogram_data["closeness_distribution"]
-        w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
-        eig_distribution = self.histogram_data["eigenvector_distribution"]
-        w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
-        # cf_distribution = self.histogram_data["currentflow_distribution"]
-        ohm_distribution = self.histogram_data["ohms_distribution"]
-        per_distribution = self.histogram_data["percolation_distribution"]
-        w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
-
         # Degree and Closeness
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if opt_gtc["display_degree_histogram"]["value"] == 1:
+            deg_distribution = self.histogram_data["degree_distribution"]
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
             deg_title = r'Degree Distribution: $\sigma$='
             ax_1 = fig.add_subplot(2, 1, 1)
             GraphAnalyzer.plot_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
+            clo_distribution = self.histogram_data["closeness_distribution"]
             cc_title = r"Closeness Centrality: $\sigma$="
             ax_2 = fig.add_subplot(2, 1, 2)
             GraphAnalyzer.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
@@ -854,22 +729,25 @@ class GraphAnalyzer(ProgressUpdate):
         # Betweenness, Clustering, Eigenvector and Ohms
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
+            bet_distribution = self.histogram_data["betweenness_distribution"]
             bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
             GraphAnalyzer.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
 
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
+            cluster_coefs = self.histogram_data["clustering_coefficients"]
             clu_title = r"Clustering Coefficients: $\sigma$="
             ax_2 = fig.add_subplot(2, 2, 2)
             GraphAnalyzer.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
 
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
+            ohm_distribution = self.histogram_data["ohms_distribution"]
             oh_title = r"Ohms Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
             GraphAnalyzer.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
-        if (
-                opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1):
+        if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
+            eig_distribution = self.histogram_data["eigenvector_distribution"]
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
             GraphAnalyzer.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
@@ -879,6 +757,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # Percolation
         if opt_gtc["display_percolation_histogram"]["value"] == 1:
+            per_distribution = self.histogram_data["percolation_distribution"]
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             pc_title = r"Percolation Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
@@ -887,26 +766,32 @@ class GraphAnalyzer(ProgressUpdate):
 
         # weighted histograms
         if opt_gte["has_weights"]["value"] == 1:
+            wt_type = graph_obj.get_weight_type()
+            weight_type = GraphExtractor.get_weight_options().get(wt_type)
 
             # degree, betweenness, closeness and eigenvector
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             if opt_gtc["display_degree_histogram"]["value"] == 1:
+                w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                 w_deg_title = r"Weighted Degree: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
                 GraphAnalyzer.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
             if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
+                w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
                 w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
                 GraphAnalyzer.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
+                w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
                 w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
                 GraphAnalyzer.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
             if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
+                w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
                 w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
                 GraphAnalyzer.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
@@ -914,6 +799,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             # percolation
             if opt_gtc["display_percolation_histogram"]["value"] == 1:
+                w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 w_pc_title = weight_type + r"-Weighted Percolation Cent.: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
@@ -934,8 +820,10 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gte = graph_obj.configs
         opt_gtc = self.configs
 
-        sel_images = self.ntwk_p.get_selected_images()
+        sel_batch = self.ntwk_p.get_selected_batch()
+        sel_images = self.ntwk_p.get_selected_images(sel_batch)
         if len(sel_images) > 1:
+            """
             # Step 1: Collect 2d images & find max dimensions
             max_w, max_h = 0, 0
             images_2d = []
@@ -948,69 +836,66 @@ class GraphAnalyzer(ProgressUpdate):
                 np.pad(mat, ((0, max_w - mat.shape[0]), (0, max_h - mat.shape[1])), mode='constant')
                 for mat in images_2d
             ])
-            img = img_3d
+            img = img_3d"""
+            img = sel_images[0].img_2d
         else:
             img_2d = sel_images[0].img_2d
             img = img_2d
 
-        wt_type = graph_obj.get_weight_type()
-        weight_type = GraphExtractor.get_weight_options().get(wt_type)
-        deg_distribution = self.histogram_data["degree_distribution"]
-        w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
-        cluster_coefs = self.histogram_data["clustering_coefficients"]
-        # w_cluster_coefs = self.histogram_data["weighted_clustering_coefficients"]
-        bet_distribution = self.histogram_data["betweenness_distribution"]
-        w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
-        clo_distribution = self.histogram_data["closeness_distribution"]
-        w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
-        eig_distribution = self.histogram_data["eigenvector_distribution"]
-        w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
-        # cf_distribution = self.histogram_data["currentflow_distribution"]
-        ohm_distribution = self.histogram_data["ohms_distribution"]
-        per_distribution = self.histogram_data["percolation_distribution"]
-        w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
-
         sz = 30
         lw = 1.5
         figs = []
+        wt_type = graph_obj.get_weight_type()
+        weight_type = GraphExtractor.get_weight_options().get(wt_type)
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
+            deg_distribution = self.histogram_data["degree_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+            w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
+            cluster_coefs = self.histogram_data["clustering_coefficients"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
+            bet_distribution = self.histogram_data["betweenness_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+            w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
+            clo_distribution = self.histogram_data["closeness_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+            w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
+            eig_distribution = self.histogram_data["eigenvector_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+            w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
+            ohm_distribution = self.histogram_data["ohms_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
-
         if opt_gtc["display_percolation_histogram"]["value"] == 1:
+            per_distribution = self.histogram_data["percolation_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+            w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
             fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_per_distribution,
                                     f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
@@ -1049,6 +934,90 @@ class GraphAnalyzer(ProgressUpdate):
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
+
+    @staticmethod
+    def compute_graph_conductance(graph_obj):
+        """
+        Computes graph conductance through an approach based on eigenvectors or spectral frequency.\
+        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
+
+        Conductance can closely be approximated via eigenvalue computation,\
+        a fact which has been well-known and well-used in the graph theory community.
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,\
+        while, e.g., traditional spectral clustering is primarily developed for undirected\
+        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply\
+        techniques requiring the symmetry is to turn the original directed graph into an\
+        undirected graph and build the Laplacian matrix for the latter.
+
+        We need to remove isolated nodes (in order to avoid singular adjacency matrix).\
+        The degree of a node is the number of edges incident to that node.\
+        When a node has a degree of zero, it means that there are no edges\
+        connected to that node. In other words, the node is isolated from\
+        the rest of the graph.
+
+        :param graph_obj: Graph Extractor object.
+
+        """
+
+        # Make a copy of the graph
+        graph = graph_obj.nx_graph.copy()
+        weighted = graph_obj.configs["has_weights"]["value"]
+
+        # It is important to notice our graph is (mostly) a directed graph,
+        # meaning that it is: (asymmetric) with self-looping nodes
+
+        # 1. Remove self-looping edges from graph, they cause zero values in Degree matrix.
+        # 1a. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 1b. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+        np.fill_diagonal(adj_mat, 0)
+
+        # 1c. Create new graph
+        giant_graph = nx.from_numpy_array(adj_mat)
+
+        # 2a. Identify isolated nodes
+        isolated_nodes = list(nx.isolates(giant_graph))
+
+        # 2b. Remove isolated nodes
+        giant_graph.remove_nodes_from(isolated_nodes)
+
+        # 3a. Check connectivity of graph
+        # It has less than two nodes or is not connected.
+        # Identify connected components
+        connected_components = list(nx.connected_components(graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
+
+        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+
+        # 4. Compute normalized-laplacian matrix
+        if weighted:
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph, weight='weight').toarray()
+        else:
+            # norm_laplacian_matrix = compute_norm_laplacian_matrix(giant_graph)
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph).toarray()
+
+        # 5. Compute eigenvalues
+        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
+        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
+
+        # 6. Approximate conductance using the 2nd smallest eigenvalue
+        # 6a. Compute the minimum and maximum values of graph conductance.
+        sorted_vals = np.array(e_vals.real)
+        sorted_vals.sort()
+        # approximate conductance using the 2nd smallest eigenvalue
+        try:
+            # Maximum Conductance
+            val_max = math.sqrt((2 * sorted_vals[1]))
+        except ValueError:
+            val_max = None
+        # Minimum Graph Conductance
+        val_min = sorted_vals[1] / 2
+
+        return val_max, val_min
 
     @staticmethod
     def plot_heatmap(graph_obj: GraphExtractor, image: MatLike, distribution: list, title: str, size: float, line_width: float):
