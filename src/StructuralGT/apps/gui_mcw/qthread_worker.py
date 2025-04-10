@@ -94,7 +94,7 @@ class WorkerTask (QObject):
             ntwk_p.abort = False
             ntwk_p.add_listener(self.update_progress)
             ntwk_p.apply_img_filters()
-            # ntwk_p.create_graphs()
+            ntwk_p.build_graph_network()
             self.is_aborted(ntwk_p)
             ntwk_p.remove_listener(self.update_progress)
             self.taskFinishedSignal.emit(True, ntwk_p)

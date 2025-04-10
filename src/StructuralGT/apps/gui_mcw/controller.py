@@ -123,7 +123,8 @@ class MainController(QObject):
         """
         try:
             ntwk_p = sgt_obj.ntwk_p
-            graph_obj = ntwk_p.graph_obj
+            sel_img_batch = ntwk_p.get_selected_batch()
+            graph_obj = sel_img_batch.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
 
@@ -134,7 +135,6 @@ class MainController(QObject):
             self.exportGraphModel.reset_data(file_options)
             self.gtcListModel.reset_data(list(options_gtc.values()))
 
-            sel_img_batch = ntwk_p.get_selected_batch()
             self.imagePropsModel.reset_data(sel_img_batch.props)
             self.graphPropsModel.reset_data(graph_obj.props)
         except Exception as err:
@@ -630,16 +630,17 @@ class MainController(QObject):
 
             # 1. Get filename
             sgt_obj = self.get_selected_sgt_obj()
-            out_dir, filename = sgt_obj.ntwk_p.get_filenames()
-            out_dir = out_dir if sgt_obj.ntwk_p.output_dir == '' else sgt_obj.ntwk_p.output_dir
+            ntwk_p = sgt_obj.ntwk_p
+            out_dir, filename = ntwk_p.get_filenames()
+            out_dir = out_dir if ntwk_p.output_dir == '' else ntwk_p.output_dir
 
             # 2. Update values
-            ntwk_p = sgt_obj.ntwk_p
+            sel_img_batch = ntwk_p.get_selected_batch()
             for val in self.exportGraphModel.list_data:
-                ntwk_p.graph_obj.configs[val["id"]]["value"] = val["value"]
+                sel_img_batch.graph_obj.configs[val["id"]]["value"] = val["value"]
 
             # 3. Save graph data to file
-            ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
+            sel_img_batch.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})

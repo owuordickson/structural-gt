@@ -48,6 +48,7 @@ class NetworkProcessor(ProgressUpdate):
         scale_factor: float
         scaling_options: list
         selected_images: set
+        graph_obj: GraphExtractor
 
     def __init__(self, img_path, out_dir, auto_scale=True):
         """
@@ -68,8 +69,6 @@ class NetworkProcessor(ProgressUpdate):
         self.img_path: str = img_path
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
-        self.graph_obj: GraphExtractor | None = None
-        self.is_graph_extracted: bool = False
         self.image_batches: list[NetworkProcessor.ImageBatch] = []
         self.selected_batch: int = 0
         self._initialize_image_batches(self._load_img_from_file(img_path))
@@ -111,7 +110,7 @@ class NetworkProcessor(ProgressUpdate):
 
                 img_batch = NetworkProcessor.ImageBatch(numpy_image=image, images=[], is_2d=True, shape=image.shape[:2],
                                                         props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                        selected_images={0})
+                                                        selected_images={0}, graph_obj=GraphExtractor())
                 return [img_batch]
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
@@ -145,7 +144,7 @@ class NetworkProcessor(ProgressUpdate):
                     images = images_small if len(images_small) > 0 else images
                     img_batch = NetworkProcessor.ImageBatch(numpy_image=images, images=[], is_2d=True, shape=(h, w),
                                                             props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                            selected_images=set(range(len(images))))
+                                                            selected_images=set(range(len(images))), graph_obj=GraphExtractor())
                     img_info_list.append(img_batch)
 
                 """
@@ -226,7 +225,6 @@ class NetworkProcessor(ProgressUpdate):
             img_batch.is_2d = is_2d
             self.update_image_props(img_batch)
         self.image_batches = img_batches
-        self.graph_obj = GraphExtractor()
 
     def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
         """
@@ -296,11 +294,10 @@ class NetworkProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on image."""
-        self.is_graph_extracted = False
         sel_batch = self.get_selected_batch()
         for img_obj in sel_batch.images:
             img_obj.img_mod, img_obj.img_bin = None, None
-            self.graph_obj.reset_graph()
+            sel_batch.graph_obj.reset_graph()
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -369,27 +366,30 @@ class NetworkProcessor(ProgressUpdate):
         self.update_status([0, "Starting graph extraction..."])
 
         try:
-            # sel_images = self.get_selected_images()
-            # img_bin = [img.img_bin for img in sel_images]
-            # MAKE SURE ALL IMAGES ARE THE SAME SIZE
-            # img_bin = np.asarray(img_bin)
+            # Get binary image
+            sel_images = self.get_selected_images()
+            img_bin = [img.img_bin for img in sel_images]
+            img_bin = np.asarray(img_bin)
 
-            self.graph_obj.abort = False
-            self.graph_obj.add_listener(self.track_progress)
-            # px_size = float(img_obj.configs["pixel_width"]["value"])
-            # rho_val = float(img_obj.configs["resistivity"]["value"])
-            # self.graph_obj.fit_graph(img_bin, img_obj.img_2d, px_size, rho_val)
-            self.graph_obj.remove_listener(self.track_progress)
-            self.abort = self.graph_obj.abort
-            self.is_graph_extracted = not self.abort
+            # Get selected batch's graph object and generate graph
+            sel_batch = self.get_selected_batch()
+            img_2d = sel_batch.images[0].img_2d  # First image (TO BE CORRECTED/UPDATED - 3D?)
+            px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
+            rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
+
+            sel_batch.graph_obj.abort = False
+            sel_batch.graph_obj.add_listener(self.track_progress)
+            sel_batch.graph_obj.fit_graph(img_bin, img_2d, px_size, rho_val)
+            sel_batch.graph_obj.remove_listener(self.track_progress)
+            self.abort = sel_batch.graph_obj.abort
             if self.abort:
                 return
-            else:  # TO BE DELETED
-                pos_arr = np.asarray(np.where(self.graph_obj.skel_obj.skeleton != 0)).T
+            else:  # TO BE DELETED  (MOVE to SAVE-Files)
+                pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
                 out_dir, f_name = self.get_filenames()
-                gsd_name = out_dir + "/cleaned_" + f_name
+                gsd_name = out_dir + "/cleaned_" + f_name + ".gsd"
                 write_gsd_file(gsd_name, pos_arr)
-                print(f"Cleaned skeleton for an image with shape {self.graph_obj.skel_obj.skeleton.shape}")
+                print(f"Cleaned skeleton for an image with shape {sel_batch.graph_obj.skel_obj.skeleton.shape}")
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
@@ -544,10 +544,10 @@ class NetworkProcessor(ProgressUpdate):
             filename += f"_Frame{i}" if is_3d else ''
             pr_filename = filename + "_processed.jpg"
             bin_filename = filename + "_binary.jpg"
-            # ntwk_filename = filename + "_graph.jpg"
+            gsd_filename = filename + "_skel.gsd"
             img_file = os.path.join(out_dir, pr_filename)
             bin_file = os.path.join(out_dir, bin_filename)
-            # ntwk_file = os.path.join(out_dir, net_filename)
+            gsd_file = os.path.join(out_dir, gsd_filename)
 
             if img.img_mod is not None:
                 cv2.imwrite(str(img_file), img.img_mod)
@@ -555,13 +555,10 @@ class NetworkProcessor(ProgressUpdate):
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
 
-            """if img.graph_obj.img_net is not None:
-                graph_img = img.graph_obj.img_net.copy()
-                if graph_img.mode == "JPEG":
-                    graph_img.save(ntwk_file, format='JPEG', quality=95)
-                elif graph_img.mode in ["RGBA", "P"]:
-                    img_net = graph_img.convert("RGB")
-                    img_net.save(ntwk_file, format='JPEG', quality=95)"""
+            sel_batch = self.get_selected_batch()
+            if sel_batch.graph_obj.skel_obj.skeleton is not None:
+                pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
+                write_gsd_file(gsd_file, pos_arr)
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):
