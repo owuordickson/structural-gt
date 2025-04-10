@@ -95,7 +95,7 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray):
     :param skeleton: skimage.morphology skeleton
     """
     # pos_count = int(sum(skeleton.ravel()))
-    particle_positions = np.asarray(np.where(skeleton != 0)).T
+    particle_positions = np.asarray(np.where(np.asarray(skeleton) != 0)).T
     with gsd.hoomd.open(name=f_name, mode="w") as f:
         s = gsd.hoomd.Frame()
         s.particles.N = len(particle_positions)  # OR pos_count

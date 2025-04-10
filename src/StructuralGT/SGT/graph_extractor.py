@@ -136,7 +136,7 @@ class GraphExtractor(ProgressUpdate):
 
         graph_skel = GraphSkeleton(image_bin, opt_gte)
         self.skel_obj = graph_skel
-        img_skel = graph_skel.skeleton  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
+        img_skel = graph_skel.skeleton.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])

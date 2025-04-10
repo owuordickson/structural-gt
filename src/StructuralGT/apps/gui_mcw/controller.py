@@ -631,8 +631,7 @@ class MainController(QObject):
             # 1. Get filename
             sgt_obj = self.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
-            out_dir, filename = ntwk_p.get_filenames()
-            out_dir = out_dir if ntwk_p.output_dir == '' else ntwk_p.output_dir
+            filename, out_dir = ntwk_p.get_filenames()
 
             # 2. Update values
             sel_img_batch = ntwk_p.get_selected_batch()

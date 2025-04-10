@@ -382,7 +382,6 @@ class NetworkProcessor(ProgressUpdate):
             sel_batch.graph_obj.fit_graph(img_bin, img_2d, px_size, rho_val)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
-            print(f"Graph complete {self.abort}")
             if self.abort:
                 return
             else:  # TO BE DELETED  (MOVE to SAVE-Files)
@@ -403,14 +402,8 @@ class NetworkProcessor(ProgressUpdate):
             filename (str): image file name., output_dir (str): image directory path.
         """
 
-        if image_path is None:
-            img_dir, filename = os.path.split(self.img_path)
-        else:
-            img_dir, filename = os.path.split(image_path)
-        if self.output_dir == '':
-            output_dir = img_dir
-        else:
-            output_dir = self.output_dir
+        img_dir, filename = os.path.split(self.img_path) if image_path is None else os.path.split(image_path)
+        output_dir = img_dir if self.output_dir == '' else self.output_dir
 
         for ext in ALLOWED_IMG_EXTENSIONS:
             ext = ext.replace('*', '')
@@ -530,8 +523,7 @@ class NetworkProcessor(ProgressUpdate):
 
         sel_images = self.get_selected_images()
         is_3d = True if len(sel_images) > 1 else False
-        out_dir, img_file_name = self.get_filenames()
-        out_dir = out_dir if self.output_dir == '' else self.output_dir
+        img_file_name, out_dir = self.get_filenames()
 
         for i, img in enumerate(sel_images):
             if img.configs["save_images"]["value"] == 0:
@@ -553,9 +545,7 @@ class NetworkProcessor(ProgressUpdate):
         gsd_filename = img_file_name + "_skel.gsd"
         gsd_file = os.path.join(out_dir, gsd_filename)
         if sel_batch.graph_obj.skel_obj.skeleton is not None:
-            pos_arr = np.asarray(np.where(sel_batch.graph_obj.skel_obj.skeleton != 0)).T
-            write_gsd_file(gsd_file, pos_arr)
-        print("successfully saved in file!!!")
+            write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):

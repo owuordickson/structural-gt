@@ -48,7 +48,7 @@ class GraphSkeleton:
         self.img_bin = img_bin
         self.configs = configs
         self.is_2d = is_2d
-        self.skeleton = None        # will always be a 3D skeleton
+        self.skeleton, self.skeleton_3d = None, None
         self.skel_int = None
         self.bp_coord_x = None
         self.bp_coord_y = None
@@ -93,7 +93,6 @@ class GraphSkeleton:
         clean_skel = GraphSkeleton.temp_skeleton
         self.skel_int = 1 * clean_skel
         self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
-        self.skeleton = self.skeleton.astype(int)
         # write_gsd_file(gsd_file, self.skeleton)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
