@@ -6,6 +6,8 @@ Builds a graph network from nano-scale microscopy images.
 
 import os
 import io
+
+import igraph
 from PIL import Image
 import sknw
 import logging
@@ -114,8 +116,7 @@ class GraphExtractor(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.nx_graph = None
-        self.img_ntwk = None
+        self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
 
     def extract_graph(self, image_bin: MatLike = None, px_size: float = 1.0, rho_val: float = 1.0):
         """
@@ -164,6 +165,7 @@ class GraphExtractor(ProgressUpdate):
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
         self.nx_graph = nx_graph
+        self.ig_graph = igraph.Graph.from_networkx(nx_graph)
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
         if opt_gte["remove_self_loops"]["value"]:
