@@ -20,7 +20,6 @@ from collections import defaultdict
 from .graph_extractor import GraphExtractor
 from .progress_update import ProgressUpdate
 from .base_image import BaseImage
-from .sgt_utils import write_gsd_file
 
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
@@ -386,8 +385,6 @@ class NetworkProcessor(ProgressUpdate):
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
                 return
-            else:  # TO BE DELETED  (MOVE to SAVE-Files)
-                self.save_images_to_file()
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
@@ -548,11 +545,11 @@ class NetworkProcessor(ProgressUpdate):
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
 
-        sel_batch = self.get_selected_batch()
+        """sel_batch = self.get_selected_batch()
         gsd_filename = img_file_name + "_skel.gsd"
         gsd_file = os.path.join(out_dir, gsd_filename)
         if sel_batch.graph_obj.skel_obj.skeleton is not None:
-            write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)
+            write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)"""
 
     @staticmethod
     def get_scaling_options(orig_size: float, auto_scale: bool):

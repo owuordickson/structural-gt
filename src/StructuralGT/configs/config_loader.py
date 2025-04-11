@@ -115,6 +115,7 @@ def load_gte_configs():
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "type": "file-options", "text": "Export as gexf", "value": 0},
         "export_adj_mat": {"id": "export_adj_mat", "type": "file-options", "text": "Export Adjacency Matrix", "value": 0},
+        "export_as_gsd": {"id": "export_as_gsd", "type": "file-options", "text": "Export as GSD/HOOMD", "value": 0},
     }
 
     # Load configuration from file
@@ -140,6 +141,7 @@ def load_gte_configs():
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
         options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))
+        options_gte["export_as_gsd"]["value"] = int(config.get('extraction-settings', 'export_as_gsd'))
 
         return options_gte
     except configparser.NoSectionError:

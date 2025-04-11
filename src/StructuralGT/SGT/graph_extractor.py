@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
-from .sgt_utils import write_csv_file
+from .sgt_utils import write_csv_file, write_gsd_file
 from ..configs.config_loader import load_gte_configs
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
@@ -361,6 +361,7 @@ class GraphExtractor(ProgressUpdate):
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
         adj_filename = filename + "_adj.csv"
+        gsd_filename = filename + "_skel.gsd"
         gexf_file = os.path.join(out_dir, g_filename)
         csv_file = os.path.join(out_dir, el_filename)
         adj_file = os.path.join(out_dir, adj_filename)
@@ -387,6 +388,11 @@ class GraphExtractor(ProgressUpdate):
             for (s, e) in nx_graph.edges():
                 del nx_graph[s][e]['pts']
             nx.write_gexf(nx_graph, gexf_file)
+
+        if opt_gte["export_as_gsd"]["value"] == 1:
+            gsd_file = os.path.join(out_dir, gsd_filename)
+            if self.skel_obj.skeleton is not None:
+                write_gsd_file(gsd_file, self.skel_obj.skeleton)
 
     @staticmethod
     def plot_to_img(fig: plt.Figure):
