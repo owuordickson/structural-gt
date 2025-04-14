@@ -81,20 +81,23 @@ class GraphAnalyzer(ProgressUpdate):
             Execute functions that will process image filters and extract graph from the processed image
         """
 
-        # 1. Apply image filters and extract graph (only if it has not been executed)
-        self.ntwk_p.add_listener(self.track_img_progress)
-        self.ntwk_p.apply_img_filters()                     # Apply image filters
-        self.ntwk_p.build_graph_network()                   # Extract graph from binary image
-        self.ntwk_p.remove_listener(self.track_img_progress)
-        self.abort = self.ntwk_p.abort
-        self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+        # 1. Get graph extracted from selected images
+        sel_batch = self.ntwk_p.get_selected_batch()
+        graph_obj = sel_batch.graph_obj
+
+        # 2. Apply image filters and extract graph (only if it has not been executed)
+        if graph_obj is None:
+            self.ntwk_p.add_listener(self.track_img_progress)
+            self.ntwk_p.apply_img_filters()                     # Apply image filters
+            self.ntwk_p.build_graph_network()                   # Extract graph from binary image
+            self.ntwk_p.remove_listener(self.track_img_progress)
+            self.abort = self.ntwk_p.abort
+            self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+            sel_batch = self.ntwk_p.get_selected_batch()
+            graph_obj = sel_batch.graph_obj
 
         if self.abort:
             return
-
-        # 2. Combine the nx_graphs of images Frames to form a 3D graph
-        sel_batch = self.ntwk_p.get_selected_batch()
-        graph_obj = sel_batch.graph_obj
 
         # 3. Compute Unweighted GT parameters
         self.output_data = self.compute_gt_metrics(graph_obj)

@@ -199,6 +199,7 @@ class NetworkProcessor(ProgressUpdate):
         for i, img_batch in enumerate(img_batches):
             img_data = img_batch.numpy_image
             scale_factor = img_batch.scale_factor
+            print(img_data.shape)
             
             # Load images for processing
             if img_data is None:
@@ -209,16 +210,20 @@ class NetworkProcessor(ProgressUpdate):
             if (len(img_data.shape) >= 3) and (not has_alpha):
                 # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, scale_factor) for img in img_data]
-                is_2d = False
-                logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
             else:
                 img_obj = BaseImage(img_data, scale_factor)
                 image_list.append(img_obj)
-                is_2d = True
-                if len(img_data.shape) == 3 and img_obj.has_alpha_channel:
+
+            is_2d = True
+            if len(image_list) == 1:
+                if len(img_data.shape) == 3 and image_list[0].has_alpha_channel:
                     logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
                 else:
                     logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+            elif len(image_list) > 1:
+                is_2d = False
+                logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
+
 
             img_batch.images = image_list
             img_batch.is_2d = is_2d
