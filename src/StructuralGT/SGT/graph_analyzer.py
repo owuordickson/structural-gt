@@ -27,7 +27,7 @@ from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
 from .progress_update import ProgressUpdate
-from .graph_extractor import GraphExtractor
+from .fiber_network import FiberNetworkBuilder
 from .network_processor import NetworkProcessor
 
 import sgt_c_module as sgt
@@ -118,7 +118,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 5. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj)
 
-    def compute_gt_metrics(self, graph_obj: GraphExtractor = None):
+    def compute_gt_metrics(self, graph_obj: FiberNetworkBuilder = None):
         """
         Compute un-weighted graph theory metrics.
 
@@ -338,7 +338,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_weighted_gt_metrics(self, graph_obj: GraphExtractor = None):
+    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None):
         """
         Compute weighted graph theory metrics.
 
@@ -357,7 +357,7 @@ class GraphAnalyzer(ProgressUpdate):
         graph = graph_obj.nx_graph
         opt_gtc = self.configs
         wt_type = graph_obj.get_weight_type()
-        weight_type = GraphExtractor.get_weight_options().get(wt_type)
+        weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
         data_dict = {"x": [], "y": []}
 
         if graph.number_of_nodes() <= 0:
@@ -457,7 +457,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_ohms_centrality(self, graph_obj: GraphExtractor):
+    def compute_ohms_centrality(self, graph_obj: FiberNetworkBuilder):
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
@@ -518,7 +518,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def average_node_connectivity(self, graph_obj: GraphExtractor, flow_func=None):
+    def average_node_connectivity(self, graph_obj: FiberNetworkBuilder, flow_func=None):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
@@ -583,7 +583,7 @@ class GraphAnalyzer(ProgressUpdate):
             return 0
         return num / den
 
-    def igraph_average_node_connectivity(self, graph_obj: GraphExtractor):
+    def igraph_average_node_connectivity(self, graph_obj: FiberNetworkBuilder):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
@@ -608,7 +608,7 @@ class GraphAnalyzer(ProgressUpdate):
             print(err)
         return anc
 
-    def generate_pdf_output(self, graph_obj: GraphExtractor):
+    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
@@ -668,7 +668,7 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["y"].append(val)
         return data_dict
 
-    def plot_gt_results(self, graph_obj: GraphExtractor):
+    def plot_gt_results(self, graph_obj: FiberNetworkBuilder):
         """
         Create a table of weighted and un-weighted graph theory results.
 
@@ -700,7 +700,7 @@ class GraphAnalyzer(ProgressUpdate):
             fig_wt = None
         return fig, fig_wt
 
-    def plot_histograms(self, graph_obj: GraphExtractor):
+    def plot_histograms(self, graph_obj: FiberNetworkBuilder):
         """
         Create plot figures of graph theory histograms selected by the user.
 
@@ -770,7 +770,7 @@ class GraphAnalyzer(ProgressUpdate):
         # weighted histograms
         if opt_gte["has_weights"]["value"] == 1:
             wt_type = graph_obj.get_weight_type()
-            weight_type = GraphExtractor.get_weight_options().get(wt_type)
+            weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
 
             # degree, betweenness, closeness and eigenvector
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
@@ -811,7 +811,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def plot_2d_heatmaps(self, graph_obj: GraphExtractor):
+    def plot_2d_heatmaps(self, graph_obj: FiberNetworkBuilder):
         """
         Create plot figures of graph theory heatmaps.
 
@@ -849,7 +849,7 @@ class GraphAnalyzer(ProgressUpdate):
         lw = 1.5
         figs = []
         wt_type = graph_obj.get_weight_type()
-        weight_type = GraphExtractor.get_weight_options().get(wt_type)
+        weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
             deg_distribution = self.histogram_data["degree_distribution"]
@@ -904,7 +904,7 @@ class GraphAnalyzer(ProgressUpdate):
             figs.append(fig)
         return figs
 
-    def plot_run_configs(self, graph_obj: GraphExtractor):
+    def plot_run_configs(self, graph_obj: FiberNetworkBuilder):
         """
         Create a page (as a figure) that show the user selected parameters and options.
 
@@ -1023,7 +1023,7 @@ class GraphAnalyzer(ProgressUpdate):
         return val_max, val_min
 
     @staticmethod
-    def plot_distribution_heatmap(graph_obj: GraphExtractor, image: MatLike, distribution: list, title: str, size: float, line_width: float):
+    def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str, size: float, line_width: float):
         """
         Create a heatmap from a distribution.
 

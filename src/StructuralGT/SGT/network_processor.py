@@ -17,7 +17,7 @@ from PIL import Image
 from dataclasses import dataclass
 from collections import defaultdict
 
-from .graph_extractor import GraphExtractor
+from .fiber_network import FiberNetworkBuilder
 from .progress_update import ProgressUpdate
 from .base_image import BaseImage
 
@@ -47,7 +47,7 @@ class NetworkProcessor(ProgressUpdate):
         scale_factor: float
         scaling_options: list
         selected_images: set
-        graph_obj: GraphExtractor
+        graph_obj: FiberNetworkBuilder
 
     def __init__(self, img_path, out_dir, auto_scale=True):
         """
@@ -109,7 +109,7 @@ class NetworkProcessor(ProgressUpdate):
 
                 img_batch = NetworkProcessor.ImageBatch(numpy_image=image, images=[], is_2d=True, shape=image.shape[:2],
                                                         props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                        selected_images={0}, graph_obj=GraphExtractor())
+                                                        selected_images={0}, graph_obj=FiberNetworkBuilder())
                 return [img_batch]
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 # Try load multi-page TIFF using PIL
@@ -143,7 +143,7 @@ class NetworkProcessor(ProgressUpdate):
                     images = images_small if len(images_small) > 0 else images
                     img_batch = NetworkProcessor.ImageBatch(numpy_image=images, images=[], is_2d=True, shape=(h, w),
                                                             props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                            selected_images=set(range(len(images))), graph_obj=GraphExtractor())
+                                                            selected_images=set(range(len(images))), graph_obj=FiberNetworkBuilder())
                     img_info_list.append(img_batch)
 
                 """

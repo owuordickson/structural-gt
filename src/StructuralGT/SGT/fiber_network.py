@@ -54,7 +54,7 @@ except cp.cuda.runtime.CUDARuntimeError:
     logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
 
 
-class GraphExtractor(ProgressUpdate):
+class FiberNetworkBuilder(ProgressUpdate):
     """
     A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
@@ -65,7 +65,7 @@ class GraphExtractor(ProgressUpdate):
         A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
         """
-        super(GraphExtractor, self).__init__()
+        super(FiberNetworkBuilder, self).__init__()
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
         self.img_ntwk: ImageFile | None = None
@@ -109,7 +109,7 @@ class GraphExtractor(ProgressUpdate):
         self.update_status([90, "Drawing graph network..."])
         graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
-            self.img_ntwk = GraphExtractor.plot_to_img(graph_plt)
+            self.img_ntwk = FiberNetworkBuilder.plot_to_img(graph_plt)
 
     def reset_graph(self):
         """
@@ -153,7 +153,7 @@ class GraphExtractor(ProgressUpdate):
             if opt_gte["has_weights"]["value"] == 1:
                 # We modify 'weight'
                 wt_type = self.get_weight_type()
-                weight_options = GraphExtractor.get_weight_options()
+                weight_options = FiberNetworkBuilder.get_weight_options()
                 pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                                          pixel_dim=px_size, rho_dim=rho_val)
             else:
@@ -205,7 +205,7 @@ class GraphExtractor(ProgressUpdate):
             gn = xp.array([nodes[i]['o'] for i in nodes])
             ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
 
-            img = xp.array(GraphExtractor.plot_to_img(fig))
+            img = xp.array(FiberNetworkBuilder.plot_to_img(fig))
             if len(img.shape) == 3:
                 img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
             return img
@@ -235,7 +235,7 @@ class GraphExtractor(ProgressUpdate):
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.set_axis_off()
-            GraphExtractor.superimpose_graph_to_img(ax, image_2d, nx_graph)
+            FiberNetworkBuilder.superimpose_graph_to_img(ax, image_2d, nx_graph)
 
         return fig
 
@@ -267,7 +267,7 @@ class GraphExtractor(ProgressUpdate):
 
         ax_2.set_title("Final Graph")
         ax_2.set_axis_off()
-        ax_2 = GraphExtractor.superimpose_graph_to_img(ax_2, image_2d, nx_graph)
+        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, image_2d, nx_graph)
 
         nodes = nx_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
@@ -292,7 +292,7 @@ class GraphExtractor(ProgressUpdate):
         run_info = "***Graph Extraction Configurations***\n"
         if opt_gte["has_weights"]["value"] == 1:
             wt_type = self.get_weight_type()
-            run_info += f"Weight Type: {GraphExtractor.get_weight_options().get(wt_type)} || "
+            run_info += f"Weight Type: {FiberNetworkBuilder.get_weight_options().get(wt_type)} || "
         if opt_gte["merge_nearby_nodes"]["value"]:
             run_info += "Merge Nodes || "
         if opt_gte["prune_dangling_edges"]["value"]:
@@ -330,7 +330,7 @@ class GraphExtractor(ProgressUpdate):
         # 2. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
         props = [
-            ["Weight Type", str(GraphExtractor.get_weight_options().get(self.get_weight_type()))],
+            ["Weight Type", str(FiberNetworkBuilder.get_weight_options().get(self.get_weight_type()))],
             ["Edge Count", str(graph.number_of_edges())],
             ["Node Count", str(graph.number_of_nodes())],
             ["Graph Count", str(len(self.nx_components))],

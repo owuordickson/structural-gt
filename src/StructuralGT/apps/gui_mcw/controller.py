@@ -20,7 +20,7 @@ from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
 from ...SGT.network_processor import NetworkProcessor, ALLOWED_IMG_EXTENSIONS
-from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
+from ...SGT.fiber_network import FiberNetworkBuilder, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
 from ...SGT.sgt_utils import get_cv_base64
 
@@ -322,7 +322,7 @@ class MainController(QObject):
         else:
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success_val: bool, result: None|list|GraphExtractor|GraphAnalyzer):
+    def _handle_finished(self, success_val: bool, result: None | list | FiberNetworkBuilder | GraphAnalyzer):
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
