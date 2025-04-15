@@ -29,7 +29,7 @@ from skimage.morphology import remove_small_objects
 from ..SGT.base_image import BaseImage
 from ..SGT.graph_skeleton import GraphSkeleton
 from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
-# from ..SGT.sgt_utils import write_gsd_file
+from ..SGT.sgt_utils import write_gsd_file
 
 """
 Questions for Alain:
@@ -230,7 +230,6 @@ class FiberNetwork:
 
         # self.set_img_bin(crop)
         self.binarize(img_options, graph_options["crop"])
-        print(f"{self._img_bin_3d.shape} and {type(self._img_bin_3d)}")
 
         if graph_options["skeleton"]:
             self._skeleton = skeletonize(np.asarray(self._img_bin, dtype=np.dtype("uint8")))
@@ -266,6 +265,10 @@ class FiberNetwork:
         self.skeleton_3d = np.asarray(self._skeleton)
         if self._2d:
             self.skeleton_3d = np.asarray([self._skeleton])
+
+        # Save to GSD/HOOMD file
+        gsd_file = self.gsd_dir + "/" + os.path.split(self.gsd_name)[1]
+        write_gsd_file(gsd_file, self.skeleton_3d)
 
         positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
         """self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
