@@ -656,7 +656,7 @@ class GraphAnalyzer(ProgressUpdate):
             for fig in figs:
                 out_figs.append(fig)
 
-        # 8. displaying run information
+        # 7. displaying run information
         fig = self.plot_run_configs(graph_obj)
         out_figs.append(fig)
         return out_figs

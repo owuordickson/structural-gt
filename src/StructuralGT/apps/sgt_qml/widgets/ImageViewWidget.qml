@@ -365,6 +365,17 @@ ColumnLayout {
         }
     }
 
+    Rectangle {
+        id: ntwkContainer
+        objectName: "ntwkContainer"   // IMPORTANT: Python will find this
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: "white"
+        border.color: "gray"
+        border.width: 1
+        visible: false
+    }
+
 
     Rectangle {
         id: imgNavControls

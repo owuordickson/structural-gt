@@ -367,7 +367,6 @@ class NetworkProcessor(ProgressUpdate):
         """Generates or extracts graphs of selected images."""
 
         self.update_status([0, "Starting graph extraction..."])
-
         try:
             # Get selected batch
             sel_batch = self.get_selected_batch()

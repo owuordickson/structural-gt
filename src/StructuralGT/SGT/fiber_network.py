@@ -201,7 +201,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             fig = plt.Figure(figsize=(h / my_dpi, w / my_dpi), dpi=my_dpi)
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
             ax.axis('off')
-            ax.imshow(image_2d, cmap='gray', alpha=0)
+            ax.imshow(image_2d, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
             for (s, e) in nx_graph.edges():
                 ge = nx_graph[s][e]['pts']
                 ax.plot(ge[:, 1], ge[:, 0], 'black')
