@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import QObject,Signal,Slot
+from PySide6.QtQml import QQmlApplicationEngine
 from matplotlib.backends.backend_pdf import PdfPages
 
 from .imagegrid_model import ImageGridModel
@@ -40,8 +41,9 @@ class MainController(QObject):
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
 
-    def __init__(self):
+    def __init__(self, qml_engine: QQmlApplicationEngine):
         super().__init__()
+        self.qml_engine = qml_engine
         self.img_loaded = False
         self.project_open = False
         self.allow_auto_scale = True
@@ -496,6 +498,21 @@ class MainController(QObject):
         choice = self.selected_img_type if choice is None else choice
         self.selected_img_type = 0 if (choice == 1 or choice == 5) else choice
         self.changeImageSignal.emit(choice)
+
+    @Slot()
+    def load_graph_simulation(self):
+        """Render and visualize OVITO graph network simulation."""
+        try:
+            # Find the QML Rectangle to embed into
+            root = self.qml_engine.rootObjects()[0]
+            ntwk_container = root.findChild(QObject, "ntwkContainer")
+
+            if ntwk_container:
+                print(f"Found it! {type(ntwk_container)}")
+            else:
+                print("QML graph container not found!")
+        except Exception as e:
+            print("Graph Simulation Error:", e)
 
     @Slot(int)
     def load_image(self, index=None):

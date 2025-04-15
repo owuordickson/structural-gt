@@ -452,6 +452,9 @@ ColumnLayout {
 
             const curr_batch = mainController.get_selected_img_batch();
             cbBatchSelector.currentIndex = curr_batch;
+
+            // JUST FOR TESTING - TO BE DELETED
+            mainController.load_graph_simulation();
         }
 
         function onProjectOpenedSignal(name) {
