@@ -370,8 +370,8 @@ ColumnLayout {
         objectName: "ntwkContainer"   // IMPORTANT: Python will find this
         Layout.fillWidth: true
         Layout.fillHeight: true
-        color: "white"
-        border.color: "gray"
+        color: "#ffffff"
+        border.color: "#d0d0d0"
         border.width: 1
         visible: false
     }
@@ -453,9 +453,6 @@ ColumnLayout {
 
             const curr_batch = mainController.get_selected_img_batch();
             cbBatchSelector.currentIndex = curr_batch;
-
-            // JUST FOR TESTING - TO BE DELETED
-            mainController.load_graph_simulation();
         }
 
         function onProjectOpenedSignal(name) {
