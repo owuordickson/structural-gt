@@ -513,8 +513,8 @@ class MainController(QObject):
             if ntwk_container:
                 print(f"Found it! {type(ntwk_container)}")
                 filename = ""
-                pipeline = import_file(filename)
-                pipeline.add_to_scene()
+                #pipeline = import_file(filename)
+                #pipeline.add_to_scene()
 
                 vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
                 ovito_widget = create_qwidget(vp)
