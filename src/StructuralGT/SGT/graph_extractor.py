@@ -107,7 +107,7 @@ class GraphExtractor(ProgressUpdate):
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
-        graph_plt = self.draw_2d_graph_network(image_2d=image_2d)
+        graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
             self.img_ntwk = GraphExtractor.plot_to_img(graph_plt)
 
@@ -174,7 +174,7 @@ class GraphExtractor(ProgressUpdate):
                     self.nx_graph.remove_edge(s, e)
         return True
 
-    def draw_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
+    def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -239,7 +239,7 @@ class GraphExtractor(ProgressUpdate):
 
         return fig
 
-    def draw_2d_skeletal_images(self, image_2d: MatLike = None):
+    def plot_2d_skeletal_images(self, image_2d: MatLike = None):
         """
         Create plot figures of skeletal image and graph network image.
 

@@ -623,41 +623,41 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = self.ntwk_p.get_image_plots()
+        figs = self.ntwk_p.plot_images()
         for fig in figs:
             out_figs.append(fig)
 
         # 2. plotting skeletal images
-        fig = graph_obj.draw_2d_skeletal_images()
+        fig = graph_obj.plot_2d_skeletal_images()
         if fig is not None:
             out_figs.append(fig)
 
         # 3. plotting sub-graph network
-        fig = graph_obj.draw_2d_graph_network(a4_size=True)
+        fig = graph_obj.plot_2d_graph_network(a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
         # 4. displaying all the GT calculations in Table  on entire page
-        fig, fig_wt = self.display_gt_results(graph_obj)
+        fig, fig_wt = self.plot_gt_results(graph_obj)
         out_figs.append(fig)
         if fig_wt:
             out_figs.append(fig_wt)
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])
-        figs = self.display_histograms(graph_obj)
+        figs = self.plot_histograms(graph_obj)
         for fig in figs:
             out_figs.append(fig)
 
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.display_2d_heatmaps(graph_obj)
+            figs = self.plot_2d_heatmaps(graph_obj)
             for fig in figs:
                 out_figs.append(fig)
 
         # 8. displaying run information
-        fig = self.display_info(graph_obj)
+        fig = self.plot_run_configs(graph_obj)
         out_figs.append(fig)
         return out_figs
 
@@ -668,7 +668,7 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["y"].append(val)
         return data_dict
 
-    def display_gt_results(self, graph_obj: GraphExtractor):
+    def plot_gt_results(self, graph_obj: GraphExtractor):
         """
         Create a table of weighted and un-weighted graph theory results.
 
@@ -700,7 +700,7 @@ class GraphAnalyzer(ProgressUpdate):
             fig_wt = None
         return fig, fig_wt
 
-    def display_histograms(self, graph_obj: GraphExtractor):
+    def plot_histograms(self, graph_obj: GraphExtractor):
         """
         Create plot figures of graph theory histograms selected by the user.
 
@@ -720,13 +720,13 @@ class GraphAnalyzer(ProgressUpdate):
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
             deg_title = r'Degree Distribution: $\sigma$='
             ax_1 = fig.add_subplot(2, 1, 1)
-            GraphAnalyzer.plot_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
+            GraphAnalyzer.plot_distribution_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             clo_distribution = self.histogram_data["closeness_distribution"]
             cc_title = r"Closeness Centrality: $\sigma$="
             ax_2 = fig.add_subplot(2, 1, 2)
-            GraphAnalyzer.plot_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
+            GraphAnalyzer.plot_distribution_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
         # Betweenness, Clustering, Eigenvector and Ohms
@@ -735,25 +735,25 @@ class GraphAnalyzer(ProgressUpdate):
             bet_distribution = self.histogram_data["betweenness_distribution"]
             bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphAnalyzer.plot_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
+            GraphAnalyzer.plot_distribution_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
 
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
             cluster_coefs = self.histogram_data["clustering_coefficients"]
             clu_title = r"Clustering Coefficients: $\sigma$="
             ax_2 = fig.add_subplot(2, 2, 2)
-            GraphAnalyzer.plot_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
+            GraphAnalyzer.plot_distribution_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
 
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             ohm_distribution = self.histogram_data["ohms_distribution"]
             oh_title = r"Ohms Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
-            GraphAnalyzer.plot_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
+            GraphAnalyzer.plot_distribution_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             eig_distribution = self.histogram_data["eigenvector_distribution"]
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
-            GraphAnalyzer.plot_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
+            GraphAnalyzer.plot_distribution_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
         # Currentflow
@@ -764,7 +764,7 @@ class GraphAnalyzer(ProgressUpdate):
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             pc_title = r"Percolation Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphAnalyzer.plot_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
+            GraphAnalyzer.plot_distribution_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
             figs.append(fig)
 
         # weighted histograms
@@ -779,25 +779,25 @@ class GraphAnalyzer(ProgressUpdate):
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                 w_deg_title = r"Weighted Degree: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                GraphAnalyzer.plot_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
+                GraphAnalyzer.plot_distribution_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
 
             if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
                 w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
                 w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
-                GraphAnalyzer.plot_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
+                GraphAnalyzer.plot_distribution_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
                 w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
                 w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
-                GraphAnalyzer.plot_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
+                GraphAnalyzer.plot_distribution_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
             if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
                 w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
                 w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
-                GraphAnalyzer.plot_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
+                GraphAnalyzer.plot_distribution_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
 
             # percolation
@@ -806,12 +806,12 @@ class GraphAnalyzer(ProgressUpdate):
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 w_pc_title = weight_type + r"-Weighted Percolation Cent.: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                GraphAnalyzer.plot_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
+                GraphAnalyzer.plot_distribution_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
                 figs.append(fig)
 
         return figs
 
-    def display_2d_heatmaps(self, graph_obj: GraphExtractor):
+    def plot_2d_heatmaps(self, graph_obj: GraphExtractor):
         """
         Create plot figures of graph theory heatmaps.
 
@@ -853,58 +853,58 @@ class GraphAnalyzer(ProgressUpdate):
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
             deg_distribution = self.histogram_data["degree_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
             cluster_coefs = self.histogram_data["clustering_coefficients"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
             bet_distribution = self.histogram_data["betweenness_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_bet_distribution,
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, w_bet_distribution,
                                     f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             clo_distribution = self.histogram_data["closeness_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             eig_distribution = self.histogram_data["eigenvector_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_eig_distribution,
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, w_eig_distribution,
                                     f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             ohm_distribution = self.histogram_data["ohms_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_percolation_histogram"]["value"] == 1:
             per_distribution = self.histogram_data["percolation_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
-            fig = GraphAnalyzer.plot_heatmap(graph_obj, img, w_per_distribution,
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, img, w_per_distribution,
                                     f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         return figs
 
-    def display_info(self, graph_obj: GraphExtractor):
+    def plot_run_configs(self, graph_obj: GraphExtractor):
         """
         Create a page (as a figure) that show the user selected parameters and options.
 
@@ -1023,7 +1023,7 @@ class GraphAnalyzer(ProgressUpdate):
         return val_max, val_min
 
     @staticmethod
-    def plot_heatmap(graph_obj: GraphExtractor, image: MatLike, distribution: list, title: str, size: float, line_width: float):
+    def plot_distribution_heatmap(graph_obj: GraphExtractor, image: MatLike, distribution: list, title: str, size: float, line_width: float):
         """
         Create a heatmap from a distribution.
 
@@ -1052,8 +1052,8 @@ class GraphAnalyzer(ProgressUpdate):
         return fig
 
     @staticmethod
-    def plot_histogram(ax: plt.axes, title: str, distribution: list, x_label: str, bins: np.ndarray = None,
-                       y_label: str = 'Counts'):
+    def plot_distribution_histogram(ax: plt.axes, title: str, distribution: list, x_label: str, bins: np.ndarray = None,
+                                    y_label: str = 'Counts'):
         """
         Create a histogram from a distribution dataset.
 

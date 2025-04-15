@@ -470,7 +470,7 @@ class NetworkProcessor(ProgressUpdate):
         ]
         selected_batch.props = props
 
-    def get_image_plots(self):
+    def plot_images(self):
         """
         Create plot figures of original, processed, and binary image.
 
