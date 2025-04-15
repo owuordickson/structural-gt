@@ -11,7 +11,7 @@ import igraph
 import sknw
 import warnings
 import cv2 as cv
-import gsd.hoomd
+# import gsd.hoomd
 # import igraph as ig
 import networkx as nx
 import matplotlib as mpl
@@ -23,13 +23,13 @@ from skimage.morphology import skeletonize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from skimage.morphology import remove_small_objects
 
-from . import base
-from . import sknwEdits
+# from . import base
+# from . import sknwEdits
 
 from ..SGT.base_image import BaseImage
 from ..SGT.graph_skeleton import GraphSkeleton
 from ..SGT.network_processor import ALLOWED_IMG_EXTENSIONS
-from ..SGT.sgt_utils import write_gsd_file
+# from ..SGT.sgt_utils import write_gsd_file
 
 """
 Questions for Alain:
@@ -242,33 +242,30 @@ class FiberNetwork:
 
         if graph_options["debubble"] is not None:
             # self = base.debubble(self, debubble)
-            GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.temp_skeleton = self._skeleton.copy()
-            self.skeleton_3d = GraphSkeleton.remove_bubbles(self._img_bin, graph_options["debubble"])
+            self._skeleton = GraphSkeleton.remove_bubbles(self._img_bin, graph_options["debubble"])
+            print(f"Ran debubble for an image with shape {self._skeleton.shape}")
 
         if graph_options["merge_nodes"] is not None:
             # self = base.merge_nodes(self, merge_nodes)
-            GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.temp_skeleton = self._skeleton.copy()
-            self.skeleton_3d = GraphSkeleton.merge_nodes()
+            self._skeleton = GraphSkeleton.merge_nodes(self._skeleton)
+            print(f"Ran merge_nodes for an image with shape {self._skeleton.shape}")
 
         if graph_options["prune"] is not None:
             # self = base.prune(self, prune)
-            GraphSkeleton.g_2d = self._2d
-            GraphSkeleton.temp_skeleton = self._skeleton.copy()
-            b_points = GraphSkeleton.get_branched_points()
-            self.skeleton_3d = GraphSkeleton.prune_edges(500, b_points)
+            b_points = GraphSkeleton.get_branched_points(self._skeleton)
+            self._skeleton = GraphSkeleton.prune_edges(self._skeleton, 500, b_points)
+            print(f"Ran prune for an image with shape {self._skeleton.shape}")
 
         if graph_options["remove_objects"] is not None:
             # self = base.remove_objects(self, remove_objects)
             canvas = self._skeleton
             self._skeleton = remove_small_objects(canvas, graph_options["remove_objects"], connectivity=2)
-            self.skeleton_3d = np.asarray(self._skeleton)
-            if self._2d:
-                self.skeleton_3d = np.asarray([self._skeleton])
             # gsd_file = self.gsd_dir + "/cleaned_" + os.path.split(self.gsd_name)[1]
             # write_gsd_file(gsd_file, self.skeleton_3d)
-            print(f"Ran remove objects in for an image with shape {self.skeleton_3d.shape}")
+            print(f"Ran remove objects for an image with shape {self._skeleton.shape}")
+        self.skeleton_3d = np.asarray(self._skeleton)
+        if self._2d:
+            self.skeleton_3d = np.asarray([self._skeleton])
 
         positions = np.asarray(np.where(np.asarray(self.skeleton_3d) == 1)).T
         """self.shape = np.asarray(list(max(positions.T[i]) + 1 for i in (2, 1, 0)[0: self.dim]))
