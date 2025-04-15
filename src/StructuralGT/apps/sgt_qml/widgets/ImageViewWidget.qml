@@ -439,8 +439,8 @@ ColumnLayout {
             imgView.visible = !mainController.is_img_3d();
             imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
-            imgContainer.visible = mainController.display_image();
-            //ntwkContainer.visible = mainController.display_image() ? mainController.display_graph() : false;
+            imgContainer.visible = mainController.display_image() ? !mainController.display_graph() : false;
+            ntwkContainer.visible = mainController.display_image() ? mainController.display_graph() : false;
             imgNavControls.visible = mainController.display_image();
             imgBatchSelector.visible = mainController.image_batches_exist();
 

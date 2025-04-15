@@ -3,6 +3,9 @@ import sys
 import logging
 import pickle
 import numpy as np
+from ovito.io import import_file
+from ovito.vis import Viewport
+from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import QObject,Signal,Slot
 from PySide6.QtQml import QQmlApplicationEngine
@@ -509,8 +512,22 @@ class MainController(QObject):
 
             if ntwk_container:
                 print(f"Found it! {type(ntwk_container)}")
-            else:
-                print("QML graph container not found!")
+                filename = ""
+                pipeline = import_file(filename)
+                pipeline.add_to_scene()
+
+                vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+                ovito_widget = create_qwidget(vp)
+                ovito_widget.setMinimumSize(800, 500)
+                vp.zoom_all((800, 500))
+
+                container_win = ntwk_container.window()
+                # win_id = int(ntwk_container.winId())  # Forces creation of native window
+
+                # Re-parent OVITO QWidget
+                ovito_widget.setParent(container_win)
+                ovito_widget.move(ntwk_container.x(), ntwk_container.y())
+                ovito_widget.show()
         except Exception as e:
             print("Graph Simulation Error:", e)
 
@@ -772,6 +789,10 @@ class MainController(QObject):
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded
+
+    @Slot(result=bool)
+    def display_graph(self):
+        return True
 
     @Slot(result=bool)
     def image_batches_exist(self):
