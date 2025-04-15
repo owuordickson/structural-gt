@@ -587,14 +587,12 @@ class _cropper:
                 self.dims = (1,) + planar_dims
             else:
                 self.dims = planar_dims + (depth,)
-
         else:
             if self.dim == 2:
                 self.crop = (slice(domain[2], domain[3]),
                              slice(domain[0], domain[1]))
                 self.dims = (1, domain[3] - domain[2], domain[1] - domain[0])
                 self.domain = (domain[2], domain[3], domain[0], domain[1])
-
             else:
                 self.crop = (
                     slice(domain[0], domain[1]),
