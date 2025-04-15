@@ -199,8 +199,7 @@ class NetworkProcessor(ProgressUpdate):
         for i, img_batch in enumerate(img_batches):
             img_data = img_batch.numpy_image
             scale_factor = img_batch.scale_factor
-            print(img_data.shape)
-            
+
             # Load images for processing
             if img_data is None:
                 raise ValueError(f"Problem with images in batch {i}!")
@@ -385,7 +384,7 @@ class NetworkProcessor(ProgressUpdate):
 
             sel_batch.graph_obj.abort = False
             sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(img_bin, img_2d, px_size, rho_val)
+            sel_batch.graph_obj.fit_graph(img_bin, img_2d, sel_batch.is_2d, px_size, rho_val)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:

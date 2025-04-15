@@ -74,12 +74,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.skel_obj: GraphSkeleton | None = None
         self.nx_components = []
 
-    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, px_width_sz: float = 1.0, rho_val: float = 1.0):
+    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
         :param image_bin: a binary image for building Graph Skeleton for the NetworkX graph.
         :param image_2d: the raw 2D image for creating a visual graph plot image.
+        :param is_img_2d: whether the image is 2D or 3D otherwise.
         :param px_width_sz: width of a pixel in nano-meters.
         :param rho_val: resistivity coefficient/value of the material.
         :return:
@@ -91,7 +92,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             return
 
         self.update_status([50, "Making graph skeleton..."])
-        success = self.extract_graph(image_bin=image_bin, px_size=px_width_sz, rho_val=rho_val)
+        success = self.extract_graph(image_bin=image_bin, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
@@ -118,11 +119,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
 
-    def extract_graph(self, image_bin: MatLike = None, px_size: float = 1.0, rho_val: float = 1.0):
+    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
         """
         Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
         :param image_bin: binary image from which skeleton will be built and graph drawn.
+        :param is_img_2d: whether the image is 2D or 3D otherwise.
         :param px_size: width of a pixel in nano-meters.
         :param rho_val: resistivity coefficient/value of the material.
         :return:
@@ -135,13 +137,14 @@ class FiberNetworkBuilder(ProgressUpdate):
         if opt_gte is None:
             return False
 
-        graph_skel = GraphSkeleton(image_bin, opt_gte)
+        graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
         img_skel = graph_skel.skeleton.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])
         nx_graph = sknw.build_sknw(img_skel[selected_slice])
+        self.update_status([64, "Assigning weights to graph network..."])
         for (s, e) in nx_graph.edges():
             # 'sknw' library stores length of edge and calls it weight, we reverse this
             # we create a new attribute 'length', later delete/modify 'weight'
@@ -169,6 +172,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # Removing all instances of edges were the start and end are the same, or "self loops"
         if opt_gte["remove_self_loops"]["value"]:
+            self.update_status([66, "Removing self loops from graph network..."])
             for (s, e) in self.nx_graph.edges():
                 if s == e:
                     self.nx_graph.remove_edge(s, e)
