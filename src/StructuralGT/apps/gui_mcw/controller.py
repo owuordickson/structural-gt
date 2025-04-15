@@ -511,23 +511,28 @@ class MainController(QObject):
             ntwk_container = root.findChild(QObject, "ntwkContainer")
 
             if ntwk_container:
-                print(f"Found it! {type(ntwk_container)}")
-                filename = ""
-                #pipeline = import_file(filename)
-                #pipeline.add_to_scene()
+                # Testing
+                # print(f"Found it! {type(ntwk_container)}")
+                # ntwk_container.setProperty("color", "#8b0000")
+
+                # Create OVITO data pipeline
+                sgt_obj = self.get_selected_sgt_obj()
+                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
+                gsd_filename = filename + "_skel.gsd"
+                gsd_file = str(os.path.join(out_dir, gsd_filename))
+                pipeline = import_file(gsd_file)
+                pipeline.add_to_scene()
 
                 vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-                ovito_widget = create_qwidget(vp)
+                ovito_widget = create_qwidget(vp, parent=)
                 ovito_widget.setMinimumSize(800, 500)
                 vp.zoom_all((800, 500))
 
-                container_win = ntwk_container.window()
-                # win_id = int(ntwk_container.winId())  # Forces creation of native window
-
                 # Re-parent OVITO QWidget
-                ovito_widget.setParent(container_win)
-                ovito_widget.move(ntwk_container.x(), ntwk_container.y())
+                ovito_widget.setGeometry(ntwk_container.property("x"), ntwk_container.property("y"),
+                                         ntwk_container.property("width"), ntwk_container.property("height"))
                 ovito_widget.show()
+
         except Exception as e:
             print("Graph Simulation Error:", e)
 
@@ -702,6 +707,8 @@ class MainController(QObject):
     @Slot()
     def run_extract_graph(self):
         """Retrieve settings from model and send to Python."""
+        self.load_graph_simulation()
+
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
