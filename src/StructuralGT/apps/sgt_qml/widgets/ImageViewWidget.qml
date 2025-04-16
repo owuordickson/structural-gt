@@ -276,6 +276,7 @@ ColumnLayout {
                                     let val = checked ? 1 : 0;
                                     var index = img3dGridModel.index(model.index, 0);
                                     img3dGridModel.setData(index, val, selectedRole);
+                                    mainController.toggle_selected_batch_image(model.id, isSelected);
                                 }
                             }
                         }

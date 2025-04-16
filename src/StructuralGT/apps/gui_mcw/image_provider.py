@@ -19,13 +19,13 @@ class ImageProvider(QQuickImageProvider):
             if option == "binary":
                 ntwk_p.apply_img_filters(filter_type=2)
                 bin_images = [obj.img_bin for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(bin_images)
+                self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
                 img_cv = bin_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "processed":
                 ntwk_p.apply_img_filters(filter_type=1)
                 mod_images = [obj.img_mod for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(mod_images)
+                self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
                 img_cv = mod_images[0]
                 img = Image.fromarray(img_cv)
             elif option == "graph":
@@ -33,17 +33,17 @@ class ImageProvider(QQuickImageProvider):
                 # If any is None, start task
                 if sel_img_batch.graph_obj.img_ntwk is None:
                     self.img_controller.run_extract_graph()
-                    # Wait for task to finish
+                    # Wait for the task to finish
                     return
                 else:
                     net_images = [sel_img_batch.graph_obj.img_ntwk]
-                    self.img_controller.img3dGridModel.reset_data(net_images)
+                    self.img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images)
                     img = net_images[0]
                     self.img_controller.load_graph_simulation()
             else:
                 # Original
                 images = [obj.img_2d for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(images)
+                self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
                 img_cv = images[0]
                 img = Image.fromarray(img_cv)
 
@@ -53,11 +53,11 @@ class ImageProvider(QQuickImageProvider):
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_graph_models(sgt_obj)
 
-            # Save changes to project data file
+            # Save changes to the project data file
             if len(self.img_controller.sgt_objs.items()) <= 10:
                 self.img_controller.save_project_data()
 
-            # Acknowledge image load and send signal to update QML
+            # Acknowledge the image load and send signal to update QML
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()
         else:

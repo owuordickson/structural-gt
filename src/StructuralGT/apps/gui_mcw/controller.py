@@ -77,7 +77,7 @@ class MainController(QObject):
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
-        self.img3dGridModel = ImageGridModel([])
+        self.img3dGridModel = ImageGridModel([], {})
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -487,6 +487,16 @@ class MainController(QObject):
             self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
                                                            f"{batch_index}. Restart app and try again.")
 
+    @Slot(int, bool)
+    def toggle_selected_batch_image(self, img_index, selected):
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        if selected:
+            sel_img_batch.selected_images.add(img_index)
+        else:
+            sel_img_batch.selected_images.discard(img_index)
+        print(sel_img_batch.selected_images)
+
     @Slot(int)
     def select_img_type(self, choice=None):
         """
@@ -644,7 +654,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_filter_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:

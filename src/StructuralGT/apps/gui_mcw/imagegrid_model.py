@@ -9,16 +9,15 @@ class ImageGridModel(QAbstractListModel):
     SelectedRole = Qt.ItemDataRole.UserRole + 20
     ImageRole = Qt.ItemDataRole.UserRole + 21
 
-    def __init__(self, img_lst, parent=None):
+    def __init__(self, img_lst: list, selected_images: set, parent=None):
         super().__init__(parent)
         if len(img_lst) == 0:
             self._image_data = []
             return
-
-        if type(img_lst[0]) is np.ndarray:
-            self._image_data = [{"id": i, "image": get_cv_base64(img_lst[i]), "selected": 1} for i in range(len(img_lst))]
-        else:
-            self._image_data = [{"id": i, "image": pil_to_base64(img_lst[i]), "selected": 1} for i in range(len(img_lst))]
+        self._image_data = [{"id": i,
+                             "image": get_cv_base64(img_lst[i]) if type(img_lst[i]) is np.ndarray else pil_to_base64(
+                                 img_lst[i]), "selected": 1 if i in selected_images else 0} for i in
+                            range(len(img_lst))]
 
     def rowCount(self, parent=None):
         return len(self._image_data)
@@ -53,17 +52,14 @@ class ImageGridModel(QAbstractListModel):
             return True
         return False
 
-    def reset_data(self, new_data):
+    def reset_data(self, new_data: list, selected_images: set):
         """ Resets the data to be displayed. """
         self._image_data = new_data
         if new_data is None:
             return
         self.beginResetModel()
 
-        if type(new_data[0]) is np.ndarray:
-            self._image_data = [{"id": i, "image": get_cv_base64(new_data[i]), "selected": 1} for i in range(len(new_data))]
-        else:
-            self._image_data = [{"id": i, "image": pil_to_base64(new_data[i]), "selected": 1} for i in range(len(new_data))]
+        self._image_data = [{"id": i, "image": get_cv_base64(new_data[i]) if type(new_data[i]) is np.ndarray else pil_to_base64(new_data[i]), "selected": 1 if i in selected_images else 0} for i in range(len(new_data))]
 
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),
