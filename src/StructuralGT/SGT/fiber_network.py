@@ -108,7 +108,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
-        # TO BE REPLACED WITH OVITO IMAGE VIZ
+        # WHAT ABOUT DEPTH/SLICES? Should show all slices?
         graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
             self.img_ntwk = FiberNetworkBuilder.plot_to_img(graph_plt)
@@ -219,7 +219,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             if a4_size:
                 fig = plt.Figure(figsize=(8.5, 11), dpi=400)
                 ax = fig.add_subplot(1, 1, 1)
-                ax.set_title("Graph Sub-networks")
+                ax.set_title("Graph Edges Sub-networks")
             else:
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
@@ -244,6 +244,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         return fig
 
+    # TO BE REPLACED WITH OVITO-VIZ Plot
     def plot_2d_skeletal_images(self, image_2d: MatLike = None):
         """
         Create plot figures of skeletal image and graph network image.
@@ -261,7 +262,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         g_skel = self.skel_obj
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-        ax_1 = fig.add_subplot(2, 1, 1)
+        return
+        """ax_1 = fig.add_subplot(2, 1, 1)
         ax_2 = fig.add_subplot(2, 1, 2)
 
         ax_1.set_title("Skeletal Image")
@@ -270,7 +272,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         ax_1.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
         ax_1.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
 
-        ax_2.set_title("Final Graph")
+        ax_2.set_title("Graph Node Plot")
         ax_2.set_axis_off()
         ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, image_2d, nx_graph)
 
@@ -284,7 +286,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
         else:
             ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        return fig
+        return fig"""
 
     def get_config_info(self):
         """

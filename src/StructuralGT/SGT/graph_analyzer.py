@@ -628,6 +628,7 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig)
 
         # 2. plotting skeletal images
+        # TO BE REPLACED WITH OVITO IMAGE VIZ
         fig = graph_obj.plot_2d_skeletal_images()
         if fig is not None:
             out_figs.append(fig)
