@@ -13,8 +13,8 @@ from PIL import Image
 
 def get_num_cores():
     """
-    Finds the count of CPU cores in a computer or a SLURM super-computer.
-    :return: number of cpu cores (int)
+    Finds the count of CPU cores in a computer or a SLURM supercomputer.
+    :return: Number of cpu cores (int)
     """
     num_cores = __get_slurm_cores__()
     if not num_cores:
@@ -25,7 +25,7 @@ def get_num_cores():
 def __get_slurm_cores__():
     """
     Test computer to see if it is a SLURM environment, then gets number of CPU cores.
-    :return: count of CPUs (int) or False
+    :return: Count of CPUs (int) or False
     """
     try:
         cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
@@ -51,8 +51,8 @@ def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):
     """Description
         Writes data into a txt file.
 
-        :param data: information to be written
-        :param path: name of file and storage path
+        :param data: Information to be written
+        :param path: name of the file and storage path
         :param wr: writes data into file if True
         :return:
     """

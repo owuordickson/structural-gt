@@ -495,7 +495,6 @@ class MainController(QObject):
             sel_img_batch.selected_images.add(img_index)
         else:
             sel_img_batch.selected_images.discard(img_index)
-        print(sel_img_batch.selected_images)
 
     @Slot(int)
     def select_img_type(self, choice=None):
@@ -674,7 +673,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_scaling(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             self.set_auto_scale(True)
             sgt_obj = self.get_selected_sgt_obj()

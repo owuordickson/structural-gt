@@ -33,7 +33,7 @@ class NetworkProcessor(ProgressUpdate):
     A class for processing and preparing 2D or 3D microscopy images for building a fiber graph network.
 
     Args:
-        img_path (str): input image path.
+        img_path (str): input image path
         out_dir (str): directory path for storing results.
     """
 
@@ -54,7 +54,7 @@ class NetworkProcessor(ProgressUpdate):
         A class for processing and preparing microscopy images for building a fiber graph network.
 
         Args:
-            img_path (str): input image path.
+            img_path (str): input image path
             out_dir (str): directory path for storing results.
 
         >>>
@@ -78,16 +78,16 @@ class NetworkProcessor(ProgressUpdate):
 
         Most 3D images are like layers of multiple image frames layered on-top of each other. The image frames may be
         images of the same object/item through time or through space (i.e., from different angles). Our approach is to
-        separate these frames, extract GT graphs from them. and then layer back the extracted graphs in the same order.
+        separate these frames, extract GT graphs from them and then the layer back from the extracted graphs in the same order.
 
         Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
-        depending on the user-selected re-scaling options); and allows the user to select which frames to run
-        GT computations on (some frames are just too noisy to be used).
+        depending on the user-selected re-scaling options), and allows the user to select which frames to run
+        GT computations on. (Some frames are just too noisy to be used.)
 
         Again, our software provides a button that allows the user to select which frames are used to reconstruct the
         layered GT graphs in the same order as their respective frames.
 
-        :param file: file path.
+        :param file: The file path.
         :return: list[NetworkProcessor.ImageBatch]
         """
         # Cluster images into batches based on (h, w) size
@@ -118,11 +118,11 @@ class NetworkProcessor(ProgressUpdate):
                 image_groups = defaultdict(list)
                 while True:
                     # Create clusters/groups of similar size images
-                    frame = np.array(img)  # Convert the current frame to numpy array
+                    frame = np.array(img)  # Convert the current frame to the numpy array
                     h, w = frame.shape[:2]
                     image_groups[(h, w)].append(frame)
                     try:
-                        # Move to next frame
+                        # Move to the next frame
                         img.seek(img.tell() + 1)
                     except EOFError:
                         # Stop when all frames are read
@@ -188,8 +188,8 @@ class NetworkProcessor(ProgressUpdate):
 
     def _initialize_image_batches(self, img_batches: list[ImageBatch]):
         """
-        Retrieve all image slices of the selected image batch. If the image is 2D only one slice exists,
-        if it is 3D multiple slices exist.
+        Retrieve all image slices of the selected image batch. If the image is 2D, only one slice exists
+        if it is 3D, then multiple slices exist.
         """
 
         # Check if image batches exist
@@ -305,10 +305,10 @@ class NetworkProcessor(ProgressUpdate):
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
 
-        scale_factor = 1
+        # scale_factor = 1
         sel_batch = self.get_selected_batch()
         if len(sel_batch.images) <= 0:
-            return None, scale_factor
+            return
 
         scale_size = 0
         for scale_item in sel_batch.scaling_options:
@@ -318,7 +318,7 @@ class NetworkProcessor(ProgressUpdate):
                 continue
 
         if scale_size <= 0:
-            return None, scale_factor
+            return
 
         img_px_size = 1
         for img_obj in sel_batch.images:
@@ -327,7 +327,7 @@ class NetworkProcessor(ProgressUpdate):
             img_px_size = temp_px if temp_px > img_px_size else img_px_size
         scale_factor = scale_size / img_px_size
 
-        # Resize (Downsample) all frames to smaller pixel size while maintaining aspect ratio
+        # Resize (Downsample) all frames to smaller pixel size while maintaining the aspect ratio
         for img_obj in sel_batch.images:
             img = img_obj.img_raw.copy()
             scale_size = scale_factor * max(img.shape[0], img.shape[1])
@@ -343,10 +343,10 @@ class NetworkProcessor(ProgressUpdate):
         """
         A function that crops images into a new box dimension.
 
-        :param x: left coordinate of cropping box.
-        :param y: top coordinate of cropping box.
-        :param width: width of cropping box.
-        :param height: height of cropping box.
+        :param x: Left coordinate of cropping box.
+        :param y: Top coordinate of cropping box.
+        :param width: Width of cropping box.
+        :param height: Height of cropping box.
         """
 
         sel_batch = self.get_selected_batch()
@@ -401,9 +401,9 @@ class NetworkProcessor(ProgressUpdate):
 
     def get_filenames(self, image_path: str = None):
         """
-        Splits image path into file name and image directory.
+        Splits the image path into file name and image directory.
 
-        :param image_path: image directory path.
+        :param image_path: Image directory path.
 
         Returns:
             filename (str): image file name., output_dir (str): image directory path.
@@ -427,7 +427,7 @@ class NetworkProcessor(ProgressUpdate):
     def get_selected_images(self, selected_batch: ImageBatch):
         """
         Get indices of selected images.
-        :param selected_batch: selected batch ImageBatch object.
+        :param selected_batch: The selected batch ImageBatch object.
         """
         if selected_batch is None:
            selected_batch = self.get_selected_batch()

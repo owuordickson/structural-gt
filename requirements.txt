@@ -11,3 +11,6 @@ PySide6~=6.8.2.1
 setuptools~=76.0.0
 pydicom~=3.0.1
 nibabel~=5.3.2
+gsd~=3.4.2
+igraph~=0.11.8
+ovito~=3.12.1

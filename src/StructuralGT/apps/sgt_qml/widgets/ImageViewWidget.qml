@@ -244,7 +244,7 @@ ColumnLayout {
                         color: "#d0d0d0"  // Background color for spacing effect
 
                         Image {
-                            source: "data:image/png;base64," + model.image  // Base64 encoded image
+                            source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image
                             width: parent.width
                             height: parent.height
                             anchors.centerIn: parent
