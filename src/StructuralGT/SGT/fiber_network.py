@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GNU GPL v3
 
 """
-Builds a graph network from nano-scale microscopy images.
+Builds a graph network from nanoscale microscopy images.
 """
 
 import os
@@ -78,11 +78,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
-        :param image_bin: a binary image for building Graph Skeleton for the NetworkX graph.
-        :param image_2d: the raw 2D image for creating a visual graph plot image.
-        :param is_img_2d: whether the image is 2D or 3D otherwise.
-        :param px_width_sz: width of a pixel in nano-meters.
-        :param rho_val: resistivity coefficient/value of the material.
+        :param image_bin: A binary image for building Graph Skeleton for the NetworkX graph.
+        :param image_2d: The raw 2D image for creating a visual graph plot image.
+        :param is_img_2d: Whether the image is 2D or 3D otherwise.
+        :param px_width_sz: Width of a pixel in nanometers.
+        :param rho_val: Resistivity coefficient/value of the material.
         :return:
         """
 
@@ -124,10 +124,10 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Build a skeleton from image and use the skeleton to build a NetworkX graph.
 
-        :param image_bin: binary image from which skeleton will be built and graph drawn.
-        :param is_img_2d: whether the image is 2D or 3D otherwise.
-        :param px_size: width of a pixel in nano-meters.
-        :param rho_val: resistivity coefficient/value of the material.
+        :param image_bin: Binary image from which skeleton will be built and graph drawn.
+        :param is_img_2d: Whether the image is 2D or 3D otherwise.
+        :param px_size: Width of a pixel in nanometers.
+        :param rho_val: Resistivity coefficient/value of the material.
         :return:
         """
 
@@ -140,7 +140,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
-        img_skel = graph_skel.skeleton.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick first image in stack
+        img_skel = graph_skel.skeleton.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in stack
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])
@@ -171,7 +171,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.nx_graph = nx_graph
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
 
-        # Removing all instances of edges were the start and end are the same, or "self loops"
+        # Removing all instances of edges were the start and end are the same, or "self-loops"
         if opt_gte["remove_self_loops"]["value"]:
             self.update_status([66, "Removing self loops from graph network..."])
             for (s, e) in self.nx_graph.edges():
@@ -184,8 +184,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
         :param image_2d: 2D image to be used to draw the network.
-        :param a4_size: decision if to create an A4 size plot figure.
-        :param blank: do not add image in the background, have a white background.
+        :param a4_size: Decision if to create an A4 size plot figure.
+        :param blank: Do not add image in the background, have a white background.
 
         :return:
         """
@@ -249,7 +249,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Create plot figures of skeletal image and graph network image.
 
-        :param image_2d: raw 2D image to be super-imposed with graph.
+        :param image_2d: Raw 2D image to be superimposed with graph.
 
         :return:
         """
@@ -262,7 +262,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         g_skel = self.skel_obj
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-        return
+        return fig
         """ax_1 = fig.add_subplot(2, 1, 1)
         ax_2 = fig.add_subplot(2, 1, 2)
 
@@ -359,8 +359,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Save graph data into files.
 
-        :param filename: the filename to save the data to.
-        :param out_dir: the directory to save the data to.
+        :param filename: The filename to save the data to.
+        :param out_dir: The directory to save the data to.
         :return:
         """
 
@@ -416,6 +416,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             buf.seek(0)
             img = Image.open(buf)
             return img
+        return None
 
     @staticmethod
     def get_weight_options():
@@ -441,7 +442,7 @@ class FiberNetworkBuilder(ProgressUpdate):
     def superimpose_graph_to_img(axis, image: MatLike, nx_graph: nx.Graph):
         """
         Plot graph edges on top of the image.
-        :param axis: matplotlib axis
+        :param axis: Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
         :return:

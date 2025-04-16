@@ -49,7 +49,7 @@ def load_img_configs():
         "save_images": {"id": "save_images", "type": "file-options", "text": "Save All Images", "visible": 1, "value": 0},
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -118,7 +118,7 @@ def load_gte_configs():
         "export_as_gsd": {"id": "export_as_gsd", "type": "file-options", "text": "Export as GSD/HOOMD", "value": 0},
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -152,7 +152,7 @@ def load_gtc_configs():
     """Networkx Calculation Settings"""
 
     options_gtc = {
-        "display_heatmaps": {"id": "display_heatmaps", "text": "Display Heatmaps", "value": 1},
+        "display_heatmaps": {"id": "display_heatmaps", "text": "Plot Heatmaps", "value": 1},
         "display_degree_histogram": {"id": "display_degree_histogram", "text": "Average Degree", "value": 1},
         "compute_network_diameter": {"id": "compute_network_diameter", "text": "Network Diameter", "value": 1},
         "compute_graph_density": {"id": "compute_graph_density", "text": "Graph Density", "value": 1},
@@ -172,7 +172,7 @@ def load_gtc_configs():
         #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -270,7 +270,7 @@ def detect_cuda_and_install_cupy():
             logging.info("CUDA version not supported. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
             install_package('cupy')
     else:
-        # No CUDA found, fall back to CPU-only version
+        # No CUDA found, fall back to the CPU-only version
         logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
         install_package('cupy')
 
