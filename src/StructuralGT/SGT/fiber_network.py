@@ -108,6 +108,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.props = self.get_graph_props()
 
         self.update_status([90, "Drawing graph network..."])
+        # TO BE REPLACED WITH OVITO IMAGE VIZ
         graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
             self.img_ntwk = FiberNetworkBuilder.plot_to_img(graph_plt)

@@ -39,6 +39,7 @@ class ImageProvider(QQuickImageProvider):
                     net_images = [sel_img_batch.graph_obj.img_ntwk]
                     self.img_controller.img3dGridModel.reset_data(net_images)
                     img = net_images[0]
+                    self.img_controller.load_graph_simulation()
             else:
                 # Original
                 images = [obj.img_2d for obj in sel_img_batch.images]

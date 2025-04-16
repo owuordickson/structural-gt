@@ -9,6 +9,7 @@ import sys
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
 
 from .gui_mcw.controller import MainController
 from .gui_mcw.image_provider import ImageProvider
@@ -17,11 +18,11 @@ from .gui_mcw.image_provider import ImageProvider
 class MainWindow(QObject):
     def __init__(self):
         super().__init__()
-        self.app = QGuiApplication(sys.argv)
+        self.app = QApplication(sys.argv)
         self.ui_engine = QQmlApplicationEngine()
 
         # Register Controller for Dynamic Updates
-        controller = MainController(qml_engine=self.ui_engine)
+        controller = MainController(qml_app=self.app)
         # Register Image Provider
         self.image_provider = ImageProvider(controller)
 

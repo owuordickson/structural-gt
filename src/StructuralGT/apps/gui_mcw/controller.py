@@ -7,8 +7,8 @@ from ovito.io import import_file
 from ovito.vis import Viewport
 from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject,Signal,Slot
-from PySide6.QtQml import QQmlApplicationEngine
 from matplotlib.backends.backend_pdf import PdfPages
 
 from .imagegrid_model import ImageGridModel
@@ -44,9 +44,9 @@ class MainController(QObject):
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
 
-    def __init__(self, qml_engine: QQmlApplicationEngine):
+    def __init__(self, qml_app: QApplication):
         super().__init__()
-        self.qml_engine = qml_engine
+        self.qml_app = qml_app
         self.img_loaded = False
         self.project_open = False
         self.allow_auto_scale = True
@@ -506,6 +506,21 @@ class MainController(QObject):
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
         try:
+            # Create OVITO data pipeline
+            sgt_obj = self.get_selected_sgt_obj()
+            filename, out_dir = sgt_obj.ntwk_p.get_filenames()
+            gsd_filename = filename + "_skel.gsd"
+            gsd_file = str(os.path.join(out_dir, gsd_filename))
+            pipeline = import_file(gsd_file)
+            pipeline.add_to_scene()
+
+            vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+            ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+            ovito_widget.setMinimumSize(800, 500)
+            vp.zoom_all((800, 500))
+            ovito_widget.show()
+
+            """
             # Find the QML Rectangle to embed into
             root = self.qml_engine.rootObjects()[0]
             ntwk_container = root.findChild(QObject, "ntwkContainer")
@@ -514,6 +529,12 @@ class MainController(QObject):
                 # Testing
                 # print(f"Found it! {type(ntwk_container)}")
                 # ntwk_container.setProperty("color", "#8b0000")
+
+                # Grab rectangle properties
+                x = ntwk_container.property("x")
+                y = ntwk_container.property("y")
+                w = ntwk_container.property("width")
+                h = ntwk_container.property("height")
 
                 # Create OVITO data pipeline
                 sgt_obj = self.get_selected_sgt_obj()
@@ -524,15 +545,13 @@ class MainController(QObject):
                 pipeline.add_to_scene()
 
                 vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-                ovito_widget = create_qwidget(vp, parent=)
+                ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
                 ovito_widget.setMinimumSize(800, 500)
                 vp.zoom_all((800, 500))
 
                 # Re-parent OVITO QWidget
-                ovito_widget.setGeometry(ntwk_container.property("x"), ntwk_container.property("y"),
-                                         ntwk_container.property("width"), ntwk_container.property("height"))
-                ovito_widget.show()
-
+                ovito_widget.setGeometry(x, y, w, h)
+                ovito_widget.show()"""
         except Exception as e:
             print("Graph Simulation Error:", e)
 
@@ -707,7 +726,6 @@ class MainController(QObject):
     @Slot()
     def run_extract_graph(self):
         """Retrieve settings from model and send to Python."""
-        self.load_graph_simulation()
 
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})

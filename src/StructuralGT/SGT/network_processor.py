@@ -388,6 +388,11 @@ class NetworkProcessor(ProgressUpdate):
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
                 return
+
+            # Save graph to GSD/HOOMD - For OVITO rendering
+            filename, out_dir = self.get_filenames()
+            sel_batch.graph_obj.configs["export_as_gsd"]["value"] = 1
+            sel_batch.graph_obj.save_graph_to_file(filename, out_dir)
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
