@@ -53,7 +53,7 @@ Item {
                     }
 
                     Loader {
-                        Layout.fillWidth: model.id === "remove_object_size" ? false : true
+                        Layout.fillWidth: model.id !== "remove_object_size"
                         Layout.preferredWidth: 75
                         Layout.leftMargin: hasChildren ? 0 : depth > 0 ? 50 : 10
                         sourceComponent: model.id === "remove_object_size" ? txtFldComponent :
@@ -67,7 +67,7 @@ Item {
                             id: checkBox
                             objectName: model.id
                             text: model.text
-                            property bool isChecked: model.value === 1 ? true : false
+                            property bool isChecked: model.value === 1
                             checked: isChecked
                             onCheckedChanged: {
                                 if (isChecked !== checked) {  // Only update if there is a change

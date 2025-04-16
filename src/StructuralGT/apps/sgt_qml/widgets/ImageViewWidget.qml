@@ -10,6 +10,7 @@ ColumnLayout {
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
     property real zoomFactor: 1.0
+    property int selectedRole: (Qt.UserRole + 20)
 
     Rectangle {
         id: welcomeContainer
@@ -262,15 +263,31 @@ ColumnLayout {
                             background: Rectangle { color: "transparent" }
                         }
 
-                        MouseArea {
+                        CheckBox {
+                            id: checkBox
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 2
+                            property bool isSelected: model.selected === 1
+                            checked: isSelected
+                            onCheckedChanged: {
+                                if (isSelected !== checked) {  // Only update if there is a change
+                                    isSelected = checked
+                                    let val = checked ? 1 : 0;
+                                    var index = img3dGridModel.index(model.index, 0);
+                                    img3dGridModel.setData(index, val, selectedRole);
+                                }
+                            }
+                        }
+
+                        /*MouseArea {
                             anchors.fill: parent
-                            property int isSelected: model.selected ? 1 : 0
                             onClicked: {
                                 isSelected = isSelected === 1 ? 0 : 1;
                                 console.log("Clicked on:", model.id)
                                 console.log("Selected: ", isSelected);
                             }
-                        }
+                        }*/
                     }
                 }
             }
