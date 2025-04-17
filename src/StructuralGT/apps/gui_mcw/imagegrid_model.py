@@ -14,10 +14,11 @@ class ImageGridModel(QAbstractListModel):
         if len(img_lst) == 0:
             self._image_data = []
             return
-        self._image_data = [{"id": i,
-                             "image": get_cv_base64(img_lst[i]) if type(img_lst[i]) is np.ndarray else pil_to_base64(
-                                 img_lst[i]), "selected": 1 if i in selected_images else 0} for i in
-                            range(len(img_lst))]
+        self._image_data = [{
+            "id": i,
+            "image": get_cv_base64(img_lst[i]) if type(img_lst[i]) is np.ndarray else "" if img_lst[i] is None else pil_to_base64(img_lst[i]),
+            "selected": 1 if i in selected_images else 0
+        } for i in range(len(img_lst))]
 
     def rowCount(self, parent=None):
         return len(self._image_data)
@@ -33,8 +34,6 @@ class ImageGridModel(QAbstractListModel):
         if role == self.IdRole:
             return item["id"]
         elif role == self.ImageRole:
-            if item["image"] is None:
-                return ""
             return item["image"]
         elif role == self.SelectedRole:
             return item["selected"]
@@ -56,12 +55,15 @@ class ImageGridModel(QAbstractListModel):
 
     def reset_data(self, new_data: list, selected_images: set):
         """ Resets the data to be displayed. """
-        self._image_data = new_data
         if new_data is None:
             return
         self.beginResetModel()
 
-        self._image_data = [{"id": i, "image": get_cv_base64(new_data[i]) if type(new_data[i]) is np.ndarray else pil_to_base64(new_data[i]), "selected": 1 if i in selected_images else 0} for i in range(len(new_data))]
+        self._image_data = [{
+            "id": i,
+            "image": get_cv_base64(new_data[i]) if type(new_data[i]) is np.ndarray else "" if new_data[i] is None else pil_to_base64(new_data[i]),
+            "selected": 1 if i in selected_images else 0
+        } for i in range(len(new_data))]
 
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),

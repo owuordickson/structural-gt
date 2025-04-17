@@ -13,27 +13,28 @@ class ImageProvider(QQuickImageProvider):
 
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
+            img = None
             sgt_obj = self.img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             if option == "binary":
                 ntwk_p.apply_img_filters(filter_type=2)
-                # 3D
                 bin_images = [obj.img_bin for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
-
-                # 2D, Do not use if 3D
-                img_cv = bin_images[0]
-                img = Image.fromarray(img_cv)
+                if self.img_controller.is_img_3d():
+                    self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
+                else:
+                    # 2D, Do not use if 3D
+                    img_cv = bin_images[0]
+                    img = Image.fromarray(img_cv)
             elif option == "processed":
                 ntwk_p.apply_img_filters(filter_type=1)
-                # 3D
                 mod_images = [obj.img_mod for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
-
-                # 2D, Do not use if 3D
-                img_cv = mod_images[0]
-                img = Image.fromarray(img_cv)
+                if self.img_controller.is_img_3d():
+                    self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
+                else:
+                    # 2D, Do not use if 3D
+                    img_cv = mod_images[0]
+                    img = Image.fromarray(img_cv)
             elif option == "graph":
 
                 # If any is None, start task
@@ -48,16 +49,17 @@ class ImageProvider(QQuickImageProvider):
                     self.img_controller.load_graph_simulation()
             else:
                 # Original
-                # 3D
                 images = [obj.img_2d for obj in sel_img_batch.images]
-                self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
+                if self.img_controller.is_img_3d():
+                    self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
+                else:
+                    # 2D, Do not use if 3D
+                    img_cv = images[0]
+                    img = Image.fromarray(img_cv)
 
-                # 2D, Do not use if 3D
-                img_cv = images[0]
-                img = Image.fromarray(img_cv)
-
-            # Create Pixmap image
-            self.pixmap = ImageQt.toqpixmap(img)
+            if img is not None:
+                # Create Pixmap image
+                self.pixmap = ImageQt.toqpixmap(img)
 
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_graph_models(sgt_obj)

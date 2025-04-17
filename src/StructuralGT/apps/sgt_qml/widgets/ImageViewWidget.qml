@@ -453,7 +453,6 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgView.source = mainController.get_pixmap();
             imgView.visible = !mainController.is_img_3d();
             imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
@@ -461,6 +460,12 @@ ColumnLayout {
             //ntwkContainer.visible = mainController.display_image() ? mainController.display_graph() : false;
             imgNavControls.visible = mainController.display_image();
             imgBatchSelector.visible = mainController.image_batches_exist();
+
+            if (!mainController.is_img_3d()) {
+                imgView.source = mainController.get_pixmap();
+            } else {
+                imgView.source = "";
+            }
 
             zoomFactor = 1.0;
 
