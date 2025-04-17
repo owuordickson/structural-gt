@@ -13,7 +13,7 @@ from skimage.morphology import disk, skeletonize, remove_small_objects
 
 
 class GraphSkeleton:
-    """A class that is used to get estimate the width of edges and compute their weights using binerized 2D/3D images."""
+    """A class that is used for estimating the width of edges and compute their weights using binerized 2D/3D images."""
 
     def __init__(self, img_bin: MatLike, configs: dict = None, is_2d: bool = True, progress_func = None):
         """
@@ -65,24 +65,24 @@ class GraphSkeleton:
         # if self.configs["remove_bubbles"]["value"] == 1:
         #    temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, self.img_bin, mask_elements)
             # if self.update_progress is not None:
-            # self.update_progress([56, f"Ran remove_bubbles for skeleton with shape {temp_skeleton.shape}"])
+            # self.update_progress([56, f"Ran remove_bubbles for image skeleton..."])
 
         if self.configs["merge_nearby_nodes"]["value"] == 1:
             temp_skeleton = GraphSkeleton.merge_nodes(temp_skeleton)
             if self.update_progress is not None:
-                self.update_progress([52, f"Ran merge_nodes for skeleton with shape {temp_skeleton.shape}"])
+                self.update_progress([52, f"Ran merge_nodes for image skeleton..."])
 
         if self.configs["remove_disconnected_segments"]["value"] == 1:
             min_size = int(self.configs["remove_disconnected_segments"]["items"][0]["value"])
             temp_skeleton = remove_small_objects(temp_skeleton, min_size=min_size, connectivity=2)
             if self.update_progress is not None:
-                self.update_progress([54, f"Ran remove_small_objects for skeleton with shape {temp_skeleton.shape}"])
+                self.update_progress([54, f"Ran remove_small_objects for image skeleton..."])
 
         if self.configs["prune_dangling_edges"]["value"] == 1:
             b_points = GraphSkeleton.get_branched_points(temp_skeleton)
             temp_skeleton = GraphSkeleton.prune_edges(temp_skeleton, 500, b_points)
             if self.update_progress is not None:
-                self.update_progress([56, f"Ran prune_dangling_edges for skeleton with shape {temp_skeleton.shape}"])
+                self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
         b_points = GraphSkeleton.get_branched_points(temp_skeleton)
         e_points = GraphSkeleton.get_end_points(temp_skeleton)
@@ -238,7 +238,7 @@ class GraphSkeleton:
          * t_branch_3 is t_branch_2 flipped left right
          * those 3 functions are used to create all possible branches with just a few starting arrays below
 
-        :param pattern: Pattern of box as a numpy array.
+        :param pattern: Pattern of the box as a numpy array.
 
         """
         return [
@@ -254,7 +254,7 @@ class GraphSkeleton:
 
     @classmethod
     def get_branched_points(cls, skeleton: MatLike):
-        """Identify and retrieve the branched points from graph skeleton."""
+        """Identify and retrieve the branched points from the graph skeleton."""
         skel_int = skeleton * 1
 
         # Define base patterns
@@ -290,7 +290,7 @@ class GraphSkeleton:
     @classmethod
     def get_end_points(cls, skeleton: MatLike):
         """
-        Identify and retrieve the end points from graph skeleton.
+        Identify and retrieve the end points from the graph skeleton.
         """
         skel_int = skeleton * 1
 
@@ -382,7 +382,7 @@ class GraphSkeleton:
         ortho -= ortho.dot(n) * n  # make it orthogonal to vector u,v
         ortho /= np.linalg.norm(ortho)  # make it a unit vector
 
-        # Returns the coordinates of the midpoint of vector u,v; the orthogonal unit vector
+        # Returns the coordinates of the vector u,v midpoint; the orthogonal unit vector
         return (v + n * hl), ortho
 
     @staticmethod
@@ -412,7 +412,7 @@ class GraphSkeleton:
                 oob = 1
                 coord = np.array([1, 1, 1])
 
-        # returns the boolean oob (1 if boundary error); coordinates (reset to (1,1) if boundary error)
+        # returns the boolean oob (1 if there is boundary error); coordinates (reset to (1,1) if boundary error)
         return oob, coord.astype(int)
 
     @staticmethod

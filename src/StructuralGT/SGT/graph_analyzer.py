@@ -101,7 +101,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         # 3. Compute Unweighted GT parameters
         self.output_data = self.compute_gt_metrics(graph_obj)
-        print(self.output_data)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -109,7 +108,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         # 4. Compute Weighted GT parameters (skip if MultiGraph)
         self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
-        print(self.weighted_output_data)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])

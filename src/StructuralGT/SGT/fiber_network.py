@@ -122,9 +122,9 @@ class FiberNetworkBuilder(ProgressUpdate):
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
         """
-        Build a skeleton from image and use the skeleton to build a NetworkX graph.
+        Build a skeleton from the image and use the skeleton to build a NetworkX graph.
 
-        :param image_bin: Binary image from which skeleton will be built and graph drawn.
+        :param image_bin: Binary image from which the skeleton will be built and graph drawn.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_size: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
@@ -140,11 +140,13 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
-        img_skel = graph_skel.skeleton.astype(int)  # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in stack
-        selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
+        img_skel = graph_skel.skeleton.astype(int)
+        # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in the stack
+        # selected_slice = 0 # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])
-        nx_graph = sknw.build_sknw(img_skel[selected_slice])
+        # nx_graph = sknw.build_sknw(img_skel[selected_slice])
+        nx_graph = sknw.build_sknw(img_skel)
         self.update_status([64, "Assigning weights to graph network..."])
         for (s, e) in nx_graph.edges():
             # 'sknw' library stores length of edge and calls it weight, we reverse this
@@ -171,7 +173,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.nx_graph = nx_graph
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
 
-        # Removing all instances of edges were the start and end are the same, or "self-loops"
+        # Removing all instances of edges where the start and end are the same, or "self-loops"
         if opt_gte["remove_self_loops"]["value"]:
             self.update_status([66, "Removing self loops from graph network..."])
             for (s, e) in self.nx_graph.edges():
@@ -185,7 +187,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         :param image_2d: 2D image to be used to draw the network.
         :param a4_size: Decision if to create an A4 size plot figure.
-        :param blank: Do not add image in the background, have a white background.
+        :param blank: Do not add the image in the background, have a white background.
 
         :return:
         """
@@ -249,7 +251,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Create plot figures of skeletal image and graph network image.
 
-        :param image_2d: Raw 2D image to be superimposed with graph.
+        :param image_2d: Raw 2D image to be superimposed with the graph.
 
         :return:
         """

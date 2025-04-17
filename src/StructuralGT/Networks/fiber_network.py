@@ -6,7 +6,6 @@ import copy
 import json
 import os
 import time
-
 import igraph
 import sknw
 import warnings
@@ -24,7 +23,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from skimage.morphology import remove_small_objects
 
 # from . import base
-# from . import sknwEdits
 
 from ..SGT.base_image import BaseImage
 from ..SGT.graph_skeleton import GraphSkeleton

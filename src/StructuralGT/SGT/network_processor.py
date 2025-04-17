@@ -74,11 +74,11 @@ class NetworkProcessor(ProgressUpdate):
 
     def _load_img_from_file(self, file: str):
         """
-        Read image and save it as an OpenCV object.
+        Read the image and save it as an OpenCV object.
 
         Most 3D images are like layers of multiple image frames layered on-top of each other. The image frames may be
         images of the same object/item through time or through space (i.e., from different angles). Our approach is to
-        separate these frames, extract GT graphs from them and then the layer back from the extracted graphs in the same order.
+        separate these frames, extract GT graphs from them, and then the layer back from the extracted graphs in the same order.
 
         Our software will display all the frames retrieved from the 3D image (automatically downsample large ones
         depending on the user-selected re-scaling options), and allows the user to select which frames to run
@@ -207,7 +207,7 @@ class NetworkProcessor(ProgressUpdate):
             has_alpha, _ = BaseImage.check_alpha_channel(img_data)
             image_list = []
             if (len(img_data.shape) >= 3) and (not has_alpha):
-                # If image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
+                # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, scale_factor) for img in img_data]
             else:
                 img_obj = BaseImage(img_data, scale_factor)
@@ -263,7 +263,7 @@ class NetworkProcessor(ProgressUpdate):
 
         Filter Types:
         1 - Just Image Filters
-        2 - Both Image + Binary (1+2) Filters
+        2 - Both Image and Binary (1 and 2) Filters
 
         :return: None
         """
@@ -296,7 +296,7 @@ class NetworkProcessor(ProgressUpdate):
         self.update_status([100, "Image processing complete..."])
 
     def reset_img_filters(self):
-        """Delete existing filters that have been applied on image."""
+        """Delete existing filters that have been applied on the image."""
         sel_batch = self.get_selected_batch()
         for img_obj in sel_batch.images:
             img_obj.img_mod, img_obj.img_bin = None, None
@@ -327,7 +327,7 @@ class NetworkProcessor(ProgressUpdate):
             img_px_size = temp_px if temp_px > img_px_size else img_px_size
         scale_factor = scale_size / img_px_size
 
-        # Resize (Downsample) all frames to smaller pixel size while maintaining the aspect ratio
+        # Resize (Downsample) all frames to the smaller pixel size while maintaining the aspect ratio
         for img_obj in sel_batch.images:
             img = img_obj.img_raw.copy()
             scale_size = scale_factor * max(img.shape[0], img.shape[1])
@@ -356,7 +356,7 @@ class NetworkProcessor(ProgressUpdate):
 
     def undo_cropping(self):
         """
-        A function that restores image to its original size.
+        A function that restores the image to its original size.
         """
         sel_batch = self.get_selected_batch()
         if len(sel_batch.selected_images) > 0:
@@ -368,7 +368,7 @@ class NetworkProcessor(ProgressUpdate):
 
         self.update_status([0, "Starting graph extraction..."])
         try:
-            # Get selected batch
+            # Get the selected batch
             sel_batch = self.get_selected_batch()
 
             # Get binary image
@@ -376,7 +376,7 @@ class NetworkProcessor(ProgressUpdate):
             img_bin = [img.img_bin for img in sel_images]
             img_bin = np.asarray(img_bin)
 
-            # Get selected batch's graph object and generate graph
+            # Get the selected batch's graph object and generate the graph
             img_2d = sel_batch.images[0].img_2d  # First image (TO BE CORRECTED/UPDATED - Ovito?)
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
             rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
@@ -529,7 +529,7 @@ class NetworkProcessor(ProgressUpdate):
 
     def save_images_to_file(self):
         """
-        Write images to file.
+        Write images to a file.
         """
 
         sel_batch = self.get_selected_batch()
@@ -590,7 +590,7 @@ class NetworkProcessor(ProgressUpdate):
 
     @staticmethod
     def rescale_img(image_data, scale_options):
-        """Downsample or up-sample image to specified pixel size."""
+        """Downsample or up-sample image to a specified pixel size."""
 
         scale_factor = 1
         img_2d, img_3d = None, None
@@ -611,13 +611,13 @@ class NetworkProcessor(ProgressUpdate):
         # if type(image_data) is np.ndarray:
         has_alpha, _ = BaseImage.check_alpha_channel(image_data)
         if (len(image_data.shape) == 2) or has_alpha:
-            # If image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
+            # If the image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
             img_2d, scale_factor = BaseImage.resize_img(scale_size, image_data)
             return img_2d, scale_factor
 
         # if type(image_data) is list:
         if (len(image_data.shape) >= 3) and (not has_alpha):
-            # If image has shape (d, h, w) and third is not alpha channel
+            # If the image has shape (d, h, w) and third is not alpha channel
             images = image_data
             img_3d = []
             for img in images:
