@@ -242,7 +242,7 @@ class FiberNetwork:
             self._skeleton = GraphSkeleton.remove_bubbles(self._img_bin, graph_options["debubble"])
             print(f"Ran debubble for an image with shape {self._skeleton.shape}")
 
-        if graph_options["merge_nodes"] is not None:
+        if graph_options["merge_nodes"]:
             # self = base.merge_nodes(self, merge_nodes)
             self._skeleton = GraphSkeleton.merge_nodes(self._skeleton)
             print(f"Ran merge_nodes for an image with shape {self._skeleton.shape}")

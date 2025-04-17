@@ -40,11 +40,11 @@ class GraphSkeleton:
         self.is_2d = is_2d
         self.update_progress = progress_func
         self.skeleton, self.skeleton_3d = None, None
-        self.skel_int = None
-        self.bp_coord_x = None
-        self.bp_coord_y = None
-        self.ep_coord_x = None
-        self.ep_coord_y = None
+        # self.skel_int = None
+        # self.bp_coord_x = None
+        # self.bp_coord_y = None
+        # self.ep_coord_x = None
+        # self.ep_coord_y = None
         if configs is not None:
             self._build_skeleton()
 
@@ -84,14 +84,13 @@ class GraphSkeleton:
             if self.update_progress is not None:
                 self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
-        b_points = GraphSkeleton.get_branched_points(temp_skeleton)
+        # Store the skeleton as 3D (always)
+        self.skeleton = np.asarray([temp_skeleton]) if self.is_2d else np.asarray(temp_skeleton)
+        """b_points = GraphSkeleton.get_branched_points(temp_skeleton)
         e_points = GraphSkeleton.get_end_points(temp_skeleton)
-
         self.bp_coord_y, self.bp_coord_x = np.where(b_points == 1)
         self.ep_coord_y, self.ep_coord_x = np.where(e_points == 1)
-        clean_skel = temp_skeleton
-        self.skel_int = 1 * clean_skel
-        self.skeleton = np.asarray([clean_skel]) if self.is_2d else np.asarray(clean_skel)
+        self.skel_int = 1 * temp_skeleton"""
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
@@ -108,9 +107,8 @@ class GraphSkeleton:
 
         # Initialize parameters: Idea copied from 'sknw' library
         pix_length = np.linalg.norm(edge_pts[1:] - edge_pts[:-1], axis=1).sum()
-        epsilon = 0.001  # to avoid division by zero
+        epsilon = 0.001             # to avoid division by zero
         pix_length += epsilon
-        # wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
             # check to see if ge is an empty or unity list, if so, set pixel counts to 0
@@ -370,17 +368,18 @@ class GraphSkeleton:
         # u, v: two coordinates (x, y) or (x, y, z)
         vec = u - v  # find the vector between u and v
 
-        if np.count_nonzero(vec) == 0:  # prevents divide by zero
-            # n = vec
+        if np.linalg.norm(vec) == 0:
             n = np.array([0,] * len(u), dtype=np.float16)
         else:
-            n = vec / np.linalg.norm(vec)  # make n a unit vector along u,v
-        if np.isnan(n[0]) or np.isnan(n[1]):
-            n[0], n[1] = float(0), float(0)
-        hl = np.linalg.norm(vec) / 2  # find the half-length of the vector u,v
-        ortho = np.random.randn(2)  # take a random vector
-        ortho -= ortho.dot(n) * n  # make it orthogonal to vector u,v
-        ortho /= np.linalg.norm(ortho)  # make it a unit vector
+            # make n a unit vector along u,v
+            n = vec / np.linalg.norm(vec)
+
+        # if np.isnan(n[0]) or np.isnan(n[1]):
+        #    n[0], n[1] = float(0), float(0)
+        hl = np.linalg.norm(vec) / 2        # find the half-length of the vector u,v
+        ortho = np.random.randn(len(u))     # take a random vector
+        ortho -= ortho.dot(n) * n           # make it orthogonal to vector u,v
+        ortho /= np.linalg.norm(ortho)      # make it a unit vector
 
         # Returns the coordinates of the vector u,v midpoint; the orthogonal unit vector
         return (v + n * hl), ortho
@@ -397,23 +396,18 @@ class GraphSkeleton:
         Returns:
 
         """
-
-        # Check if the image is 2D
-        is_2d = len(coord) == 2
-
         oob = 0  # Generate a boolean check for out-of-boundary
         # Check if coordinate is within the boundary
-        if is_2d:
-            if coord[0] < 0 or coord[1] < 0 or coord[0] > (w - 1) or coord[1] > (h - 1):
+        if d is None:
+            if coord[0] < 0 or coord[1] < 0 or coord[:-2] > (w - 1) or coord[-1] > (h - 1):
                 oob = 1
-                coord[0], coord[1] = 1, 1
         else:
-            if sum(coord < 0) > 0 or sum(coord > [w - 1, h - 1, d - 1]) > 0:
+            # if sum(coord < 0) > 0 or sum(coord > [w - 1, h - 1, d - 1]) > 0:
+            if sum(coord < 0) > 0 or coord[-3] > (d - 1) or coord[-2] > (w - 1) or coord[-1] > (h - 1):
                 oob = 1
-                coord = np.array([1, 1, 1])
 
-        # returns the boolean oob (1 if there is boundary error); coordinates (reset to (1,1) if boundary error)
-        return oob, coord.astype(int)
+        # returns the boolean oob (1 if there is a boundary error); coordinates (reset to (1,1) if boundary error)
+        return oob
 
     @staticmethod
     def point_check(img_bin: MatLike, pt_check):
@@ -426,13 +420,17 @@ class GraphSkeleton:
             d = 0
         else:
             is_2d = False
-            w, h, d = img_bin.shape
+            d, w, h = img_bin.shape
 
-        if is_2d:
-            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h)
-            is_in_edge = (img_bin[pt_check[0], pt_check[1]] == 0 or oob == 1)  # Checks if point in fiber
-        else:
-            oob, pt_check = GraphSkeleton.boundary_check(pt_check, w, h, d=d)
-            is_in_edge = (img_bin[pt_check[0], pt_check[1], pt_check[2]] == 0 or oob == 1)
-
-        return is_in_edge
+        try:
+            if is_2d:
+                # Checks if point in fiber is out-of-bounds (oob) or black space (img_bin[x,y] = 0)
+                oob = GraphSkeleton.boundary_check(pt_check, w, h)
+                not_in_edge = True if (oob == 1) else True if (img_bin[pt_check[-2], pt_check[-1]] == 0) else False
+            else:
+                # Checks if point in fiber is out-of-bounds (oob) or black space (img_bin[d,x,y] = 0)
+                oob = GraphSkeleton.boundary_check(pt_check, w, h, d=d)
+                not_in_edge = True if (oob == 1) else True if (img_bin[pt_check[-3], pt_check[-2], pt_check[-1]] == 0) else False
+        except IndexError:
+            not_in_edge = True
+        return not_in_edge
