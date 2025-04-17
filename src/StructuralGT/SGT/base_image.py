@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GNU GPL v3
 
 """
-Processes of an image by applying filters to it and converting it to binary version.
+Processes of an image by applying filters to it and converting it to a binary version.
 """
 
 import cv2
@@ -16,16 +16,16 @@ from ..configs.config_loader import load_img_configs
 
 class BaseImage:
     """
-    A class that is used to binarize an image by applying filters to it and converting it to binary version.
+    A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
     Args:
-        raw_img (MatLike): Raw image in OpenCV format.
+        raw_img (MatLike): Raw image in OpenCV format
         scale_factor (float): Scale factor used to downsample/up-sample the image.
     """
 
     def __init__(self, raw_img: MatLike, scale_factor: float = 1.0):
         """
-        A class that is used to binarize an image by applying filters to it and converting it to binary version.
+        A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
         Args:
             raw_img: Raw image in OpenCV format.
@@ -54,7 +54,7 @@ class BaseImage:
         self.img_2d = img_data
 
     def get_pixel_width(self):
-        """Compute pixel dimension in nanometers in order to estimate and update the width of graph edges."""
+        """Compute pixel dimension in nanometers to estimate and update the width of graph edges."""
         opt_img = self.configs
         pixel_count = int(opt_img["scalebar_pixel_count"]["value"])
         scale_val = float(opt_img["scale_value_nanometers"]["value"])
@@ -66,13 +66,13 @@ class BaseImage:
         """
         A function that crops images into a new box dimension.
 
-        :param x: left coordinate of cropping box.
-        :param y: top coordinate of cropping box.
-        :param width: width of cropping box.
-        :param height: height of cropping box.
+        :param x: Left coordinate of cropping box.
+        :param y: Top coordinate of cropping box.
+        :param width: Width of cropping box.
+        :param height: Height of cropping box.
         """
 
-        # Verify bounds of cropping box
+        # Verify the bounds of cropping box
         h, w = self.img_2d.shape[:2]
         x = max(0.0, min(x, w))
         y = max(0.0, min(y, h))
@@ -188,9 +188,9 @@ class BaseImage:
 
         img_bin = None
         opt_img = self.configs
-        otsu_res = 0  # only needed for OTSU threshold
+        otsu_res = 0  # only needed for the OTSU threshold
 
-        # applying universal threshold, checking if it should be inverted (dark foreground)
+        # Applying the universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
             if opt_img["apply_dark_foreground"]["value"] == 1:
                 img_bin = \
@@ -289,6 +289,7 @@ class BaseImage:
             abs_dst = cv2.convertScaleAbs(dst)
             filtered_img = cv2.addWeighted(img, 0.75, abs_dst, 0.25, 0)
             return cv2.convertScaleAbs(filtered_img)
+        return img
 
     @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
@@ -296,8 +297,8 @@ class BaseImage:
         Apply contrast and brightness filters to image.
 
         :param img: OpenCV image.
-        :param brightness_val: brightness value.
-        :param contrast_val: contrast value.
+        :param brightness_val: Brightness value.
+        :param contrast_val: Contrast value.
         :return:
         """
 
@@ -333,7 +334,7 @@ class BaseImage:
     @staticmethod
     def check_alpha_channel(img: MatLike):
         """
-        A function that checks if an image has an Alpha channel or not. Only works for images with upto 4-Dimensions.
+        A function that checks if an image has an Alpha channel or not. Only works for images with up to 4-Dimensions.
 
         :param img: OpenCV image.
         """
@@ -385,9 +386,9 @@ class BaseImage:
         """
         Compute the width of a single pixel in nanometers.
 
-        :param scale_val: unit value of the scale in nanometers.
-        :param scalebar_pixel_count: pixel count of the width of the scalebar.
-        :return: width of a single pixel in nanometers.
+        :param scale_val: Unit value of the scale in nanometers.
+        :param scalebar_pixel_count: Pixel count of the scalebar width.
+        :return: Width of a single pixel in nanometers.
         """
 
         val_in_meters = scale_val / 1e9

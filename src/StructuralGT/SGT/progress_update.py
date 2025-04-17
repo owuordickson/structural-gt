@@ -15,7 +15,7 @@ class ProgressUpdate:
         A class for sending updates to outside functions.
 
         >>> def print_progress(code, msg):
-        >>>     print(f"{code}: {msg}")
+        >>>     print(str(code) + ': ' + str(msg))
         >>>
         >>> upd = ProgressUpdate()
         >>> upd.add_listener(print_progress)  # to get updates

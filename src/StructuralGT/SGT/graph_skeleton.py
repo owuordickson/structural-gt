@@ -21,7 +21,7 @@ class GraphSkeleton:
         The skeleton will be 3D so that it can be analyzed with OVITO
 
         :param img_bin: OpenCV image in binary format.
-        :param configs: options and parameters.
+        :param configs: Options and parameters.
 
         >>> import cv2
         >>> import numpy
@@ -98,12 +98,12 @@ class GraphSkeleton:
         """
         Compute and assign weights to a line edge between 2 nodes.
 
-        :param edge_pts: a list of pts that trace along a graph edge.
-        :param weight_type: basis of computation for the weight (i.e., length, width, resistance, conductance etc.)
+        :param edge_pts: A list of pts that trace along a graph edge.
+        :param weight_type: Basis of computation for the weight (i.e., length, width, resistance, conductance, etc.)
         :param weight_options: weight types to be used in computation of weights.
-        :param pixel_dim: physical size of width of a single pixel in nanometers.
-        :param rho_dim: the resistivity value of the material.
-        :return: width pixel count of edge, computed weight.
+        :param pixel_dim: Physical size of a single pixel width in nanometers.
+        :param rho_dim: The resistivity value of the material.
+        :return: Width pixel count of edge, computed weight.
         """
 
         # Initialize parameters: Idea copied from 'sknw' library
@@ -113,7 +113,7 @@ class GraphSkeleton:
         # wt = 1 * (10 ** -9)  # Smallest possible
 
         if len(edge_pts) < 2:
-            # check to see if ge is an empty or unity list, if so, set pixel count to 0
+            # check to see if ge is an empty or unity list, if so, set pixel counts to 0
             # Assume only 1/2 pixel exists between edge points
             pix_width = 0.5
             pix_angle = None
@@ -180,8 +180,8 @@ class GraphSkeleton:
         # ortho: an orthogonal unit vector
         # img_bin: the binary image that the graph is derived from
 
-        # 2. Compute angle in Radians
-        # Delta X and Y: Compute the  difference in x and y coordinates:
+        # 2. Compute the angle in Radians
+        # Delta X and Y: Compute the difference in x and y coordinates:
         dx = pt2[0] - pt1[0]
         dy = pt2[1] - pt1[1]
         # Angle Calculation: Use the arc-tangent function to get the angle in radians:
@@ -238,7 +238,7 @@ class GraphSkeleton:
          * t_branch_3 is t_branch_2 flipped left right
          * those 3 functions are used to create all possible branches with just a few starting arrays below
 
-        :param pattern: pattern of box as a numpy array.
+        :param pattern: Pattern of box as a numpy array.
 
         """
         return [
@@ -354,7 +354,7 @@ class GraphSkeleton:
     def remove_bubbles(cls, img_bin: MatLike, mask_elements: list):
         """Remove bubbles from graph skeleton."""
         if not isinstance(mask_elements, list):
-            return
+            return None
 
         canvas = img_bin.copy()
         for mask_elem in mask_elements:
@@ -398,7 +398,7 @@ class GraphSkeleton:
 
         """
 
-        # Check if image is 2D
+        # Check if the image is 2D
         is_2d = len(coord) == 2
 
         oob = 0  # Generate a boolean check for out-of-boundary

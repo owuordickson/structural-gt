@@ -14,7 +14,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from .imagegrid_model import ImageGridModel
 
 if TYPE_CHECKING:
-    # False at run time, only for type checker
+    # False at run time, only for a type-checker
     from _typeshed import SupportsWrite
 
 from .tree_model import TreeModel
@@ -77,7 +77,7 @@ class MainController(QObject):
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
-        self.img3dGridModel = ImageGridModel([], {})
+        self.img3dGridModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -87,7 +87,7 @@ class MainController(QObject):
         """
             Reload image configuration selections and controls from saved dict to QML gui_mcw after the image is loaded.
 
-            :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
+            :param sgt_obj: A GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
             ntwk_p = sgt_obj.ntwk_p
@@ -195,7 +195,7 @@ class MainController(QObject):
         Delete SGT Obj stored at specified index (if not specified, get the current index).
         """
         del_index = index if index is not None else self.selected_sgt_obj_index
-        if 0 <= del_index < len(self.sgt_objs):  # Check if index exists
+        if 0 <= del_index < len(self.sgt_objs):  # Check if the index exists
             keys_list = list(self.sgt_objs.keys())
             key_at_del_index = keys_list[self.selected_sgt_obj_index]
             # Delete the object at index
@@ -210,7 +210,7 @@ class MainController(QObject):
     def save_project_data(self):
         """
         A handler function that handles saving project data.
-        Returns: True on success, False otherwise.
+        Returns: True if successful, False otherwise.
 
         """
         if not self.project_open:
@@ -267,7 +267,7 @@ class MainController(QObject):
                 a_path = a_path[8:]
             else:  # macOS/Linux (remove "file://")
                 a_path = a_path[7:]
-        # Normalize path
+        # Normalize the path
         a_path = os.path.normpath(a_path)
         # print(a_path)
 
@@ -288,7 +288,7 @@ class MainController(QObject):
 
     def write_to_pdf(self, sgt_obj):
         """
-        Write results to PDF file.
+        Write results to the PDF file.
         Args:
             sgt_obj:
 
@@ -441,12 +441,12 @@ class MainController(QObject):
 
     @Slot(int)
     def set_selected_thumbnail(self, row_index):
-        """Change color of list item to gray if it is the active image"""
+        """Change the color of list item to gray if it is the active image"""
         self.imgThumbnailModel.set_selected(row_index)
 
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
-        """Delete the selected image from list."""
+        """Delete the selected image from the list."""
         self.delete_sgt_object(img_index)
 
     @Slot(str)
@@ -458,7 +458,7 @@ class MainController(QObject):
                 folder_path = folder_path[8:]
             else:  # macOS/Linux (remove "file://")
                 folder_path = folder_path[7:]
-        folder_path = os.path.normpath(folder_path)  # Normalize path
+        folder_path = os.path.normpath(folder_path)  # Normalize the path
 
         # Update for all sgt_objs
         key_list = list(self.sgt_objs.keys())
@@ -593,7 +593,7 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def load_next_image(self):
-        """Load next image in the list into view."""
+        """Load the next image in the list into view."""
         if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
             self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
             self.update_img_models(self.get_selected_sgt_obj())
@@ -605,7 +605,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_ctrl_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -621,7 +621,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_microscopy_props_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -637,7 +637,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_bin_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -734,7 +734,7 @@ class MainController(QObject):
 
     @Slot()
     def run_extract_graph(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
 
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
@@ -760,7 +760,7 @@ class MainController(QObject):
 
     @Slot()
     def run_graph_analyzer(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -813,7 +813,7 @@ class MainController(QObject):
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
-            return
+            return False
 
         self.wait_flag = True
         success_val = self.save_project_data()
@@ -957,7 +957,7 @@ class MainController(QObject):
                 self.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
                 return False
 
-            # Open the file in write mode ('w').
+            # Open the file in the 'write' mode ('w').
             # This will create the file if it doesn't exist
             with open(proj_path, 'w'):
                 pass  # Do nothing, just create the file (updates will be done automatically/dynamically)
@@ -968,13 +968,15 @@ class MainController(QObject):
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
             logging.info(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
+            return True
         except Exception as err:
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
+            return False
 
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
-        """Opens and loads SGT project from the '.sgtproj' file"""
+        """Opens and loads the SGT project from the '.sgtproj' file"""
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -983,7 +985,7 @@ class MainController(QObject):
         try:
             self.wait_flag = True
             self.project_open = False
-            # Verify path
+            # Verify the path
             sgt_path = self.verify_path(sgt_path)
             if not sgt_path:
                 self.wait_flag = False

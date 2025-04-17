@@ -281,14 +281,6 @@ ColumnLayout {
                             }
                         }
 
-                        /*MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                isSelected = isSelected === 1 ? 0 : 1;
-                                console.log("Clicked on:", model.id)
-                                console.log("Selected: ", isSelected);
-                            }
-                        }*/
                     }
                 }
             }
