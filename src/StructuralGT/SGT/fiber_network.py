@@ -207,24 +207,29 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             size = (800, 600)
             bg_pil = None
+        print("OK")
 
         # Load OVITO pipeline and scene
         pipeline = import_file(self.gsd_file)
         pipeline.add_to_scene()
         vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-        vp.zoom_all()
+        vp.zoom_all(size)
+        print("OK 1")
 
         # Render to QImage without the alpha channel
         q_img = vp.render_image(size=size, alpha=False, background=(1, 1, 1))
+        print("OK 2")
 
         # Convert QImage to PIL Image
         pil_img = ImageQt.fromqimage(q_img).convert("RGB")
+        print("OK 3")
 
         if bg_pil is not None:
             # Overlay using simple blending (optional: adjust transparency)
             final_img = Image.blend(bg_pil, pil_img, alpha=0.75)
         else:
             final_img = pil_img
+        print("OK 4")
         return final_img
 
     def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False):
