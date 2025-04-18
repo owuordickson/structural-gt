@@ -5,7 +5,6 @@ Builds a graph network from nanoscale microscopy images.
 """
 
 import os
-import io
 import cv2
 import igraph
 import sknw
@@ -15,7 +14,9 @@ import networkx as nx
 from PIL import Image, ImageQt
 from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
+from ovito.data import DataCollection, Particles
 from ovito.io import import_file
+from ovito.pipeline import Pipeline, StaticSource
 from ovito.vis import Viewport
 import matplotlib.pyplot as plt
 
@@ -115,9 +116,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(image_file, save_dir)
 
-        self.update_status([95, "Plotting graph network..."])
-        self.img_ntwk  = self.render_graph_to_image()
-
     def reset_graph(self):
         """
         Erase the existing data stored in the object.
@@ -207,29 +205,28 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             size = (800, 600)
             bg_pil = None
-        print("OK")
 
         # Load OVITO pipeline and scene
         pipeline = import_file(self.gsd_file)
         pipeline.add_to_scene()
+        # data = self.data_gen_function()
+        # print(type(data))
+        # pipeline = Pipeline(source = StaticSource(data = data))
+
         vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
         vp.zoom_all(size)
-        print("OK 1")
 
         # Render to QImage without the alpha channel
         q_img = vp.render_image(size=size, alpha=False, background=(1, 1, 1))
-        print("OK 2")
 
         # Convert QImage to PIL Image
         pil_img = ImageQt.fromqimage(q_img).convert("RGB")
-        print("OK 3")
 
         if bg_pil is not None:
             # Overlay using simple blending (optional: adjust transparency)
             final_img = Image.blend(bg_pil, pil_img, alpha=0.75)
         else:
             final_img = pil_img
-        print("OK 4")
         return final_img
 
     def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False):
@@ -478,3 +475,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             c_set = axis.scatter(gn[:, 1], gn[:, 0], s=marker_size)
         return c_set
+
+    def data_gen_function(self):
+        """Populates OVITO's data with particles."""
+        data = DataCollection()
+        positions = np.asarray(np.where(np.asarray(self.skel_obj.skeleton) != 0)).T
+        particles = Particles()
+        particles.create_property("Position", data=positions)
+        data.objects.append(particles)
+        return data

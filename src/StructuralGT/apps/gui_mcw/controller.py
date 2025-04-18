@@ -346,6 +346,12 @@ class MainController(QObject):
                 self.write_to_pdf(result)
         else:
             if type(result) is NetworkProcessor:
+
+                self._handle_progress_update(95, "Plotting graph network...")
+                sgt_obj = self.get_selected_sgt_obj()
+                sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+                sel_batch.graph_obj.img_ntwk = sel_batch.graph_obj.render_graph_to_image()
+
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
@@ -516,12 +522,11 @@ class MainController(QObject):
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
         try:
+            print("Controller: load simulation")
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
-            filename, out_dir = sgt_obj.ntwk_p.get_filenames()
-            gsd_filename = filename + "_skel.gsd"
-            gsd_file = str(os.path.join(out_dir, gsd_filename))
-            pipeline = import_file(gsd_file)
+            sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+            pipeline = import_file(sel_batch.graph_obj.gsd_file)
             pipeline.add_to_scene()
 
             vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
