@@ -192,7 +192,7 @@ class MainController(QObject):
 
     def delete_sgt_object(self, index=None):
         """
-        Delete SGT Obj stored at specified index (if not specified, get the current index).
+        Delete SGT Obj stored at the specified index (if not specified, get the current index).
         """
         del_index = index if index is not None else self.selected_sgt_obj_index
         if 0 <= del_index < len(self.sgt_objs):  # Check if the index exists
@@ -349,7 +349,7 @@ class MainController(QObject):
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
-                # Load image superimposed with graph
+                # Load image superimposed on the graph
                 self.select_img_type(4)
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
@@ -441,7 +441,7 @@ class MainController(QObject):
 
     @Slot(int)
     def set_selected_thumbnail(self, row_index):
-        """Change the color of list item to gray if it is the active image"""
+        """Change the color of the list item to gray if it is the active image"""
         self.imgThumbnailModel.set_selected(row_index)
 
     @Slot(int)
@@ -495,6 +495,7 @@ class MainController(QObject):
             sel_img_batch.selected_images.add(img_index)
         else:
             sel_img_batch.selected_images.discard(img_index)
+        self.select_img_type()
 
     @Slot(int)
     def select_img_type(self, choice=None):
@@ -705,7 +706,7 @@ class MainController(QObject):
             for val in self.exportGraphModel.list_data:
                 sel_img_batch.graph_obj.configs[val["id"]]["value"] = val["value"]
 
-            # 3. Save graph data to file
+            # 3. Save graph data to the file
             sel_img_batch.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
@@ -714,7 +715,7 @@ class MainController(QObject):
 
     @Slot()
     def save_img_files(self):
-        """Retrieve and save images to file."""
+        """Retrieve and save images to the file."""
         try:
 
             sel_images = self.get_selected_images()
