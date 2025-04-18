@@ -37,7 +37,7 @@ from ..configs.config_loader import load_gtc_configs
 
 class GraphAnalyzer(ProgressUpdate):
     """
-    A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
+    A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
 
     Args:
         ntwk_p: Network Processor object.
@@ -46,7 +46,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def __init__(self, ntwk_p: NetworkProcessor, allow_multiprocessing: bool = True):
         """
-        A class that computes all the user selected graph theory metrics and writes the results in a PDF file.
+        A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
 
         :param ntwk_p: Network Processor object.
         :param allow_multiprocessing: Allows multiprocessing computing.
@@ -78,14 +78,14 @@ class GraphAnalyzer(ProgressUpdate):
 
     def run_analyzer(self):
         """
-            Execute functions that will process image filters and extract graph from the processed image
+            Execute functions that will process image filters and extract the graph from the processed image
         """
 
         # 1. Get graph extracted from selected images
         sel_batch = self.ntwk_p.get_selected_batch()
         graph_obj = sel_batch.graph_obj
 
-        # 2. Apply image filters and extract graph (only if it has not been executed)
+        # 2. Apply image filters and extract the graph (only if it has not been executed)
         if graph_obj is None:
             self.ntwk_p.add_listener(self.track_img_progress)
             self.ntwk_p.apply_img_filters()                     # Apply image filters
@@ -884,7 +884,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def plot_run_configs(self, graph_obj: FiberNetworkBuilder):
         """
-        Create a page (as a figure) that show the user selected parameters and options.
+        Create a page (as a figure) that will show the user-selected parameters and options.
 
         :param graph_obj: GraphExtractor object.
 
@@ -927,7 +927,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         The Laplacian matrix of a directed graph is by definition generally non-symmetric,
         while, e.g., traditional spectral clustering is primarily developed for undirected
-        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to apply
+        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to applying the
         techniques requiring symmetry is to turn the original directed graph into an
         undirected graph and build the Laplacian matrix for the latter.
 
@@ -948,7 +948,7 @@ class GraphAnalyzer(ProgressUpdate):
         # It is important to notice our graph is (mostly) a directed graph,
         # meaning that it is: (asymmetric) with self-looping nodes
 
-        # 1. Remove self-looping edges from graph, they cause zero values in Degree matrix.
+        # 1. Remove self-looping edges from the graph, they cause zero values in Degree matrix.
         # 1a. Get Adjacency matrix
         adj_mat = nx.adjacency_matrix(graph).todense()
 
@@ -1019,13 +1019,10 @@ class GraphAnalyzer(ProgressUpdate):
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title, fontdict=font_1)
-        ax.set_axis_off()
 
-        ax.imshow(image, cmap='gray')
-        nodes = nx_graph.nodes()
-        gn = np.array([nodes[i]['o'] for i in nodes])
-        c_set = ax.scatter(gn[:, 1], gn[:, 0], s=size, c=distribution, cmap='plasma')
-        GraphAnalyzer.plot_graph_edges(nx_graph, ax, line_width)
+        FiberNetworkBuilder.plot_graph_edges(ax, image, nx_graph, line_width=line_width)
+        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, marker_size=size, distribution_data=distribution)
+
         fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
         return fig
 
@@ -1054,17 +1051,3 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title(hist_title, fontdict=font_1)
         ax.set(xlabel=x_label, ylabel=y_label)
         ax.hist(distribution, bins=bins)
-
-    @staticmethod
-    def plot_graph_edges(nx_graph: nx.Graph, ax: plt.axes, line_width: float):
-        """
-        Create a plot of graph edges and nodes.
-
-        :param nx_graph: Networkx graph.
-        :param ax: Plot axis.
-        :param line_width: Axis line-width parameter.
-        :return:
-        """
-        for (s, e) in nx_graph.edges():
-            ge = nx_graph[s][e]['pts']
-            ax.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)

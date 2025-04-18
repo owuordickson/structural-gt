@@ -152,8 +152,6 @@ class FiberNetworkBuilder(ProgressUpdate):
             # 'sknw' library stores length of edge and calls it weight, we reverse this
             # we create a new attribute 'length', later delete/modify 'weight'
             nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-            #    if nx_graph[s][e]['weight'] == 0:  # TO BE DELETED later
-            #        nx_graph[s][e]['length'] = 2
             ge = nx_graph[s][e]['pts']
 
             if opt_gte["has_weights"]["value"] == 1:
@@ -203,15 +201,8 @@ class FiberNetworkBuilder(ProgressUpdate):
             my_dpi = 96
             fig = plt.Figure(figsize=(h / my_dpi, w / my_dpi), dpi=my_dpi)
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            ax.axis('off')
-            ax.imshow(image_2d, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
-            for (s, e) in nx_graph.edges():
-                ge = nx_graph[s][e]['pts']
-                ax.plot(ge[:, 1], ge[:, 0], 'black')
-            nodes = nx_graph.nodes()
-            gn = xp.array([nodes[i]['o'] for i in nodes])
-            ax.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-
+            ax = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, transparent=True)
+            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, marker_size=3)
             img = xp.array(FiberNetworkBuilder.plot_to_img(fig))
             if len(img.shape) == 3:
                 img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
@@ -225,25 +216,14 @@ class FiberNetworkBuilder(ProgressUpdate):
             else:
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            ax.set_axis_off()
-            ax.imshow(image_2d, cmap='gray')
-            color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-            color_cycle = itertools.cycle(color_list)
-            for component in nx_components:
-                sg = nx_graph.subgraph(component)
-                color = next(color_cycle)
-                for (s, e) in sg.edges():
-                    ge = sg[s][e]['pts']
-                    ax.plot(ge[:, 1], ge[:, 0], color)
+            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, nx_components=nx_components)
         else:
             if a4_size:
                 return None
             else:
                 fig = plt.Figure()
                 ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            ax.set_axis_off()
-            FiberNetworkBuilder.superimpose_graph_to_img(ax, image_2d, nx_graph)
-
+            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph)
         return fig
 
     # TO BE REPLACED WITH OVITO-VIZ Plot
@@ -441,17 +421,54 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def superimpose_graph_to_img(axis, image: MatLike, nx_graph: nx.Graph):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, nx_components: list = None, line_width: float=1.5):
         """
         Plot graph edges on top of the image.
         :param axis: Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
+        :param transparent: whether to draw image with a transparent background
+        :param nx_components: the number of subgraph components
+        :param line_width: each edge's line width
         :return:
         """
-        # axis.set_axis_off()
+        axis.set_axis_off()
         axis.imshow(image, cmap='gray')
+
+        if nx_components is not None:
+            color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+            color_cycle = itertools.cycle(color_list)
+            for component in nx_components:
+                sg = nx_graph.subgraph(component)
+                color = next(color_cycle)
+                for (s, e) in sg.edges():
+                    ge = sg[s][e]['pts']
+                    axis.plot(ge[:, 1], ge[:, 0], color)
+            return axis
+
+        if transparent:
+            axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
+
         for (s, e) in nx_graph.edges():
             ge = nx_graph[s][e]['pts']
-            axis.plot(ge[:, 1], ge[:, 0], 'red')
+            axis.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
         return axis
+
+    @staticmethod
+    def plot_graph_nodes(axis, nx_graph: nx.Graph, marker_size: float = 3, distribution_data: list = None):
+        """
+        Plot graph nodes on top of the image.
+        :param axis: Matplotlib axis
+        :param nx_graph: a NetworkX graph
+        :param marker_size: the size of each node
+        :param distribution_data: the heatmap distribution data
+        :return:
+
+        """
+        node_list = list(nx_graph.nodes())
+        gn = xp.array([nx_graph.nodes[i]['o'] for i in node_list])
+        if distribution_data is not None:
+            c_set = axis.scatter(gn[:, 1], gn[:, 0], s=marker_size, c=distribution_data, cmap='plasma')
+        else:
+            c_set = axis.scatter(gn[:, 1], gn[:, 0], s=marker_size)
+        return c_set
