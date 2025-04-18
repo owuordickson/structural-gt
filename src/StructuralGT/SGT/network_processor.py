@@ -380,19 +380,15 @@ class NetworkProcessor(ProgressUpdate):
             img_2d = sel_batch.images[0].img_2d  # First image (TO BE CORRECTED/UPDATED - Ovito?)
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
             rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
+            f_name, out_dir = self.get_filenames()
 
             sel_batch.graph_obj.abort = False
             sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(img_bin, img_2d, sel_batch.is_2d, px_size, rho_val)
+            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_2d, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
                 return
-
-            # Save graph to GSD/HOOMD - For OVITO rendering
-            filename, out_dir = self.get_filenames()
-            sel_batch.graph_obj.configs["export_as_gsd"]["value"] = 1
-            sel_batch.graph_obj.save_graph_to_file(filename, out_dir)
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")

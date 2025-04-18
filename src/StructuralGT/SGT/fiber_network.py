@@ -6,16 +6,17 @@ Builds a graph network from nanoscale microscopy images.
 
 import os
 import io
-
+import cv2
 import igraph
-from PIL import Image
 import sknw
 import logging
-import itertools
 import numpy as np
 import networkx as nx
+from PIL import Image, ImageQt
 from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
+from ovito.io import import_file
+from ovito.vis import Viewport
 import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
@@ -71,18 +72,20 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.img_ntwk: ImageFile | None = None
         self.nx_graph = None
         self.ig_graph = None
+        self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
-        self.nx_components = []
 
-    def fit_graph(self, image_bin: MatLike = None, image_2d: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0):
+    def fit_graph(self, save_dir: str, image_bin: MatLike = None, image_2d: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
+        :param save_dir: Directory to save the graph to.
         :param image_bin: A binary image for building Graph Skeleton for the NetworkX graph.
         :param image_2d: The raw 2D image for creating a visual graph plot image.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_width_sz: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
+        :param image_file: Filename of the binary image.
         :return:
         """
 
@@ -107,8 +110,14 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([77, "Retrieving graph properties..."])
         self.props = self.get_graph_props()
 
-        self.update_status([90, "Drawing graph network..."])
-        # WHAT ABOUT DEPTH/SLICES? Should show all slices?
+        self.update_status([90, "Saving graph network..."])
+        # Save graph to GSD/HOOMD - For OVITO rendering
+        self.configs["export_as_gsd"]["value"] = 1
+        self.save_graph_to_file(image_file, save_dir)
+
+        self.update_status([95, "Plotting graph network..."])
+
+
         graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
         if graph_plt is not None:
             self.img_ntwk = FiberNetworkBuilder.plot_to_img(graph_plt)
@@ -179,6 +188,49 @@ class FiberNetworkBuilder(ProgressUpdate):
                     self.nx_graph.remove_edge(s, e)
         return True
 
+    def render_graph_to_image(self, bg_image=None):
+        """
+        Renders the graph network into an image; it can optionally superimpose the graph on the image.
+
+        :param bg_image: Optional background image.
+        """
+        if self.gsd_file is None:
+            return None
+
+        if bg_image is not None:
+            # OVITO doesn’t directly support 3D numpy volumes as backgrounds
+            # (visualize only one slice) Extract a middle slice from 3D grayscale volume
+            mid_slice = bg_image[bg_image.shape[0] // 2]  # shape: (H, W)
+
+            # Convert to RGB for PIL
+            bg_rgb = cv2.cvtColor(mid_slice, cv2.COLOR_GRAY2RGB)
+            bg_pil = Image.fromarray(bg_rgb)
+
+            # Set OVITO render size
+            size = (bg_pil.width, bg_pil.height)
+        else:
+            size = (800, 600)
+            bg_pil = None
+
+        # Load OVITO pipeline and scene
+        pipeline = import_file(self.gsd_file)
+        pipeline.add_to_scene()
+        vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+        vp.zoom_all()
+
+        # Render to QImage without the alpha channel
+        q_img = vp.render_image(size=size, alpha=False, background=(1, 1, 1))
+
+        # Convert QImage to PIL Image
+        pil_img = ImageQt.fromqimage(q_img).convert("RGB")
+
+        if bg_pil is not None:
+            # Overlay using simple blending (optional: adjust transparency)
+            final_img = Image.blend(bg_pil, pil_img, alpha=0.75)
+        else:
+            final_img = pil_img
+        return final_img
+
     def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
@@ -190,11 +242,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
+        nx_graph = self.nx_graph
         if image_2d is None:
             return None
-
-        nx_graph = self.nx_graph
-        nx_components = self.nx_components
 
         if blank:
             w, h = image_2d.shape[:2]
@@ -208,22 +258,14 @@ class FiberNetworkBuilder(ProgressUpdate):
                 img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
             return img
 
-        if len(nx_components) > 0:
-            if a4_size:
-                fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-                ax = fig.add_subplot(1, 1, 1)
-                ax.set_title("Graph Edges Sub-networks")
-            else:
-                fig = plt.Figure()
-                ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, nx_components=nx_components)
+        if a4_size:
+            fig = plt.Figure(figsize=(8.5, 11), dpi=400)
+            ax = fig.add_subplot(1, 1, 1)
+            ax.set_title("Graph Edge Plot")
         else:
-            if a4_size:
-                return None
-            else:
-                fig = plt.Figure()
-                ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph)
+            fig = plt.Figure()
+            ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
+        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph)
         return fig
 
     # TO BE REPLACED WITH OVITO-VIZ Plot
@@ -303,26 +345,27 @@ class FiberNetworkBuilder(ProgressUpdate):
         Returns: list of graph properties
         """
 
-        graph = self.nx_graph
-
         # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
         self.update_status([78, "Identifying graph subcomponents..."])
+        graph = self.nx_graph.copy()
         connected_components = list(nx.connected_components(graph))
         if not connected_components:  # In case the graph is empty
             connected_components = []
         sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
         giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
         num_graphs = len(sub_graphs)
-        self.nx_components = connected_components
         connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
 
-        # 2. Populate graph properties
+        # 2. Update with the giant graph
+        self.nx_graph = giant_graph
+
+        # 3. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
         props = [
             ["Weight Type", str(FiberNetworkBuilder.get_weight_options().get(self.get_weight_type()))],
             ["Edge Count", str(graph.number_of_edges())],
             ["Node Count", str(graph.number_of_nodes())],
-            ["Graph Count", str(len(self.nx_components))],
+            ["Graph Count", str(len(connected_components))],
             ["Sub-graph Count", str(num_graphs)],
             ["Giant-to-Entire graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
         return props
@@ -381,9 +424,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx.write_gexf(nx_graph, gexf_file)
 
         if opt_gte["export_as_gsd"]["value"] == 1:
-            gsd_file = os.path.join(out_dir, gsd_filename)
+            self.gsd_file = os.path.join(out_dir, gsd_filename)
             if self.skel_obj.skeleton is not None:
-                write_gsd_file(gsd_file, self.skel_obj.skeleton)
+                write_gsd_file(self.gsd_file, self.skel_obj.skeleton)
 
     @staticmethod
     def plot_to_img(fig: plt.Figure):
@@ -421,30 +464,20 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, nx_components: list = None, line_width: float=1.5):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, line_width: float=1.5):
         """
         Plot graph edges on top of the image.
+
         :param axis: Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
         :param transparent: whether to draw image with a transparent background
-        :param nx_components: the number of subgraph components
         :param line_width: each edge's line width
         :return:
         """
+
         axis.set_axis_off()
         axis.imshow(image, cmap='gray')
-
-        if nx_components is not None:
-            color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-            color_cycle = itertools.cycle(color_list)
-            for component in nx_components:
-                sg = nx_graph.subgraph(component)
-                color = next(color_cycle)
-                for (s, e) in sg.edges():
-                    ge = sg[s][e]['pts']
-                    axis.plot(ge[:, 1], ge[:, 0], color)
-            return axis
 
         if transparent:
             axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
