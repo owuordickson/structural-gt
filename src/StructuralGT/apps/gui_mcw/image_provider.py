@@ -37,7 +37,7 @@ class ImageProvider(QQuickImageProvider):
                     img = Image.fromarray(img_cv)
             elif option == "graph":
 
-                # If any is None, start task
+                # If any is None, start the task
                 if sel_img_batch.graph_obj.img_ntwk is None:
                     self.img_controller.run_extract_graph()
                     # Wait for the task to finish
@@ -68,7 +68,7 @@ class ImageProvider(QQuickImageProvider):
             if len(self.img_controller.sgt_objs.items()) <= 10:
                 self.img_controller.save_project_data()
 
-            # Acknowledge the image load and send signal to update QML
+            # Acknowledge the image load and send the signal to update QML
             self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()
         else:
