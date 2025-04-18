@@ -436,7 +436,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         axis.imshow(image, cmap='gray')
 
         if nx_components is not None:
-            color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+            color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
             color_cycle = itertools.cycle(color_list)
             for component in nx_components:
                 sg = nx_graph.subgraph(component)
