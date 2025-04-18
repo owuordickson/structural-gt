@@ -109,7 +109,7 @@ class BaseImage:
 
         # applies a low-pass filter
         if opt_img["apply_lowpass_filter"]["value"] == 1:
-            w, h = filtered_img.shape
+            h, w = filtered_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
             ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** int(

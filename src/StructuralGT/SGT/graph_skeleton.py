@@ -416,19 +416,19 @@ class GraphSkeleton:
         # Check if the image is 2D
         if len(img_bin.shape) == 2:
             is_2d = True
-            w, h = img_bin.shape  # finds dimensions of img_bin for boundary check
+            h, w = img_bin.shape  # finds dimensions of img_bin for boundary check
             d = 0
         else:
             is_2d = False
-            d, w, h = img_bin.shape
+            d, h, w = img_bin.shape
 
         try:
             if is_2d:
-                # Checks if point in fiber is out-of-bounds (oob) or black space (img_bin[x,y] = 0)
+                # Checks if the point in fiber is out-of-bounds (oob) or black space (img_bin(x,y) = 0)
                 oob = GraphSkeleton.boundary_check(pt_check, w, h)
                 not_in_edge = True if (oob == 1) else True if (img_bin[pt_check[-2], pt_check[-1]] == 0) else False
             else:
-                # Checks if point in fiber is out-of-bounds (oob) or black space (img_bin[d,x,y] = 0)
+                # Checks if the point in fiber is out-of-bounds (oob) or black space (img_bin(d,x,y) = 0)
                 oob = GraphSkeleton.boundary_check(pt_check, w, h, d=d)
                 not_in_edge = True if (oob == 1) else True if (img_bin[pt_check[-3], pt_check[-2], pt_check[-1]] == 0) else False
         except IndexError:

@@ -377,14 +377,13 @@ class NetworkProcessor(ProgressUpdate):
             img_bin = np.asarray(img_bin)
 
             # Get the selected batch's graph object and generate the graph
-            img_3d = sel_batch.numpy_image
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
             rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
             f_name, out_dir = self.get_filenames()
 
             sel_batch.graph_obj.abort = False
             sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_3d, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
+            sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:

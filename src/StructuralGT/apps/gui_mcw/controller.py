@@ -350,7 +350,10 @@ class MainController(QObject):
                 self._handle_progress_update(95, "Plotting graph network...")
                 sgt_obj = self.get_selected_sgt_obj()
                 sel_batch = sgt_obj.ntwk_p.get_selected_batch()
-                sel_batch.graph_obj.img_ntwk = sel_batch.graph_obj.render_graph_to_image()
+                graph_obj = sel_batch.graph_obj
+                img_arr = [obj.img_2d for obj in sel_batch.images]
+                img_arr = np.asarray(img_arr)
+                graph_obj.img_ntwk = graph_obj.render_graph_to_image(bg_image=img_arr, is_img_2d=sel_batch.is_2d)
 
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
@@ -522,7 +525,6 @@ class MainController(QObject):
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
         try:
-            print("Controller: load simulation")
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
             sel_batch = sgt_obj.ntwk_p.get_selected_batch()
