@@ -116,11 +116,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.save_graph_to_file(image_file, save_dir)
 
         self.update_status([95, "Plotting graph network..."])
-
-
-        graph_plt = self.plot_2d_graph_network(image_2d=image_2d)
-        if graph_plt is not None:
-            self.img_ntwk = FiberNetworkBuilder.plot_to_img(graph_plt)
+        self.img_ntwk  = self.render_graph_to_image()
 
     def reset_graph(self):
         """
@@ -231,13 +227,12 @@ class FiberNetworkBuilder(ProgressUpdate):
             final_img = pil_img
         return final_img
 
-    def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False, blank: bool = False):
+    def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
         :param image_2d: 2D image to be used to draw the network.
         :param a4_size: Decision if to create an A4 size plot figure.
-        :param blank: Do not add the image in the background, have a white background.
 
         :return:
         """
@@ -245,18 +240,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         nx_graph = self.nx_graph
         if image_2d is None:
             return None
-
-        if blank:
-            w, h = image_2d.shape[:2]
-            my_dpi = 96
-            fig = plt.Figure(figsize=(h / my_dpi, w / my_dpi), dpi=my_dpi)
-            ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-            ax = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, transparent=True)
-            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, marker_size=3)
-            img = xp.array(FiberNetworkBuilder.plot_to_img(fig))
-            if len(img.shape) == 3:
-                img = xp.mean(img[:, :, :2], 2)  # Convert the image to grayscale (or 2D)
-            return img
 
         if a4_size:
             fig = plt.Figure(figsize=(8.5, 11), dpi=400)
@@ -427,21 +410,6 @@ class FiberNetworkBuilder(ProgressUpdate):
             self.gsd_file = os.path.join(out_dir, gsd_filename)
             if self.skel_obj.skeleton is not None:
                 write_gsd_file(self.gsd_file, self.skel_obj.skeleton)
-
-    @staticmethod
-    def plot_to_img(fig: plt.Figure):
-        """
-        Convert a Matplotlib figure to a PIL Image and return it
-
-        :param fig: Matplotlib figure.
-        """
-        if fig:
-            buf = io.BytesIO()
-            fig.savefig(buf)
-            buf.seek(0)
-            img = Image.open(buf)
-            return img
-        return None
 
     @staticmethod
     def get_weight_options():
