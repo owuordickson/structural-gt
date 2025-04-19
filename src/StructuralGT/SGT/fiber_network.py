@@ -115,6 +115,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(image_file, save_dir)
 
+        self.update_status([95, "Plotting graph network..."])
+        # self.img_ntwk = self.plot_2d_graph_network()
+
     def reset_graph(self):
         """
         Erase the existing data stored in the object.
@@ -181,6 +184,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                     self.nx_graph.remove_edge(s, e)
         return True
 
+    # ONLY RUNS ON MAIN THREAD - TO BE DELETED
     def render_graph_to_image(self, bg_image=None, is_img_2d: bool = True):
         """
         Renders the graph network into an image; it can optionally superimpose the graph on the image.

@@ -346,15 +346,6 @@ class MainController(QObject):
                 self.write_to_pdf(result)
         else:
             if type(result) is NetworkProcessor:
-
-                self._handle_progress_update(95, "Plotting graph network...")
-                sgt_obj = self.get_selected_sgt_obj()
-                sel_batch = sgt_obj.ntwk_p.get_selected_batch()
-                graph_obj = sel_batch.graph_obj
-                img_arr = [obj.img_2d for obj in sel_batch.images]
-                img_arr = np.asarray(img_arr)
-                graph_obj.img_ntwk = graph_obj.render_graph_to_image(bg_image=img_arr, is_img_2d=sel_batch.is_2d)
-
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
