@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
-from .sgt_utils import write_csv_file, write_gsd_file
+from .sgt_utils import write_csv_file, write_gsd_file, plot_to_pil
 from ..configs.config_loader import load_gte_configs
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
@@ -76,12 +76,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
-    def fit_graph(self, save_dir: str, image_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
+    def fit_graph(self, save_dir: str, img_bin: MatLike = None, img_2d: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
         :param save_dir: Directory to save the graph to.
-        :param image_bin: A binary image for building Graph Skeleton for the NetworkX graph.
+        :param img_bin: A binary image for building Graph Skeleton for the NetworkX graph.
+        :param img_2d: The actual 2D image(s) used for plotting the graph network.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_width_sz: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
@@ -94,8 +95,8 @@ class FiberNetworkBuilder(ProgressUpdate):
                                     "image/binary filters and graph options. OR change brightness/contrast"])
             return
 
-        self.update_status([50, "Making graph skeleton..."])
-        success = self.extract_graph(image_bin=image_bin, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
+        self.update_status([50, "Extracting the graph network..."])
+        success = self.extract_graph(image_bin=img_bin, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         if not success:
             self.update_status([-1, "Problem encountered, provide GT parameters"])
             self.abort = True
@@ -116,7 +117,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.save_graph_to_file(image_file, save_dir)
 
         self.update_status([95, "Plotting graph network..."])
-        self.img_ntwk = self.plot_2d_graph_network()
+        plt_fig = self.plot_2d_graph_network(img_2d)
+        self.img_ntwk = plot_to_pil(plt_fig)
 
     def reset_graph(self):
         """
@@ -143,16 +145,27 @@ class FiberNetworkBuilder(ProgressUpdate):
         if opt_gte is None:
             return False
 
+        self.update_status([58, "Build graph skeleton from binary image..."])
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
         img_skel = graph_skel.skeleton.astype(int)
-        # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in the stack
-        # selected_slice = 0 # Select first slice in 3D skeleton of shape (depth, w, h)
 
         self.update_status([60, "Creating graph network..."])
-        # nx_graph = sknw.build_sknw(img_skel[selected_slice])
         nx_graph = sknw.build_sknw(img_skel)
-        self.update_status([64, "Assigning weights to graph network..."])
+
+
+        # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in the stack
+        selected_slice = 0 # Select first slice in 3D skeleton of shape (depth, w, h)
+        nx_graph = sknw.build_sknw(img_skel[selected_slice])
+
+        # Removing all instances of edges where the start and end are the same, or "self-loops"
+        if opt_gte["remove_self_loops"]["value"]:
+            self.update_status([64, "Removing self loops from graph network..."])
+            for (s, e) in self.nx_graph.edges():
+                if s == e:
+                    self.nx_graph.remove_edge(s, e)
+
+        self.update_status([66, "Assigning weights to graph network..."])
         for (s, e) in nx_graph.edges():
             # 'sknw' library stores length of edge and calls it weight, we reverse this
             # we create a new attribute 'length', later delete/modify 'weight'
@@ -167,8 +180,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                                                                          pixel_dim=px_size, rho_dim=rho_val)
             else:
                 pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
-                # delete 'weight'
-                # del nx_graph[s][e]['weight']
+                del nx_graph[s][e]['weight']            # delete 'weight'
             nx_graph[s][e]['width'] = pix_width
             nx_graph[s][e]['angle'] = pix_angle
             nx_graph[s][e]['weight'] = wt
@@ -176,27 +188,23 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.nx_graph = nx_graph
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
 
-        # Removing all instances of edges where the start and end are the same, or "self-loops"
-        if opt_gte["remove_self_loops"]["value"]:
-            self.update_status([66, "Removing self loops from graph network..."])
-            for (s, e) in self.nx_graph.edges():
-                if s == e:
-                    self.nx_graph.remove_edge(s, e)
         return True
 
-    def plot_2d_graph_network(self, image_2d: MatLike = None, a4_size: bool = False):
+    def plot_2d_graph_network(self, image_2d_arr: MatLike = None, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
-        :param image_2d: 2D image to be used to draw the network.
+        :param image_2d_arr: Slides of 2D images to be used to draw the network.
         :param a4_size: Decision if to create an A4 size plot figure.
 
         :return:
         """
 
         nx_graph = self.nx_graph
-        if image_2d is None:
+        if image_2d_arr is None:
             return None
+        else:
+            image_2d = image_2d_arr[0]
 
         if a4_size:
             fig = plt.Figure(figsize=(8.5, 11), dpi=400)
@@ -205,7 +213,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             fig = plt.Figure()
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph)
+        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, color='yellow')
         return fig
 
     # TO BE REPLACED WITH OVITO-VIZ Plot
@@ -238,7 +246,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         ax_2.set_title("Graph Node Plot")
         ax_2.set_axis_off()
-        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, image_2d, nx_graph)
+        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, img_2d, nx_graph)
 
         nodes = nx_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
@@ -389,15 +397,16 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, line_width: float=1.5):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, line_width: float=1.5, color: str = 'black'):
         """
         Plot graph edges on top of the image.
 
         :param axis: Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
-        :param transparent: whether to draw image with a transparent background
+        :param transparent: whether to draw the image with a transparent background
         :param line_width: each edge's line width
+        :param color: each edge's color
         :return:
         """
 
@@ -409,7 +418,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         for (s, e) in nx_graph.edges():
             ge = nx_graph[s][e]['pts']
-            axis.plot(ge[:, 1], ge[:, 0], 'black', linewidth=line_width)
+            axis.plot(ge[:, 1], ge[:, 0], color, linewidth=line_width)
         return axis
 
     @staticmethod

@@ -6,6 +6,7 @@ import base64
 import gsd.hoomd
 import numpy as np
 import multiprocessing as mp
+import matplotlib.pyplot as plt
 from typing import LiteralString
 from PIL import Image
 
@@ -24,7 +25,7 @@ def get_num_cores():
 
 def __get_slurm_cores__():
     """
-    Test computer to see if it is a SLURM environment, then gets number of CPU cores.
+    Test the computer to see if it is a SLURM environment, then gets the number of CPU cores.
     :return: Count of CPUs (int) or False
     """
     try:
@@ -122,3 +123,18 @@ def pil_to_base64(img_pil):
     buffer.seek(0)
     base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")  # Convert to Base64 string
     return base64_data
+
+
+def plot_to_pil(fig: plt.Figure):
+    """
+    Convert a Matplotlib figure to a PIL Image and return it
+
+    :param fig: Matplotlib figure.
+    """
+    if fig:
+        buf = io.BytesIO()
+        fig.savefig(buf)
+        buf.seek(0)
+        img = Image.open(buf)
+        return img
+    return None
