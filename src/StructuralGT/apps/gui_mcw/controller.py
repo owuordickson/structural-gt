@@ -3,6 +3,7 @@ import sys
 import logging
 import pickle
 import numpy as np
+from ovito import scene
 from ovito.io import import_file
 from ovito.vis import Viewport
 from ovito.gui import create_qwidget
@@ -516,6 +517,10 @@ class MainController(QObject):
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
         try:
+            # Clear any existing scene
+            for p_line in list(scene.pipelines):
+                p_line.remove_from_scene()
+
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
             sel_batch = sgt_obj.ntwk_p.get_selected_batch()
