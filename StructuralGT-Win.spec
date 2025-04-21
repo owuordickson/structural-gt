@@ -4,7 +4,6 @@ from PyInstaller.utils.hooks import collect_submodules
 from glob import glob
 
 ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
-
 a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
