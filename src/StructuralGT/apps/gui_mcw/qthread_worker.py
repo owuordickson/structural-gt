@@ -8,7 +8,7 @@ from ...SGT.sgt_utils import get_num_cores, write_txt_file
 
 
 class AbortException(Exception):
-    """Custom exception to handle task cancellation initiated by user or an error."""
+    """Custom exception to handle task cancellation initiated by the user or an error."""
     pass
 
 
@@ -60,10 +60,10 @@ class WorkerTask (QObject):
 
     def update_progress(self, value, msg):
         """
-        Send update_progress signal to all listeners.
-        progress-value (0-100), progress-message (str)
+        Send the update_progress signal to all listeners.
+        Progress-value (0-100), progress-message (str)
         Args:
-            value: progress value (0-100), (-1, if it is an error), (101, if it is nav-control message)
+            value: progress value (0-100), (-1, if it is an error), (101, if it is the nav-control message)
             msg: progress message (str)
 
         Returns:
