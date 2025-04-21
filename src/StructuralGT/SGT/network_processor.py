@@ -374,9 +374,9 @@ class NetworkProcessor(ProgressUpdate):
             # Get binary image
             sel_images = self.get_selected_images(sel_batch)
             img_bin = [img.img_bin for img in sel_images]
-            img_2d = [img.img_2d for img in sel_images]
+            img_3d = [img.img_2d for img in sel_images]
             img_bin = np.asarray(img_bin)
-            img_2d = np.asarray(img_2d)
+            img_3d = np.asarray(img_3d)
 
             # Get the selected batch's graph object and generate the graph
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
@@ -385,7 +385,7 @@ class NetworkProcessor(ProgressUpdate):
 
             sel_batch.graph_obj.abort = False
             sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_2d, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
+            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_3d, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:

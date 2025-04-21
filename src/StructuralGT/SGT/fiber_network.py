@@ -184,30 +184,39 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
-    def plot_2d_graph_network(self, image_2d_arr: MatLike = None, a4_size: bool = False):
+    def plot_2d_graph_network(self, image_2d_arr: MatLike = None, plot_nodes: bool = False, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
         :param image_2d_arr: Slides of 2D images to be used to draw the network.
+        :param plot_nodes: Make the graph's node plot figure.
         :param a4_size: Decision if to create an A4 size plot figure.
 
         :return:
         """
 
+        # Fetch the graph and config options
         nx_graph = self.nx_3d_graph
+        show_node_id = (self.configs["display_node_id"]["value"] == 1)
+
+        # Fetch a single 2D image
         if image_2d_arr is None:
             return None
         else:
             image_2d = image_2d_arr[0]
 
+        # Create the plot figure
         if a4_size:
             fig = plt.Figure(figsize=(8.5, 11), dpi=400)
             ax = fig.add_subplot(1, 1, 1)
-            ax.set_title("Graph Edge Plot")
+            plt_title = "Graph Node Plot" if plot_nodes else "Graph Edge Plot"
+            ax.set_title(plt_title)
         else:
             fig = plt.Figure()
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
         FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, color='yellow')
+        if plot_nodes:
+            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, display_node_id=show_node_id)
         return fig
 
     # TO BE REPLACED WITH OVITO-VIZ Plot
@@ -419,23 +428,37 @@ class FiberNetworkBuilder(ProgressUpdate):
         return axis
 
     @staticmethod
-    def plot_graph_nodes(axis, nx_graph: nx.Graph, marker_size: float = 3, distribution_data: list = None):
+    def plot_graph_nodes(axis: plt.axis, nx_graph: nx.Graph, marker_size: float = 3, distribution_data: list = None, display_node_id: bool = False):
         """
         Plot graph nodes on top of the image.
         :param axis: Matplotlib axis
         :param nx_graph: a NetworkX graph
         :param marker_size: the size of each node
         :param distribution_data: the heatmap distribution data
+        :param display_node_id: indicate the node id on the plot
         :return:
 
         """
+
         node_list = list(nx_graph.nodes())
         gn = xp.array([nx_graph.nodes[i]['o'] for i in node_list])
+        # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
+
+        if display_node_id:
+            i = 0
+            # coordinates: (z, y)
+            for x, y in zip(gn[:, 2], gn[:, 1]):
+                axis.annotate(str(i), (x, y), fontsize=5)
+                i += 1
+
         if distribution_data is not None:
-            c_set = axis.scatter(gn[:, 1], gn[:, 0], s=marker_size, c=distribution_data, cmap='plasma')
+            # coordinates: (z, y)
+            c_set = axis.scatter(gn[:, 2], gn[:, 1], s=marker_size, c=distribution_data, cmap='plasma')
+            return c_set
         else:
-            c_set = axis.scatter(gn[:, 1], gn[:, 0], s=marker_size)
-        return c_set
+            # c_set = axis.scatter(gn[:, 2], gn[:, 1], s=marker_size)
+            axis.plot(gn[:, 2], gn[:, 1], 'b.', markersize=marker_size)
+            return axis
 
     # TO DELETE IT LATER
     def data_gen_function(self):

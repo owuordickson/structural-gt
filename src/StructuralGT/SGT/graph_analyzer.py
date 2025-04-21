@@ -612,11 +612,9 @@ class GraphAnalyzer(ProgressUpdate):
         out_figs = []
 
         sel_batch = self.ntwk_p.get_selected_batch()
-        if sel_batch.is_2d:
-            sel_images = self.ntwk_p.get_selected_images(sel_batch)
-            img_2d = sel_images[0].img_2d
-        else:
-            img_2d = None
+        sel_images = self.ntwk_p.get_selected_images(sel_batch)
+        img_3d = [img.img_2d for img in sel_images]
+        img_3d = np.asarray(img_3d)
 
         self.update_status([90, "Generating PDF GT Output..."])
 
@@ -625,14 +623,13 @@ class GraphAnalyzer(ProgressUpdate):
         for fig in figs:
             out_figs.append(fig)
 
-        # 2. plotting skeletal images
-        # TO BE REPLACED WITH OVITO IMAGE VIZ
-        fig = graph_obj.plot_2d_skeletal_images(image_2d=img_2d)
+        # 2. plotting graph nodes
+        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
-        # 3. plotting subgraph network
-        fig = graph_obj.plot_2d_graph_network(a4_size=True, image_2d=img_2d)
+        # 3. plotting graph edges
+        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
@@ -651,7 +648,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.plot_2d_heatmaps(graph_obj, image_2d=img_2d)
+            figs = self.plot_2d_heatmaps(graph_obj, image_2d=img_3d[0])
             for fig in figs:
                 out_figs.append(fig)
 
