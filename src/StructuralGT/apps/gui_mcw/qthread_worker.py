@@ -153,8 +153,8 @@ class WorkerTask (QObject):
                 output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
                 output += "Number of cores: " + str(num_cores) + "\n"
                 output += "Results generated for: " + sgt_obj.ntwk_p.img_path + "\n"
-                output += "Node Count: " + str(sgt_obj.g_obj.nx_graph.number_of_nodes()) + "\n"
-                output += "Edge Count: " + str(sgt_obj.g_obj.nx_graph.number_of_edges()) + "\n"
+                output += "Node Count: " + str(sgt_obj.g_obj.nx_3d_graph.number_of_nodes()) + "\n"
+                output += "Edge Count: " + str(sgt_obj.g_obj.nx_3d_graph.number_of_edges()) + "\n"
                 filename, out_dir = sgt_obj.ntwk_p.get_filenames()
                 out_file = os.path.join(out_dir, filename + '-v2_results.txt')
                 write_txt_file(output, out_file)

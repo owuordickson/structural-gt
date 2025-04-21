@@ -130,7 +130,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         self.update_status([1, "Performing un-weighted analysis..."])
 
-        graph = graph_obj.nx_graph
+        graph = graph_obj.nx_3d_graph
         opt_gtc = self.configs
         data_dict = {"x": [], "y": []}
 
@@ -351,7 +351,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         self.update_status([70, "Performing weighted analysis..."])
 
-        graph = graph_obj.nx_graph
+        graph = graph_obj.nx_3d_graph
         opt_gtc = self.configs
         wt_type = graph_obj.get_weight_type()
         weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
@@ -466,7 +466,7 @@ class GraphAnalyzer(ProgressUpdate):
         lst_area = []
         lst_len = []
         lst_width = []
-        nx_graph = graph_obj.nx_graph
+        nx_graph = graph_obj.nx_3d_graph
 
         sel_batch = self.ntwk_p.get_selected_batch()
         sel_images = self.ntwk_p.get_selected_images(sel_batch)
@@ -519,7 +519,7 @@ class GraphAnalyzer(ProgressUpdate):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
-        of local node connectivity over all pairs of the nx_graph nodes.
+        of local node connectivity over all pairs of the nx_3d_graph nodes.
 
         https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
 
@@ -550,7 +550,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         """
 
-        nx_graph = graph_obj.nx_graph
+        nx_graph = graph_obj.nx_3d_graph
         if nx_graph.is_directed():
             iter_func = itertools.permutations
         else:
@@ -585,7 +585,7 @@ class GraphAnalyzer(ProgressUpdate):
         graph_obj: Graph extractor object.
         """
 
-        nx_graph = graph_obj.nx_graph
+        nx_graph = graph_obj.nx_3d_graph
         cpu_count = get_num_cores()
         anc = 0
 
@@ -942,7 +942,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         # Make a copy of the graph
-        graph = graph_obj.nx_graph.copy()
+        graph = graph_obj.nx_3d_graph.copy()
         weighted = graph_obj.configs["has_weights"]["value"]
 
         # It is important to notice our graph is (mostly) a directed graph,
@@ -1013,7 +1013,7 @@ class GraphAnalyzer(ProgressUpdate):
         :param line_width: Size of the plot line-width.
         :return: Histogram plot figure.
         """
-        nx_graph = graph_obj.nx_graph
+        nx_graph = graph_obj.nx_3d_graph
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)

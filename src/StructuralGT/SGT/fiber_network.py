@@ -5,7 +5,6 @@ Builds a graph network from nanoscale microscopy images.
 """
 
 import os
-import cv2
 import igraph
 import sknw
 import logging
@@ -15,7 +14,6 @@ from PIL import Image, ImageQt
 from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
 from ovito.data import DataCollection, Particles
-from ovito.io import import_file
 from ovito.pipeline import StaticSource, Pipeline
 from ovito.vis import Viewport
 import matplotlib.pyplot as plt
@@ -71,8 +69,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
         self.img_ntwk: ImageFile | None = None
-        self.nx_graph = None
-        self.ig_graph = None
+        self.nx_3d_graph: nx.Graph | None = None
+        self.ig_graph: igraph.Graph | None = None
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
@@ -103,7 +101,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             return
 
         self.update_status([75, "Verifying graph network..."])
-        if self.nx_graph.number_of_nodes() <= 0:
+        if self.nx_3d_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change image/binary filters)"])
             self.abort = True
             return
@@ -125,7 +123,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
+        self.nx_3d_graph, self.ig_graph, self.img_ntwk = None, None, None
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
         """
@@ -153,27 +151,24 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([60, "Creating graph network..."])
         nx_graph = sknw.build_sknw(img_skel)
 
-
-        # DOES NOT PLOT - node_plot (BUG IN CODE), so we pick the first image in the stack
-        selected_slice = 0 # Select first slice in 3D skeleton of shape (depth, w, h)
-        nx_graph = sknw.build_sknw(img_skel[selected_slice])
-
-        # Removing all instances of edges where the start and end are the same, or "self-loops"
         if opt_gte["remove_self_loops"]["value"]:
             self.update_status([64, "Removing self loops from graph network..."])
-            for (s, e) in self.nx_graph.edges():
-                if s == e:
-                    self.nx_graph.remove_edge(s, e)
 
         self.update_status([66, "Assigning weights to graph network..."])
         for (s, e) in nx_graph.edges():
-            # 'sknw' library stores length of edge and calls it weight, we reverse this
-            # we create a new attribute 'length', later delete/modify 'weight'
+
+            if opt_gte["remove_self_loops"]["value"]:
+                # Removing all instances of edges where the start and end are the same, or "self-loops"
+                if s == e:
+                    nx_graph.remove_edge(s, e)
+                    continue
+
+            # 'sknw' library stores the length of edge as 'weight', we create an attribute 'length', and update 'weight'
             nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
             ge = nx_graph[s][e]['pts']
 
             if opt_gte["has_weights"]["value"] == 1:
-                # We modify 'weight'
+                # We update 'weight'
                 wt_type = self.get_weight_type()
                 weight_options = FiberNetworkBuilder.get_weight_options()
                 pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
@@ -185,9 +180,8 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx_graph[s][e]['angle'] = pix_angle
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
-        self.nx_graph = nx_graph
+        self.nx_3d_graph = nx_graph
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
-
         return True
 
     def plot_2d_graph_network(self, image_2d_arr: MatLike = None, a4_size: bool = False):
@@ -200,7 +194,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        nx_graph = self.nx_graph
+        nx_graph = self.nx_3d_graph
         if image_2d_arr is None:
             return None
         else:
@@ -229,9 +223,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         if image_2d is None:
             return None
 
-        opt_gte = self.configs
-        nx_graph = self.nx_graph
-        g_skel = self.skel_obj
+        # opt_gte = self.configs
+        # nx_graph = self.nx_3d_graph
+        # g_skel = self.skel_obj
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=400)
 
@@ -246,9 +240,9 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         ax_2.set_title("Graph Node Plot")
         ax_2.set_axis_off()
-        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, img_2d, nx_graph)
+        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, img_2d, nx_3d_graph)
 
-        nodes = nx_graph.nodes()
+        nodes = nx_3d_graph.nodes()
         gn = xp.array([nodes[i]['o'] for i in nodes])
         if opt_gte["display_node_id"]["value"] == 1:
             i = 0
@@ -295,7 +289,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
         self.update_status([78, "Identifying graph subcomponents..."])
-        graph = self.nx_graph.copy()
+        graph = self.nx_3d_graph.copy()
         connected_components = list(nx.connected_components(graph))
         if not connected_components:  # In case the graph is empty
             connected_components = []
@@ -305,7 +299,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
 
         # 2. Update with the giant graph
-        self.nx_graph = giant_graph
+        self.nx_3d_graph = giant_graph
 
         # 3. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
@@ -337,7 +331,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        nx_graph = self.nx_graph.copy()
+        nx_graph = self.nx_3d_graph.copy()
         opt_gte = self.configs
 
         g_filename = filename + "_graph.gexf"
@@ -349,7 +343,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         adj_file = os.path.join(out_dir, adj_filename)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
-            adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
+            adj_mat = nx.adjacency_matrix(self.nx_3d_graph).todense()
             xp.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte["export_edge_list"]["value"] == 1:
@@ -416,9 +410,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         if transparent:
             axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
 
+        # DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
         for (s, e) in nx_graph.edges():
+            # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
             ge = nx_graph[s][e]['pts']
-            axis.plot(ge[:, 1], ge[:, 0], color, linewidth=line_width)
+            # axis.plot(ge[:, 1], ge[:, 0], color, linewidth=line_width) # coordinates: (y, x)
+            axis.plot(ge[:, 2], ge[:, 1], color, linewidth=line_width)          # coordinates: (z, y)
         return axis
 
     @staticmethod

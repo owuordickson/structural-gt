@@ -311,7 +311,7 @@ class FiberNetwork:
         selected_slice = 0  # Select first slice in 3D skeleton of shape (depth, w, h)
 
         # G = sknwEdits.build_sknw(img_skel[selected_slice])
-        # nx_graph = G.to_networkx()
+        # nx_3d_graph = G.to_networkx()
         nx_graph = sknw.build_sknw(img_skel[selected_slice])
         G = igraph.Graph.from_networkx(nx_graph)
 
