@@ -96,58 +96,46 @@ class NetworkProcessor(ProgressUpdate):
         ext = os.path.splitext(file[0])[1].lower() if (type(file) is list) else os.path.splitext(file)[1].lower()
         try:
             if ext in ['.png', '.jpg', '.jpeg']:
-                # Load standard 2D images with OpenCV
-                image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-                if image is None:
-                    raise ValueError(f"Failed to load {file}")
-
-                scale_factor = 1
-                scaling_opts = []
-                img_px_size = max(image.shape[0], image.shape[1])
-                if img_px_size > 0 and self.auto_scale:
-                    scaling_opts = NetworkProcessor.get_scaling_options(img_px_size, self.auto_scale)
-                    image, scale_factor = NetworkProcessor.rescale_img(image, scaling_opts)
-
-                img_batch = NetworkProcessor.ImageBatch(numpy_image=image, images=[], is_2d=True, shape=image.shape[:2],
-                                                        props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                        selected_images={0}, graph_obj=FiberNetworkBuilder())
-                return [img_batch]
-            elif ext in ['.tif', '.tiff', '.qptiff']:
-                # Try load multi-page TIFF using PIL
-                img = Image.open(file)
-
                 image_groups = defaultdict(list)
-                while True:
-                    # Create clusters/groups of similar size images
-                    frame = np.array(img)  # Convert the current frame to the numpy array
-                    h, w = frame.shape[:2]
-                    image_groups[(h, w)].append(frame)
-                    try:
-                        # Move to the next frame
-                        img.seek(img.tell() + 1)
-                    except EOFError:
-                        # Stop when all frames are read
-                        break
-
-                img_info_list = []
-                for (h, w), images in image_groups.items():
-                    images_small = []
-                    scale_factor = 1
-                    scaling_opts = []
-                    images  = np.array(images)
-                    max_size = max(h, w)
-                    if max_size > 0 and self.auto_scale:
-                        scaling_opts = NetworkProcessor.get_scaling_options(max_size, self.auto_scale)
-                        images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
-
-                    # Convert back to numpy arrays
-                    images = images_small if len(images_small) > 0 else images
-                    img_batch = NetworkProcessor.ImageBatch(numpy_image=images, images=[], is_2d=True, shape=(h, w),
-                                                            props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                            selected_images=set(range(len(images))), graph_obj=FiberNetworkBuilder())
-                    img_info_list.append(img_batch)
-
-                return img_info_list
+                if type(file) is list:
+                    for img in file:
+                        # Create clusters/groups of similar size images
+                        frame = cv2.imread(img, cv2.IMREAD_UNCHANGED)
+                        h, w = frame.shape[:2]
+                        image_groups[(h, w)].append(frame)
+                else:
+                    # Load standard 2D images with OpenCV
+                    image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+                    if image is None:
+                        raise ValueError(f"Failed to load {file}")
+                    h, w = image.shape[:2]
+                    image_groups[(h, w)].append(image)
+                img_batch_groups = NetworkProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                return img_batch_groups
+            elif ext in ['.tif', '.tiff', '.qptiff']:
+                image_groups = defaultdict(list)
+                if type(file) is list:
+                    for img in file:
+                        # Create clusters/groups of similar size images
+                        frame = cv2.imread(img, cv2.IMREAD_UNCHANGED)
+                        h, w = frame.shape[:2]
+                        image_groups[(h, w)].append(frame)
+                else:
+                    # Try load multi-page TIFF using PIL
+                    img = Image.open(file)
+                    while True:
+                        # Create clusters/groups of similar size images
+                        frame = np.array(img)  # Convert the current frame to the numpy array
+                        h, w = frame.shape[:2]
+                        image_groups[(h, w)].append(frame)
+                        try:
+                            # Move to the next frame
+                            img.seek(img.tell() + 1)
+                        except EOFError:
+                            # Stop when all frames are read
+                            break
+                img_batch_groups = NetworkProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                return img_batch_groups
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
                 img_nib = nib.load(file)
@@ -603,3 +591,26 @@ class NetworkProcessor(ProgressUpdate):
                 img_small, scale_factor = BaseImage.resize_img(scale_size, img)
                 img_3d.append(img_small)
         return np.array(img_3d), scale_factor
+
+    @staticmethod
+    def create_img_batch_groups(img_groups: defaultdict, auto_scale: bool):
+        """"""
+        img_info_list = []
+        for (h, w), images in img_groups.items():
+            images_small = []
+            scale_factor = 1
+            scaling_opts = []
+            images = np.array(images)
+            max_size = max(h, w)
+            if max_size > 0 and auto_scale:
+                scaling_opts = NetworkProcessor.get_scaling_options(max_size, auto_scale)
+                images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
+
+            # Convert back to numpy arrays
+            images = images_small if len(images_small) > 0 else images
+            img_batch = NetworkProcessor.ImageBatch(numpy_image=images, images=[], is_2d=True, shape=(h, w),
+                                                    props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
+                                                    selected_images=set(range(len(images))),
+                                                    graph_obj=FiberNetworkBuilder())
+            img_info_list.append(img_batch)
+        return img_info_list
