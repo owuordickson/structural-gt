@@ -947,11 +947,6 @@ class MainController(QObject):
         if not dir_path:
             return False
 
-        # Create the directory if it doesn't exist
-        # results_dir = os.path.join(dir_path, '/results')
-        # if not os.path.exists(results_dir):
-        #    os.makedirs(results_dir)
-
         proj_name += '.sgtproj'
         proj_path = os.path.join(str(dir_path), proj_name)
 
