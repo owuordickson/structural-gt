@@ -183,9 +183,11 @@ class MainController(QObject):
 
             # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
             img_name_pattern = re.match(r'^([a-zA-Z_]+)\d+', img_file_name)
+            print(img_name_pattern)
             if img_name_pattern:
                 name_prefix = img_name_pattern.group(1)
                 name_pattern = re.compile(rf'^{name_prefix}\d+{re.escape(img_file_ext)}$', re.IGNORECASE)
+                print(name_pattern)
 
                 # Check if 3D image slices exist in the image folder. Same file name but different number
                 files = sorted(os.listdir(img_dir))
