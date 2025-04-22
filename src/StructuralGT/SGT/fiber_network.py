@@ -219,50 +219,6 @@ class FiberNetworkBuilder(ProgressUpdate):
             FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, display_node_id=show_node_id)
         return fig
 
-    # TO BE REPLACED WITH OVITO-VIZ Plot
-    def plot_2d_skeletal_images(self, image_2d: MatLike = None):
-        """
-        Create plot figures of skeletal image and graph network image.
-
-        :param image_2d: Raw 2D image to be superimposed with the graph.
-
-        :return:
-        """
-
-        if image_2d is None:
-            return None
-
-        # opt_gte = self.configs
-        # nx_graph = self.nx_3d_graph
-        # g_skel = self.skel_obj
-
-        fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-
-        """ax_1 = fig.add_subplot(2, 1, 1)
-        ax_2 = fig.add_subplot(2, 1, 2)
-
-        ax_1.set_title("Skeletal Image")
-        ax_1.set_axis_off()
-        ax_1.imshow(g_skel.skel_int, cmap='gray')
-        ax_1.scatter(g_skel.bp_coord_x, g_skel.bp_coord_y, s=0.25, c='b')
-        ax_1.scatter(g_skel.ep_coord_x, g_skel.ep_coord_y, s=0.25, c='r')
-
-        ax_2.set_title("Graph Node Plot")
-        ax_2.set_axis_off()
-        ax_2 = FiberNetworkBuilder.superimpose_graph_to_img(ax_2, img_2d, nx_3d_graph)
-
-        nodes = nx_3d_graph.nodes()
-        gn = xp.array([nodes[i]['o'] for i in nodes])
-        if opt_gte["display_node_id"]["value"] == 1:
-            i = 0
-            for x, y in zip(gn[:, 1], gn[:, 0]):
-                ax_2.annotate(str(i), (x, y), fontsize=5)
-                i += 1
-            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)
-        else:
-            ax_2.plot(gn[:, 1], gn[:, 0], 'b.', markersize=3)"""
-        return fig
-
     def get_config_info(self):
         """
         Get the user selected parameters and options information.
