@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 import logging
@@ -175,18 +176,23 @@ class MainController(QObject):
         # Try reading the image
         try:
             # Get the image path and folder
-            img_dir, filename = os.path.split(str(img_path))
+            img_files = []
+            img_dir, img_file = os.path.split(str(img_path))
+            img_file_ext = os.path.splitext(img_file)[1].lower()
+            img_file_name = os.path.splitext(img_file)[0]
 
-            # Check if 3D image slices exist in the image folder. Same file name but different number
-            files = os.listdir(img_dir)
-            files = sorted(files)
-            """files = os.listdir(img_dir_path)
-            files = sorted(files)
-            for a_file in files:
-                allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
-                if a_file.endswith(allowed_extensions):
-                    img_path = os.path.join(str(img_dir_path), a_file)
-                    _ = self.create_sgt_object(img_path)"""
+            # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
+            img_name_pattern = re.match(r'^([a-zA-Z_]+)\d+', img_file_name)
+            if img_name_pattern:
+                name_prefix = img_name_pattern.group(1)
+                name_pattern = re.compile(rf'^{name_prefix}\d+{re.escape(img_file_ext)}$', re.IGNORECASE)
+
+                # Check if 3D image slices exist in the image folder. Same file name but different number
+                files = sorted(os.listdir(img_dir))
+                for a_file in files:
+                    if a_file.endswith(img_file_ext):
+                        if name_pattern.match(a_file):
+                            img_files.append(os.path.join(img_dir, a_file))
 
             # Create the Output folder if it does not exist
             out_dir_name = "sgt_files"
@@ -195,11 +201,12 @@ class MainController(QObject):
             os.makedirs(out_dir, exist_ok=True)
 
             # Create the StructuralGT object
-            ntwk_p = NetworkProcessor(str(img_path), out_dir, self.allow_auto_scale)
+            input_file = img_files if len(img_files) > 1 else str(img_path)
+            ntwk_p = NetworkProcessor(input_file, out_dir, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
-            self.sgt_objs[filename] = sgt_obj
+            self.sgt_objs[img_file] = sgt_obj
             self.update_img_models(sgt_obj)
             self.update_graph_models(sgt_obj)
             return True

@@ -54,7 +54,7 @@ class NetworkProcessor(ProgressUpdate):
         A class for processing and preparing microscopy images for building a fiber graph network.
 
         Args:
-            img_path (str): input image path
+            img_path (str | list): input image path
             out_dir (str): directory path for storing results.
 
         >>>
@@ -65,14 +65,14 @@ class NetworkProcessor(ProgressUpdate):
         >>> imp_obj.apply_img_filters()
         """
         super(NetworkProcessor, self).__init__()
-        self.img_path: str = img_path
+        self.img_path: str | list = img_path
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
         self.image_batches: list[NetworkProcessor.ImageBatch] = []
         self.selected_batch: int = 0
         self._initialize_image_batches(self._load_img_from_file(img_path))
 
-    def _load_img_from_file(self, file: str):
+    def _load_img_from_file(self, file: list | str):
         """
         Read the image and save it as an OpenCV object.
 
@@ -92,7 +92,8 @@ class NetworkProcessor(ProgressUpdate):
         """
         # Cluster images into batches based on (h, w) size
 
-        ext = os.path.splitext(file)[1].lower()
+        # First file if it's a list
+        ext = os.path.splitext(file[0])[1].lower() if (type(file) is list) else os.path.splitext(file)[1].lower()
         try:
             if ext in ['.png', '.jpg', '.jpeg']:
                 # Load standard 2D images with OpenCV
@@ -146,25 +147,6 @@ class NetworkProcessor(ProgressUpdate):
                                                             selected_images=set(range(len(images))), graph_obj=FiberNetworkBuilder())
                     img_info_list.append(img_batch)
 
-                """
-                # Plot all frames
-                num_frames = len(images)
-                                cols = min(5, num_frames)  # Limit to 5 columns
-                                rows = (num_frames // cols) + (num_frames % cols > 0)  # Auto-calculate rows
-
-                                fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
-                                axes = np.array(axes).flatten()  # Flatten in case of single row
-
-                                for ax, frame, idx in zip(axes, images, range(num_frames)):
-                                    ax.imshow(frame, cmap="gray" if len(frame.shape) == 2 else None)
-                                    ax.set_title(f"Frame {idx + 1}")
-                                    ax.axis("off")
-
-                                # Hide extra subplots if any
-                                for ax in axes[num_frames:]:
-                                    ax.axis("off")
-                                plt.tight_layout()
-                                plt.show()"""
                 return img_info_list
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
