@@ -174,14 +174,31 @@ class MainController(QObject):
 
         # Try reading the image
         try:
+            # Get the image path and folder
             img_dir, filename = os.path.split(str(img_path))
+
+            # Check if 3D image slices exist in the image folder. Same file name but different number
+            files = os.listdir(img_dir)
+            files = sorted(files)
+            """files = os.listdir(img_dir_path)
+            files = sorted(files)
+            for a_file in files:
+                allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
+                if a_file.endswith(allowed_extensions):
+                    img_path = os.path.join(str(img_dir_path), a_file)
+                    _ = self.create_sgt_object(img_path)"""
+
+            # Create the Output folder if it does not exist
             out_dir_name = "sgt_files"
             out_dir = os.path.join(img_dir, out_dir_name)
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
+            # Create the StructuralGT object
             ntwk_p = NetworkProcessor(str(img_path), out_dir, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
+
+            # Store the StructuralGT object and sync application
             self.sgt_objs[filename] = sgt_obj
             self.update_img_models(sgt_obj)
             self.update_graph_models(sgt_obj)
@@ -264,22 +281,16 @@ class MainController(QObject):
         # print(a_path)
         # Convert QML "file:///" path format to a proper OS path
         if a_path.startswith("file:///"):
-            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
+            if sys.platform.startswith("win"):
+                # Windows Fix (remove extra '/')
                 a_path = a_path[8:]
-            else:  # macOS/Linux (remove "file://")
+            else:
+                # macOS/Linux (remove "file://")
                 a_path = a_path[7:]
+
         # Normalize the path
         a_path = os.path.normpath(a_path)
         # print(a_path)
-
-        # Convert to a proper file system path
-        """import urllib.parse
-        a_path = urllib.parse.urlparse(a_path).path
-
-        # If running on Windows, remove leading '/'
-        if os.name == "nt":
-            a_path = a_path.lstrip("/")  # Remove leading slash for Windows
-        print(a_path)"""
 
         if not os.path.exists(a_path):
             logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
