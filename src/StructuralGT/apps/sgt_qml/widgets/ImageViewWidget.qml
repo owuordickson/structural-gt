@@ -377,7 +377,7 @@ ColumnLayout {
 
     /*Rectangle {
         id: ntwkContainer
-        objectName: "ntwkContainer"   // IMPORTANT: Python will find this
+        objectName: "ntwkContainer" // IMPORTANT: Python will find this
         Layout.fillWidth: true
         Layout.fillHeight: true
         color: "#ffffff"
@@ -431,12 +431,33 @@ ColumnLayout {
     }
 
 
+    function getCropAreaInImageCoords() {
+        const scale = zoomFactor;
+        const offsetX = flickableArea.contentX;
+        const offsetY = flickableArea.contentY;
+
+        const cropX = (cropArea.x + offsetX) / scale;
+        const cropY = (cropArea.y + offsetY) / scale;
+        const cropW = cropArea.width / scale;
+        const cropH = cropArea.height / scale;
+
+        console.log(offsetX);
+
+        return {
+            x: Math.round(cropX),
+            y: Math.round(cropY),
+            width: Math.round(cropW),
+            height: Math.round(cropH)
+        };
+    }
+
     function cropImage() {
 
         // Crop image through mainController
-        mainController.crop_image(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
+        const cropRect = getCropAreaInImageCoords();
+        mainController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
 
-        // Hide selection box
+        // Hide the selection box
         cropArea.visible = false;
     }
 
