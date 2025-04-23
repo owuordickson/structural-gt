@@ -177,7 +177,6 @@ class NetworkProcessor(ProgressUpdate):
 
             has_alpha, _ = BaseImage.check_alpha_channel(img_data)
             image_list = []
-            print(f"Load Image: {img_data.shape}")
             if (len(img_data.shape) >= 3) and (not has_alpha):
                 # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, scale_factor) for img in img_data]

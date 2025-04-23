@@ -535,7 +535,7 @@ class MainController(QObject):
         Returns:
         """
         choice = self.selected_img_type if choice is None else choice
-        self.selected_img_type = 0 if (choice == 1 or choice == 5) else choice
+        self.selected_img_type = 0 if (choice not in {0, 2, 3, 4}) else choice
         self.changeImageSignal.emit(choice)
 
     @Slot()
@@ -596,9 +596,12 @@ class MainController(QObject):
     @Slot(int)
     def load_image(self, index=None):
         try:
+            if index is not None:
+                self.select_img_type(0)
             self.selected_sgt_obj_index = index if index is not None else self.selected_sgt_obj_index
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
+            # self.selected_sgt_obj_index = self.imgThumbnailModel.rowCount() - 1
             self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
             self.select_img_type()
         except Exception as err:
@@ -615,7 +618,8 @@ class MainController(QObject):
             # self.load_image(pos)
             self.selected_sgt_obj_index = self.selected_sgt_obj_index - 1
             self.update_img_models(self.get_selected_sgt_obj())
-            self.load_image(self.selected_sgt_obj_index)
+            self.select_img_type(0)
+            self.load_image()
             # return False if pos == 0 else True
             return True
         return False
@@ -626,11 +630,11 @@ class MainController(QObject):
         if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
             self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
             self.update_img_models(self.get_selected_sgt_obj())
-            self.load_image(self.selected_sgt_obj_index)
+            self.select_img_type(0)
+            self.load_image()
             # return False if pos == (len(self.sgt_objs) - 1) else True
             return True
-        else:
-            return False
+        return False
 
     @Slot()
     def apply_img_ctrl_changes(self):
@@ -932,6 +936,7 @@ class MainController(QObject):
         is_created = self.create_sgt_object(image_path)
         if is_created:
             # pos = (len(self.sgt_objs) - 1)
+            self.select_img_type(0)
             self.load_image()
             return True
         return False
@@ -960,6 +965,7 @@ class MainController(QObject):
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
+            self.select_img_type(0)
             self.load_image()
             return True
 
