@@ -179,15 +179,20 @@ class MainController(QObject):
             img_files = []
             img_dir, img_file = os.path.split(str(img_path))
             img_file_ext = os.path.splitext(img_file)[1].lower()
-            img_file_name = os.path.splitext(img_file)[0]
 
+            is_prefix = True
             # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
-            img_name_pattern = re.match(r'^([a-zA-Z_]+)\d+', img_file_name)
-            print(img_name_pattern)
+            img_name_pattern = re.match(r'^([a-zA-Z_]+)(\d+)(?=\.[a-zA-Z]+$)', img_file)
+            if img_name_pattern is None:
+                # Regex pattern to extract the suffix (non-digit characters at the end of the file name)
+                is_prefix = False
+                img_name_pattern = re.match(r'^\d+([a-zA-Z_]+)(?=\.[a-zA-Z]+$)', img_file)
+
             if img_name_pattern:
-                name_prefix = img_name_pattern.group(1)
-                name_pattern = re.compile(rf'^{name_prefix}\d+{re.escape(img_file_ext)}$', re.IGNORECASE)
-                print(name_pattern)
+                img_files.append(img_path)
+                f_name = img_name_pattern.group(1)
+                name_pattern = re.compile(rf'^{f_name}\d+{re.escape(img_file_ext)}$', re.IGNORECASE) \
+                    if is_prefix else re.compile(rf'^\d+{f_name}{re.escape(img_file_ext)}$', re.IGNORECASE)
 
                 # Check if 3D image slices exist in the image folder. Same file name but different number
                 files = sorted(os.listdir(img_dir))

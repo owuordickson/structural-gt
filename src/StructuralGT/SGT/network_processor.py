@@ -90,7 +90,6 @@ class NetworkProcessor(ProgressUpdate):
         :param file: The file path.
         :return: list[NetworkProcessor.ImageBatch]
         """
-        # Cluster images into batches based on (h, w) size
 
         # First file if it's a list
         ext = os.path.splitext(file[0])[1].lower() if (type(file) is list) else os.path.splitext(file)[1].lower()
@@ -108,6 +107,7 @@ class NetworkProcessor(ProgressUpdate):
                     image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
                     if image is None:
                         raise ValueError(f"Failed to load {file}")
+                    # Cluster the images into batches based on (h, w) size
                     h, w = image.shape[:2]
                     image_groups[(h, w)].append(image)
                 img_batch_groups = NetworkProcessor.create_img_batch_groups(image_groups, self.auto_scale)
@@ -126,6 +126,7 @@ class NetworkProcessor(ProgressUpdate):
                     while True:
                         # Create clusters/groups of similar size images
                         frame = np.array(img)  # Convert the current frame to the numpy array
+                        # Cluster the images into batches based on (h, w) size
                         h, w = frame.shape[:2]
                         image_groups[(h, w)].append(frame)
                         try:
