@@ -13,7 +13,7 @@ class ImageProvider(QQuickImageProvider):
 
     def select_image(self, option: str=""):
         if len(self.img_controller.sgt_objs) > 0:
-            img = None
+            img_cv = None
             sgt_obj = self.img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
@@ -25,7 +25,6 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0]
-                    img = Image.fromarray(img_cv)
             elif option == "processed":
                 ntwk_p.apply_img_filters(filter_type=1)
                 mod_images = [obj.img_mod for obj in sel_img_batch.images]
@@ -34,9 +33,7 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = mod_images[0]
-                    img = Image.fromarray(img_cv)
             elif option == "graph":
-
                 # If any is None, start the task
                 if sel_img_batch.graph_obj.img_ntwk is None:
                     self.img_controller.run_extract_graph()
@@ -45,7 +42,7 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     net_images = [sel_img_batch.graph_obj.img_ntwk]
                     self.img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images)
-                    img = net_images[0]
+                    img_cv = net_images[0]
                     self.img_controller.load_graph_simulation()
             else:
                 # Original
@@ -55,10 +52,10 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = images[0]
-                    img = Image.fromarray(img_cv)
 
-            if img is not None:
+            if img_cv is not None:
                 # Create Pixmap image
+                img = Image.fromarray(img_cv)
                 self.pixmap = ImageQt.toqpixmap(img)
 
             # Reset graph/image configs with selected values - reloads QML

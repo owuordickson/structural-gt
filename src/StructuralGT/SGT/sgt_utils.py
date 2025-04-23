@@ -13,8 +13,6 @@ from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
 
-from src.StructuralGT.SGT.base_image import BaseImage
-
 
 def get_num_cores():
     """
@@ -119,26 +117,17 @@ def img_to_base64(img: MatLike | Image.Image):
         return opencv_to_base64(img)
 
     if type(img) == Image.Image:
-        return pil_to_base64(img)
+        # Convert to numpy, apply safe conversion
+        np_img = np.array(img)
+        img_norm = safe_uint8_image(np_img)
+        return opencv_to_base64(img_norm)
 
     return None
 
 
-def pil_to_base64(img_pil: Image.Image):
-    """Convert a PIL Image to a base64 string."""
-    if img_pil is None:
-        return None
-    buffer = io.BytesIO()
-    img_pil.save(buffer, format="PNG")  # Save image to buffer
-    buffer.seek(0)
-    base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")  # Convert to Base64 string
-    return base64_data
-
-
 def opencv_to_base64(img_arr: MatLike):
     """Convert an OpenCV/Numpy image to a base64 string."""
-    img_norm = safe_uint8_image(img_arr)
-    success, encoded_img = cv2.imencode('.png', img_norm)
+    success, encoded_img = cv2.imencode('.png', img_arr)
     if success:
         buffer = io.BytesIO(encoded_img.tobytes())
         buffer.seek(0)
@@ -148,18 +137,20 @@ def opencv_to_base64(img_arr: MatLike):
         return None
 
 
-def plot_to_pil(fig: plt.Figure):
-    """
-    Convert a Matplotlib figure to a PIL Image and return it
-
-    :param fig: Matplotlib figure.
-    """
+def plot_to_opencv(fig: plt.Figure):
+    """Convert a Matplotlib figure to an OpenCV BGR image (Numpy array), retaining colors."""
     if fig:
         buf = io.BytesIO()
-        fig.savefig(buf)
+        fig.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
-        img = Image.open(buf)
-        return img
+
+        # Convert bytes to a Numpy array
+        img_array = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+        buf.close()
+
+        # Decode image as BGR (color), discard alpha channel
+        img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        return img_cv
     return None
 
 

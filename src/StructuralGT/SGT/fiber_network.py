@@ -11,7 +11,6 @@ import logging
 import numpy as np
 import networkx as nx
 from PIL import Image, ImageQt
-from PIL.ImageFile import ImageFile
 from cv2.typing import MatLike
 from ovito.data import DataCollection, Particles
 from ovito.pipeline import StaticSource, Pipeline
@@ -20,7 +19,7 @@ import matplotlib.pyplot as plt
 
 from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
-from .sgt_utils import write_csv_file, write_gsd_file, plot_to_pil
+from .sgt_utils import write_csv_file, write_gsd_file, plot_to_opencv
 from ..configs.config_loader import load_gte_configs
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
@@ -68,7 +67,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         super(FiberNetworkBuilder, self).__init__()
         self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
         self.props: list = []
-        self.img_ntwk: ImageFile | None = None
+        self.img_ntwk: MatLike | None = None
         self.nx_3d_graph: nx.Graph | None = None
         self.ig_graph: igraph.Graph | None = None
         self.gsd_file: str | None = None
@@ -116,7 +115,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         self.update_status([95, "Plotting graph network..."])
         plt_fig = self.plot_2d_graph_network(img_2d)
-        self.img_ntwk = plot_to_pil(plt_fig)
+        self.img_ntwk = plot_to_opencv(plt_fig)
 
     def reset_graph(self):
         """

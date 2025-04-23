@@ -11,6 +11,7 @@ from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
 from ..configs.config_loader import load_img_configs
+from .sgt_utils import safe_uint8_image
 
 
 
@@ -32,7 +33,7 @@ class BaseImage:
             scale_factor: Scale factor used to downsample/up-sample the image.
         """
         self.configs: dict = load_img_configs()  # image processing configuration parameters and options.
-        self.img_raw: MatLike | None = raw_img
+        self.img_raw: MatLike | None = safe_uint8_image(raw_img)
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None

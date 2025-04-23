@@ -65,7 +65,7 @@ class NetworkProcessor(ProgressUpdate):
         >>> imp_obj.apply_img_filters()
         """
         super(NetworkProcessor, self).__init__()
-        self.img_path: str | list = img_path
+        self.img_path: str = img_path if type(img_path) is str else img_path[0]
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
         self.image_batches: list[NetworkProcessor.ImageBatch] = []
