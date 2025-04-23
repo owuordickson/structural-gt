@@ -213,8 +213,8 @@ class MainController(QObject):
 
             # Store the StructuralGT object and sync application
             self.sgt_objs[img_file] = sgt_obj
-            self.update_img_models(sgt_obj)
-            self.update_graph_models(sgt_obj)
+            self.update_img_models(self.get_selected_sgt_obj())
+            self.update_graph_models(self.get_selected_sgt_obj())
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -283,7 +283,7 @@ class MainController(QObject):
         ntwk_p = sgt_obj.ntwk_p
         sel_img_batch = ntwk_p.get_selected_batch()
         sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
-        if img_view is None:
+        if img_view is not None:
             sel_img_batch.current_view = img_view
         return sel_images
 
@@ -376,6 +376,10 @@ class MainController(QObject):
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
+
+                # Load the graph image to app
+                self.changeImageSignal.emit()
+
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
@@ -466,11 +470,6 @@ class MainController(QObject):
     @Slot(result=bool)
     def get_auto_scale(self):
         return self.allow_auto_scale
-
-    @Slot(int)
-    def set_selected_thumbnail(self, row_index):
-        """Change the color of the list item to gray if it is the active image"""
-        self.imgThumbnailModel.set_selected(row_index)
 
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
@@ -598,10 +597,13 @@ class MainController(QObject):
     @Slot(int)
     def load_image(self, index=None):
         try:
-            self.selected_sgt_obj_index = index if index is not None else self.selected_sgt_obj_index
+            # Add the image thumbnail to the model
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
-            # self.selected_sgt_obj_index = self.imgThumbnailModel.rowCount() - 1
+
+            # Update the image selection
+            self.selected_sgt_obj_index = index if index is not None else self.selected_sgt_obj_index
+            self.update_img_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
             self.changeImageSignal.emit()
         except Exception as err:
@@ -614,12 +616,8 @@ class MainController(QObject):
     def load_prev_image(self):
         """Load the previous image in the list into view."""
         if self.selected_sgt_obj_index > 0:
-            # pos = self.current_obj_index - 1
-            # self.load_image(pos)
             self.selected_sgt_obj_index = self.selected_sgt_obj_index - 1
-            self.update_img_models(self.get_selected_sgt_obj())
             self.load_image()
-            # return False if pos == 0 else True
             return True
         return False
 
@@ -628,9 +626,7 @@ class MainController(QObject):
         """Load the next image in the list into view."""
         if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
             self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
-            self.update_img_models(self.get_selected_sgt_obj())
             self.load_image()
-            # return False if pos == (len(self.sgt_objs) - 1) else True
             return True
         return False
 
@@ -644,6 +640,7 @@ class MainController(QObject):
             for val in self.imgControlModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
@@ -669,7 +666,7 @@ class MainController(QObject):
     def apply_img_bin_changes(self):
         """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images(img_view='binary')
+            sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
                 return
             for val in self.imgBinFilterModel.list_data:
@@ -685,7 +682,7 @@ class MainController(QObject):
     def apply_img_filter_changes(self):
         """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images(img_view='binary')
+            sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
                 return
             for val in self.imgFilterModel.list_data:
@@ -1034,7 +1031,6 @@ class MainController(QObject):
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
-            self.update_img_models(self.get_selected_sgt_obj())
             self.load_image()
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True

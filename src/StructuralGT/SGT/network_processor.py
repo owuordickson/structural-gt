@@ -343,6 +343,7 @@ class NetworkProcessor(ProgressUpdate):
         try:
             # Get the selected batch
             sel_batch = self.get_selected_batch()
+            sel_batch.current_view = 'graph'
 
             # Get binary image
             sel_images = self.get_selected_images(sel_batch)
@@ -362,8 +363,8 @@ class NetworkProcessor(ProgressUpdate):
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
+                sel_batch.current_view = 'processed'
                 return
-            sel_batch.current_view = 'graph'
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
