@@ -3,13 +3,17 @@ import os
 import io
 import csv
 import base64
+
+import cv2
 import gsd.hoomd
 import numpy as np
 import multiprocessing as mp
 import matplotlib.pyplot as plt
-from typing import LiteralString
 from PIL import Image
+from typing import LiteralString
+from cv2.typing import MatLike
 
+from src.StructuralGT.SGT.base_image import BaseImage
 
 
 def get_num_cores():
@@ -106,15 +110,21 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray):
         f.append(s)
 
 
-def get_cv_base64(img_cv):
-    """ Converts an OpenCV image to a base64 string."""
-    if img_cv is None:
+def img_to_base64(img: MatLike | Image.Image):
+    """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
+    if img is None:
         return None
-    img_pil = Image.fromarray(img_cv)  # Convert to PIL Image
-    return pil_to_base64(img_pil)
+
+    if type(img) == np.ndarray:
+        return opencv_to_base64(img)
+
+    if type(img) == Image.Image:
+        return pil_to_base64(img)
+
+    return None
 
 
-def pil_to_base64(img_pil):
+def pil_to_base64(img_pil: Image.Image):
     """Convert a PIL Image to a base64 string."""
     if img_pil is None:
         return None
@@ -123,6 +133,19 @@ def pil_to_base64(img_pil):
     buffer.seek(0)
     base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")  # Convert to Base64 string
     return base64_data
+
+
+def opencv_to_base64(img_arr: MatLike):
+    """Convert an OpenCV/Numpy image to a base64 string."""
+    img_norm = safe_uint8_image(img_arr)
+    success, encoded_img = cv2.imencode('.png', img_norm)
+    if success:
+        buffer = io.BytesIO(encoded_img.tobytes())
+        buffer.seek(0)
+        base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return base64_data
+    else:
+        return None
 
 
 def plot_to_pil(fig: plt.Figure):
@@ -138,3 +161,25 @@ def plot_to_pil(fig: plt.Figure):
         img = Image.open(buf)
         return img
     return None
+
+
+def safe_uint8_image(img: MatLike):
+    """
+    Converts an image to uint8 safely:
+        - If already uint8, returns as is.
+        - If float or other type, normalizes to 0–255 and converts to uint8.
+    """
+    if img.dtype == np.uint8:
+        return img
+
+    # Handle float or other types
+    min_val = np.min(img)
+    max_val = np.max(img)
+
+    if min_val == max_val:
+        # Avoid divide by zero; return constant grayscale
+        return np.full(img.shape, 0 if min_val == 0 else 255, dtype=np.uint8)
+
+    # Normalize to 0–255
+    norm_img = ((img - min_val) / (max_val - min_val)) * 255.0
+    return norm_img.astype(np.uint8)

@@ -28,7 +28,7 @@ from ... import __version__
 from ...SGT.network_processor import NetworkProcessor, ALLOWED_IMG_EXTENSIONS
 from ...SGT.fiber_network import FiberNetworkBuilder, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
-from ...SGT.sgt_utils import get_cv_base64
+from ...SGT.sgt_utils import img_to_base64
 
 
 class MainController(QObject):
@@ -272,7 +272,7 @@ class MainController(QObject):
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             img_cv = sel_img_batch.images[0].img_2d  # First image, assuming OpenCV image format
-            base64_data = get_cv_base64(img_cv)
+            base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
 

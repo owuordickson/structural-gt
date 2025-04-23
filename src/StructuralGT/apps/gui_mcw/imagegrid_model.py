@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtCore import Qt, QAbstractListModel
 
-from ...SGT.sgt_utils import get_cv_base64, pil_to_base64
+from ...SGT.sgt_utils import img_to_base64
 
 
 class ImageGridModel(QAbstractListModel):
@@ -16,7 +16,7 @@ class ImageGridModel(QAbstractListModel):
             return
         self._image_data = [{
             "id": i,
-            "image": get_cv_base64(img_lst[i]) if type(img_lst[i]) is np.ndarray else "" if img_lst[i] is None else pil_to_base64(img_lst[i]),
+            "image": img_to_base64(img_lst[i]) if img_lst[i] is not None else "",
             "selected": 1 if i in selected_images else 0
         } for i in range(len(img_lst))]
 
@@ -61,7 +61,7 @@ class ImageGridModel(QAbstractListModel):
 
         self._image_data = [{
             "id": i,
-            "image": get_cv_base64(new_data[i]) if type(new_data[i]) is np.ndarray else "" if new_data[i] is None else pil_to_base64(new_data[i]),
+            "image": img_to_base64(new_data[i]) if new_data[i] is not None else "",
             "selected": 1 if i in selected_images else 0
         } for i in range(len(new_data))]
 
