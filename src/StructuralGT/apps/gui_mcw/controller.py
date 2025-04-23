@@ -909,7 +909,7 @@ class MainController(QObject):
             sgt_obj.ntwk_p.undo_cropping()
 
             # Emit signal to update UI with new image
-            self.select_img_type(None)
+            self.select_img_type()
             self.showUnCroppingToolSignal.emit(False)
 
     @Slot(bool)
