@@ -248,10 +248,10 @@ Rectangle {
                 Layout.minimumWidth: 150
                 model: ListModel {
                     id: imgTypeModel
-                    ListElement { text: "Original Image"; value: 0 }
-                    ListElement { text: "Binary Image"; value: 3 }
-                    ListElement { text: "Processed Image"; value: 2 }
-                    ListElement { text: "Extracted Graph"; value: 4 }
+                    ListElement { text: "Original Image"; value: "original" }
+                    ListElement { text: "Binary Image"; value: "binary" }
+                    ListElement { text: "Processed Image"; value: "processed" }
+                    ListElement { text: "Extracted Graph"; value: "graph" }
                 }
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
@@ -259,7 +259,7 @@ Rectangle {
                 ToolTip.text: "Change image type"
                 ToolTip.visible: cbImageType.hovered
                 enabled: mainController.display_image()
-                onCurrentIndexChanged: mainController.select_img_type(valueAt(currentIndex))
+                onCurrentIndexChanged: mainController.toggle_current_img_view(valueAt(currentIndex))
             }
 
             Button {
@@ -391,9 +391,9 @@ Rectangle {
             drpDownRescale.height = mainController.display_image() ? 180 : 50;
             //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
-            let curr_type = mainController.get_selected_img_type();
+            let curr_view = mainController.get_selected_img_type();
             for (let i=0; i < cbImageType.model.count; i++) {
-                if (cbImageType.model.get(i).value === curr_type){
+                if (cbImageType.model.get(i).value === curr_view){
                     cbImageType.currentIndex = i;
                 }
             }

@@ -47,6 +47,7 @@ class NetworkProcessor(ProgressUpdate):
         scale_factor: float
         scaling_options: list
         selected_images: set
+        current_view: str
         graph_obj: FiberNetworkBuilder
 
     def __init__(self, img_path, out_dir, auto_scale=True):
@@ -324,6 +325,7 @@ class NetworkProcessor(ProgressUpdate):
         if len(sel_batch.selected_images) > 0:
             [sel_batch.images[i].apply_img_crop(x, y, width, height) for i in sel_batch.selected_images]
         self.update_image_props(sel_batch)
+        sel_batch.current_view = 'processed'
 
     def undo_cropping(self):
         """
@@ -361,6 +363,7 @@ class NetworkProcessor(ProgressUpdate):
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
                 return
+            sel_batch.current_view = 'graph'
         except Exception as err:
             self.abort = True
             logging.info(f"Error creating graph from image binary.")
@@ -609,9 +612,17 @@ class NetworkProcessor(ProgressUpdate):
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
-            img_batch = NetworkProcessor.ImageBatch(numpy_image=images, images=[], is_2d=True, shape=(h, w),
-                                                    props=[], scale_factor=scale_factor, scaling_options=scaling_opts,
-                                                    selected_images=set(range(len(images))),
-                                                    graph_obj=FiberNetworkBuilder())
+            img_batch = NetworkProcessor.ImageBatch(
+                numpy_image=images,
+                images=[],
+                is_2d=True,
+                shape=(h, w),
+                props=[],
+                scale_factor=scale_factor,
+                scaling_options=scaling_opts,
+                selected_images=set(range(len(images))),
+                current_view = 'original',              # 'original', 'binary', 'processed', 'graph'
+                graph_obj=FiberNetworkBuilder()
+            )
             img_info_list.append(img_batch)
         return img_info_list

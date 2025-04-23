@@ -39,7 +39,7 @@ class MainController(QObject):
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
-    changeImageSignal = Signal(int)
+    changeImageSignal = Signal()
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
@@ -62,7 +62,6 @@ class MainController(QObject):
         # Create graph objects
         self.sgt_objs = {}
         self.selected_sgt_obj_index = 0
-        self.selected_img_type = 0
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -276,14 +275,16 @@ class MainController(QObject):
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
 
-    def get_selected_images(self):
+    def get_selected_images(self, img_view: str = None):
         """
-        Get selected images.
+        Get selected images from a specific image batch.
         """
         sgt_obj = self.get_selected_sgt_obj()
         ntwk_p = sgt_obj.ntwk_p
         sel_img_batch = ntwk_p.get_selected_batch()
         sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
+        if img_view is None:
+            sel_img_batch.current_view = img_view
         return sel_images
 
     def verify_path(self, a_path):
@@ -375,8 +376,6 @@ class MainController(QObject):
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
-                # Load image superimposed on the graph
-                self.select_img_type(4)
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
@@ -429,7 +428,8 @@ class MainController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        unique_num = self.selected_sgt_obj_index + self.selected_img_type + np.random.randint(low=21, high=1000)
+        curr_img_view = np.random.randint(0, 4)
+        unique_num = self.selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
         return "image://imageProvider/" + str(unique_num)
 
     @Slot(result=bool)
@@ -446,9 +446,11 @@ class MainController(QObject):
         sgt_obj = self.get_selected_sgt_obj()
         return sgt_obj.ntwk_p.selected_batch
 
-    @Slot(result=int)
+    @Slot(result=str)
     def get_selected_img_type(self):
-        return self.selected_img_type
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        return sel_img_batch.current_view
 
     @Slot(result=str)
     def get_img_nav_location(self):
@@ -507,7 +509,7 @@ class MainController(QObject):
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.select_image_batch(batch_index)
             self.update_img_models(sgt_obj)
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
@@ -521,22 +523,22 @@ class MainController(QObject):
             sel_img_batch.selected_images.add(img_index)
         else:
             sel_img_batch.selected_images.discard(img_index)
-        self.select_img_type()
+        self.changeImageSignal.emit()
 
-    @Slot(int)
-    def select_img_type(self, choice=None):
+    @Slot(str)
+    def toggle_current_img_view(self, choice: str = None):
         """
-            '0' - Original image
-            '2' - Processed image
-            '3' - Binary image
-            '4' - Extracted graph
-        Args:
-            choice:
-        Returns:
+            Change the view of the current image to either: original, binary, processed or graph.
+
+            :param choice: Selected view to be loaded.
         """
-        choice = self.selected_img_type if choice is None else choice
-        self.selected_img_type = 0 if (choice not in {0, 2, 3, 4}) else choice
-        self.changeImageSignal.emit(choice)
+        sgt_obj = self.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        if choice is not None:
+            sel_img_batch.current_view = choice
+        self.changeImageSignal.emit()
 
     @Slot()
     def load_graph_simulation(self):
@@ -596,14 +598,12 @@ class MainController(QObject):
     @Slot(int)
     def load_image(self, index=None):
         try:
-            if index is not None:
-                self.select_img_type(0)
             self.selected_sgt_obj_index = index if index is not None else self.selected_sgt_obj_index
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
             # self.selected_sgt_obj_index = self.imgThumbnailModel.rowCount() - 1
             self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             self.delete_sgt_object()
             self.selected_sgt_obj_index = 0
@@ -618,7 +618,6 @@ class MainController(QObject):
             # self.load_image(pos)
             self.selected_sgt_obj_index = self.selected_sgt_obj_index - 1
             self.update_img_models(self.get_selected_sgt_obj())
-            self.select_img_type(0)
             self.load_image()
             # return False if pos == 0 else True
             return True
@@ -630,7 +629,6 @@ class MainController(QObject):
         if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
             self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
             self.update_img_models(self.get_selected_sgt_obj())
-            self.select_img_type(0)
             self.load_image()
             # return False if pos == (len(self.sgt_objs) - 1) else True
             return True
@@ -640,13 +638,12 @@ class MainController(QObject):
     def apply_img_ctrl_changes(self):
         """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images()
+            sel_images = self.get_selected_images(img_view='processed')
             if len(sel_images) <= 0:
                 return
             for val in self.imgControlModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
-            self.select_img_type(choice=2)
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
@@ -672,13 +669,13 @@ class MainController(QObject):
     def apply_img_bin_changes(self):
         """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images()
+            sel_images = self.get_selected_images(img_view='binary')
             if len(sel_images) <= 0:
                 return
             for val in self.imgBinFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
@@ -688,7 +685,7 @@ class MainController(QObject):
     def apply_img_filter_changes(self):
         """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images()
+            sel_images = self.get_selected_images(img_view='binary')
             if len(sel_images) <= 0:
                 return
             for val in self.imgFilterModel.list_data:
@@ -698,7 +695,7 @@ class MainController(QObject):
                         img.configs[val["id"]]["dataValue"] = val["dataValue"]
                     except KeyError:
                         pass
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
@@ -714,7 +711,7 @@ class MainController(QObject):
             sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
             sel_img_batch.scaling_options = self.imgScaleOptionModel.list_data
             sgt_obj.ntwk_p.apply_img_scaling()
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
@@ -895,7 +892,7 @@ class MainController(QObject):
             sgt_obj.ntwk_p.crop_image(x, y, width, height)
 
             # Emit signal to update UI with new image
-            self.select_img_type(2)
+            self.changeImageSignal.emit()
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
@@ -909,7 +906,7 @@ class MainController(QObject):
             sgt_obj.ntwk_p.undo_cropping()
 
             # Emit signal to update UI with new image
-            self.select_img_type()
+            self.changeImageSignal.emit()
             self.showUnCroppingToolSignal.emit(False)
 
     @Slot(bool)
@@ -936,7 +933,6 @@ class MainController(QObject):
         is_created = self.create_sgt_object(image_path)
         if is_created:
             # pos = (len(self.sgt_objs) - 1)
-            self.select_img_type(0)
             self.load_image()
             return True
         return False
@@ -965,7 +961,6 @@ class MainController(QObject):
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
-            self.select_img_type(0)
             self.load_image()
             return True
 
