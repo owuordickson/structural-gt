@@ -73,12 +73,18 @@ class BaseImage:
         :param height: Height of cropping box.
         """
 
-        # Verify the bounds of cropping box
+        # Verify the bounds of the cropping box
         h, w = self.img_2d.shape[:2]
         x = max(0.0, min(x, w))
         y = max(0.0, min(y, h))
         width = min(width, w - x)
         height = min(height, h - y)
+
+        # Convert to integer pixel indices
+        x = int(round(x))
+        y = int(round(y))
+        width = int(round(width))
+        height = int(round(height))
 
         # Crop image
         self.img_2d = self.img_2d[y:y + height, x:x + width]
