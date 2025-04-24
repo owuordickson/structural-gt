@@ -40,11 +40,6 @@ class GraphSkeleton:
         self.is_2d = is_2d
         self.update_progress = progress_func
         self.skeleton, self.skeleton_3d = None, None
-        # self.skel_int = None
-        # self.bp_coord_x = None
-        # self.bp_coord_y = None
-        # self.ep_coord_x = None
-        # self.ep_coord_y = None
         if configs is not None:
             self._build_skeleton()
 
@@ -84,13 +79,8 @@ class GraphSkeleton:
             if self.update_progress is not None:
                 self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
-        # Store the skeleton as 3D (always)
-        self.skeleton = np.asarray([temp_skeleton]) if self.is_2d else np.asarray(temp_skeleton)
-        """b_points = GraphSkeleton.get_branched_points(temp_skeleton)
-        e_points = GraphSkeleton.get_end_points(temp_skeleton)
-        self.bp_coord_y, self.bp_coord_x = np.where(b_points == 1)
-        self.ep_coord_y, self.ep_coord_x = np.where(e_points == 1)
-        self.skel_int = 1 * temp_skeleton"""
+        self.skeleton = np.asarray(temp_skeleton, dtype = np.uint8)
+        self.skeleton_3d = np.asarray([temp_skeleton]) if self.is_2d else np.asarray(temp_skeleton)
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):
@@ -171,12 +161,13 @@ class GraphSkeleton:
         m = graph_edge_coords[mid_index]
         m = m.astype(int)
 
-        mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
-        m[0] = int(m[0])
-        m[1] = int(m[1])
+        mid, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
+        print(f"Skeleton Midpoint idx: {m} and Calculated: {mid}")
+        print(f"ImageBin Shape: {self.img_bin.shape}")
         # m: the midpoint of a trace of an edge
         # ortho: an orthogonal unit vector
-        # img_bin: the binary image that the graph is derived from
+        m[0] = int(m[0])
+        m[1] = int(m[1])
 
         # 2. Compute the angle in Radians
         # Delta X and Y: Compute the difference in x and y coordinates:
@@ -189,7 +180,6 @@ class GraphSkeleton:
             angle_deg += 360
 
         # 3. Estimate width
-        img_bin = self.img_bin
         check = 0  # initializing boolean check
         i = 0      # initializing iterative variable
         l1 = np.nan
@@ -197,7 +187,7 @@ class GraphSkeleton:
         while check == 0:             # iteratively check along orthogonal vector to see if the coordinate is either...
             pt_check = m + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
             pt_check = pt_check.astype(int)
-            is_in_edge = GraphSkeleton.point_check(img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
 
             if is_in_edge:
                 edge = m + (i - 1) * ortho
@@ -212,7 +202,7 @@ class GraphSkeleton:
         while check == 0:  # Repeat, but following the negative orthogonal vector
             pt_check = m - i * ortho
             pt_check = pt_check.astype(int)
-            is_in_edge = GraphSkeleton.point_check(img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
 
             if is_in_edge:
                 edge = m - (i - 1) * ortho
@@ -374,8 +364,6 @@ class GraphSkeleton:
             # make n a unit vector along u,v
             n = vec / np.linalg.norm(vec)
 
-        # if np.isnan(n[0]) or np.isnan(n[1]):
-        #    n[0], n[1] = float(0), float(0)
         hl = np.linalg.norm(vec) / 2        # find the half-length of the vector u,v
         ortho = np.random.randn(len(u))     # take a random vector
         ortho -= ortho.dot(n) * n           # make it orthogonal to vector u,v

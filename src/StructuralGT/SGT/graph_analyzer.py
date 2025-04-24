@@ -613,6 +613,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         sel_batch = self.ntwk_p.get_selected_batch()
         sel_images = self.ntwk_p.get_selected_images(sel_batch)
+        is_2d = sel_batch.is_2d
         img_3d = [img.img_2d for img in sel_images]
         img_3d = np.asarray(img_3d)
 

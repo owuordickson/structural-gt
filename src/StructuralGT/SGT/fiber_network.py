@@ -114,7 +114,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.save_graph_to_file(image_file, save_dir)
 
         self.update_status([95, "Plotting graph network..."])
-        plt_fig = self.plot_2d_graph_network(img_2d)
+        plt_fig = self.plot_2d_graph_network(img_2d, is_img_2d)
         self.img_ntwk = plot_to_opencv(plt_fig)
 
     def reset_graph(self):
@@ -145,7 +145,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([58, "Build graph skeleton from binary image..."])
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
-        img_skel = graph_skel.skeleton.astype(int)
+        img_skel = graph_skel.skeleton  # .astype(int)
 
         self.update_status([60, "Creating graph network..."])
         nx_graph = sknw.build_sknw(img_skel)
@@ -183,11 +183,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
-    def plot_2d_graph_network(self, image_2d_arr: MatLike = None, plot_nodes: bool = False, a4_size: bool = False):
+    def plot_2d_graph_network(self, image_2d_arr: MatLike, is_img_2d: bool, plot_nodes: bool = False, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
         :param image_2d_arr: Slides of 2D images to be used to draw the network.
+        :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param plot_nodes: Make the graph's node plot figure.
         :param a4_size: Decision if to create an A4 size plot figure.
 
@@ -213,9 +214,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             fig = plt.Figure()
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, color='yellow')
+        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_img_2d, color='yellow')
         if plot_nodes:
-            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, display_node_id=show_node_id)
+            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_img_2d, display_node_id=show_node_id)
         return fig
 
     def get_config_info(self):
@@ -331,8 +332,8 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         if opt_gte["export_as_gsd"]["value"] == 1:
             self.gsd_file = os.path.join(out_dir, gsd_filename)
-            if self.skel_obj.skeleton is not None:
-                write_gsd_file(self.gsd_file, self.skel_obj.skeleton)
+            if self.skel_obj.skeleton_3d is not None:
+                write_gsd_file(self.gsd_file, self.skel_obj.skeleton_3d)
 
     @staticmethod
     def get_weight_options():
@@ -355,13 +356,14 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, transparent: bool = False, line_width: float=1.5, color: str = 'black'):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, is_graph_2d: bool, transparent: bool = False, line_width: float=1.5, color: str = 'black'):
         """
         Plot graph edges on top of the image.
 
         :param axis: Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
+        :param is_graph_2d: whether the generated graph is 2D or 3D
         :param transparent: whether to draw the image with a transparent background
         :param line_width: each edge's line width
         :param color: each edge's color
@@ -371,6 +373,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         axis.set_axis_off()
         axis.imshow(image, cmap='gray')
 
+        if is_graph_2d:
+            coord_1, coord_2 = 1, 0         # coordinates: (y, x)
+        else:
+            coord_1, coord_2 = 2, 1         # coordinates: (z, y)
+
         if transparent:
             axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
 
@@ -378,16 +385,16 @@ class FiberNetworkBuilder(ProgressUpdate):
         for (s, e) in nx_graph.edges():
             # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
             ge = nx_graph[s][e]['pts']
-            # axis.plot(ge[:, 1], ge[:, 0], color, linewidth=line_width) # coordinates: (y, x)
-            axis.plot(ge[:, 2], ge[:, 1], color, linewidth=line_width)          # coordinates: (z, y)
+            axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
         return axis
 
     @staticmethod
-    def plot_graph_nodes(axis: plt.axis, nx_graph: nx.Graph, marker_size: float = 3, distribution_data: list = None, display_node_id: bool = False):
+    def plot_graph_nodes(axis: plt.axis, nx_graph: nx.Graph, is_graph_2d: bool, marker_size: float = 3, distribution_data: list = None, display_node_id: bool = False):
         """
         Plot graph nodes on top of the image.
         :param axis: Matplotlib axis
         :param nx_graph: a NetworkX graph
+        :param is_graph_2d: whether the generated graph is 2D or 3D
         :param marker_size: the size of each node
         :param distribution_data: the heatmap distribution data
         :param display_node_id: indicate the node id on the plot
@@ -399,27 +406,30 @@ class FiberNetworkBuilder(ProgressUpdate):
         gn = xp.array([nx_graph.nodes[i]['o'] for i in node_list])
         # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
 
+        if is_graph_2d:
+            coord_1, coord_2 = 1, 0         # coordinates: (y, x)
+        else:
+            coord_1, coord_2 = 2, 1         # coordinates: (z, y)
+
         if display_node_id:
             i = 0
-            # coordinates: (z, y)
-            for x, y in zip(gn[:, 2], gn[:, 1]):
+            for x, y in zip(gn[:, coord_1], gn[:, coord_2]):
                 axis.annotate(str(i), (x, y), fontsize=5)
                 i += 1
 
         if distribution_data is not None:
-            # coordinates: (z, y)
-            c_set = axis.scatter(gn[:, 2], gn[:, 1], s=marker_size, c=distribution_data, cmap='plasma')
+            c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size, c=distribution_data, cmap='plasma')
             return c_set
         else:
-            # c_set = axis.scatter(gn[:, 2], gn[:, 1], s=marker_size)
-            axis.plot(gn[:, 2], gn[:, 1], 'b.', markersize=marker_size)
+            # c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
+            axis.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=marker_size)
             return axis
 
     # TO DELETE IT LATER
     def data_gen_function(self):
         """Populates OVITO's data with particles."""
         data = DataCollection()
-        positions = np.asarray(np.where(np.asarray(self.skel_obj.skeleton) != 0)).T
+        positions = np.asarray(np.where(np.asarray(self.skel_obj.skeleton_3d) != 0)).T
         particles = Particles()
         particles.create_property("Position", data=positions)
         data.objects.append(particles)
