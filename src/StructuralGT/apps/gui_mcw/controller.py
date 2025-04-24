@@ -597,12 +597,17 @@ class MainController(QObject):
     @Slot(int)
     def load_image(self, index=None):
         try:
+            if index is not None:
+                if index == self.selected_sgt_obj_index:
+                    return
+                else:
+                    self.selected_sgt_obj_index = index
+
             # Add the image thumbnail to the model
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Update the image selection
-            self.selected_sgt_obj_index = index if index is not None else self.selected_sgt_obj_index
             self.update_img_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
             self.changeImageSignal.emit()

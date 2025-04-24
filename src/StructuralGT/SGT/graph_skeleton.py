@@ -155,19 +155,15 @@ class GraphSkeleton:
 
         # 1. Estimate orthogonal and mid-point
         end_index = len(graph_edge_coords) - 1
-        mid_index = int(len(graph_edge_coords) / 2)
         pt1 = graph_edge_coords[0]
         pt2 = graph_edge_coords[end_index]
-        m = graph_edge_coords[mid_index]
-        m = m.astype(int)
+        # mid_index = int(len(graph_edge_coords) / 2)
+        # mid_pt = graph_edge_coords[mid_index]
 
-        mid, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
-        print(f"Skeleton Midpoint idx: {m} and Calculated: {mid}")
-        print(f"ImageBin Shape: {self.img_bin.shape}")
-        # m: the midpoint of a trace of an edge
+        mid_pt, ortho = GraphSkeleton.find_orthogonal(pt1, pt2)
+        # mid: the midpoint of a trace of an edge
         # ortho: an orthogonal unit vector
-        m[0] = int(m[0])
-        m[1] = int(m[1])
+        mid_pt = mid_pt.astype(int)
 
         # 2. Compute the angle in Radians
         # Delta X and Y: Compute the difference in x and y coordinates:
@@ -185,12 +181,12 @@ class GraphSkeleton:
         l1 = np.nan
         l2 = np.nan
         while check == 0:             # iteratively check along orthogonal vector to see if the coordinate is either...
-            pt_check = m + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
+            pt_check = mid_pt + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
             pt_check = pt_check.astype(int)
             is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
 
             if is_in_edge:
-                edge = m + (i - 1) * ortho
+                edge = mid_pt + (i - 1) * ortho
                 edge = edge.astype(int)
                 l1 = edge  # When the check indicates oob or black space, assign width to l1
                 check = 1
@@ -200,12 +196,12 @@ class GraphSkeleton:
         check = 0
         i = 0
         while check == 0:  # Repeat, but following the negative orthogonal vector
-            pt_check = m - i * ortho
+            pt_check = mid_pt - i * ortho
             pt_check = pt_check.astype(int)
             is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
 
             if is_in_edge:
-                edge = m - (i - 1) * ortho
+                edge = mid_pt - (i - 1) * ortho
                 edge = edge.astype(int)
                 l2 = edge  # When the check indicates oob or black space, assign width to l2
                 check = 1
