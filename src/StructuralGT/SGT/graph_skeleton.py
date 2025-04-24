@@ -56,7 +56,7 @@ class GraphSkeleton:
         """
 
         # rebuilding the binary image as a boolean for skeletonizing
-        img_bin = self.img_bin / 255
+        img_bin = self.img_bin
         self.img_bin = np.squeeze(img_bin)
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
