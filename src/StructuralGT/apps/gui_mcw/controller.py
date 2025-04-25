@@ -886,12 +886,12 @@ class MainController(QObject):
     def perform_cropping(self, allowed):
         self.performCroppingSignal.emit(allowed)
 
-    @Slot( int, int, int, int)
-    def crop_image(self, x, y, width, height):
+    @Slot( int, int, int, int, int, int)
+    def crop_image(self, x, y, crop_width, crop_height, qimg_width, qimg_height):
         """Crop image using PIL and save it."""
         try:
             sgt_obj = self.get_selected_sgt_obj()
-            sgt_obj.ntwk_p.crop_image(x, y, width, height)
+            sgt_obj.ntwk_p.crop_image(x, y, crop_width, crop_height, qimg_width, qimg_height)
 
             # Emit signal to update UI with new image
             self.changeImageSignal.emit()

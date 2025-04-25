@@ -63,35 +63,27 @@ class BaseImage:
             px_width = BaseImage.compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width / self.scale_factor
 
-    def apply_img_crop(self, x: float, y: float, width: float, height: float):
+    def apply_img_crop(self, x: int, y: int, crop_width: int, crop_height: int, actual_w: int, actual_h: int):
         """
         A function that crops images into a new box dimension.
 
         :param x: Left coordinate of cropping box.
         :param y: Top coordinate of cropping box.
-        :param width: Width of cropping box.
-        :param height: Height of cropping box.
+        :param crop_width: Width of cropping box.
+        :param crop_height: Height of cropping box.
+        :param actual_w: Width of actual image.
+        :param actual_h: Height of actual image.
         """
 
-        # Verify the bounds of the cropping box
-        h, w = self.img_2d.shape[:2]
-        x = max(0.0, min(x, w))
-        y = max(0.0, min(y, h))
-        width = min(width, w - x)
-        height = min(height, h - y)
-
-        # Convert to integer pixel indices
-        x = int(round(x))
-        y = int(round(y))
-        width = int(round(width))
-        height = int(round(height))
+        # Resize image
+        scaled_img = cv2.resize(self.img_2d.copy(), (actual_h, actual_w))
 
         # Crop image
-        self.img_2d = self.img_2d[y:y + height, x:x + width]
+        self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
 
     def process_img(self, image: MatLike):
         """
-        Apply filters to image.
+        Apply filters to the image.
 
         :param image: OpenCV image.
         :return: None
@@ -151,7 +143,7 @@ class BaseImage:
 
         # applying a scharr filter,
         if opt_img["apply_scharr_gradient"]["value"] == 1:
-            # applying a scharr filter, and then taking that image and weighting it 25% with the original
+            # applying a scharr filter, and then taking that image and weighting it 25% with the original,
             # this should bring out the edges without separating each "edge" into two separate parallel ones
             d_depth = cv2.CV_16S
             grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
@@ -301,7 +293,7 @@ class BaseImage:
     @staticmethod
     def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
         """
-        Apply contrast and brightness filters to image.
+        Apply contrast and brightness filters to the image.
 
         :param img: OpenCV image.
         :param brightness_val: Brightness value.

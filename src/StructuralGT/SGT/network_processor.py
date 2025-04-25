@@ -311,19 +311,20 @@ class NetworkProcessor(ProgressUpdate):
             img_obj.scale_factor = scale_factor
         self.update_image_props(sel_batch)
 
-    def crop_image(self, x: float, y: float, width: float, height: float):
+    def crop_image(self, x: int, y: int, crop_w: int, crop_h: int, actual_w: int, actual_h: int):
         """
         A function that crops images into a new box dimension.
 
         :param x: Left coordinate of cropping box.
         :param y: Top coordinate of cropping box.
-        :param width: Width of cropping box.
-        :param height: Height of cropping box.
+        :param crop_w: Width of cropping box.
+        :param crop_h: Height of cropping box.
+        :param actual_w: Width of actual image.
+        :param actual_h: Height of actual image.
         """
-
         sel_batch = self.get_selected_batch()
         if len(sel_batch.selected_images) > 0:
-            [sel_batch.images[i].apply_img_crop(x, y, width, height) for i in sel_batch.selected_images]
+            [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in sel_batch.selected_images]
         self.update_image_props(sel_batch)
         sel_batch.current_view = 'processed'
 
