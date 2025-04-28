@@ -79,8 +79,9 @@ class GraphSkeleton:
             if self.update_progress is not None:
                 self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
-        self.skeleton = np.asarray(temp_skeleton, dtype = np.uint8)
-        self.skeleton_3d = np.asarray([temp_skeleton]) if self.is_2d else np.asarray(temp_skeleton)
+        self.skeleton = np.asarray(temp_skeleton)
+        self.skeleton = self.skeleton.astype(int)
+        self.skeleton_3d = np.asarray([self.skeleton]) if self.is_2d else self.skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1):

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "StructuralGT"
-#define MyAppVersion "3.2.5"
+#define MyAppVersion "3.3.1"
 #define MyAppPublisher "Kotov Lab"
 #define MyAppURL "https://kotov.engin.umich.edu/"
 #define MyAppExeName "StructuralGT.exe"
@@ -33,7 +33,7 @@ LicenseFile=C:\Users\owuor\PycharmProjects\structural-gt\license.txt
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
 OutputDir=C:\Users\owuor\PycharmProjects\structural-gt\dist\
-OutputBaseFilename=StructuralGT_WIN_3.2.5_setup
+OutputBaseFilename=StructuralGT_WIN_{#MyAppVersion}_setup
 SetupIconFile=C:\Users\owuor\PycharmProjects\structural-gt\setup_icon.ico
 SolidCompression=yes
 WizardStyle=modern

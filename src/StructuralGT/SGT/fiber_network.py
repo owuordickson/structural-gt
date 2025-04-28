@@ -145,10 +145,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([58, "Build graph skeleton from binary image..."])
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
         self.skel_obj = graph_skel
-        img_skel = graph_skel.skeleton  # .astype(int)
+        img_skel = graph_skel.skeleton
 
         self.update_status([60, "Creating graph network..."])
+        print(img_skel.shape)
         nx_graph = sknw.build_sknw(img_skel)
+        print("Done!")
 
         if opt_gte["remove_self_loops"]["value"]:
             self.update_status([64, "Removing self loops from graph network..."])
