@@ -55,7 +55,7 @@ class GraphSkeleton:
         self.img_bin = np.squeeze(img_bin)
 
         # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
-        temp_skeleton = skeletonize(np.asarray(self.img_bin, dtype=np.dtype("uint8")))
+        temp_skeleton = skeletonize(np.asarray(self.img_bin, dtype=np.uint16))
 
         # if self.configs["remove_bubbles"]["value"] == 1:
         #    temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, self.img_bin, mask_elements)
@@ -79,8 +79,8 @@ class GraphSkeleton:
             if self.update_progress is not None:
                 self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
-        self.skeleton = np.asarray(temp_skeleton)
-        self.skeleton = self.skeleton.astype(int)
+        self.skeleton = np.asarray(temp_skeleton, dtype=np.uint16)
+        # self.skeleton = self.skeleton.astype(int)
         self.skeleton_3d = np.asarray([self.skeleton]) if self.is_2d else self.skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,

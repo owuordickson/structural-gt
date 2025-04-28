@@ -148,6 +148,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         img_skel = graph_skel.skeleton
 
         self.update_status([60, "Creating graph network..."])
+        # padded_skel = np.pad(img_skel, pad_width=1, mode='constant', constant_values=0)
         print(img_skel.shape)
         nx_graph = sknw.build_sknw(img_skel)
         print("Done!")
