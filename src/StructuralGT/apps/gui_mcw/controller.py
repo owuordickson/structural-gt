@@ -235,7 +235,7 @@ class MainController(QObject):
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
             self.selected_sgt_obj_index = 0
-            self.load_image()
+            self.load_image(update_data=True)
             self.imageChangedSignal.emit()
 
     def save_project_data(self):
@@ -337,6 +337,60 @@ class MainController(QObject):
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
 
+    def load_graph_simulation(self):
+        """Render and visualize OVITO graph network simulation."""
+        try:
+            # Clear any existing scene
+            for p_line in list(scene.pipelines):
+                p_line.remove_from_scene()
+
+            # Create OVITO data pipeline
+            sgt_obj = self.get_selected_sgt_obj()
+            sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+            pipeline = import_file(sel_batch.graph_obj.gsd_file)
+            pipeline.add_to_scene()
+
+            vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+            ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+            ovito_widget.setMinimumSize(800, 500)
+            vp.zoom_all((800, 500))
+            ovito_widget.show()
+
+            """
+            # Find the QML Rectangle to embed into
+            root = self.qml_engine.rootObjects()[0]
+            ntwk_container = root.findChild(QObject, "ntwkContainer")
+
+            if ntwk_container:
+                # Testing
+                # print(f"Found it! {type(ntwk_container)}")
+                # ntwk_container.setProperty("color", "#8b0000")
+
+                # Grab rectangle properties
+                x = ntwk_container.property("x")
+                y = ntwk_container.property("y")
+                w = ntwk_container.property("width")
+                h = ntwk_container.property("height")
+
+                # Create OVITO data pipeline
+                sgt_obj = self.get_selected_sgt_obj()
+                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
+                gsd_filename = filename + "_skel.gsd"
+                gsd_file = str(os.path.join(out_dir, gsd_filename))
+                pipeline = import_file(gsd_file)
+                pipeline.add_to_scene()
+
+                vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+                ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+                ovito_widget.setMinimumSize(800, 500)
+                vp.zoom_all((800, 500))
+
+                # Re-parent OVITO QWidget
+                ovito_widget.setGeometry(x, y, w, h)
+                ovito_widget.show()"""
+        except Exception as e:
+            print("Graph Simulation Error:", e)
+
     def _handle_progress_update(self, value: int, msg: str):
         """
         Handler function for progress updates for ongoing tasks.
@@ -377,7 +431,7 @@ class MainController(QObject):
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
 
-                # Load the graph image to app
+                # Load the graph image to the app
                 self.changeImageSignal.emit()
 
                 # Send task termination signal to QML
@@ -539,63 +593,8 @@ class MainController(QObject):
             sel_img_batch.current_view = choice
         self.changeImageSignal.emit()
 
-    @Slot()
-    def load_graph_simulation(self):
-        """Render and visualize OVITO graph network simulation."""
-        try:
-            # Clear any existing scene
-            for p_line in list(scene.pipelines):
-                p_line.remove_from_scene()
-
-            # Create OVITO data pipeline
-            sgt_obj = self.get_selected_sgt_obj()
-            sel_batch = sgt_obj.ntwk_p.get_selected_batch()
-            pipeline = import_file(sel_batch.graph_obj.gsd_file)
-            pipeline.add_to_scene()
-
-            vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-            ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
-            ovito_widget.setMinimumSize(800, 500)
-            vp.zoom_all((800, 500))
-            ovito_widget.show()
-
-            """
-            # Find the QML Rectangle to embed into
-            root = self.qml_engine.rootObjects()[0]
-            ntwk_container = root.findChild(QObject, "ntwkContainer")
-
-            if ntwk_container:
-                # Testing
-                # print(f"Found it! {type(ntwk_container)}")
-                # ntwk_container.setProperty("color", "#8b0000")
-
-                # Grab rectangle properties
-                x = ntwk_container.property("x")
-                y = ntwk_container.property("y")
-                w = ntwk_container.property("width")
-                h = ntwk_container.property("height")
-
-                # Create OVITO data pipeline
-                sgt_obj = self.get_selected_sgt_obj()
-                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
-                gsd_filename = filename + "_skel.gsd"
-                gsd_file = str(os.path.join(out_dir, gsd_filename))
-                pipeline = import_file(gsd_file)
-                pipeline.add_to_scene()
-
-                vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-                ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
-                ovito_widget.setMinimumSize(800, 500)
-                vp.zoom_all((800, 500))
-
-                # Re-parent OVITO QWidget
-                ovito_widget.setGeometry(x, y, w, h)
-                ovito_widget.show()"""
-        except Exception as e:
-            print("Graph Simulation Error:", e)
-
     @Slot(int)
-    def load_image(self, index=None):
+    def load_image(self, index=None, update_data=False):
         try:
             if index is not None:
                 if index == self.selected_sgt_obj_index:
@@ -603,11 +602,12 @@ class MainController(QObject):
                 else:
                     self.selected_sgt_obj_index = index
 
-            # Add the image thumbnail to the model
-            img_list, img_cache = self.get_thumbnail_list()
-            self.imgThumbnailModel.update_data(img_list, img_cache)
+            if update_data:
+                # Update the thumbnail list data (delete/add image)
+                img_list, img_cache = self.get_thumbnail_list()
+                self.imgThumbnailModel.update_data(img_list, img_cache)
 
-            # Update the image selection
+            # Load the SGT Object data of the selected image
             self.update_img_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
             self.changeImageSignal.emit()
@@ -935,7 +935,7 @@ class MainController(QObject):
         is_created = self.create_sgt_object(image_path)
         if is_created:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image()
+            self.load_image(update_data=True)
             return True
         return False
 
@@ -963,7 +963,7 @@ class MainController(QObject):
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image()
+            self.load_image(update_data=True)
             return True
 
     @Slot(str, str, result=bool)
@@ -1036,7 +1036,7 @@ class MainController(QObject):
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
-            self.load_image()
+            self.load_image(update_data=True)
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
