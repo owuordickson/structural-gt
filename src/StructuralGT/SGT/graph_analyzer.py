@@ -613,7 +613,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         sel_batch = self.ntwk_p.get_selected_batch()
         sel_images = self.ntwk_p.get_selected_images(sel_batch)
-        is_2d = sel_batch.is_2d
         img_3d = [img.img_2d for img in sel_images]
         img_3d = np.asarray(img_3d)
 
@@ -1012,14 +1011,15 @@ class GraphAnalyzer(ProgressUpdate):
         :return: Histogram plot figure.
         """
         nx_graph = graph_obj.nx_3d_graph
+        is_2d = graph_obj.skel_obj.is_2d
         font_1 = {'fontsize': 9}
 
         fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title, fontdict=font_1)
 
-        FiberNetworkBuilder.plot_graph_edges(ax, image, nx_graph, line_width=line_width)
-        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, marker_size=size, distribution_data=distribution)
+        FiberNetworkBuilder.plot_graph_edges(ax, image, nx_graph, is_graph_2d=is_2d, line_width=line_width)
+        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size, distribution_data=distribution)
 
         fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
         return fig
