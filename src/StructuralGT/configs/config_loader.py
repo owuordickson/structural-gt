@@ -49,7 +49,7 @@ def load_img_configs():
         "save_images": {"id": "save_images", "type": "file-options", "text": "Save All Images", "visible": 1, "value": 0},
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -63,7 +63,7 @@ def load_img_configs():
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
         options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
 
-        options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))
+        options_img["apply_gamma"]["value"] = float(config.get('filter-settings', 'apply_gamma'))
         options_img["apply_gamma"]["dataValue"] = float(config.get('filter-settings', 'adjust_gamma'))
         options_img["apply_autolevel"]["value"] = int(config.get('filter-settings', 'apply_autolevel'))
         options_img["apply_autolevel"]["dataValue"] = int(config.get('filter-settings', 'blurring_window_size'))
@@ -110,15 +110,15 @@ def load_gte_configs():
         "prune_dangling_edges": {"id": "prune_dangling_edges", "type": "graph-extraction", "text": "Prune Dangling Edges", "value": 1},
         "remove_disconnected_segments": {"id": "remove_disconnected_segments", "type": "graph-extraction", "text": "Remove Disconnected Segments", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
         "remove_self_loops": {"id": "remove_self_loops", "type": "graph-extraction", "text": "Remove Self Loops", "value": 1},
-        "is_multigraph": {"id": "is_multigraph", "type": "graph-extraction", "text": "Is Multigraph?", "value": 0},
         "display_node_id": {"id": "display_node_id", "type": "graph-extraction", "text": "Display Node ID", "value": 0},
 
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "type": "file-options", "text": "Export as gexf", "value": 0},
         "export_adj_mat": {"id": "export_adj_mat", "type": "file-options", "text": "Export Adjacency Matrix", "value": 0},
+        "export_as_gsd": {"id": "export_as_gsd", "type": "file-options", "text": "Export as GSD/HOOMD", "value": 0},
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -133,7 +133,6 @@ def load_gte_configs():
             config.get('extraction-settings', 'remove_disconnected_segments'))
         options_gte["remove_disconnected_segments"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
-        options_gte["is_multigraph"]["value"] = int(config.get('extraction-settings', 'is_multigraph'))
         options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
         weight_type = str(config.get('extraction-settings', 'weight_type'))
         for i in range(len(options_gte["has_weights"]["items"])):
@@ -142,6 +141,7 @@ def load_gte_configs():
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
         options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))
+        options_gte["export_as_gsd"]["value"] = int(config.get('extraction-settings', 'export_as_gsd'))
 
         return options_gte
     except configparser.NoSectionError:
@@ -152,7 +152,7 @@ def load_gtc_configs():
     """Networkx Calculation Settings"""
 
     options_gtc = {
-        "display_heatmaps": {"id": "display_heatmaps", "text": "Display Heatmaps", "value": 1},
+        "display_heatmaps": {"id": "display_heatmaps", "text": "Plot Heatmaps", "value": 1},
         "display_degree_histogram": {"id": "display_degree_histogram", "text": "Average Degree", "value": 1},
         "compute_network_diameter": {"id": "compute_network_diameter", "text": "Network Diameter", "value": 1},
         "compute_graph_density": {"id": "compute_graph_density", "text": "Graph Density", "value": 1},
@@ -172,7 +172,7 @@ def load_gtc_configs():
         #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
     }
 
-    # Load configuration from file
+    # Load configuration from the file
     config = configparser.ConfigParser()
     try:
         # Get the directory of the current script
@@ -270,7 +270,7 @@ def detect_cuda_and_install_cupy():
             logging.info("CUDA version not supported. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
             install_package('cupy')
     else:
-        # No CUDA found, fall back to CPU-only version
+        # No CUDA found, fall back to the CPU-only version
         logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
         install_package('cupy')
 

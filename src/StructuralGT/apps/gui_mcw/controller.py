@@ -1,16 +1,22 @@
+import re
 import os
 import sys
 import logging
 import pickle
 import numpy as np
+from ovito import scene
+from ovito.io import import_file
+from ovito.vis import Viewport
+from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
 from .imagegrid_model import ImageGridModel
 
 if TYPE_CHECKING:
-    # False at run time, only for type checker
+    # False at run time, only for a type-checker
     from _typeshed import SupportsWrite
 
 from .tree_model import TreeModel
@@ -19,10 +25,10 @@ from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ...SGT.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
-from ...SGT.graph_extractor import GraphExtractor, COMPUTING_DEVICE
+from ...SGT.network_processor import NetworkProcessor, ALLOWED_IMG_EXTENSIONS
+from ...SGT.fiber_network import FiberNetworkBuilder, COMPUTING_DEVICE
 from ...SGT.graph_analyzer import GraphAnalyzer
-from ...SGT.sgt_utils import get_cv_base64
+from ...SGT.sgt_utils import img_to_base64
 
 
 class MainController(QObject):
@@ -33,15 +39,16 @@ class MainController(QObject):
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
-    changeImageSignal = Signal(int)
+    changeImageSignal = Signal()
     imageChangedSignal = Signal()
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
 
-    def __init__(self):
+    def __init__(self, qml_app: QApplication):
         super().__init__()
+        self.qml_app = qml_app
         self.img_loaded = False
         self.project_open = False
         self.allow_auto_scale = True
@@ -54,8 +61,7 @@ class MainController(QObject):
 
         # Create graph objects
         self.sgt_objs = {}
-        self.current_obj_index = 0
-        self.current_img_type = 0
+        self.selected_sgt_obj_index = 0
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -66,12 +72,13 @@ class MainController(QObject):
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
         self.exportGraphModel = CheckBoxModel([])
+        self.imgBatchModel = CheckBoxModel([])
         self.imgControlModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
-        self.img3dGridModel = ImageGridModel([])
+        self.img3dGridModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)
@@ -81,26 +88,31 @@ class MainController(QObject):
         """
             Reload image configuration selections and controls from saved dict to QML gui_mcw after the image is loaded.
 
-            :param sgt_obj: a GraphAnalyzer object with all saved user-selected configurations.
+            :param sgt_obj: A GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
-            im_obj = sgt_obj.imp
-            first_index = next(iter(im_obj.selected_images), None)  # 1st selected image
+            ntwk_p = sgt_obj.ntwk_p
+            sel_img_batch = ntwk_p.get_selected_batch()
+            first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
             first_index = first_index if first_index is not None else 0  # first image if None
-            options_img = im_obj.images[first_index].configs
-            options_scaling = im_obj.scaling_options
+            options_img = sel_img_batch.images[first_index].configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
+            options_scaling = sel_img_batch.scaling_options
+            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
+                          for i in range(len(sgt_obj.ntwk_p.image_batches))]
+
+            self.imgBatchModel.reset_data(batch_list)
+            self.imgScaleOptionModel.reset_data(options_scaling)
 
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
             self.microscopyPropsModel.reset_data(img_properties)
-            self.imgScaleOptionModel.reset_data(options_scaling)
             self.saveImgModel.reset_data(file_options)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
@@ -116,10 +128,9 @@ class MainController(QObject):
 
         """
         try:
-            im_obj = sgt_obj.imp
-            first_index = next(iter(im_obj.selected_images), None)  # 1st selected image
-            first_index = first_index if first_index is not None else 0  # first image if None
-            graph_obj = im_obj.images[first_index].graph_obj
+            ntwk_p = sgt_obj.ntwk_p
+            sel_img_batch = ntwk_p.get_selected_batch()
+            graph_obj = sel_img_batch.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
 
@@ -130,16 +141,16 @@ class MainController(QObject):
             self.exportGraphModel.reset_data(file_options)
             self.gtcListModel.reset_data(list(options_gtc.values()))
 
-            self.imagePropsModel.reset_data(sgt_obj.imp.props)
+            self.imagePropsModel.reset_data(sel_img_batch.props)
             self.graphPropsModel.reset_data(graph_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
-    def get_current_obj(self):
+    def get_selected_sgt_obj(self):
         try:
             keys_list = list(self.sgt_objs.keys())
-            key_at_index = keys_list[self.current_obj_index]
+            key_at_index = keys_list[self.selected_sgt_obj_index]
             sgt_obj = self.sgt_objs[key_at_index]
             return sgt_obj
         except IndexError:
@@ -163,17 +174,47 @@ class MainController(QObject):
 
         # Try reading the image
         try:
-            img_dir, filename = os.path.split(str(img_path))
+            # Get the image path and folder
+            img_files = []
+            img_dir, img_file = os.path.split(str(img_path))
+            img_file_ext = os.path.splitext(img_file)[1].lower()
+
+            is_prefix = True
+            # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
+            img_name_pattern = re.match(r'^([a-zA-Z_]+)(\d+)(?=\.[a-zA-Z]+$)', img_file)
+            if img_name_pattern is None:
+                # Regex pattern to extract the suffix (non-digit characters at the end of the file name)
+                is_prefix = False
+                img_name_pattern = re.match(r'^\d+([a-zA-Z_]+)(?=\.[a-zA-Z]+$)', img_file)
+
+            if img_name_pattern:
+                img_files.append(img_path)
+                f_name = img_name_pattern.group(1)
+                name_pattern = re.compile(rf'^{f_name}\d+{re.escape(img_file_ext)}$', re.IGNORECASE) \
+                    if is_prefix else re.compile(rf'^\d+{f_name}{re.escape(img_file_ext)}$', re.IGNORECASE)
+
+                # Check if 3D image slices exist in the image folder. Same file name but different number
+                files = sorted(os.listdir(img_dir))
+                for a_file in files:
+                    if a_file.endswith(img_file_ext):
+                        if name_pattern.match(a_file):
+                            img_files.append(os.path.join(img_dir, a_file))
+
+            # Create the Output folder if it does not exist
             out_dir_name = "sgt_files"
             out_dir = os.path.join(img_dir, out_dir_name)
             out_dir = os.path.normpath(out_dir)
             os.makedirs(out_dir, exist_ok=True)
 
-            im_obj = ImageProcessor(str(img_path), out_dir, self.allow_auto_scale)
-            sgt_obj = GraphAnalyzer(im_obj)
-            self.sgt_objs[filename] = sgt_obj
-            self.update_img_models(sgt_obj)
-            self.update_graph_models(sgt_obj)
+            # Create the StructuralGT object
+            input_file = img_files if len(img_files) > 1 else str(img_path)
+            ntwk_p = NetworkProcessor(input_file, out_dir, self.allow_auto_scale)
+            sgt_obj = GraphAnalyzer(ntwk_p)
+
+            # Store the StructuralGT object and sync application
+            self.sgt_objs[img_file] = sgt_obj
+            self.update_img_models(self.get_selected_sgt_obj())
+            self.update_graph_models(self.get_selected_sgt_obj())
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -182,25 +223,25 @@ class MainController(QObject):
 
     def delete_sgt_object(self, index=None):
         """
-        Delete SGT Obj stored at specified index (if not specified, get the current index).
+        Delete SGT Obj stored at the specified index (if not specified, get the current index).
         """
-        del_index = index if index is not None else self.current_obj_index
-        if 0 <= del_index < len(self.sgt_objs):  # Check if index exists
+        del_index = index if index is not None else self.selected_sgt_obj_index
+        if 0 <= del_index < len(self.sgt_objs):  # Check if the index exists
             keys_list = list(self.sgt_objs.keys())
-            key_at_del_index = keys_list[self.current_obj_index]
+            key_at_del_index = keys_list[self.selected_sgt_obj_index]
             # Delete the object at index
             del self.sgt_objs[key_at_del_index]
             # Update Data
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
-            self.current_obj_index = 0
-            self.load_image()
+            self.selected_sgt_obj_index = 0
+            self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()
 
     def save_project_data(self):
         """
         A handler function that handles saving project data.
-        Returns: True on success, False otherwise.
+        Returns: True if successful, False otherwise.
 
         """
         if not self.project_open:
@@ -227,19 +268,23 @@ class MainController(QObject):
         for key in keys_list:
             item_data.append([key])  # Store the key
             sgt_obj = self.sgt_objs[key]
-            im_obj = sgt_obj.imp
-            img_cv = im_obj.images[0].img_2d  # First image, assuming OpenCV image format
-            base64_data = get_cv_base64(img_cv)
+            ntwk_p = sgt_obj.ntwk_p
+            sel_img_batch = ntwk_p.get_selected_batch()
+            img_cv = sel_img_batch.images[0].img_2d  # First image, assuming OpenCV image format
+            base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
 
-    def get_selected_images(self):
+    def get_selected_images(self, img_view: str = None):
         """
-        Get selected images.
+        Get selected images from a specific image batch.
         """
-        sgt_obj = self.get_current_obj()
-        im_obj = sgt_obj.imp
-        sel_images = [im_obj.images[i] for i in im_obj.selected_images]
+        sgt_obj = self.get_selected_sgt_obj()
+        ntwk_p = sgt_obj.ntwk_p
+        sel_img_batch = ntwk_p.get_selected_batch()
+        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
+        if img_view is not None:
+            sel_img_batch.current_view = img_view
         return sel_images
 
     def verify_path(self, a_path):
@@ -251,22 +296,16 @@ class MainController(QObject):
         # print(a_path)
         # Convert QML "file:///" path format to a proper OS path
         if a_path.startswith("file:///"):
-            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
+            if sys.platform.startswith("win"):
+                # Windows Fix (remove extra '/')
                 a_path = a_path[8:]
-            else:  # macOS/Linux (remove "file://")
+            else:
+                # macOS/Linux (remove "file://")
                 a_path = a_path[7:]
-        # Normalize path
+
+        # Normalize the path
         a_path = os.path.normpath(a_path)
         # print(a_path)
-
-        # Convert to a proper file system path
-        """import urllib.parse
-        a_path = urllib.parse.urlparse(a_path).path
-
-        # If running on Windows, remove leading '/'
-        if os.name == "nt":
-            a_path = a_path.lstrip("/")  # Remove leading slash for Windows
-        print(a_path)"""
 
         if not os.path.exists(a_path):
             logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})
@@ -276,7 +315,7 @@ class MainController(QObject):
 
     def write_to_pdf(self, sgt_obj):
         """
-        Write results to PDF file.
+        Write results to the PDF file.
         Args:
             sgt_obj:
 
@@ -286,7 +325,7 @@ class MainController(QObject):
         try:
             self._handle_progress_update(98, "Writing PDF...")
 
-            filename, output_location = sgt_obj.imp.create_filenames()
+            filename, output_location = sgt_obj.ntwk_p.get_filenames()
             pdf_filename = filename + "_SGT_results.pdf"
             pdf_file = os.path.join(output_location, pdf_filename)
             with (PdfPages(pdf_file) as pdf):
@@ -297,6 +336,60 @@ class MainController(QObject):
         except Exception as err:
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
+
+    def load_graph_simulation(self):
+        """Render and visualize OVITO graph network simulation."""
+        try:
+            # Clear any existing scene
+            for p_line in list(scene.pipelines):
+                p_line.remove_from_scene()
+
+            # Create OVITO data pipeline
+            sgt_obj = self.get_selected_sgt_obj()
+            sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+            pipeline = import_file(sel_batch.graph_obj.gsd_file)
+            pipeline.add_to_scene()
+
+            vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+            ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+            ovito_widget.setMinimumSize(800, 500)
+            vp.zoom_all((800, 500))
+            ovito_widget.show()
+
+            """
+            # Find the QML Rectangle to embed into
+            root = self.qml_engine.rootObjects()[0]
+            ntwk_container = root.findChild(QObject, "ntwkContainer")
+
+            if ntwk_container:
+                # Testing
+                # print(f"Found it! {type(ntwk_container)}")
+                # ntwk_container.setProperty("color", "#8b0000")
+
+                # Grab rectangle properties
+                x = ntwk_container.property("x")
+                y = ntwk_container.property("y")
+                w = ntwk_container.property("width")
+                h = ntwk_container.property("height")
+
+                # Create OVITO data pipeline
+                sgt_obj = self.get_selected_sgt_obj()
+                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
+                gsd_filename = filename + "_skel.gsd"
+                gsd_file = str(os.path.join(out_dir, gsd_filename))
+                pipeline = import_file(gsd_file)
+                pipeline.add_to_scene()
+
+                vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+                ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+                ovito_widget.setMinimumSize(800, 500)
+                vp.zoom_all((800, 500))
+
+                # Re-parent OVITO QWidget
+                ovito_widget.setGeometry(x, y, w, h)
+                ovito_widget.show()"""
+        except Exception as e:
+            print("Graph Simulation Error:", e)
 
     def _handle_progress_update(self, value: int, msg: str):
         """
@@ -315,7 +408,7 @@ class MainController(QObject):
         else:
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success_val: bool, result: None|list|GraphExtractor|GraphAnalyzer):
+    def _handle_finished(self, success_val: bool, result: None | list | FiberNetworkBuilder | GraphAnalyzer):
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
@@ -333,12 +426,14 @@ class MainController(QObject):
             elif type(result) is GraphAnalyzer:
                 self.write_to_pdf(result)
         else:
-            if type(result) is ImageProcessor:
+            if type(result) is NetworkProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
-                sgt_obj = self.get_current_obj()
-                sgt_obj.imp = result
-                # Load image superimposed with graph
-                self.select_img_type(4)
+                sgt_obj = self.get_selected_sgt_obj()
+                sgt_obj.ntwk_p = result
+
+                # Load the graph image to the app
+                self.changeImageSignal.emit()
+
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
@@ -391,44 +486,48 @@ class MainController(QObject):
     @Slot(result=str)
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
-        unique_num = self.current_obj_index + self.current_img_type + np.random.randint(low=21, high=1000)
+        curr_img_view = np.random.randint(0, 4)
+        unique_num = self.selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
         return "image://imageProvider/" + str(unique_num)
 
     @Slot(result=bool)
     def is_img_3d(self):
-        sgt_obj = self.get_current_obj()
+        sgt_obj = self.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
-        is_3d = True if len(sgt_obj.imp.images) > 1 else False
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        is_3d = not sel_img_batch.is_2d
         return is_3d
 
     @Slot(result=int)
-    def get_current_img_type(self):
-        return self.current_img_type
+    def get_selected_img_batch(self):
+        sgt_obj = self.get_selected_sgt_obj()
+        return sgt_obj.ntwk_p.selected_batch
+
+    @Slot(result=str)
+    def get_selected_img_type(self):
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        return sel_img_batch.current_view
 
     @Slot(result=str)
     def get_img_nav_location(self):
-        return f"{(self.current_obj_index + 1)} / {len(self.sgt_objs)}"
+        return f"{(self.selected_sgt_obj_index + 1)} / {len(self.sgt_objs)}"
 
     @Slot(result=str)
     def get_output_dir(self):
-        sgt_obj = self.get_current_obj()
+        sgt_obj = self.get_selected_sgt_obj()
         if sgt_obj is None:
             return ""
-        return f"{sgt_obj.imp.output_dir}"
+        return f"{sgt_obj.ntwk_p.output_dir}"
 
     @Slot(result=bool)
     def get_auto_scale(self):
         return self.allow_auto_scale
 
     @Slot(int)
-    def set_selected_thumbnail(self, row_index):
-        """Change color of list item to gray if it is the active image"""
-        self.imgThumbnailModel.set_selected(row_index)
-
-    @Slot(int)
     def delete_selected_thumbnail(self, img_index):
-        """Delete the selected image from list."""
+        """Delete the selected image from the list."""
         self.delete_sgt_object(img_index)
 
     @Slot(str)
@@ -440,13 +539,13 @@ class MainController(QObject):
                 folder_path = folder_path[8:]
             else:  # macOS/Linux (remove "file://")
                 folder_path = folder_path[7:]
-        folder_path = os.path.normpath(folder_path)  # Normalize path
+        folder_path = os.path.normpath(folder_path)  # Normalize the path
 
         # Update for all sgt_objs
         key_list = list(self.sgt_objs.keys())
         for key in key_list:
             sgt_obj = self.sgt_objs[key]
-            sgt_obj.imp.output_dir = folder_path
+            sgt_obj.ntwk_p.output_dir = folder_path
         self.imageChangedSignal.emit()
 
     @Slot(bool)
@@ -455,70 +554,98 @@ class MainController(QObject):
         self.allow_auto_scale = auto_scale
 
     @Slot(int)
-    def select_img_type(self, choice=None):
+    def select_img_batch(self, batch_index=-1):
+        if batch_index < 0:
+            return
+
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.select_image_batch(batch_index)
+            self.update_img_models(sgt_obj)
+            self.changeImageSignal.emit()
+        except Exception as err:
+            logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
+                                                           f"{batch_index}. Restart app and try again.")
+
+    @Slot(int, bool)
+    def toggle_selected_batch_image(self, img_index, selected):
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        if selected:
+            sel_img_batch.selected_images.add(img_index)
+        else:
+            sel_img_batch.selected_images.discard(img_index)
+        self.changeImageSignal.emit()
+
+    @Slot(str)
+    def toggle_current_img_view(self, choice: str = None):
         """
-            '0' - Original image
-            '2' - Processed image
-            '3' - Binary image
-            '4' - Extracted graph
-        Args:
-            choice:
-        Returns:
+            Change the view of the current image to either: original, binary, processed or graph.
+
+            :param choice: Selected view to be loaded.
         """
-        choice = self.current_img_type if choice is None else choice
-        self.current_img_type = 0 if (choice == 1 or choice == 5) else choice
-        self.changeImageSignal.emit(choice)
+        sgt_obj = self.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        if choice is not None:
+            sel_img_batch.current_view = choice
+        self.changeImageSignal.emit()
 
     @Slot(int)
-    def load_image(self, index=None):
+    def load_image(self, index=None, reload_thumbnails=False):
         try:
-            self.current_obj_index = index if index is not None else self.current_obj_index
-            img_list, img_cache = self.get_thumbnail_list()
-            self.imgThumbnailModel.update_data(img_list, img_cache)
-            self.imgThumbnailModel.set_selected(self.current_obj_index)
-            self.select_img_type()
+            if index is not None:
+                if index == self.selected_sgt_obj_index:
+                    return
+                else:
+                    self.selected_sgt_obj_index = index
+
+            if reload_thumbnails:
+                # Update the thumbnail list data (delete/add image)
+                img_list, img_cache = self.get_thumbnail_list()
+                self.imgThumbnailModel.update_data(img_list, img_cache)
+
+            # Load the SGT Object data of the selected image
+            self.update_img_models(self.get_selected_sgt_obj())
+            self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
+            self.changeImageSignal.emit()
         except Exception as err:
             self.delete_sgt_object()
-            self.current_obj_index = 0
+            self.selected_sgt_obj_index = 0
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
 
     @Slot(result=bool)
     def load_prev_image(self):
         """Load the previous image in the list into view."""
-        if self.current_obj_index > 0:
-            # pos = self.current_obj_index - 1
-            # self.load_image(pos)
-            self.current_obj_index = self.current_obj_index - 1
-            self.update_img_models(self.get_current_obj())
-            self.load_image(self.current_obj_index)
-            # return False if pos == 0 else True
+        if self.selected_sgt_obj_index > 0:
+            self.selected_sgt_obj_index = self.selected_sgt_obj_index - 1
+            self.load_image()
             return True
         return False
 
     @Slot(result=bool)
     def load_next_image(self):
-        """Load next image in the list into view."""
-        if self.current_obj_index < (len(self.sgt_objs) - 1):
-            self.current_obj_index = self.current_obj_index + 1
-            self.update_img_models(self.get_current_obj())
-            self.load_image(self.current_obj_index)
-            # return False if pos == (len(self.sgt_objs) - 1) else True
+        """Load the next image in the list into view."""
+        if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
+            self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
+            self.load_image()
             return True
-        else:
-            return False
+        return False
 
     @Slot()
     def apply_img_ctrl_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
-            sel_images = self.get_selected_images()
+            sel_images = self.get_selected_images(img_view='processed')
             if len(sel_images) <= 0:
                 return
             for val in self.imgControlModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
-            self.select_img_type(choice=2)
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
@@ -526,7 +653,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_microscopy_props_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -542,7 +669,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_bin_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -550,7 +677,7 @@ class MainController(QObject):
             for val in self.imgBinFilterModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
@@ -558,7 +685,7 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_filter_changes(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
@@ -570,7 +697,7 @@ class MainController(QObject):
                         img.configs[val["id"]]["dataValue"] = val["dataValue"]
                     except KeyError:
                         pass
-            self.select_img_type()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
@@ -578,14 +705,15 @@ class MainController(QObject):
 
     @Slot()
     def apply_img_scaling(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         try:
             self.set_auto_scale(True)
-            sgt_obj = self.get_current_obj()
-            sgt_obj.imp.auto_scale = self.allow_auto_scale
-            sgt_obj.imp.scaling_options = self.imgScaleOptionModel.list_data
-            sgt_obj.imp.apply_img_scaling()
-            self.select_img_type()
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.auto_scale = self.allow_auto_scale
+            sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+            sel_img_batch.scaling_options = self.imgScaleOptionModel.list_data
+            sgt_obj.ntwk_p.apply_img_scaling()
+            self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
@@ -600,19 +728,17 @@ class MainController(QObject):
                 return
 
             # 1. Get filename
-            sgt_obj = self.get_current_obj()
-            out_dir, filename = sgt_obj.imp.create_filenames()
-            out_dir = out_dir if sgt_obj.imp.output_dir == '' else sgt_obj.imp.output_dir
+            sgt_obj = self.get_selected_sgt_obj()
+            ntwk_p = sgt_obj.ntwk_p
+            filename, out_dir = ntwk_p.get_filenames()
 
             # 2. Update values
+            sel_img_batch = ntwk_p.get_selected_batch()
             for val in self.exportGraphModel.list_data:
-                for img in sel_images:
-                    img.graph_obj.configs[val["id"]]["value"] = val["value"]
+                sel_img_batch.graph_obj.configs[val["id"]]["value"] = val["value"]
 
-            # 3. Save graph data to file
-            for i, img in enumerate(sel_images):
-                filename += f"_Frame{i}"
-                img.graph_obj.save_graph_to_file(filename, out_dir)
+            # 3. Save graph data to the file
+            sel_img_batch.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
@@ -620,7 +746,7 @@ class MainController(QObject):
 
     @Slot()
     def save_img_files(self):
-        """Retrieve and save images to file."""
+        """Retrieve and save images to the file."""
         try:
 
             sel_images = self.get_selected_images()
@@ -629,8 +755,8 @@ class MainController(QObject):
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
-            sgt_obj = self.get_current_obj()
-            sgt_obj.imp.save_images_to_file()
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.save_images_to_file()
             self.taskTerminatedSignal.emit(True,
                                            ["Save Images", "Image files successfully saved in 'Output Dir'"])
         except Exception as err:
@@ -640,7 +766,8 @@ class MainController(QObject):
 
     @Slot()
     def run_extract_graph(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
+
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -649,9 +776,9 @@ class MainController(QObject):
         self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
-            sgt_obj = self.get_current_obj()
+            sgt_obj = self.get_selected_sgt_obj()
 
-            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.imp,))
+            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.ntwk_p,))
             self.worker_task.inProgressSignal.connect(self._handle_progress_update)
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
             self.worker.start()
@@ -665,7 +792,7 @@ class MainController(QObject):
 
     @Slot()
     def run_graph_analyzer(self):
-        """Retrieve settings from model and send to Python."""
+        """Retrieve settings from the model and send to Python."""
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -674,7 +801,7 @@ class MainController(QObject):
         self.worker_task = WorkerTask()
         try:
             self.wait_flag = True
-            sgt_obj = self.get_current_obj()
+            sgt_obj = self.get_selected_sgt_obj()
 
             self.worker = QThreadWorker(func=self.worker_task.task_compute_gt, args=(sgt_obj,))
             self.worker_task.inProgressSignal.connect(self._handle_progress_update)
@@ -718,7 +845,7 @@ class MainController(QObject):
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
-            return
+            return False
 
         self.wait_flag = True
         success_val = self.save_project_data()
@@ -728,6 +855,20 @@ class MainController(QObject):
     @Slot(result=bool)
     def display_image(self):
         return self.img_loaded
+
+    @Slot(result=bool)
+    def display_graph(self):
+        return True
+
+    @Slot(result=bool)
+    def image_batches_exist(self):
+        if not self.img_loaded:
+            return False
+
+        sgt_obj = self.get_selected_sgt_obj()
+        batch_count = len(sgt_obj.ntwk_p.image_batches)
+        batches_exist = True if batch_count > 1 else False
+        return batches_exist
 
     @Slot(result=bool)
     def is_project_open(self):
@@ -745,15 +886,15 @@ class MainController(QObject):
     def perform_cropping(self, allowed):
         self.performCroppingSignal.emit(allowed)
 
-    @Slot( int, int, int, int)
-    def crop_image(self, x, y, width, height):
+    @Slot( int, int, int, int, int, int)
+    def crop_image(self, x, y, crop_width, crop_height, qimg_width, qimg_height):
         """Crop image using PIL and save it."""
         try:
-            sgt_obj = self.get_current_obj()
-            sgt_obj.imp.crop_image(x, y, width, height)
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.crop_image(x, y, crop_width, crop_height, qimg_width, qimg_height)
 
             # Emit signal to update UI with new image
-            self.select_img_type(2)
+            self.changeImageSignal.emit()
             self.showCroppingToolSignal.emit(False)
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
@@ -763,11 +904,11 @@ class MainController(QObject):
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
         if undo:
-            sgt_obj = self.get_current_obj()
-            sgt_obj.imp.undo_cropping()
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.undo_cropping()
 
             # Emit signal to update UI with new image
-            self.select_img_type(None)
+            self.changeImageSignal.emit()
             self.showUnCroppingToolSignal.emit(False)
 
     @Slot(bool)
@@ -776,14 +917,14 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def enable_prev_nav_btn(self):
-        if (self.current_obj_index == 0) or self.is_task_running():
+        if (self.selected_sgt_obj_index == 0) or self.is_task_running():
             return False
         else:
             return True
 
     @Slot(result=bool)
     def enable_next_nav_btn(self):
-        if (self.current_obj_index == (len(self.sgt_objs) - 1)) or self.is_task_running():
+        if (self.selected_sgt_obj_index == (len(self.sgt_objs) - 1)) or self.is_task_running():
             return False
         else:
             return True
@@ -794,7 +935,7 @@ class MainController(QObject):
         is_created = self.create_sgt_object(image_path)
         if is_created:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image()
+            self.load_image(reload_thumbnails=True)
             return True
         return False
 
@@ -822,7 +963,7 @@ class MainController(QObject):
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image()
+            self.load_image(reload_thumbnails=True)
             return True
 
     @Slot(str, str, result=bool)
@@ -834,11 +975,6 @@ class MainController(QObject):
         if not dir_path:
             return False
 
-        # Create the directory if it doesn't exist
-        # results_dir = os.path.join(dir_path, '/results')
-        # if not os.path.exists(results_dir):
-        #    os.makedirs(results_dir)
-
         proj_name += '.sgtproj'
         proj_path = os.path.join(str(dir_path), proj_name)
 
@@ -848,7 +984,7 @@ class MainController(QObject):
                 self.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
                 return False
 
-            # Open the file in write mode ('w').
+            # Open the file in the 'write' mode ('w').
             # This will create the file if it doesn't exist
             with open(proj_path, 'w'):
                 pass  # Do nothing, just create the file (updates will be done automatically/dynamically)
@@ -859,13 +995,15 @@ class MainController(QObject):
             self.project_open = True
             self.projectOpenedSignal.emit(proj_name)
             logging.info(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
+            return True
         except Exception as err:
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
+            return False
 
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
-        """Opens and loads SGT project from the '.sgtproj' file"""
+        """Opens and loads the SGT project from the '.sgtproj' file"""
         if self.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -874,7 +1012,7 @@ class MainController(QObject):
         try:
             self.wait_flag = True
             self.project_open = False
-            # Verify path
+            # Verify the path
             sgt_path = self.verify_path(sgt_path)
             if not sgt_path:
                 self.wait_flag = False
@@ -888,7 +1026,7 @@ class MainController(QObject):
             if self.sgt_objs:
                 key_list = list(self.sgt_objs.keys())
                 for key in key_list:
-                    self.sgt_objs[key].imp.output_dir = img_dir
+                    self.sgt_objs[key].ntwk_p.output_dir = img_dir
 
             # Update and notify QML
             self.project_data["name"] = proj_name
@@ -898,8 +1036,7 @@ class MainController(QObject):
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
-            self.update_img_models(self.get_current_obj())
-            self.load_image()
+            self.load_image(reload_thumbnails=True)
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:

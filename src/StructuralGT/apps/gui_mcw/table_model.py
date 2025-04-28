@@ -10,7 +10,7 @@ class TableModel(QAbstractTableModel):
         super().__init__(parent)
         self.itemData = data
         self.imageCache = {}
-        self.selected_index = -1  # Track selected row
+        self.selected_index = -1  # To track the selected row
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.itemData) if self.itemData else 0

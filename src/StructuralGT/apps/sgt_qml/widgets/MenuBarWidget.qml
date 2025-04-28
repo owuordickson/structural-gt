@@ -34,6 +34,8 @@ MenuBar {
             MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
             MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: export_graph_data(2) }
             MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(1) }
+            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: false; onTriggered: export_graph_data(3) }
+
         }
         MenuSeparator{}
 
@@ -119,6 +121,7 @@ MenuBar {
             mnuExportEdge.enabled = graphPropsModel.rowCount() > 0 ? true : false;
             mnuExportAdj.enabled = graphPropsModel.rowCount() > 0 ? true : false;
             mnuExportGexf.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportGSD.enabled = graphPropsModel.rowCount() > 0 ? true : false;
             mnuExportAll.enabled = graphPropsModel.rowCount() > 0 ? true : false;
 
             //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS

@@ -10,6 +10,7 @@ ColumnLayout {
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
     property real zoomFactor: 1.0
+    property int selectedRole: (Qt.UserRole + 20)
 
     Rectangle {
         id: welcomeContainer
@@ -158,6 +159,34 @@ ColumnLayout {
 
 
     Rectangle {
+        id: imgBatchSelector
+        height: 32
+        Layout.fillHeight: false
+        Layout.fillWidth: true
+        color: "transparent"
+        visible: mainController.image_batches_exist()
+
+        RowLayout {
+            anchors.fill: parent
+
+            ComboBox {
+                id: cbBatchSelector
+                Layout.minimumWidth: 125
+                Layout.alignment: Qt.AlignCenter
+                model: imgBatchModel
+                implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+                textRole: "text"
+                valueRole: "value"
+                ToolTip.text: "Change image batch"
+                ToolTip.visible: cbBatchSelector.hovered
+                //enabled: image_batches_exist.display_image()
+                onCurrentIndexChanged: mainController.select_img_batch(valueAt(currentIndex))
+            }
+        }
+    }
+
+
+    Rectangle {
         id: imgContainer
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -170,7 +199,7 @@ ColumnLayout {
             anchors.fill: parent
             contentWidth: imgView.width * imgView.scale
             contentHeight: imgView.height * imgView.scale
-            clip: true
+            //clip: true
             flickableDirection: Flickable.HorizontalAndVerticalFlick
 
             ScrollBar.vertical: ScrollBar {
@@ -215,7 +244,7 @@ ColumnLayout {
                         color: "#d0d0d0"  // Background color for spacing effect
 
                         Image {
-                            source: "data:image/png;base64," + model.image  // Base64 encoded image
+                            source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image
                             width: parent.width
                             height: parent.height
                             anchors.centerIn: parent
@@ -234,15 +263,24 @@ ColumnLayout {
                             background: Rectangle { color: "transparent" }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            property int isSelected: model.selected ? 1 : 0
-                            onClicked: {
-                                isSelected = isSelected === 1 ? 0 : 1;
-                                console.log("Clicked on:", model.id)
-                                console.log("Selected: ", isSelected);
+                        CheckBox {
+                            id: checkBox
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 2
+                            property bool isSelected: model.selected === 1
+                            checked: isSelected
+                            onCheckedChanged: {
+                                if (isSelected !== checked) {  // Only update if there is a change
+                                    isSelected = checked
+                                    let val = checked ? 1 : 0;
+                                    var index = img3dGridModel.index(model.index, 0);
+                                    img3dGridModel.setData(index, val, selectedRole);
+                                    mainController.toggle_selected_batch_image(model.id, isSelected);
+                                }
                             }
                         }
+
                     }
                 }
             }
@@ -337,15 +375,25 @@ ColumnLayout {
         }
     }
 
+    /*Rectangle {
+        id: ntwkContainer
+        objectName: "ntwkContainer" // IMPORTANT: Python will find this
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: "#ffffff"
+        border.color: "#d0d0d0"
+        border.width: 1
+        visible: false
+    }*/
+
 
     Rectangle {
-        id: navControls
+        id: imgNavControls
         height: 32
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
         visible: mainController.display_image()
-
 
         RowLayout {
             anchors.fill: parent
@@ -382,13 +430,61 @@ ColumnLayout {
         }
     }
 
+    function getActualImageSize() {
+        const containerWidth = flickableArea.width;
+        const containerHeight = flickableArea.height;
+
+        const imageSourceWidth = imgView.sourceSize.width;
+        const imageSourceHeight = imgView.sourceSize.height;
+
+        if (imageSourceWidth <= 0 || imageSourceHeight <= 0)
+            return { width: 0, height: 0 };
+
+        const imgAspect = imageSourceWidth / imageSourceHeight;
+        const containerAspect = containerWidth / containerHeight;
+
+        let actualWidth, actualHeight;
+        if (imgAspect > containerAspect) {
+            // Image is wider than container, so width fits
+            actualWidth = containerWidth;
+            actualHeight = containerWidth / imgAspect;
+        } else {
+            // Image is taller than container, so height fits
+            actualHeight = containerHeight;
+            actualWidth = containerHeight * imgAspect;
+        }
+
+        return { width: actualWidth, height: actualHeight };
+    }
+
+    function getCropAreaInImageCoords() {
+        const scale = zoomFactor;
+        const offsetX = flickableArea.contentX;
+        const offsetY = flickableArea.contentY;
+        const actualSize = getActualImageSize();
+
+        const cropX = (cropArea.x + offsetX) / scale;
+        const cropY = (cropArea.y + offsetY) / scale;
+        const cropW = cropArea.width / scale;
+        const cropH = cropArea.height / scale;
+
+        return {
+            x: Math.round(cropX),
+            y: Math.round(cropY),
+            width: Math.round(cropW),
+            height: Math.round(cropH),
+            actualWidth: Math.round(actualSize.width),
+            actualHeight: Math.round(actualSize.height)
+        };
+    }
 
     function cropImage() {
 
         // Crop image through mainController
-        mainController.crop_image(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
+        const cropRect = getCropAreaInImageCoords();
+        mainController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height, cropRect.actualWidth, cropRect.actualHeight);
 
-        // Hide selection box
+        // Hide the selection box
         cropArea.visible = false;
     }
 
@@ -397,12 +493,19 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgView.source = mainController.get_pixmap();
             imgView.visible = !mainController.is_img_3d();
             imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
-            imgContainer.visible = mainController.display_image();
-            navControls.visible = mainController.display_image();
+            imgContainer.visible = mainController.display_image();// ? !mainController.display_graph() : false;
+            //ntwkContainer.visible = mainController.display_image() ? mainController.display_graph() : false;
+            imgNavControls.visible = mainController.display_image();
+            imgBatchSelector.visible = mainController.image_batches_exist();
+
+            if (!mainController.is_img_3d()) {
+                imgView.source = mainController.get_pixmap();
+            } else {
+                imgView.source = "";
+            }
 
             zoomFactor = 1.0;
 
@@ -410,6 +513,9 @@ ColumnLayout {
             btnNext.enabled = mainController.enable_next_nav_btn();
             lblNavInfo.text = mainController.get_img_nav_location();
             //console.log(src);
+
+            const curr_batch = mainController.get_selected_img_batch();
+            cbBatchSelector.currentIndex = curr_batch;
         }
 
         function onProjectOpenedSignal(name) {

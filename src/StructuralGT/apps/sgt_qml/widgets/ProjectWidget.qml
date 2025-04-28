@@ -51,7 +51,6 @@ Item {
                     // Left-click to select item
                     onClicked: {
                         mainController.load_image(row);
-                        mainController.set_selected_thumbnail(model.index);
                     }
 
                     // Right-click to show context menu

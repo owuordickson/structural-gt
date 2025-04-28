@@ -6,9 +6,9 @@ Pyside6 implementation of StructuralGT user interface.
 
 import os
 import sys
-from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
+from PySide6.QtWidgets import QApplication
 
 from .gui_mcw.controller import MainController
 from .gui_mcw.image_provider import ImageProvider
@@ -17,11 +17,11 @@ from .gui_mcw.image_provider import ImageProvider
 class MainWindow(QObject):
     def __init__(self):
         super().__init__()
-        self.app = QGuiApplication(sys.argv)
+        self.app = QApplication(sys.argv)
         self.ui_engine = QQmlApplicationEngine()
 
         # Register Controller for Dynamic Updates
-        controller = MainController()
+        controller = MainController(qml_app=self.app)
         # Register Image Provider
         self.image_provider = ImageProvider(controller)
 
@@ -38,6 +38,7 @@ class MainWindow(QObject):
         self.ui_engine.rootContext().setContextProperty("gteTreeModel", controller.gteTreeModel)
         self.ui_engine.rootContext().setContextProperty("gtcListModel", controller.gtcListModel)
         self.ui_engine.rootContext().setContextProperty("exportGraphModel", controller.exportGraphModel)
+        self.ui_engine.rootContext().setContextProperty("imgBatchModel", controller.imgBatchModel)
         self.ui_engine.rootContext().setContextProperty("imgControlModel", controller.imgControlModel)
         self.ui_engine.rootContext().setContextProperty("imgBinFilterModel", controller.imgBinFilterModel)
         self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)

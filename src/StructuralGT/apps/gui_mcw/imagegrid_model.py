@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtCore import Qt, QAbstractListModel
 
-from ...SGT.sgt_utils import get_cv_base64, pil_to_base64
+from ...SGT.sgt_utils import img_to_base64
 
 
 class ImageGridModel(QAbstractListModel):
@@ -9,16 +9,16 @@ class ImageGridModel(QAbstractListModel):
     SelectedRole = Qt.ItemDataRole.UserRole + 20
     ImageRole = Qt.ItemDataRole.UserRole + 21
 
-    def __init__(self, img_lst, parent=None):
+    def __init__(self, img_lst: list, selected_images: set, parent=None):
         super().__init__(parent)
         if len(img_lst) == 0:
             self._image_data = []
             return
-
-        if type(img_lst[0]) is np.ndarray:
-            self._image_data = [{"id": i, "image": get_cv_base64(img_lst[i]), "selected": 0} for i in range(len(img_lst))]
-        else:
-            self._image_data = [{"id": i, "image": pil_to_base64(img_lst[i]), "selected": 0} for i in range(len(img_lst))]
+        self._image_data = [{
+            "id": i,
+            "image": img_to_base64(img_lst[i]) if img_lst[i] is not None else "",
+            "selected": 1 if i in selected_images else 0
+        } for i in range(len(img_lst))]
 
     def rowCount(self, parent=None):
         return len(self._image_data)
@@ -37,7 +37,7 @@ class ImageGridModel(QAbstractListModel):
             return item["image"]
         elif role == self.SelectedRole:
             return item["selected"]
-        return None
+        return ""
 
     def setData(self, index, value, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or index.row() >= len(self._image_data):
@@ -51,18 +51,19 @@ class ImageGridModel(QAbstractListModel):
             self._image_data[index.row()]["image"] = value
             self.dataChanged.emit(index, index, [role])
             return True
+        return False
 
-    def reset_data(self, new_data):
+    def reset_data(self, new_data: list, selected_images: set):
         """ Resets the data to be displayed. """
-        self._image_data = new_data
         if new_data is None:
             return
         self.beginResetModel()
 
-        if type(new_data[0]) is np.ndarray:
-            self._image_data = [{"id": i, "image": get_cv_base64(new_data[i]), "selected": 0} for i in range(len(new_data))]
-        else:
-            self._image_data = [{"id": i, "image": pil_to_base64(new_data[i]), "selected": 0} for i in range(len(new_data))]
+        self._image_data = [{
+            "id": i,
+            "image": img_to_base64(new_data[i]) if new_data[i] is not None else "",
+            "selected": 1 if i in selected_images else 0
+        } for i in range(len(new_data))]
 
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),
