@@ -235,7 +235,7 @@ class MainController(QObject):
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
             self.selected_sgt_obj_index = 0
-            self.load_image(update_data=True)
+            self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()
 
     def save_project_data(self):
@@ -594,7 +594,7 @@ class MainController(QObject):
         self.changeImageSignal.emit()
 
     @Slot(int)
-    def load_image(self, index=None, update_data=False):
+    def load_image(self, index=None, reload_thumbnails=False):
         try:
             if index is not None:
                 if index == self.selected_sgt_obj_index:
@@ -602,7 +602,7 @@ class MainController(QObject):
                 else:
                     self.selected_sgt_obj_index = index
 
-            if update_data:
+            if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
                 img_list, img_cache = self.get_thumbnail_list()
                 self.imgThumbnailModel.update_data(img_list, img_cache)
@@ -935,7 +935,7 @@ class MainController(QObject):
         is_created = self.create_sgt_object(image_path)
         if is_created:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image(update_data=True)
+            self.load_image(reload_thumbnails=True)
             return True
         return False
 
@@ -963,7 +963,7 @@ class MainController(QObject):
             return False
         else:
             # pos = (len(self.sgt_objs) - 1)
-            self.load_image(update_data=True)
+            self.load_image(reload_thumbnails=True)
             return True
 
     @Slot(str, str, result=bool)
@@ -1036,7 +1036,7 @@ class MainController(QObject):
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
-            self.load_image(update_data=True)
+            self.load_image(reload_thumbnails=True)
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
