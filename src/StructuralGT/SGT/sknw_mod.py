@@ -41,36 +41,49 @@ def idx2rc(idx, acc):
 
 # @jit(nopython=True)  # fill a node (maybe two or more points)
 def fill(img, p, num, nbs, acc):
+    cap = 131072
+    buf = np.empty(cap, dtype=np.int64)
     img[p] = num
-    buf = [p]
+    buf[0] = p
     cur = 0
     s = 1
     iso = True
 
-    while True:
+    while cur < s:
         p = buf[cur]
         for dp in nbs:
             cp = p + dp
             if img[cp] == 2:
                 img[cp] = num
+                if s >= cap:
+                    cap *= 2
+                    buf = np.resize(buf, cap)
                 buf[s] = cp
                 s += 1
-            if img[cp] == 1: iso = False
+            elif img[cp] == 1:
+                iso = False
         cur += 1
-        if cur == s: break
+
     return iso, idx2rc(buf[:s], acc)
 
 
 # @jit(nopython=True)  # trace the edge and use a buffer, then buf.copy if you use [] numba not works
 def trace(img, p, nbs, acc):
+    cap = 2048
+    buf = np.empty(cap, dtype=np.int64)
+    cur = 1
     c1 = 0
     c2 = 0
     newp = 0
-    cur = 1
+
     while True:
+        if cur >= cap:
+            cap *= 2
+            buf = np.resize(buf, cap)
         buf[cur] = p
         img[p] = 0
         cur += 1
+
         for dp in nbs:
             cp = p + dp
             if img[cp] >= 10:
@@ -79,11 +92,17 @@ def trace(img, p, nbs, acc):
                     buf[0] = cp
                 else:
                     c2 = img[cp]
+                    if cur >= cap:
+                        cap += 1
+                        buf = np.resize(buf, cap)
                     buf[cur] = cp
-            if img[cp] == 1:
+            elif img[cp] == 1:
                 newp = cp
+
         p = newp
-        if c2 != 0: break
+        if c2 != 0:
+            break
+
     return c1 - 10, c2 - 10, idx2rc(buf[:cur + 1], acc)
 
 
