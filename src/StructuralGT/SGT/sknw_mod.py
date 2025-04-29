@@ -40,9 +40,9 @@ def idx2rc(idx, acc):
 
 
 # @jit(nopython=True)  # fill a node (maybe two or more points)
-def fill(img, p, num, nbs, acc, buf):
+def fill(img, p, num, nbs, acc):
     img[p] = num
-    buf[0] = p
+    buf = [p]
     cur = 0
     s = 1
     iso = True
@@ -62,7 +62,7 @@ def fill(img, p, num, nbs, acc, buf):
 
 
 # @jit(nopython=True)  # trace the edge and use a buffer, then buf.copy if you use [] numba not works
-def trace(img, p, nbs, acc, buf):
+def trace(img, p, nbs, acc):
     c1 = 0
     c2 = 0
     newp = 0
@@ -90,12 +90,12 @@ def trace(img, p, nbs, acc, buf):
 # @jit(nopython=True)  # parse the image, then get the nodes and edges
 def parse_struc(img, nbs, acc, iso, ring):
     img = img.ravel()
-    buf = np.zeros(13107200, dtype=np.int64)
+    # buf = np.zeros(13107200, dtype=np.int64)
     num = 10
     nodes = []
     for p in range(len(img)):
         if img[p] == 2:
-            isiso, nds = fill(img, p, num, nbs, acc, buf)
+            isiso, nds = fill(img, p, num, nbs, acc)
             if isiso and not iso: continue
             num += 1
             nodes.append(nds)
@@ -104,7 +104,7 @@ def parse_struc(img, nbs, acc, iso, ring):
         if img[p] < 10: continue
         for dp in nbs:
             if img[p + dp] == 1:
-                edge = trace(img, p + dp, nbs, acc, buf)
+                edge = trace(img, p + dp, nbs, acc)
                 edges.append(edge)
     if not ring: return nodes, edges
     for p in range(len(img)):
@@ -114,7 +114,7 @@ def parse_struc(img, nbs, acc, iso, ring):
         nodes.append(idx2rc([p], acc))
         for dp in nbs:
             if img[p + dp] == 1:
-                edge = trace(img, p + dp, nbs, acc, buf)
+                edge = trace(img, p + dp, nbs, acc)
                 edges.append(edge)
     return nodes, edges
 
