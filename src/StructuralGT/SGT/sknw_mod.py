@@ -1,3 +1,16 @@
+"""
+
+This code is a modified version of the original `sknw.py` by Yan Xiaolong.
+
+Modifications were made to address bugs caused by 'numba' on some platforms (e.g., Windows) and to replace fixed-size
+NumPy buffers with dynamically resizable ones, improving robustness for large images and graphs.
+
+Original author: Yan Xiaolong
+Original source: https://github.com/Image-Py/sknw.git
+
+"""
+
+
 import numpy as np
 # from numba import jit
 import networkx as nx
