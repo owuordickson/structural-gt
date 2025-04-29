@@ -6,7 +6,7 @@ Builds a graph network from nanoscale microscopy images.
 
 import os
 import igraph
-import sknw
+# import sknw
 import logging
 import numpy as np
 import networkx as nx
@@ -21,6 +21,7 @@ from .progress_update import ProgressUpdate
 from .graph_skeleton import GraphSkeleton
 from .sgt_utils import write_csv_file, write_gsd_file, plot_to_opencv
 from ..configs.config_loader import load_gte_configs
+from .sknw_mod import build_sknw
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
@@ -148,9 +149,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         img_skel = graph_skel.skeleton
 
         self.update_status([60, "Creating graph network..."])
-        # padded_skel = np.pad(img_skel, pad_width=1, mode='constant', constant_values=0)
         print(img_skel.shape)
-        nx_graph = sknw.build_sknw(img_skel)
+        # nx_graph = sknw.build_sknw(img_skel)
+        nx_graph = build_sknw(img_skel)
         print("Done!")
 
         if opt_gte["remove_self_loops"]["value"]:
