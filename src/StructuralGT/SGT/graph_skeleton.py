@@ -9,7 +9,7 @@ import math
 from scipy import ndimage
 from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
-from skimage.morphology import disk, skeletonize, remove_small_objects
+from skimage.morphology import disk, medial_axis, skeletonize, remove_small_objects, dilation, square
 
 
 class GraphSkeleton:
@@ -51,14 +51,19 @@ class GraphSkeleton:
         """
 
         # rebuilding the binary image as a boolean for skeletonizing
-        img_bin = self.img_bin
-        self.img_bin = np.squeeze(img_bin)
+        self.img_bin = np.squeeze(self.img_bin)
+        img_bin_int = np.asarray(self.img_bin, dtype=np.uint16)
 
-        # making the initial skeleton image, then getting x and y co-ords of all branch points and endpoints
-        temp_skeleton = skeletonize(np.asarray(self.img_bin, dtype=np.uint16))
+        # making the initial skeleton image
+        temp_skeleton = skeletonize(img_bin_int)
+
+        # Use medial axis with distance transform
+        # skeleton, distance = medial_axis(img_bin_int, return_distance=True)
+        # Scale thickness by distance (optional)
+        # temp_skeleton = skeleton * distance
 
         # if self.configs["remove_bubbles"]["value"] == 1:
-        #    temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, self.img_bin, mask_elements)
+        #    temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, img_bin_int, mask_elements)
             # if self.update_progress is not None:
             # self.update_progress([56, f"Ran remove_bubbles for image skeleton..."])
 

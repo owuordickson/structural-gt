@@ -4,6 +4,7 @@
 Compute graph theory metrics
 """
 
+import sys
 import os
 import math
 import datetime
@@ -591,7 +592,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         nx_graph = graph_obj.nx_3d_graph
         cpu_count = get_num_cores()
-        num_threads = cpu_count * 10
+        num_threads = cpu_count * 10 if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 20
         anc = 0
 
         try:

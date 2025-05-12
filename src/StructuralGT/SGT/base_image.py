@@ -111,7 +111,7 @@ class BaseImage:
             h, w = filtered_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
-            ham2d = np.sqrt(np.dot(ham1x, ham1y.T)) ** int(
+            ham2d = np.sqrt(np.dot(ham1y, ham1x.T)) ** int(
                 opt_img["apply_lowpass_filter"]["dataValue"])  # expand to 2D hamming
             f = cv2.dft(filtered_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
             f_shifted = np.fft.fftshift(f)
