@@ -44,7 +44,6 @@ def terminal_app():
             out_path = img_path
             for a_file in files:
                 if a_file.endswith(('.tif', '.png', '.jpg', '.jpeg')):
-                    print(a_file)
                     logging.info(a_file, extra={'user': 'SGT Logs'})
                     filenames.append(os.path.join(out_path, a_file))
             if len(filenames) <= 0:

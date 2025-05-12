@@ -57,7 +57,6 @@ class CheckBoxModel(QAbstractListModel):
         if not index.isValid() or index.row() >= len(self.list_data):
             return False
 
-        # print(f"{self.list_data[index.row()]["id"]}, {self.list_data[index.row()]["value"]}")
         if role == self.ValueRole:
             self.list_data[index.row()]["value"] = value
             self.dataChanged.emit(index, index, [role])

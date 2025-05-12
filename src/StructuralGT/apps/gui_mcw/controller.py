@@ -293,7 +293,6 @@ class MainController(QObject):
             self.showAlertSignal.emit("File/Directory Error", "No folder/file selected.")
             return False
 
-        # print(a_path)
         # Convert QML "file:///" path format to a proper OS path
         if a_path.startswith("file:///"):
             if sys.platform.startswith("win"):
@@ -305,7 +304,6 @@ class MainController(QObject):
 
         # Normalize the path
         a_path = os.path.normpath(a_path)
-        # print(a_path)
 
         if not os.path.exists(a_path):
             logging.exception("Path Error: %s", IOError, extra={'user': 'SGT Logs'})

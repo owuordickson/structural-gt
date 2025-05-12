@@ -8,6 +8,7 @@ import os
 import math
 import datetime
 import itertools
+import logging
 import multiprocessing
 import numpy as np
 import scipy as sp
@@ -34,6 +35,9 @@ import sgt_c_module as sgt
 from .sgt_utils import get_num_cores
 from ..configs.config_loader import load_gtc_configs
 
+
+logger = logging.getLogger("SGT App")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class GraphAnalyzer(ProgressUpdate):
     """
@@ -597,7 +601,7 @@ class GraphAnalyzer(ProgressUpdate):
             nx.write_edgelist(nx_graph, graph_file, data=False)
             anc = sgt.compute_anc(graph_file, num_threads, self.allow_mp)
         except Exception as err:
-            print(err)
+            logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
         return anc
 
     def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
