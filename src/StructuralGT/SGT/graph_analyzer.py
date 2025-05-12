@@ -587,6 +587,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         nx_graph = graph_obj.nx_3d_graph
         cpu_count = get_num_cores()
+        num_threads = cpu_count * 10
         anc = 0
 
         try:
@@ -594,7 +595,7 @@ class GraphAnalyzer(ProgressUpdate):
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
-            anc = sgt.compute_anc(graph_file, cpu_count, self.allow_mp)
+            anc = sgt.compute_anc(graph_file, num_threads, self.allow_mp)
         except Exception as err:
             print(err)
         return anc
