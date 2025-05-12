@@ -384,7 +384,7 @@ class GraphSkeleton:
         oob = 0  # Generate a boolean check for out-of-boundary
         # Check if coordinate is within the boundary
         if d is None:
-            if coord[0] < 0 or coord[1] < 0 or coord[:-2] > (w - 1) or coord[-1] > (h - 1):
+            if coord[0] < 0 or coord[1] < 0 or coord[-2] > (w - 1) or coord[-1] > (h - 1):
                 oob = 1
         else:
             # if sum(coord < 0) > 0 or sum(coord > [w - 1, h - 1, d - 1]) > 0:
