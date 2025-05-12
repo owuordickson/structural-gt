@@ -4,8 +4,9 @@
 Create a graph skeleton from an image binary
 """
 
-import numpy as np
+import cv2
 import math
+import numpy as np
 from scipy import ndimage
 from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
