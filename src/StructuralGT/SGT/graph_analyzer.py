@@ -91,7 +91,7 @@ class GraphAnalyzer(ProgressUpdate):
         graph_obj = sel_batch.graph_obj
 
         # 2. Apply image filters and extract the graph (only if it has not been executed)
-        if graph_obj is None:
+        if graph_obj.nx_3d_graph is None:
             self.ntwk_p.add_listener(self.track_img_progress)
             self.ntwk_p.apply_img_filters()                     # Apply image filters
             self.ntwk_p.build_graph_network()                   # Extract graph from binary image
