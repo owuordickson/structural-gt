@@ -825,6 +825,16 @@ class MainController(QObject):
         try:
             self.wait_flag = True
 
+            # Update Configs
+            current_sgt_obj = self.get_selected_sgt_obj()
+            keys_list = list(self.sgt_objs.keys())
+            key_at_current = keys_list[self.selected_sgt_obj_index]
+            shared_configs = current_sgt_obj.configs
+            for key in keys_list:
+                if key != key_at_current:
+                    s_obj = self.sgt_objs[key]
+                    s_obj.configs = shared_configs
+
             self.worker = QThreadWorker(func=self.worker_task.task_compute_multi_gt, args=(self.sgt_objs,))
             self.worker_task.inProgressSignal.connect(self._handle_progress_update)
             self.worker_task.taskFinishedSignal.connect(self._handle_finished)
