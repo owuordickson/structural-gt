@@ -13,7 +13,7 @@ Item {
     property int valueRole: Qt.UserRole + 4
 
     ColumnLayout {
-        id: brightnessCtrlLayout
+        id: gtComputationLayout
         spacing: 10
 
         Repeater {

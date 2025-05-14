@@ -650,8 +650,8 @@ ApplicationWindow {
                     Layout.preferredHeight: 30
                     text: ""
                     onClicked: {
+                        dialogRunAnalyzer.close();
                         mainController.run_multi_graph_analyzer();
-                        dialogRunAnalyzer.close()
                     }
 
                     Rectangle {
