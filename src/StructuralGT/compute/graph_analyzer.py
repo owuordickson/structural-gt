@@ -28,17 +28,48 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
+import sgt_c_module as sgt
+# from src.StructuralGT.modules import FiberNetworkBuilder, NetworkProcessor
 from src.StructuralGT.utils.progress_update import ProgressUpdate
 from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
 from src.StructuralGT.imaging.network_processor import NetworkProcessor
-
-import sgt_c_module as sgt
-from src.StructuralGT.utils.sgt_utils import get_num_cores
 from src.StructuralGT.utils.config_loader import load_gtc_configs
+from src.StructuralGT.utils.sgt_utils import get_num_cores
 
 
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
+
+
+# WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
+COMPUTING_DEVICE = "CPU"
+try:
+    import sys
+
+    logger = logging.getLogger("SGT App")
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
+    import cupy as cp
+
+    # Check for GPU
+    test = cp.cuda.Device(0).compute_capability
+    # Check for CUDA_PATH in environment variables
+    cuda_path = os.getenv("CUDA_PATH")
+    print(cuda_path)
+    if cuda_path:
+        xp = np  # Use CuPy for GPU
+        COMPUTING_DEVICE = "GPU"
+        logging.info("Using GPU with CuPy!", extra={'user': 'SGT Logs'})
+    else:
+        logging.info(
+            "Please add CUDA_PATH to System environment variables OR install 'NVIDIA GPU Computing Toolkit'\nvia: https://developer.nvidia.com/cuda-downloads",
+            extra={'user': 'SGT Logs'})
+        raise ImportError("Please add CUDA_PATH to System environment variables.")
+except (ImportError, NameError, AttributeError):
+    xp = np  # Fallback to NumPy for CPU
+    logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
+except cp.cuda.runtime.CUDARuntimeError:
+    xp = np  # Fallback to NumPy for CPU
+    logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
 
 class GraphAnalyzer(ProgressUpdate):
     """

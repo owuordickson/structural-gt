@@ -9,8 +9,7 @@ import os
 import logging
 
 from src.StructuralGT.utils.sgt_utils import get_num_cores
-from src.StructuralGT.imaging.network_processor import NetworkProcessor
-from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
+from src.StructuralGT.imaging.network_processor import NetworkProcessor, FiberNetworkBuilder
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 

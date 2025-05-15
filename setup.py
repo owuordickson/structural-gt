@@ -33,7 +33,7 @@ class BuildExt(build_ext):
 ext_modules = [
     Extension(
         name="sgt_c_module",
-        sources=["src/StructuralGT/c_lang/sgtmodule.c", "src/StructuralGT/c_lang/sgt_base.c"],
+        sources=["src/StructuralGT/compute/c_lang/sgtmodule.c", "src/StructuralGT/compute/c_lang/sgt_base.c"],
         libraries=["igraph"],  # macOS/Linux
         include_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph"],  # macOS/Linux
         library_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"],  # macOS/Linux

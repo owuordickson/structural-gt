@@ -6,10 +6,10 @@ Processes 2D or 3D images and generate a fiber graph network.
 
 import re
 import os
-import sys
+# import sys
 import cv2
 import pydicom
-import logging
+# import logging
 import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
@@ -17,12 +17,12 @@ from PIL import Image
 from dataclasses import dataclass
 from collections import defaultdict
 
-from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
 from src.StructuralGT.utils.progress_update import ProgressUpdate
-from .base_image import BaseImage
+from src.StructuralGT.imaging.base_image import BaseImage
+from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
 
-logger = logging.getLogger("SGT App")
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
+# logger = logging.getLogger("SGT App")
+# logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
@@ -155,7 +155,8 @@ class NetworkProcessor(ProgressUpdate):
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
-            logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
+            # logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
+            self.update_status([-1, f"Failed to load {file}: {err}"])
             return None
 
     def _initialize_image_batches(self, img_batches: list[ImageBatch]):
@@ -188,12 +189,15 @@ class NetworkProcessor(ProgressUpdate):
             is_2d = True
             if len(image_list) == 1:
                 if len(img_data.shape) == 3 and image_list[0].has_alpha_channel:
-                    logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+                    # logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
+                    self.update_status([101, "Image is 2D with Alpha Channel"])
                 else:
-                    logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+                    # logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
+                    self.update_status([101, "Image is 2D"])
             elif len(image_list) > 1:
                 is_2d = False
-                logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
+                # logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
+                self.update_status([101, "Image is 3D"])
 
 
             img_batch.images = image_list
@@ -368,8 +372,9 @@ class NetworkProcessor(ProgressUpdate):
                 return
         except Exception as err:
             self.abort = True
-            logging.info(f"Error creating graph from image binary.")
-            logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
+            # logging.info(f"Error creating graph from image binary.")
+            # logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
+            self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
     def get_filenames(self, image_path: str = None):

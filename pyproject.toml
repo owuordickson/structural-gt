@@ -1,12 +1,12 @@
 [build-system]
-requires = ["setuptools >= 78.0", "wheel"]
+requires = ["setuptools >= 80.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "StructuralGT"
 dynamic = ["version"]
 dependencies = [
-  "numpy<2.2",
+  "numpy",
   "pandas",
   "scipy",
   "matplotlib",
@@ -17,7 +17,7 @@ dependencies = [
   "pillow",
   "PySide6"
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 authors = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"},
   {name = "Nicholas Kotov", email = "kotov@umich.edu"}

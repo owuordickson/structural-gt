@@ -1,5 +1,4 @@
 from PySide6.QtCore import Qt, QAbstractListModel
-
 from src.StructuralGT.utils.sgt_utils import img_to_base64
 
 

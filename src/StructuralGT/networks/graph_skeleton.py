@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
-from skimage.morphology import disk, medial_axis, skeletonize, remove_small_objects, dilation, square
+from skimage.morphology import disk, skeletonize, remove_small_objects
 
 
 class GraphSkeleton:

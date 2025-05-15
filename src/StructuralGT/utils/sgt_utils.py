@@ -1,10 +1,14 @@
 
 import os
 import io
+import sys
 import csv
-import base64
-
 import cv2
+import base64
+import socket
+import logging
+import platform
+import subprocess
 import gsd.hoomd
 import numpy as np
 import multiprocessing as mp
@@ -12,17 +16,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
-
-
-def get_num_cores():
-    """
-    Finds the count of CPU cores in a computer or a SLURM supercomputer.
-    :return: Number of cpu cores (int)
-    """
-    num_cores = __get_slurm_cores__()
-    if not num_cores:
-        num_cores = mp.cpu_count()
-    return num_cores
 
 
 def __get_slurm_cores__():
@@ -48,6 +41,96 @@ def __get_slurm_cores__():
             return False
     except KeyError:
         return False
+
+
+def get_num_cores():
+    """
+    Finds the count of CPU cores in a computer or a SLURM supercomputer.
+    :return: Number of cpu cores (int)
+    """
+    num_cores = __get_slurm_cores__()
+    if not num_cores:
+        num_cores = mp.cpu_count()
+    return num_cores
+
+
+def install_package(package):
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        logging.info(f"Successfully installed {package}", extra={'user': 'SGT Logs'})
+    except subprocess.CalledProcessError:
+        logging.info(f"Failed to install {package}: ", extra={'user': 'SGT Logs'})
+
+
+def detect_cuda_version():
+    """Check if CUDA is installed and return its version."""
+    try:
+        output = subprocess.check_output(['nvcc', '--version']).decode()
+        if 'release 12' in output:
+            return '12'
+        elif 'release 11' in output:
+            return '11'
+        else:
+            return None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logging.info(f"Please install 'NVIDIA GPU Computing Toolkit' via: https://developer.nvidia.com/cuda-downloads", extra={'user': 'SGT Logs'})
+        return None
+
+
+def is_connected(host="8.8.8.8", port=53, timeout=3):
+    """Check if the system has an active internet connection."""
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error:
+        return False
+
+
+def detect_cuda_and_install_cupy():
+    try:
+        import cupy
+        logging.info(f"CuPy is already installed: {cupy.__version__}", extra={'user': 'SGT Logs'})
+        return
+    except ImportError:
+        logging.info("CuPy is not installed.", extra={'user': 'SGT Logs'})
+
+    if not is_connected():
+        logging.info("No internet connection. Cannot install CuPy.", extra={'user': 'SGT Logs'})
+        return
+
+    # Handle macOS (Apple Silicon) - CPU only
+    if platform.system() == "Darwin" and platform.processor().startswith("arm"):
+        logging.info("Detected MacOS with Apple Silicon (M1/M2/M3). Installing CPU-only version of CuPy.", extra={'user': 'SGT Logs'})
+        # install_package('cupy')  # CPU-only version
+        return
+
+    # Handle CUDA systems (Linux/Windows with GPU)
+    cuda_version = detect_cuda_version()
+
+    if cuda_version:
+        logging.info(f"CUDA detected: {cuda_version}", extra={'user': 'SGT Logs'})
+        if cuda_version == '12':
+            install_package('cupy-cuda12x')
+        elif cuda_version == '11':
+            install_package('cupy-cuda11x')
+        else:
+            logging.info("CUDA version not supported. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+            install_package('cupy')
+    else:
+        # No CUDA found, fall back to the CPU-only version
+        logging.info("CUDA not found. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+        install_package('cupy')
+
+    # Proceed with installation if connected
+    cuda_version = detect_cuda_version()
+    if cuda_version == '12':
+        install_package('cupy-cuda12x')
+    elif cuda_version == '11':
+        install_package('cupy-cuda11x')
+    else:
+        logging.info("No CUDA detected or NVIDIA GPU Toolkit not installed. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
+        install_package('cupy')
 
 
 def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):

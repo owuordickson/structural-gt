@@ -6,9 +6,9 @@ Pyside6 implementation of StructuralGT user interface.
 
 import os
 import sys
-from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
+from PySide6.QtQml import QQmlApplicationEngine
 
 from .gui_mcw.controller import MainController
 from .gui_mcw.image_provider import ImageProvider

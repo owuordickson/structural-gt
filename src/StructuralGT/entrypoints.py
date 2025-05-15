@@ -9,7 +9,7 @@ import sys
 import logging
 from .apps.gui_main import pyside_app
 from .apps.cli_main import terminal_app
-# from .configs.config_loader import detect_cuda_and_install_cupy
+# from src.StructuralGT import detect_cuda_and_install_cupy
 
 
 logger = logging.getLogger("SGT App")

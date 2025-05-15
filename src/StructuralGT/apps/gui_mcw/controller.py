@@ -24,11 +24,11 @@ from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
-from ... import __version__
-from src.StructuralGT.imaging.network_processor import NetworkProcessor, ALLOWED_IMG_EXTENSIONS
-from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder, COMPUTING_DEVICE
-from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
+from src.StructuralGT import __version__
+from src.StructuralGT import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
 from src.StructuralGT.utils.sgt_utils import img_to_base64
+from src.StructuralGT.imaging.network_processor import NetworkProcessor, FiberNetworkBuilder
+from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 
 class MainController(QObject):
@@ -389,21 +389,24 @@ class MainController(QObject):
         except Exception as e:
             print("Graph Simulation Error:", e)
 
-    def _handle_progress_update(self, value: int, msg: str):
+    def _handle_progress_update(self, progress_val: int, msg: str):
         """
         Handler function for progress updates for ongoing tasks.
         Args:
-            value:
-            msg:
+            progress_val: Progress value, range is 0-100%.
+            msg: Progress message to be displayed.
 
         Returns:
 
         """
-        progress_val = 0 if value < 0 else value
-        logging.info(str(progress_val) + "%: " + msg, extra={'user': 'SGT Logs'})
-        if value >= 0:
+
+        if 0 <= progress_val <= 100:
             self.updateProgressSignal.emit(progress_val, msg)
+            logging.info(f"{progress_val} %: {msg}", extra={'user': 'SGT Logs'})
+        elif progress_val > 100:
+            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
         else:
+            logging.exception("Error: %s", msg, extra={'user': 'SGT Logs'})
             self.errorSignal.emit(msg)
 
     def _handle_finished(self, success_val: bool, result: None | list | FiberNetworkBuilder | GraphAnalyzer):
