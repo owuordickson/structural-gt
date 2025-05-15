@@ -17,8 +17,8 @@ from PIL import Image
 from dataclasses import dataclass
 from collections import defaultdict
 
-from .fiber_network import FiberNetworkBuilder
-from .progress_update import ProgressUpdate
+from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
+from src.StructuralGT.utils.progress_update import ProgressUpdate
 from .base_image import BaseImage
 
 logger = logging.getLogger("SGT App")

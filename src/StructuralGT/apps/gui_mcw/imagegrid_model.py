@@ -1,7 +1,6 @@
-import numpy as np
 from PySide6.QtCore import Qt, QAbstractListModel
 
-from ...SGT.sgt_utils import img_to_base64
+from src.StructuralGT.utils.sgt_utils import img_to_base64
 
 
 class ImageGridModel(QAbstractListModel):
