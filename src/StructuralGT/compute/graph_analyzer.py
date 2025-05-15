@@ -32,7 +32,7 @@ import sgt_c_module as sgt
 # from src.StructuralGT.modules import FiberNetworkBuilder, NetworkProcessor
 from src.StructuralGT.utils.progress_update import ProgressUpdate
 from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
-from src.StructuralGT.imaging.network_processor import NetworkProcessor
+from src.StructuralGT.imaging.image_processor import NetworkProcessor
 from src.StructuralGT.utils.config_loader import load_gtc_configs
 from src.StructuralGT.utils.sgt_utils import get_num_cores
 

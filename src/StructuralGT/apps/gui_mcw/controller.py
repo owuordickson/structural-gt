@@ -27,7 +27,7 @@ from .qthread_worker import QThreadWorker, WorkerTask
 from src.StructuralGT import __version__
 from src.StructuralGT import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
 from src.StructuralGT.utils.sgt_utils import img_to_base64
-from src.StructuralGT.imaging.network_processor import NetworkProcessor, FiberNetworkBuilder
+from src.StructuralGT.imaging.image_processor import NetworkProcessor, FiberNetworkBuilder
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 
