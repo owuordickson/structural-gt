@@ -28,7 +28,7 @@ Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
 
 
-class NetworkProcessor(ProgressUpdate):
+class ImageProcessor(ProgressUpdate):
     """
     A class for processing and preparing 2D or 3D microscopy images for building a fiber graph network.
 
@@ -62,14 +62,14 @@ class NetworkProcessor(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> imp_obj = NetworkProcessor(i_path, o_dir)
+        >>> imp_obj = ImageProcessor(i_path, o_dir)
         >>> imp_obj.apply_img_filters()
         """
-        super(NetworkProcessor, self).__init__()
+        super(ImageProcessor, self).__init__()
         self.img_path: str = img_path if type(img_path) is str else img_path[0]
         self.output_dir: str = out_dir
         self.auto_scale: bool = auto_scale
-        self.image_batches: list[NetworkProcessor.ImageBatch] = []
+        self.image_batches: list[ImageProcessor.ImageBatch] = []
         self.selected_batch: int = 0
         self._initialize_image_batches(self._load_img_from_file(img_path))
 
@@ -89,7 +89,7 @@ class NetworkProcessor(ProgressUpdate):
         layered GT graphs in the same order as their respective frames.
 
         :param file: The file path.
-        :return: list[NetworkProcessor.ImageBatch]
+        :return: list[ImageProcessor.ImageBatch]
         """
 
         # First file if it's a list
@@ -111,7 +111,7 @@ class NetworkProcessor(ProgressUpdate):
                     # Cluster the images into batches based on (h, w) size
                     h, w = image.shape[:2]
                     image_groups[(h, w)].append(image)
-                img_batch_groups = NetworkProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.auto_scale)
                 return img_batch_groups
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 image_groups = defaultdict(list)
@@ -136,7 +136,7 @@ class NetworkProcessor(ProgressUpdate):
                         except EOFError:
                             # Stop when all frames are read
                             break
-                img_batch_groups = NetworkProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.auto_scale)
                 return img_batch_groups
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
@@ -613,12 +613,12 @@ class NetworkProcessor(ProgressUpdate):
             images = np.array(images)
             max_size = max(h, w)
             if max_size > 0 and auto_scale:
-                scaling_opts = NetworkProcessor.get_scaling_options(max_size, auto_scale)
-                images_small, scale_factor = NetworkProcessor.rescale_img(images, scaling_opts)
+                scaling_opts = ImageProcessor.get_scaling_options(max_size, auto_scale)
+                images_small, scale_factor = ImageProcessor.rescale_img(images, scaling_opts)
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
-            img_batch = NetworkProcessor.ImageBatch(
+            img_batch = ImageProcessor.ImageBatch(
                 numpy_image=images,
                 images=[],
                 is_2d=True,

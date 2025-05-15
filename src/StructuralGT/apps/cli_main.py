@@ -9,7 +9,7 @@ import os
 import logging
 
 from src.StructuralGT.utils.sgt_utils import get_num_cores
-from src.StructuralGT.imaging.image_processor import NetworkProcessor, FiberNetworkBuilder
+from src.StructuralGT.imaging.image_processor import ImageProcessor, FiberNetworkBuilder
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 
@@ -99,7 +99,7 @@ def produce_metrics(img_path, out_dir):
     Returns:
         None:
     """
-    imp_obj = NetworkProcessor(img_path, out_dir)
+    imp_obj = ImageProcessor(img_path, out_dir)
     graph_obj = FiberNetworkBuilder(imp_obj)
     graph_obj.add_listener(print_progress)
     graph_obj.fit()

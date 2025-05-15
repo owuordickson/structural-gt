@@ -29,10 +29,10 @@ from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
 import sgt_c_module as sgt
-# from src.StructuralGT.modules import FiberNetworkBuilder, NetworkProcessor
+# from src.StructuralGT.modules import FiberNetworkBuilder, ImageProcessor
 from src.StructuralGT.utils.progress_update import ProgressUpdate
 from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
-from src.StructuralGT.imaging.image_processor import NetworkProcessor
+from src.StructuralGT.imaging.image_processor import ImageProcessor
 from src.StructuralGT.utils.config_loader import load_gtc_configs
 from src.StructuralGT.utils.sgt_utils import get_num_cores
 
@@ -80,7 +80,7 @@ class GraphAnalyzer(ProgressUpdate):
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
-    def __init__(self, ntwk_p: NetworkProcessor, allow_multiprocessing: bool = True):
+    def __init__(self, ntwk_p: ImageProcessor, allow_multiprocessing: bool = True):
         """
         A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
 
@@ -90,14 +90,14 @@ class GraphAnalyzer(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> o_dir = ""
         >>>
-        >>> ntwk_obj = NetworkProcessor(i_path, o_dir)
+        >>> ntwk_obj = ImageProcessor(i_path, o_dir)
         >>> metrics_obj = GraphAnalyzer(ntwk_obj)
         >>> metrics_obj.run_analyzer()
         """
         super(GraphAnalyzer, self).__init__()
         self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
         self.allow_mp: bool = allow_multiprocessing
-        self.ntwk_p: NetworkProcessor = ntwk_p
+        self.ntwk_p: ImageProcessor = ntwk_p
         self.plot_figures: list | None = None
         self.output_data: pd.DataFrame | None = None
         self.weighted_output_data: pd.DataFrame | None = None

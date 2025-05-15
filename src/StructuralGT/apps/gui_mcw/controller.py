@@ -27,7 +27,7 @@ from .qthread_worker import QThreadWorker, WorkerTask
 from src.StructuralGT import __version__
 from src.StructuralGT import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
 from src.StructuralGT.utils.sgt_utils import img_to_base64
-from src.StructuralGT.imaging.image_processor import NetworkProcessor, FiberNetworkBuilder
+from src.StructuralGT.imaging.image_processor import ImageProcessor, FiberNetworkBuilder
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 
@@ -208,7 +208,7 @@ class MainController(QObject):
 
             # Create the StructuralGT object
             input_file = img_files if len(img_files) > 1 else str(img_path)
-            ntwk_p = NetworkProcessor(input_file, out_dir, self.allow_auto_scale)
+            ntwk_p = ImageProcessor(input_file, out_dir, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
@@ -427,7 +427,7 @@ class MainController(QObject):
             elif type(result) is GraphAnalyzer:
                 self.write_to_pdf(result)
         else:
-            if type(result) is NetworkProcessor:
+            if type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 sgt_obj = self.get_selected_sgt_obj()
                 sgt_obj.ntwk_p = result
