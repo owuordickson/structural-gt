@@ -29,12 +29,12 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\owuor\PycharmProjects\structural-gt\license.txt
+LicenseFile=C:\Users\owuor\owProjects\structural-gt\license.txt
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
-OutputDir=C:\Users\owuor\PycharmProjects\structural-gt\dist\
+OutputDir=C:\Users\owuor\owProjects\structural-gt\dist\
 OutputBaseFilename=StructuralGT_WIN_{#MyAppVersion}_setup
-SetupIconFile=C:\Users\owuor\PycharmProjects\structural-gt\setup_icon.ico
+SetupIconFile=C:\Users\owuor\owProjects\structural-gt\setup_icon.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -45,7 +45,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\owuor\PycharmProjects\structural-gt\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\owuor\owProjects\structural-gt\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

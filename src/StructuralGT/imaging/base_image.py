@@ -7,6 +7,7 @@ Processes of an image by applying filters to it and converting it to a binary ve
 import cv2
 import numpy as np
 from cv2.typing import MatLike
+from dataclasses import dataclass
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
@@ -24,6 +25,12 @@ class BaseImage:
         scale_factor (float): Scale factor used to downsample/up-sample the image.
     """
 
+    @dataclass
+    class ScalingFilter:
+        image_sqs: list[MatLike]
+        padding: int
+        stride: int
+
     def __init__(self, raw_img: MatLike, scale_factor: float = 1.0):
         """
         A class that is used to binarize an image by applying filters to it and converting it to a binary version.
@@ -39,6 +46,7 @@ class BaseImage:
         self.img_mod: MatLike | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
+        self.image_segments: list[BaseImage.ScalingFilter] = []
         self.init_image()
 
     def init_image(self):
@@ -379,6 +387,21 @@ class BaseImage:
         std_size = (std_height, std_width)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
+
+    @staticmethod
+    def convolve_img(img: MatLike, num_filters: int = 5):
+        """
+        Perform a convolution operation that breaks down an image into smaller square mini-images.
+        :param img: OpenCV image.
+        :param num_filters: Number of convolution filters.
+        :return: List of convolved images."""
+        if img is None:
+            return []
+
+        padding = 0
+        stride = 1
+        filter_dim = img.shape[:2]
+        return []
 
     @staticmethod
     def compute_pixel_width(scale_val: float, scalebar_pixel_count: int):
