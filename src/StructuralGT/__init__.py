@@ -23,7 +23,7 @@ of the GNU General Public License along with this program.  If not, see <https:/
 """
 
 # MODULES
-from .compute.graph_analyzer import GraphAnalyzer
+from .compute.graph_analyzer import GraphAnalyzer, COMPUTING_DEVICE
 from .imaging.base_image import BaseImage
 from .imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from .networks.fiber_network import FiberNetworkBuilder
