@@ -428,7 +428,7 @@ class BaseImage:
         import matplotlib.pyplot as plt
         #---------------------------
         for i in range(num_filters):
-            temp_dim = int(dim / ((2*i) + 4))
+            temp_dim = int(dim / ((2*i) + 4))  # Find a better non-linear relationship
             k_h, k_w = (temp_dim, temp_dim)
             stride_h = int((h + (2*pad_h) - temp_dim) / (num_h - 1)) if num_h > 1 else int((h + (2*pad_h) - temp_dim))
             stride_w = int((w + (2*pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int((w + (2*pad_w) - temp_dim))
