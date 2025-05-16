@@ -390,7 +390,7 @@ class BaseImage:
         return std_img, scale_factor
 
     @staticmethod
-    def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 8, padding: tuple = (0, 0)):
+    def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 6, padding: tuple = (0, 0)):
         """
         Perform a convolution operation that breaks down an image into smaller square mini-images.
         Extract all patches from the image based on filter size, stride, and padding, similar to
@@ -421,17 +421,17 @@ class BaseImage:
                     return j, n // j
             return 1, n
         num_h, num_w = factor_closest(num_patches)
-        print(f"num_h={num_h}, num_w={num_w}")
 
         #---------------------------
         # TO BE DELETED
+        print(f"num_h={num_h}, num_w={num_w}")
         import matplotlib.pyplot as plt
         #---------------------------
         for i in range(num_filters):
             temp_dim = int(dim / ((2*i) + 4))
             k_h, k_w = (temp_dim, temp_dim)
-            stride_h = int((h + (2*pad_h) - temp_dim) / (num_h - 1))
-            stride_w = int((w + (2*pad_w) - temp_dim) / (num_w - 1))
+            stride_h = int((h + (2*pad_h) - temp_dim) / (num_h - 1)) if num_h > 1 else int((h + (2*pad_h) - temp_dim))
+            stride_w = int((w + (2*pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int((w + (2*pad_w) - temp_dim))
 
             img_scaling = BaseImage.ScalingFilter (
                 image_patches= [],
