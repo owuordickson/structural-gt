@@ -18,36 +18,37 @@ from typing import LiteralString
 from cv2.typing import MatLike
 
 
-def __get_slurm_cores__():
-    """
-    Test the computer to see if it is a SLURM environment, then gets the number of CPU cores.
-    :return: Count of CPUs (int) or False
-    """
-    try:
-        cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-        return cores
-    except ValueError:
-        try:
-            str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-            temp = str_cores.split('(', 1)
-            cpus = int(temp[0])
-            str_nodes = temp[1]
-            temp = str_nodes.split('x', 1)
-            str_temp = str(temp[1]).split(')', 1)
-            nodes = int(str_temp[0])
-            cores = cpus * nodes
-            return cores
-        except ValueError:
-            return False
-    except KeyError:
-        return False
-
 
 def get_num_cores():
     """
     Finds the count of CPU cores in a computer or a SLURM supercomputer.
     :return: Number of cpu cores (int)
     """
+
+    def __get_slurm_cores__():
+        """
+        Test the computer to see if it is a SLURM environment, then gets the number of CPU cores.
+        :return: Count of CPUs (int) or False
+        """
+        try:
+            cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+            return cores
+        except ValueError:
+            try:
+                str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+                temp = str_cores.split('(', 1)
+                cpus = int(temp[0])
+                str_nodes = temp[1]
+                temp = str_nodes.split('x', 1)
+                str_temp = str(temp[1]).split(')', 1)
+                nodes = int(str_temp[0])
+                cores = cpus * nodes
+                return cores
+            except ValueError:
+                return False
+        except KeyError:
+            return False
+
     num_cores = __get_slurm_cores__()
     if not num_cores:
         num_cores = mp.cpu_count()
@@ -77,16 +78,6 @@ def detect_cuda_version():
         return None
 
 
-def is_connected(host="8.8.8.8", port=53, timeout=3):
-    """Check if the system has an active internet connection."""
-    try:
-        socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
-    except socket.error:
-        return False
-
-
 def detect_cuda_and_install_cupy():
     try:
         import cupy
@@ -94,6 +85,15 @@ def detect_cuda_and_install_cupy():
         return
     except ImportError:
         logging.info("CuPy is not installed.", extra={'user': 'SGT Logs'})
+
+    def is_connected(host="8.8.8.8", port=53, timeout=3):
+        """Check if the system has an active internet connection."""
+        try:
+            socket.setdefaulttimeout(timeout)
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+            return True
+        except socket.error:
+            return False
 
     if not is_connected():
         logging.info("No internet connection. Cannot install CuPy.", extra={'user': 'SGT Logs'})
