@@ -267,6 +267,7 @@ class ImageProcessor(ProgressUpdate):
             if filter_type == 2:
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
+                BaseImage.extract_cnn_patches(img_obj.img_bin)
             img_obj.get_pixel_width()
 
         self.update_status([100, "Image processing complete..."])
@@ -442,8 +443,8 @@ class ImageProcessor(ProgressUpdate):
 
         props = [
             ["Name", f_name],
-            ["Height x Width", f"({width} x {height}) pixels"] if slices == 0 else ["Depth x H x W",
-                                                                                    f"({slices} x {width} x {height}) pixels"],
+            ["Height x Width", f"({height} x {width}) pixels"] if slices == 0
+                                                            else ["Depth x H x W", f"({slices} x {height} x {width}) pixels"],
             ["Dimensions", f"{num_dim}D"],
             ["Format", f"{fmt}"],
             # ["Pixel Size", "2nm x 2nm"]

@@ -27,9 +27,9 @@ class BaseImage:
 
     @dataclass
     class ScalingFilter:
-        image_sqs: list[MatLike]
-        padding: int
-        stride: int
+        image_patches: list[MatLike]
+        padding: tuple
+        stride: tuple
 
     def __init__(self, raw_img: MatLike, scale_factor: float = 1.0):
         """
@@ -377,30 +377,55 @@ class BaseImage:
         """
         if image is None:
             return None, None
-        w, h = image.shape[:2]
+        h, w = image.shape[:2]
         if h > w:
             scale_factor = size / h
         else:
             scale_factor = size / w
         std_width = int(scale_factor * w)
         std_height = int(scale_factor * h)
-        std_size = (std_height, std_width)
+        std_size = (std_width, std_height)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
 
     @staticmethod
-    def convolve_img(img: MatLike, num_filters: int = 5):
+    def extract_cnn_patches(img: MatLike, num_filters: int = 5, padding: tuple = (0, 0)):
         """
         Perform a convolution operation that breaks down an image into smaller square mini-images.
+        Extract all patches from the image based on filter size, stride, and padding, similar to
+        CNN convolution but without applying the filter.
+
         :param img: OpenCV image.
         :param num_filters: Number of convolution filters.
-        :return: List of convolved images."""
+        :param padding: Padding value (pad_y, pad_x).
+        :return: List of convolved images.
+        """
         if img is None:
             return []
 
-        padding = 0
-        stride = 1
-        filter_dim = img.shape[:2]
+        # Pad the image
+        pad_h, pad_w = padding
+        img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
+        h, w = img.shape[:2]
+
+        filter_size = (int(h/4), int(h/2))
+        stride = (1, 1)
+        import matplotlib.pyplot as plt
+
+        k_h, k_w = filter_size
+        stride_h, stride_w = stride
+        img_patches = []
+        # Sliding-window to extract patches
+        for y in range(0, h - k_h + 1, stride_h):
+            for x in range(0, w - k_w + 1, stride_w):
+                patch = img_padded[y:y + k_h, x:x + k_w]
+                img_patches.append(patch)
+
+                fig = plt.Figure()
+                ax = fig.add_axes((0, 0, 1, 1))
+                ax.imshow(patch, cmap='gray', alpha=0)
+
+        plt.show()
         return []
 
     @staticmethod
