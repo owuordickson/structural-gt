@@ -28,7 +28,7 @@ class BaseImage:
     @dataclass
     class ScalingFilter:
         image_patches: list[MatLike]
-        padding: tuple
+        filter_size: tuple
         stride: tuple
 
     def __init__(self, raw_img: MatLike, scale_factor: float = 1.0):
@@ -403,6 +403,9 @@ class BaseImage:
         if img is None:
             return []
 
+        # Initialize Parameters
+        lst_img_seg = []
+
         # Pad the image
         pad_h, pad_w = padding
         img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
@@ -416,23 +419,29 @@ class BaseImage:
         import matplotlib.pyplot as plt
         #---------------------------
 
-        k_h, k_w = filter_size
-        stride_h, stride_w = stride
-        img_patches = []
+        img_scaling = BaseImage.ScalingFilter (
+            image_patches= [],
+            filter_size= filter_size,
+            stride= stride
+        )
+        k_h, k_w = img_scaling.filter_size
+        stride_h, stride_w = img_scaling.stride
+
         # Sliding-window to extract patches
         for y in range(0, h - k_h + 1, stride_h):
             for x in range(0, w - k_w + 1, stride_w):
                 patch = img_padded[y:y + k_h, x:x + k_w]
-                img_patches.append(patch)
+                img_scaling.image_patches.append(patch)
                 #---------------------------------------
                 # TO BE DELETED
                 fig, ax = plt.subplots()
                 im = ax.imshow(patch, cmap='gray')
                 ax.axis('off')
         plt.show()
-        print(f"Patch Count: {len(img_patches)}")
+        print(f"Patch Count: {len(img_scaling.image_patches)}")
         #--------------------------------------------------
-        return []
+        lst_img_seg.append(img_scaling)
+        return lst_img_seg
 
     @staticmethod
     def compute_pixel_width(scale_val: float, scalebar_pixel_count: int):
