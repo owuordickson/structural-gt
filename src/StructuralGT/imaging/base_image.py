@@ -408,10 +408,13 @@ class BaseImage:
         img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
         h, w = img.shape[:2]
 
+        #---------------------------
+        # TO BE UPDATED
         filter_size = (int(h/4), int(h/2))
         # stride = (10, 10)
         stride = filter_size
         import matplotlib.pyplot as plt
+        #---------------------------
 
         k_h, k_w = filter_size
         stride_h, stride_w = stride
@@ -421,11 +424,14 @@ class BaseImage:
             for x in range(0, w - k_w + 1, stride_w):
                 patch = img_padded[y:y + k_h, x:x + k_w]
                 img_patches.append(patch)
+                #---------------------------------------
+                # TO BE DELETED
                 fig, ax = plt.subplots()
                 im = ax.imshow(patch, cmap='gray')
                 ax.axis('off')
         plt.show()
         print(f"Patch Count: {len(img_patches)}")
+        #--------------------------------------------------
         return []
 
     @staticmethod

@@ -267,7 +267,10 @@ class ImageProcessor(ProgressUpdate):
             if filter_type == 2:
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
+                #--------------------------------------------------
+                # TO BE UPDATED
                 BaseImage.extract_cnn_patches(img_obj.img_bin)
+                #--------------------------------------------------
             img_obj.get_pixel_width()
 
         self.update_status([100, "Image processing complete..."])
