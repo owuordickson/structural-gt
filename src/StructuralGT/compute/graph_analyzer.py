@@ -99,8 +99,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.allow_mp: bool = allow_multiprocessing
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
-        self.output_data: pd.DataFrame | None = None
-        self.weighted_output_data: pd.DataFrame | None = None
+        self.output_df: pd.DataFrame | None = None
+        self.weighted_output_df: pd.DataFrame | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -136,28 +136,33 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 3a. Compute Unweighted GT parameters
-        self.output_data = self.compute_gt_metrics(graph_obj.nx_3d_graph)
+        self.output_df = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
             self.update_status([0, "Computing scaling scatter-plot..."])
             self.ntwk_p.add_listener(self.track_img_progress)
             graph_groups = self.ntwk_p.build_patch_graphs()
-            # print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
             self.ntwk_p.remove_listener(self.track_img_progress)
+
+            out_df = None
             for (h, w), nx_graphs in graph_groups.items():
-                print(f"Filter: {(h, w)}, Size: {len(nx_graphs)}")
                 for nx_graph in nx_graphs:
-                    out_data = self.compute_gt_metrics(nx_graph)
-                    print(out_data)
-                print("\n")
+                    temp_df = self.compute_gt_metrics(nx_graph)
+                    temp_df["h"] = h
+                    temp_df["w"] = w
+                    if out_df is None:
+                        out_df = temp_df
+                    else:
+                        out_df = pd.concat([out_df, temp_df], ignore_index=True)
+            print(out_df)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
             return
 
         # 4. Compute Weighted GT parameters (skip if MultiGraph)
-        self.weighted_output_data = self.compute_weighted_gt_metrics(graph_obj)
+        self.weighted_output_df = self.compute_weighted_gt_metrics(graph_obj)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
@@ -720,8 +725,8 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         opt_gte = graph_obj.configs
-        data = self.output_data
-        w_data = self.weighted_output_data
+        data = self.output_df
+        w_data = self.weighted_output_df
 
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         ax = fig.add_subplot(1, 1, 1)
