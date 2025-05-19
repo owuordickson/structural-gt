@@ -139,23 +139,10 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
+        scaling_df = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
-            self.update_status([0, "Computing scaling scatter-plot..."])
-            self.ntwk_p.add_listener(self.track_img_progress)
-            graph_groups = self.ntwk_p.build_patch_graphs()
-            self.ntwk_p.remove_listener(self.track_img_progress)
-
-            out_df = None
-            for (h, w), nx_graphs in graph_groups.items():
-                for nx_graph in nx_graphs:
-                    temp_df = self.compute_gt_metrics(nx_graph)
-                    temp_df["h"] = h
-                    temp_df["w"] = w
-                    if out_df is None:
-                        out_df = temp_df
-                    else:
-                        out_df = pd.concat([out_df, temp_df], ignore_index=True)
-            print(out_df)
+            scaling_df = self.compute_scaling_data()
+            print(scaling_df)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -169,7 +156,7 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 5. Generate results in PDF
-        self.plot_figures = self.generate_pdf_output(graph_obj)
+        self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data=scaling_df)
 
     def compute_gt_metrics(self, graph: nx.Graph = None):
         """
@@ -508,6 +495,25 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
+    def compute_scaling_data(self):
+        """"""
+        self.update_status([0, "Computing scaling scatter-plot..."])
+        self.ntwk_p.add_listener(self.track_img_progress)
+        graph_groups = self.ntwk_p.build_patch_graphs()
+        self.ntwk_p.remove_listener(self.track_img_progress)
+
+        scaling_df = None
+        for (h, w), nx_graphs in graph_groups.items():
+            for nx_graph in nx_graphs:
+                temp_df = self.compute_gt_metrics(nx_graph)
+                temp_df["h"] = h
+                temp_df["w"] = w
+                if scaling_df is None:
+                    scaling_df = temp_df
+                else:
+                    scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
+        return scaling_df
+
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
@@ -650,11 +656,12 @@ class GraphAnalyzer(ProgressUpdate):
             logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
         return anc
 
-    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
+    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
         :param graph_obj: Graph extractor object.
+        :param scaling_data: Scaling data as a Pandas DataFrame.
 
         :return: List of results.
         """
@@ -684,11 +691,23 @@ class GraphAnalyzer(ProgressUpdate):
         if fig is not None:
             out_figs.append(fig)
 
-        # 4. displaying all the GT calculations in Table (on the entire page)
+        # 4a. displaying all the GT calculations in Table (on the entire page)
         fig, fig_wt = self.plot_gt_results(graph_obj)
         out_figs.append(fig)
         if fig_wt:
             out_figs.append(fig_wt)
+
+        # 4b. display scaling GT results in a Table
+        if scaling_data is not None:
+            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+            ax = fig.add_subplot(1, 1, 1)
+            ax.set_axis_off()
+            ax.set_title("Scaling GT parameters")
+            col_width = [0.4, 0.2, 0.2, 0.2]
+            tab_1 = tbl.table(ax, cellText=scaling_data.values[:, :], loc='upper center', colWidths=col_width,
+                              cellLoc='left')
+            tab_1.scale(1, 1.5)
+            out_figs.append(fig)
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])
@@ -1100,3 +1119,27 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title(hist_title, fontdict=font_1)
         ax.set(xlabel=x_label, ylabel=y_label)
         ax.hist(distribution, bins=bins)
+
+    @staticmethod
+    def paginate_table(scaling_data, rows_per_page=40):
+        n_rows = scaling_data.shape[0]
+        n_pages = (n_rows + rows_per_page - 1) // rows_per_page  # ceil division
+
+        for i in range(n_pages):
+            start = i * rows_per_page
+            end = min((i + 1) * rows_per_page, n_rows)
+            chunk = scaling_data.iloc[start:end]
+
+            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+            ax = fig.add_subplot(1, 1, 1)
+            ax.set_axis_off()
+            ax.set_title(f"Scaling GT Parameters (Page {i + 1})")
+
+            col_width = [2 / 3, 1 / 3]
+            table = tbl.table(ax,
+                              cellText=chunk.values,
+                              colLabels=chunk.columns,
+                              loc='upper center',
+                              colWidths=col_width,
+                              cellLoc='left')
+            table.scale(1, 1.5)
