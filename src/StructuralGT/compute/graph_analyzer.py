@@ -142,7 +142,6 @@ class GraphAnalyzer(ProgressUpdate):
         scaling_df = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
             scaling_df = self.compute_scaling_data()
-            print(scaling_df)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
