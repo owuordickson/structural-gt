@@ -136,7 +136,7 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 3a. Compute Unweighted GT parameters
-        self.output_data = self.compute_gt_metrics(graph_obj)
+        self.output_data = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
@@ -145,6 +145,12 @@ class GraphAnalyzer(ProgressUpdate):
             graph_groups = self.ntwk_p.build_patch_graphs()
             # print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
             self.ntwk_p.remove_listener(self.track_img_progress)
+            for (h, w), nx_graphs in graph_groups.items():
+                print(f"Filter: {(h, w)}, Size: {len(nx_graphs)}")
+                for nx_graph in nx_graphs:
+                    out_data = self.compute_gt_metrics(nx_graph)
+                    print(out_data)
+                print("\n")
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -160,21 +166,20 @@ class GraphAnalyzer(ProgressUpdate):
         # 5. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj)
 
-    def compute_gt_metrics(self, graph_obj: FiberNetworkBuilder = None):
+    def compute_gt_metrics(self, graph: nx.Graph = None):
         """
         Compute unweighted graph theory metrics.
 
-        :param graph_obj: GraphExtractor object.
+        :param graph: NetworkX graph object.
 
         :return: A Pandas DataFrame containing the unweighted graph theory metrics.
         """
 
-        if graph_obj is None:
+        if graph is None:
             return None
 
         self.update_status([1, "Performing un-weighted analysis..."])
 
-        graph = graph_obj.nx_3d_graph
         opt_gtc = self.configs
         data_dict = {"x": [], "y": []}
 
@@ -238,12 +243,12 @@ class GraphAnalyzer(ProgressUpdate):
                 if use_igraph:
                     # use iGraph Lib in C
                     self.update_status([15, "Using iGraph library..."])
-                    avg_node_con = self.igraph_average_node_connectivity(graph_obj)
+                    avg_node_con = self.igraph_average_node_connectivity(graph)
                 else:
                     # Use NetworkX Lib in Python
                     self.update_status([15, "Using NetworkX library..."])
                     if self.allow_mp:  # Multi-processing
-                        avg_node_con = self.average_node_connectivity(graph_obj)
+                        avg_node_con = self.average_node_connectivity(graph)
                     else:
                         avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
@@ -329,7 +334,7 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             self.update_status([60, "Computing Ohms centrality..."])
-            o_distribution_1, res = self.compute_ohms_centrality(graph_obj)
+            o_distribution_1, res = self.compute_ohms_centrality(graph)
             o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
             hist_name = "ohms_distribution"
             hist_label = "Average Ohms centrality"
@@ -498,11 +503,11 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_ohms_centrality(self, graph_obj: FiberNetworkBuilder):
+    def compute_ohms_centrality(self, nx_graph: nx.Graph):
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
-        :param graph_obj: Graph extractor object.
+        :param nx_graph: NetworkX graph object.
 
         Returns: Ohms centrality distribution
         """
@@ -510,7 +515,6 @@ class GraphAnalyzer(ProgressUpdate):
         lst_area = []
         lst_len = []
         lst_width = []
-        nx_graph = graph_obj.nx_3d_graph
 
         sel_batch = self.ntwk_p.get_selected_batch()
         sel_images = self.ntwk_p.get_selected_images(sel_batch)
@@ -559,7 +563,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def average_node_connectivity(self, graph_obj: FiberNetworkBuilder, flow_func=None):
+    def average_node_connectivity(self, nx_graph: nx.Graph, flow_func=None):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
@@ -569,10 +573,9 @@ class GraphAnalyzer(ProgressUpdate):
 
         Parameters
         ----------
-        graph_obj: Graph extractor object.
-
-        flow_func : function
-            A function for computing the maximum flow among a pair of nodes.
+        :param nx_graph: NetworkX graph object.
+        :param flow_func : Function
+            A function for computing the maximum flow between a pair of nodes.
             The function has to accept at least three parameters: a Digraph,
             a source node, and a target node. And return a residual network
             that follows NetworkX conventions (see: meth:`maximum_flow` for
@@ -594,7 +597,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         """
 
-        nx_graph = graph_obj.nx_3d_graph
         if nx_graph.is_directed():
             iter_func = itertools.permutations
         else:
@@ -618,7 +620,7 @@ class GraphAnalyzer(ProgressUpdate):
             return 0
         return num / den
 
-    def igraph_average_node_connectivity(self, graph_obj: FiberNetworkBuilder):
+    def igraph_average_node_connectivity(self, nx_graph: nx.Graph):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity of a graph G is the average
@@ -626,10 +628,9 @@ class GraphAnalyzer(ProgressUpdate):
 
         Parameters
         ---------
-        graph_obj: Graph extractor object.
+        :param nx_graph: NetworkX graph object.
         """
 
-        nx_graph = graph_obj.nx_3d_graph
         cpu_count = get_num_cores()
         num_threads = cpu_count * 10 if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 20
         anc = 0
