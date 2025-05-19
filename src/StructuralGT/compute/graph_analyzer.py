@@ -372,9 +372,7 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating scaling scatter plot values
         if opt_gtc["display_scaling_scatter_plot"]["value"] == 1:
             self.update_status([66, "Computing scaling scatter-plot..."])
-            sel_batch = self.ntwk_p.get_selected_batch()
-            img_obj = sel_batch.images[0]  # ONLY works for 2D
-            ImageProcessor.extract_cnn_patches(img_obj.img_bin)
+            self.ntwk_p.build_patch_graphs()
 
         return pd.DataFrame(data_dict)
 
