@@ -391,15 +391,18 @@ class ImageProcessor(ProgressUpdate):
             img_obj.image_segments = ImageProcessor.extract_cnn_patches(img_obj.img_bin)
 
         seg_count = len(img_obj.image_segments)
+        graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_segments):
             self.update_status([101, f"Extracting graphs for filter {i}/{seg_count}..."])
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder()
                 graph_patch.configs = graph_configs
                 success = graph_patch.extract_graph(img_patch, is_img_2d=True)
-                if not success:
-                    print(f"Filter {img_patch.shape} graph extraction failed!")
-                print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
+                if success:
+                    h, w = img_patch.shape
+                    graph_groups[(h, w)].append(graph_patch.nx_3d_graph)
+                else:
+                    self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
             # -------------------------------------------------
             # TO BE DELETED
             #    fig, ax = plt.subplots()
@@ -410,6 +413,7 @@ class ImageProcessor(ProgressUpdate):
         # --------------------------------------------------
         #plt.show()
         # --------------------------------------------------
+        return graph_groups
 
     def get_filenames(self, image_path: str = None):
         """

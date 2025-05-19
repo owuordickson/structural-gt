@@ -373,7 +373,8 @@ class GraphAnalyzer(ProgressUpdate):
         if opt_gtc["display_scaling_scatter_plot"]["value"] == 1:
             self.update_status([66, "Computing scaling scatter-plot..."])
             self.ntwk_p.add_listener(self.track_img_progress)
-            self.ntwk_p.build_patch_graphs()
+            graph_groups = self.ntwk_p.build_patch_graphs()
+            # print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
             self.ntwk_p.remove_listener(self.track_img_progress)
 
         return pd.DataFrame(data_dict)
