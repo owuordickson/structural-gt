@@ -378,6 +378,29 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
+    def build_patch_graphs(self):
+        """Extracts graphs from smaller patches of selected images."""
+        # Get the selected batch
+        sel_batch = self.get_selected_batch()
+        sel_batch.current_view = 'graph'
+
+        # Get binary image
+        img_obj = sel_batch.images[0]  # ONLY works for 2D
+        if len(img_obj.image_segments) <= 0:
+            img_obj.image_segments = ImageProcessor.extract_cnn_patches(img_obj.img_bin)
+
+        for scale_filter in img_obj.image_segments:
+            for img_patch in scale_filter.image_patches:
+            # -------------------------------------------------
+            # TO BE DELETED
+                fig, ax = plt.subplots()
+                im = ax.imshow(img_patch, cmap='gray')
+                ax.axis('off')
+            print(f"Patch Count: {len(scale_filter.image_patches)}, Stride: {scale_filter.stride}, Filter Size: {scale_filter.filter_size}")
+            # --------------------------------------------------
+        # --------------------------------------------------
+        plt.show()
+        # --------------------------------------------------
 
 
     def get_filenames(self, image_path: str = None):
@@ -682,6 +705,7 @@ class ImageProcessor(ProgressUpdate):
 
             img_scaling = BaseImage.ScalingFilter(
                 image_patches=[],
+                # graph_patches=[],
                 filter_size=(k_h, k_w),
                 stride=(stride_h, stride_w)
             )
@@ -691,16 +715,5 @@ class ImageProcessor(ProgressUpdate):
                 for x in range(0, w - k_w + 1, stride_w):
                     patch = img_padded[y:y + k_h, x:x + k_w]
                     img_scaling.image_patches.append(patch)
-                    # -------------------------------------------------
-                    # TO BE DELETED
-                    fig, ax = plt.subplots()
-                    im = ax.imshow(patch, cmap='gray')
-                    ax.axis('off')
-            print(
-                f"Patch Count: {len(img_scaling.image_patches)}, Stride: {img_scaling.stride}, Filter Size: {img_scaling.filter_size}")
-            # --------------------------------------------------
             lst_img_seg.append(img_scaling)
-        # --------------------------------------------------
-        plt.show()
-        # --------------------------------------------------
         return lst_img_seg
