@@ -6,7 +6,6 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
-from math import isqrt
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
@@ -388,74 +387,6 @@ class BaseImage:
         std_size = (std_width, std_height)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
-
-    @staticmethod
-    def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 6, padding: tuple = (0, 0)):
-        """
-        Perform a convolution operation that breaks down an image into smaller square mini-images.
-        Extract all patches from the image based on filter size, stride, and padding, similar to
-        CNN convolution but without applying the filter.
-
-        :param img: OpenCV image.
-        :param num_filters: Number of convolution filters.
-        :param num_patches: Number of patches to extract per filter window size.
-        :param padding: Padding value (pad_y, pad_x).
-        :return: List of convolved images.
-        """
-        if img is None:
-            return []
-
-        # Initialize Parameters
-        lst_img_seg = []
-
-        # Pad the image
-        pad_h, pad_w = padding
-        img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
-        h, w = img.shape[:2]
-        dim = h if h > w else w
-
-        # Get the best 2D layout
-        def factor_closest(n):
-            for j in range(isqrt(n), 0, -1):
-                if n % j == 0:
-                    return j, n // j
-            return 1, n
-        num_h, num_w = factor_closest(num_patches)
-
-        #---------------------------
-        # TO BE DELETED
-        print(f"num_h={num_h}, num_w={num_w}")
-        import matplotlib.pyplot as plt
-        #---------------------------
-        for i in range(num_filters):
-            temp_dim = int(dim / ((2*i) + 4))  # Find a better non-linear relationship
-            k_h, k_w = (temp_dim, temp_dim)
-            stride_h = int((h + (2*pad_h) - temp_dim) / (num_h - 1)) if num_h > 1 else int((h + (2*pad_h) - temp_dim))
-            stride_w = int((w + (2*pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int((w + (2*pad_w) - temp_dim))
-
-            img_scaling = BaseImage.ScalingFilter (
-                image_patches= [],
-                filter_size= (k_h, k_w),
-                stride= (stride_h, stride_w)
-            )
-
-            # Sliding-window to extract patches
-            for y in range(0, h - k_h + 1, stride_h):
-                for x in range(0, w - k_w + 1, stride_w):
-                    patch = img_padded[y:y + k_h, x:x + k_w]
-                    img_scaling.image_patches.append(patch)
-            #-------------------------------------------------
-                    # TO BE DELETED
-                    fig, ax = plt.subplots()
-                    im = ax.imshow(patch, cmap='gray')
-                    ax.axis('off')
-            print(f"Patch Count: {len(img_scaling.image_patches)}, Stride: {img_scaling.stride}, Filter Size: {img_scaling.filter_size}")
-            #--------------------------------------------------
-            lst_img_seg.append(img_scaling)
-        #--------------------------------------------------
-        plt.show()
-        #--------------------------------------------------
-        return lst_img_seg
 
     @staticmethod
     def compute_pixel_width(scale_val: float, scalebar_pixel_count: int):

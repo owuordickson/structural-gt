@@ -76,7 +76,7 @@ class GraphAnalyzer(ProgressUpdate):
     A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
 
     Args:
-        ntwk_p: Network Processor object.
+        :param imp: Image Processor object.
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
@@ -368,6 +368,13 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "percolation_distribution"
             hist_label = "Average percolation centrality"
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
+
+        # calculating scaling scatter plot values
+        if opt_gtc["display_scaling_scatter_plot"]["value"] == 1:
+            self.update_status([66, "Computing scaling scatter-plot..."])
+            sel_batch = self.ntwk_p.get_selected_batch()
+            img_obj = sel_batch.images[0]  # ONLY works for 2D
+            ImageProcessor.extract_cnn_patches(img_obj.img_bin)
 
         return pd.DataFrame(data_dict)
 

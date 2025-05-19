@@ -58,7 +58,7 @@ def load_img_configs():
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
         options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
 
-        options_img["apply_gamma"]["value"] = float(config.get('filter-settings', 'apply_gamma'))
+        options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))
         options_img["apply_gamma"]["dataValue"] = float(config.get('filter-settings', 'adjust_gamma'))
         options_img["apply_autolevel"]["value"] = int(config.get('filter-settings', 'apply_autolevel'))
         options_img["apply_autolevel"]["dataValue"] = int(config.get('filter-settings', 'blurring_window_size'))
@@ -160,6 +160,7 @@ def load_gtc_configs():
         "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closeness Centrality", "value": 1},
         "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
+        "display_scaling_scatter_plot": {"id": "display_scaling_scatter_plot", "text": "Scaling Scatter Plot", "value": 0},
         #"display_currentflow_histogram": {"id": "display_currentflow_histogram", "text": "Current Flow Betweenness Centrality", "value": 0},
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
         #"compute_graph_conductance": {"id": "compute_graph_conductance", "text": "Graph Conductance", "value": 0},
@@ -186,6 +187,7 @@ def load_gtc_configs():
         options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
         options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
         options_gtc["display_percolation_histogram"]["value"] = int(config.get('sgt-settings', 'display_percolation_histogram'))
+        options_gtc["display_scaling_scatter_plot"]["value"] = int(config.get('sgt-settings', 'display_scaling_scatter_plot'))
         options_gtc["compute_avg_node_connectivity"]["value"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
         options_gtc["compute_graph_density"]["value"] = int(config.get('sgt-settings', 'compute_graph_density'))
         # options_gtc["compute_graph_conductance"]["value"] = int(config.get('sgt-settings', 'compute_graph_conductance'))
