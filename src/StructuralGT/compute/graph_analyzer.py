@@ -135,8 +135,16 @@ class GraphAnalyzer(ProgressUpdate):
         if self.abort:
             return
 
-        # 3. Compute Unweighted GT parameters
+        # 3a. Compute Unweighted GT parameters
         self.output_data = self.compute_gt_metrics(graph_obj)
+
+        # 3b. Compute Scaling Scatter Plots
+        if self.configs["display_scaling_scatter_plot"]["value"] == 1:
+            self.update_status([0, "Computing scaling scatter-plot..."])
+            self.ntwk_p.add_listener(self.track_img_progress)
+            graph_groups = self.ntwk_p.build_patch_graphs()
+            # print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
+            self.ntwk_p.remove_listener(self.track_img_progress)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -368,14 +376,6 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "percolation_distribution"
             hist_label = "Average percolation centrality"
             data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
-
-        # calculating scaling scatter plot values
-        if opt_gtc["display_scaling_scatter_plot"]["value"] == 1:
-            self.update_status([66, "Computing scaling scatter-plot..."])
-            self.ntwk_p.add_listener(self.track_img_progress)
-            graph_groups = self.ntwk_p.build_patch_graphs()
-            # print(f"Number of Nodes for filter {img_patch.shape} is {graph_patch.nx_3d_graph.number_of_nodes()}")
-            self.ntwk_p.remove_listener(self.track_img_progress)
 
         return pd.DataFrame(data_dict)
 

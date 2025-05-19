@@ -393,7 +393,7 @@ class ImageProcessor(ProgressUpdate):
         seg_count = len(img_obj.image_segments)
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_segments):
-            self.update_status([101, f"Extracting graphs for filter {i}/{seg_count}..."])
+            self.update_status([101, f"Extracting graphs from image filter {i+1}/{seg_count}..."])
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder()
                 graph_patch.configs = graph_configs
