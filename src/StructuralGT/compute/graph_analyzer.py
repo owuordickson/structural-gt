@@ -18,6 +18,7 @@ import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
 from cv2.typing import MatLike
+from collections import defaultdict
 from statistics import stdev, StatisticsError
 
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
@@ -502,15 +503,19 @@ class GraphAnalyzer(ProgressUpdate):
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         scaling_df = None
+        scaling_plot_data = defaultdict(list)
         for (h, w), nx_graphs in graph_groups.items():
             for nx_graph in nx_graphs:
                 temp_df = self.compute_gt_metrics(nx_graph)
+                for index, val in temp_df.iterrows():
+                    scaling_plot_data[val["x"]].append([val["y"], h, w])
                 temp_df["h"] = h
                 temp_df["w"] = w
                 if scaling_df is None:
                     scaling_df = temp_df
                 else:
                     scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
+        print(scaling_plot_data)
         return scaling_df
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):

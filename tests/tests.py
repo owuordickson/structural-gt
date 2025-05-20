@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 # from src.StructuralGT.Networks.binarizer import Binarizer
-from src.StructuralGT.Networks.fiber_network import FiberNetwork
-from src.StructuralGT.Networks.structural import Degree
+from src.StructuralGT.networks.fiber_network import FiberNetwork
+from src.StructuralGT.networks.structural import Degree
 
 
 # 1. IMAGE PROCESSING
