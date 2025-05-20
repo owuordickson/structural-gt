@@ -142,7 +142,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 3b. Compute Scaling Scatter Plots
         scaling_data = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
-            scaling_data = self.compute_scaling_data()
+            scaling_data = self.compute_scaling_data(full_img_df=self.output_df)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -495,15 +495,22 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_scaling_data(self):
+    def compute_scaling_data(self, full_img_df: pd.DataFrame = None):
         """"""
         self.update_status([0, "Computing scaling scatter-plot..."])
         self.ntwk_p.add_listener(self.track_img_progress)
         graph_groups = self.ntwk_p.build_patch_graphs()
         self.ntwk_p.remove_listener(self.track_img_progress)
 
-        scaling_df = None
+        # scaling_df = None
         scaling_plot_data = defaultdict(list)
+        if full_img_df is not None:
+            # Get full image dimensions
+            sel_batch = self.ntwk_p.get_selected_batch()
+            h, w  = sel_batch.images[0].img_bin.shape
+            for index, val in full_img_df.iterrows():
+                scaling_plot_data[val["x"]].append([val["y"], h, w])
+
         for (h, w), nx_graphs in graph_groups.items():
             for nx_graph in nx_graphs:
                 temp_df = self.compute_gt_metrics(nx_graph)
@@ -511,11 +518,11 @@ class GraphAnalyzer(ProgressUpdate):
                     scaling_plot_data[val["x"]].append([val["y"], h, w])
                 temp_df["h"] = h
                 temp_df["w"] = w
-                if scaling_df is None:
-                    scaling_df = temp_df
-                else:
-                    scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
-        # print(scaling_plot_data)
+                # if scaling_df is None:
+                #    scaling_df = temp_df
+                # else:
+                #    scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
+        # print(scaling_df)
         return scaling_plot_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -720,7 +727,6 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.set(xlabel='Image Height', ylabel='Image Width')
                 break
             out_figs.append(fig)
-            plt.show()
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])
