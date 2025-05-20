@@ -1,41 +1,18 @@
 import matplotlib.pyplot as plt
-# from src.StructuralGT.Networks.binarizer import Binarizer
-from src.StructuralGT.networks.fiber_network import FiberNetwork
-from src.StructuralGT.networks.structural import Degree
+import numpy as np
 
+# from matplotlib import cbook
 
-# 1. IMAGE PROCESSING
-# Nanowires = Network('dataset/Nanowires')
-# B = Binarizer('dataset/Nanowires/Nanowires.tif')
-# Nanowires.binarize()
+np.random.seed(19680801)
+data = np.random.randn(20, 3)
+print(data)
 
+fig, (ax1, ax2) = plt.subplots(1, 2)
 
-# AdaptiveThreshold = {"Thresh_method": 1, "gamma": 1.001, "md_filter": 0, "g_blur": 0, "autolvl": 0, "fg_color": 0, "laplacian": 0, "scharr": 0, "sobel": 0, "lowpass": 0, "asize": 55, "bsize": 1, "wsize": 1, "thresh": 128.0}
-# Nanowires_AdaptiveThreshold = FiberNetwork('../datasets/Nanowires', binarized_dir='AdaptiveThreshold')
-# Nanowires_AdaptiveThreshold.binarize(options=AdaptiveThreshold)
+# single boxplot call
+ax1.boxplot(data, tick_labels=['A', 'B', 'C'], patch_artist=True, boxprops={'facecolor': 'bisque'})
+plt.show()
 
-
-# 2. GRAPH EXTRACTION
-GaussianBlur = {"Thresh_method": 0, "gamma": 1.001, "md_filter": 0, "g_blur": 1, "autolvl": 0, "fg_color": 0, "laplacian": 0, "scharr": 0, "sobel": 0,"lowpass": 0, "asize": 3, "bsize": 11, "wsize": 1, "thresh": 128.0}
-Nanowires = FiberNetwork('../datasets/Nanowires', binarized_dir='GaussianBlur')
-
-# 2a. Image Processing
-GraphOptions = {"file": "skel.gsd", "merge_nodes": False, "prune": None, "remove_objects": 500, "debubble": None, "crop": None, "box": False, "skeleton": True}
-# Nanowires.img_to_skel(img_options=GaussianBlur, merge_nodes=True, prune=500, remove_objects=500)
-# Nanowires.img_to_skel(img_options=GaussianBlur, remove_objects=500)
-Nanowires.img_to_skel(img_options=GaussianBlur, graph_options=GraphOptions)
-plt.imshow(Nanowires._skeleton, cmap='gray')
-
-# 2b. Build graph
-Nanowires.set_graph(weight_type=["VariableWidthConductance"])
-Nanowires.node_plot()
-
-
-# 3. GRAPH ANALYSIS
-# Nanowires = Network.from_gsd('Nanowires/GaussianBlur/network.gsd')
-D = Degree()
-D.compute(Nanowires)
-print(f'Average degree is {D.average_degree}')
-
-Nanowires.node_plot(parameter=D.degree)
-#plt.show()
+# separate calculation of statistics and plotting
+#stats = cbook.boxplot_stats(data, labels=['A', 'B', 'C'])
+#ax2.bxp(stats, patch_artist=True, boxprops={'facecolor': 'bisque'})

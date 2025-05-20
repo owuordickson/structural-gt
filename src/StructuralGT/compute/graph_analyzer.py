@@ -723,8 +723,9 @@ class GraphAnalyzer(ProgressUpdate):
                 sizes = size_scale * vals  # size depends on value
 
                 ax.set_title(param_name)
-                ax.scatter(x, y, c=vals, s=sizes)
-                ax.set(xlabel='Image Height', ylabel='Image Width')
+                # ax.scatter(x, y, c=vals, s=sizes)
+                ax.plot(vals, y, 'b.', markersize=5)
+                ax.set(xlabel='Value', ylabel='Image Filter Size')
                 break
             out_figs.append(fig)
 
