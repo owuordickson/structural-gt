@@ -140,9 +140,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
-        scaling_df = None
+        scaling_data = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
-            scaling_df = self.compute_scaling_data()
+            scaling_data = self.compute_scaling_data()
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -156,7 +156,7 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 5. Generate results in PDF
-        self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data=scaling_df)
+        self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data=scaling_data)
 
     def compute_gt_metrics(self, graph: nx.Graph = None):
         """
@@ -219,7 +219,7 @@ class GraphAnalyzer(ProgressUpdate):
             if connected_graph:
                 dia = int(diameter(graph))
             else:
-                dia = 'NaN'
+                dia = None
             data_dict["x"].append("Network diameter")
             data_dict["y"].append(dia)
 
@@ -245,7 +245,7 @@ class GraphAnalyzer(ProgressUpdate):
                         avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
-                avg_node_con = 'NaN'
+                avg_node_con = None
             data_dict["x"].append("Average node connectivity")
             data_dict["y"].append(avg_node_con)
 
@@ -431,7 +431,7 @@ class GraphAnalyzer(ProgressUpdate):
                             max_flow = flow_value
                 max_flow = round(max_flow, 5)
             else:
-                max_flow = 'NaN'
+                max_flow = None
             data_dict["x"].append("Max flow between periphery")
             data_dict["y"].append(max_flow)
 
@@ -515,8 +515,8 @@ class GraphAnalyzer(ProgressUpdate):
                     scaling_df = temp_df
                 else:
                     scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
-        print(scaling_plot_data)
-        return scaling_df
+        # print(scaling_plot_data)
+        return scaling_plot_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
         r"""
@@ -705,13 +705,22 @@ class GraphAnalyzer(ProgressUpdate):
         if scaling_data is not None:
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = fig.add_subplot(1, 1, 1)
-            ax.set_axis_off()
-            ax.set_title("Scaling GT parameters")
-            col_width = [0.4, 0.2, 0.2, 0.2]
-            tab_1 = tbl.table(ax, cellText=scaling_data.values[:, :], loc='upper center', colWidths=col_width,
-                              cellLoc='left')
-            tab_1.scale(1, 1.5)
+            for param_name, lst_data in scaling_data.items():
+                plt_data = np.array(lst_data)
+                print(plt_data)
+                vals = plt_data[:, 0]
+                x = plt_data[:, 1]
+                y = plt_data[:, 2]
+                # Normalize size: you can scale to get a good visual appearance
+                size_scale = 40  # tweak this as needed
+                sizes = size_scale * vals  # size depends on value
+
+                ax.set_title(param_name)
+                ax.scatter(x, y, c=vals, s=sizes)
+                ax.set(xlabel='Image Height', ylabel='Image Width')
+                break
             out_figs.append(fig)
+            plt.show()
 
         # 5. displaying histograms
         self.update_status([92, "Generating histograms..."])

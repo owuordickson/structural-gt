@@ -29,7 +29,7 @@ Item {
                     objectName: model.id
                     //Layout.preferredWidth: 100
                     text: model.text
-                    property bool isChecked: model.value === 1 ? true : false
+                    property bool isChecked: model.value === 1
                     checked: isChecked
                     onCheckedChanged: updateValue(isChecked, checked)
                 }
