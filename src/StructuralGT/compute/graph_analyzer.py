@@ -529,7 +529,6 @@ class GraphAnalyzer(ProgressUpdate):
                     x_param = row["x"]
                     y_value = row["y"]
                     # sorted_plt_data[x_param][h].append(y_value)
-        print(sorted_plt_data)
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
