@@ -142,7 +142,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 3b. Compute Scaling Scatter Plots
         scaling_data = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
-            scaling_data = self.compute_scaling_data(full_img_df=self.output_df)
+            scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -502,11 +502,34 @@ class GraphAnalyzer(ProgressUpdate):
         graph_groups = self.ntwk_p.build_patch_graphs()
         self.ntwk_p.remove_listener(self.track_img_progress)
 
-        # scaling_df = None
-        scaling_plot_data = defaultdict(list)
+        sorted_plt_data = defaultdict(lambda: defaultdict(list))
         if full_img_df is not None:
             # Get full image dimensions
             sel_batch = self.ntwk_p.get_selected_batch()
+            # full_img_df["h"], full_img_df["w"] = sel_batch.images[0].img_bin.shape
+            # scaling_data.append(full_img_df)
+            h, w = sel_batch.images[0].img_bin.shape
+            for _, row in full_img_df.iterrows():
+                x_param = row["x"]
+                y_value = row["y"]
+                sorted_plt_data[x_param][h].append(y_value)
+
+        for (h, w), nx_graphs in graph_groups.items():
+            for nx_graph in nx_graphs:
+                temp_df = self.compute_gt_metrics(nx_graph)
+                for _, row in temp_df.iterrows():
+                    x_param = row["x"]
+                    y_value = row["y"]
+                    sorted_plt_data[x_param][h].append(y_value)
+
+        """"# scaling_df = None
+        scaling_plot_data = defaultdict(list)
+        # scaling_data = list()
+        if full_img_df is not None:
+            # Get full image dimensions
+            sel_batch = self.ntwk_p.get_selected_batch()
+            # full_img_df["h"], full_img_df["w"] = sel_batch.images[0].img_bin.shape
+            # scaling_data.append(full_img_df)
             h, w  = sel_batch.images[0].img_bin.shape
             for index, val in full_img_df.iterrows():
                 scaling_plot_data[val["x"]].append([val["y"], h, w])
@@ -514,16 +537,33 @@ class GraphAnalyzer(ProgressUpdate):
         for (h, w), nx_graphs in graph_groups.items():
             for nx_graph in nx_graphs:
                 temp_df = self.compute_gt_metrics(nx_graph)
-                for index, val in temp_df.iterrows():
-                    scaling_plot_data[val["x"]].append([val["y"], h, w])
-                temp_df["h"] = h
-                temp_df["w"] = w
+                for index, row in temp_df.iterrows():
+                    scaling_plot_data[row["x"]].append([row["y"], h, w])
+                # temp_df["h"] = h
+                # temp_df["w"] = w
+                # scaling_data.append(temp_df)
                 # if scaling_df is None:
                 #    scaling_df = temp_df
                 # else:
                 #    scaling_df = pd.concat([scaling_df, temp_df], ignore_index=True)
         # print(scaling_df)
-        return scaling_plot_data
+
+        # Create Box Plot data and labels
+        sorted_plt_data = defaultdict(defaultdict)
+        for param_name, lst_data in scaling_plot_data.items():
+            # arr_data = np.array(lst_data)
+            plt_data = defaultdict(list)
+            for row in lst_data:
+                plt_data[row[1]].append(row[0])
+            sorted_plt_data[param_name] = plt_data
+        # scaling_plot_data = defaultdict(list)
+        # for plt_df in scaling_data:
+        #    print(plt_df)
+        #    print("\n")
+        #    for index, row in plt_df.iterrows():
+        #        pass"""
+        print(sorted_plt_data)
+        return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
         r"""
@@ -709,24 +749,20 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig_wt)
 
         # 4b. display scaling GT results in a Table
+        scaling_data = None
         if scaling_data is not None:
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = fig.add_subplot(1, 1, 1)
-            for param_name, lst_data in scaling_data.items():
-                plt_data = np.array(lst_data)
-                print(plt_data)
-                vals = plt_data[:, 0]
-                x = plt_data[:, 1]
-                y = plt_data[:, 2]
-                # Normalize size: you can scale to get a good visual appearance
-                size_scale = 40  # tweak this as needed
-                sizes = size_scale * vals  # size depends on value
-
-                ax.set_title(param_name)
-                # ax.scatter(x, y, c=vals, s=sizes)
-                ax.plot(vals, y, 'b.', markersize=5)
-                ax.set(xlabel='Value', ylabel='Image Filter Size')
-                break
+            # for param_name, lst_data in scaling_data.items():
+            #    plt_data = np.array(lst_data)
+            #    print(plt_data)
+            #    vals = plt_data[:, 0]
+            #    x = plt_data[:, 1]  # Filter Size (Height)
+            #    y = plt_data[:, 2]  # Filter Size (Width)
+            #    ax.set_title(param_name)
+            #    ax.plot(x, vals, 'b.', markersize=5)
+            #    ax.set(xlabel='Image Filter Size (px)', ylabel='Count')
+            #    break
             out_figs.append(fig)
 
         # 5. displaying histograms
