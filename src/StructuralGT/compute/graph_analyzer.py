@@ -708,7 +708,6 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig_wt)
 
         # 4b. display scaling GT results in a Table
-        # scaling_data = None
         if scaling_data is not None:
             fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = fig.add_subplot(1, 1, 1)
@@ -720,7 +719,7 @@ class GraphAnalyzer(ProgressUpdate):
                 # Box plot
                 ax.set_title(param_name)
                 ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
-                ax.set(xlabel='Image Filter Size (px)', ylabel='Value')
+                ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
 
                 # Mean line (center of each box)
                 means = np.mean(y_values, axis=0)
