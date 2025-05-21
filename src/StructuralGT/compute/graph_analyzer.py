@@ -221,7 +221,7 @@ class GraphAnalyzer(ProgressUpdate):
             if connected_graph:
                 dia = int(diameter(graph))
             else:
-                dia = None
+                dia= np.nan
             data_dict["x"].append("Network diameter")
             data_dict["y"].append(dia)
 
@@ -247,7 +247,7 @@ class GraphAnalyzer(ProgressUpdate):
                         avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
-                avg_node_con = None
+                avg_node_con= np.nan
             data_dict["x"].append("Average node connectivity")
             data_dict["y"].append(avg_node_con)
 
@@ -433,7 +433,7 @@ class GraphAnalyzer(ProgressUpdate):
                             max_flow = flow_value
                 max_flow = round(max_flow, 5)
             else:
-                max_flow = None
+                max_flow= np.nan
             data_dict["x"].append("Max flow between periphery")
             data_dict["y"].append(max_flow)
 
@@ -510,6 +510,11 @@ class GraphAnalyzer(ProgressUpdate):
             num_patches = len(nx_graphs)
             for nx_graph in nx_graphs:
                 temp_df = self.compute_gt_metrics(nx_graph)
+                if temp_df is None:
+                    # Skip the problematic graph
+                    num_patches -= 1
+                    continue
+
                 for _, row in temp_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
@@ -523,7 +528,8 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in full_img_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
-                    sorted_plt_data[x_param][h].append(y_value)
+                    # sorted_plt_data[x_param][h].append(y_value)
+        print(sorted_plt_data)
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -1065,7 +1071,7 @@ class GraphAnalyzer(ProgressUpdate):
             # Maximum Conductance
             val_max = math.sqrt((2 * sorted_vals[1]))
         except ValueError:
-            val_max = None
+            val_max= np.nan
         # Minimum Graph Conductance
         val_min = sorted_vals[1] / 2
 
@@ -1136,8 +1142,16 @@ class GraphAnalyzer(ProgressUpdate):
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
             box_labels = sorted(plt_dict.keys())            # Optional: sort heights
-            y_values = [plt_dict[h] for h in box_labels]    # shape: (n_samples, n_boxes)
-            y_values = np.array(y_values).T
+            y_lst = [plt_dict[h] for h in box_labels]    # shape: (n_samples, n_boxes)
+            # y_values = [list(row) for row in zip(*y_lst)]
+
+            # Pad with NaN
+            max_len = max(len(row) for row in y_lst)
+            padded_lst = [row + [np.nan] * (max_len - len(row)) for row in y_lst]
+
+            # Convert to a Numpy array
+            y_values = np.array(padded_lst).T
+            # y_values = np.nan_to_num(y_values, nan=0.0)
             print(f"{i}. {param_name}\n{y_values}\n\n")
 
             # Box plot
