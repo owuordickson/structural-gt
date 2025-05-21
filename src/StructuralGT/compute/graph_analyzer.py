@@ -1134,9 +1134,11 @@ class GraphAnalyzer(ProgressUpdate):
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         i = 1
         for param_name, plt_dict in scaling_data.items():
+            # Retrieve plot data
             box_labels = sorted(plt_dict.keys())            # Optional: sort heights
             y_values = [plt_dict[h] for h in box_labels]    # shape: (n_samples, n_boxes)
             y_values = np.array(y_values).T
+            print(f"{i}. {param_name}\n{y_values}\n\n")
 
             # Box plot
             ax = fig.add_subplot(2, 2, i)
@@ -1149,14 +1151,14 @@ class GraphAnalyzer(ProgressUpdate):
             ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
             ax.legend()
 
-            if i == 4:
+            # Navigate to the next subplot
+            i = i + 1
+            if i > 4:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
-                # break
-
-            # Navigate to the next subplot
-            i = i + 1 if i < 4 else 1
+        if i <= 4:
+            figs.append(fig)
         return figs
 
     @staticmethod
