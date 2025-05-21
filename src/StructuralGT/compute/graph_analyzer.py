@@ -44,6 +44,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", str
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
+"""
 try:
     import sys
 
@@ -71,6 +72,7 @@ except (ImportError, NameError, AttributeError):
 except cp.cuda.runtime.CUDARuntimeError:
     xp = np  # Fallback to NumPy for CPU
     logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
+"""
 
 class GraphAnalyzer(ProgressUpdate):
     """
@@ -100,6 +102,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.allow_mp: bool = allow_multiprocessing
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
+        self.scaling_data = None
         self.output_df: pd.DataFrame | None = None
         self.weighted_output_df: pd.DataFrame | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
@@ -140,9 +143,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
-        scaling_data = None
         if self.configs["display_scaling_scatter_plot"]["value"] == 1:
-            scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
+            self.scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -156,7 +158,7 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 5. Generate results in PDF
-        self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data=scaling_data)
+        self.plot_figures = self.generate_pdf_output(graph_obj)
 
     def compute_gt_metrics(self, graph: nx.Graph = None):
         """
@@ -666,12 +668,11 @@ class GraphAnalyzer(ProgressUpdate):
             logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
         return anc
 
-    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
+    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
         :param graph_obj: Graph extractor object.
-        :param scaling_data: Scaling data as a Pandas DataFrame.
 
         :return: List of results.
         """
@@ -708,24 +709,8 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig_wt)
 
         # 4b. display scaling GT results in a Table
-        if scaling_data is not None:
-            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            ax = fig.add_subplot(1, 1, 1)
-            for param_name, plt_dict in scaling_data.items():
-                box_labels = sorted(plt_dict.keys())  # Optional: sort heights
-                y_values = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
-                y_values = np.array(y_values).T
-
-                # Box plot
-                ax.set_title(param_name)
-                ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
-                ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
-
-                # Mean line (center of each box)
-                means = np.mean(y_values, axis=0)
-                ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
-                ax.legend()
-                break
+        figs = GraphAnalyzer.plot_scaling_behavior(self.scaling_data)
+        for fig in figs:
             out_figs.append(fig)
 
         # 5. displaying histograms
@@ -1138,6 +1123,33 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title(hist_title, fontdict=font_1)
         ax.set(xlabel=x_label, ylabel=y_label)
         ax.hist(distribution, bins=bins)
+
+    @staticmethod
+    def plot_scaling_behavior(scaling_data: defaultdict = None):
+        """"""
+        figs = []
+        if scaling_data is None:
+            return figs
+
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+        ax = fig.add_subplot(1, 1, 1)
+        for param_name, plt_dict in scaling_data.items():
+            box_labels = sorted(plt_dict.keys())  # Optional: sort heights
+            y_values = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
+            y_values = np.array(y_values).T
+
+            # Box plot
+            ax.set_title(param_name)
+            ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
+            ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
+
+            # Mean line (center of each box)
+            means = np.mean(y_values, axis=0)
+            ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
+            ax.legend()
+            break
+        figs.append(fig)
+        return figs
 
     @staticmethod
     def paginate_table(scaling_data, rows_per_page=40):
