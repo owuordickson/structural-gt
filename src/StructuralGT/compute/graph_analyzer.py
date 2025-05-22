@@ -1141,7 +1141,7 @@ class GraphAnalyzer(ProgressUpdate):
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
             box_labels = sorted(plt_dict.keys())            # Optional: sort heights
-            y_lst = [plt_dict[h] for h in box_labels]    # shape: (n_samples, n_boxes)
+            y_lst = [plt_dict[h] for h in box_labels]       # shape: (n_samples, n_boxes)
             # y_values = [list(row) for row in zip(*y_lst)]
 
             # Pad with NaN
