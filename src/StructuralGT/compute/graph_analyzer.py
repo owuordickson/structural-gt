@@ -14,6 +14,7 @@ import multiprocessing
 import numpy as np
 import scipy as sp
 import pandas as pd
+import seaborn as sns
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
@@ -333,16 +334,16 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "ohms_distribution"
             hist_label = "Average Ohms centrality"
             data_dict = self._update_histogram_data(data_dict, o_distribution, hist_name, hist_label)
-            data_dict["x"].append("Ohms centrality (avg. area)")
-            data_dict["y"].append(f"{res['avg area']} " + r"$m^2$")
-            data_dict["x"].append("Ohms centrality (avg. length)")
-            data_dict["y"].append(f"{res['avg length']} m")
-            data_dict["x"].append("Ohms centrality (avg. width)")
-            data_dict["y"].append(f"{res['avg width']} m")
-            data_dict["x"].append("Ohms centrality (g shape coeff.)")
-            data_dict["y"].append(f"{res['g shape']}")
-            data_dict["x"].append("Ohms centrality (conductivity)")
-            data_dict["y"].append(f"{res['conductivity']} S/m")
+            data_dict["x"].append("Ohms centrality -- avg. area "+ r"($m^2$)")
+            data_dict["y"].append(res['avg area'])
+            data_dict["x"].append("Ohms centrality -- avg. length (m)")
+            data_dict["y"].append(res['avg length'])
+            data_dict["x"].append("Ohms centrality -- avg. width (m)")
+            data_dict["y"].append(res['avg width'])
+            data_dict["x"].append("Ohms centrality -- g shape coeff.")
+            data_dict["y"].append(res['g shape'])
+            data_dict["x"].append("Ohms centrality -- conductivity (S/m)")
+            data_dict["y"].append(res['conductivity'])
 
             # calculating current-flow betweenness centrality
         """
@@ -512,7 +513,7 @@ class GraphAnalyzer(ProgressUpdate):
                 temp_df = self.compute_gt_metrics(nx_graph)
                 if temp_df is None:
                     # Skip the problematic graph
-                    num_patches -= 1
+                    # num_patches -= 1
                     continue
 
                 for _, row in temp_df.iterrows():
@@ -1155,13 +1156,13 @@ class GraphAnalyzer(ProgressUpdate):
 
             # Box plot
             ax = fig.add_subplot(2, 2, i)
-            ax.set_title(param_name)
             ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
-            ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
 
             # Mean line (center of each box)
             means = np.mean(y_values, axis=0)
             ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
+            ax.set_title(param_name)
+            ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
             ax.legend()
 
             # Navigate to the next subplot
@@ -1170,8 +1171,8 @@ class GraphAnalyzer(ProgressUpdate):
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
-        if i <= 4:
-            figs.append(fig)
+
+        figs.append(fig) if i <= 4 else None
         return figs
 
     @staticmethod
