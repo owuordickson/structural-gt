@@ -1,3 +1,26 @@
-keep track of image graphs -- img saved as xyz
-
-name of file, filters selected, good or bad
+file_name,Adaptive Kernel,Global Threshold,OTSU,Dark FG,Autolevel,Gaussian Kernel,Laplacian,Sobel,Median,Scharr,Lowpass Window,Gamma,result
+ANF copy.jpeg,21,,,FALSE,7,7,,,,,3,0.94,G
+CANF copy.jpeg,21,,,FALSE,7,7,,,,,3,0.94,G
+CANF copy.jpeg,21,,,FALSE,7,7,,,,,2,0.94,G
+CANN copy.jpeg,23,,,FALSE,7,7,,,,,2,0.94,G
+CANN copy.jpeg,25,,,FALSE,7,7,,,,,3,0.94,G
+CCF copy.jpeg,,59,,FALSE,,3,,,,,1,0.92,G
+CCF copy.jpeg,,59,,FALSE,,3,,,,,2,0.92,G
+e (6).tif,,55,,FALSE,,3,,,,,1,0.9,G
+e (6).tif,,52,,FALSE,,3,,,,,2,0.88,G
+FCF copy.jpeg,15,,,FALSE,7,7,,,,,9,0.9,G
+FCF copy.jpeg,13,,,FALSE,7,7,,,,,9,0.89,G
+f (3).tif,,55,,FALSE,,5,,,,,2,0.9,G
+f (3).tif,,55,,FALSE,,5,,,,,1,0.9,G
+b (5).tif,,54,,FALSE,,5,,,,,3,0.92,G
+b (5).tif,,55,,FALSE,,5,,,,,2,0.92,G
+d (2).tif,,56,,FALSE,,5,,,,,2,0.92,G
+d (2).tif,,55,,FALSE,,5,,,,,2,0.9,G
+j (5).tif,,57,,FALSE,,5,,,,,4,0.88,G
+c (1).tif,,56,,FALSE,,5,,,,,2,0.86,G
+c (1).tif,,54,,FALSE,,5,,,,,2,0.87,G
+h (1).tif,27,,,FALSE,,5,,,,,11,0.78,G
+4_002.tif,21,,,FALSE,,3,,,,,9,0.82,G
+i (3).tif,,56,,FALSE,,5,,,,,7,0.88,G
+a (2).jpg,,56,,FALSE,,5,,,,,2,0.86,G
+a (2).jpg,,56,,FALSE,,5,,,,,2,0.89,G
