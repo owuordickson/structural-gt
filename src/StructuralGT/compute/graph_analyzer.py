@@ -1154,7 +1154,7 @@ class GraphAnalyzer(ProgressUpdate):
             col_medians = np.nanmedian(y_values, axis=0)
             idx_s = np.where(np.isnan(y_values))
             y_values[idx_s] = np.take(col_medians, idx_s[1])
-            print(f"{i}. {param_name}\n{y_values}\n\n")
+            # print(f"{i}. {param_name}\n{y_values}\n\n")
 
             # Box plot
             ax = fig.add_subplot(2, 2, i)
