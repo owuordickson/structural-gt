@@ -513,7 +513,6 @@ class GraphAnalyzer(ProgressUpdate):
                 temp_df = self.compute_gt_metrics(nx_graph)
                 if temp_df is None:
                     # Skip the problematic graph
-                    # num_patches -= 1
                     continue
 
                 for _, row in temp_df.iterrows():
@@ -529,7 +528,7 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in full_img_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
-                    # sorted_plt_data[x_param][h].append(y_value)
+                    sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -1149,9 +1148,12 @@ class GraphAnalyzer(ProgressUpdate):
             max_len = max(len(row) for row in y_lst)
             padded_lst = [row + [np.nan] * (max_len - len(row)) for row in y_lst]
 
-            # Convert to a Numpy array
+            # Convert to a Numpy array and replace NaN values with the median of their respective columns
             y_values = np.array(padded_lst).T
-            # y_values = np.nan_to_num(y_values, nan=0.0)
+            # y_values = np.nan_to_num(y_values, nan=0.0)  # replace NaN values with 0
+            col_medians = np.nanmedian(y_values, axis=0)
+            idx_s = np.where(np.isnan(y_values))
+            y_values[idx_s] = np.take(col_medians, idx_s[1])
             print(f"{i}. {param_name}\n{y_values}\n\n")
 
             # Box plot
