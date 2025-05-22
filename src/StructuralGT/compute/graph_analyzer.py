@@ -14,7 +14,6 @@ import multiprocessing
 import numpy as np
 import scipy as sp
 import pandas as pd
-import seaborn as sns
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
