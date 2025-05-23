@@ -692,17 +692,17 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = []#self.ntwk_p.plot_images()
+        figs = self.ntwk_p.plot_images()
         for fig in figs:
             out_figs.append(fig)
 
         # 2. plotting graph nodes
-        fig = None#graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, plot_nodes=True, a4_size=True)
+        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
         # 3. plotting graph edges
-        fig = None#graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, a4_size=True)
+        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
