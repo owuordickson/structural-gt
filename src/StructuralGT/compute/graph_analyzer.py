@@ -527,7 +527,7 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in full_img_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
-                    sorted_plt_data[x_param][h].append(y_value)
+                    # sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -692,17 +692,17 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([90, "Generating PDF GT Output..."])
 
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
-        figs = self.ntwk_p.plot_images()
+        figs = []#self.ntwk_p.plot_images()
         for fig in figs:
             out_figs.append(fig)
 
         # 2. plotting graph nodes
-        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, plot_nodes=True, a4_size=True)
+        fig = None#graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
         # 3. plotting graph edges
-        fig = graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, a4_size=True)
+        fig = None#graph_obj.plot_2d_graph_network(image_2d_arr=img_3d, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
@@ -1135,8 +1135,10 @@ class GraphAnalyzer(ProgressUpdate):
         if scaling_data is None:
             return figs
 
-        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         i = 1
+        x_label = None
+        x_values = None
+        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
             box_labels = sorted(plt_dict.keys())            # Optional: sort heights
@@ -1166,9 +1168,22 @@ class GraphAnalyzer(ProgressUpdate):
             ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
             ax.legend()
 
+            # Plot of number of nodes against others
+            if x_label is None:
+                x_label = param_name
+                x_values = y_values
+            else:
+                i = i + 1
+                ax = fig.add_subplot(2, 2, i)
+                ax.plot(x_values, y_values, 'b.', markersize=3)
+                y_title = param_name.split('(')[0] if '(' in param_name else param_name
+                ax.set_title(f"Nodes vs {y_title}")
+                ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                ax.legend()
+
             # Navigate to the next subplot
             i = i + 1
-            if i > 4:
+            if i >= 4:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
