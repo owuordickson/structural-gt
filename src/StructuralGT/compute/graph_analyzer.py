@@ -1158,32 +1158,30 @@ class GraphAnalyzer(ProgressUpdate):
             # print(f"{i}. {param_name}\n{y_values}\n\n")
 
             # Box plot
-            ax = fig.add_subplot(2, 2, i)
-            ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
-
+            # ax = fig.add_subplot(2, 2, i)
+            # ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
             # Mean line (center of each box)
-            means = np.mean(y_values, axis=0)
-            ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
-            ax.set_title(param_name)
-            ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
-            ax.legend()
+            # means = np.mean(y_values, axis=0)
+            # ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
+            # ax.set_title(param_name)
+            # ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
+            # ax.legend()
 
-            # Plot of number of nodes against others
+            # Plot of the nodes counts against others
             if x_label is None:
                 x_label = param_name
                 x_values = y_values
             else:
-                i = i + 1
+                # i = i + 1
                 ax = fig.add_subplot(2, 2, i)
                 ax.plot(x_values, y_values, 'b.', markersize=3)
                 y_title = param_name.split('(')[0] if '(' in param_name else param_name
                 ax.set_title(f"Nodes vs {y_title}")
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                ax.legend()
 
             # Navigate to the next subplot
             i = i + 1
-            if i >= 4:
+            if i > 4:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
