@@ -195,6 +195,11 @@ class TerminalApp:
                               help='you can run the following tasks: (1) extract graph; (2) compute GT metrics.',
                               default=2,
                               type='int')
+        opt_parser.add_option('-c', '--config',
+                              dest='config_file',
+                              help='path to config file',
+                              default="",
+                              type='string')
         # opt_parser.add_option('-m', '--runMultiGT',
         #                      dest='run_multi_gt',
         #                      help='run compute GT parameters on multiple images',
