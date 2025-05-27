@@ -20,8 +20,6 @@ def terminal_app():
     """
     configs = load_project_configs()
 
-    alg = configs.algChoice
-    num_cores = configs.numCores
     is_multi = configs.multiImage
     img_path = configs.filePath
     out_dir = configs.outputDir
@@ -29,10 +27,7 @@ def terminal_app():
 
     try:
         # 1. Get the correct number of CPU cores
-        if num_cores > 1:
-            pass
-        else:
-            num_cores = get_num_cores()
+        num_cores = get_num_cores()
 
         # 2. Verify image file or image-dir
         if is_multi == 1:
@@ -65,20 +60,12 @@ def terminal_app():
 
         # 4. Run GT program
         start = time.time()
-        if alg == 0:
-            file_count = len(filenames)
-            for i in range(file_count):
-                print(f'Analyzing Image: {i+1}/{len(filenames)}')
-                logging.info(f'Analyzing Image: {i+1}/{len(filenames)}', extra={'user': 'SGT Logs'})
-                im_path = filenames[i]
-                run_sgt_module(im_path, out_dir)
-
-                # updating the images completed
-                print("Results generated for " + im_path)
-                # print(f'Images Completed: {i+1}/{len(filenames)}')
-                print("----------------\n\n")
-        else:
-            raise Exception("Wrong algorithm choice!")
+        file_count = len(filenames)
+        for i in range(file_count):
+            print(f'Analyzing Image: {i+1}/{len(filenames)}')
+            logging.info(f'Analyzing Image: {i+1}/{len(filenames)}', extra={'user': 'SGT Logs'})
+            im_path = filenames[i]
+            run_sgt_module(im_path, out_dir)
 
         duration = time.time() - start
         out_line = "Run-time: " + str(duration) + " seconds\n"
