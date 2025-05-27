@@ -23,6 +23,10 @@ from typing import LiteralString
 from cv2.typing import MatLike
 
 
+class AbortException(Exception):
+    """Custom exception to handle task cancellation initiated by the user or an error."""
+    pass
+
 
 def get_num_cores():
     """

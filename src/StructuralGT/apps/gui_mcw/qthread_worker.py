@@ -2,12 +2,8 @@ import os
 import time
 import logging
 from PySide6.QtCore import QObject,QThread,Signal
-from src.StructuralGT.utils.sgt_utils import get_num_cores, write_txt_file
+from src.StructuralGT.utils.sgt_utils import get_num_cores, write_txt_file, AbortException
 
-
-class AbortException(Exception):
-    """Custom exception to handle task cancellation initiated by the user or an error."""
-    pass
 
 
 class QThreadWorker(QThread):
