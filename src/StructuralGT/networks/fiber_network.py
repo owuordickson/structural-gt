@@ -29,13 +29,16 @@ class FiberNetworkBuilder(ProgressUpdate):
 
     """
 
-    def __init__(self):
+    def __init__(self, cfg_file=""):
         """
         A class for builds a graph network from microscopy images and stores is as a NetworkX object.
 
+        Args:
+            cfg_file (str): configuration file path
+
         """
         super(FiberNetworkBuilder, self).__init__()
-        self.configs: dict = load_gte_configs()  # graph extraction parameters and options.
+        self.configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
         self.props: list = []
         self.img_ntwk: MatLike | None = None
         self.nx_3d_graph: nx.Graph | None = None

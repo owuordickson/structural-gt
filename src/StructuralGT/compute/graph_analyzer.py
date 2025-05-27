@@ -99,7 +99,7 @@ class GraphAnalyzer(ProgressUpdate):
         >>> metrics_obj.run_analyzer()
         """
         super(GraphAnalyzer, self).__init__()
-        self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
+        self.configs: dict = load_gtc_configs(imp.config_file)  # graph theory computation parameters and options.
         self.allow_mp: bool = allow_multiprocessing
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None

@@ -52,13 +52,15 @@ class ImageProcessor(ProgressUpdate):
         current_view: str
         graph_obj: FiberNetworkBuilder
 
-    def __init__(self, img_path, out_dir, auto_scale=True):
+    def __init__(self, img_path, out_dir, cfg_file="", auto_scale=True):
         """
         A class for processing and preparing microscopy images for building a fiber graph network.
 
         Args:
             img_path (str | list): input image path
-            out_dir (str): directory path for storing results.
+            out_dir (str): directory path for storing results
+            cfg_file (str): configuration file path
+            auto_scale (bool): whether to automatically scale the image
 
         >>>
         >>> i_path = "path/to/image"
@@ -70,6 +72,7 @@ class ImageProcessor(ProgressUpdate):
         super(ImageProcessor, self).__init__()
         self.img_path: str = img_path if type(img_path) is str else img_path[0]
         self.output_dir: str = out_dir
+        self.config_file: str = cfg_file
         self.auto_scale: bool = auto_scale
         self.image_batches: list[ImageProcessor.ImageBatch] = []
         self.selected_batch: int = 0
@@ -113,7 +116,7 @@ class ImageProcessor(ProgressUpdate):
                     # Cluster the images into batches based on (h, w) size
                     h, w = image.shape[:2]
                     image_groups[(h, w)].append(image)
-                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.config_file, self.auto_scale)
                 return img_batch_groups
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 image_groups = defaultdict(list)
@@ -138,7 +141,7 @@ class ImageProcessor(ProgressUpdate):
                         except EOFError:
                             # Stop when all frames are read
                             break
-                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.config_file, self.auto_scale)
                 return img_batch_groups
             elif ext in ['.nii', '.nii.gz']:
                 # Load NIfTI image using nibabel
@@ -183,9 +186,9 @@ class ImageProcessor(ProgressUpdate):
             image_list = []
             if (len(img_data.shape) >= 3) and (not has_alpha):
                 # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
-                image_list = [BaseImage(img, scale_factor) for img in img_data]
+                image_list = [BaseImage(img, self.config_file, scale_factor) for img in img_data]
             else:
-                img_obj = BaseImage(img_data, scale_factor)
+                img_obj = BaseImage(img_data, self.config_file, scale_factor)
                 image_list.append(img_obj)
 
             is_2d = True
@@ -395,7 +398,7 @@ class ImageProcessor(ProgressUpdate):
         for i, scale_filter in enumerate(img_obj.image_segments):
             self.update_status([101, f"Extracting graphs from image filter {i+1}/{seg_count}..."])
             for img_patch in scale_filter.image_patches:
-                graph_patch = FiberNetworkBuilder()
+                graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs
                 success = graph_patch.extract_graph(img_patch, is_img_2d=True)
                 if success:
@@ -642,7 +645,7 @@ class ImageProcessor(ProgressUpdate):
         return np.array(img_3d), scale_factor
 
     @staticmethod
-    def create_img_batch_groups(img_groups: defaultdict, auto_scale: bool):
+    def create_img_batch_groups(img_groups: defaultdict, cfg_file: str, auto_scale: bool):
         """"""
         img_info_list = []
         for (h, w), images in img_groups.items():
@@ -667,7 +670,7 @@ class ImageProcessor(ProgressUpdate):
                 scaling_options=scaling_opts,
                 selected_images=set(range(len(images))),
                 current_view = 'original',              # 'original', 'binary', 'processed', 'graph'
-                graph_obj=FiberNetworkBuilder()
+                graph_obj=FiberNetworkBuilder(cfg_file=cfg_file)
             )
             img_info_list.append(img_batch)
         return img_info_list
@@ -731,10 +734,11 @@ class ImageProcessor(ProgressUpdate):
         return lst_img_seg
 
     @classmethod
-    def create_imp_object(cls, img_path: str, allow_auto_scale: bool = True):
+    def create_imp_object(cls, img_path: str, config_file: str = "", allow_auto_scale: bool = True):
         """
         Creates an ImageProcessor object. Make sure the image path exists, is verified, and points to an image.
         :param img_path: Path to the image to be processed
+        :param config_file: Path to the config file
         :param allow_auto_scale: Allows automatic scaling of the image
         :return: ImageProcessor object.
         """
@@ -773,4 +777,4 @@ class ImageProcessor(ProgressUpdate):
 
         # Create the StructuralGT object
         input_file = img_files if len(img_files) > 1 else str(img_path)
-        return cls(input_file, out_dir, allow_auto_scale), img_file
+        return cls(input_file, out_dir, config_file, allow_auto_scale), img_file
