@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from PySide6.QtCore import QObject,QThread,Signal
+from PySide6.QtCore import QObject, QThread, Signal
 from src.StructuralGT.utils.sgt_utils import get_num_cores, write_txt_file, AbortException
 
 
@@ -88,7 +88,7 @@ class WorkerTask (QObject):
             ntwk_p.add_listener(self.update_progress)
             ntwk_p.apply_img_filters()
             ntwk_p.build_graph_network()
-            self.is_aborted(ntwk_p)
+            WorkerTask.is_aborted(ntwk_p)
             ntwk_p.remove_listener(self.update_progress)
             self.taskFinishedSignal.emit(True, ntwk_p)
         except AbortException as err:
@@ -136,7 +136,7 @@ class WorkerTask (QObject):
 
                 start = time.time()
                 success, result = self._compute_gt_parameters(sgt_obj)
-                self.is_aborted(sgt_obj)
+                WorkerTask.is_aborted(sgt_obj)
                 self.taskFinishedSignal.emit(False, result)
                 end = time.time()
 
@@ -177,7 +177,7 @@ class WorkerTask (QObject):
             self.add_thread_listener(sgt_obj.abort_tasks)
 
             sgt_obj.run_analyzer()
-            self.is_aborted(sgt_obj)
+            WorkerTask.is_aborted(sgt_obj)
 
             # Cleanup - remove listeners
             sgt_obj.remove_listener(self.update_progress)
