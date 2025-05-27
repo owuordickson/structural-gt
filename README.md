@@ -4,13 +4,18 @@ A software tool that allows graph theory analysis of nano-structures. This is a 
 
 ## Installation
 
-This specified version is not currently available for download via GitHub. Therefore, please follow the manual installation instructions provided below:
+### a) Install as software
 
-### a) Install via source code
+* Download link: https://forms.gle/UtFfkGGqRoUjzeL47
+* Install and enjoy. We would love to hear from you, please give us feedback.
+
+### b) Install via source code
+
+Therefore, please follow the manual installation instructions provided below:
 
 * Install Python version 3.13 on your computer.
-* Download link https://drive.google.com/file/d/1jhr5w0KhCAbMS9kxbOlean0X2q2HrZy9/view?usp=drive_link
-* Download, extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
+* Git Clone the branch **DicksoOwuor-GUI** from this repo: ```https://github.com/compass-stc/StructuralGT.git```
+* Extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
 * Navigate to the location where you saved the **'structural-gt'** folder using the terminal. 
 * Execute the following commands:
@@ -20,18 +25,6 @@ cd structural-gt
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install .
-```
-
-### b) Install as executable
-
-* Install Python version 3.13 on your computer.
-* Download link (to be provided)
-* Open a terminal application such as CMD. 
-* Navigate to the location where you saved the **'.whl'** file using the terminal. 
-* Execute the following command:
-
-```bash
-pip install structuralgt-3.0.1-win_amd64.whl
 ```
 
 ## Executing program
