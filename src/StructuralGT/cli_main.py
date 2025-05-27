@@ -50,6 +50,21 @@ class TerminalApp:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
             return False
 
+    def get_selected_sgt_obj(self, obj_index: int = 0):
+        """
+        Retrieve SGT object at specified index.
+        Args:
+            obj_index: index of SGT object to retrieve
+        """
+        try:
+            keys_list = list(self.sgt_objs.keys())
+            key_at_index = keys_list[obj_index]
+            sgt_obj = self.sgt_objs[key_at_index]
+            return sgt_obj
+        except IndexError:
+            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
+            return None
+
     def add_single_image(self, image_path):
         """
         Verify and validate an image path, use it to create an SGT object
@@ -88,9 +103,12 @@ class TerminalApp:
         else:
             return True
 
-    def task_extract_graph(self, ntwk_p):
+    def task_extract_graph(self, selected_index: int = 0):
         """"""
         try:
+
+            sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
+            ntwk_p = sgt_obj.ntwk_p
             ntwk_p.abort = False
             ntwk_p.add_listener(TerminalApp.update_progress)
             ntwk_p.apply_img_filters()
@@ -120,9 +138,9 @@ class TerminalApp:
             logging.info(f"SGT Computations Failed: {msg}", extra={'user': 'SGT Logs'})
             return None
 
-    def task_compute_multi_gt(self, sgt_objs):
+    def task_compute_multi_gt(self):
         """"""
-        new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(sgt_objs, TerminalApp.update_progress)
+        new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(self.sgt_objs, TerminalApp.update_progress)
         if new_sgt_objs is None:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."
             logging.info(f"SGT Computations Failed: {msg}", extra={'user': 'SGT Logs'})
@@ -149,7 +167,6 @@ def terminal_app():
     Initializes and executes StructuralGT functions.
     :return:
     """
-    configs = {}  # load_project_configs()
 
     """is_multi = configs.multiImage
     img_path = configs.filePath
