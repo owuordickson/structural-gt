@@ -1,3 +1,8 @@
+# SPDX-License-Identifier: GNU GPL v3
+
+"""
+StructuralGT utility functions.
+"""
 
 import os
 import io
