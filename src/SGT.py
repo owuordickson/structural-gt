@@ -5,7 +5,7 @@ A launcher for executing the application as a Window app or a Terminal app.
 """
 
 
-from StructuralGT.entrypoints import main_gui
+from StructuralGT.entrypoints import main_cli
 
 if __name__ == "__main__":
-    main_gui()
+    main_cli()
