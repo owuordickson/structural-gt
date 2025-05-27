@@ -19,8 +19,13 @@ from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 class TerminalApp:
     """Exposes the terminal interface for StructuralGT."""
 
-    def __init__(self):
+    def __init__(self, config_path: str):
+        """
+        Exposes methods for running StructuralGT tasks.
+        :param config_path: path to the configuration file.
+        """
         # Create graph objects
+        self.config_file = config_path
         self.allow_auto_scale = True
         self.sgt_objs = {}
 
@@ -43,7 +48,7 @@ class TerminalApp:
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, self.allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, self.config_file, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
             self.sgt_objs[img_file] = sgt_obj
             return True
@@ -216,7 +221,7 @@ class TerminalApp:
 
         # Run the Terminal App
         # 1. Get images and process them
-        term_app = cls()
+        term_app = cls(cfg.config_file)
         if cfg.img_path != "":
             term_app.add_single_image(cfg.img_path)
         elif cfg.img_dir_path != "":
