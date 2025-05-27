@@ -729,3 +729,48 @@ class ImageProcessor(ProgressUpdate):
                     img_scaling.image_patches.append(patch)
             lst_img_seg.append(img_scaling)
         return lst_img_seg
+
+    @classmethod
+    def create_imp_object(cls, img_path: str, allow_auto_scale: bool = True):
+        """
+        Creates an ImageProcessor object. Make sure the image path exists, is verified, and points to an image.
+        :param img_path: Path to the image to be processed
+        :param allow_auto_scale: Allows automatic scaling of the image
+        :return: ImageProcessor object.
+        """
+
+        # Get the image path and folder
+        img_files = []
+        img_dir, img_file = os.path.split(str(img_path))
+        img_file_ext = os.path.splitext(img_file)[1].lower()
+
+        is_prefix = True
+        # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
+        img_name_pattern = re.match(r'^([a-zA-Z_]+)(\d+)(?=\.[a-zA-Z]+$)', img_file)
+        if img_name_pattern is None:
+            # Regex pattern to extract the suffix (non-digit characters at the end of the file name)
+            is_prefix = False
+            img_name_pattern = re.match(r'^\d+([a-zA-Z_]+)(?=\.[a-zA-Z]+$)', img_file)
+
+        if img_name_pattern:
+            img_files.append(img_path)
+            f_name = img_name_pattern.group(1)
+            name_pattern = re.compile(rf'^{f_name}\d+{re.escape(img_file_ext)}$', re.IGNORECASE) \
+                if is_prefix else re.compile(rf'^\d+{f_name}{re.escape(img_file_ext)}$', re.IGNORECASE)
+
+            # Check if 3D image slices exist in the image folder. Same file name but different number
+            files = sorted(os.listdir(img_dir))
+            for a_file in files:
+                if a_file.endswith(img_file_ext):
+                    if name_pattern.match(a_file):
+                        img_files.append(os.path.join(img_dir, a_file))
+
+        # Create the Output folder if it does not exist
+        out_dir_name = "sgt_files"
+        out_dir = os.path.join(img_dir, out_dir_name)
+        out_dir = os.path.normpath(out_dir)
+        os.makedirs(out_dir, exist_ok=True)
+
+        # Create the StructuralGT object
+        input_file = img_files if len(img_files) > 1 else str(img_path)
+        return cls(input_file, out_dir, allow_auto_scale), img_file

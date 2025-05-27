@@ -55,6 +55,27 @@ def get_num_cores():
     return num_cores
 
 
+def verify_path(a_path):
+    if not a_path:
+        return False, "No folder/file selected."
+
+    # Convert QML "file:///" path format to a proper OS path
+    if a_path.startswith("file:///"):
+        if sys.platform.startswith("win"):
+            # Windows Fix (remove extra '/')
+            a_path = a_path[8:]
+        else:
+            # macOS/Linux (remove "file://")
+            a_path = a_path[7:]
+
+    # Normalize the path
+    a_path = os.path.normpath(a_path)
+
+    if not os.path.exists(a_path):
+        return False, f"File/Folder in {a_path} does not exist. Try again."
+    return True, a_path
+
+
 def install_package(package):
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
