@@ -1,4 +1,4 @@
-import re
+
 import os
 import sys
 import logging
@@ -13,8 +13,6 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject,Signal,Slot
 from matplotlib.backends.backend_pdf import PdfPages
 
-from .imagegrid_model import ImageGridModel
-
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
     from _typeshed import SupportsWrite
@@ -22,6 +20,7 @@ if TYPE_CHECKING:
 from .tree_model import TreeModel
 from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
+from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from src.StructuralGT import __version__
@@ -176,7 +175,7 @@ class MainController(QObject):
             self.showAlertSignal.emit("File/Directory Error", result)
             return False
 
-        # Create SGT object as a GraphAnalyzer object.
+        # Create an SGT object as a GraphAnalyzer object.
         try:
             ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
@@ -256,30 +255,6 @@ class MainController(QObject):
         if img_view is not None:
             sel_img_batch.current_view = img_view
         return sel_images
-
-    def write_to_pdf(self, sgt_obj):
-        """
-        Write results to the PDF file.
-        Args:
-            sgt_obj:
-
-        Returns:
-
-        """
-        try:
-            self._handle_progress_update(98, "Writing PDF...")
-
-            filename, output_location = sgt_obj.ntwk_p.get_filenames()
-            pdf_filename = filename + "_SGT_results.pdf"
-            pdf_file = os.path.join(output_location, pdf_filename)
-            with (PdfPages(pdf_file) as pdf):
-                for fig in sgt_obj.plot_figures:
-                    pdf.savefig(fig)
-
-            self._handle_finished(True, sgt_obj)
-        except Exception as err:
-            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Error occurred while trying to write to PDF.")
 
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
@@ -371,7 +346,9 @@ class MainController(QObject):
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 self.taskTerminatedSignal.emit(success_val, result)
             elif type(result) is GraphAnalyzer:
-                self.write_to_pdf(result)
+                pdf_saved = GraphAnalyzer.write_to_pdf(result, self._handle_progress_update)
+                if pdf_saved:
+                    self._handle_finished(True, result)
         else:
             if type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
@@ -732,8 +709,8 @@ class MainController(QObject):
         except Exception as err:
             self.wait_flag = False
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(False, ["Graph Extraction Error",
+            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_finished(False, ["Graph Extraction Error",
                                                           "Fatal error while trying to extract graph. "
                                                           "Close the app and try again."])
 
@@ -757,8 +734,8 @@ class MainController(QObject):
         except Exception as err:
             self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
+            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_finished(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
 
@@ -791,8 +768,8 @@ class MainController(QObject):
         except Exception as err:
             self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self.worker_task.inProgressSignal.emit(-1, "Fatal error occurred! Close the app and try again.")
-            self.worker_task.taskFinishedSignal.emit(False, ["GT Computation Error",
+            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_finished(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
 
