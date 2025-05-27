@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from cv2.typing import MatLike
 from collections import defaultdict
 from statistics import stdev, StatisticsError
+from matplotlib.backends.backend_pdf import PdfPages
 
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
 from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
@@ -1074,6 +1075,33 @@ class GraphAnalyzer(ProgressUpdate):
         val_min = sorted_vals[1] / 2
 
         return val_max, val_min
+
+    @staticmethod
+    def write_to_pdf(sgt_obj, update_func):
+        """
+        Write results to the PDF file.
+        Args:
+            sgt_obj: StructuralGT object with calculated GT parameters
+            update_func: Function to update the progress bar
+
+        Returns:
+            True if the PDF file is written successfully, otherwise False
+        """
+        try:
+            update_func(98, "Writing PDF...")
+
+            filename, output_location = sgt_obj.ntwk_p.get_filenames()
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+            with (PdfPages(pdf_file) as pdf):
+                for fig in sgt_obj.plot_figures:
+                    pdf.savefig(fig)
+            update_func(100, "GT PDF successfully generated!")
+            return True
+        except Exception as err:
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
+            update_func(-1, "Error occurred while trying to write to PDF.")
+            return False
 
     @staticmethod
     def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str, size: float, line_width: float):

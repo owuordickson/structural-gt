@@ -7,7 +7,6 @@ Terminal interface implementations
 import os
 import time
 import logging
-from matplotlib.backends.backend_pdf import PdfPages
 
 from src.StructuralGT import ALLOWED_IMG_EXTENSIONS
 from src.StructuralGT.utils.sgt_utils import get_num_cores, verify_path, AbortException, write_txt_file
@@ -89,32 +88,6 @@ class TerminalApp:
         else:
             return True
 
-    @staticmethod
-    def write_to_pdf(sgt_obj):
-        """
-        Write results to the PDF file.
-        Args:
-            sgt_obj:
-
-        Returns:
-
-        """
-        try:
-            TerminalApp.update_progress(98, "Writing PDF...")
-
-            filename, output_location = sgt_obj.ntwk_p.get_filenames()
-            pdf_filename = filename + "_SGT_results.pdf"
-            pdf_file = os.path.join(output_location, pdf_filename)
-            with (PdfPages(pdf_file) as pdf):
-                for fig in sgt_obj.plot_figures:
-                    pdf.savefig(fig)
-            TerminalApp.update_progress(100, "GT PDF successfully generated!")
-            return True
-        except Exception as err:
-            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            TerminalApp.update_progress(-1, "Error occurred while trying to write to PDF.")
-            return False
-
     def task_extract_graph(self, ntwk_p):
         """"""
         try:
@@ -139,7 +112,7 @@ class TerminalApp:
         """"""
         success, new_sgt = TerminalApp.compute_gt_parameters(sgt_obj)
         if success:
-            TerminalApp.write_to_pdf(new_sgt)
+            GraphAnalyzer.write_to_pdf(new_sgt, TerminalApp.update_progress)
             return new_sgt
         else:
             msg = "Fatal error occurred while computing GT parameters. Change image filters and/or  graph settings and try again. If error persists then close the app and try again."
@@ -161,7 +134,7 @@ class TerminalApp:
                 success, new_sgt = TerminalApp.compute_gt_parameters(sgt_obj)
                 TerminalApp.is_aborted(sgt_obj)
                 if success:
-                    TerminalApp.write_to_pdf(new_sgt)
+                    GraphAnalyzer.write_to_pdf(new_sgt, TerminalApp.update_progress)
                 end = time.time()
 
                 i += 1
