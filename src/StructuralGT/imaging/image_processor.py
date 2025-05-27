@@ -170,7 +170,7 @@ class ImageProcessor(ProgressUpdate):
         # Check if image batches exist
         if len(img_batches) == 0:
             raise ValueError("No images available! Please add at least one image.")
-        
+
         for i, img_batch in enumerate(img_batches):
             img_data = img_batch.numpy_image
             scale_factor = img_batch.scale_factor
@@ -201,7 +201,6 @@ class ImageProcessor(ProgressUpdate):
                 logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
                 # self.update_status([101, "Image is 3D"])
 
-
             img_batch.images = image_list
             img_batch.is_2d = is_2d
             self.update_image_props(img_batch)
@@ -220,7 +219,8 @@ class ImageProcessor(ProgressUpdate):
         """
 
         if sel_batch_idx >= len(self.image_batches):
-            raise ValueError(f"Selected image batch {sel_batch_idx} out of range! Select in range 0-{len(self.image_batches)}")
+            raise ValueError(
+                f"Selected image batch {sel_batch_idx} out of range! Select in range 0-{len(self.image_batches)}")
 
         self.selected_batch = sel_batch_idx
         self.update_image_props(self.image_batches[sel_batch_idx])
@@ -249,7 +249,7 @@ class ImageProcessor(ProgressUpdate):
         self.update_status([10, "Processing image..."])
         if filter_type == 2:
             self.reset_img_filters()
-        
+
         sel_batch = self.get_selected_batch()
         progress = 10
         incr = 90 / len(sel_batch.images) - 1
@@ -330,7 +330,8 @@ class ImageProcessor(ProgressUpdate):
         """
         sel_batch = self.get_selected_batch()
         if len(sel_batch.selected_images) > 0:
-            [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in sel_batch.selected_images]
+            [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
+             sel_batch.selected_images]
         self.update_image_props(sel_batch)
         sel_batch.current_view = 'processed'
 
@@ -366,7 +367,8 @@ class ImageProcessor(ProgressUpdate):
 
             sel_batch.graph_obj.abort = False
             sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_3d, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
+            sel_batch.graph_obj.fit_graph(out_dir, img_bin, img_3d, sel_batch.is_2d, px_size, rho_val,
+                                          image_file=f_name)
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
@@ -393,7 +395,7 @@ class ImageProcessor(ProgressUpdate):
         seg_count = len(img_obj.image_segments)
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_segments):
-            self.update_status([101, f"Extracting graphs from image filter {i+1}/{seg_count}..."])
+            self.update_status([101, f"Extracting graphs from image filter {i + 1}/{seg_count}..."])
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder()
                 graph_patch.configs = graph_configs
@@ -408,10 +410,10 @@ class ImageProcessor(ProgressUpdate):
             #    fig, ax = plt.subplots()
             #    im = ax.imshow(img_patch, cmap='gray')
             #    ax.axis('off')
-            #print(f"Patch Count: {len(scale_filter.image_patches)}, Stride: {scale_filter.stride}, Filter Size: {scale_filter.filter_size}")
+            # print(f"Patch Count: {len(scale_filter.image_patches)}, Stride: {scale_filter.stride}, Filter Size: {scale_filter.filter_size}")
             # --------------------------------------------------
         # --------------------------------------------------
-        #plt.show()
+        # plt.show()
         # --------------------------------------------------
         return graph_groups
 
@@ -446,7 +448,7 @@ class ImageProcessor(ProgressUpdate):
         :param selected_batch: The selected batch ImageBatch object.
         """
         if selected_batch is None:
-           selected_batch = self.get_selected_batch()
+            selected_batch = self.get_selected_batch()
 
         sel_images = [selected_batch.images[i] for i in selected_batch.selected_images]
         return sel_images
@@ -482,7 +484,7 @@ class ImageProcessor(ProgressUpdate):
         props = [
             ["Name", f_name],
             ["Height x Width", f"({height} x {width}) pixels"] if slices == 0
-                                                            else ["Depth x H x W", f"({slices} x {height} x {width}) pixels"],
+            else ["Depth x H x W", f"({slices} x {height} x {width}) pixels"],
             ["Dimensions", f"{num_dim}D"],
             ["Format", f"{fmt}"],
             # ["Pixel Size", "2nm x 2nm"]
@@ -527,7 +529,8 @@ class ImageProcessor(ProgressUpdate):
             ax_3.set_axis_off()
             ax_3.imshow(img_bin, cmap='gray')
 
-            ax_4.set_title(f"Frame {i}: Histogram of Processed Image") if is_3d else ax_4.set_title(f"Histogram of Processed Image")
+            ax_4.set_title(f"Frame {i}: Histogram of Processed Image") if is_3d else ax_4.set_title(
+                f"Histogram of Processed Image")
             ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
             ax_4.plot(img_histogram)
             if opt_img["threshold_type"]["value"] == 0:
@@ -666,7 +669,7 @@ class ImageProcessor(ProgressUpdate):
                 scale_factor=scale_factor,
                 scaling_options=scaling_opts,
                 selected_images=set(range(len(images))),
-                current_view = 'original',              # 'original', 'binary', 'processed', 'graph'
+                current_view='original',  # 'original', 'binary', 'processed', 'graph'
                 graph_obj=FiberNetworkBuilder()
             )
             img_info_list.append(img_batch)
@@ -729,3 +732,48 @@ class ImageProcessor(ProgressUpdate):
                     img_scaling.image_patches.append(patch)
             lst_img_seg.append(img_scaling)
         return lst_img_seg
+
+    @classmethod
+    def create_imp_object(cls, img_path: str, allow_auto_scale: bool = True):
+        """
+        Creates an ImageProcessor object. Make sure the image path exists, is verified, and points to an image.
+        :param img_path: Path to the image to be processed
+        :param allow_auto_scale: Allows automatic scaling of the image
+        :return: ImageProcessor object.
+        """
+
+        # Get the image path and folder
+        img_files = []
+        img_dir, img_file = os.path.split(str(img_path))
+        img_file_ext = os.path.splitext(img_file)[1].lower()
+
+        is_prefix = True
+        # Regex pattern to extract the prefix (non-digit characters at the beginning of the file name)
+        img_name_pattern = re.match(r'^([a-zA-Z_]+)(\d+)(?=\.[a-zA-Z]+$)', img_file)
+        if img_name_pattern is None:
+            # Regex pattern to extract the suffix (non-digit characters at the end of the file name)
+            is_prefix = False
+            img_name_pattern = re.match(r'^\d+([a-zA-Z_]+)(?=\.[a-zA-Z]+$)', img_file)
+
+        if img_name_pattern:
+            img_files.append(img_path)
+            f_name = img_name_pattern.group(1)
+            name_pattern = re.compile(rf'^{f_name}\d+{re.escape(img_file_ext)}$', re.IGNORECASE) \
+                if is_prefix else re.compile(rf'^\d+{f_name}{re.escape(img_file_ext)}$', re.IGNORECASE)
+
+            # Check if 3D image slices exist in the image folder. Same file name but different number
+            files = sorted(os.listdir(img_dir))
+            for a_file in files:
+                if a_file.endswith(img_file_ext):
+                    if name_pattern.match(a_file):
+                        img_files.append(os.path.join(img_dir, a_file))
+
+        # Create the Output folder if it does not exist
+        out_dir_name = "sgt_files"
+        out_dir = os.path.join(img_dir, out_dir_name)
+        out_dir = os.path.normpath(out_dir)
+        os.makedirs(out_dir, exist_ok=True)
+
+        # Create the StructuralGT object
+        input_file = img_files if len(img_files) > 1 else str(img_path)
+        return cls(input_file, out_dir, allow_auto_scale), img_file

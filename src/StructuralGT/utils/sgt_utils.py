@@ -1,3 +1,8 @@
+# SPDX-License-Identifier: GNU GPL v3
+
+"""
+StructuralGT utility functions.
+"""
 
 import os
 import io
@@ -17,6 +22,10 @@ from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
 
+
+class AbortException(Exception):
+    """Custom exception to handle task cancellation initiated by the user or an error."""
+    pass
 
 
 def get_num_cores():
@@ -53,6 +62,27 @@ def get_num_cores():
     if not num_cores:
         num_cores = mp.cpu_count()
     return num_cores
+
+
+def verify_path(a_path):
+    if not a_path:
+        return False, "No folder/file selected."
+
+    # Convert QML "file:///" path format to a proper OS path
+    if a_path.startswith("file:///"):
+        if sys.platform.startswith("win"):
+            # Windows Fix (remove extra '/')
+            a_path = a_path[8:]
+        else:
+            # macOS/Linux (remove "file://")
+            a_path = a_path[7:]
+
+    # Normalize the path
+    a_path = os.path.normpath(a_path)
+
+    if not os.path.exists(a_path):
+        return False, f"File/Folder in {a_path} does not exist. Try again."
+    return True, a_path
 
 
 def install_package(package):
