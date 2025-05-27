@@ -22,7 +22,6 @@ def read_config_file(config_path):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)
-
     # Load the default configuration from the file
     try:
         config.read(config_file)
