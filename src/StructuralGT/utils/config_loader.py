@@ -6,9 +6,33 @@ Loads default configurations from 'configs.ini' file
 
 import os
 import configparser
+from .sgt_utils import verify_path
 
 
-def load_img_configs():
+def read_config_file(config_path):
+    """Read the contents of the 'configs.ini' file"""
+    config = configparser.ConfigParser()
+    success, result = verify_path(config_path)
+    if success:
+        config_file = result
+    else:
+        print(f"File Error: unable to find config file {config_path}. Using the default config file")
+        # return False
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = 'configs.ini'
+        config_file = os.path.join(script_dir, config_path)
+
+    # Load the default configuration from the file
+    try:
+        config.read(config_file)
+        return config
+    except configparser.Error:
+        print(f"Unable to read the configs from {config_file}.")
+        return None
+
+
+def load_img_configs(cfg_path: str = ""):
     """Image Detection settings"""
 
     options_img = {
@@ -45,14 +69,11 @@ def load_img_configs():
     }
 
     # Load configuration from the file
-    config = configparser.ConfigParser()
-    try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = 'configs.ini'
-        config_file = os.path.join(script_dir, config_path)
-        config.read(config_file)
+    config = read_config_file(cfg_path)
+    if config is None:
+        return options_img
 
+    try:
         options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
         options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
@@ -87,7 +108,7 @@ def load_img_configs():
         return options_img
 
 
-def load_gte_configs():
+def load_gte_configs(cfg_path: str = ""):
     """Graph Extraction Settings"""
 
     options_gte = {
@@ -114,13 +135,11 @@ def load_gte_configs():
     }
 
     # Load configuration from the file
-    config = configparser.ConfigParser()
+    config = read_config_file(cfg_path)
+    if config is None:
+        return options_gte
+
     try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = 'configs.ini'
-        config_file = os.path.join(script_dir, config_path)
-        config.read(config_file)
 
         options_gte["merge_nearby_nodes"]["value"] = int(config.get('extraction-settings', 'merge_nearby_nodes'))
         options_gte["prune_dangling_edges"]["value"] = int(config.get('extraction-settings', 'prune_dangling_edges'))
@@ -143,7 +162,7 @@ def load_gte_configs():
         return options_gte
 
 
-def load_gtc_configs():
+def load_gtc_configs(cfg_path: str = ""):
     """Networkx Calculation Settings"""
 
     options_gtc = {
@@ -169,14 +188,11 @@ def load_gtc_configs():
     }
 
     # Load configuration from the file
-    config = configparser.ConfigParser()
-    try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = 'configs.ini'
-        config_file = os.path.join(script_dir, config_path)
-        config.read(config_file)
+    config = read_config_file(cfg_path)
+    if config is None:
+        return options_gtc
 
+    try:
         options_gtc["display_heatmaps"]["value"] = int(config.get('sgt-settings', 'display_heatmaps'))
         options_gtc["display_degree_histogram"]["value"] = int(config.get('sgt-settings', 'display_degree_histogram'))
         options_gtc["display_betweenness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_betweenness_centrality_histogram'))

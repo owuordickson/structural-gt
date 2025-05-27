@@ -39,10 +39,8 @@ from src.StructuralGT.imaging.image_processor import ImageProcessor
 from src.StructuralGT.utils.config_loader import load_gtc_configs
 from src.StructuralGT.utils.sgt_utils import get_num_cores, AbortException, write_txt_file
 
-
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
-
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
@@ -76,6 +74,7 @@ except cp.cuda.runtime.CUDARuntimeError:
     logging.info("Using CPU with NumPy!", extra={'user': 'SGT Logs'})
 """
 
+
 class GraphAnalyzer(ProgressUpdate):
     """
     A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
@@ -100,7 +99,7 @@ class GraphAnalyzer(ProgressUpdate):
         >>> metrics_obj.run_analyzer()
         """
         super(GraphAnalyzer, self).__init__()
-        self.configs: dict = load_gtc_configs()  # graph theory computation parameters and options.
+        self.configs: dict = load_gtc_configs(imp.config_file)  # graph theory computation parameters and options.
         self.allow_mp: bool = allow_multiprocessing
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
@@ -130,8 +129,8 @@ class GraphAnalyzer(ProgressUpdate):
         # 2. Apply image filters and extract the graph (only if it has not been executed)
         if graph_obj.nx_3d_graph is None:
             self.ntwk_p.add_listener(self.track_img_progress)
-            self.ntwk_p.apply_img_filters()                     # Apply image filters
-            self.ntwk_p.build_graph_network()                   # Extract graph from binary image
+            self.ntwk_p.apply_img_filters()  # Apply image filters
+            self.ntwk_p.build_graph_network()  # Extract graph from binary image
             self.ntwk_p.remove_listener(self.track_img_progress)
             self.abort = self.ntwk_p.abort
             self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
@@ -223,7 +222,7 @@ class GraphAnalyzer(ProgressUpdate):
             if connected_graph:
                 dia = int(diameter(graph))
             else:
-                dia= np.nan
+                dia = np.nan
             data_dict["x"].append("Network diameter")
             data_dict["y"].append(dia)
 
@@ -249,7 +248,7 @@ class GraphAnalyzer(ProgressUpdate):
                         avg_node_con = average_node_connectivity(graph)
                 avg_node_con = round(avg_node_con, 5)
             else:
-                avg_node_con= np.nan
+                avg_node_con = np.nan
             data_dict["x"].append("Average node connectivity")
             data_dict["y"].append(avg_node_con)
 
@@ -335,7 +334,7 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "ohms_distribution"
             hist_label = "Average Ohms centrality"
             data_dict = self._update_histogram_data(data_dict, o_distribution, hist_name, hist_label)
-            data_dict["x"].append("Ohms centrality -- avg. area "+ r"($m^2$)")
+            data_dict["x"].append("Ohms centrality -- avg. area " + r"($m^2$)")
             data_dict["y"].append(res['avg area'])
             data_dict["x"].append("Ohms centrality -- avg. length (m)")
             data_dict["y"].append(res['avg length'])
@@ -435,7 +434,7 @@ class GraphAnalyzer(ProgressUpdate):
                             max_flow = flow_value
                 max_flow = round(max_flow, 5)
             else:
-                max_flow= np.nan
+                max_flow = np.nan
             data_dict["x"].append("Max flow between periphery")
             data_dict["y"].append(max_flow)
 
@@ -908,54 +907,68 @@ class GraphAnalyzer(ProgressUpdate):
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
             deg_distribution = self.histogram_data["degree_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, deg_distribution, 'Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, deg_distribution, 'Degree Heatmap', sz,
+                                                          lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_deg_distribution, 'Weighted Degree Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_deg_distribution,
+                                                          'Weighted Degree Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
             cluster_coefs = self.histogram_data["clustering_coefficients"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, cluster_coefs, 'Clustering Coefficient Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, cluster_coefs,
+                                                          'Clustering Coefficient Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
             bet_distribution = self.histogram_data["betweenness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, bet_distribution, 'Betweenness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, bet_distribution,
+                                                          'Betweenness Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+        if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
+                opt_gte["has_weights"]["value"] == 1):
             w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
             fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_bet_distribution,
-                                    f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz, lw)
+                                                          f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz,
+                                                          lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             clo_distribution = self.histogram_data["closeness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, clo_distribution, 'Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, clo_distribution,
+                                                          'Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_clo_distribution, 'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_clo_distribution,
+                                                          'Length-Weighted Closeness Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             eig_distribution = self.histogram_data["eigenvector_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, eig_distribution, 'Eigenvector Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, eig_distribution,
+                                                          'Eigenvector Centrality Heatmap', sz, lw)
             figs.append(fig)
-        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
+        if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
+                opt_gte["has_weights"]["value"] == 1):
             w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
             fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_eig_distribution,
-                                    f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz, lw)
+                                                          f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz,
+                                                          lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             ohm_distribution = self.histogram_data["ohms_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, ohm_distribution, 'Ohms Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, ohm_distribution,
+                                                          'Ohms Centrality Heatmap', sz, lw)
             figs.append(fig)
         if opt_gtc["display_percolation_histogram"]["value"] == 1:
             per_distribution = self.histogram_data["percolation_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, per_distribution, 'Percolation Centrality Heatmap', sz, lw)
+            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, per_distribution,
+                                                          'Percolation Centrality Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
             fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_per_distribution,
-                                    f'{weight_type}-Weighted Percolation Centrality Heatmap', sz, lw)
+                                                          f'{weight_type}-Weighted Percolation Centrality Heatmap', sz,
+                                                          lw)
             figs.append(fig)
         return figs
 
@@ -1071,14 +1084,15 @@ class GraphAnalyzer(ProgressUpdate):
             # Maximum Conductance
             val_max = math.sqrt((2 * sorted_vals[1]))
         except ValueError:
-            val_max= np.nan
+            val_max = np.nan
         # Minimum Graph Conductance
         val_min = sorted_vals[1] / 2
 
         return val_max, val_min
 
     @staticmethod
-    def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str, size: float, line_width: float):
+    def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str,
+                                  size: float, line_width: float):
         """
         Create a heatmap from a distribution.
 
@@ -1099,7 +1113,8 @@ class GraphAnalyzer(ProgressUpdate):
         ax.set_title(title, fontdict=font_1)
 
         FiberNetworkBuilder.plot_graph_edges(ax, image, nx_graph, is_graph_2d=is_2d, line_width=line_width)
-        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size, distribution_data=distribution)
+        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size,
+                                                     distribution_data=distribution)
 
         fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
         return fig
@@ -1143,8 +1158,8 @@ class GraphAnalyzer(ProgressUpdate):
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
-            box_labels = sorted(plt_dict.keys())            # Optional: sort heights
-            y_lst = [plt_dict[h] for h in box_labels]       # shape: (n_samples, n_boxes)
+            box_labels = sorted(plt_dict.keys())  # Optional: sort heights
+            y_lst = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
             # y_values = [list(row) for row in zip(*y_lst)]
 
             # Pad with NaN
