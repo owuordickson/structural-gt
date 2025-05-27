@@ -91,10 +91,7 @@ class WorkerTask (QObject):
         if success:
             self.taskFinishedSignal.emit(False, new_sgt)
         else:
-            self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing "
-                                                                            "GT parameters. Change image filters and/or "
-                                                                            "graph settings and try again. If error "
-                                                                            "persists then close the app and try again."])
+            self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."])
 
     def task_compute_multi_gt(self, sgt_objs):
         """"""
