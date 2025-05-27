@@ -4,8 +4,8 @@
 Terminal interface implementations
 """
 
-import time
 import os
+import time
 import logging
 
 from src.StructuralGT.utils.sgt_utils import get_num_cores
@@ -28,7 +28,7 @@ def terminal_app():
     filenames = []
 
     try:
-        # 1. Get correct number of CPU cores
+        # 1. Get the correct number of CPU cores
         if num_cores > 1:
             pass
         else:
@@ -49,7 +49,7 @@ def terminal_app():
                 raise Exception("No workable images found! Files have to be either .tif, .png, or .jpg")
         else:
             # Process only a single image file
-            # testing if file is a workable image
+            # testing if the file is a workable image
             if img_path.endswith(('.tif', '.png', '.jpg', '.jpeg')):
                 if os.path.isfile(img_path):
                     filenames.append(img_path)
@@ -58,7 +58,7 @@ def terminal_app():
             else:
                 raise Exception("File has to be a .tif, .png, or .jpg")
 
-        # 3. Verify output directory
+        # 3. Verify the output directory
         if not os.path.isdir(out_dir):
             path, _ = os.path.split(filenames[0])
             out_dir = path
@@ -71,7 +71,7 @@ def terminal_app():
                 print(f'Analyzing Image: {i+1}/{len(filenames)}')
                 logging.info(f'Analyzing Image: {i+1}/{len(filenames)}', extra={'user': 'SGT Logs'})
                 im_path = filenames[i]
-                produce_metrics(im_path, out_dir)
+                run_sgt_module(im_path, out_dir)
 
                 # updating the images completed
                 print("Results generated for " + im_path)
@@ -79,23 +79,24 @@ def terminal_app():
                 print("----------------\n\n")
         else:
             raise Exception("Wrong algorithm choice!")
+
         duration = time.time() - start
         out_line = "Run-time: " + str(duration) + " seconds\n"
         out_line += "Number of cores: " + str(num_cores) + '\n'
         print(out_line)
         logging.info(out_line, extra={'user': 'SGT Logs'})
-    except PermissionError as error:
+    except Exception as error:
         print(error)
         logging.exception("Error: %s", error, extra={'user': 'SGT Logs'})
 
 
-def produce_metrics(img_path, out_dir):
+def run_sgt_module(img_path, out_dir):
     """
-    Executes StructuralGT functions that compute all the user selected metrics.
+    Executes StructuralGT functions that compute all the user-selected metrics.
 
     Args:
-        img_path (str): input image path.
-        out_dir (str): directory path for storing results.
+        img_path (str): input image path
+        out_dir (str): directory path for storing results
     Returns:
         None:
     """
@@ -119,8 +120,8 @@ def print_progress(x, y):
     Simple method to display progress updates.
 
     Args:
-        x (int): progress value.
-        y (str): progress message.
+        x (int): progress value
+        y (str): progress message
     Returns:
          None:
     """
