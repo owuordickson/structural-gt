@@ -24,33 +24,6 @@ class WorkerTask (QObject):
 
     def __init__(self):
         super().__init__()
-        self.__listeners = []
-
-    def add_thread_listener(self, func):
-        """
-        Add functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func in self.__listeners:
-            return
-        self.__listeners.append(func)
-
-    def remove_thread_listener(self, func):
-        """
-        Remove functions from the list of listeners.
-        :param func:
-        :return:
-        """
-        if func not in self.__listeners:
-            return
-        self.__listeners.remove(func)
-
-    def send_abort_signal(self, args=None):
-        if args is None:
-            args = []
-        for func in self.__listeners:
-            func(*args)
 
     def update_progress(self, value, msg):
         """
@@ -105,7 +78,6 @@ class WorkerTask (QObject):
             self.update_progress(-1, "Error encountered! Try again")
             # Clean up listeners before exiting
             ntwk_p.remove_listener(self.update_progress)
-            self.remove_thread_listener(ntwk_p.abort_tasks)
             # Emit failure signal (aborted)
             self.taskFinishedSignal.emit(False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
@@ -174,28 +146,24 @@ class WorkerTask (QObject):
         try:
             # Add Listeners
             sgt_obj.add_listener(self.update_progress)
-            self.add_thread_listener(sgt_obj.abort_tasks)
 
             sgt_obj.run_analyzer()
             WorkerTask.is_aborted(sgt_obj)
 
             # Cleanup - remove listeners
             sgt_obj.remove_listener(self.update_progress)
-            self.remove_thread_listener(sgt_obj.abort_tasks)
             return True, sgt_obj
         except AbortException as err:
             logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})
             self.update_progress(-1, "Task aborted!")
             # Clean up listeners before exiting
             sgt_obj.remove_listener(self.update_progress)
-            self.remove_thread_listener(sgt_obj.abort_tasks)
             return False, None
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.update_progress(-1, "Error encountered! Try again")
             # Clean up listeners before exiting
             sgt_obj.remove_listener(self.update_progress)
-            self.remove_thread_listener(sgt_obj.abort_tasks)
             return False, None
 
     @staticmethod
