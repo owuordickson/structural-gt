@@ -1336,7 +1336,7 @@ class GraphAnalyzer(ProgressUpdate):
                 write_txt_file(output, out_file)
                 logging.info(output, extra={'user': 'SGT Logs'})
             return sgt_objs
-        except AbortException as err:
+        except AbortException:
             update_func(-1, "Task aborted by user or a fatal error occurred!")
             return None
         except Exception as err:
