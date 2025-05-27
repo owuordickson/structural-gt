@@ -62,7 +62,8 @@ class WorkerTask (QObject):
             ntwk_p.add_listener(self.update_progress)
             ntwk_p.apply_img_filters()
             ntwk_p.build_graph_network()
-            WorkerTask.is_aborted(ntwk_p)
+            if ntwk_p.abort:
+                raise AbortException("Process aborted")
             ntwk_p.remove_listener(self.update_progress)
             self.taskFinishedSignal.emit(True, ntwk_p)
         except AbortException as err:
@@ -101,9 +102,3 @@ class WorkerTask (QObject):
         else:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."
             self.taskFinishedSignal.emit(False, ["SGT Computations Aborted/Failed", msg])
-
-    @staticmethod
-    def is_aborted(active_obj):
-        """Raise an exception if the process is aborted."""
-        if active_obj.abort:
-            raise AbortException("Process aborted")
