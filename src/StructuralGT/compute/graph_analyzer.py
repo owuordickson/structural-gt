@@ -4,9 +4,10 @@
 Compute graph theory metrics
 """
 
-import sys
 import os
+import sys
 import math
+import time
 import datetime
 import itertools
 import logging
@@ -36,7 +37,7 @@ from src.StructuralGT.utils.progress_update import ProgressUpdate
 from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
 from src.StructuralGT.imaging.image_processor import ImageProcessor
 from src.StructuralGT.utils.config_loader import load_gtc_configs
-from src.StructuralGT.utils.sgt_utils import get_num_cores
+from src.StructuralGT.utils.sgt_utils import get_num_cores, AbortException, write_txt_file
 
 
 logger = logging.getLogger("SGT App")
@@ -1077,33 +1078,6 @@ class GraphAnalyzer(ProgressUpdate):
         return val_max, val_min
 
     @staticmethod
-    def write_to_pdf(sgt_obj, update_func):
-        """
-        Write results to the PDF file.
-        Args:
-            sgt_obj: StructuralGT object with calculated GT parameters
-            update_func: Function to update the progress bar
-
-        Returns:
-            True if the PDF file is written successfully, otherwise False
-        """
-        try:
-            update_func(98, "Writing PDF...")
-
-            filename, output_location = sgt_obj.ntwk_p.get_filenames()
-            pdf_filename = filename + "_SGT_results.pdf"
-            pdf_file = os.path.join(output_location, pdf_filename)
-            with (PdfPages(pdf_file) as pdf):
-                for fig in sgt_obj.plot_figures:
-                    pdf.savefig(fig)
-            update_func(100, "GT PDF successfully generated!")
-            return True
-        except Exception as err:
-            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            update_func(-1, "Error occurred while trying to write to PDF.")
-            return False
-
-    @staticmethod
     def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str, size: float, line_width: float):
         """
         Create a heatmap from a distribution.
@@ -1240,3 +1214,117 @@ class GraphAnalyzer(ProgressUpdate):
                               colWidths=col_width,
                               cellLoc='left')
             table.scale(1, 1.5)
+
+    @staticmethod
+    def write_to_pdf(sgt_obj, update_func=None):
+        """
+        Write results to a PDF file.
+
+        Args:
+            sgt_obj: StructuralGT object with calculated GT parameters
+            update_func: Callable for progress updates (e.g., update_func(percentage, message))
+
+        Returns:
+            True if the PDF file is written successfully, otherwise False
+        """
+        try:
+            if update_func:
+                update_func(98, "Writing PDF...")
+
+            filename, output_location = sgt_obj.ntwk_p.get_filenames()
+            pdf_filename = filename + "_SGT_results.pdf"
+            pdf_file = os.path.join(output_location, pdf_filename)
+
+            if not sgt_obj.plot_figures:
+                raise ValueError("No figures available to write to PDF.")
+
+            with PdfPages(pdf_file) as pdf:
+                for fig in sgt_obj.plot_figures:
+                    pdf.savefig(fig)
+
+            if update_func:
+                update_func(100, "GT PDF successfully generated!")
+            return True
+        except Exception as err:
+            logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
+            if update_func:
+                update_func(-1, "Error occurred while trying to write to PDF.")
+            return False
+
+    @staticmethod
+    def safe_run_analyzer(sgt_obj, update_func):
+        """
+        Safely compute GT metrics without raising exceptions or crushing app.
+
+        Args:
+            sgt_obj: StructuralGT object with calculated GT parameters
+            update_func: Callable for progress updates (e.g., update_func(percentage, message))
+        """
+        try:
+            # Add Listeners
+            sgt_obj.add_listener(update_func)
+
+            sgt_obj.run_analyzer()
+            if sgt_obj.abort:
+                raise AbortException("Process aborted")
+
+            # Cleanup - remove listeners
+            sgt_obj.remove_listener(update_func)
+            return True, sgt_obj
+        except AbortException as err:
+            update_func(-1, "Task aborted by user or a fatal error occurred!")
+            sgt_obj.remove_listener(update_func)
+            return False, None
+        except Exception as err:
+            update_func(-1, "Error encountered! Try again")
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            # Clean up listeners before exiting
+            sgt_obj.remove_listener(update_func)
+            return False, None
+
+    @staticmethod
+    def safe_run_multi_analyzer(sgt_objs, update_func):
+        """
+        Safely compute GT metrics of multiple images without raising exceptions or crushing app.
+
+        Args:
+            sgt_objs: List of StructuralGT objects with calculated GT parameters
+            update_func: Callable for progress updates (e.g., update_func(percentage, message))
+        """
+        try:
+            i = 0
+            keys_list = list(sgt_objs.keys())
+            for key in keys_list:
+                sgt_obj = sgt_objs[key]
+
+                status_msg = f"Analyzing Image: {(i + 1)} / {len(sgt_objs)}"
+                update_func(101, status_msg)
+
+                start = time.time()
+                success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, update_func)
+                # TerminalApp.is_aborted(sgt_obj)
+                if success:
+                    GraphAnalyzer.write_to_pdf(new_sgt, update_func)
+                end = time.time()
+
+                i += 1
+                num_cores = get_num_cores()
+                sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+                graph_obj = sel_batch.graph_obj
+                output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
+                output += "Number of cores: " + str(num_cores) + "\n"
+                output += "Results generated for: " + sgt_obj.ntwk_p.img_path + "\n"
+                output += "Node Count: " + str(graph_obj.nx_3d_graph.number_of_nodes()) + "\n"
+                output += "Edge Count: " + str(graph_obj.nx_3d_graph.number_of_edges()) + "\n"
+                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
+                out_file = os.path.join(out_dir, filename + '-v2_results.txt')
+                write_txt_file(output, out_file)
+                logging.info(output, extra={'user': 'SGT Logs'})
+            return sgt_objs
+        except AbortException:
+            update_func(-1, "Task aborted by user or a fatal error occurred!")
+            return None
+        except Exception as err:
+            update_func(-1, "Error encountered! Try again")
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            return None
