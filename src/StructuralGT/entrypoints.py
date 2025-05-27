@@ -5,9 +5,8 @@ Entry points that allow users to execute GUI or Cli programs
 """
 
 import sys
-# import time
 import logging
-from .cli_main import terminal_app
+from .cli_main import TerminalApp
 # from src.StructuralGT import detect_cuda_and_install_cupy
 
 
@@ -22,7 +21,7 @@ def main_cli():
     :return:
     """
     initialize_logging()
-    terminal_app()
+    TerminalApp.execute()
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
 
 

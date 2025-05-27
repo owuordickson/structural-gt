@@ -5,12 +5,13 @@ Terminal interface implementations
 """
 
 import os
-import time
+import sys
 import logging
+from optparse import OptionParser
 
 from src.StructuralGT import ALLOWED_IMG_EXTENSIONS
-from src.StructuralGT.utils.sgt_utils import get_num_cores, verify_path, AbortException, write_txt_file
-from src.StructuralGT.imaging.image_processor import ImageProcessor, FiberNetworkBuilder
+from src.StructuralGT.utils.sgt_utils import verify_path, AbortException
+from src.StructuralGT.imaging.image_processor import ImageProcessor
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
 
@@ -105,10 +106,9 @@ class TerminalApp:
 
     def task_extract_graph(self, selected_index: int = 0):
         """"""
+        sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
+        ntwk_p = sgt_obj.ntwk_p
         try:
-
-            sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
-            ntwk_p = sgt_obj.ntwk_p
             ntwk_p.abort = False
             ntwk_p.add_listener(TerminalApp.update_progress)
             ntwk_p.apply_img_filters()
@@ -127,8 +127,9 @@ class TerminalApp:
             logging.info(f"Extract Graph Aborted: {msg}", extra={'user': 'SGT Logs'})
             return None
 
-    def task_compute_gt(self, sgt_obj):
+    def task_compute_gt(self, selected_index: int = 0):
         """"""
+        sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
         success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, TerminalApp.update_progress)
         if success:
             GraphAnalyzer.write_to_pdf(new_sgt, TerminalApp.update_progress)
@@ -147,28 +148,84 @@ class TerminalApp:
         return new_sgt_objs
 
     @staticmethod
-    def update_progress(value, msg):
+    def update_progress(progress_val, msg):
         """
         Simple method to display progress updates.
 
         Args:
-            value (int): progress value
+            progress_val (int): progress value
             msg (str): progress message
         Returns:
              None:
         """
-        print(str(value) + "%: " + msg)
-        logging.info(str(value) + "%: " + msg, extra={'user': 'SGT Logs'})
 
+        if 0 <= progress_val <= 100:
+            print(f"{progress_val} %: {msg}")
+            logging.info(f"{progress_val} %: {msg}", extra={'user': 'SGT Logs'})
+        elif progress_val > 100:
+            print(f"{msg}")
+            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
+        else:
+            print(f"Error: {msg}")
+            logging.exception(f"Error: {msg}", extra={'user': 'SGT Logs'})
 
+    @classmethod
+    def execute(cls):
+        """Initializes and starts the terminal/CMD the StructuralGT application."""
 
-def terminal_app():
-    """
-    Initializes and executes StructuralGT functions.
-    :return:
-    """
+        # Retrieve user settings
+        opt_parser = OptionParser()
+        opt_parser.add_option('-f', '--inputFile',
+                             dest='img_path',
+                             help='path to image file',
+                             default="",
+                             type='string')
+        opt_parser.add_option('-d', '--inputDir',
+                             dest='img_dir_path',
+                             help='path to folder containing images',
+                             default="",
+                             type='string')
+        opt_parser.add_option('-s', '--allowAutoScale',
+                             dest='auto_scale',
+                             help='allow automatic scaling of images',
+                             default=1,
+                             type='int')
+        opt_parser.add_option('-t', '--runTask',
+                              dest='run_task',
+                              help='you can run the following tasks: (1) extract graph; (2) compute GT metrics.',
+                              default=2,
+                              type='int')
+        # opt_parser.add_option('-m', '--runMultiGT',
+        #                      dest='run_multi_gt',
+        #                      help='run compute GT parameters on multiple images',
+        #                      default=0,
+        #                      type='int')
+        # opt_parser.add_option('-i', '--selectedImgIndex',
+        #                      dest='sel_img_idx',
+        #                      help='index of selected image',
+        #                      default=0,
+        #                      type='int')
+        (cfg, args) = opt_parser.parse_args()
+        cfg.auto_scale = bool(cfg.auto_scale)
+        # cfg.run_multi_gt = bool(cfg.run_multi_gt)
 
-    """is_multi = configs.multiImage
-    img_path = configs.filePath
-    out_dir = configs.outputDir
-    filenames = []"""
+        # Run the Terminal App
+        # 1. Get images and process them
+        term_app = cls()
+        if cfg.img_path != "":
+            term_app.add_single_image(cfg.img_path)
+        elif cfg.img_dir_path != "":
+            term_app.add_multiple_images(cfg.img_dir_path)
+        else:
+            term_app.update_progress(-1, "No image path/image folder provided! System will exit.")
+            sys.exit('System exit')
+
+        # 2. Execute specific task
+        if cfg.run_task == 1:
+            term_app.task_extract_graph()
+        elif cfg.run_task == 2:
+            run_multi_gt = True if cfg.img_dir_path != "" else False
+            term_app.task_compute_multi_gt() if run_multi_gt else term_app.task_compute_gt()
+        else:
+            term_app.update_progress(-1, "Invalid GT task selected! System will exit.")
+            sys.exit('System exit')
