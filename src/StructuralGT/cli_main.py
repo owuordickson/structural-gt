@@ -11,6 +11,7 @@ from optparse import OptionParser
 
 from src.StructuralGT import ALLOWED_IMG_EXTENSIONS
 from src.StructuralGT.utils.sgt_utils import verify_path, AbortException
+from src.StructuralGT.utils.config_loader import strict_read_config_file
 from src.StructuralGT.imaging.image_processor import ImageProcessor
 from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
 
@@ -219,9 +220,15 @@ class TerminalApp:
         cfg.auto_scale = bool(cfg.auto_scale)
         # cfg.run_multi_gt = bool(cfg.run_multi_gt)
 
-        # Run the Terminal App
-        # 1. Get images and process them
+        # Create Terminal App
         term_app = cls(cfg.config_file)
+
+        # 1. Verify config file
+        config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
+        if not config_file_ok:
+            sys.exit('Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_config.ini -t 2')
+
+        # 2. Get images and process them
         if cfg.img_path != "":
             term_app.add_single_image(cfg.img_path)
         elif cfg.img_dir_path != "":
@@ -230,7 +237,7 @@ class TerminalApp:
             term_app.update_progress(-1, "No image path/image folder provided! System will exit.")
             sys.exit('System exit')
 
-        # 2. Execute specific task
+        # 3. Execute specific task
         if cfg.run_task == 1:
             term_app.task_extract_graph()
         elif cfg.run_task == 2:
