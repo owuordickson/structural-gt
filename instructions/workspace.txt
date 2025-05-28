@@ -7,7 +7,7 @@ git init
 git remote add origin https://github.com/owuordickson/structural-gt.git
 git fetch origin
 git fetch origin cppy
-git pull origin main/v3.0.1-terminal
+git pull origin main/terminal
 
 
 2. SETUP PYCHARM
