@@ -12,7 +12,8 @@ from .apps.cli_main import TerminalApp
 
 
 logger = logging.getLogger("SGT App")
-FORMAT = '%(asctime)s; %(user)-8s. %(message)s'
+# FORMAT = '%(asctime)s; %(user)s. %(levelname)s: %(message)s'
+FORMAT = '%(asctime)s; %(levelname)s: %(message)s'
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
