@@ -7,7 +7,6 @@ Entry points that allow users to execute GUI or Cli programs
 import sys
 import logging
 from .cli_main import TerminalApp
-# from src.StructuralGT import detect_cuda_and_install_cupy
 
 
 logger = logging.getLogger("SGT App")
