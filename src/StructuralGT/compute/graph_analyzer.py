@@ -522,6 +522,7 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in full_img_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
+                    print(f"{x_param}-{h}: {y_value}")
                     # sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
 
@@ -1168,16 +1169,6 @@ class GraphAnalyzer(ProgressUpdate):
             y_values[idx_s] = np.take(col_medians, idx_s[1])
             # print(f"{i}. {param_name}\n{y_values}\n\n")
 
-            # Box plot
-            # ax = fig.add_subplot(2, 2, i)
-            # ax.boxplot(y_values, tick_labels=box_labels, patch_artist=True, boxprops={'facecolor': 'bisque'})
-            # Mean line (center of each box)
-            # means = np.mean(y_values, axis=0)
-            # ax.plot(range(1, len(means) + 1), means, marker='o', color='blue', linestyle='--', label='Mean')
-            # ax.set_title(param_name)
-            # ax.set(xlabel='Image Height Filter Size (px)', ylabel='Value')
-            # ax.legend()
-
             # Plot of the nodes counts against others
             if x_label is None:
                 x_label = param_name
@@ -1280,7 +1271,7 @@ class GraphAnalyzer(ProgressUpdate):
             # Cleanup - remove listeners
             sgt_obj.remove_listener(update_func)
             return True, sgt_obj
-        except AbortException as err:
+        except AbortException:
             update_func(-1, "Task aborted by user or a fatal error occurred!")
             sgt_obj.remove_listener(update_func)
             return False, None
