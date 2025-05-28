@@ -111,8 +111,8 @@ class BaseImage:
 
         if float(opt_img["apply_gamma"]["dataValue"]) != 1.00:
             inv_gamma = 1.00 / float(opt_img["apply_gamma"]["dataValue"])
-            table = np.array([((i / 255.0) ** inv_gamma) * 255
-                              for i in np.arange(0, 256)]).astype('uint8')
+            lst_tbl = [((float(i) / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]
+            table = np.array(lst_tbl).astype('uint8')
             filtered_img = cv2.LUT(filtered_img, table)
 
         # applies a low-pass filter
