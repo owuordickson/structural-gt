@@ -181,11 +181,24 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["x"].append("Number of edges")
         data_dict["y"].append(edge_count)
 
+        # length of edges
+        length_arr = np.array(list(nx.get_edge_attributes(graph, 'length').values()))
+        data_dict["x"].append('Average length (nm)')
+        data_dict["y"].append(round(np.average(length_arr), 3))
+        data_dict["x"].append('Median length (nm)')
+        data_dict["y"].append(round(np.median(length_arr), 3))
+
+        # width of edges
+        width_arr = np.array(list(nx.get_edge_attributes(graph, 'width').values()))
+        data_dict["x"].append('Average width (nm)')
+        data_dict["y"].append(round(np.average(width_arr), 3))
+        data_dict["x"].append('Median width (nm)')
+        data_dict["y"].append(round(np.median(width_arr), 3))
+
         # angle of edges (inbound and outbound)
         angle_arr = np.array(list(nx.get_edge_attributes(graph, 'angle').values()))
         data_dict["x"].append('Average edge angle (degrees)')
         data_dict["y"].append(round(np.average(angle_arr), 3))
-
         data_dict["x"].append('Median edge angle (degrees)')
         data_dict["y"].append(round(np.median(angle_arr), 3))
 
@@ -579,10 +592,16 @@ class GraphAnalyzer(ProgressUpdate):
                 # if n < 5:
             ohms_dict[n] = ohms_val
         avg_area = np.average(np.array(lst_area, dtype=float))
+        med_area = np.median(np.array(lst_area, dtype=float))
         avg_len = np.average(np.array(lst_len, dtype=float))
+        med_len = np.median(np.array(lst_len, dtype=float))
         avg_width = np.average(np.array(lst_width, dtype=float))
-        res = {'avg area': avg_area, 'avg length': avg_len, 'avg width': avg_width,
-               'g shape': g_shape, 'conductivity': round((1 / rho_dim), 2)}
+        med_width = np.median(np.array(lst_width, dtype=float))
+        res = {
+            'avg area': avg_area, 'med area': med_area,
+            'avg length': avg_len, 'med length': med_len,
+            'avg width': avg_width, 'med width': med_width,
+            'g shape': g_shape, 'conductivity': round((1 / rho_dim), 2)}
 
         return ohms_dict, res
 
@@ -1149,34 +1168,38 @@ class GraphAnalyzer(ProgressUpdate):
 
         i = 1
         x_label = None
-        x_values = None
+        x_values, x_avg, x_err = None, None, None
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
             box_labels = sorted(plt_dict.keys())  # Optional: sort heights
             y_lst = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
-            # y_values = [list(row) for row in zip(*y_lst)]
 
             # Pad with NaN
             max_len = max(len(row) for row in y_lst)
             padded_lst = [row + [np.nan] * (max_len - len(row)) for row in y_lst]
 
-            # Convert to a Numpy array and replace NaN values with the median of their respective columns
+            # Convert to a Numpy array
             y_values = np.array(padded_lst).T
-            # y_values = np.nan_to_num(y_values, nan=0.0)  # replace NaN values with 0
-            col_medians = np.nanmedian(y_values, axis=0)
-            idx_s = np.where(np.isnan(y_values))
-            y_values[idx_s] = np.take(col_medians, idx_s[1])
-            # print(f"{i}. {param_name}\n{y_values}\n\n")
+            # Replace NaN values with the median of their respective columns
+            # col_medians = np.nanmedian(y_values, axis=0)
+            # idx_s = np.where(np.isnan(y_values))
+            # y_values[idx_s] = np.take(col_medians, idx_s[1])
+            y_avg = np.nanmean(y_values, axis=0)
+            y_err = np.nanstd(y_values, axis=0, ddof=1) / np.sqrt(y_values.shape[0])
+            # print(f"{i}. {param_name}\n{y_values}\n{y_avg} - {y_err}\n\n")
 
             # Plot of the nodes counts against others
             if x_label is None:
                 x_label = param_name
                 x_values = y_values
+                x_avg = y_avg
+                x_err = y_err
             else:
                 # i = i + 1
                 ax = fig.add_subplot(2, 2, i)
-                ax.plot(x_values, y_values, 'b.', markersize=3)
+                # ax.plot(x_values, y_values, 'b.', markersize=3)
+                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, capsize=4, marker="s", color="r", markersize=4, linewidth=1, linestyle='-')
                 y_title = param_name.split('(')[0] if '(' in param_name else param_name
                 ax.set_title(f"Nodes vs {y_title}")
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
