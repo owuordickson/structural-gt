@@ -5,7 +5,6 @@ Compute graph theory metrics
 """
 
 import os
-import sys
 import math
 import time
 import datetime
@@ -31,7 +30,7 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-import sgt_c_module as sgt
+# import sgt_c_module as sgt
 from ..utils.progress_update import ProgressUpdate
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
@@ -228,7 +227,7 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
                 # use_igraph = opt_gtc["compute_lang == 'C'"]["value"]
-                use_igraph = True
+                use_igraph = False
                 if use_igraph:
                     # use iGraph Lib in C
                     self.update_status([15, "Using iGraph library..."])
