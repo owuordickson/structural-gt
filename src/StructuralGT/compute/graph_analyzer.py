@@ -30,7 +30,7 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-import sgt_c_module as sgt
+from .c_lang import sgt_c_module as sgt
 from ..utils.progress_update import ProgressUpdate
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
