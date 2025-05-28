@@ -6,7 +6,6 @@ Processes 2D or 3D images and generate a fiber graph network.
 
 import re
 import os
-import sys
 import cv2
 import pydicom
 import logging
@@ -24,7 +23,6 @@ from ..imaging.base_image import BaseImage
 from ..networks.fiber_network import FiberNetworkBuilder
 
 logger = logging.getLogger("SGT App")
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
