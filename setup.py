@@ -1,4 +1,3 @@
-# import os
 import platform
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -50,8 +49,6 @@ if platform.system() == "Windows":
 
 # Setup configuration
 setup(
-    name="sgt_c_module",
-    version="1.0.0",
     #ext_modules=ext_modules,
     cmdclass={"build_ext": BuildExt},  # Use the custom build class
     # **extra_options
