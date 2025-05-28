@@ -102,7 +102,7 @@ class TerminalApp:
             allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
             if a_file.endswith(allowed_extensions):
                 img_path = os.path.join(str(img_dir_path), a_file)
-                _ = self.create_sgt_object(img_path)
+                self.create_sgt_object(img_path)
 
         if len(self.sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
