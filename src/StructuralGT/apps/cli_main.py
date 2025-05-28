@@ -15,7 +15,8 @@ from ..utils.config_loader import strict_read_config_file
 from ..imaging.image_processor import ImageProcessor
 from ..compute.graph_analyzer import GraphAnalyzer
 
-
+logger = logging.getLogger("SGT App")
+# logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class TerminalApp:
     """Exposes the terminal interface for StructuralGT."""
@@ -119,9 +120,9 @@ class TerminalApp:
             ntwk_p.add_listener(TerminalApp.update_progress)
             ntwk_p.apply_img_filters()
             ntwk_p.build_graph_network()
+            ntwk_p.remove_listener(TerminalApp.update_progress)
             if ntwk_p.abort:
                 raise AbortException("Process aborted")
-            ntwk_p.remove_listener(TerminalApp.update_progress)
             TerminalApp.update_progress(100, "Graph successfully extracted!")
             return ntwk_p
         except AbortException as err:
@@ -173,7 +174,7 @@ class TerminalApp:
             logging.info(f"{msg}", extra={'user': 'SGT Logs'})
         else:
             print(f"Error: {msg}")
-            logging.exception(f"Error: {msg}", extra={'user': 'SGT Logs'})
+            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
 
     @classmethod
     def execute(cls):
