@@ -9,6 +9,35 @@ import configparser
 from .sgt_utils import verify_path
 
 
+def strict_read_config_file(config_path, update_func=None):
+    """
+    Strictly read the contents of the 'configs.ini' file, otherwise stop execution.
+
+    Args:
+        config_path (str): path to config file
+        update_func (function): function that will be called to give message updates
+
+    Returns:
+        ConfigParser object or None if an error occurs.
+    """
+    success, result = verify_path(config_path)
+    if not success:
+        if update_func is not None:
+            update_func(-1, f"File Error: unable to find config file {config_path}.")
+        return False
+
+    config = configparser.ConfigParser()
+    config_file = result
+    try:
+        config.read(config_file)
+        return True
+    except configparser.Error:
+        if update_func is not None:
+            update_func(-1, f"Unable to read the configs from {config_file}.")
+        return False
+
+
+
 def read_config_file(config_path):
     """Read the contents of the 'configs.ini' file"""
     config = configparser.ConfigParser()
@@ -22,7 +51,6 @@ def read_config_file(config_path):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)
-
     # Load the default configuration from the file
     try:
         config.read(config_file)
