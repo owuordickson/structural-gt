@@ -1,9 +1,7 @@
-import os
-import time
 import logging
 from PySide6.QtCore import QObject, QThread, Signal
-from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
-from src.StructuralGT.utils.sgt_utils import get_num_cores, write_txt_file, AbortException
+from ...compute.graph_analyzer import GraphAnalyzer
+from ...utils.sgt_utils import AbortException
 
 
 

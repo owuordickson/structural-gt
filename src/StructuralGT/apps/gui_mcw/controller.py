@@ -23,11 +23,11 @@ from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
-from src.StructuralGT import __version__
-from src.StructuralGT import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
-from src.StructuralGT.utils.sgt_utils import img_to_base64, verify_path
-from src.StructuralGT.imaging.image_processor import ImageProcessor, FiberNetworkBuilder
-from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
+from ... import __version__
+from ... import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
+from ...utils.sgt_utils import img_to_base64, verify_path
+from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder
+from ...compute.graph_analyzer import GraphAnalyzer
 
 
 class MainController(QObject):

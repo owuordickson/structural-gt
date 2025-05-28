@@ -1,6 +1,7 @@
 # Others
 .DS_STORE
 .idea/
+sgt_files/
 *.exe
 *.app
 

@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from skimage.morphology import disk
 from skimage.filters.rank import autolevel, median
 
-from src.StructuralGT.utils.config_loader import load_img_configs
-from src.StructuralGT.utils.sgt_utils import safe_uint8_image
+from ..utils.config_loader import load_img_configs
+from ..utils.sgt_utils import safe_uint8_image
 
 
 

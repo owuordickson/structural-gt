@@ -16,11 +16,10 @@ from ovito.data import DataCollection, Particles
 from ovito.pipeline import StaticSource, Pipeline
 
 from .sknw_mod import build_sknw
-# from src.StructuralGT import GraphSkeleton
-from src.StructuralGT.utils.progress_update import ProgressUpdate
-from src.StructuralGT.networks.graph_skeleton import GraphSkeleton
-from src.StructuralGT.utils.config_loader import load_gte_configs
-from src.StructuralGT.utils.sgt_utils import write_csv_file, write_gsd_file, plot_to_opencv
+from ..utils.progress_update import ProgressUpdate
+from ..networks.graph_skeleton import GraphSkeleton
+from ..utils.config_loader import load_gte_configs
+from ..utils.sgt_utils import write_csv_file, write_gsd_file, plot_to_opencv
 
 
 class FiberNetworkBuilder(ProgressUpdate):
