@@ -37,4 +37,3 @@ pip install -r requirements.txt
 pip install .
 deactivate
 .venv_sgt/bin/StructuralGT-cli -f examples/Cont-SR_NPs.tif
-.venv_sgt/bin/StructuralGT

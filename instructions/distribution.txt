@@ -37,3 +37,7 @@ CREATING AN EXECUTABLE WITH PyInstaller
     pyinstaller StructuralGT-Win.spec
 
 5. For Windows, use Inno Setup to create an installer
+
+6. Run the executable
+    Open a terminal application and execute the following command:
+    StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1

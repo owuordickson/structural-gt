@@ -4,12 +4,12 @@ A software tool that allows graph theory analysis of nano-structures. This is a 
 
 ## Installation
 
-### a) Install as software
+## 1. Install as software
 
 * Download link: https://forms.gle/UtFfkGGqRoUjzeL47
 * Install and enjoy. We would love to hear from you, please give us feedback.
 
-### b) Install via source code
+## 2. Install via source code
 
 Therefore, please follow the manual installation instructions provided below:
 
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 pip install .
 ```
 
-## Executing program
+### 2a. Executing GUI app
 
 To execute the program, please follow these steps:
 
@@ -38,6 +38,35 @@ To execute the program, please follow these steps:
 StructuralGT
 ```
 
+### 2b. Executing Terminal app
+
+Before executing ```StructuralGT-cli```, you need to specify these parameters:
+
+* **image file path** or **image directory/folder**: *[required and mutually exclusive]* you can set the file path using ```-f path-to-image``` or set the directory path using ```-d path-to-folder```. If directory path is set, StructuralGT will compute the GT metrics of all the images simultaneously,
+* **configuration file path**: *[required]* you can set the path to config file using ```-c path-to-config```,
+* **type of GT task**: *[required]* you can either 'extract graph' using ```-t 1``` or compute GT metrics using ```-t 2```,
+* **allow auto-scaling** : *[optional]* allows StructuralGT to automatically scale images to an optimal size for computation. You can disable this using ```-s 0```.
+
+To execute the program, please follow these steps:
+
+* Open a terminal application such as CMD.
+* Execute the following command:
+
+```bash
+StructuralGT-cli -d datasets/ -c datasets/sgt_configs.ini -t 2
+```
+
+OR 
+
+```bash
+StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2
+```
+
+OR
+
+```bash
+StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
+```
 
 ## References
 * Drew A. Vecchio, Samuel H. Mahler, Mark D. Hammig, and Nicholas A. Kotov

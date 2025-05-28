@@ -49,6 +49,7 @@ Changelog = "https://github.com/owuordickson/structural-gt/blob/main/CHANGELOG.m
 
 [project.scripts]
 StructuralGT = "StructuralGT.entrypoints:main_gui"
+StructuralGT-cli = "StructuralGT.entrypoints:main_cli"
 
 [tool.setuptools]
 include-package-data = true
