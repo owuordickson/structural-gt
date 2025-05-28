@@ -23,7 +23,8 @@ class TerminalApp:
 
     def __init__(self, config_path: str):
         """
-        Exposes methods for running StructuralGT tasks.
+        Exposes methods for running StructuralGT tasks
+
         :param config_path: path to the configuration file.
         """
         # Create graph objects
@@ -60,9 +61,9 @@ class TerminalApp:
 
     def get_selected_sgt_obj(self, obj_index: int = 0):
         """
-        Retrieve SGT object at specified index.
+        Retrieve the SGT object at a specified index.
         Args:
-            obj_index: index of SGT object to retrieve
+            obj_index: index of the SGT object to retrieve
         """
         try:
             keys_list = list(self.sgt_objs.keys())
@@ -227,7 +228,8 @@ class TerminalApp:
         # 1. Verify config file
         config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
         if not config_file_ok:
-            sys.exit('Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2')
+            # Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2
+            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2')
 
         # 2. Get images and process them
         if cfg.img_path != "":

@@ -1294,7 +1294,7 @@ class GraphAnalyzer(ProgressUpdate):
     @staticmethod
     def safe_run_multi_analyzer(sgt_objs, update_func):
         """
-        Safely compute GT metrics of multiple images without raising exceptions or crushing app.
+        Safely compute GT metrics of multiple images without raising exceptions or crushing the app.
 
         Args:
             sgt_objs: List of StructuralGT objects with calculated GT parameters

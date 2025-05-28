@@ -11,7 +11,6 @@ from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject,Signal,Slot
-from matplotlib.backends.backend_pdf import PdfPages
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
