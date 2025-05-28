@@ -19,9 +19,9 @@ from cv2.typing import MatLike
 from dataclasses import dataclass
 from collections import defaultdict
 
-from src.StructuralGT.utils.progress_update import ProgressUpdate
-from src.StructuralGT.imaging.base_image import BaseImage
-from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
+from ..utils.progress_update import ProgressUpdate
+from ..imaging.base_image import BaseImage
+from ..networks.fiber_network import FiberNetworkBuilder
 
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)

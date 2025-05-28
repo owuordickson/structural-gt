@@ -24,4 +24,4 @@ BUILD & DISTRIBUTE PRE-COMPILED WHEEL
 
 6. Run the executable
     Open a terminal application and execute the following command:
-    StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_config.ini -t 1
+    StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1

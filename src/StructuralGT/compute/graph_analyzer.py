@@ -32,12 +32,11 @@ from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
 import sgt_c_module as sgt
-# from src.StructuralGT.modules import FiberNetworkBuilder, ImageProcessor
-from src.StructuralGT.utils.progress_update import ProgressUpdate
-from src.StructuralGT.networks.fiber_network import FiberNetworkBuilder
-from src.StructuralGT.imaging.image_processor import ImageProcessor
-from src.StructuralGT.utils.config_loader import load_gtc_configs
-from src.StructuralGT.utils.sgt_utils import get_num_cores, AbortException, write_txt_file
+from ..utils.progress_update import ProgressUpdate
+from ..networks.fiber_network import FiberNetworkBuilder
+from ..imaging.image_processor import ImageProcessor
+from ..utils.config_loader import load_gtc_configs
+from ..utils.sgt_utils import get_num_cores, AbortException, write_txt_file
 
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)

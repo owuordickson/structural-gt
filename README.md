@@ -42,19 +42,19 @@ To execute the program, please follow these steps:
 * Execute the following command:
 
 ```bash
-StructuralGT-cli -d datasets/ -c datasets/sgt_config.ini -t 2
+StructuralGT-cli -d datasets/ -c datasets/sgt_configs.ini -t 2
 ```
 
 OR 
 
 ```bash
-StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_config.ini -t 2
+StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2
 ```
 
 OR
 
 ```bash
-StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_config.ini -t 1
+StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
 ```
 
 

@@ -9,11 +9,11 @@ import sys
 import logging
 from optparse import OptionParser
 
-from src.StructuralGT import ALLOWED_IMG_EXTENSIONS
-from src.StructuralGT.utils.sgt_utils import verify_path, AbortException
-from src.StructuralGT.utils.config_loader import strict_read_config_file
-from src.StructuralGT.imaging.image_processor import ImageProcessor
-from src.StructuralGT.compute.graph_analyzer import GraphAnalyzer
+from . import ALLOWED_IMG_EXTENSIONS
+from .utils.sgt_utils import verify_path, AbortException
+from .utils.config_loader import strict_read_config_file
+from .imaging.image_processor import ImageProcessor
+from .compute.graph_analyzer import GraphAnalyzer
 
 
 
@@ -226,7 +226,7 @@ class TerminalApp:
         # 1. Verify config file
         config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
         if not config_file_ok:
-            sys.exit('Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_config.ini -t 2')
+            sys.exit('Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2')
 
         # 2. Get images and process them
         if cfg.img_path != "":
