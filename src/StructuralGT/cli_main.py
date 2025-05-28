@@ -174,7 +174,7 @@ class TerminalApp:
             logging.info(f"{msg}", extra={'user': 'SGT Logs'})
         else:
             print(f"Error: {msg}")
-            logging.exception(f"Error: {msg}", extra={'user': 'SGT Logs'})
+            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
 
     @classmethod
     def execute(cls):

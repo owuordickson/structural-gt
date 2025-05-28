@@ -306,11 +306,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         if opt_gte["export_as_gsd"]["value"] == 1:
             self.gsd_file = os.path.join(out_dir, gsd_filename)
             if self.skel_obj.skeleton_3d is not None:
-                # try:
                 write_gsd_file(self.gsd_file, self.skel_obj.skeleton_3d)
-                #except ValueError:
-                #    print("logging problem because Logger is not stdout")
-                #    pass
 
     @staticmethod
     def get_weight_options():
