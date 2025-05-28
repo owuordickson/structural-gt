@@ -7,12 +7,16 @@ git init
 git remote add origin https://github.com/owuordickson/structural-gt.git
 git fetch origin
 git fetch origin cppy
-git pull origin main/v3.0.1-terminal
+git fetch origin terminal
+git pull origin main
+git worktree add ../structural-gt-c origin/cppy
+git worktree add ../structural-gt-term origin/terminal
 
 
 2. SETUP PYCHARM
 create a new Project call it "structural-gt"
 create another Project "structural-gt-c" and attach it to the previous one
+create another Project "structural-gt-term" and attach it to the previous one
 create different pyenv environments for each
 
 

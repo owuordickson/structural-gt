@@ -6,6 +6,8 @@ Loads default configurations from 'configs.ini' file
 
 import os
 import configparser
+from typing import Union
+
 from .sgt_utils import verify_path
 
 
@@ -63,7 +65,7 @@ def read_config_file(config_path):
 def load_img_configs(cfg_path: str = ""):
     """Image Detection settings"""
 
-    options_img = {
+    options_img: dict[str, dict[str, Union[int, float]]] = {
         "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 1 },
         "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 127 },
         "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },

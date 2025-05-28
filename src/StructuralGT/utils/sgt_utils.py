@@ -10,9 +10,9 @@ import sys
 import csv
 import cv2
 import base64
-import socket
+# import socket
 import logging
-import platform
+# import platform
 import subprocess
 import gsd.hoomd
 import numpy as np
@@ -108,6 +108,7 @@ def detect_cuda_version():
         return None
 
 
+"""
 def detect_cuda_and_install_cupy():
     try:
         import cupy
@@ -117,7 +118,7 @@ def detect_cuda_and_install_cupy():
         logging.info("CuPy is not installed.", extra={'user': 'SGT Logs'})
 
     def is_connected(host="8.8.8.8", port=53, timeout=3):
-        """Check if the system has an active internet connection."""
+        # Check if the system has an active internet connection.
         try:
             socket.setdefaulttimeout(timeout)
             socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
@@ -161,6 +162,7 @@ def detect_cuda_and_install_cupy():
     else:
         logging.info("No CUDA detected or NVIDIA GPU Toolkit not installed. Installing CPU-only CuPy.", extra={'user': 'SGT Logs'})
         install_package('cupy')
+"""
 
 
 def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):
