@@ -37,18 +37,13 @@ from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
 from ..utils.config_loader import load_gtc_configs
 from ..utils.sgt_utils import get_num_cores, AbortException, write_txt_file
-
 logger = logging.getLogger("SGT App")
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 # WE ARE USING CPU BECAUSE CuPy generates some errors - yet to be resolved.
 COMPUTING_DEVICE = "CPU"
 """
 try:
     import sys
-
-    logger = logging.getLogger("SGT App")
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
     import cupy as cp
 
     # Check for GPU
