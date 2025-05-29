@@ -7,10 +7,10 @@ Processes 2D or 3D images and generate a fiber graph network.
 import re
 import os
 import cv2
-import pydicom
+# import pydicom
 import logging
 import numpy as np
-import nibabel as nib
+# import nibabel as nib
 import matplotlib.pyplot as plt
 from PIL import Image
 from math import isqrt
@@ -21,6 +21,7 @@ from collections import defaultdict
 from ..utils.progress_update import ProgressUpdate
 from ..imaging.base_image import BaseImage
 from ..networks.fiber_network import FiberNetworkBuilder
+
 logger = logging.getLogger("SGT App")
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
@@ -143,19 +144,21 @@ class ImageProcessor(ProgressUpdate):
                                                                           self.auto_scale)
                 return img_batch_groups
             elif ext in ['.nii', '.nii.gz']:
-                # Load NIfTI image using nibabel
+                """# Load NIfTI image using nibabel
                 img_nib = nib.load(file)
                 data = img_nib.get_fdata()
                 # Normalize and convert to uint8 for OpenCV compatibility
                 data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-                return data
+                return data"""
+                return []
             elif ext == '.dcm':
-                # Load DICOM image using pydicom
+                """# Load DICOM image using pydicom
                 dcm = pydicom.dcmread(file)
                 data = dcm.pixel_array
                 # Normalize and convert to uint8 if needed
                 data = cv2.normalize(data, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-                return data
+                return data"""
+                return []
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
