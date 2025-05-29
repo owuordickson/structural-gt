@@ -24,20 +24,20 @@ class TerminalApp:
     def __init__(self, config_path: str):
         """
         Exposes methods for running StructuralGT tasks
-
-        :param config_path: path to the configuration file.
+        :param config_path: the path to the configuration file
         """
         # Create graph objects
         self.config_file = config_path
         self.allow_auto_scale = True
         self.sgt_objs = {}
 
-    def create_sgt_object(self, img_path):
+    def create_sgt_object(self, img_path, out_dir):
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
 
         Args:
-            img_path: file path to image
+            img_path (str): file path to image
+            out_dir (str): file path to the output folder.
 
         Returns:
         """
@@ -45,13 +45,16 @@ class TerminalApp:
         success, result = verify_path(img_path)
         if success:
             img_path = result
+            if out_dir != "":
+                path_ok, new_path = verify_path(out_dir)
+                out_dir = new_path if path_ok else ""
         else:
             logging.info(result, extra={'user': 'SGT Logs'})
             return False
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, self.config_file, self.allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, out_dir, self.config_file, self.allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
             self.sgt_objs[img_file] = sgt_obj
             return True
@@ -74,19 +77,20 @@ class TerminalApp:
             logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
             return None
 
-    def add_single_image(self, image_path):
+    def add_single_image(self, image_path, output_dir):
         """
         Verify and validate an image path, use it to create an SGT object
 
         :param image_path: image path to be processed
+        :param output_dir: output directory for saving output files
         :return: bool result of SGT object creation
         """
-        is_created = self.create_sgt_object(image_path)
+        is_created = self.create_sgt_object(image_path, output_dir)
         if not is_created:
             logging.info("Fatal Error: Unable to create SGT object", extra={'user': 'SGT Logs'})
         return is_created
 
-    def add_multiple_images(self, img_dir_path):
+    def add_multiple_images(self, img_dir_path, output_dir):
         """
         Verify and validate multiple image paths, use each to create an SGT object.
         """
@@ -104,7 +108,7 @@ class TerminalApp:
             allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
             if a_file.endswith(allowed_extensions):
                 img_path = os.path.join(str(img_dir_path), a_file)
-                self.create_sgt_object(img_path)
+                self.create_sgt_object(img_path, output_dir)
 
         if len(self.sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
@@ -193,6 +197,11 @@ class TerminalApp:
                              help='path to folder containing images',
                              default="",
                              type='string')
+        opt_parser.add_option('-o', '--outputDir',
+                              dest='output_dir',
+                              help='path to folder for saving output files. If not provided, output files will be saved in input dir.',
+                              default="",
+                              type='string')
         opt_parser.add_option('-s', '--allowAutoScale',
                              dest='auto_scale',
                              help='allow automatic scaling of images',
@@ -228,14 +237,13 @@ class TerminalApp:
         # 1. Verify config file
         config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
         if not config_file_ok:
-            # Usage: src/SGT.py -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2
-            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2')
+            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2 -o results/')
 
         # 2. Get images and process them
         if cfg.img_path != "":
-            term_app.add_single_image(cfg.img_path)
+            term_app.add_single_image(cfg.img_path, cfg.output_dir)
         elif cfg.img_dir_path != "":
-            term_app.add_multiple_images(cfg.img_dir_path)
+            term_app.add_multiple_images(cfg.img_dir_path, cfg.output_dir)
         else:
             term_app.update_progress(-1, "No image path/image folder provided! System will exit.")
             sys.exit('System exit')
