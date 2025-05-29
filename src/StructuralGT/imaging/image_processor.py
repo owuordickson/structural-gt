@@ -739,10 +739,11 @@ class ImageProcessor(ProgressUpdate):
         return lst_img_seg
 
     @classmethod
-    def create_imp_object(cls, img_path: str, config_file: str = "", allow_auto_scale: bool = True):
+    def create_imp_object(cls, img_path: str, out_path: str = "", config_file: str = "", allow_auto_scale: bool = True):
         """
         Creates an ImageProcessor object. Make sure the image path exists, is verified, and points to an image.
         :param img_path: Path to the image to be processed
+        :param out_path: Path to the output directory
         :param config_file: Path to the config file
         :param allow_auto_scale: Allows automatic scaling of the image
         :return: ImageProcessor object.
@@ -775,8 +776,12 @@ class ImageProcessor(ProgressUpdate):
                         img_files.append(os.path.join(img_dir, a_file))
 
         # Create the Output folder if it does not exist
+        default_out_dir = img_dir
+        if out_path != "":
+            default_out_dir = out_path
+
         out_dir_name = "sgt_files"
-        out_dir = os.path.join(img_dir, out_dir_name)
+        out_dir = os.path.join(default_out_dir, out_dir_name)
         out_dir = os.path.normpath(out_dir)
         os.makedirs(out_dir, exist_ok=True)
 
