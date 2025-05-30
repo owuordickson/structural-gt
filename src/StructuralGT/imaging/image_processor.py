@@ -395,7 +395,9 @@ class ImageProcessor(ProgressUpdate):
         # Get binary image
         img_obj = sel_batch.images[0]  # ONLY works for 2D
         if len(img_obj.image_segments) <= 0:
-            img_obj.image_segments = ImageProcessor.extract_cnn_patches(img_obj.img_bin)
+            filter_count = 10
+            window_count = 20
+            img_obj.image_segments = ImageProcessor.extract_cnn_patches(img_obj.img_bin, num_filters=filter_count, num_patches=window_count)
 
         seg_count = len(img_obj.image_segments)
         graph_groups = defaultdict(list)

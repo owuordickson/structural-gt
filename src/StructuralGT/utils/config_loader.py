@@ -47,8 +47,7 @@ def read_config_file(config_path):
     if success:
         config_file = result
     else:
-        print(f"File Error: unable to find config file {config_path}. Using the default config file")
-        # return False
+        # print(f"File Error: unable to find config file {config_path}. Using the default config file")
         # Get the directory of the current script
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = 'configs.ini'
@@ -58,7 +57,7 @@ def read_config_file(config_path):
         config.read(config_file)
         return config
     except configparser.Error:
-        print(f"Unable to read the configs from {config_file}.")
+        # print(f"Unable to read the configs from {config_file}.")
         return None
 
 

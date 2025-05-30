@@ -18,6 +18,7 @@ import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
 from cv2.typing import MatLike
+from scipy.optimize import curve_fit
 from collections import defaultdict
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
@@ -535,7 +536,7 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in full_img_df.iterrows():
                     x_param = row["x"]
                     y_value = row["y"]
-                    print(f"{x_param}-{h}: {y_value}")
+                    # print(f"{x_param}-{h}: {y_value}")
                     # sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
 
@@ -1162,13 +1163,29 @@ class GraphAnalyzer(ProgressUpdate):
     @staticmethod
     def plot_scaling_behavior(scaling_data: defaultdict = None):
         """"""
+
+        # Define our 'best-fit' model
+        def power_law_model(x, a, k):
+            """
+            A best-fit model that follows the power law distribution: y = (a * x)^(-k),
+            where a and k are fitting parameters.
+
+            Args:
+                x (np.array): Array of x values
+                a (float): fitting parameter
+                k (float): fitting parameter
+            """
+            return a * x ** (-k)
+
+        # Initialize plot figures
         figs = []
         if scaling_data is None:
             return figs
 
+        # Plot scaling behavior
         i = 1
         x_label = None
-        x_values, x_avg, x_err = None, None, None
+        x_values, x_avg, x_err = np.nan, np.nan, np.nan
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         for param_name, plt_dict in scaling_data.items():
             # Retrieve plot data
@@ -1188,21 +1205,37 @@ class GraphAnalyzer(ProgressUpdate):
             y_avg = np.nanmean(y_values, axis=0)
             y_err = np.nanstd(y_values, axis=0, ddof=1) / np.sqrt(y_values.shape[0])
             # print(f"{i}. {param_name}\n{y_values}\n{y_avg} - {y_err}\n\n")
+            if np.any(np.isnan(y_avg)):
+                # print(f"{param_name} has NaN values: {y_avg}")
+                continue
 
             # Plot of the nodes counts against others
             if x_label is None:
                 x_label = param_name
-                x_values = y_values
+                # x_values = y_values
                 x_avg = y_avg
                 x_err = y_err
             else:
+                # Compute the line of best-fit on our data according to our power-law model
+                init_params = [1.0, 1.0]  # initial guess for [a, k]
+                optimal_params: np.ndarray = curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
+                a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
+                # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
+
+                # Generate points for the best-fit curve
+                x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+                y_fit = power_law_model(x_fit, a_fit, k_fit)
+
+                # Plot data
                 # i = i + 1
                 ax = fig.add_subplot(2, 2, i)
                 # ax.plot(x_values, y_values, 'b.', markersize=3)
-                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, capsize=4, marker="s", color="r", markersize=4, linewidth=1, linestyle='-')
+                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', capsize=4, marker="s", color="b", markersize=4, linewidth=1, linestyle='-')
+                ax.plot(x_fit, y_fit, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$', color='red')
                 y_title = param_name.split('(')[0] if '(' in param_name else param_name
                 ax.set_title(f"Nodes vs {y_title}")
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                ax.legend()
 
             # Navigate to the next subplot
             i = i + 1
