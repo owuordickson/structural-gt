@@ -171,37 +171,39 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([1, "Performing un-weighted analysis..."])
 
         opt_gtc = self.configs
-        data_dict = {"x": [], "y": []}
+        data_dict = {"parameter": [], "value": []}
 
         node_count = int(nx.number_of_nodes(graph))
         edge_count = int(nx.number_of_edges(graph))
 
-        data_dict["x"].append("Number of nodes")
-        data_dict["y"].append(node_count)
+        data_dict["parameter"].append("Number of nodes")
+        data_dict["value"].append(node_count)
 
-        data_dict["x"].append("Number of edges")
-        data_dict["y"].append(edge_count)
+        data_dict["parameter"].append("Number of edges")
+        data_dict["value"].append(edge_count)
 
+        """
         # length of edges
         length_arr = np.array(list(nx.get_edge_attributes(graph, 'length').values()))
-        data_dict["x"].append('Average length (nm)')
-        data_dict["y"].append(round(np.average(length_arr), 3))
-        data_dict["x"].append('Median length (nm)')
-        data_dict["y"].append(round(np.median(length_arr), 3))
+        data_dict["parameter"].append('Average length (nm)')
+        data_dict["value"].append(round(np.average(length_arr), 3))
+        data_dict["parameter"].append('Median length (nm)')
+        data_dict["value"].append(round(np.median(length_arr), 3))
 
         # width of edges
         width_arr = np.array(list(nx.get_edge_attributes(graph, 'width').values()))
-        data_dict["x"].append('Average width (nm)')
-        data_dict["y"].append(round(np.average(width_arr), 3))
-        data_dict["x"].append('Median width (nm)')
-        data_dict["y"].append(round(np.median(width_arr), 3))
+        data_dict["parameter"].append('Average width (nm)')
+        data_dict["value"].append(round(np.average(width_arr), 3))
+        data_dict["parameter"].append('Median width (nm)')
+        data_dict["value"].append(round(np.median(width_arr), 3))
+        """
 
         # angle of edges (inbound and outbound)
         angle_arr = np.array(list(nx.get_edge_attributes(graph, 'angle').values()))
-        data_dict["x"].append('Average edge angle (degrees)')
-        data_dict["y"].append(round(np.average(angle_arr), 3))
-        data_dict["x"].append('Median edge angle (degrees)')
-        data_dict["y"].append(round(np.median(angle_arr), 3))
+        data_dict["parameter"].append('Average edge angle (degrees)')
+        data_dict["value"].append(round(np.average(angle_arr), 3))
+        data_dict["parameter"].append('Median edge angle (degrees)')
+        data_dict["value"].append(round(np.median(angle_arr), 3))
 
         if graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem with graph (change filter and graph options)."])
@@ -231,8 +233,8 @@ class GraphAnalyzer(ProgressUpdate):
                 dia = int(diameter(graph))
             else:
                 dia = np.nan
-            data_dict["x"].append("Network diameter")
-            data_dict["y"].append(dia)
+            data_dict["parameter"].append("Network diameter")
+            data_dict["value"].append(dia)
 
         # calculating average nodal connectivity
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
@@ -257,16 +259,16 @@ class GraphAnalyzer(ProgressUpdate):
                 avg_node_con = round(avg_node_con, 5)
             else:
                 avg_node_con = np.nan
-            data_dict["x"].append("Average node connectivity")
-            data_dict["y"].append(avg_node_con)
+            data_dict["parameter"].append("Average node connectivity")
+            data_dict["value"].append(avg_node_con)
 
         # calculating graph density
         if opt_gtc["compute_graph_density"]["value"] == 1:
             self.update_status([20, "Computing graph density..."])
             g_density = nx.density(graph)
             g_density = round(g_density, 5)
-            data_dict["x"].append("Graph density")
-            data_dict["y"].append(g_density)
+            data_dict["parameter"].append("Graph density")
+            data_dict["value"].append(g_density)
 
         # calculating global efficiency
         if opt_gtc["compute_global_efficiency"]["value"] == 1:
@@ -276,24 +278,24 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([25, "Computing global efficiency..."])
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
-            data_dict["x"].append("Global efficiency")
-            data_dict["y"].append(g_eff)
+            data_dict["parameter"].append("Global efficiency")
+            data_dict["value"].append(g_eff)
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
             self.update_status([30, "Computing wiener index..."])
             # settings.update_label("Calculating w_index...")
             w_index = wiener_index(graph)
             w_index = round(w_index, 1)
-            data_dict["x"].append("Wiener Index")
-            data_dict["y"].append(w_index)
+            data_dict["parameter"].append("Wiener Index")
+            data_dict["value"].append(w_index)
 
         # calculating assortativity coefficient
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
             self.update_status([35, "Computing assortativity coefficient..."])
             a_coef = degree_assortativity_coefficient(graph)
             a_coef = round(a_coef, 5)
-            data_dict["x"].append("Assortativity coefficient")
-            data_dict["y"].append(a_coef)
+            data_dict["parameter"].append("Assortativity coefficient")
+            data_dict["value"].append(a_coef)
 
         # calculating clustering coefficients
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
@@ -342,16 +344,16 @@ class GraphAnalyzer(ProgressUpdate):
             hist_name = "ohms_distribution"
             hist_label = "Average Ohms centrality"
             data_dict = self._update_histogram_data(data_dict, o_distribution, hist_name, hist_label)
-            data_dict["x"].append("Ohms centrality -- avg. area " + r"($m^2$)")
-            data_dict["y"].append(res['avg area'])
-            data_dict["x"].append("Ohms centrality -- avg. length (m)")
-            data_dict["y"].append(res['avg length'])
-            data_dict["x"].append("Ohms centrality -- avg. width (m)")
-            data_dict["y"].append(res['avg width'])
-            data_dict["x"].append("Ohms centrality -- g shape coeff.")
-            data_dict["y"].append(res['g shape'])
-            data_dict["x"].append("Ohms centrality -- conductivity (S/m)")
-            data_dict["y"].append(res['conductivity'])
+            data_dict["parameter"].append("Ohms centrality -- avg. area " + r"($m^2$)")
+            data_dict["value"].append(res['avg area'])
+            data_dict["parameter"].append("Ohms centrality -- avg. length (m)")
+            data_dict["value"].append(res['avg length'])
+            data_dict["parameter"].append("Ohms centrality -- avg. width (m)")
+            data_dict["value"].append(res['avg width'])
+            data_dict["parameter"].append("Ohms centrality -- g shape coeff.")
+            data_dict["value"].append(res['g shape'])
+            data_dict["parameter"].append("Ohms centrality -- conductivity (S/m)")
+            data_dict["value"].append(res['conductivity'])
 
             # calculating current-flow betweenness centrality
         """
@@ -407,7 +409,7 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gtc = self.configs
         wt_type = graph_obj.get_weight_type()
         weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
-        data_dict = {"x": [], "y": []}
+        data_dict = {"parameter": [], "value": []}
 
         if graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem with graph (change filter and graph options)."])
@@ -425,8 +427,8 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([74, "Compute weighted wiener index..."])
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
-            data_dict["x"].append("Length-weighted Wiener Index")
-            data_dict["y"].append(w_index)
+            data_dict["parameter"].append("Length-weighted Wiener Index")
+            data_dict["value"].append(w_index)
 
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
             self.update_status([76, "Compute weighted node connectivity..."])
@@ -443,15 +445,15 @@ class GraphAnalyzer(ProgressUpdate):
                 max_flow = round(max_flow, 5)
             else:
                 max_flow = np.nan
-            data_dict["x"].append("Max flow between periphery")
-            data_dict["y"].append(max_flow)
+            data_dict["parameter"].append("Max flow between periphery")
+            data_dict["value"].append(max_flow)
 
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
             self.update_status([78, "Compute weighted assortativity..."])
             a_coef = degree_assortativity_coefficient(graph, weight='width')
             a_coef = round(a_coef, 5)
-            data_dict["x"].append("Width-weighted assortativity coefficient")
-            data_dict["y"].append(a_coef)
+            data_dict["parameter"].append("Width-weighted assortativity coefficient")
+            data_dict["value"].append(a_coef)
 
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
             self.update_status([80, "Compute weighted betweenness centrality..."])
@@ -501,8 +503,8 @@ class GraphAnalyzer(ProgressUpdate):
             a_distribution = np.array(temp_distribution, dtype=float)
             ae_val = np.average(a_distribution)
             ae_val = round(ae_val, 5)
-            data_dict["x"].append(f"Average edge cross-sectional area (nm\u00b2)")
-            data_dict["y"].append(ae_val)
+            data_dict["parameter"].append(f"Average edge cross-sectional area (nm\u00b2)")
+            data_dict["value"].append(ae_val)
 
         return pd.DataFrame(data_dict)
 
@@ -524,8 +526,10 @@ class GraphAnalyzer(ProgressUpdate):
                     continue
 
                 for _, row in temp_df.iterrows():
-                    x_param = row["x"]
-                    y_value = row["y"]
+                    x_param = row["parameter"]
+                    y_value = row["value"]
+                    if 'Average edge angle' in x_param:  # Skip this
+                        continue
                     sorted_plt_data[x_param][h].append(y_value)
 
         if full_img_df is not None:
@@ -534,8 +538,8 @@ class GraphAnalyzer(ProgressUpdate):
             h, w = sel_batch.images[0].img_bin.shape
             for _ in range(num_patches):
                 for _, row in full_img_df.iterrows():
-                    x_param = row["x"]
-                    y_value = row["y"]
+                    x_param = row["parameter"]
+                    y_value = row["value"]
                     # print(f"{x_param}-{h}: {y_value}")
                     # sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
@@ -754,8 +758,8 @@ class GraphAnalyzer(ProgressUpdate):
     def _update_histogram_data(self, data_dict: dict, arr_distribution: np.ndarray, hist_name: str, hist_label: str):
         val = round(np.average(arr_distribution), 5)
         self.histogram_data[hist_name] = arr_distribution
-        data_dict["x"].append(hist_label)
-        data_dict["y"].append(val)
+        data_dict["parameter"].append(hist_label)
+        data_dict["value"].append(val)
         return data_dict
 
     def plot_gt_results(self, graph_obj: FiberNetworkBuilder):
