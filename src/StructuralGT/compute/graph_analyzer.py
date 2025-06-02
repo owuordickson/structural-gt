@@ -23,8 +23,7 @@ from collections import defaultdict
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
 
-from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality
-from networkx.algorithms.centrality import eigenvector_centrality, percolation_centrality
+from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
 from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
@@ -156,11 +155,12 @@ class GraphAnalyzer(ProgressUpdate):
         # 5. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj)
 
-    def compute_gt_metrics(self, graph: nx.Graph = None):
+    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True):
         """
         Compute unweighted graph theory metrics.
 
         :param graph: NetworkX graph object.
+        :param save_histogram: Whether to save the histogram data.
 
         :return: A Pandas DataFrame containing the unweighted graph theory metrics.
         """
@@ -214,9 +214,10 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([5, "Computing graph degree..."])
             deg_distribution_1 = dict(nx.degree(graph))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
-            hist_name = "degree_distribution"
-            hist_label = "Average degree"
-            data_dict = self._update_histogram_data(data_dict, deg_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["degree_distribution"] = deg_distribution
+            data_dict["parameter"].append("Average degree")
+            data_dict["value"].append(round(np.average(deg_distribution), 5))
 
         connected_graph = None
         if (opt_gtc["compute_network_diameter"]["value"] == 1) or (
@@ -302,18 +303,20 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([40, "Computing clustering coefficients..."])
             coefficients_1 = clustering(graph)
             cl_coefficients = np.array(list(coefficients_1.values()), dtype=float)
-            hist_name = "clustering_coefficients"
-            hist_label = "Average clustering coefficient"
-            data_dict = self._update_histogram_data(data_dict, cl_coefficients, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["clustering_coefficients"] = cl_coefficients
+            data_dict["parameter"].append("Average clustering coefficient")
+            data_dict["value"].append(round(np.average(cl_coefficients), 5))
 
         # calculating betweenness centrality histogram
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
             self.update_status([45, "Computing betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph)
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
-            hist_name = "betweenness_distribution"
-            hist_label = "Average betweenness centrality"
-            data_dict = self._update_histogram_data(data_dict, b_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["betweenness_distribution"] = b_distribution
+            data_dict["parameter"].append("Average betweenness centrality")
+            data_dict["value"].append(round(np.average(b_distribution), 5))
 
         # calculating eigenvector centrality
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
@@ -323,27 +326,30 @@ class GraphAnalyzer(ProgressUpdate):
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000)
             e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
-            hist_name = "eigenvector_distribution"
-            hist_label = "Average eigenvector centrality"
-            data_dict = self._update_histogram_data(data_dict, e_vecs, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["eigenvector_distribution"] = e_vecs
+            data_dict["parameter"].append("Average eigenvector centrality")
+            data_dict["value"].append(round(np.average(e_vecs), 5))
 
         # calculating closeness centrality
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             self.update_status([55, "Computing closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph)
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
-            hist_name = "closeness_distribution"
-            hist_label = "Average closeness centrality"
-            data_dict = self._update_histogram_data(data_dict, close_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["closeness_distribution"] = close_distribution
+            data_dict["parameter"].append("Average closeness centrality")
+            data_dict["value"].append(round(np.average(close_distribution), 5))
 
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             self.update_status([60, "Computing Ohms centrality..."])
             o_distribution_1, res = self.compute_ohms_centrality(graph)
             o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
-            hist_name = "ohms_distribution"
-            hist_label = "Average Ohms centrality"
-            data_dict = self._update_histogram_data(data_dict, o_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["ohms_distribution"] = o_distribution
+            data_dict["parameter"].append("Average Ohms centrality")
+            data_dict["value"].append(round(np.average(o_distribution), 5))
             data_dict["parameter"].append("Ohms centrality -- avg. area " + r"($m^2$)")
             data_dict["value"].append(res['avg area'])
             data_dict["parameter"].append("Ohms centrality -- avg. length (m)")
@@ -355,45 +361,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["parameter"].append("Ohms centrality -- conductivity (S/m)")
             data_dict["value"].append(res['conductivity'])
 
-            # calculating current-flow betweenness centrality
-        """
-        if opt_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] == 1:
-            # We select source nodes and target nodes with highest degree-centrality
-
-            gph = self.g_obj.nx_connected_graph
-            all_nodes = list(gph.nodes())
-            # source_nodes = random.sample(all_nodes, k=5)
-            # rem_nodes = list(set(source_nodes) - set(source_nodes))
-            # target_nodes = random.sample(rem_nodes, k=5)
-            degree_centrality = nx.degree_centrality(gph)
-            sorted_nodes = sorted(all_nodes, key=lambda x: degree_centrality[x], reverse=True)
-            source_nodes = sorted_nodes[:5]
-            target_nodes = sorted_nodes[-5:]
-
-            self.update_status([62, "Computing current-flow betweenness centrality..."])
-            cf_distribution_1 = nx.current_flow_betweenness_centrality_subset(gph, source_nodes, target_nodes)
-            cf_distribution = np.array(list(cf_distribution_1.values()), dtype=float)
-            hist_name = "currentflow_distribution"
-            hist_label = "Average current-flow betweenness centrality"
-            data_dict = self.update_histogram_data(data_dict, cf_distribution, hist_name, hist_label)
-        """
-
-        # calculating percolation centrality
-        if opt_gtc["display_percolation_histogram"]["value"] == 1:
-            self.update_status([65, "Computing percolation centrality..."])
-            p_distribution_1 = percolation_centrality(graph, states=None)
-            p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
-            hist_name = "percolation_distribution"
-            hist_label = "Average percolation centrality"
-            data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
-
         return pd.DataFrame(data_dict)
 
-    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None):
+    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None, save_histogram: bool = True):
         """
         Compute weighted graph theory metrics.
 
         :param graph_obj: GraphExtractor object.
+        :param save_histogram: Whether to save histogram data.
 
         :return: A Pandas DataFrame containing the weighted graph theory metrics.
         """
@@ -419,9 +394,10 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([72, "Compute weighted graph degree..."])
             deg_distribution_1 = dict(nx.degree(graph, weight='weight'))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
-            hist_name = "weighted_degree_distribution"
-            hist_label = f"{weight_type}-weighted average degree"
-            data_dict = self._update_histogram_data(data_dict, deg_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["weighted_degree_distribution"] = deg_distribution
+            data_dict["parameter"].append(f"{weight_type}-weighted average degree")
+            data_dict["value"].append(round(np.average(deg_distribution), 5))
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
             self.update_status([74, "Compute weighted wiener index..."])
@@ -459,17 +435,19 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([80, "Compute weighted betweenness centrality..."])
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
-            hist_name = "weighted_betweenness_distribution"
-            hist_label = f"{weight_type}-weighted average betweenness centrality"
-            data_dict = self._update_histogram_data(data_dict, b_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["weighted_betweenness_distribution"] = b_distribution
+            data_dict["parameter"].append(f"{weight_type}-weighted betweenness centrality")
+            data_dict["value"].append(round(np.average(b_distribution), 5))
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             self.update_status([82, "Compute weighted closeness centrality..."])
             close_distribution_1 = closeness_centrality(graph, distance='length')
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
-            hist_name = "weighted_closeness_distribution"
-            hist_label = f"Length-weighted average closeness centrality"
-            data_dict = self._update_histogram_data(data_dict, close_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["weighted_closeness_distribution"] = close_distribution
+            data_dict["parameter"].append(f"Length-weighted average closeness centrality")
+            data_dict["value"].append(round(np.average(close_distribution), 5))
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             if self.abort:
@@ -481,17 +459,10 @@ class GraphAnalyzer(ProgressUpdate):
             except nx.exception.PowerIterationFailedConvergence:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=10000, weight='weight')
             e_vecs = np.array(list(e_vecs_1.values()), dtype=float)
-            hist_name = "weighted_eigenvector_distribution"
-            hist_label = f"{weight_type}-weighted average eigenvector centrality"
-            data_dict = self._update_histogram_data(data_dict, e_vecs, hist_name, hist_label)
-
-        if opt_gtc["display_percolation_histogram"]["value"] == 1:
-            self.update_status([86, "Compute weighted percolation centrality..."])
-            p_distribution_1 = percolation_centrality(graph, states=None, weight='weight')
-            p_distribution = np.array(list(p_distribution_1.values()), dtype=float)
-            hist_name = "weighted_percolation_distribution"
-            hist_label = f"{weight_type}-weighted average percolation centrality"
-            data_dict = self._update_histogram_data(data_dict, p_distribution, hist_name, hist_label)
+            if save_histogram:
+                self.histogram_data["weighted_eigenvector_distribution"] = e_vecs
+            data_dict["parameter"].append(f"{weight_type}-weighted average eigenvector centrality")
+            data_dict["value"].append(round(np.average(e_vecs), 5))
 
         # calculate cross-sectional area of edges
         wt_type = graph_obj.get_weight_type()
@@ -520,7 +491,7 @@ class GraphAnalyzer(ProgressUpdate):
         for (h, w), nx_graphs in graph_groups.items():
             num_patches = len(nx_graphs)
             for nx_graph in nx_graphs:
-                temp_df = self.compute_gt_metrics(nx_graph)
+                temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False)
                 if temp_df is None:
                     # Skip the problematic graph
                     continue
@@ -528,7 +499,7 @@ class GraphAnalyzer(ProgressUpdate):
                 for _, row in temp_df.iterrows():
                     x_param = row["parameter"]
                     y_value = row["value"]
-                    if 'Average edge angle' in x_param:  # Skip this
+                    if ' edge angle' in x_param:  # Skip this
                         continue
                     sorted_plt_data[x_param][h].append(y_value)
 
@@ -755,13 +726,6 @@ class GraphAnalyzer(ProgressUpdate):
         out_figs.append(fig)
         return out_figs
 
-    def _update_histogram_data(self, data_dict: dict, arr_distribution: np.ndarray, hist_name: str, hist_label: str):
-        val = round(np.average(arr_distribution), 5)
-        self.histogram_data[hist_name] = arr_distribution
-        data_dict["parameter"].append(hist_label)
-        data_dict["value"].append(val)
-        return data_dict
-
     def plot_gt_results(self, graph_obj: FiberNetworkBuilder):
         """
         Create a table of weighted and unweighted graph theory results.
@@ -850,17 +814,6 @@ class GraphAnalyzer(ProgressUpdate):
             GraphAnalyzer.plot_distribution_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
-        # Currentflow
-
-        # Percolation
-        if opt_gtc["display_percolation_histogram"]["value"] == 1:
-            per_distribution = self.histogram_data["percolation_distribution"]
-            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            pc_title = r"Percolation Centrality: $\sigma$="
-            ax_1 = fig.add_subplot(2, 2, 1)
-            GraphAnalyzer.plot_distribution_histogram(ax_1, pc_title, per_distribution, 'Percolation value')
-            figs.append(fig)
-
         # weighted histograms
         if opt_gte["has_weights"]["value"] == 1:
             wt_type = graph_obj.get_weight_type()
@@ -893,15 +846,6 @@ class GraphAnalyzer(ProgressUpdate):
                 ax_4 = fig.add_subplot(2, 2, 4)
                 GraphAnalyzer.plot_distribution_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
-
-            # percolation
-            if opt_gtc["display_percolation_histogram"]["value"] == 1:
-                w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
-                fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-                w_pc_title = weight_type + r"-Weighted Percolation Cent.: $\sigma$="
-                ax_1 = fig.add_subplot(2, 2, 1)
-                GraphAnalyzer.plot_distribution_histogram(ax_1, w_pc_title, w_per_distribution, 'Percolation value')
-                figs.append(fig)
 
         return figs
 
@@ -977,17 +921,6 @@ class GraphAnalyzer(ProgressUpdate):
             ohm_distribution = self.histogram_data["ohms_distribution"]
             fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, ohm_distribution,
                                                           'Ohms Centrality Heatmap', sz, lw)
-            figs.append(fig)
-        if opt_gtc["display_percolation_histogram"]["value"] == 1:
-            per_distribution = self.histogram_data["percolation_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, per_distribution,
-                                                          'Percolation Centrality Heatmap', sz, lw)
-            figs.append(fig)
-        if (opt_gtc["display_percolation_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
-            w_per_distribution = self.histogram_data["weighted_percolation_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_per_distribution,
-                                                          f'{weight_type}-Weighted Percolation Centrality Heatmap', sz,
-                                                          lw)
             figs.append(fig)
         return figs
 

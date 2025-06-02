@@ -209,10 +209,7 @@ def load_gtc_configs(cfg_path: str = ""):
         "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
         "display_scaling_scatter_plot": {"id": "display_scaling_scatter_plot", "text": "Scaling Scatter Plot", "value": 0},
-        #"display_currentflow_histogram": {"id": "display_currentflow_histogram", "text": "Current Flow Betweenness Centrality", "value": 0},
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
-        #"compute_graph_conductance": {"id": "compute_graph_conductance", "text": "Graph Conductance", "value": 0},
-        "display_percolation_histogram": {"id": "display_percolation_histogram", "text": "Percolation Centrality", "value": 0},
         #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
     }
 
@@ -225,17 +222,13 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["display_heatmaps"]["value"] = int(config.get('sgt-settings', 'display_heatmaps'))
         options_gtc["display_degree_histogram"]["value"] = int(config.get('sgt-settings', 'display_degree_histogram'))
         options_gtc["display_betweenness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_betweenness_centrality_histogram'))
-        # options_gtc["display_current_flow_betweenness_centrality_histogram"]["value"] = int(
-        #    config.get('sgt-settings', 'display_current_flow_betweenness_centrality_histogram'))
         options_gtc["display_closeness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_closeness_centrality_histogram'))
         options_gtc["display_eigenvector_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_eigenvector_centrality_histogram'))
         options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
         options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
-        options_gtc["display_percolation_histogram"]["value"] = int(config.get('sgt-settings', 'display_percolation_histogram'))
         options_gtc["display_scaling_scatter_plot"]["value"] = int(config.get('sgt-settings', 'display_scaling_scatter_plot'))
         options_gtc["compute_avg_node_connectivity"]["value"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
         options_gtc["compute_graph_density"]["value"] = int(config.get('sgt-settings', 'compute_graph_density'))
-        # options_gtc["compute_graph_conductance"]["value"] = int(config.get('sgt-settings', 'compute_graph_conductance'))
         options_gtc["compute_global_efficiency"]["value"] = int(config.get('sgt-settings', 'compute_global_efficiency'))
         options_gtc["compute_avg_clustering_coef"]["value"] = int(config.get('sgt-settings', 'compute_avg_clustering_coef'))
         options_gtc["compute_assortativity_coef"]["value"] = int(config.get('sgt-settings', 'compute_assortativity_coef'))
