@@ -502,7 +502,7 @@ class GraphAnalyzer(ProgressUpdate):
                         continue
                     sorted_plt_data[x_param][h].append(y_value)
 
-        # Include the computed GT metrics of entire image
+        # Include the computed GT metrics of the entire image
         if full_img_df is not None:
             # Get full image dimensions
             sel_batch = self.ntwk_p.get_selected_batch()
@@ -1135,7 +1135,7 @@ class GraphAnalyzer(ProgressUpdate):
             return figs
 
         # Plot scaling behavior
-        i = 1
+        i = 0
         x_label = None
         x_values, x_avg, x_err = np.nan, np.nan, np.nan
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
@@ -1187,20 +1187,20 @@ class GraphAnalyzer(ProgressUpdate):
                 y_fit = power_law_model(x_fit, a_fit, k_fit)
 
                 # 2c. Compute best-fit, assuming Log-Normal dependence on X
-                init_params_log = [1.0, 1.0, 1]
-                opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log)[0]
+                init_params_log = [1.0, 1.0, 10]
+                opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
                 mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
                 # Generate predicted points for the best-fit curve
                 y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
                 # 3a. Plot data (Log-Log scale with the line best-fit)
-                # i = i + 1
+                i = i + 1
                 y_title = param_name.split('(')[0] if '(' in param_name else param_name
                 ax = fig.add_subplot(2, 2, i)
                 # ax.plot(x_values, y_values, 'b.', markersize=3)
                 ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
                 ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
-                ax.set_title(f"Log-Log Plot of Nodes vs {y_title}")
+                ax.set_title(f"Log-Log Plot of Nodes vs {y_title}", fontsize=10)
                 ax.set(xlabel='No. of Nodes (log scale)', ylabel=f'{param_name} (log scale)')
                 ax.legend()
 
@@ -1209,7 +1209,7 @@ class GraphAnalyzer(ProgressUpdate):
                 ax = fig.add_subplot(2, 2, i)
                 ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s', markersize=4, linewidth=1, linestyle='-')
                 ax.plot(x_fit, y_fit, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$', color='red')
-                ax.set_title(f"Nodes vs {y_title}")
+                ax.set_title(f"Nodes vs {y_title}", fontsize=10)
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                 ax.legend()
 
@@ -1220,13 +1220,13 @@ class GraphAnalyzer(ProgressUpdate):
                             markersize=4, linewidth=1, linestyle='-')
                 ax.plot(x_fit, y_fit_ln, label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
                          color='red')
-                ax.set_title(f"'Fit Assuming Log-Normal Dependence on Nodes vs {y_title}")
+                ax.set_title(f"Fit Assuming Log-Normal Dependence on\n Nodes vs {y_title}", fontsize=10)
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                 ax.legend()
 
             # Navigate to the next subplot
-            i = i + 1
-            if i > 2:
+            # i = i + 1
+            if (i+1) > 2:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
