@@ -1225,7 +1225,6 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.legend()
 
             # Navigate to the next subplot
-            # i = i + 1
             if (i+1) > 2:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
