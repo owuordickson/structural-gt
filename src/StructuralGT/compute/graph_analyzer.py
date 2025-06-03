@@ -1187,9 +1187,12 @@ class GraphAnalyzer(ProgressUpdate):
                 y_fit = power_law_model(x_fit, a_fit, k_fit)
 
                 # 2c. Compute best-fit, assuming Log-Normal dependence on X
-                init_params_log = [1.0, 1.0, 10]
-                opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
-                mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+                try:
+                    init_params_log = [1.0, 1.0, 10]
+                    opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+                    mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+                except RuntimeError:
+                    mu_fit, sigma_fit, a_log_fit = 1.0, 1.0, 10.0
                 # Generate predicted points for the best-fit curve
                 y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
