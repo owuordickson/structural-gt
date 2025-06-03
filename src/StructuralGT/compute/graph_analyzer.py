@@ -1127,7 +1127,7 @@ class GraphAnalyzer(ProgressUpdate):
             Returns:
 
             """
-            return a * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
+            return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
         # Initialize plot figures
         figs = []
@@ -1187,12 +1187,11 @@ class GraphAnalyzer(ProgressUpdate):
                 y_fit = power_law_model(x_fit, a_fit, k_fit)
 
                 # 2c. Compute best-fit, assuming Log-Normal dependence on X
-                init_params_log = [1.0, 1.0, 10]
-                #opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log)[0]
-                #mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+                init_params_log = [1.0, 1.0, 1]
+                opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log)[0]
+                mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
                 # Generate predicted points for the best-fit curve
-                #x_fit_ln = np.linspace(min(x_avg), max(x_avg), 100)
-                #y_fit_ln = lognormal_model(x_fit_ln, mu_fit, sigma_fit, a_log_fit)
+                y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
                 # 3a. Plot data (Log-Log scale with the line best-fit)
                 # i = i + 1
@@ -1215,19 +1214,19 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.legend()
 
                 # 3c. Plot data (Log-normal distribution best fit)
-                """i = i + 1
+                i = i + 1
                 ax = fig.add_subplot(2, 2, i)
                 ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
                             markersize=4, linewidth=1, linestyle='-')
-                ax.plot(x_fit_ln, y_fit_ln, label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
+                ax.plot(x_fit, y_fit_ln, label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
                          color='red')
                 ax.set_title(f"'Fit Assuming Log-Normal Dependence on Nodes vs {y_title}")
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                ax.legend()"""
+                ax.legend()
 
             # Navigate to the next subplot
             i = i + 1
-            if i > 3:
+            if i > 2:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
