@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
-from PyInstaller.utils.hooks import collect_submodules
 from glob import glob
+from PyInstaller.utils.hooks import collect_submodules
 
 ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
 a = Analysis(
