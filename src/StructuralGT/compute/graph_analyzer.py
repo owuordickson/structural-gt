@@ -650,8 +650,10 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         cpu_count = get_num_cores()
-        num_threads = cpu_count * 10 if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 20
+        # num_threads = cpu_count * 10 if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 10
+        num_threads = cpu_count
         anc = 0
+        print(f"Number of threads: {num_threads}")
 
         try:
             filename, output_location = self.ntwk_p.get_filenames()
