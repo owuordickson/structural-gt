@@ -23,10 +23,9 @@ from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker, WorkerTask
 
 from ... import __version__
-from ... import ALLOWED_IMG_EXTENSIONS, COMPUTING_DEVICE
 from ...utils.sgt_utils import img_to_base64, verify_path
-from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder
-from ...compute.graph_analyzer import GraphAnalyzer
+from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS
+from ...compute.graph_analyzer import GraphAnalyzer, COMPUTING_DEVICE
 
 
 class MainController(QObject):

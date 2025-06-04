@@ -1173,8 +1173,8 @@ class GraphAnalyzer(ProgressUpdate):
                 x_err = y_err
             else:
                 # 1. Transform to log-log scale
-                log_x = np.log(x_avg)
-                log_y = np.log(y_avg)
+                log_x = np.log10(x_avg)
+                log_y = np.log10(y_avg)
 
                 # 2a. Perform linear regression in log-log scale
                 slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
