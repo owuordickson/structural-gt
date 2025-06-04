@@ -3,11 +3,16 @@ import os
 from glob import glob
 from PyInstaller.utils.hooks import collect_submodules
 
+# Collect ovito plugin DLLs
 ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
+
+# Collect StructuralGT .pyd files
+sgt_sos = glob('src/StructuralGT/compute/c_lang/*.so')
+
 a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
-    binaries=[(dll, 'ovito/plugins') for dll in ovito_dlls],
+    binaries=[(dll, 'ovito/plugins') for dll in ovito_dlls] + [(so, 'StructuralGT/compute/c_lang') for so in sgt_sos],
     datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
     hiddenimports=collect_submodules('ovito') + ['PySide6.QtQml', 'PySide6.QtQuick', 'subprocess', 'pip'],  # Add dependencies
     hookspath=[],
