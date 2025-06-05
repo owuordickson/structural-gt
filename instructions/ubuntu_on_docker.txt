@@ -1,0 +1,16 @@
+1. We create a custom Dockerfile to install a desktop environment (e.g., Kubuntu)
+    and a remote desktop server (e.g., XRDP) to allow us to access it from the
+    Windows 'Remote Desktop Connection' app.
+
+2. Build the image: Open CMD and navigate to the 'Dockerfile' and run
+    docker build -t sgt_ubuntu .
+
+3. Create a container and run the image
+    docker run -it -d --name=owuordesk -p 3389:3389 sgt_ubuntu
+
+4. Open the 'Remote Desktop Connection' app and login using the:
+    session: localhost
+    port: 3389
+    user: owuor
+    pwd: 1234
+
