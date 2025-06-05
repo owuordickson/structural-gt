@@ -65,8 +65,8 @@ def load_img_configs(cfg_path: str = ""):
     """Image Detection settings"""
 
     options_img: dict[str, dict[str, Union[int, float]]] = {
-        "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 1 },
-        "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 127 },
+        "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 0 },
+        "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 128 },
         "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },
         "otsu": {"id": "otsu", "type": "binary-filter", "text": "", "visible": 0, "value": 0},
         "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "visible": 1, "value": 0},

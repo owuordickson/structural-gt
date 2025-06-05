@@ -650,11 +650,8 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         cpu_count = get_num_cores()
-        if cpu_count > 10:
-            num_threads = cpu_count
-        else:
-            num_threads = 10
-        num_threads = num_threads if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 10
+        # num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
+        num_threads = cpu_count - 1
         anc = 0
 
         try:
