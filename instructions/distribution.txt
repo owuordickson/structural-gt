@@ -36,8 +36,12 @@ CREATING AN EXECUTABLE WITH PyInstaller
 4. Run PyInstaller with .spec file. The executable is in dist/ folder:
     pyinstaller StructuralGT-Win.spec
 
-5. For Windows, use Inno Setup to create an installer
+5a. For Windows, use Inno Setup to create an installer. Share the setup.exe with users for installation and use.
 
-6. Run the executable
+5b. For MacOS, compress the StructuralGT.app file into a zip file. Share the zip file with users.
+    Once downloaded by user, unzip the file and drag the app to the Applications folder.
+    Users should 'Allow StructuralGT' under Privacy and Security.
+
+6. For the terminal executable,
     Open a terminal application and execute the following command:
     StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
