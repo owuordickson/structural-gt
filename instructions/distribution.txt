@@ -42,6 +42,36 @@ CREATING AN EXECUTABLE WITH PyInstaller
     Once downloaded by user, unzip the file and drag the app to the Applications folder.
     Users should 'Allow StructuralGT' under Privacy and Security.
 
+5c. For Linux, follow the following steps:
+    mkdir sgt_package
+    mkdir -p sgt_package/usr/bin
+    mkdir -p sgt_package/usr/share/applications
+    mkdir -p sgt_package/usr/share/icons/hicolor/128x128/apps
+    cp StructuralGT sgt_package/usr/bin
+    cp ../icon.png sgt_package/usr/share/icons/hicolor/128x128/apps
+    mv sgt_package/usr/share/icons/hicolor/128x128/apps/icon.png sgt_package/usr/share/icons/hicolor/128x128/apps/structuralgt.png
+    echo "[Desktop Entry]" > sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Name=StructuralGT" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Exec=/usr/bin/StructuralGT" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Terminal=false" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Type=Application" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Icon=structuralgt" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    echo "Categories=Science;Utility;" >> sgt_package/usr/share/applications/StructuralGT.desktop
+    mkdir sgt_package/DEBIAN
+    echo "Package: structural-gt" > sgt_package/DEBIAN/control
+    echo "Version: 3.3.4" >> sgt_package/DEBIAN/control
+    echo "Architecture: all" >> sgt_package/DEBIAN/control
+    echo "Priority: optional" >> sgt_package/DEBIAN/control
+    echo "Section: misc" >> sgt_package/DEBIAN/control
+    echo "Maintainer: Dickson Owuor <owuordickson@gmail.com>" >> sgt_package/DEBIAN/control
+    echo "Homepage: https://github.com/owuordickson/structural-gt" >> sgt_package/DEBIAN/control
+    echo "Description: A software tool for graph theory analysis of microscopy images." >> sgt_package/DEBIAN/control
+    dpkg-deb --build sgt_package
+
+    Install via:
+    cd ~/Downloads
+    sudo dpkg -i sgt_package.deb
+
 6. For the terminal executable,
     Open a terminal application and execute the following command:
     StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
