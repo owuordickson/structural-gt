@@ -27,15 +27,14 @@ class BuildExt(build_ext):
 
 
 # Make sure igraph lib is installed
-# brew install igraph  - macOS (Homebrew)
-# sudo apt install libigraph-dev  - Linux (Debian-based)
+# brew install igraph - macOS (Homebrew)
+# sudo apt install libigraph-dev - Linux (Debian-based)
 ext_modules = [
     Extension(
         name="StructuralGT.compute.c_lang.sgt_c_module",
         sources=["src/StructuralGT/compute/c_lang/sgtmodule.c", "src/StructuralGT/compute/c_lang/sgt_base.c"],
         libraries=["igraph"],  # macOS/Linux
-        include_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph", "src/StructuralGT/compute/c_lang/include"],  # macOS/Linux
-        library_dirs=["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"],  # macOS/Linux
+        include_dirs=["src/StructuralGT/compute/c_lang/include"],
     )
 ]
 
@@ -45,6 +44,14 @@ if platform.system() == "Windows":
     ext_modules[0].include_dirs = ["C:/msys64/ucrt64/include/igraph", "C:/msys64/ucrt64/include/pthread"]
     ext_modules[0].library_dirs = ["C:/msys64/ucrt64/lib/igraph", "C:/msys64/ucrt64/lib/pthread"]
     ext_modules[0].extra_link_args = ["/VERBOSE:LIB"]
+
+if platform.system() == "Darwin":
+    ext_modules[0].include_dirs = ["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph"]
+    ext_modules[0].library_dirs = ["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"]
+
+if platform.system() == "Linux":
+    ext_modules[0].include_dirs = ["/home/linuxbrew/.linuxbrew/Cellar/igraph/0.10.15_1/include/igraph"]
+    ext_modules[0].library_dirs = ["/home/linuxbrew/.linuxbrew/Cellar/igraph/0.10.15_1/lib"]
 
 
 # Setup configuration
