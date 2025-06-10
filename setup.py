@@ -21,6 +21,8 @@ class BuildExt(build_ext):
                 ext.extra_compile_args = ["-std=c99", "-O2"]
         elif platform.system() == "Linux":
             print("Configuring build for Linux...")
+            # Make sure: export CC=/home/linuxbrew/.linuxbrew/bin/gcc-15
+            # Make sure to add in PyCharm Run Environment: LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH
             for ext in self.extensions:
                 ext.extra_compile_args = ["-std=c99", "-O2"]
         build_ext.build_extensions(self)
@@ -28,7 +30,8 @@ class BuildExt(build_ext):
 
 # Make sure igraph lib is installed
 # brew install igraph - macOS (Homebrew)
-# sudo apt install libigraph-dev - Linux (Debian-based)
+# brew install igraph - Linux (Homebrew)
+# Build with CMAKE    - Windows
 ext_modules = [
     Extension(
         name="StructuralGT.compute.c_lang.sgt_c_module",
