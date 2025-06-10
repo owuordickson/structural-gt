@@ -1,10 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
-#from glob import glob
-#from PyInstaller.utils.hooks import collect_submodules
+from glob import glob
+from PyInstaller.utils.hooks import collect_submodules
 
 # Collect ovito plugin DLLs
-# ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
+ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
+
+# Runtime iGraph lib
+libigraph_path = '/home/linuxbrew/.linuxbrew/lib/libigraph.so.3'
 
 # Collect StructuralGT .pyd files
 # sgt_pyds = glob('src/StructuralGT/compute/c_lang/*.pyd')
@@ -12,9 +15,9 @@ import os
 a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
-    binaries=[],
+    binaries=[(dll, 'ovito/plugins') for dll in ovito_dlls] + [(libigraph_path, '.')],
     datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
-    hiddenimports=['PySide6.QtQml', 'PySide6.QtQuick', 'subprocess', 'pip'],  # Add dependencies
+    hiddenimports=collect_submodules('ovito') + ['PySide6.QtQml', 'PySide6.QtQuick', 'subprocess', 'pip'],  # Add dependencies
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
