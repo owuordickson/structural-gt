@@ -166,7 +166,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -243,7 +243,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -304,7 +304,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -374,7 +374,7 @@ ApplicationWindow {
 
             RowLayout {
                 spacing: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -441,7 +441,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -501,7 +501,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -555,13 +555,12 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            GTWidget {
-            }
+            GTWidget {}
 
             RowLayout {
                 spacing: 10
                 //Layout.topMargin: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
@@ -604,7 +603,6 @@ ApplicationWindow {
                     }
                 }
             }
-
         }
     }
 
@@ -619,12 +617,11 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            GTWidget {
-            }
+            GTWidget {}
 
             RowLayout {
                 spacing: 10
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
                 Button {
                     Layout.preferredWidth: 54
