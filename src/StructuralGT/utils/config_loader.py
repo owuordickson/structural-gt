@@ -89,8 +89,8 @@ def load_img_configs(cfg_path: str = ""):
         "brightness_level": {"id": "brightness_level", "type": "image-control", "text": "Brightness", "value": 0 },
         "contrast_level": {"id": "contrast_level", "type": "image-control", "text": "Contrast", "value": 0 },
 
-        "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "visible": 1, "value": 1.0 },
-        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "visible": 1, "value": 0 },
+        "scale_value_nanometers": {"id": "scale_value_nanometers", "type": "image-property", "text": "Scalebar (nm)", "visible": 1, "value": 0.0 },
+        "scalebar_pixel_count": {"id": "scalebar_pixel_count", "type": "image-property", "text": "Scalebar Pixel Count", "visible": 1, "value": 1 },
         "resistivity": {"id": "resistivity", "type": "image-property", "text": "Resistivity (<html>&Omega;</html>m)", "visible": 1, "value": 1.0 },
         "pixel_width": {"id": "pixel_width", "type": "image-property", "text": "", "visible": 0, "value": 1.0},  # * (10**-9)  # 1 nanometer
 
