@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: microscopyProps
-    //Layout.preferredHeight: 150
+    Layout.preferredHeight: 100
     Layout.preferredWidth: parent.width - 75
     enabled: mainController.display_image();
 
