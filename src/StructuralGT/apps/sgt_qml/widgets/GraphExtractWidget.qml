@@ -27,7 +27,6 @@ Item {
                 exclusive: true
             }
 
-
             delegate: Item {
                 required property TreeView treeView
                 required property int row
