@@ -64,6 +64,7 @@ class MainController(QObject):
         self.imgThumbnailModel = TableModel([])
         self.imagePropsModel = TableModel([])
         self.graphPropsModel = TableModel([])
+        self.graphComputeModel = TableModel([])
         self.microscopyPropsModel = CheckBoxModel([])
 
         self.gteTreeModel = TreeModel([])
