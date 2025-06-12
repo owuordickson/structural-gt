@@ -93,6 +93,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
         super(GraphAnalyzer, self).__init__()
         self.configs: dict = load_gtc_configs(imp.config_file)  # graph theory computation parameters and options.
+        self.props: list = []
         self.allow_mp: bool = allow_multiprocessing
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
@@ -151,7 +152,10 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
             return
 
-        # 5. Generate results in PDF
+        # 5. Save GT compute metrics into props
+        self.get_compute_props()
+
+        # 6. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj)
 
     def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True):
@@ -663,6 +667,34 @@ class GraphAnalyzer(ProgressUpdate):
         except Exception as err:
             logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
         return anc
+
+    def get_compute_props(self):
+        """
+        A method that retrieves graph theory computed parameters and stores them in a list-array.
+
+        Returns: list of computed GT params.
+
+        """
+        self.props = []
+        # 1. Unweighted parameters
+        if self.output_df is None:
+            return
+        param_df = self.output_df.copy()
+        self.props.append(['UN-WEIGHTED', 'PARAMETERS'])
+        for _, row in param_df.iterrows():
+            x_param = row["parameter"]
+            y_value = row["value"]
+            self.props.append([x_param, y_value])
+
+        # 2. Weighted parameters
+        if self.weighted_output_df is None:
+            return
+        param_df = self.weighted_output_df.copy()
+        self.props.append(['WEIGHTED', 'PARAMETERS'])
+        for _, row in param_df.iterrows():
+            x_param = row["parameter"]
+            y_value = row["value"]
+            self.props.append([x_param, y_value])
 
     def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
         """

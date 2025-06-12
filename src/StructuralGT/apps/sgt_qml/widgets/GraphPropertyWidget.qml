@@ -6,9 +6,9 @@ import QtQuick.Layouts
 Item {
     id: graphPropsTbl
     Layout.preferredHeight: (numRows * tblRowHeight) + 5
-    Layout.preferredWidth: parent.width
+    Layout.preferredWidth: parent.width - 10
     Layout.leftMargin: 5
-    Layout.rightMargin: 5
+    //Layout.rightMargin: 5
 
     property int numRows: graphPropsModel.rowCount()
     property int tblRowHeight: 25
@@ -20,7 +20,7 @@ Item {
         model: graphPropsModel
 
         delegate: Rectangle {
-            implicitWidth: column === 0 ? (tblViewGraphProps.width * 0.36) : (tblViewGraphProps.width * 0.64)
+            implicitWidth: column === 0 ? (tblViewGraphProps.width * 0.4) : (tblViewGraphProps.width * 0.6)
             implicitHeight: tblRowHeight
             color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
 

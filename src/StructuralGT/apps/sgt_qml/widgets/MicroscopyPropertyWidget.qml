@@ -24,7 +24,7 @@ Item {
                     id: label
                     wrapMode: Text.Wrap
                     color: "#bc2222"
-                    font.pointSize: 10
+                    font.pixelSize: 10
                     Layout.preferredWidth: lblWidthSize
                     Layout.leftMargin: 10
                     text: model.text
@@ -34,7 +34,7 @@ Item {
                     id: txtField
                     objectName: model.id
                     color: "#bc2222"
-                    font.pointSize: 10
+                    font.pixelSize: 10
                     Layout.preferredWidth: txtWidthSize
                     text: model.value
                     onActiveFocusChanged: {
