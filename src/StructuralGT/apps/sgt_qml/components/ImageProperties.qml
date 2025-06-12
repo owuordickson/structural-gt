@@ -74,7 +74,7 @@ Rectangle {
                 Layout.rightMargin: 20
             }
             Text {
-                text: "Compute Parameters"
+                text: "Computation Metrics"
                 font.pixelSize: 12
                 font.bold: true
                 Layout.topMargin: 10
@@ -86,7 +86,7 @@ Rectangle {
                 id: lblNoGraphParams
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
-                text: "No parameters to show!"
+                text: "No metrics to show!"
                 color: "#808080"
                 visible: graphComputeModel.rowCount() > 0 ? false : true
             }
