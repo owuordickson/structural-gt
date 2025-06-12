@@ -357,17 +357,22 @@ class MainController(QObject):
 
                 # Load the graph image to the app
                 self.changeImageSignal.emit()
-                print("Emitted")
 
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
                 self._handle_progress_update(100, "GT PDF successfully generated!")
+                # Update graph properties
+                self.update_graph_models(self.get_selected_sgt_obj())
+                # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(True, ["GT calculations completed", "The image's GT parameters have been "
                                                                                 "calculated. Check out generated PDF in "
                                                                                 "'Output Dir'."])
             elif type(result) is dict:
                 self._handle_progress_update(100, "All GT PDF successfully generated!")
+                # Update graph properties
+                self.update_graph_models(self.get_selected_sgt_obj())
+                # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                     "images have been calculated. Check "
                                                                                     "out all the generated PDFs in "
