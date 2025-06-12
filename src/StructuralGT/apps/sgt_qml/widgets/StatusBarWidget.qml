@@ -37,8 +37,8 @@ Rectangle {
             Basic.Button {
                 id: btnCancel
                 text: ""
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
                 icon.source: "../assets/icons/cancel_icon.png" // Path to your icon
                 icon.width: 21 // Adjust as needed
                 icon.height: 21

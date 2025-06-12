@@ -563,6 +563,9 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 clip: true  // Ensures contents are clipped to the scroll view bounds
 
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
+
                 GTWidget {}
             }
 
@@ -629,6 +632,9 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true  // Ensures contents are clipped to the scroll view bounds
+
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
 
                 GTWidget {}
             }

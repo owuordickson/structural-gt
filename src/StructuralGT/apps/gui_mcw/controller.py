@@ -125,6 +125,7 @@ class MainController(QObject):
         Returns:
 
         """
+        print("Graph Model updated!")
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
@@ -356,6 +357,7 @@ class MainController(QObject):
 
                 # Load the graph image to the app
                 self.changeImageSignal.emit()
+                print("Emitted")
 
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])

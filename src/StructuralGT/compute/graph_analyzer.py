@@ -1288,8 +1288,8 @@ class GraphAnalyzer(ProgressUpdate):
                 for fig in sgt_obj.plot_figures:
                     pdf.savefig(fig)
 
-            if update_func:
-                update_func(100, "GT PDF successfully generated!")
+            # if update_func:
+            #    update_func(100, "GT PDF successfully generated!")
             return True
         except Exception as err:
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
