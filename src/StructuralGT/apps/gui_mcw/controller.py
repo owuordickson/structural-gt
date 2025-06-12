@@ -125,7 +125,6 @@ class MainController(QObject):
         Returns:
 
         """
-        print("Graph Model updated!")
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
