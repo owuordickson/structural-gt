@@ -1295,7 +1295,7 @@ class GraphAnalyzer(ProgressUpdate):
             if (i+1) > 1:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-                i = 1
+                i = 0
 
         figs.append(fig) if i <= 4 else None
         return figs
