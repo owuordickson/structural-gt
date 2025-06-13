@@ -516,7 +516,7 @@ class GraphAnalyzer(ProgressUpdate):
                     x_param = row["parameter"]
                     y_value = row["value"]
                     # print(f"{x_param}-{h}: {y_value}")
-                    # sorted_plt_data[x_param][h].append(y_value)
+                    sorted_plt_data[x_param][h].append(y_value)
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -654,8 +654,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         cpu_count = get_num_cores()
-        # num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
-        num_threads = cpu_count - 1
+        num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
         anc = 0
 
         try:
@@ -1137,7 +1136,7 @@ class GraphAnalyzer(ProgressUpdate):
         # Define our 'best-fit' model
         def power_law_model(x, a, k):
             """
-            A best-fit model that follows the power law distribution: y = (a * x)^(-k),
+            A best-fit model that follows the power law distribution: y = a * x^(-k),
             where a and k are fitting parameters.
 
             Args:
@@ -1146,6 +1145,21 @@ class GraphAnalyzer(ProgressUpdate):
                 k (float): fitting parameter
             """
             return a * x ** (-k)
+
+        def truncated_power_law_model(x, a, k, c):
+            """
+            A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
+            where a, c and k are fitting parameters.
+
+            https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
+
+            Args:
+                x (np.array): Array of x values
+                a (float): fitting parameter
+                k (float): fitting parameter
+                c (float): cut-off fitting parameter
+            """
+            return a * x ** (-k) * np.exp(-c * x)
 
         def lognormal_model(x, mu, sigma, a):
             """
@@ -1219,7 +1233,14 @@ class GraphAnalyzer(ProgressUpdate):
                 x_fit = np.linspace(min(x_avg), max(x_avg), 100)
                 y_fit = power_law_model(x_fit, a_fit, k_fit)
 
-                # 2c. Compute best-fit, assuming Log-Normal dependence on X
+                # 2c. Compute the line of best-fit according to our truncated power-law model
+                init_params_cutoff = [1.0, 1.0, 1.0]
+                opt_params_cutoff: np.ndarray = sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
+                a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2])
+                # Generate points for the best-fit curve
+                y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
+
+                # 2d. Compute best-fit, assuming Log-Normal dependence on X
                 try:
                     init_params_log = [1.0, 1.0, 10]
                     opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
@@ -1249,6 +1270,16 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                 ax.legend()
 
+                # 3c. Plot data (truncated power-law best fit)
+                i = i + 1
+                ax = fig.add_subplot(2, 2, i)
+                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                            markersize=4, linewidth=1, linestyle='-')
+                ax.plot(x_fit, y_fit_cut, label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$', color='red')
+                ax.set_title(f"Nodes vs {y_title}", fontsize=10)
+                ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                ax.legend()
+
                 # 3c. Plot data (Log-normal distribution best fit)
                 i = i + 1
                 ax = fig.add_subplot(2, 2, i)
@@ -1261,7 +1292,7 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.legend()
 
             # Navigate to the next subplot
-            if (i+1) > 2:
+            if (i+1) > 1:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 1
