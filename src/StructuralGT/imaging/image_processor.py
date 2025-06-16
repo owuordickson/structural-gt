@@ -414,7 +414,6 @@ class ImageProcessor(ProgressUpdate):
             # return int(parent_width / ((2*num) + 4))
             # est_w = int((parent_width * np.exp(-0.3 * num) / 4))  # Exponential decay
             est_w = int((parent_width - 10) * (1 - (num/num_square_filters)))
-            print(f"Estimated width: {est_w}")
             return max(50, est_w)  # Avoid too small sizes
 
         def estimate_patches_count(total_patches_count):
