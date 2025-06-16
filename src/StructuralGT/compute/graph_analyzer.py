@@ -486,7 +486,7 @@ class GraphAnalyzer(ProgressUpdate):
         """"""
         self.update_status([0, "Computing scaling scatter-plot..."])
         self.ntwk_p.add_listener(self.track_img_progress)
-        graph_groups = self.ntwk_p.build_patch_graphs()
+        graph_groups = self.ntwk_p.build_graph_from_patches()
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         sorted_plt_data = defaultdict(lambda: defaultdict(list))

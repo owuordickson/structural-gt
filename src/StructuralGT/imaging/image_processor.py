@@ -385,19 +385,91 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
-    def build_patch_graphs(self):
-        """Extracts graphs from smaller patches of selected images."""
+    def build_graph_from_patches(self):
+        """
+        Extracts graphs from smaller square patches/windows of selected images.
+
+        """
         # Get the selected batch
         sel_batch = self.get_selected_batch()
         # sel_batch.current_view = 'graph'
         graph_configs = sel_batch.graph_obj.configs
-
-        # Get binary image
         img_obj = sel_batch.images[0]  # ONLY works for 2D
+
+        def estimate_patches_count(total_patches_count):
+            """
+            The method computes the best approximate number of patches in a 2D layout that
+            will be equal to total_patches_count: total_n = num_rows * num_patches_per_row
+
+            :param total_patches_count: Total number of patches given by the user
+            :return: row_count, patches_count_per_row
+            """
+            for row_count in range(isqrt(total_patches_count), 0, -1):
+                if total_patches_count % row_count == 0:
+                    num_patches_per_row = total_patches_count // row_count
+                    return row_count, num_patches_per_row
+            return 1, total_patches_count
+
+        def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 6, padding: tuple = (0, 0)):
+            """
+            Perform a convolution operation that breaks down an image into smaller square mini-images.
+            Extract all patches from the image based on filter size, stride, and padding, similar to
+            CNN convolution but without applying the filter.
+
+            :param img: OpenCV image.
+            :param num_filters: Number of convolution filters.
+            :param num_patches: Number of patches to extract per filter window size.
+            :param padding: Padding value (pad_y, pad_x).
+            :return: List of convolved images.
+            """
+            if img is None:
+                return []
+
+            # Initialize Parameters
+            lst_img_seg = []
+
+            # Pad the image
+            pad_h, pad_w = padding
+            img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
+            h, w = img.shape[:2]
+            dim = h if h > w else w
+
+            # Get the best 2D layout
+            def factor_closest(n):
+                for j in range(isqrt(n), 0, -1):
+                    if n % j == 0:
+                        return j, n // j
+                return 1, n
+            num_row, num_w = factor_closest(num_patches)
+
+            for k in range(num_filters):
+                # temp_dim = int(dim / ((2*k) + 4))  # Find a better non-linear relationship
+                temp_dim = max(3, int((dim * np.exp(-0.3 * k) / 4)))  # Avoid too small sizes
+                k_h, k_w = (temp_dim, temp_dim)
+                stride_h = int((h + (2 * pad_h) - temp_dim) / (num_row - 1)) if num_row > 1 else int(
+                    (h + (2 * pad_h) - temp_dim))
+                stride_w = int((w + (2 * pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int(
+                    (w + (2 * pad_w) - temp_dim))
+
+                img_scaling = BaseImage.ScalingFilter(
+                    image_patches=[],
+                    # graph_patches=[],
+                    filter_size=(k_h, k_w),
+                    stride=(stride_h, stride_w)
+                )
+
+                # Sliding-window to extract patches
+                for y in range(0, h - k_h + 1, stride_h):
+                    for x in range(0, w - k_w + 1, stride_w):
+                        patch = img_padded[y:y + k_h, x:x + k_w]
+                        img_scaling.image_patches.append(patch)
+                lst_img_seg.append(img_scaling)
+            return lst_img_seg
+
         if len(img_obj.image_segments) <= 0:
             filter_count = 10
             window_count = 20
-            img_obj.image_segments = ImageProcessor.extract_cnn_patches(img_obj.img_bin, num_filters=filter_count, num_patches=window_count)
+            img_obj.image_segments = extract_cnn_patches(img_obj.img_bin, num_filters=filter_count, num_patches=window_count)
 
         seg_count = len(img_obj.image_segments)
         graph_groups = defaultdict(list)
@@ -408,8 +480,8 @@ class ImageProcessor(ProgressUpdate):
                 graph_patch.configs = graph_configs
                 success = graph_patch.extract_graph(img_patch, is_img_2d=True)
                 if success:
-                    h, w = img_patch.shape
-                    graph_groups[(h, w)].append(graph_patch.nx_3d_graph)
+                    height, width = img_patch.shape
+                    graph_groups[(height, width)].append(graph_patch.nx_3d_graph)
                 else:
                     self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
             # -------------------------------------------------
@@ -682,64 +754,6 @@ class ImageProcessor(ProgressUpdate):
             img_info_list.append(img_batch)
             break  # REMOVE TO ALLOW 3D
         return img_info_list
-
-    @staticmethod
-    def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 6, padding: tuple = (0, 0)):
-        """
-        Perform a convolution operation that breaks down an image into smaller square mini-images.
-        Extract all patches from the image based on filter size, stride, and padding, similar to
-        CNN convolution but without applying the filter.
-
-        :param img: OpenCV image.
-        :param num_filters: Number of convolution filters.
-        :param num_patches: Number of patches to extract per filter window size.
-        :param padding: Padding value (pad_y, pad_x).
-        :return: List of convolved images.
-        """
-        if img is None:
-            return []
-
-        # Initialize Parameters
-        lst_img_seg = []
-
-        # Pad the image
-        pad_h, pad_w = padding
-        img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
-        h, w = img.shape[:2]
-        dim = h if h > w else w
-
-        # Get the best 2D layout
-        def factor_closest(n):
-            for j in range(isqrt(n), 0, -1):
-                if n % j == 0:
-                    return j, n // j
-            return 1, n
-
-        num_h, num_w = factor_closest(num_patches)
-
-        for i in range(num_filters):
-            # temp_dim = int(dim / ((2*i) + 4))  # Find a better non-linear relationship
-            temp_dim = max(3, int((dim * np.exp(-0.3 * i) / 4)))  # Avoid too small sizes
-            k_h, k_w = (temp_dim, temp_dim)
-            stride_h = int((h + (2 * pad_h) - temp_dim) / (num_h - 1)) if num_h > 1 else int(
-                (h + (2 * pad_h) - temp_dim))
-            stride_w = int((w + (2 * pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int(
-                (w + (2 * pad_w) - temp_dim))
-
-            img_scaling = BaseImage.ScalingFilter(
-                image_patches=[],
-                # graph_patches=[],
-                filter_size=(k_h, k_w),
-                stride=(stride_h, stride_w)
-            )
-
-            # Sliding-window to extract patches
-            for y in range(0, h - k_h + 1, stride_h):
-                for x in range(0, w - k_w + 1, stride_w):
-                    patch = img_padded[y:y + k_h, x:x + k_w]
-                    img_scaling.image_patches.append(patch)
-            lst_img_seg.append(img_scaling)
-        return lst_img_seg
 
     @classmethod
     def create_imp_object(cls, img_path: str, out_path: str = "", config_file: str = "", allow_auto_scale: bool = True):
