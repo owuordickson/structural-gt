@@ -1236,7 +1236,8 @@ class GraphAnalyzer(ProgressUpdate):
                     ax.set_title(f"Log-Log Plot of Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes (log scale)', ylabel=f'{param_name} (log scale)')
                     ax.legend()
-                except Exception:
+                except Exception as e:
+                    print(f"Log-Log Error: {e}")
                     pass
 
                 # 2b. Compute the line of best-fit on our data according to our power-law model
@@ -1258,7 +1259,8 @@ class GraphAnalyzer(ProgressUpdate):
                     ax.set_title(f"Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                     ax.legend()
-                except Exception:
+                except Exception as e:
+                    print(f"Power Law Error: {e}")
                     pass
 
                 # 2c. Compute the line of best-fit according to our truncated power-law model
@@ -1281,7 +1283,8 @@ class GraphAnalyzer(ProgressUpdate):
                     ax.set_title(f"Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                     ax.legend()
-                except Exception:
+                except Exception as e:
+                    print(f"Truncated Power Law Error: {e}")
                     pass
 
                 # 2d. Compute best-fit, assuming Log-Normal dependence on X
@@ -1303,7 +1306,8 @@ class GraphAnalyzer(ProgressUpdate):
                     ax.set_title(f"Fit Assuming Log-Normal Dependence on\n Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
                     ax.legend()
-                except Exception:
+                except Exception as e:
+                    print(f"Log Normal Dependence Error: {e}")
                     pass
 
             # Navigate to the next subplot
