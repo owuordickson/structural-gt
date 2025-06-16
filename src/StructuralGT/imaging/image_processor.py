@@ -585,86 +585,84 @@ class ImageProcessor(ProgressUpdate):
         if sel_batch.graph_obj.skel_obj.skeleton is not None:
             write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)"""
 
-    @staticmethod
-    def get_scaling_options(orig_size: float, auto_scale: bool):
-        """"""
-        orig_size = int(orig_size)
-        if orig_size > 2048:
-            recommended_size = 1024
-            scaling_options = [1024, 2048, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75),
-                               orig_size]
-        elif orig_size > 1024:
-            recommended_size = 1024
-            scaling_options = [1024, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
-        else:
-            recommended_size = orig_size
-            scaling_options = [int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
-
-        # Remove duplicates and arrange in ascending order
-        scaling_options = sorted(list(set(scaling_options)))
-        scaling_data = []
-        for val in scaling_options:
-            data = {"text": f"{val} px", "value": 0, "dataValue": val}
-            if val == orig_size:
-                data["text"] = f"{data['text']}*"
-
-            if val == recommended_size:
-                data["text"] = f"{data['text']} (recommended)"
-                data["value"] = 1 if auto_scale else 0
-            scaling_data.append(data)
-        return scaling_data
-
-    @staticmethod
-    def rescale_img(image_data, scale_options):
-        """Downsample or up-sample image to a specified pixel size."""
-
-        scale_factor = 1
-        img_2d, img_3d = None, None
-
-        if image_data is None:
-            return None, scale_factor
-
-        scale_size = 0
-        for scale_item in scale_options:
-            try:
-                scale_size = scale_item["dataValue"] if scale_item["value"] == 1 else scale_size
-            except KeyError:
-                continue
-
-        if scale_size <= 0:
-            return None, scale_factor
-
-        # if type(image_data) is np.ndarray:
-        has_alpha, _ = BaseImage.check_alpha_channel(image_data)
-        if (len(image_data.shape) == 2) or has_alpha:
-            # If the image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
-            img_2d, scale_factor = BaseImage.resize_img(scale_size, image_data)
-            return img_2d, scale_factor
-
-        # if type(image_data) is list:
-        if (len(image_data.shape) >= 3) and (not has_alpha):
-            # If the image has shape (d, h, w) and third is not alpha channel
-            images = image_data
-            img_3d = []
-            for img in images:
-                img_small, scale_factor = BaseImage.resize_img(scale_size, img)
-                img_3d.append(img_small)
-        return np.array(img_3d), scale_factor
-
     # MODIFIED TO EXCLUDE 3D IMAGES (TO BE REVISITED LATER)
     @staticmethod
     def create_img_batch_groups(img_groups: defaultdict, cfg_file: str, auto_scale: bool):
         """"""
+
+        def get_scaling_options(orig_size: float):
+            """"""
+            orig_size = int(orig_size)
+            if orig_size > 2048:
+                recommended_size = 1024
+                scaling_options = [1024, 2048, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75),
+                                   orig_size]
+            elif orig_size > 1024:
+                recommended_size = 1024
+                scaling_options = [1024, int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
+            else:
+                recommended_size = orig_size
+                scaling_options = [int(orig_size * 0.25), int(orig_size * 0.5), int(orig_size * 0.75), orig_size]
+
+            # Remove duplicates and arrange in ascending order
+            scaling_options = sorted(list(set(scaling_options)))
+            scaling_data = []
+            for val in scaling_options:
+                data = {"text": f"{val} px", "value": 0, "dataValue": val}
+                if val == orig_size:
+                    data["text"] = f"{data['text']}*"
+
+                if val == recommended_size:
+                    data["text"] = f"{data['text']} (recommended)"
+                    data["value"] = 1 if auto_scale else 0
+                scaling_data.append(data)
+            return scaling_data
+
+        def rescale_img(image_data, scale_options):
+            """Downsample or up-sample image to a specified pixel size."""
+
+            scale_factor = 1
+            img_2d, img_3d = None, None
+
+            if image_data is None:
+                return None, scale_factor
+
+            scale_size = 0
+            for scale_item in scale_options:
+                try:
+                    scale_size = scale_item["dataValue"] if scale_item["value"] == 1 else scale_size
+                except KeyError:
+                    continue
+
+            if scale_size <= 0:
+                return None, scale_factor
+
+            # if type(image_data) is np.ndarray:
+            has_alpha, _ = BaseImage.check_alpha_channel(image_data)
+            if (len(image_data.shape) == 2) or has_alpha:
+                # If the image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
+                img_2d, scale_factor = BaseImage.resize_img(scale_size, image_data)
+                return img_2d, scale_factor
+
+            # if type(image_data) is list:
+            if (len(image_data.shape) >= 3) and (not has_alpha):
+                # If the image has shape (d, h, w) and third is not alpha channel
+                img_3d = []
+                for img in image_data:
+                    img_small, scale_factor = BaseImage.resize_img(scale_size, img)
+                    img_3d.append(img_small)
+            return np.array(img_3d), scale_factor
+
         img_info_list = []
         for (h, w), images in img_groups.items():
             images_small = []
-            scale_factor = 1
+            scaling_factor = 1
             scaling_opts = []
             images = np.array(images)
             max_size = max(h, w)
             if max_size > 0 and auto_scale:
-                scaling_opts = ImageProcessor.get_scaling_options(max_size, auto_scale)
-                images_small, scale_factor = ImageProcessor.rescale_img(images, scaling_opts)
+                scaling_opts = get_scaling_options(max_size)
+                images_small, scaling_factor = rescale_img(images, scaling_opts)
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
@@ -675,7 +673,7 @@ class ImageProcessor(ProgressUpdate):
                 is_2d=True,
                 shape=(h, w),
                 props=[],
-                scale_factor=scale_factor,
+                scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
                 selected_images=set(range(len(images))),
                 current_view='original',  # 'original', 'binary', 'processed', 'graph'

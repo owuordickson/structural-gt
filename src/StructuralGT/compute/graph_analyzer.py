@@ -667,6 +667,89 @@ class GraphAnalyzer(ProgressUpdate):
             logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
         return anc
 
+    def compute_graph_conductance(self, graph_obj):
+        """
+        Computes graph conductance through an approach based on eigenvectors or spectral frequency.
+        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
+
+        Conductance can closely be approximated via eigenvalue computation,
+        a fact which has been well-known and well-used in the graph theory community.
+
+        The Laplacian matrix of a directed graph is by definition generally non-symmetric,
+        while, e.g., traditional spectral clustering is primarily developed for undirected
+        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to applying the
+        techniques requiring symmetry is to turn the original directed graph into an
+        undirected graph and build the Laplacian matrix for the latter.
+
+        We need to remove isolated nodes (to avoid singular adjacency matrix).
+        The degree of a node is the number of edges incident to that node.
+        When a node has a degree of zero, it means that there are no edges
+        connected to that node. In other words, the node is isolated from
+        the rest of the graph.
+
+        :param graph_obj: Graph Extractor object.
+
+        """
+        self.update_status([101, "Computing graph conductance..."])
+        # Make a copy of the graph
+        graph = graph_obj.nx_3d_graph.copy()
+        weighted = graph_obj.configs["has_weights"]["value"]
+
+        # It is important to notice our graph is (mostly) a directed graph,
+        # meaning that it is: (asymmetric) with self-looping nodes
+
+        # 1. Remove self-looping edges from the graph, they cause zero values in Degree matrix.
+        # 1a. Get Adjacency matrix
+        adj_mat = nx.adjacency_matrix(graph).todense()
+
+        # 1b. Remove (self-loops) non-zero diagonal values in Adjacency matrix
+        np.fill_diagonal(adj_mat, 0)
+
+        # 1c. Create the new graph
+        giant_graph = nx.from_numpy_array(adj_mat)
+
+        # 2a. Identify isolated nodes
+        isolated_nodes = list(nx.isolates(giant_graph))
+
+        # 2b. Remove isolated nodes
+        giant_graph.remove_nodes_from(isolated_nodes)
+
+        # 3a. Check the connectivity of the graph
+        # It has less than two nodes or is not connected.
+        # Identify connected components
+        connected_components = list(nx.connected_components(graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
+
+        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+
+        # 4. Compute normalized-laplacian matrix
+        if weighted:
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph, weight='weight').toarray()
+        else:
+            # norm_laplacian_matrix = compute_norm_laplacian_matrix(giant_graph)
+            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph).toarray()
+
+        # 5. Compute eigenvalues
+        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
+        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
+
+        # 6. Approximate conductance using the 2nd smallest eigenvalue
+        # 6a. Compute the minimum and maximum values of graph conductance.
+        sorted_vals = np.array(e_vals.real)
+        sorted_vals.sort()
+        # approximate conductance using the 2nd smallest eigenvalue
+        try:
+            # Maximum Conductance
+            val_max = math.sqrt((2 * sorted_vals[1]))
+        except ValueError:
+            val_max = np.nan
+        # Minimum Graph Conductance
+        val_min = sorted_vals[1] / 2
+
+        return val_max, val_min
+
     def get_compute_props(self):
         """
         A method that retrieves graph theory computed parameters and stores them in a list-array.
@@ -803,6 +886,31 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gtc = self.configs
         figs = []
 
+        def plot_distribution_histogram(ax: plt.axes, title: str, distribution: list, x_label: str,
+                                        plt_bins: np.ndarray = None, y_label: str = 'Counts'):
+            """
+            Create a histogram from a distribution dataset.
+
+            :param ax: Plot axis.
+            :param title: Title text.
+            :param distribution: Dataset to be plotted.
+            :param x_label: X-label title text.
+            :param plt_bins: Bin dataset.
+            :param y_label: Y-label title text.
+            :return:
+            """
+            font_1 = {'fontsize': 9}
+            if plt_bins is None:
+                plt_bins = np.linspace(min(distribution), max(distribution), 50)
+            try:
+                std_val = str(round(stdev(distribution), 3))
+            except StatisticsError:
+                std_val = "N/A"
+            hist_title = title + std_val
+            ax.set_title(hist_title, fontdict=font_1)
+            ax.set(xlabel=x_label, ylabel=y_label)
+            ax.hist(distribution, bins=plt_bins)
+
         # Degree and Closeness
         fig = plt.Figure(figsize=(8.5, 11), dpi=300)
         if opt_gtc["display_degree_histogram"]["value"] == 1:
@@ -810,13 +918,13 @@ class GraphAnalyzer(ProgressUpdate):
             bins = np.arange(0.5, max(deg_distribution) + 1.5, 1)
             deg_title = r'Degree Distribution: $\sigma$='
             ax_1 = fig.add_subplot(2, 1, 1)
-            GraphAnalyzer.plot_distribution_histogram(ax_1, deg_title, deg_distribution, 'Degree', bins=bins)
+            plot_distribution_histogram(ax_1, deg_title, deg_distribution, 'Degree', plt_bins=bins)
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             clo_distribution = self.histogram_data["closeness_distribution"]
             cc_title = r"Closeness Centrality: $\sigma$="
             ax_2 = fig.add_subplot(2, 1, 2)
-            GraphAnalyzer.plot_distribution_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
+            plot_distribution_histogram(ax_2, cc_title, clo_distribution, 'Closeness value')
         figs.append(fig)
 
         # Betweenness, Clustering, Eigenvector and Ohms
@@ -825,25 +933,25 @@ class GraphAnalyzer(ProgressUpdate):
             bet_distribution = self.histogram_data["betweenness_distribution"]
             bc_title = r"Betweenness Centrality: $\sigma$="
             ax_1 = fig.add_subplot(2, 2, 1)
-            GraphAnalyzer.plot_distribution_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
+            plot_distribution_histogram(ax_1, bc_title, bet_distribution, 'Betweenness value')
 
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
             cluster_coefs = self.histogram_data["clustering_coefficients"]
             clu_title = r"Clustering Coefficients: $\sigma$="
             ax_2 = fig.add_subplot(2, 2, 2)
-            GraphAnalyzer.plot_distribution_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
+            plot_distribution_histogram(ax_2, clu_title, cluster_coefs, 'Clust. Coeff.')
 
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             ohm_distribution = self.histogram_data["ohms_distribution"]
             oh_title = r"Ohms Centrality: $\sigma$="
             ax_3 = fig.add_subplot(2, 2, 3)
-            GraphAnalyzer.plot_distribution_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
+            plot_distribution_histogram(ax_3, oh_title, ohm_distribution, 'Ohms value')
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             eig_distribution = self.histogram_data["eigenvector_distribution"]
             ec_title = r"Eigenvector Centrality: $\sigma$="
             ax_4 = fig.add_subplot(2, 2, 4)
-            GraphAnalyzer.plot_distribution_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
+            plot_distribution_histogram(ax_4, ec_title, eig_distribution, 'Eigenvector value')
         figs.append(fig)
 
         # weighted histograms
@@ -858,25 +966,25 @@ class GraphAnalyzer(ProgressUpdate):
                 bins = np.arange(0.5, max(w_deg_distribution) + 1.5, 1)
                 w_deg_title = r"Weighted Degree: $\sigma$="
                 ax_1 = fig.add_subplot(2, 2, 1)
-                GraphAnalyzer.plot_distribution_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', bins=bins)
+                plot_distribution_histogram(ax_1, w_deg_title, w_deg_distribution, 'Degree', plt_bins=bins)
 
             if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
                 w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
                 w_bt_title = weight_type + r"-Weighted Betweenness: $\sigma$="
                 ax_2 = fig.add_subplot(2, 2, 2)
-                GraphAnalyzer.plot_distribution_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
+                plot_distribution_histogram(ax_2, w_bt_title, w_bet_distribution, 'Betweenness value')
 
             if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
                 w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
                 w_clo_title = r"Length-Weighted Closeness: $\sigma$="
                 ax_3 = fig.add_subplot(2, 2, 3)
-                GraphAnalyzer.plot_distribution_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
+                plot_distribution_histogram(ax_3, w_clo_title, w_clo_distribution, 'Closeness value')
 
             if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
                 w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
                 w_ec_title = weight_type + r"-Weighted Eigenvector Cent.: $\sigma$="
                 ax_4 = fig.add_subplot(2, 2, 4)
-                GraphAnalyzer.plot_distribution_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
+                plot_distribution_histogram(ax_4, w_ec_title, w_eig_distribution, 'Eigenvector value')
             figs.append(fig)
 
         return figs
@@ -1012,116 +1120,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
         return fig
-
-    @staticmethod
-    def compute_graph_conductance(graph_obj):
-        """
-        Computes graph conductance through an approach based on eigenvectors or spectral frequency.
-        Implements ideas proposed in:    https://doi.org/10.1016/j.procs.2013.09.311.
-
-        Conductance can closely be approximated via eigenvalue computation,
-        a fact which has been well-known and well-used in the graph theory community.
-
-        The Laplacian matrix of a directed graph is by definition generally non-symmetric,
-        while, e.g., traditional spectral clustering is primarily developed for undirected
-        graphs with symmetric adjacency and Laplacian matrices. A trivial approach to applying the
-        techniques requiring symmetry is to turn the original directed graph into an
-        undirected graph and build the Laplacian matrix for the latter.
-
-        We need to remove isolated nodes (to avoid singular adjacency matrix).
-        The degree of a node is the number of edges incident to that node.
-        When a node has a degree of zero, it means that there are no edges
-        connected to that node. In other words, the node is isolated from
-        the rest of the graph.
-
-        :param graph_obj: Graph Extractor object.
-
-        """
-
-        # Make a copy of the graph
-        graph = graph_obj.nx_3d_graph.copy()
-        weighted = graph_obj.configs["has_weights"]["value"]
-
-        # It is important to notice our graph is (mostly) a directed graph,
-        # meaning that it is: (asymmetric) with self-looping nodes
-
-        # 1. Remove self-looping edges from the graph, they cause zero values in Degree matrix.
-        # 1a. Get Adjacency matrix
-        adj_mat = nx.adjacency_matrix(graph).todense()
-
-        # 1b. Remove (self-loops) non-zero diagonal values in Adjacency matrix
-        np.fill_diagonal(adj_mat, 0)
-
-        # 1c. Create the new graph
-        giant_graph = nx.from_numpy_array(adj_mat)
-
-        # 2a. Identify isolated nodes
-        isolated_nodes = list(nx.isolates(giant_graph))
-
-        # 2b. Remove isolated nodes
-        giant_graph.remove_nodes_from(isolated_nodes)
-
-        # 3a. Check the connectivity of the graph
-        # It has less than two nodes or is not connected.
-        # Identify connected components
-        connected_components = list(nx.connected_components(graph))
-        if not connected_components:  # In case the graph is empty
-            connected_components = []
-        sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
-
-        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-
-        # 4. Compute normalized-laplacian matrix
-        if weighted:
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph, weight='weight').toarray()
-        else:
-            # norm_laplacian_matrix = compute_norm_laplacian_matrix(giant_graph)
-            norm_laplacian_matrix = nx.normalized_laplacian_matrix(giant_graph).toarray()
-
-        # 5. Compute eigenvalues
-        # e_vals, _ = xp.linalg.eig(norm_laplacian_matrix)
-        e_vals = sp.linalg.eigvals(norm_laplacian_matrix)
-
-        # 6. Approximate conductance using the 2nd smallest eigenvalue
-        # 6a. Compute the minimum and maximum values of graph conductance.
-        sorted_vals = np.array(e_vals.real)
-        sorted_vals.sort()
-        # approximate conductance using the 2nd smallest eigenvalue
-        try:
-            # Maximum Conductance
-            val_max = math.sqrt((2 * sorted_vals[1]))
-        except ValueError:
-            val_max = np.nan
-        # Minimum Graph Conductance
-        val_min = sorted_vals[1] / 2
-
-        return val_max, val_min
-
-    @staticmethod
-    def plot_distribution_histogram(ax: plt.axes, title: str, distribution: list, x_label: str, bins: np.ndarray = None,
-                                    y_label: str = 'Counts'):
-        """
-        Create a histogram from a distribution dataset.
-
-        :param ax: Plot axis.
-        :param title: Title text.
-        :param distribution: Dataset to be plotted.
-        :param x_label: X-label title text.
-        :param bins: Bin dataset.
-        :param y_label: Y-label title text.
-        :return:
-        """
-        font_1 = {'fontsize': 9}
-        if bins is None:
-            bins = np.linspace(min(distribution), max(distribution), 50)
-        try:
-            std_val = str(round(stdev(distribution), 3))
-        except StatisticsError:
-            std_val = "N/A"
-        hist_title = title + std_val
-        ax.set_title(hist_title, fontdict=font_1)
-        ax.set(xlabel=x_label, ylabel=y_label)
-        ax.hist(distribution, bins=bins)
 
     @staticmethod
     def plot_scaling_behavior(scaling_data: defaultdict = None):
@@ -1317,30 +1315,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         figs.append(fig) if i <= 4 else None
         return figs
-
-    @staticmethod
-    def paginate_table(scaling_data, rows_per_page=40):
-        n_rows = scaling_data.shape[0]
-        n_pages = (n_rows + rows_per_page - 1) // rows_per_page  # ceil division
-
-        for i in range(n_pages):
-            start = i * rows_per_page
-            end = min((i + 1) * rows_per_page, n_rows)
-            chunk = scaling_data.iloc[start:end]
-
-            fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            ax = fig.add_subplot(1, 1, 1)
-            ax.set_axis_off()
-            ax.set_title(f"Scaling GT Parameters (Page {i + 1})")
-
-            col_width = [2 / 3, 1 / 3]
-            table = tbl.table(ax,
-                              cellText=chunk.values,
-                              colLabels=chunk.columns,
-                              loc='upper center',
-                              colWidths=col_width,
-                              cellLoc='left')
-            table.scale(1, 1.5)
 
     @staticmethod
     def write_to_pdf(sgt_obj, update_func=None):
