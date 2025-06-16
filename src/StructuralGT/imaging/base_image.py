@@ -116,13 +116,16 @@ class BaseImage:
         if image is None:
             return None
 
-        def control_brightness(img: MatLike, brightness_val: int = 0, contrast_val: int = 0):
+        def control_brightness(img: MatLike):
             """
-            Apply contrast and brightness filters to the image.
+            Apply contrast and brightness filters to the image
 
+            param img: OpenCV image
             :return:
             """
 
+            brightness_val = opt_img["brightness_level"]["value"]
+            contrast_val = opt_img["contrast_level"]["value"]
             brightness = ((brightness_val / 100) * 127)
             contrast = ((contrast_val / 100) * 127)
 
@@ -167,8 +170,8 @@ class BaseImage:
         if alpha_channel:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        filtered_img = control_brightness(image, opt_img["brightness_level"]["value"],
-                                                    opt_img["contrast_level"]["value"])
+        # Apply brightness/contrast
+        filtered_img = control_brightness(image)
 
         if float(opt_img["apply_gamma"]["dataValue"]) != 1.00:
             inv_gamma = 1.00 / float(opt_img["apply_gamma"]["dataValue"])
