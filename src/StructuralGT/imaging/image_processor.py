@@ -452,8 +452,7 @@ class ImageProcessor(ProgressUpdate):
             pad_h, pad_w = padding
             img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
             h, w = img.shape[:2]
-            # orig_img_width = h if h > w else w
-            orig_img_width = w
+            orig_img_width = h if h < w else w
             num_rows, num_cols = estimate_patches_count(num_patches)
 
             for k in range(num_filters):
