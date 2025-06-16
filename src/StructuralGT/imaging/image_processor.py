@@ -411,8 +411,11 @@ class ImageProcessor(ProgressUpdate):
             :param parent_width: Width of parent image.
             :param num: Index of filter.
             """
-            # return int(dim / ((2*k) + 4))  # Find a better non-linear relationship
-            return max(3, int((parent_width * np.exp(-0.3 * num) / 4)))  # Avoid too small sizes
+            # return int(parent_width / ((2*num) + 4))
+            # est_w = int((parent_width * np.exp(-0.3 * num) / 4))  # Exponential decay
+            est_w = int((parent_width - 10) * (1 - (num/num_square_filters)))
+            print(f"Estimated width: {est_w}")
+            return max(50, est_w)  # Avoid too small sizes
 
         def estimate_patches_count(total_patches_count):
             """
@@ -450,7 +453,8 @@ class ImageProcessor(ProgressUpdate):
             pad_h, pad_w = padding
             img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
             h, w = img.shape[:2]
-            orig_img_width = h if h > w else w
+            # orig_img_width = h if h > w else w
+            orig_img_width = w
             num_rows, num_cols = estimate_patches_count(num_patches)
 
             for k in range(num_filters):
@@ -474,6 +478,10 @@ class ImageProcessor(ProgressUpdate):
                         patch = img_padded[y:y + k_h, x:x + k_w]
                         img_scaling.image_patches.append(patch)
                 lst_img_seg.append(img_scaling)
+
+                # Stop loop if filter size is too small
+                if temp_w <= 50:
+                    break
             return lst_img_seg
 
         if len(img_obj.image_segments) <= 0:
