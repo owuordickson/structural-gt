@@ -900,60 +900,83 @@ class GraphAnalyzer(ProgressUpdate):
         wt_type = graph_obj.get_weight_type()
         weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
 
+        def plot_distribution_heatmap( distribution: list, title: str, size: float, line_width: float):
+            """
+            Create a heatmap from a distribution.
+
+            :param distribution: Dataset to be plotted.
+            :param title: Title of the plot figure.
+            :param size: Size of the scatter items.
+            :param line_width: Size of the plot line-width.
+            :return: Histogram plot figure.
+            """
+            nx_graph = graph_obj.nx_3d_graph
+            is_2d = graph_obj.skel_obj.is_2d
+            font_1 = {'fontsize': 9}
+
+            plt_fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
+            ax = plt_fig.add_subplot(1, 1, 1)
+            ax.set_title(title, fontdict=font_1)
+
+            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_2d, line_width=line_width)
+            c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size,
+                                                         distribution_data=distribution)
+
+            plt_fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
+            return plt_fig
+
         if opt_gtc["display_degree_histogram"]["value"] == 1:
             deg_distribution = self.histogram_data["degree_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, deg_distribution, 'Degree Heatmap', sz,
-                                                          lw)
+            fig = plot_distribution_heatmap(deg_distribution, 'Degree Heatmap', sz, lw)
             figs.append(fig)
         if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_deg_distribution,
-                                                          'Weighted Degree Heatmap', sz, lw)
+            plt_title = 'Weighted Degree Heatmap'
+            fig = plot_distribution_heatmap(w_deg_distribution, plt_title, sz, lw)
             figs.append(fig)
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
             cluster_coefs = self.histogram_data["clustering_coefficients"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, cluster_coefs,
-                                                          'Clustering Coefficient Heatmap', sz, lw)
+            plt_title = 'Clustering Coefficient Heatmap'
+            fig = plot_distribution_heatmap(cluster_coefs, plt_title, sz, lw)
             figs.append(fig)
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
             bet_distribution = self.histogram_data["betweenness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, bet_distribution,
-                                                          'Betweenness Centrality Heatmap', sz, lw)
+            plt_title = 'Betweenness Centrality Heatmap'
+            fig = plot_distribution_heatmap(bet_distribution, plt_title, sz, lw)
             figs.append(fig)
         if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1):
             w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_bet_distribution,
-                                                          f'{weight_type}-Weighted Betweenness Centrality Heatmap', sz,
-                                                          lw)
+            plt_title = f'{weight_type}-Weighted Betweenness Centrality Heatmap'
+            fig = plot_distribution_heatmap(w_bet_distribution, plt_title, sz, lw)
             figs.append(fig)
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
             clo_distribution = self.histogram_data["closeness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, clo_distribution,
-                                                          'Closeness Centrality Heatmap', sz, lw)
+            plt_title = 'Closeness Centrality Heatmap'
+            fig = plot_distribution_heatmap(clo_distribution, plt_title, sz, lw)
             figs.append(fig)
         if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
             w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_clo_distribution,
-                                                          'Length-Weighted Closeness Centrality Heatmap', sz, lw)
+            plt_title = 'Length-Weighted Closeness Centrality Heatmap'
+            fig = plot_distribution_heatmap(w_clo_distribution, plt_title, sz, lw)
             figs.append(fig)
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             eig_distribution = self.histogram_data["eigenvector_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, eig_distribution,
-                                                          'Eigenvector Centrality Heatmap', sz, lw)
+            plt_title = 'Eigenvector Centrality Heatmap'
+            fig = plot_distribution_heatmap(eig_distribution, plt_title, sz, lw)
             figs.append(fig)
         if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                 opt_gte["has_weights"]["value"] == 1):
             w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, w_eig_distribution,
-                                                          f'{weight_type}-Weighted Eigenvector Centrality Heatmap', sz,
-                                                          lw)
+            plt_title = f'{weight_type}-Weighted Eigenvector Centrality Heatmap'
+            fig = plot_distribution_heatmap(w_eig_distribution, plt_title, sz, lw)
             figs.append(fig)
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
             ohm_distribution = self.histogram_data["ohms_distribution"]
-            fig = GraphAnalyzer.plot_distribution_heatmap(graph_obj, image_2d, ohm_distribution,
-                                                          'Ohms Centrality Heatmap', sz, lw)
+            plt_title = 'Ohms Centrality Heatmap'
+            fig = plot_distribution_heatmap(ohm_distribution, plt_title, sz, lw)
             figs.append(fig)
+        print("Successfully plotted heatmaps")
         return figs
 
     def plot_run_configs(self, graph_obj: FiberNetworkBuilder):
@@ -1073,35 +1096,6 @@ class GraphAnalyzer(ProgressUpdate):
         val_min = sorted_vals[1] / 2
 
         return val_max, val_min
-
-    @staticmethod
-    def plot_distribution_heatmap(graph_obj: FiberNetworkBuilder, image: MatLike, distribution: list, title: str,
-                                  size: float, line_width: float):
-        """
-        Create a heatmap from a distribution.
-
-        :param graph_obj: GraphExtractor object.
-        :param image: Image to plot.
-        :param distribution: Dataset to be plotted.
-        :param title: Title of the plot figure.
-        :param size: Size of the scatter items.
-        :param line_width: Size of the plot line-width.
-        :return: Histogram plot figure.
-        """
-        nx_graph = graph_obj.nx_3d_graph
-        is_2d = graph_obj.skel_obj.is_2d
-        font_1 = {'fontsize': 9}
-
-        fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
-        ax = fig.add_subplot(1, 1, 1)
-        ax.set_title(title, fontdict=font_1)
-
-        FiberNetworkBuilder.plot_graph_edges(ax, image, nx_graph, is_graph_2d=is_2d, line_width=line_width)
-        c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size,
-                                                     distribution_data=distribution)
-
-        fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
-        return fig
 
     @staticmethod
     def plot_distribution_histogram(ax: plt.axes, title: str, distribution: list, x_label: str, bins: np.ndarray = None,
@@ -1266,8 +1260,10 @@ class GraphAnalyzer(ProgressUpdate):
                 # 2c. Compute the line of best-fit according to our truncated power-law model
                 try:
                     init_params_cutoff = [1.0, 1.0, 0.1]
-                    opt_params_cutoff: np.ndarray = sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
-                    a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2])
+                    opt_params_cutoff: np.ndarray = \
+                    sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
+                    a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(
+                        opt_params_cutoff[2])
                     # Generate points for the best-fit curve
                     y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
                     print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
@@ -1290,8 +1286,11 @@ class GraphAnalyzer(ProgressUpdate):
                 # 2d. Compute best-fit, assuming Log-Normal dependence on X
                 try:
                     init_params_log = [1.0, 1.0, 10]
-                    opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
-                    mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+                    opt_params_log: np.ndarray = \
+                    sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log,
+                                          bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+                    mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(
+                        opt_params_log[2])
                     # Generate predicted points for the best-fit curve
                     y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
@@ -1311,7 +1310,7 @@ class GraphAnalyzer(ProgressUpdate):
                     pass
 
             # Navigate to the next subplot
-            if (i+1) > 1:
+            if (i + 1) > 1:
                 figs.append(fig)
                 fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                 i = 0
