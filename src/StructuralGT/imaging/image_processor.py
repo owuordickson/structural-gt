@@ -405,6 +405,15 @@ class ImageProcessor(ProgressUpdate):
         graph_configs = sel_batch.graph_obj.configs
         img_obj = sel_batch.images[0]  # ONLY works for 2D
 
+        def estimate_filter_width(parent_width, num):
+            """
+            Applies a non-linear function to compute the width-size of a filter based on its index location.
+            :param parent_width: Width of parent image.
+            :param num: Index of filter.
+            """
+            # return int(dim / ((2*k) + 4))  # Find a better non-linear relationship
+            return max(3, int((parent_width * np.exp(-0.3 * num) / 4)))  # Avoid too small sizes
+
         def estimate_patches_count(total_patches_count):
             """
             The method computes the best approximate number of patches in a 2D layout that
@@ -441,17 +450,16 @@ class ImageProcessor(ProgressUpdate):
             pad_h, pad_w = padding
             img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
             h, w = img.shape[:2]
-            dim = h if h > w else w
+            orig_img_width = h if h > w else w
             num_rows, num_cols = estimate_patches_count(num_patches)
 
             for k in range(num_filters):
-                # temp_dim = int(dim / ((2*k) + 4))  # Find a better non-linear relationship
-                temp_dim = max(3, int((dim * np.exp(-0.3 * k) / 4)))  # Avoid too small sizes
-                k_h, k_w = (temp_dim, temp_dim)
-                stride_h = int((h + (2 * pad_h) - temp_dim) / (num_rows - 1)) if num_rows > 1 else int(
-                    (h + (2 * pad_h) - temp_dim))
-                stride_w = int((w + (2 * pad_w) - temp_dim) / (num_cols - 1)) if num_cols > 1 else int(
-                    (w + (2 * pad_w) - temp_dim))
+                temp_w = estimate_filter_width(orig_img_width, k)
+                k_h, k_w = (temp_w, temp_w)
+                stride_h = int((h + (2 * pad_h) - temp_w) / (num_rows - 1)) if num_rows > 1 else int(
+                    (h + (2 * pad_h) - temp_w))
+                stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
+                    (w + (2 * pad_w) - temp_w))
 
                 img_scaling = BaseImage.ScalingFilter(
                     image_patches=[],
