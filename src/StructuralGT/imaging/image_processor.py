@@ -385,14 +385,23 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
-    def build_graph_from_patches(self):
+    def build_graph_from_patches(self, num_square_filters: int, patch_count_per_filter: int, patch_padding: tuple = (0, 0)):
         """
-        Extracts graphs from smaller square patches/windows of selected images.
+        Extracts graphs from smaller square patches of selected images.
+
+        Given `num_square_filters` (k), the method generates k square filters/windows, each of sizes NxN—where N is
+        a distinct value computed or estimated for each filter.
+
+        For every NxN window, it randomly selects `patch_count_per_filter` (m) patches (aligned with the window)
+        from across the entire image.
+
+        :param num_square_filters: Number of square filters to generate.
+        :param patch_count_per_filter: Number of patches per filter.
+        :param patch_padding: Padding around each patch.
 
         """
         # Get the selected batch
         sel_batch = self.get_selected_batch()
-        # sel_batch.current_view = 'graph'
         graph_configs = sel_batch.graph_obj.configs
         img_obj = sel_batch.images[0]  # ONLY works for 2D
 
@@ -410,7 +419,7 @@ class ImageProcessor(ProgressUpdate):
                     return row_count, num_patches_per_row
             return 1, total_patches_count
 
-        def extract_cnn_patches(img: MatLike, num_filters: int = 5, num_patches: int = 6, padding: tuple = (0, 0)):
+        def extract_cnn_patches(img: MatLike, num_filters: int, num_patches: int, padding: tuple):
             """
             Perform a convolution operation that breaks down an image into smaller square mini-images.
             Extract all patches from the image based on filter size, stride, and padding, similar to
@@ -433,22 +442,15 @@ class ImageProcessor(ProgressUpdate):
             img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
             h, w = img.shape[:2]
             dim = h if h > w else w
-
-            # Get the best 2D layout
-            def factor_closest(n):
-                for j in range(isqrt(n), 0, -1):
-                    if n % j == 0:
-                        return j, n // j
-                return 1, n
-            num_row, num_w = factor_closest(num_patches)
+            num_rows, num_cols = estimate_patches_count(num_patches)
 
             for k in range(num_filters):
                 # temp_dim = int(dim / ((2*k) + 4))  # Find a better non-linear relationship
                 temp_dim = max(3, int((dim * np.exp(-0.3 * k) / 4)))  # Avoid too small sizes
                 k_h, k_w = (temp_dim, temp_dim)
-                stride_h = int((h + (2 * pad_h) - temp_dim) / (num_row - 1)) if num_row > 1 else int(
+                stride_h = int((h + (2 * pad_h) - temp_dim) / (num_rows - 1)) if num_rows > 1 else int(
                     (h + (2 * pad_h) - temp_dim))
-                stride_w = int((w + (2 * pad_w) - temp_dim) / (num_w - 1)) if num_w > 1 else int(
+                stride_w = int((w + (2 * pad_w) - temp_dim) / (num_cols - 1)) if num_cols > 1 else int(
                     (w + (2 * pad_w) - temp_dim))
 
                 img_scaling = BaseImage.ScalingFilter(
@@ -467,9 +469,7 @@ class ImageProcessor(ProgressUpdate):
             return lst_img_seg
 
         if len(img_obj.image_segments) <= 0:
-            filter_count = 10
-            window_count = 20
-            img_obj.image_segments = extract_cnn_patches(img_obj.img_bin, num_filters=filter_count, num_patches=window_count)
+            img_obj.image_segments = extract_cnn_patches(img_obj.img_bin, num_square_filters, patch_count_per_filter, patch_padding)
 
         seg_count = len(img_obj.image_segments)
         graph_groups = defaultdict(list)
@@ -484,16 +484,7 @@ class ImageProcessor(ProgressUpdate):
                     graph_groups[(height, width)].append(graph_patch.nx_3d_graph)
                 else:
                     self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
-            # -------------------------------------------------
-            # TO BE DELETED
-            #    fig, ax = plt.subplots()
-            #    im = ax.imshow(img_patch, cmap='gray')
-            #    ax.axis('off')
-            # print(f"Patch Count: {len(scale_filter.image_patches)}, Stride: {scale_filter.stride}, Filter Size: {scale_filter.filter_size}")
-            # --------------------------------------------------
-        # --------------------------------------------------
-        # plt.show()
-        # --------------------------------------------------
+
         return graph_groups
 
     def get_filenames(self, image_path: str = None):
