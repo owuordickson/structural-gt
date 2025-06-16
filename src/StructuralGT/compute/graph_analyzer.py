@@ -1159,7 +1159,7 @@ class GraphAnalyzer(ProgressUpdate):
                 k (float): fitting parameter
                 c (float): cut-off fitting parameter
             """
-            return a * x ** (-k) * np.exp(-c * x)
+            return a * (x ** (-k)) * np.exp(-c * x)
 
         def lognormal_model(x, mu, sigma, a):
             """
@@ -1218,78 +1218,93 @@ class GraphAnalyzer(ProgressUpdate):
                 # 1. Transform to log-log scale
                 log_x = np.log10(x_avg)
                 log_y = np.log10(y_avg)
+                x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+                y_title = param_name.split('(')[0] if '(' in param_name else param_name
 
                 # 2a. Perform linear regression in log-log scale
-                slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
-                # Compute line of best-fit
-                log_y_fit = slope * log_x + intercept
+                try:
+                    slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
+                    # Compute line of best-fit
+                    log_y_fit = slope * log_x + intercept
+
+                    # 3a. Plot data (Log-Log scale with the line best-fit)
+                    i = i + 1
+                    ax = fig.add_subplot(2, 2, i)
+                    # ax.plot(x_values, y_values, 'b.', markersize=3)
+                    ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
+                    ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
+                    ax.set_title(f"Log-Log Plot of Nodes vs {y_title}", fontsize=10)
+                    ax.set(xlabel='No. of Nodes (log scale)', ylabel=f'{param_name} (log scale)')
+                    ax.legend()
+                except Exception:
+                    pass
 
                 # 2b. Compute the line of best-fit on our data according to our power-law model
-                init_params = [1.0, 1.0]  # initial guess for [a, k]
-                optimal_params: np.ndarray = sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
-                a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
-                # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
-                # Generate points for the best-fit curve
-                x_fit = np.linspace(min(x_avg), max(x_avg), 100)
-                y_fit = power_law_model(x_fit, a_fit, k_fit)
+                try:
+                    init_params = [1.0, 1.0]  # initial guess for [a, k]
+                    optimal_params: np.ndarray = sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
+                    a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
+                    # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
+                    # Generate points for the best-fit curve
+                    y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
+
+                    # 3b. Plot data (power-law best fit)
+                    i = i + 1
+                    ax = fig.add_subplot(2, 2, i)
+                    ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                                markersize=4, linewidth=1, linestyle='-')
+                    ax.plot(x_fit, y_fit_pwr, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$',
+                            color='red')
+                    ax.set_title(f"Nodes vs {y_title}", fontsize=10)
+                    ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                    ax.legend()
+                except Exception:
+                    pass
 
                 # 2c. Compute the line of best-fit according to our truncated power-law model
-                init_params_cutoff = [1.0, 1.0, 1.0]
-                opt_params_cutoff: np.ndarray = sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
-                a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2])
-                # Generate points for the best-fit curve
-                y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
+                try:
+                    init_params_cutoff = [1.0, 1.0, 0.1]
+                    opt_params_cutoff: np.ndarray = sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
+                    a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2])
+                    # Generate points for the best-fit curve
+                    y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
+                    print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
+
+                    # 3c. Plot data (truncated power-law best fit)
+                    i = i + 1
+                    ax = fig.add_subplot(2, 2, i)
+                    ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                                markersize=4, linewidth=1, linestyle='-')
+                    ax.plot(x_fit, y_fit_cut,
+                            label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
+                            color='red')
+                    ax.set_title(f"Nodes vs {y_title}", fontsize=10)
+                    ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                    ax.legend()
+                except Exception:
+                    pass
 
                 # 2d. Compute best-fit, assuming Log-Normal dependence on X
                 try:
                     init_params_log = [1.0, 1.0, 10]
                     opt_params_log: np.ndarray = sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log, bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
                     mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
-                except RuntimeError:
-                    mu_fit, sigma_fit, a_log_fit = 1.0, 1.0, 10.0
-                # Generate predicted points for the best-fit curve
-                y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
+                    # Generate predicted points for the best-fit curve
+                    y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
-                # 3a. Plot data (Log-Log scale with the line best-fit)
-                i = i + 1
-                y_title = param_name.split('(')[0] if '(' in param_name else param_name
-                ax = fig.add_subplot(2, 2, i)
-                # ax.plot(x_values, y_values, 'b.', markersize=3)
-                ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
-                ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
-                ax.set_title(f"Log-Log Plot of Nodes vs {y_title}", fontsize=10)
-                ax.set(xlabel='No. of Nodes (log scale)', ylabel=f'{param_name} (log scale)')
-                ax.legend()
-
-                # 3b. Plot data (power-law best fit)
-                i = i + 1
-                ax = fig.add_subplot(2, 2, i)
-                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s', markersize=4, linewidth=1, linestyle='-')
-                ax.plot(x_fit, y_fit, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$', color='red')
-                ax.set_title(f"Nodes vs {y_title}", fontsize=10)
-                ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                ax.legend()
-
-                # 3c. Plot data (truncated power-law best fit)
-                i = i + 1
-                ax = fig.add_subplot(2, 2, i)
-                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
-                            markersize=4, linewidth=1, linestyle='-')
-                ax.plot(x_fit, y_fit_cut, label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$', color='red')
-                ax.set_title(f"Nodes vs {y_title}", fontsize=10)
-                ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                ax.legend()
-
-                # 3c. Plot data (Log-normal distribution best fit)
-                i = i + 1
-                ax = fig.add_subplot(2, 2, i)
-                ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
-                            markersize=4, linewidth=1, linestyle='-')
-                ax.plot(x_fit, y_fit_ln, label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
-                         color='red')
-                ax.set_title(f"Fit Assuming Log-Normal Dependence on\n Nodes vs {y_title}", fontsize=10)
-                ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                ax.legend()
+                    # 3c. Plot data (Log-normal distribution best fit)
+                    i = i + 1
+                    ax = fig.add_subplot(2, 2, i)
+                    ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                                markersize=4, linewidth=1, linestyle='-')
+                    ax.plot(x_fit, y_fit_ln,
+                            label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
+                            color='red')
+                    ax.set_title(f"Fit Assuming Log-Normal Dependence on\n Nodes vs {y_title}", fontsize=10)
+                    ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                    ax.legend()
+                except Exception:
+                    pass
 
             # Navigate to the next subplot
             if (i+1) > 1:
