@@ -60,8 +60,8 @@ Item {
                         wrapMode: Text.Wrap
                         color: "#bc2222"
                         font.pixelSize: 10
-                        Layout.preferredWidth: parent.width - 75
-                        text: "**Warning: this calculation takes long (esp. when node-count>2000)"
+                        Layout.preferredWidth: 200
+                        text: "**Warning**: this calculation takes long (esp. when node-count>2000)"
                     }
                 }
             }
