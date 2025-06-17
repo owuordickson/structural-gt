@@ -42,11 +42,26 @@ Item {
                 }
 
                 ColumnLayout {
-                    id: childContent
+                    id: childContentOhms
                     visible: parentCheckBox.checked && model.id === "display_ohms_histogram"
                     Layout.leftMargin: 20
 
                     MicroscopyPropertyWidget {
+                    }
+                }
+
+                ColumnLayout {
+                    id: childContentAVG
+                    visible: parentCheckBox.checked && model.id === "compute_avg_node_connectivity"
+                    Layout.leftMargin: 20
+
+                    Label {
+                        id: label
+                        wrapMode: Text.Wrap
+                        color: "#bc2222"
+                        font.pixelSize: 10
+                        Layout.preferredWidth: parent.width - 75
+                        text: "**this calculation takes long (esp. when node-count>2000)"
                     }
                 }
             }

@@ -33,6 +33,7 @@
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",
         "widgets/GraphComputeWidget.qml",
-        "widgets/CreateProjectWidget.qml"
+        "widgets/CreateProjectWidget.qml",
+        "widgets/LoggingWidget.qml"
     ]
 }
