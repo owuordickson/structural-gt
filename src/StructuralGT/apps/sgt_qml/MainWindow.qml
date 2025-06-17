@@ -11,6 +11,7 @@ ApplicationWindow {
     height: 800
     visible: true
     title: "Structural GT"
+    font.family: "Arial"  // or Qt.application.font.family
 
     menuBar: MenuBarWidget {
     }
@@ -23,7 +24,7 @@ ApplicationWindow {
         rows: 2
         columns: 2
 
-        // First row, first column (spanning 2 columns)
+        // First row, first column (spanning 2 columns) - Ribbon
         Rectangle {
             Layout.row: 0
             Layout.column: 0
@@ -39,7 +40,7 @@ ApplicationWindow {
             }
         }
 
-        // Second row, first column
+        // Second row, first column - Left Pane
         Rectangle {
             id: recLeftPane
             Layout.row: 1
@@ -55,7 +56,7 @@ ApplicationWindow {
             }
         }
 
-        // Second row, second column
+        // Second row, second column - Center
         Rectangle {
             id: recRightPane
             Layout.row: 1

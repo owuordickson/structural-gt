@@ -6,12 +6,60 @@ import QtQuick.Layouts
 Rectangle {
     id: loggingDataContainer
     width: parent.width
-    height: parent.height
+    height: parent.height - 75
     color: "transparent"
+
+    property string currentFilter: "All"
+    property var logEntries: []
+
+    function currentTimestamp() {
+        let now = new Date()
+        return now.toLocaleTimeString(Qt.locale(), "hh:mm:ss")
+    }
+
+    function appendLog(type, message, color = "black") {
+        let timestamp = currentTimestamp()
+        let html = "<font color='" + color + "'>[" + timestamp + "] " + message + "</font>"
+        logEntries.push({ type: type, html: html })
+        refreshLogDisplay()
+    }
+
+    function refreshLogDisplay() {
+        lblTextLogs.text = ""
+        for (let i = 0; i < logEntries.length; ++i) {
+            let entry = logEntries[i]
+            if (currentFilter === "All" || entry.type === currentFilter)
+                lblTextLogs.append(entry.html)
+        }
+        lblTextLogs.cursorPosition = lblTextLogs.length
+    }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 5
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            ComboBox {
+                id: logFilter
+                Layout.preferredWidth: 150
+                model: ["All", "Info", "Error", "Success"]
+                onCurrentTextChanged: {
+                    currentFilter = currentText
+                    refreshLogDisplay()
+                }
+            }
+
+            Button {
+                text: "Clear Logs"
+                onClicked: {
+                    logEntries = []
+                    refreshLogDisplay()
+                }
+            }
+        }
 
         ScrollView {
             Layout.fillWidth: true
@@ -24,23 +72,11 @@ Rectangle {
                 selectByMouse: true
                 textFormat: TextEdit.RichText
                 font.pixelSize: 10
-                color: "#000000"
                 background: Rectangle {
                     color: "white"
                     radius: 4
                 }
-
-                function appendAndScroll(htmlText) {
-                    lblTextLogs.append(htmlText);
-                    lblTextLogs.cursorPosition = lblTextLogs.length;  // Auto-scroll to bottom
-                }
             }
-        }
-
-        Button {
-            text: "Clear Logs"
-            Layout.alignment: Qt.AlignRight
-            onClicked: lblTextLogs.text = ""
         }
     }
 
@@ -48,26 +84,23 @@ Rectangle {
         target: mainController
 
         function onUpdateProgressSignal(val, msg) {
-            if (val <= 100) {
-                lblTextLogs.appendAndScroll("<font color='blue'>" + val + "%: " + msg + "</font>");
-            } else {
-                lblTextLogs.appendAndScroll("<font color='blue'>" + msg + "</font>");
-            }
+            let fullMsg = (val <= 100) ? val + "%: " + msg : msg
+            appendLog("Info", fullMsg, "blue")
         }
 
         function onErrorSignal(msg) {
-            lblTextLogs.appendAndScroll("<font color='red'>" + msg + "</font>");
+            appendLog("Error", msg, "red")
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                lblTextLogs.appendAndScroll("<b><font color='#2222bc'>Task completed successfully!</font></b>");
+                appendLog("Success", "Task completed successfully!", "#2222bc")
             } else {
-                lblTextLogs.appendAndScroll("<b><font color='#bc2222'>Task terminated due to an error. Try again.</font></b>");
+                appendLog("Error", "Task terminated due to an error. Try again.", "#bc2222")
             }
 
             if (msg_data.length >= 2) {
-                lblTextLogs.appendAndScroll("<br><font color='gray'>" + msg_data[0] + "<br>" + msg_data[1] + "</font>");
+                appendLog("Info", msg_data[0] + "<br>" + msg_data[1], "gray")
             }
         }
     }
