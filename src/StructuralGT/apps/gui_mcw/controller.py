@@ -325,6 +325,7 @@ class MainController(QObject):
             self.updateProgressSignal.emit(progress_val, msg)
             logging.info(f"{progress_val}%: {msg}", extra={'user': 'SGT Logs'})
         elif progress_val > 100:
+            self.updateProgressSignal.emit(progress_val, msg)
             logging.info(f"{msg}", extra={'user': 'SGT Logs'})
         else:
             logging.exception("Error: %s", msg, extra={'user': 'SGT Logs'})

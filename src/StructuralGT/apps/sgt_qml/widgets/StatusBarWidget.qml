@@ -75,13 +75,13 @@ Rectangle {
             if (val <= 100) {
                 progressBar.value = val;
                 lblStatusMsg.text = msg;
-                lblStatusMsg.color = "#008b00";
-                progressBar.visible = mainController.is_task_running();
-                //if (btnCancel.visible === true){
-                    btnCancel.visible = mainController.is_task_running();
-                    btnCancel.enabled = mainController.is_task_running();
-                //}
+            } else {
+                lblStatusMsg.text = msg;
             }
+            lblStatusMsg.color = "#008b00";
+            progressBar.visible = mainController.is_task_running();
+            btnCancel.visible = mainController.is_task_running();
+            btnCancel.enabled = mainController.is_task_running();
         }
 
         function onErrorSignal (msg) {
@@ -89,10 +89,8 @@ Rectangle {
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#bc2222";
             progressBar.visible = mainController.is_task_running();
-            //if (btnCancel.visible === true){
-                btnCancel.visible = mainController.is_task_running();
-                btnCancel.enabled = mainController.is_task_running();
-            //}
+            btnCancel.visible = mainController.is_task_running();
+            btnCancel.enabled = mainController.is_task_running();
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
