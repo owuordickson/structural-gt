@@ -1,7 +1,8 @@
 {
     "files": [
         "LeftContent.qml",
-        "RightContent.qml",
+        "CenterMainContent.qml",
+        "RightLoggingPanel.qml",
         "MainWindow.qml",
         "widgets/MenuBarWidget.qml",
         "widgets/StatusBarWidget.qml",
@@ -33,7 +34,6 @@
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",
         "widgets/GraphComputeWidget.qml",
-        "widgets/CreateProjectWidget.qml",
-        "widgets/LoggingWidget.qml"
+        "widgets/CreateProjectWidget.qml"
     ]
 }

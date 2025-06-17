@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 import QtQuick.Dialogs as QuickDialogs
 import Qt.labs.platform as Platform
 import "widgets"
@@ -40,7 +41,7 @@ ApplicationWindow {
             }
         }
 
-        // Second row, first column - Left Pane
+        // Second row, first column - Left Navigation Pane
         Rectangle {
             id: recLeftPane
             Layout.row: 1
@@ -56,9 +57,9 @@ ApplicationWindow {
             }
         }
 
-        // Second row, second column - Center
+        // Second row, second column - Center Content
         Rectangle {
-            id: recRightPane
+            id: recCenterContent
             Layout.row: 1
             Layout.column: 1
             Layout.rightMargin: 10
@@ -67,8 +68,13 @@ ApplicationWindow {
             Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
             Layout.fillHeight: true
-            RightContent {
+            CenterMainContent {
             }
+        }
+
+        // Logging Panel View on the Right side
+        RightLoggingPanel {
+            id: loggingWindowPanel
         }
     }
 
@@ -150,7 +156,7 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    /*Dialog {
         id: dialogViewLogs
         title: "StructuralGT Runtime Logs"
         modal: true
@@ -163,7 +169,7 @@ ApplicationWindow {
             anchors.fill: parent
             LoggingWidget{}
         }
-    }
+    }*/
 
     Dialog {
         id: createProjectDialog

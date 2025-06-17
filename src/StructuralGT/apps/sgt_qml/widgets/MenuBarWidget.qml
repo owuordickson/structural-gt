@@ -71,7 +71,7 @@ MenuBar {
     Menu {
         title: "Help"
         MenuItem { id:mnuHelp; text: "Structural GT Help"; enabled: true; onTriggered: dialogAbout.open() }
-        MenuItem { id:mnuLogs; text: "View Logs"; enabled: true; onTriggered: dialogViewLogs.open() }
+        MenuItem { id:mnuLogs; text: "View Logs"; enabled: true; onTriggered: loggingWindowPanel.visible = true }
     }
 
     function export_graph_data (row) {
