@@ -1169,6 +1169,18 @@ class GraphAnalyzer(ProgressUpdate):
             """
             return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
+        def plot_axis(subplot_num, plt_type="", plot_err=True):
+            """"""
+            subplot_num += 1
+            axis = fig.add_subplot(2, 2, subplot_num)
+            if plot_err:
+                axis.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                        markersize=4, linewidth=1, linestyle='-')
+            axis.set_title(f"{plt_type} Nodes vs {y_title}", fontsize=10)
+            axis.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+            axis.legend()
+            return axis
+
         # Initialize plot figures
         figs = []
         if scaling_data is None:
@@ -1190,13 +1202,8 @@ class GraphAnalyzer(ProgressUpdate):
 
             # Convert to a Numpy array
             y_values = np.array(padded_lst).T
-            # Replace NaN values with the median of their respective columns
-            # col_medians = np.nanmedian(y_values, axis=0)
-            # idx_s = np.where(np.isnan(y_values))
-            # y_values[idx_s] = np.take(col_medians, idx_s[1])
             y_avg = np.nanmean(y_values, axis=0)
             y_err = np.nanstd(y_values, axis=0, ddof=1) / np.sqrt(y_values.shape[0])
-            # print(f"{i}. {param_name}\n{y_values}\n{y_avg} - {y_err}\n\n")
             if np.any(np.isnan(y_avg)):
                 # print(f"{param_name} has NaN values: {y_avg}")
                 continue
@@ -1221,14 +1228,17 @@ class GraphAnalyzer(ProgressUpdate):
                     log_y_fit = slope * log_x + intercept
 
                     # 3a. Plot data (Log-Log scale with the line best-fit)
-                    i = i + 1
+                    ax = plot_axis(i, "Log-Log Plot of", plot_err=False)
+                    ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
+                    ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
+                    """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     # ax.plot(x_values, y_values, 'b.', markersize=3)
                     ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
                     ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
                     ax.set_title(f"Log-Log Plot of Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes (log scale)', ylabel=f'{param_name} (log scale)')
-                    ax.legend()
+                    ax.legend()"""
                 except Exception as e:
                     print(f"Log-Log Error: {e}")
                     pass
@@ -1243,7 +1253,10 @@ class GraphAnalyzer(ProgressUpdate):
                     y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
 
                     # 3b. Plot data (power-law best fit)
-                    i = i + 1
+                    ax = plot_axis(i, "Power Law Fit and Plot of")
+                    ax.plot(x_fit, y_fit_pwr, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$',
+                            color='red')
+                    """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
                                 markersize=4, linewidth=1, linestyle='-')
@@ -1251,7 +1264,7 @@ class GraphAnalyzer(ProgressUpdate):
                             color='red')
                     ax.set_title(f"Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                    ax.legend()
+                    ax.legend()"""
                 except Exception as e:
                     print(f"Power Law Error: {e}")
                     pass
@@ -1268,7 +1281,11 @@ class GraphAnalyzer(ProgressUpdate):
                     print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
 
                     # 3c. Plot data (truncated power-law best fit)
-                    i = i + 1
+                    ax = plot_axis(i, "Truncated Power Law Fit and Plot of")
+                    ax.plot(x_fit, y_fit_cut,
+                            label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
+                            color='red')
+                    """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
                                 markersize=4, linewidth=1, linestyle='-')
@@ -1277,7 +1294,7 @@ class GraphAnalyzer(ProgressUpdate):
                             color='red')
                     ax.set_title(f"Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                    ax.legend()
+                    ax.legend()"""
                 except Exception as e:
                     print(f"Truncated Power Law Error: {e}")
                     pass
@@ -1294,7 +1311,11 @@ class GraphAnalyzer(ProgressUpdate):
                     y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
                     # 3c. Plot data (Log-normal distribution best fit)
-                    i = i + 1
+                    ax = plot_axis(i, "Log-Normal Fit and Plot of")
+                    ax.plot(x_fit, y_fit_ln,
+                            label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
+                            color='red')
+                    """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
                                 markersize=4, linewidth=1, linestyle='-')
@@ -1303,7 +1324,7 @@ class GraphAnalyzer(ProgressUpdate):
                             color='red')
                     ax.set_title(f"Fit Assuming Log-Normal Dependence on\n Nodes vs {y_title}", fontsize=10)
                     ax.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-                    ax.legend()
+                    ax.legend()"""
                 except Exception as e:
                     print(f"Log Normal Dependence Error: {e}")
                     pass
