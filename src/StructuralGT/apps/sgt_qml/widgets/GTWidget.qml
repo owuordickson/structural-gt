@@ -61,7 +61,7 @@ Item {
                         color: "#bc2222"
                         font.pixelSize: 10
                         Layout.preferredWidth: parent.width - 75
-                        text: "**this calculation takes long (esp. when node-count>2000)"
+                        text: "**Warning: this calculation takes long (esp. when node-count>2000)"
                     }
                 }
             }
