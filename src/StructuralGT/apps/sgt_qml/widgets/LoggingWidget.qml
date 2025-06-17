@@ -1,6 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Basic as Basic
+import QtQuick.Layouts
 
 Rectangle {
     id: loggingDataContainer
@@ -11,13 +12,12 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         spacing: 5
-        padding: 5
 
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            TextArea {
+            Basic.TextArea {
                 id: lblTextLogs
                 wrapMode: Text.Wrap
                 readOnly: true

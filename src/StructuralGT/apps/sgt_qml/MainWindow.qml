@@ -150,6 +150,21 @@ ApplicationWindow {
     }
 
     Dialog {
+        id: dialogViewLogs
+        title: "StructuralGT Runtime Logs"
+        modal: true
+        standardButtons: Dialog.Ok
+        anchors.centerIn: parent
+        width: 400
+        height: 512
+
+        ColumnLayout {
+            anchors.fill: parent
+            LoggingWidget{}
+        }
+    }
+
+    Dialog {
         id: createProjectDialog
         anchors.centerIn: parent
         title: "Create SGT Project"

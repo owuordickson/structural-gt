@@ -23,7 +23,7 @@ Item {
                 Label {
                     id: label
                     wrapMode: Text.Wrap
-                    color: "#bc2222"
+                    color: "#2222bc"
                     font.pixelSize: 10
                     Layout.preferredWidth: lblWidthSize
                     Layout.leftMargin: 10
@@ -33,7 +33,7 @@ Item {
                 TextField {
                     id: txtField
                     objectName: model.id
-                    color: "#bc2222"
+                    color: "#2222bc"
                     font.pixelSize: 10
                     Layout.preferredWidth: txtWidthSize
                     text: model.value
