@@ -74,10 +74,10 @@ Rectangle {
         function onUpdateProgressSignal(val, msg) {
             if (val <= 100) {
                 progressBar.value = val;
-                lblStatusMsg.text = msg;
             } else {
-                lblStatusMsg.text = msg;
+                progressBar.value = 50;
             }
+            lblStatusMsg.text = msg;
             lblStatusMsg.color = "#008b00";
             progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running();

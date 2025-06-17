@@ -39,7 +39,6 @@ def strict_read_config_file(config_path, update_func=None):
         return False
 
 
-
 def read_config_file(config_path):
     """Read the contents of the 'configs.ini' file"""
     config = configparser.ConfigParser()
@@ -208,7 +207,7 @@ def load_gtc_configs(cfg_path: str = ""):
         "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closeness Centrality", "value": 1},
         "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
-        "display_scaling_scatter_plot": {"id": "display_scaling_scatter_plot", "text": "Scaling Scatter Plot", "value": 0},
+        "compute_scaling_behavior": {"id": "compute_scaling_behavior", "text": "Scaling Behavior", "value": 0},
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
         #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
     }
@@ -226,7 +225,7 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["display_eigenvector_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_eigenvector_centrality_histogram'))
         options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
         options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
-        options_gtc["display_scaling_scatter_plot"]["value"] = int(config.get('sgt-settings', 'display_scaling_scatter_plot'))
+        options_gtc["compute_scaling_behavior"]["value"] = int(config.get('sgt-settings', 'compute_scaling_behavior'))
         options_gtc["compute_avg_node_connectivity"]["value"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
         options_gtc["compute_graph_density"]["value"] = int(config.get('sgt-settings', 'compute_graph_density'))
         options_gtc["compute_global_efficiency"]["value"] = int(config.get('sgt-settings', 'compute_global_efficiency'))

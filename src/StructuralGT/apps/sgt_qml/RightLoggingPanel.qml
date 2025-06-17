@@ -12,6 +12,7 @@ Window {
     y: 40
     //flags: Qt.Window | Qt.FramelessWindowHint
     visible: false  // Only show when needed
+    title: "SGT Logs"
 
     property string currentFilter: "All"
     property var logEntries: []
@@ -50,6 +51,8 @@ Window {
 
             RowLayout {
                 Layout.fillWidth: true
+                Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
                 spacing: 10
 
                 ComboBox {
@@ -74,6 +77,8 @@ Window {
             ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.topMargin: 5
+                Layout.bottomMargin: 10
 
                 Basic.TextArea {
                     id: lblTextLogs

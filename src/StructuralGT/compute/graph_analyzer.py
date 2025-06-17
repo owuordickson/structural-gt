@@ -138,7 +138,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_3d_graph)
 
         # 3b. Compute Scaling Scatter Plots
-        if self.configs["display_scaling_scatter_plot"]["value"] == 1:
+        if self.configs["compute_scaling_behavior"]["value"] == 1:
             self.scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
 
         if self.abort:
@@ -484,7 +484,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def compute_scaling_data(self, full_img_df: pd.DataFrame = None):
         """"""
-        self.update_status([0, "Computing scaling scatter-plot..."])
+        self.update_status([0, "Computing scaling behaviour..."])
         self.ntwk_p.add_listener(self.track_img_progress)
         # Get from configs
         graph_groups = self.ntwk_p.build_graph_from_patches(num_square_filters=10, patch_count_per_filter=10)
@@ -1176,10 +1176,10 @@ class GraphAnalyzer(ProgressUpdate):
             if plot_err:
                 axis.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
                         markersize=4, linewidth=1, linestyle='-')
-            axis.set_title(f"{plt_type} Nodes vs {y_title}", fontsize=10)
+            axis.set_title(f"{plt_type}\nNodes vs {y_title}", fontsize=10)
             axis.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-            axis.legend()
-            return axis
+            # axis.legend()
+            return axis, subplot_num
 
         # Initialize plot figures
         figs = []
@@ -1228,9 +1228,10 @@ class GraphAnalyzer(ProgressUpdate):
                     log_y_fit = slope * log_x + intercept
 
                     # 3a. Plot data (Log-Log scale with the line best-fit)
-                    ax = plot_axis(i, "Log-Log Plot of", plot_err=False)
+                    ax, i = plot_axis(i, "Log-Log Plot of", plot_err=False)
                     ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
                     ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
+                    ax.legend()
                     """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     # ax.plot(x_values, y_values, 'b.', markersize=3)
@@ -1253,9 +1254,10 @@ class GraphAnalyzer(ProgressUpdate):
                     y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
 
                     # 3b. Plot data (power-law best fit)
-                    ax = plot_axis(i, "Power Law Fit and Plot of")
+                    ax, i = plot_axis(i, "Power Law Fit and Plot of")
                     ax.plot(x_fit, y_fit_pwr, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$',
                             color='red')
+                    ax.legend()
                     """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
@@ -1281,10 +1283,11 @@ class GraphAnalyzer(ProgressUpdate):
                     print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
 
                     # 3c. Plot data (truncated power-law best fit)
-                    ax = plot_axis(i, "Truncated Power Law Fit and Plot of")
+                    ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
                     ax.plot(x_fit, y_fit_cut,
                             label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
                             color='red')
+                    ax.legend()
                     """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
@@ -1311,10 +1314,11 @@ class GraphAnalyzer(ProgressUpdate):
                     y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
 
                     # 3c. Plot data (Log-normal distribution best fit)
-                    ax = plot_axis(i, "Log-Normal Fit and Plot of")
+                    ax, i = plot_axis(i, "Log-Normal Fit and Plot of")
                     ax.plot(x_fit, y_fit_ln,
                             label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
                             color='red')
+                    ax.legend()
                     """i = i + 1
                     ax = fig.add_subplot(2, 2, i)
                     ax.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
