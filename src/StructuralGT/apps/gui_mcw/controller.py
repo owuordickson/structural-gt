@@ -407,7 +407,9 @@ class MainController(QObject):
 
     @Slot(result=str)
     def check_for_updates(self):
-        updates_available = True
+        # current_version = float(__version__)
+        # new_version = float(https://github.com/owuordickson/structural-gt/blob/main/src/StructuralGT/__init__.py __version__)
+        updates_available = False
         if updates_available:
             msg = "New version available! <html><br>Download via this <a href='https://forms.gle/oG9Gk2qbmxooK63D7'>link</a></html>"
         else:
