@@ -7,7 +7,7 @@ import QtQuick.Window
 Window {
     id: loggingWindowPanel
     width: 400
-    height: 800
+    height: 764
     x: 1024  // Exactly starts where your app ends
     y: 40
     //flags: Qt.Window | Qt.FramelessWindowHint

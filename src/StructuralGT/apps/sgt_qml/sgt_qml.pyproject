@@ -30,6 +30,7 @@
         "assets/icons/rescale_icon.png",
         "assets/icons/show_panel.png",
         "assets/icons/hide_panel.png",
+        "assets/icons/notify_icon.png",
         "widgets/BrightnessControlWidget.qml",
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",

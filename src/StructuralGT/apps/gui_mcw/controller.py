@@ -25,7 +25,7 @@ from .qthread_worker import QThreadWorker, WorkerTask
 from ... import __version__
 from ...utils.sgt_utils import img_to_base64, verify_path
 from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS
-from ...compute.graph_analyzer import GraphAnalyzer, COMPUTING_DEVICE
+from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 
 
 class MainController(QObject):
@@ -385,7 +385,8 @@ class MainController(QObject):
     def get_sgt_version(self):
         """"""
         # Copyright (C) 2024, the Regents of the University of Michigan.
-        return f"StructuralGT v{__version__}, Computing: {COMPUTING_DEVICE}"
+        # return f"StructuralGT v{__version__}, Computing: {COMPUTING_DEVICE}"
+        return f"v{__version__}"
 
     @Slot(result=str)
     def get_about_details(self):
@@ -403,6 +404,15 @@ class MainController(QObject):
             "Copyright (C) 2018-2025, The Regents of the University of Michigan.<html><br/></html>"
             "License: GPL GNU v3<html><br/></html>")
         return about_app
+
+    @Slot(result=str)
+    def check_for_updates(self):
+        updates_available = True
+        if updates_available:
+            msg = "New version available! <html><br>Download via this <a href='https://forms.gle/oG9Gk2qbmxooK63D7'>link</a></html>"
+        else:
+            msg = "No updates available."
+        return msg
 
     @Slot(str, result=str)
     def get_file_extensions(self, option):
