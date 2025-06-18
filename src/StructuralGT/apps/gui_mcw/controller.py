@@ -1,12 +1,14 @@
 
 import os
 import sys
-import logging
 import pickle
+import logging
+import requests
 import numpy as np
+from packaging import version
 from ovito import scene
-from ovito.io import import_file
 from ovito.vis import Viewport
+from ovito.io import import_file
 from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
@@ -413,13 +415,39 @@ class MainController(QObject):
 
     @Slot(result=str)
     def check_for_updates(self):
-        # current_version = float(__version__)
-        # new_version = float(https://github.com/owuordickson/structural-gt/blob/main/src/StructuralGT/__init__.py __version__)
-        updates_available = False
-        if updates_available:
-            msg = "<html>New version available! <br>Download via this <a href='https://forms.gle/oG9Gk2qbmxooK63D7'>link</a></html>"
+        """"""
+        github_url = "https://raw.githubusercontent.com/compass-stc/StructuralGT/refs/heads/DicksonOwuor-GUI/src/StructuralGT/__init__.py"
+
+        try:
+            response = requests.get(github_url, timeout=5)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            msg = f"Error checking for updates: {e}"
+            return msg
+
+        remote_version = None
+        for line in response.text.splitlines():
+            if line.strip().startswith("__version__"):
+                try:
+                    remote_version = line.split("=")[1].strip().strip("\"'")
+                    break
+                except IndexError:
+                    msg = "Could not connect to server!"
+                    return msg
+
+        if not remote_version:
+            msg = "Could not find the new version!"
+            return msg
+
+        new_version = version.parse(remote_version)
+        current_version = version.parse(__version__)
+        if new_version > current_version:
+            msg = (
+                "New version available!<br>"
+                "Download via this <a href='https://forms.gle/oG9Gk2qbmxooK63D7'>link</a>"
+            )
         else:
-            msg = "<html>No updates available.</html>"
+            msg = "No updates available."
         return msg
 
     @Slot(str, result=str)
