@@ -5,7 +5,7 @@ import numpy as np
 
 np.random.seed(19680801)
 data = np.random.randn(20, 3)
-print(data)
+#print(data)
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 
@@ -25,20 +25,25 @@ def check_for_updates():
 
     __version__ = "2.3.7"
     current_version = version.parse(__version__)
-    github_url = "https://github.com/compass-stc/StructuralGT/blob/DicksonOwuor-GUI/src/StructuralGT/__init__.py"
+    github_url = "https://raw.githubusercontent.com/compass-stc/StructuralGT/refs/heads/DicksonOwuor-GUI/src/StructuralGT/__init__.py"
 
     try:
         response = requests.get(github_url, timeout=5)
         response.raise_for_status()
-        remote_code = response.text
-        print(remote_code)
 
-        # Extract version string using regex
-        match = re.search(r"__version__\s*=\s*['\"](.+?)['\"]", remote_code)
-        if not match:
+        remote_version = None
+        for line in response.text.splitlines():
+            if line.strip().startswith("__version__"):
+                try:
+                    remote_version = line.split("=")[1].strip().strip("\"'")
+                    break
+                except IndexError:
+                    return "Could not parse remote version."
+
+        if not remote_version:
             return "Could not determine remote version."
 
-        new_version = version.parse(match.group(1))
+        new_version = version.parse(remote_version)
 
         if new_version > current_version:
             msg = (
