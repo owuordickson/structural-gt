@@ -433,7 +433,7 @@ class MainController(QObject):
 
         remote_version = None
         for line in response.text.splitlines():
-            if line.strip().startswith("__version__"):
+            if line.strip().startswith("__install_version__"):
                 try:
                     remote_version = line.split("=")[1].strip().strip("\"'")
                     break
