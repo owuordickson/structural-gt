@@ -128,7 +128,6 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         self.update_status([66, "Assigning weights to graph network..."])
         for (s, e) in nx_graph.edges():
-
             if opt_gte["remove_self_loops"]["value"]:
                 # Removing all instances of edges where the start and end are the same, or "self-loops"
                 if s == e:
@@ -238,6 +237,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # 2. Update with the giant graph
         self.nx_3d_graph = giant_graph
+        self.ig_graph = igraph.Graph.from_networkx(giant_graph)
 
         # 3. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
