@@ -41,7 +41,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.props: list = []
         self.img_ntwk: MatLike | None = None
         self.nx_3d_graph: nx.Graph | None = None
-        self.ig_graph: igraph.Graph | None = None
+        self.ig_3d_graph: igraph.Graph | None = None
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
@@ -94,7 +94,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.nx_3d_graph, self.ig_graph, self.img_ntwk = None, None, None
+        self.nx_3d_graph, self.ig_3d_graph, self.img_ntwk = None, None, None
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
         """
@@ -152,7 +152,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
         self.nx_3d_graph = nx_graph
-        self.ig_graph = igraph.Graph.from_networkx(nx_graph)
+        self.ig_3d_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
     def plot_2d_graph_network(self, image_2d_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
@@ -237,7 +237,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # 2. Update with the giant graph
         self.nx_3d_graph = giant_graph
-        self.ig_graph = igraph.Graph.from_networkx(giant_graph)
+        self.ig_3d_graph = igraph.Graph.from_networkx(giant_graph)
 
         # 3. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
