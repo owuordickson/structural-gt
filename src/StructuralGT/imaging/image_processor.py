@@ -663,6 +663,10 @@ class ImageProcessor(ProgressUpdate):
             write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)"""
 
     # MODIFIED TO EXCLUDE 3D IMAGES (TO BE REVISITED LATER)
+    # Problems:
+    # 1. Merge Nodes
+    # 2. Prune dangling edges
+    # 3. Matplotlib plot nodes and edges
     @staticmethod
     def create_img_batch_groups(img_groups: defaultdict, cfg_file: str, auto_scale: bool):
         """"""
