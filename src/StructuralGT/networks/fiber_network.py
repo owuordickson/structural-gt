@@ -40,8 +40,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
         self.props: list = []
         self.img_ntwk: MatLike | None = None
-        self.nx_3d_graph: nx.Graph | None = None
-        self.ig_3d_graph: igraph.Graph | None = None
+        self.nx_graph: nx.Graph | None = None
+        self.ig_graph: igraph.Graph | None = None
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
@@ -72,7 +72,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             return
 
         self.update_status([75, "Verifying graph network..."])
-        if self.nx_3d_graph.number_of_nodes() <= 0:
+        if self.nx_graph.number_of_nodes() <= 0:
             self.update_status([-1, "Problem generating graph (change image/binary filters)"])
             self.abort = True
             return
@@ -94,7 +94,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.nx_3d_graph, self.ig_3d_graph, self.img_ntwk = None, None, None
+        self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
         """
@@ -151,8 +151,8 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx_graph[s][e]['angle'] = pix_angle
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
-        self.nx_3d_graph = nx_graph
-        self.ig_3d_graph = igraph.Graph.from_networkx(nx_graph)
+        self.nx_graph = nx_graph
+        self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
     def plot_2d_graph_network(self, image_2d_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
@@ -167,7 +167,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
 
         # Fetch the graph and config options
-        nx_graph = self.nx_3d_graph
+        nx_graph = self.nx_graph
         is_img_2d = self.skel_obj.is_2d
         show_node_id = (self.configs["display_node_id"]["value"] == 1)
 
@@ -226,7 +226,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
         self.update_status([78, "Identifying graph subcomponents..."])
-        graph = self.nx_3d_graph.copy()
+        graph = self.nx_graph.copy()
         connected_components = list(nx.connected_components(graph))
         if not connected_components:  # In case the graph is empty
             connected_components = []
@@ -236,8 +236,8 @@ class FiberNetworkBuilder(ProgressUpdate):
         connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
 
         # 2. Update with the giant graph
-        self.nx_3d_graph = giant_graph
-        self.ig_3d_graph = igraph.Graph.from_networkx(giant_graph)
+        self.nx_graph = giant_graph
+        self.ig_graph = igraph.Graph.from_networkx(giant_graph)
 
         # 3. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
@@ -269,7 +269,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        nx_graph = self.nx_3d_graph.copy()
+        nx_graph = self.nx_graph.copy()
         opt_gte = self.configs
 
         g_filename = filename + "_graph.gexf"
@@ -281,7 +281,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         adj_file = os.path.join(out_dir, adj_filename)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
-            adj_mat = nx.adjacency_matrix(self.nx_3d_graph).todense()
+            adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
             np.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte["export_edge_list"]["value"] == 1:
