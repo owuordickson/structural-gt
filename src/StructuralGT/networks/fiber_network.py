@@ -366,11 +366,6 @@ class FiberNetworkBuilder(ProgressUpdate):
                 # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
                 ge = sg[s][e]['pts']
                 axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
-        """for (s, e) in nx_graph.edges():
-            # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
-            ge = nx_graph[s][e]['pts']
-            axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
-        """
         return axis
 
     @staticmethod
