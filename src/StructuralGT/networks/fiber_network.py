@@ -47,13 +47,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
-    def fit_graph(self, save_dir: str, img_bin: MatLike = None, img_2d: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
+    def fit_graph(self, save_dir: str, img_bin: MatLike = None, img_frames: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
         :param save_dir: Directory to save the graph to.
         :param img_bin: A binary image for building Graph Skeleton for the NetworkX graph.
-        :param img_2d: The actual 2D image(s) used for plotting the graph network.
+        :param img_frames: The actual 2D image(s) used for plotting the graph network.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_width_sz: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
@@ -88,7 +88,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.save_graph_to_file(image_file, save_dir)
 
         self.update_status([95, "Plotting graph network..."])
-        plt_fig = self.plot_2d_graph_network(img_2d)
+        plt_fig = self.plot_2d_graph_network(image_arr=img_frames)
         self.img_ntwk = plot_to_opencv(plt_fig)
 
     def reset_graph(self):
@@ -157,11 +157,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
-    def plot_2d_graph_network(self, image_2d_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
+    def plot_2d_graph_network(self, image_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
-        :param image_2d_arr: Slides of 2D images to be used to draw the network.
+        :param image_arr: Slides of 2D images to be used to draw the network.
         :param plot_nodes: Make the graph's node plot figure.
         :param a4_size: Decision if to create an A4 size plot figure.
 
@@ -173,13 +173,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         show_node_id = (self.configs["display_node_id"]["value"] == 1)
 
         # Fetch a single 2D image
-        if image_2d_arr is None:
+        if image_arr is None:
             return None
         else:
-            image_2d = image_2d_arr[0]
+            image_2d = image_arr[0]
 
         # plt_figs = []
-        for i, image_2d in enumerate(image_2d_arr):
+        for i, image_2d in enumerate(image_arr):
             pass
 
         # Create the plot figure(s)
