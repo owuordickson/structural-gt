@@ -175,23 +175,15 @@ class FiberNetworkBuilder(ProgressUpdate):
         # Fetch a single 2D image
         if image_arr is None:
             return None
-        else:
-            image_2d = image_arr[0]
-
-        # plt_figs = []
-        for i, image_2d in enumerate(image_arr):
-            pass
 
         # Create the plot figure(s)
+        fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id)
+        fig = fig_grp[0]
         if a4_size:
-            fig = plt.Figure(figsize=(8.5, 11), dpi=400)
-            ax = fig.add_subplot(1, 1, 1)
             plt_title = "Graph Node Plot" if plot_nodes else "Graph Edge Plot"
-            ax.set_title(plt_title)
-        else:
-            fig = plt.Figure()
-            ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id)
+            fig.set_size_inches(8.5, 11)
+            fig.set_dpi(400)
+            fig.axes[0].set_title(plt_title)
         return fig
 
     def get_config_info(self):
@@ -332,11 +324,10 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
+    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
         """
         Plot graph edges on top of the image
 
-        :param axis: a Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
         :param node_distribution_data: a list of node distribution data for a heatmap plot
@@ -348,9 +339,10 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        def plot_graph_nodes():
+        def plot_graph_nodes(node_ax):
             """
             Plot graph nodes on top of the image.
+            :param node_ax: Matplotlib axes
             """
 
             node_list = list(nx_graph.nodes())
@@ -359,46 +351,76 @@ class FiberNetworkBuilder(ProgressUpdate):
             if show_node_id:
                 i = 0
                 for x, y in zip(gn[:, coord_1], gn[:, coord_2]):
-                    axis.annotate(str(i), (x, y), fontsize=5)
+                    node_ax.annotate(str(i), (x, y), fontsize=5)
                     i += 1
 
             if node_distribution_data is not None:
-                c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=node_marker_size, c=node_distribution_data, cmap='plasma')
+                c_set = node_ax.scatter(gn[:, coord_1], gn[:, coord_2], s=node_marker_size, c=node_distribution_data, cmap='plasma')
                 return c_set
             else:
-                # c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
-                axis.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=node_marker_size)
+                # c_set = node_ax.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
+                node_ax.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=node_marker_size)
                 return None
 
-        axis.set_axis_off()
-        axis.imshow(image, cmap='gray')
+        def create_plt_axes(pos):
+            """
+            Create a matplotlib axes object.
+            Args:
+                pos: index position of image frame.
 
-        if transparent:
-            axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
+            Returns:
+
+            """
+            new_fig = plt.Figure()
+            new_ax = new_fig.add_axes((0, 0, 1, 1))  # span the whole figure
+            new_ax.set_axis_off()
+            if transparent:
+                new_ax.imshow(image[pos], cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
+            else:
+                new_ax.imshow(image[pos], cmap='gray')
+            return new_fig
+
+        fig_group = {}
+        # Create axes for the first frame of image (enough if it is 2D)
+        fig = create_plt_axes(0)
+        fig_group[0] = fig
 
         color_list = ['black', 'r', 'g', 'b', 'c', 'm', 'y', 'k']
         color_cycle = itertools.cycle(color_list)
         nx_components = list(nx.connected_components(nx_graph))
         for component in nx_components:
-            sg = nx_graph.subgraph(component)
             color = next(color_cycle)
-            # DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
-            print(f"Component edges: {sg.edges()}")
+            sg = nx_graph.subgraph(component)
+
+            #DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
+            #print(f"Component edges: {sg.edges()}")
+
             for (s, e) in sg.edges():
                 ge = sg[s][e]['pts']
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
+                coord_3 = 0
                 if ge.shape[1] == 3:
                     # image and graph are 3D (not 2D)
                     # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
-                    coord_1, coord_2 = 2, 1  # coordinates: (z, y)
-                print(f"Edge shape: {ge.shape}\n{ge}")
-                axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
-            print("\n")
+                    coord_1, coord_2, coord_3 = 2, 1, 0  # coordinates: (z, y, x)
 
-        node_color_set = None
+                if coord_3 in fig_group and fig_group[coord_3] is not None:
+                    fig = fig_group[coord_3]
+                else:
+                    fig = create_plt_axes(coord_3)
+                    fig_group[coord_3] = fig
+                ax = fig.get_axes()[0]
+                #print(f"Edge shape: {ge.shape}\n{ge}")
+                ax.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
+            #print("\n")
+
+        # node_color_set = None
         if plot_nodes:
-            node_color_set = plot_graph_nodes()
-        return node_color_set
+            for idx, plt_fig in fig_group.items():
+                ax = plt_fig.get_axes()[0]
+                # node_color_set =
+                plot_graph_nodes(ax)
+        return fig_group
 
     # TO DELETE IT LATER
     def data_gen_function(self):

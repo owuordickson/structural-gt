@@ -833,7 +833,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.plot_2d_heatmaps(graph_obj, image_2d=img_3d[0])
+            figs = self.plot_2d_heatmaps(graph_obj, image_arr=img_3d)
             for fig in figs:
                 out_figs.append(fig)
 
@@ -990,12 +990,12 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def plot_2d_heatmaps(self, graph_obj: FiberNetworkBuilder, image_2d: MatLike = None):
+    def plot_2d_heatmaps(self, graph_obj: FiberNetworkBuilder, image_arr: MatLike = None):
         """
         Create plot figures of graph theory heatmaps.
 
         :param graph_obj: GraphExtractor object.
-        :param image_2d: Raw 2D images to be superimposed with heatmap.
+        :param image_arr: Raw 2D images to be superimposed with heatmap.
 
         :return: A list of Matplotlib figures.
         """
@@ -1026,7 +1026,7 @@ class GraphAnalyzer(ProgressUpdate):
             ax = plt_fig.add_subplot(1, 1, 1)
             ax.set_title(title, fontdict=font_1)
 
-            c_set = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
+            c_set = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
 
             plt_fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
             return plt_fig
