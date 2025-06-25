@@ -805,12 +805,12 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig)
 
         # 2. plotting graph nodes
-        fig = graph_obj.plot_2d_graph_network(image_arr=img_3d, plot_nodes=True, a4_size=True)
+        fig = graph_obj.plot_graph_network(image_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
         # 3. plotting graph edges
-        fig = graph_obj.plot_2d_graph_network(image_arr=img_3d, a4_size=True)
+        fig = graph_obj.plot_graph_network(image_arr=img_3d, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
@@ -834,7 +834,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
-            figs = self.plot_2d_heatmaps(graph_obj, image_arr=img_3d)
+            figs = self.plot_heatmaps(graph_obj, image_arr=img_3d)
             for fig in figs:
                 out_figs.append(fig)
 
@@ -991,7 +991,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return figs
 
-    def plot_2d_heatmaps(self, graph_obj: FiberNetworkBuilder, image_arr: MatLike = None):
+    def plot_heatmaps(self, graph_obj: FiberNetworkBuilder, image_arr: MatLike = None):
         """
         Create plot figures of graph theory heatmaps.
 

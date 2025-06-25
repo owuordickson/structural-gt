@@ -88,7 +88,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.save_graph_to_file(image_file, save_dir)
 
         self.update_status([95, "Plotting graph network..."])
-        plt_fig = self.plot_2d_graph_network(image_arr=img_frames)
+        plt_fig = self.plot_graph_network(image_arr=img_frames)
         self.img_ntwk = plot_to_opencv(plt_fig)
 
     def reset_graph(self):
@@ -157,7 +157,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
-    def plot_2d_graph_network(self, image_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
+    def plot_graph_network(self, image_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
