@@ -1020,15 +1020,13 @@ class GraphAnalyzer(ProgressUpdate):
             :return: Histogram plot figure.
             """
             nx_graph = graph_obj.nx_graph
-            font_1 = {'fontsize': 9}
+            fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
 
-            plt_fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
-            ax = plt_fig.add_subplot(1, 1, 1)
-            ax.set_title(title, fontdict=font_1)
+            plt_fig = fig_grp[0]
+            plt_fig.set_size_inches(8.5, 8.5)
+            plt_fig.set_dpi(400)
+            plt_fig.axes[0].set_title(title, fontdict={'fontsize': 9})
 
-            c_set = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
-
-            plt_fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
             return plt_fig
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:

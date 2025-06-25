@@ -418,8 +418,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         if plot_nodes:
             for idx, plt_fig in fig_group.items():
                 ax = plt_fig.get_axes()[0]
-                # node_color_set =
-                plot_graph_nodes(ax)
+                node_color_set = plot_graph_nodes(ax)
+                if node_color_set is not None:
+                    plt_fig.colorbar(node_color_set, ax=ax, orientation='vertical', label='Value')
         return fig_group
 
     # TO DELETE IT LATER
