@@ -170,7 +170,6 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # Fetch the graph and config options
         nx_graph = self.nx_graph
-        is_img_2d = self.skel_obj.is_2d
         show_node_id = (self.configs["display_node_id"]["value"] == 1)
 
         # Fetch a single 2D image
@@ -179,7 +178,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             image_2d = image_2d_arr[0]
 
-        plt_figs = []
+        # plt_figs = []
         for i, image_2d in enumerate(image_2d_arr):
             pass
 
@@ -192,9 +191,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             fig = plt.Figure()
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_img_2d, plot_nodes=plot_nodes, show_node_id=show_node_id)
-        # if plot_nodes:
-        #    FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_img_2d, display_node_id=show_node_id)
+        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id)
         return fig
 
     def get_config_info(self):
@@ -335,14 +332,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, is_graph_2d: bool, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
         """
         Plot graph edges on top of the image
 
         :param axis: a Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
-        :param is_graph_2d: whether the generated graph is 2D or 3D
         :param node_distribution_data: a list of node distribution data for a heatmap plot
         :param plot_nodes: whether to plot graph nodes or not
         :param show_node_id: if True, node IDs are displayed on the plot
@@ -377,14 +373,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         axis.set_axis_off()
         axis.imshow(image, cmap='gray')
 
-        # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
-        if is_graph_2d:
-            coord_1, coord_2 = 1, 0         # coordinates: (y, x)
-            # coord_3 = None
-        else:
-            coord_1, coord_2 = 2, 1         # coordinates: (z, y)
-            # coord_3 = 0
-
         if transparent:
             axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
 
@@ -397,8 +385,12 @@ class FiberNetworkBuilder(ProgressUpdate):
             # DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
             print(f"Component edges: {sg.edges()}")
             for (s, e) in sg.edges():
-                # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
                 ge = sg[s][e]['pts']
+                coord_1, coord_2 = 1, 0  # coordinates: (y, x)
+                if ge.shape[1] == 3:
+                    # image and graph are 3D (not 2D)
+                    # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
+                    coord_1, coord_2 = 2, 1  # coordinates: (z, y)
                 print(f"Edge shape: {ge.shape}\n{ge}")
                 axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
             print("\n")

@@ -1020,14 +1020,13 @@ class GraphAnalyzer(ProgressUpdate):
             :return: Histogram plot figure.
             """
             nx_graph = graph_obj.nx_graph
-            is_2d = graph_obj.skel_obj.is_2d
             font_1 = {'fontsize': 9}
 
             plt_fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
             ax = plt_fig.add_subplot(1, 1, 1)
             ax.set_title(title, fontdict=font_1)
 
-            c_set = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_2d, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
+            c_set = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
 
             plt_fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
             return plt_fig
