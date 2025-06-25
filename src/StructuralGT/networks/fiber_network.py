@@ -185,8 +185,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             fig.set_dpi(400)
             ax = fig.axes[0]
             ax.set_title(plt_title)
-            # This moves the Axes to start at 5% from the left, 5% from the bottom,
+            # This moves the Axes to start: 5% from the left, 5% from the bottom,
             # and have a width and height: 80% of the figure.
+            # [left, bottom, width, height]
             ax.set_position([0.05, 0.05, 0.9, 0.9])
         return fig
 
@@ -396,9 +397,6 @@ class FiberNetworkBuilder(ProgressUpdate):
             color = next(color_cycle)
             sg = nx_graph.subgraph(component)
 
-            #DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
-            #print(f"Component edges: {sg.edges()}")
-
             for (s, e) in sg.edges():
                 ge = sg[s][e]['pts']
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
@@ -414,11 +412,8 @@ class FiberNetworkBuilder(ProgressUpdate):
                     fig = create_plt_axes(coord_3)
                     fig_group[coord_3] = fig
                 ax = fig.get_axes()[0]
-                #print(f"Edge shape: {ge.shape}\n{ge}")
                 ax.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
-            #print("\n")
 
-        # node_color_set = None
         if plot_nodes:
             for idx, plt_fig in fig_group.items():
                 ax = plt_fig.get_axes()[0]
