@@ -10,6 +10,7 @@ import time
 import datetime
 import itertools
 import logging
+import matplotlib
 import multiprocessing
 import numpy as np
 import scipy as sp
@@ -1025,7 +1026,9 @@ class GraphAnalyzer(ProgressUpdate):
             plt_fig = fig_grp[0]
             plt_fig.set_size_inches(8.5, 8.5)
             plt_fig.set_dpi(400)
-            plt_fig.axes[0].set_title(title, fontdict={'fontsize': 9})
+            plt_ax = plt_fig.axes[0]
+            plt_ax.set_title(title, fontdict={'fontsize': 9})
+            plt_ax.set_position([0.05, 0.05, 0.75, 0.75])
 
             return plt_fig
 

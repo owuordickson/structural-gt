@@ -183,7 +183,11 @@ class FiberNetworkBuilder(ProgressUpdate):
             plt_title = "Graph Node Plot" if plot_nodes else "Graph Edge Plot"
             fig.set_size_inches(8.5, 11)
             fig.set_dpi(400)
-            fig.axes[0].set_title(plt_title)
+            ax = fig.axes[0]
+            ax.set_title(plt_title)
+            # This moves the Axes to start at 5% from the left, 5% from the bottom,
+            # and have a width and height: 80% of the figure.
+            ax.set_position([0.05, 0.05, 0.9, 0.9])
         return fig
 
     def get_config_info(self):
@@ -420,7 +424,9 @@ class FiberNetworkBuilder(ProgressUpdate):
                 ax = plt_fig.get_axes()[0]
                 node_color_set = plot_graph_nodes(ax)
                 if node_color_set is not None:
-                    plt_fig.colorbar(node_color_set, ax=ax, orientation='vertical', label='Value')
+                    cbar = plt_fig.colorbar(node_color_set, ax=ax, orientation='vertical', label='Value')
+                    # [left, bottom, width, height]
+                    cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
         return fig_group
 
     # TO DELETE IT LATER
