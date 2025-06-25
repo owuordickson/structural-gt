@@ -135,7 +135,7 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 3a. Compute Unweighted GT parameters
-        self.output_df = self.compute_gt_metrics(graph_obj.nx_graph)
+        self.output_df = self.compute_gt_metrics(graph_obj.nx_graph)  # replace with graph_obj.nx_giant_graph
 
         # 3b. Compute Scaling Scatter Plots
         if self.configs["compute_scaling_behavior"]["value"] == 1:
@@ -1027,9 +1027,7 @@ class GraphAnalyzer(ProgressUpdate):
             ax = plt_fig.add_subplot(1, 1, 1)
             ax.set_title(title, fontdict=font_1)
 
-            FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_2d, line_width=line_width)
-            c_set = FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_2d, marker_size=size,
-                                                         distribution_data=distribution)
+            c_set = FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_2d, node_distribution_data=distribution, plot_nodes=True, line_width=line_width, node_marker_size=size)
 
             plt_fig.colorbar(c_set, ax=ax, orientation='vertical', label='Value')
             return plt_fig

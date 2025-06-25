@@ -747,7 +747,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
-            images = np.array([images[0]])  # REMOVE TO ALLOW 3D
+            # images = np.array([images[0]])  # REMOVE TO ALLOW 3D
             img_batch = ImageProcessor.ImageBatch(
                 numpy_image=images,
                 images=[],
@@ -761,7 +761,7 @@ class ImageProcessor(ProgressUpdate):
                 graph_obj=FiberNetworkBuilder(cfg_file=cfg_file)
             )
             img_info_list.append(img_batch)
-            break  # REMOVE TO ALLOW 3D
+            # break  # REMOVE TO ALLOW 3D
         return img_info_list
 
     @classmethod

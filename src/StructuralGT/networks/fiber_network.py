@@ -179,7 +179,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             image_2d = image_2d_arr[0]
 
-        # Create the plot figure
+        plt_figs = []
+        for i, image_2d in enumerate(image_2d_arr):
+            pass
+
+        # Create the plot figure(s)
         if a4_size:
             fig = plt.Figure(figsize=(8.5, 11), dpi=400)
             ax = fig.add_subplot(1, 1, 1)
@@ -188,9 +192,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             fig = plt.Figure()
             ax = fig.add_axes((0, 0, 1, 1))  # span the whole figure
-        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_img_2d)
-        if plot_nodes:
-            FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_img_2d, display_node_id=show_node_id)
+        FiberNetworkBuilder.plot_graph_edges(ax, image_2d, nx_graph, is_graph_2d=is_img_2d, plot_nodes=plot_nodes, show_node_id=show_node_id)
+        # if plot_nodes:
+        #    FiberNetworkBuilder.plot_graph_nodes(ax, nx_graph, is_graph_2d=is_img_2d, display_node_id=show_node_id)
         return fig
 
     def get_config_info(self):
@@ -331,79 +335,78 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, is_graph_2d: bool, transparent: bool = False, line_width: float=1.5):
+    def plot_graph_edges(axis, image: MatLike, nx_graph: nx.Graph, is_graph_2d: bool, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
         """
-        Plot graph edges on top of the image.
+        Plot graph edges on top of the image
 
-        :param axis: Matplotlib axis
+        :param axis: a Matplotlib axis
         :param image: image to be superimposed with graph edges
         :param nx_graph: a NetworkX graph
         :param is_graph_2d: whether the generated graph is 2D or 3D
+        :param node_distribution_data: a list of node distribution data for a heatmap plot
+        :param plot_nodes: whether to plot graph nodes or not
+        :param show_node_id: if True, node IDs are displayed on the plot
         :param transparent: whether to draw the image with a transparent background
         :param line_width: each edge's line width
+        :param node_marker_size: the size (diameter) of the node marker
         :return:
         """
+
+        def plot_graph_nodes():
+            """
+            Plot graph nodes on top of the image.
+            """
+
+            node_list = list(nx_graph.nodes())
+            gn = np.array([nx_graph.nodes[i]['o'] for i in node_list])
+
+            if show_node_id:
+                i = 0
+                for x, y in zip(gn[:, coord_1], gn[:, coord_2]):
+                    axis.annotate(str(i), (x, y), fontsize=5)
+                    i += 1
+
+            if node_distribution_data is not None:
+                c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=node_marker_size, c=node_distribution_data, cmap='plasma')
+                return c_set
+            else:
+                # c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
+                axis.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=node_marker_size)
+                return None
 
         axis.set_axis_off()
         axis.imshow(image, cmap='gray')
 
+        # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
         if is_graph_2d:
             coord_1, coord_2 = 1, 0         # coordinates: (y, x)
+            # coord_3 = None
         else:
             coord_1, coord_2 = 2, 1         # coordinates: (z, y)
+            # coord_3 = 0
 
         if transparent:
             axis.imshow(image, cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
 
-        color_list = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+        color_list = ['black', 'r', 'g', 'b', 'c', 'm', 'y', 'k']
         color_cycle = itertools.cycle(color_list)
         nx_components = list(nx.connected_components(nx_graph))
         for component in nx_components:
             sg = nx_graph.subgraph(component)
             color = next(color_cycle)
             # DOES NOT PLOT 3D graphs - node_plot (BUG IN CODE), so we pick the first 2D graph in the stack
+            print(f"Component edges: {sg.edges()}")
             for (s, e) in sg.edges():
                 # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
                 ge = sg[s][e]['pts']
+                print(f"Edge shape: {ge.shape}\n{ge}")
                 axis.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
-        return axis
+            print("\n")
 
-    @staticmethod
-    def plot_graph_nodes(axis: plt.axis, nx_graph: nx.Graph, is_graph_2d: bool, marker_size: float = 3, distribution_data: list = None, display_node_id: bool = False):
-        """
-        Plot graph nodes on top of the image.
-        :param axis: Matplotlib axis
-        :param nx_graph: a NetworkX graph
-        :param is_graph_2d: whether the generated graph is 2D or 3D
-        :param marker_size: the size of each node
-        :param distribution_data: the heatmap distribution data
-        :param display_node_id: indicates the node id on the plot
-        :return:
-
-        """
-
-        node_list = list(nx_graph.nodes())
-        gn = np.array([nx_graph.nodes[i]['o'] for i in node_list])
-        # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
-
-        if is_graph_2d:
-            coord_1, coord_2 = 1, 0         # coordinates: (y, x)
-        else:
-            coord_1, coord_2 = 2, 1         # coordinates: (z, y)
-
-        if display_node_id:
-            i = 0
-            for x, y in zip(gn[:, coord_1], gn[:, coord_2]):
-                axis.annotate(str(i), (x, y), fontsize=5)
-                i += 1
-
-        if distribution_data is not None:
-            c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size, c=distribution_data, cmap='plasma')
-            return c_set
-        else:
-            # c_set = axis.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
-            axis.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=marker_size)
-            return axis
+        node_color_set = None
+        if plot_nodes:
+            node_color_set = plot_graph_nodes()
+        return node_color_set
 
     # TO DELETE IT LATER
     def data_gen_function(self):
