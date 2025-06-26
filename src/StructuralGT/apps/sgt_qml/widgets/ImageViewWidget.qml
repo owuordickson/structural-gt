@@ -2,8 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
-//import QtQuick.Dialogs as QuickDialogs
-//import Qt.labs.platform as Platform
+
 
 ColumnLayout {
     Layout.fillWidth: true
@@ -153,9 +152,7 @@ ColumnLayout {
                 }
 
             }
-
         }
-
     }
 
 
@@ -375,17 +372,6 @@ ColumnLayout {
             }
         }
     }
-
-    /*Rectangle {
-        id: ntwkContainer
-        objectName: "ntwkContainer" // IMPORTANT: Python will find this
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        color: "#ffffff"
-        border.color: "#d0d0d0"
-        border.width: 1
-        visible: false
-    }*/
 
 
     Rectangle {
