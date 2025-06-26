@@ -20,7 +20,7 @@ from .sknw_mod import build_sknw
 from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_csv_file, write_gsd_file, plot_to_opencv
+from ..utils.sgt_utils import write_csv_file, write_gsd_file
 
 
 class FiberNetworkBuilder(ProgressUpdate):
@@ -47,13 +47,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
-    def fit_graph(self, save_dir: str, img_bin: MatLike = None, img_frames: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
+    def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
         :param save_dir: Directory to save the graph to.
         :param img_bin: A binary image for building Graph Skeleton for the NetworkX graph.
-        :param img_frames: The actual 2D image(s) used for plotting the graph network.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_width_sz: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
@@ -86,10 +85,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         # Save graph to GSD/HOOMD - For OVITO rendering
         self.configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(image_file, save_dir)
-
-        self.update_status([95, "Plotting graph network..."])
-        plt_fig = self.plot_graph_network(image_arr=img_frames)
-        self.img_ntwk = plot_to_opencv(plt_fig)
 
     def reset_graph(self):
         """
