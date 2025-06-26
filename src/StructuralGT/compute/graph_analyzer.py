@@ -355,15 +355,15 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["parameter"].append("Average Ohms centrality")
             data_dict["value"].append(round(np.average(o_distribution), 5))
             data_dict["parameter"].append("Ohms centrality -- avg. area " + r"($m^2$)")
-            data_dict["value"].append(res['avg area'])
+            data_dict["value"].append(round(res['avg area'], 5))
             data_dict["parameter"].append("Ohms centrality -- avg. length (m)")
-            data_dict["value"].append(res['avg length'])
+            data_dict["value"].append(round(res['avg length'], 5))
             data_dict["parameter"].append("Ohms centrality -- avg. width (m)")
-            data_dict["value"].append(res['avg width'])
+            data_dict["value"].append(round(res['avg width'], 5))
             data_dict["parameter"].append("Ohms centrality -- g shape coeff.")
-            data_dict["value"].append(res['g shape'])
+            data_dict["value"].append(round(res['g shape'], 5))
             data_dict["parameter"].append("Ohms centrality -- conductivity (S/m)")
-            data_dict["value"].append(res['conductivity'])
+            data_dict["value"].append(round(res['conductivity'], 5))
 
         return pd.DataFrame(data_dict)
 
@@ -583,7 +583,7 @@ class GraphAnalyzer(ProgressUpdate):
             'avg area': avg_area, 'med area': med_area,
             'avg length': avg_len, 'med length': med_len,
             'avg width': avg_width, 'med width': med_width,
-            'g shape': g_shape, 'conductivity': round((1 / rho_dim), 2)}
+            'g shape': g_shape, 'conductivity': (1 / rho_dim)}
 
         return ohms_dict, res
 

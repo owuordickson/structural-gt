@@ -422,7 +422,7 @@ class MainController(QObject):
     @Slot(result=str)
     def check_for_updates(self):
         """"""
-        github_url = "https://raw.githubusercontent.com/compass-stc/StructuralGT/refs/heads/DicksonOwuor-GUI/src/StructuralGT/__init__.py"
+        github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/StructuralGT/__init__.py"
 
         try:
             response = requests.get(github_url, timeout=5)
@@ -448,9 +448,10 @@ class MainController(QObject):
         new_version = version.parse(remote_version)
         current_version = version.parse(__version__)
         if new_version > current_version:
+            # https://github.com/owuordickson/structural-gt/releases/tag/v3.3.5
             msg = (
                 "New version available!<br>"
-                "Download via this <a href='https://forms.gle/oG9Gk2qbmxooK63D7'>link</a>"
+                f"Download via this <a href='https://github.com/owuordickson/structural-gt/releases/tag/v{remote_version}'>link</a>"
             )
         else:
             msg = "No updates available."

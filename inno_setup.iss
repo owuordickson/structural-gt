@@ -33,7 +33,7 @@ LicenseFile=C:\Users\owuor\owProjects\structural-gt\license.txt
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
 OutputDir=C:\Users\owuor\owProjects\structural-gt\dist\
-OutputBaseFilename=StructuralGT_WIN_{#MyAppVersion}_setup
+OutputBaseFilename=StructuralGT_WIN_{#MyAppVersion}_amd64_setup
 SetupIconFile=C:\Users\owuor\owProjects\structural-gt\setup_icon.ico
 SolidCompression=yes
 WizardStyle=modern
