@@ -852,7 +852,17 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def display_graph(self):
-        return True
+        if len(self.sgt_objs) <= 0:
+            return False
+
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        if sel_img_batch.graph_obj.img_ntwk is None:
+            return False
+
+        if sel_img_batch.current_view  == "graph":
+            return True
+        return False
 
     @Slot(result=bool)
     def image_batches_exist(self):
