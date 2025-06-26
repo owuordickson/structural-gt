@@ -157,18 +157,19 @@ ColumnLayout {
 
 
     Rectangle {
-        id: imgBatchSelector
+        id: imgViewControls
         height: 32
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
-        visible: mainController.image_batches_exist()
+        visible: mainController.display_image()
 
         RowLayout {
             anchors.fill: parent
 
             ComboBox {
                 id: cbBatchSelector
+                visible: mainController.image_batches_exist()
                 Layout.minimumWidth: 125
                 Layout.alignment: Qt.AlignCenter
                 model: imgBatchModel
@@ -483,10 +484,10 @@ ColumnLayout {
             imgView.visible = !mainController.is_img_3d();
             imgGridView.visible = mainController.is_img_3d();
             welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
-            imgContainer.visible = mainController.display_image();// ? !mainController.display_graph() : false;
-            //ntwkContainer.visible = mainController.display_image() ? mainController.display_graph() : false;
+            imgContainer.visible = mainController.display_image();
             imgNavControls.visible = mainController.display_image();
-            imgBatchSelector.visible = mainController.image_batches_exist();
+            imgViewControls.visible = mainController.display_image();
+            cbBatchSelector.visible = mainController.image_batches_exist();
 
             if (!mainController.is_img_3d()) {
                 imgView.source = mainController.get_pixmap();
