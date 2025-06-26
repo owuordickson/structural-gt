@@ -164,6 +164,9 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
+        if self.nx_graph is None:
+            return None
+
         # Fetch the graph and config options
         if giant_only:
             nx_graph = self.nx_giant_graph

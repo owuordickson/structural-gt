@@ -619,8 +619,12 @@ class ImageProcessor(ProgressUpdate):
         img_3d = [img.img_2d for img in sel_images]
         img_3d = np.asarray(img_3d)
 
+        if sel_batch.graph_obj is None:
+            return
+
         plt_fig = sel_batch.graph_obj.plot_graph_network(image_arr=img_3d, giant_only=show_giant_only)
-        sel_batch.graph_obj.img_ntwk = plot_to_opencv(plt_fig)
+        if plt_fig is not None:
+            sel_batch.graph_obj.img_ntwk = plot_to_opencv(plt_fig)
 
     # MODIFIED TO EXCLUDE 3D IMAGES (TO BE REVISITED LATER)
     # Problems:

@@ -194,10 +194,10 @@ ColumnLayout {
                 onCheckedChanged: {
                     if (checked) {
                         // Actions when switched on
-                        //mainController.set_auto_scale(true)
+                        mainController.reload_graph_image(true);
                     } else {
                         // Actions when switched off
-                        //mainController.set_auto_scale(false)
+                        mainController.reload_graph_image(false);
                     }
                 }
             }

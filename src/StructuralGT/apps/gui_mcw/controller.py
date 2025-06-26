@@ -577,6 +577,13 @@ class MainController(QObject):
             sel_img_batch.current_view = choice
         self.changeImageSignal.emit()
 
+    @Slot(bool)
+    def reload_graph_image(self, only_giant_graph=False):
+        sgt_obj = self.get_selected_sgt_obj()
+        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        sgt_obj.ntwk_p.draw_graph_image(sel_img_batch, show_giant_only=only_giant_graph)
+        self.changeImageSignal.emit()
+
     @Slot(int)
     def load_image(self, index=None, reload_thumbnails=False):
         try:
@@ -704,7 +711,7 @@ class MainController(QObject):
                                                                               "image. Try again."])
 
     @Slot()
-    def export_graph(self):
+    def export_graph_to_file(self):
         """Export graph data and save as a file."""
         try:
             sel_images = self.get_selected_images()
