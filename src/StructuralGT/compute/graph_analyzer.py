@@ -804,41 +804,36 @@ class GraphAnalyzer(ProgressUpdate):
         for fig in figs:
             out_figs.append(fig)
 
-        # 2. plotting graph nodes
+        # 2. plotting graph nodes and edges
         fig = graph_obj.plot_graph_network(image_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
-        # 3. plotting graph edges
-        fig = graph_obj.plot_graph_network(image_arr=img_3d, a4_size=True)
-        if fig is not None:
-            out_figs.append(fig)
-
-        # 4a. displaying all the GT calculations in Table (on the entire page)
+        # 3a. displaying all the GT calculations in Table (on the entire page)
         fig, fig_wt = self.plot_gt_results(graph_obj)
         out_figs.append(fig)
         if fig_wt:
             out_figs.append(fig_wt)
 
-        # 4b. display scaling GT results in a Table
+        # 3b. display scaling GT results in a Table
         figs = GraphAnalyzer.plot_scaling_behavior(self.scaling_data)
         for fig in figs:
             out_figs.append(fig)
 
-        # 5. displaying histograms
+        # 4. displaying histograms
         self.update_status([92, "Generating histograms..."])
         figs = self.plot_histograms(graph_obj)
         for fig in figs:
             out_figs.append(fig)
 
-        # 6. displaying heatmaps
+        # 5. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             self.update_status([95, "Generating heatmaps..."])
             figs = self.plot_heatmaps(graph_obj, image_arr=img_3d)
             for fig in figs:
                 out_figs.append(fig)
 
-        # 7. displaying run information
+        # 6. displaying run information
         fig = self.plot_run_configs(graph_obj)
         out_figs.append(fig)
         return out_figs

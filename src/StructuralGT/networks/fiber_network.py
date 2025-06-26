@@ -157,11 +157,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.ig_graph = igraph.Graph.from_networkx(nx_graph)
         return True
 
-    def plot_graph_network(self, image_arr: MatLike, plot_nodes: bool = False, a4_size: bool = False):
+    def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False):
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
         :param image_arr: Slides of 2D images to be used to draw the network.
+        :param giant_only: If True, only the giant graph is identified and drawn.
         :param plot_nodes: Make the graph's node plot figure.
         :param a4_size: Decision if to create an A4 size plot figure.
 
@@ -169,7 +170,10 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
 
         # Fetch the graph and config options
-        nx_graph = self.nx_graph
+        if giant_only:
+            nx_graph = self.nx_giant_graph
+        else:
+            nx_graph = self.nx_graph
         show_node_id = (self.configs["display_node_id"]["value"] == 1)
 
         # Fetch a single 2D image
