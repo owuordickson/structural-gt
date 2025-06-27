@@ -138,8 +138,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_giant_graph)  # replace with graph_obj.nx_giant_graph
 
         # 3b. Compute Scaling Scatter Plots
-        #if self.configs["compute_scaling_behavior"]["value"] == 1:
-        #    self.scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
+        if self.configs["compute_scaling_behavior"]["value"] == 1:
+            self.scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
