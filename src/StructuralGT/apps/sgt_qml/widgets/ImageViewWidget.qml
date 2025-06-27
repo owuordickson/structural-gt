@@ -201,6 +201,13 @@ ColumnLayout {
                     }
                 }
             }
+
+            Button {
+                id: btnLoad3DGraph
+                text: "view 3D graph"
+                visible: mainController.display_graph()
+                onClicked: mainController.load_graph_simulation()
+            }
         }
     }
 
@@ -519,6 +526,7 @@ ColumnLayout {
             imgViewControls.visible = mainController.display_image();
             cbBatchSelector.visible = mainController.image_batches_exist();
             toggleShowGiantGraph.visible = mainController.display_graph();
+            btnLoad3DGraph.visible = mainController.display_graph();
 
             if (!mainController.is_img_3d()) {
                 imgView.source = mainController.get_pixmap();
