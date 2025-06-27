@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "StructuralGT"
-#define MyAppVersion "3.3.8"
+#define MyAppVersion "3.3.9"
 #define MyAppPublisher "Kotov Lab"
 #define MyAppURL "https://kotov.engin.umich.edu/"
 #define MyAppExeName "StructuralGT.exe"
