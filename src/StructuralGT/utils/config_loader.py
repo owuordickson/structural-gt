@@ -210,9 +210,9 @@ def load_gtc_configs(cfg_path: str = ""):
         "display_betweenness_centrality_histogram": {"id": "display_betweenness_centrality_histogram", "text": "Betweenness Centrality", "value": 1},
         "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closeness Centrality", "value": 1},
         "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
-        "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
-        "compute_scaling_behavior": {"id": "compute_scaling_behavior", "text": "Scaling Behavior", "value": 0},
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
+        "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
+        #"compute_scaling_behavior": {"id": "compute_scaling_behavior", "text": "Scaling Behavior", "value": 0},
         #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
     }
 
@@ -227,9 +227,6 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["display_betweenness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_betweenness_centrality_histogram'))
         options_gtc["display_closeness_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_closeness_centrality_histogram'))
         options_gtc["display_eigenvector_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_eigenvector_centrality_histogram'))
-        options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
-        options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
-        options_gtc["compute_scaling_behavior"]["value"] = int(config.get('sgt-settings', 'compute_scaling_behavior'))
         options_gtc["compute_avg_node_connectivity"]["value"] = int(config.get('sgt-settings', 'compute_avg_node_connectivity'))
         options_gtc["compute_graph_density"]["value"] = int(config.get('sgt-settings', 'compute_graph_density'))
         options_gtc["compute_global_efficiency"]["value"] = int(config.get('sgt-settings', 'compute_global_efficiency'))
@@ -237,6 +234,9 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["compute_assortativity_coef"]["value"] = int(config.get('sgt-settings', 'compute_assortativity_coef'))
         options_gtc["compute_network_diameter"]["value"] = int(config.get('sgt-settings', 'compute_network_diameter'))
         options_gtc["compute_wiener_index"]["value"] = int(config.get('sgt-settings', 'compute_wiener_index'))
+        options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
+        options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
+        # options_gtc["compute_scaling_behavior"]["value"] = int(config.get('sgt-settings', 'compute_scaling_behavior'))
         # options_gtc["compute_lang"]["value"] = str(config.get('sgt-settings', 'compute_lang'))
 
         return options_gtc
