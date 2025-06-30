@@ -77,12 +77,13 @@ class GraphAnalyzer(ProgressUpdate):
         allow_multiprocessing: a decision to allow multiprocessing computing.
     """
 
-    def __init__(self, imp: ImageProcessor, allow_multiprocessing: bool = True):
+    def __init__(self, imp: ImageProcessor, allow_multiprocessing: bool = True, use_igraph: bool = True):
         """
         A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
 
         :param imp: Image Processor object.
         :param allow_multiprocessing: Allows multiprocessing computing.
+        :param use_igraph: Whether to use igraph C library module.
 
         >>> i_path = "path/to/image"
         >>> o_dir = ""
@@ -95,6 +96,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.configs: dict = load_gtc_configs(imp.config_file)  # graph theory computation parameters and options.
         self.props: list = []
         self.allow_mp: bool = allow_multiprocessing
+        self.use_igraph: bool = use_igraph
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
         self.scaling_data = None
@@ -248,8 +250,7 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([15, "Computing node connectivity..."])
             if connected_graph:
                 # use_igraph = opt_gtc["compute_lang == 'C'"]["value"]
-                use_igraph = True
-                if use_igraph:
+                if self.use_igraph:
                     # use iGraph Lib in C
                     self.update_status([15, "Using iGraph library..."])
                     avg_node_con = self.igraph_average_node_connectivity(graph)
