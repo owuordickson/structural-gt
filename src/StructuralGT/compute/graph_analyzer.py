@@ -29,7 +29,6 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-from .c_lang import sgt_c_module as sgt
 from ..utils.progress_update import ProgressUpdate
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
@@ -654,6 +653,7 @@ class GraphAnalyzer(ProgressUpdate):
         ---------
         :param nx_graph: NetworkX graph object.
         """
+        from .c_lang import sgt_c_module as sgt
 
         cpu_count = get_num_cores()
         num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
