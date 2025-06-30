@@ -49,8 +49,8 @@ if platform.system() == "Windows":
     ext_modules[0].extra_link_args = ["/VERBOSE:LIB"]
 
 if platform.system() == "Darwin":
-    ext_modules[0].include_dirs = ["/opt/homebrew/Cellar/igraph/0.10.15_1/include/igraph"]
-    ext_modules[0].library_dirs = ["/opt/homebrew/Cellar/igraph/0.10.15_1/lib"]
+    ext_modules[0].include_dirs = ["/opt/homebrew/Cellar/igraph/0.10.16/include/igraph"]
+    ext_modules[0].library_dirs = ["/opt/homebrew/Cellar/igraph/0.10.16/lib"]
 
 if platform.system() == "Linux":
     ext_modules[0].include_dirs = ["/home/linuxbrew/.linuxbrew/Cellar/igraph/0.10.15_1/include/igraph"]
