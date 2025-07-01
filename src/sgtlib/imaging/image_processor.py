@@ -25,7 +25,7 @@ from ..networks.fiber_network import FiberNetworkBuilder
 logger = logging.getLogger("SGT App")
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
-ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.tif', '*.tiff', '*.qptiff')
+ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.bmp', '*.tif', '*.tiff', '*.qptiff')
 
 
 class ImageProcessor(ProgressUpdate):
@@ -98,7 +98,7 @@ class ImageProcessor(ProgressUpdate):
         # First file if it's a list
         ext = os.path.splitext(file[0])[1].lower() if (type(file) is list) else os.path.splitext(file)[1].lower()
         try:
-            if ext in ['.png', '.jpg', '.jpeg']:
+            if ext in ['.png', '.jpg', '.jpeg', '.bmp']:
                 image_groups = defaultdict(list)
                 if type(file) is list:
                     for img in file:
