@@ -335,13 +335,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         Plot graph edges on top of the image
 
-        :param image: image to be superimposed with graph edges
-        :param nx_graph: a NetworkX graph
-        :param node_distribution_data: a list of node distribution data for a heatmap plot
-        :param plot_nodes: whether to plot graph nodes or not
-        :param show_node_id: if True, node IDs are displayed on the plot
-        :param transparent: whether to draw the image with a transparent background
-        :param line_width: each edge's line width
+        :param image: image to be superimposed with graph edges;
+        :param nx_graph: a NetworkX graph;
+        :param node_distribution_data: a list of node distribution data for a heatmap plot;
+        :param plot_nodes: whether to plot graph nodes or not;
+        :param show_node_id: if True, node IDs are displayed on the plot;
+        :param transparent: whether to draw the image with a transparent background;
+        :param line_width: each edge's line width;
         :param node_marker_size: the size (diameter) of the node marker
         :return:
         """
@@ -403,7 +403,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 ge = sg[s][e]['pts']
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
                 coord_3 = 0
-                if ge.shape[1] == 3:
+                if np.array(ge).shape[1] == 3:
                     # image and graph are 3D (not 2D)
                     # 3D Coordinates are (x, y, z) ... assume that y and z are the same for 2D graphs and x is depth.
                     coord_1, coord_2, coord_3 = 2, 1, 0  # coordinates: (z, y, x)

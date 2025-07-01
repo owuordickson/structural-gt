@@ -95,11 +95,12 @@ class GraphAnalyzer(ProgressUpdate):
         :param use_igraph: Whether to use igraph C library module.
 
         >>> i_path = "path/to/image"
-        >>> o_dir = ""
+        >>> cfg_file = "path/to/sgt_configs.ini"
         >>>
-        >>> ntwk_obj = ImageProcessor(i_path, o_dir)
+        >>> ntwk_obj, _ = ImageProcessor.create_imp_object(i_path)
         >>> metrics_obj = GraphAnalyzer(ntwk_obj)
-        >>> metrics_obj.run_analyzer()
+        >>> metrics_obj.safe_run_analyzer()
+
         """
         super(GraphAnalyzer, self).__init__()
         self.configs: dict = load_gtc_configs(imp.config_file)  # graph theory computation parameters and options.

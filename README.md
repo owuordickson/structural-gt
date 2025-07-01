@@ -11,7 +11,16 @@ A software tool that allows graph theory analysis of nanostructures. This is a m
 * 5 minute YouTube tutorial: https://www.youtube.com/watch?v=bEXaIKnse3g
 * We would love to hear from you, please give us feedback.
 
-## 2. Install via source code
+## 2. Install via pip
+* Install Python version 3.13 on your computer.
+* Execute the following commands:
+
+```bash
+pip install sgtlib
+```
+
+
+## 3. Install via source code
 
 Therefore, please follow the manual installation instructions provided below:
 
@@ -29,7 +38,9 @@ pip install -r requirements.txt
 pip install .
 ```
 
-### 2(a) Executing GUI App
+## 3. Usage
+
+### 3(a) Executing GUI App
 
 To run the GUI version, please follow these steps:
 
@@ -40,7 +51,7 @@ To run the GUI version, please follow these steps:
 StructuralGT
 ```
 
-### 2(b) Executing Terminal App
+### 3(b) Executing Terminal App
 
 Before executing ```StructuralGT-cli```, you need to specify these parameters:
 
@@ -69,6 +80,44 @@ OR
 
 ```bash
 StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
+```
+
+### 3(c) Using Library API
+To use ```StructuralGT``` library, create a **Python** script or **Jupyter Notebook** and import modules as shown:
+
+```python
+from StructuralGT import modules as sgt
+
+# set paths
+img_path = "path/to/image"
+cfg_file = "path/to/sgt_configs.ini"   # Optional: leave blank
+
+# Create Network object
+ntwk_obj, _ = sgt.ImageProcessor.create_imp_object(img_path, config_file=cfg_file)
+
+# Apply image filters according to cfg_file
+ntwk_obj.apply_img_filters()
+
+# View images
+sel_img_batch = ntwk_obj.get_selected_batch()
+bin_images = [obj.img_bin for obj in sel_img_batch.images]
+mod_images = [obj.img_mod for obj in sel_img_batch.images]
+bin_images[0]
+
+# Extract graph
+ntwk_obj.build_graph_network()
+
+# View graph
+net_images = [sel_img_batch.graph_obj.img_ntwk]
+net_images[0]
+
+# Compute graph theory metrics
+compute_obj = sgt.GraphAnalyzer(ntwk_obj)
+compute_obj.safe_run_analyzer()
+print(compute_obj.output_df)
+
+# Save in PDF
+sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 ```
 
 

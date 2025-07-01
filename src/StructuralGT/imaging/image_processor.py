@@ -62,10 +62,10 @@ class ImageProcessor(ProgressUpdate):
 
         >>>
         >>> i_path = "path/to/image"
-        >>> o_dir = ""
+        >>> cfg_path = "path/to/sgt_configs.ini"
         >>>
-        >>> imp_obj = ImageProcessor(i_path, o_dir)
-        >>> imp_obj.apply_img_filters()
+        >>> ntwk_p, img_file = ImageProcessor.create_imp_object(i_path, config_file=cfg_path)
+        >>> ntwk_p.apply_img_filters()
         """
         super(ImageProcessor, self).__init__()
         self.img_path: str = img_path if type(img_path) is str else img_path[0]
