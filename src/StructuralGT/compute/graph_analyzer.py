@@ -15,6 +15,7 @@ import multiprocessing
 import numpy as np
 import scipy as sp
 import pandas as pd
+import igraph as ig
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
@@ -664,6 +665,7 @@ class GraphAnalyzer(ProgressUpdate):
             g_filename = filename + "_graph.txt"
             graph_file = os.path.join(output_location, g_filename)
             nx.write_edgelist(nx_graph, graph_file, data=False)
+            ig.Graph.vertex_connectivity()
             anc = sgt.compute_anc(graph_file, num_threads, self.allow_mp)
         except Exception as err:
             logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})

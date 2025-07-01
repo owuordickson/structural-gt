@@ -5,9 +5,9 @@ Builds a graph network from nanoscale microscopy images.
 """
 
 import os
-import igraph
 import itertools
 import numpy as np
+import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image, ImageQt
@@ -43,7 +43,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.img_ntwk: MatLike | None = None
         self.nx_giant_graph: nx.Graph | None = None
         self.nx_graph: nx.Graph | None = None
-        self.ig_graph: igraph.Graph | None = None
+        self.ig_graph: ig.Graph | None = None
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
@@ -149,7 +149,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
         self.nx_graph = nx_graph
-        self.ig_graph = igraph.Graph.from_networkx(nx_graph)
+        self.ig_graph = ig.Graph.from_networkx(nx_graph)
         return True
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False):
