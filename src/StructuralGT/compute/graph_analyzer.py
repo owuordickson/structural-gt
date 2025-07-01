@@ -257,7 +257,7 @@ class GraphAnalyzer(ProgressUpdate):
                 self.update_status([-1, "Task aborted."])
                 return None
             self.update_status([15, "Computing node connectivity..."])
-            avg_node_con = self.compute_average_node_connectivity(graph, connected_graph)
+            avg_node_con = self.compute_avg_node_connectivity(graph, connected_graph)
             data_dict["parameter"].append("Average node connectivity")
             data_dict["value"].append(avg_node_con)
 
@@ -581,7 +581,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def compute_average_node_connectivity(self, nx_graph: nx.Graph, is_graph_connected=False):
+    def compute_avg_node_connectivity(self, nx_graph: nx.Graph, is_graph_connected=False):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
