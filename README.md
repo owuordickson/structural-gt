@@ -83,16 +83,19 @@ StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 1
 ```
 
 ### 3(c) Using Library API
-To use ```StructuralGT``` library, create a **Python** script or **Jupyter Notebook** and import modules as shown:
+To use ```StructuralGT``` library:
+* Make sure you **install via pip**
+* Create a **Python** script or **Jupyter Notebook** and import modules as shown:
 
 ```python
+import matplotlib.pyplot as plt
 from StructuralGT import modules as sgt
 
 # set paths
 img_path = "path/to/image"
 cfg_file = "path/to/sgt_configs.ini"   # Optional: leave blank
 
-# Create Network object
+# Create a Network object
 ntwk_obj, _ = sgt.ImageProcessor.create_imp_object(img_path, config_file=cfg_file)
 
 # Apply image filters according to cfg_file
@@ -102,14 +105,25 @@ ntwk_obj.apply_img_filters()
 sel_img_batch = ntwk_obj.get_selected_batch()
 bin_images = [obj.img_bin for obj in sel_img_batch.images]
 mod_images = [obj.img_mod for obj in sel_img_batch.images]
-bin_images[0]
+plt.imshow(bin_images[0])
+plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
+plt.title('Binary Image')
+plt.show()
+
+plt.imshow(mod_images[0])
+plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
+plt.title('Processed Image')
+plt.show()
 
 # Extract graph
 ntwk_obj.build_graph_network()
 
 # View graph
 net_images = [sel_img_batch.graph_obj.img_ntwk]
-net_images[0]
+plt.imshow(net_images[0])
+plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
+plt.title('Graph Image')
+plt.show()
 
 # Compute graph theory metrics
 compute_obj = sgt.GraphAnalyzer(ntwk_obj)
