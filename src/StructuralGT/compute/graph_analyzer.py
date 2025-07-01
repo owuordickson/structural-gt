@@ -68,6 +68,15 @@ except cp.cuda.runtime.CUDARuntimeError:
 """
 
 
+def _worker_vertex_connectivity(ig_graph_obj, i, j):
+    try:
+        lnc = ig_graph_obj.vertex_connectivity(source=i, target=j, neighbors="negative")
+        return lnc if lnc != -1 else None
+    except Exception as err:
+        logging.exception("Computing iGraph ANC Error: %s", err, extra={'user': 'SGT Logs'})
+        return None
+
+
 class GraphAnalyzer(ProgressUpdate):
     """
     A class that computes all the user-selected graph theory metrics and writes the results in a PDF file.
@@ -248,22 +257,7 @@ class GraphAnalyzer(ProgressUpdate):
                 self.update_status([-1, "Task aborted."])
                 return None
             self.update_status([15, "Computing node connectivity..."])
-            if connected_graph:
-                # use_igraph = opt_gtc["compute_lang == 'C'"]["value"]
-                if self.use_igraph:
-                    # use iGraph Lib in C
-                    self.update_status([15, "Using iGraph library..."])
-                    avg_node_con = self.igraph_average_node_connectivity(graph)
-                else:
-                    # Use NetworkX Lib in Python
-                    self.update_status([15, "Using NetworkX library..."])
-                    if self.allow_mp:  # Multi-processing
-                        avg_node_con = self.average_node_connectivity(graph)
-                    else:
-                        avg_node_con = average_node_connectivity(graph)
-                avg_node_con = round(avg_node_con, 5)
-            else:
-                avg_node_con = np.nan
+            avg_node_con = self.compute_average_node_connectivity(graph, connected_graph)
             data_dict["parameter"].append("Average node connectivity")
             data_dict["value"].append(avg_node_con)
 
@@ -587,89 +581,147 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def average_node_connectivity(self, nx_graph: nx.Graph, flow_func=None):
+    def compute_average_node_connectivity(self, nx_graph: nx.Graph, is_graph_connected=False):
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
         of local node connectivity over all pairs of the nx_graph nodes.
 
-        https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
-
-        Parameters
-        ----------
         :param nx_graph: NetworkX graph object.
-        :param flow_func : Function
-            A function for computing the maximum flow between a pair of nodes.
-            The function has to accept at least three parameters: a Digraph,
-            a source node, and a target node. And return a residual network
-            that follows NetworkX conventions (see: meth:`maximum_flow` for
-            details). If flow_func is None, the default maximum flow function
-            (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
-            for details. The choice of the default function may change from
-            version to version and should not be relied on. Default value: None.
-
-        Returns
-        -------
-        K : float
-            Average node connectivity
-
-        References
-        ----------
-        [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
-                connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
-                https://www.sciencedirect.com/science/article/pii/S0012365X01001807
-
+        :param is_graph_connected: Boolean
         """
 
-        if nx_graph.is_directed():
-            iter_func = itertools.permutations
+        def nx_average_node_connectivity(flow_func=None):
+            r"""Returns the average connectivity of a graph G.
+
+            The average connectivity `\bar{\kappa}` of a graph G is the average
+            of local node connectivity over all pairs of the nx_graph nodes.
+
+            https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
+
+            Parameters
+            ----------
+            :param flow_func : Function
+                A function for computing the maximum flow between a pair of nodes.
+                The function has to accept at least three parameters: a Digraph,
+                a source node, and a target node. And return a residual network
+                that follows NetworkX conventions (see: meth:`maximum_flow` for
+                details). If flow_func is None, the default maximum flow function
+                (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
+                for details. The choice of the default function may change from
+                version to version and should not be relied on. Default value: None.
+
+            Returns
+            -------
+            K : float
+                Average node connectivity
+
+            References
+            ----------
+            [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
+                    connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
+                    https://www.sciencedirect.com/science/article/pii/S0012365X01001807
+
+            """
+
+            if nx_graph.is_directed():
+                iter_func = itertools.permutations
+            else:
+                iter_func = itertools.combinations
+
+            # Reuse the auxiliary digraph and the residual network
+            a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
+            r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
+            # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
+
+            total, count = 0, 0
+            with multiprocessing.Pool() as pool:
+                items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
+                async_result = pool.starmap_async(nx.algorithms.connectivity.local_node_connectivity, items)
+                for n in async_result.get():
+                    total += n
+                    count += 1
+                    if self.abort:
+                        self.update_status([-1, "Task aborted."])
+                        pool.terminate()
+                        pool.join()
+                        return 0
+                    if n is not None:
+                        total += n
+                        count += 1
+            anc = total / count if count > 0 else 0
+            return anc
+
+        def igraph_average_node_connectivity():
+            r"""
+            Returns the average connectivity of a graph G.
+
+            The average connectivity of a graph G is the average
+            of local node connectivity over all pairs of the Graph (G) nodes.
+            """
+
+            ig_graph = ig.Graph.from_networkx(nx_graph)
+            num_nodes = ig_graph.vcount()
+            total, count = 0, 0
+            with multiprocessing.Pool() as pool:
+                # Prepare all node pairs (i < j)
+                items = [(ig_graph, i, j) for i in range(num_nodes) for j in range(i + 1, num_nodes)]
+                async_result = pool.starmap_async(_worker_vertex_connectivity, items)
+                for n in async_result.get():
+                    if self.abort:
+                        self.update_status([-1, "Task aborted."])
+                        pool.terminate()
+                        pool.join()
+                        return 0
+                    if n is not None:
+                        total += n
+                        count += 1
+            anc = total / count if count > 0 else 0
+            return anc
+
+        def igraph_clang_average_node_connectivity():
+            r"""Returns the average connectivity of a graph G.
+
+            The average connectivity of a graph G is the average
+            of local node connectivity over all pairs of the Graph (G) nodes.
+
+            """
+            from .c_lang import sgt_c_module as sgt
+
+            cpu_count = get_num_cores()
+            num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
+            anc = 0
+
+            try:
+                filename, output_location = self.ntwk_p.get_filenames()
+                g_filename = filename + "_graph.txt"
+                graph_file = os.path.join(output_location, g_filename)
+                nx.write_edgelist(nx_graph, graph_file, data=False)
+                anc = sgt.compute_anc(graph_file, num_threads, self.allow_mp)
+            except Exception as err:
+                logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
+            return anc
+
+        if is_graph_connected:
+            # use_igraph = opt_gtc["compute_lang == 'C'"]["value"]
+            if self.use_igraph:
+                # use iGraph Lib in C
+                self.update_status([15, "Using iGraph library..."])
+                try:
+                    avg_node_con = igraph_clang_average_node_connectivity()
+                except ImportError:
+                    avg_node_con = igraph_average_node_connectivity()
+            else:
+                # Use NetworkX Lib in Python
+                self.update_status([15, "Using NetworkX library..."])
+                if self.allow_mp:  # Multi-processing
+                    avg_node_con = nx_average_node_connectivity()
+                else:
+                    avg_node_con = average_node_connectivity(nx_graph)
+            avg_node_con = round(avg_node_con, 5)
         else:
-            iter_func = itertools.combinations
-
-        # Reuse the auxiliary digraph and the residual network
-        a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
-        r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
-        # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
-
-        num, den = 0, 0
-        with multiprocessing.Pool() as pool:
-            items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
-            for n in pool.starmap(nx.algorithms.connectivity.local_node_connectivity, items):
-                num += n
-                den += 1
-                if self.abort:
-                    self.update_status([-1, "Task aborted."])
-                    return 0
-        if den == 0:
-            return 0
-        return num / den
-
-    def igraph_average_node_connectivity(self, nx_graph: nx.Graph):
-        r"""Returns the average connectivity of a graph G.
-
-        The average connectivity of a graph G is the average
-        of local node connectivity over all pairs of the Graph (G) nodes.
-
-        Parameters
-        ---------
-        :param nx_graph: NetworkX graph object.
-        """
-        from .c_lang import sgt_c_module as sgt
-
-        cpu_count = get_num_cores()
-        num_threads = cpu_count if nx.number_of_nodes(nx_graph) < 2000 else cpu_count * 2
-        anc = 0
-
-        try:
-            filename, output_location = self.ntwk_p.get_filenames()
-            g_filename = filename + "_graph.txt"
-            graph_file = os.path.join(output_location, g_filename)
-            nx.write_edgelist(nx_graph, graph_file, data=False)
-            ig.Graph.vertex_connectivity()
-            anc = sgt.compute_anc(graph_file, num_threads, self.allow_mp)
-        except Exception as err:
-            logging.exception("Computing ANC Error: %s", err, extra={'user': 'SGT Logs'})
-        return anc
+            avg_node_con = np.nan
+        return avg_node_con
 
     def compute_graph_conductance(self, graph_obj):
         """
