@@ -7,7 +7,7 @@ from PyInstaller.utils.hooks import collect_submodules
 ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
 
 # Collect StructuralGT .pyd files
-# sgt_sos = glob('src/StructuralGT/compute/c_lang/*.so')
+# sgt_sos = glob('src/sgtlib/compute/c_lang/*.so')
 
 a = Analysis(
     ['src/SGT.py'],

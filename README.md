@@ -89,7 +89,7 @@ To use ```StructuralGT``` library:
 
 ```python
 import matplotlib.pyplot as plt
-from StructuralGT import modules as sgt
+from sgtlib import modules as sgt
 
 # set paths
 img_path = "path/to/image"

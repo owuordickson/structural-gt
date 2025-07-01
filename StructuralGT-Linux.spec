@@ -10,7 +10,7 @@ ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
 libigraph_path = '/home/linuxbrew/.linuxbrew/lib/libigraph.so.3'
 
 # Collect StructuralGT .pyd files
-# sgt_pyds = glob('src/StructuralGT/compute/c_lang/*.pyd')
+# sgt_pyds = glob('src/sgtlib/compute/c_lang/*.pyd')
 
 a = Analysis(
     ['src/SGT.py'],

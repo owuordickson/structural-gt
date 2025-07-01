@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from StructuralGT import modules as sgt
+from sgtlib import modules as sgt
 
 # set paths
 img_path = "../datasets/InVitroBioFilm.png"

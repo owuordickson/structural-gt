@@ -34,10 +34,10 @@ class BuildExt(build_ext):
 # Build with CMAKE    - Windows
 ext_modules = [
     Extension(
-        name="StructuralGT.compute.c_lang.sgt_c_module",
-        sources=["src/StructuralGT/compute/c_lang/sgtmodule.c", "src/StructuralGT/compute/c_lang/sgt_base.c"],
+        name="sgtlib.compute.c_lang.sgt_c_module",
+        sources=["src/sgtlib/compute/c_lang/sgtmodule.c", "src/sgtlib/compute/c_lang/sgt_base.c"],
         libraries=["igraph"],  # macOS/Linux
-        include_dirs=["src/StructuralGT/compute/c_lang/include"],
+        include_dirs=["src/sgtlib/compute/c_lang/include"],
     )
 ]
 
