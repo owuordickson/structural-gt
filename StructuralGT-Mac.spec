@@ -13,7 +13,7 @@ a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
     binaries=[(dll, 'ovito/plugins') for dll in ovito_dlls],
-    datas=[('src/StructuralGT/apps/sgt_qml', 'StructuralGT/apps/sgt_qml')],  # Fix relative path
+    datas=[('src/sgtlib/apps/sgt_qml', 'sgtlib/apps/sgt_qml')],  # Fix relative path
     hiddenimports=collect_submodules('ovito') + ['PySide6.QtQml', 'PySide6.QtQuick', 'subprocess', 'pip'],  # Add dependencies
     hookspath=[],
     hooksconfig={},

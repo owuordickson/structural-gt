@@ -331,7 +331,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, line_width: float=1.5, node_marker_size: float = 3):
+    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3):
         """
         Plot graph edges on top of the image
 
@@ -341,7 +341,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :param plot_nodes: whether to plot graph nodes or not;
         :param show_node_id: if True, node IDs are displayed on the plot;
         :param transparent: whether to draw the image with a transparent background;
-        :param line_width: each edge's line width;
+        :param edge_color: each edge's line color;
         :param node_marker_size: the size (diameter) of the node marker
         :return:
         """
@@ -387,12 +387,24 @@ class FiberNetworkBuilder(ProgressUpdate):
                 new_ax.imshow(image[pos], cmap='gray')
             return new_fig
 
+        def normalize_width(w, new_min=0.5, new_max=5.0):
+            if max_w == min_w:
+                return (new_min + new_max) / 2  # avoid division by zero
+            return new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
+
+        # First, extract all widths to compute min and max
+        all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])
+        min_w, max_w = min(all_widths), max(all_widths)
+
         fig_group = {}
         # Create axes for the first frame of image (enough if it is 2D)
         fig = create_plt_axes(0)
         fig_group[0] = fig
 
-        color_list = ['black', 'r', 'g', 'b', 'c', 'm', 'y', 'k']
+        if edge_color == 'black':
+            color_list = ['k', 'r', 'g', 'b', 'c', 'm', 'y']
+        else:
+            color_list = ['r', 'y', 'g', 'b', 'c', 'm', 'k']
         color_cycle = itertools.cycle(color_list)
         nx_components = list(nx.connected_components(nx_graph))
         for component in nx_components:
@@ -401,6 +413,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
             for (s, e) in sg.edges():
                 ge = sg[s][e]['pts']
+                edge_w = normalize_width(sg[s][e]['width'])  # Size of the plot line-width depends on width of edge
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
                 coord_3 = 0
                 if np.array(ge).shape[1] == 3:
@@ -414,7 +427,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                     fig = create_plt_axes(coord_3)
                     fig_group[coord_3] = fig
                 ax = fig.get_axes()[0]
-                ax.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=line_width)
+                ax.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=edge_w)
 
         if plot_nodes:
             for idx, plt_fig in fig_group.items():

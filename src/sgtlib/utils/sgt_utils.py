@@ -255,17 +255,28 @@ def opencv_to_base64(img_arr: MatLike):
 def plot_to_opencv(fig: plt.Figure):
     """Convert a Matplotlib figure to an OpenCV BGR image (Numpy array), retaining colors."""
     if fig:
+        # Save figure to a buffer
         buf = io.BytesIO()
         fig.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
 
-        # Convert bytes to a Numpy array
+        # Convert buffer to NumPy array
         img_array = np.frombuffer(buf.getvalue(), dtype=np.uint8)
         buf.close()
 
-        # Decode image as BGR (color), discard alpha channel
-        img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        return img_cv
+        # Decode image including the alpha channel (if any)
+        img_cv_rgba = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
+
+        # Convert RGBA to RGB if needed
+        if img_cv_rgba.shape[2] == 4:
+            img_cv_rgb = cv2.cvtColor(img_cv_rgba, cv2.COLOR_RGBA2RGB)
+        else:
+            img_cv_rgb = img_cv_rgba
+
+        # Convert RGB to BGR to match OpenCV color space
+        img_cv_bgr = cv2.cvtColor(img_cv_rgb, cv2.COLOR_RGB2BGR)
+
+        return img_cv_bgr
     return None
 
 

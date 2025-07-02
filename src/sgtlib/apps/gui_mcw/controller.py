@@ -368,7 +368,7 @@ class MainController(QObject):
     @Slot(result=str)
     def check_for_updates(self):
         """"""
-        github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/StructuralGT/__init__.py"
+        github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/sgtlib/__init__.py"
 
         try:
             response = requests.get(github_url, timeout=5)

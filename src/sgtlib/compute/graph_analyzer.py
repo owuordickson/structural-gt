@@ -1092,25 +1092,25 @@ class GraphAnalyzer(ProgressUpdate):
 
             sz = 30
             lw = 1.5
+            lc = 'black'
             plt_figs = []
             opt_gte = graph_obj.configs
             wt_type = graph_obj.get_weight_type()
             weight_type = FiberNetworkBuilder.get_weight_options().get(wt_type)
 
-            def plot_distribution_heatmap(distribution: list, title: str, size: float, line_width: float):
+            def plot_distribution_heatmap(distribution: list, title: str, size: float, line_color: str):
                 """
                 Create a heatmap from a distribution.
 
                 :param distribution: Dataset to be plotted.
                 :param title: Title of the plot figure.
                 :param size: Size of the scatter items.
-                :param line_width: Size of the plot line-width.
+                :param line_color: Color of the line items.
                 :return: Histogram plot figure.
                 """
                 nx_graph = graph_obj.nx_giant_graph
                 fig_grp = FiberNetworkBuilder.plot_graph_edges(img_3d, nx_graph, node_distribution_data=distribution,
-                                                               plot_nodes=True, line_width=line_width,
-                                                               node_marker_size=size)
+                                                               plot_nodes=True, edge_color=line_color, node_marker_size=size)
 
                 plt_fig_inner = fig_grp[0]
                 plt_fig_inner.set_size_inches(8.5, 8.5)
@@ -1123,55 +1123,55 @@ class GraphAnalyzer(ProgressUpdate):
 
             if opt_gtc["display_degree_histogram"]["value"] == 1:
                 deg_distribution = self.histogram_data["degree_distribution"]
-                plt_fig = plot_distribution_heatmap(deg_distribution, 'Degree Heatmap', sz, lw)
+                plt_fig = plot_distribution_heatmap(deg_distribution, 'Degree Heatmap', sz, lc)
                 plt_figs.append(plt_fig)
             if (opt_gtc["display_degree_histogram"]["value"] == 1) and (opt_gte["has_weights"]["value"] == 1):
                 w_deg_distribution = self.histogram_data["weighted_degree_distribution"]
                 plt_title = 'Weighted Degree Heatmap'
-                plt_fig = plot_distribution_heatmap(w_deg_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(w_deg_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
                 cluster_coefs = self.histogram_data["clustering_coefficients"]
                 plt_title = 'Clustering Coefficient Heatmap'
-                plt_fig = plot_distribution_heatmap(cluster_coefs, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(cluster_coefs, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
                 bet_distribution = self.histogram_data["betweenness_distribution"]
                 plt_title = 'Betweenness Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(bet_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(bet_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if (opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1) and (
                     opt_gte["has_weights"]["value"] == 1):
                 w_bet_distribution = self.histogram_data["weighted_betweenness_distribution"]
                 plt_title = f'{weight_type}-Weighted Betweenness Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(w_bet_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(w_bet_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
                 clo_distribution = self.histogram_data["closeness_distribution"]
                 plt_title = 'Closeness Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(clo_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(clo_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if (opt_gtc["display_closeness_centrality_histogram"]["value"] == 1) and (
                     opt_gte["has_weights"]["value"] == 1):
                 w_clo_distribution = self.histogram_data["weighted_closeness_distribution"]
                 plt_title = 'Length-Weighted Closeness Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(w_clo_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(w_clo_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
                 eig_distribution = self.histogram_data["eigenvector_distribution"]
                 plt_title = 'Eigenvector Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(eig_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(eig_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if (opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1) and (
                     opt_gte["has_weights"]["value"] == 1):
                 w_eig_distribution = self.histogram_data["weighted_eigenvector_distribution"]
                 plt_title = f'{weight_type}-Weighted Eigenvector Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(w_eig_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(w_eig_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             if opt_gtc["display_ohms_histogram"]["value"] == 1:
                 ohm_distribution = self.histogram_data["ohms_distribution"]
                 plt_title = 'Ohms Centrality Heatmap'
-                plt_fig = plot_distribution_heatmap(ohm_distribution, plt_title, sz, lw)
+                plt_fig = plot_distribution_heatmap(ohm_distribution, plt_title, sz, lc)
                 plt_figs.append(plt_fig)
             return plt_figs
 
