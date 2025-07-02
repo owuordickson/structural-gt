@@ -99,7 +99,7 @@ class BaseImage:
         """
 
         # Resize image
-        scaled_img = cv2.resize(self.img_2d.copy(), (actual_h, actual_w))
+        scaled_img = cv2.resize(self.img_2d.copy(), (actual_w, actual_h))
 
         # Crop image
         self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
