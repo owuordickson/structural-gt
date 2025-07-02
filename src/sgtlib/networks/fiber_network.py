@@ -10,11 +10,7 @@ import numpy as np
 import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
-from PIL import Image, ImageQt
 from cv2.typing import MatLike
-from ovito.vis import Viewport
-from ovito.data import DataCollection, Particles
-from ovito.pipeline import StaticSource, Pipeline
 
 from .sknw_mod import build_sknw
 from ..utils.progress_update import ProgressUpdate
@@ -438,66 +434,3 @@ class FiberNetworkBuilder(ProgressUpdate):
                     # [left, bottom, width, height]
                     cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
         return fig_group
-
-    # TO DELETE IT LATER
-    def data_gen_function(self):
-        """Populates OVITO's data with particles."""
-        data = DataCollection()
-        positions = np.asarray(np.where(np.asarray(self.skel_obj.skeleton_3d) != 0)).T
-        particles = Particles()
-        particles.create_property("Position", data=positions)
-        data.objects.append(particles)
-        return data
-
-    # ONLY RUNS ON MAIN THREAD - TO BE DELETED
-    def render_graph_to_image(self, bg_image=None, is_img_2d: bool = True):
-        """
-        Renders the graph network into an image; it can optionally superimpose the graph on the image.
-
-        :param bg_image: Optional background image.
-        :param is_img_2d: Whether the image is 2D or 3D otherwise.
-        """
-        if self.gsd_file is None:
-            return None
-
-        if bg_image is not None:
-            # OVITO doesn’t directly support 3D numpy volumes as backgrounds
-            bg_image = bg_image.squeeze()
-            if not is_img_2d:
-                # (visualize only one slice) Extract a middle slice from 3D grayscale volume
-                mid_slice = bg_image[bg_image.shape[0] // 2]  # shape: (H, W)
-            else:
-                mid_slice = bg_image
-
-            # Convert to RGB for PIL
-            # bg_rgb = cv2.cvtColor(mid_slice, cv2.COLOR_GRAY2RGB)
-            bg_pil = Image.fromarray(mid_slice).convert("RGB")
-
-            # Set OVITO render size
-            size = (bg_pil.width, bg_pil.height)
-        else:
-            size = (800, 600)
-            bg_pil = None
-
-        # Load OVITO pipeline and scene
-        # pipeline = import_file(self.gsd_file)
-        data = self.data_gen_function()
-        # print(type(data))
-        pipeline = Pipeline(source = StaticSource(data = data))
-        pipeline.add_to_scene()
-
-        vp = Viewport(type=Viewport.Type.Front, camera_dir=(2, 1, -1))
-        vp.zoom_all(size)
-
-        # Render to QImage without the alpha channel
-        q_img = vp.render_image(size=size, alpha=True, background=(1, 1, 1))
-
-        # Convert QImage to PIL Image
-        pil_img = ImageQt.fromqimage(q_img).convert("RGB")
-
-        if bg_pil is not None:
-            # Overlay using simple blending (optional: adjust transparency)
-            final_img = Image.blend(bg_pil, pil_img, alpha=0.5)
-        else:
-            final_img = pil_img
-        return final_img
