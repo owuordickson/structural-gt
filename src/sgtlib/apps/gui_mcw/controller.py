@@ -79,6 +79,7 @@ class MainController(QObject):
         self.imgScaleOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
         self.img3dGridModel = ImageGridModel([], set([]))
+        self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
         self.worker = QThreadWorker(0, None)

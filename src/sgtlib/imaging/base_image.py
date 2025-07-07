@@ -6,6 +6,7 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
@@ -45,6 +46,7 @@ class BaseImage:
         self.img_2d: MatLike | None = None
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
+        self.img_hist: MatLike | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
         self.image_segments: list[BaseImage.ScalingFilter] = []
@@ -299,6 +301,25 @@ class BaseImage:
                 otsu_res = temp[0]
         self.configs["otsu"]["value"] = otsu_res
         return img_bin
+
+    def plot_img_histogram(self):
+        """Uses Matplotlib to plot the histogram of the processed image."""
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
+        ax.set_title(f"Histogram of Processed Image")
+
+        ax.plot(self.img_hist)
+        if self.configs["threshold_type"]["value"] == 0:
+            global_val = int(self.configs["global_threshold_value"]["value"])
+            thresh_arr = np.array([[global_val, global_val], [0, max(self.img_hist)]], dtype='object')
+            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        elif self.configs["threshold_type"]["value"] == 2:
+            otsu_val = self.configs["otsu"]["value"]
+            thresh_arr = np.array([[otsu_val, otsu_val], [0, max(self.img_hist)]], dtype='object')
+            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+        fig.tight_layout()
+        return fig
 
     def get_config_info(self):
         """
