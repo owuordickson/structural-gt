@@ -80,10 +80,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 visible: mainController.display_image()
                 enabled: mainController.display_image()
-                onClicked: {
-                    mainController.compute_img_histogram();
-                    imgHistogramWindow.visible = true;  // Move it to HistWindow Connections
-                }
+                onClicked: imgHistogramWindow.visible = true
             }
 
         }
