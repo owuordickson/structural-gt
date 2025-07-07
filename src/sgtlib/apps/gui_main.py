@@ -46,6 +46,7 @@ class MainWindow(QObject):
         self.ui_engine.rootContext().setContextProperty("imgScaleOptionModel", controller.imgScaleOptionModel)
         self.ui_engine.rootContext().setContextProperty("saveImgModel", controller.saveImgModel)
         self.ui_engine.rootContext().setContextProperty("img3dGridModel", controller.img3dGridModel)
+        self.ui_engine.rootContext().setContextProperty("imgHistogramModel", controller.imgHistogramModel)
         self.ui_engine.rootContext().setContextProperty("mainController", controller)
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
