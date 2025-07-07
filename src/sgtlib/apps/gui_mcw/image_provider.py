@@ -63,6 +63,10 @@ class ImageProvider(QQuickImageProvider):
 
             # Acknowledge the image load and send the signal to update QML
             self.img_controller.imageChangedSignal.emit()
+
+            # Calculate image histogram
+            if sel_img_batch.current_view == "binary" or sel_img_batch.current_view == "processed":
+                self.img_controller.compute_img_histogram()
         else:
             self.img_controller.img_loaded = False
 

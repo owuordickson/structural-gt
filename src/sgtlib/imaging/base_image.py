@@ -314,7 +314,7 @@ class BaseImage:
         else:
             ax = axes
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        ax.set_title(f"Histogram of Processed Image")
+        ax.set_title(f"Processed Image")
 
         if self.img_mod is None:
             return fig

@@ -6,7 +6,7 @@ import QtQuick.Window
 
 Window {
     id: imgHistogramWindow
-    width: 860
+    width: 480
     height: 400
     x: 1024  // Exactly starts where your app ends
     y: 40
@@ -27,8 +27,8 @@ Window {
                 width: parent.width
                 height: parent.height
                 anchors.centerIn: parent
-                cellWidth: parent.width / 4
-                cellHeight: parent.height / 4
+                cellWidth: (parent.width / 2)
+                cellHeight: (parent.height / 2)
                 model: imgHistogramModel
                 visible: true
 
@@ -39,7 +39,8 @@ Window {
                     Rectangle {
                         width: parent.width - 2  // Adds horizontal spacing
                         height: parent.height - 2  // Adds vertical spacing
-                        color: "#d0d0d0"  // Background color for spacing effect
+                        color: "#ffffff"  // Background color for spacing effect
+                        visible: model.selected === 1
 
                         Image {
                             source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image
@@ -47,7 +48,7 @@ Window {
                             height: parent.height
                             anchors.centerIn: parent
                             transformOrigin: Item.Center
-                            fillMode: Image.PreserveAspectCrop
+                            fillMode: Image.PreserveAspectFit
                         }
 
                         Label {

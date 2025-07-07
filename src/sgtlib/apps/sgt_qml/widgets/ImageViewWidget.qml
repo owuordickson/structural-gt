@@ -276,7 +276,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             //scale: zoomFactor
                             transformOrigin: Item.Center
-                            fillMode: Image.PreserveAspectCrop
+                            fillMode: Image.PreserveAspectFit
                             //cache: true
                         }
 
