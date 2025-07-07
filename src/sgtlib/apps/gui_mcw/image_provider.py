@@ -56,16 +56,12 @@ class ImageProvider(QQuickImageProvider):
                 # Create Pixmap image
                 img = Image.fromarray(img_cv)
                 self.pixmap = ImageQt.toqpixmap(img)
+                self.img_controller.img_loaded = True
 
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_graph_models(sgt_obj)
 
-            # Save changes to the project data file
-            if len(self.img_controller.sgt_objs.items()) <= 10:
-                self.img_controller.save_project_data()
-
             # Acknowledge the image load and send the signal to update QML
-            self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()
         else:
             self.img_controller.img_loaded = False

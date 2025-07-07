@@ -302,12 +302,22 @@ class BaseImage:
         self.configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def plot_img_histogram(self):
-        """Uses Matplotlib to plot the histogram of the processed image."""
+    def plot_img_histogram(self, axes=None):
+        """
+        Uses Matplotlib to plot the histogram of the processed image.
+
+        :param axes: A Matplotlib axes object.
+        """
         fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        if axes is None:
+            ax = fig.add_subplot(1, 1, 1)
+        else:
+            ax = axes
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax.set_title(f"Histogram of Processed Image")
+
+        if self.img_hist is None:
+            return fig
 
         ax.plot(self.img_hist)
         if self.configs["threshold_type"]["value"] == 0:

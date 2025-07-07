@@ -327,8 +327,18 @@ class MainController(QObject):
                                                                                     "images have been calculated. Check "
                                                                                     "out all the generated PDFs in "
                                                                                     "'Output Dir'."])
+            elif type(result) is list:
+                # Image histogram calculated
+                if len(self.sgt_objs) > 0:
+                    sgt_obj = self.get_selected_sgt_obj()
+                    sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+                    self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images)
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
+
+            # Auto-save changes to the project data file
+            if len(self.sgt_objs.items()) <= 10:
+                self.save_project_data()
 
     @Slot(result=str)
     def get_sgt_version(self):
@@ -668,7 +678,20 @@ class MainController(QObject):
     @Slot()
     def compute_img_histogram(self):
         """Calculate the histogram of the image."""
-        print(f"Compute Histogram of processed image!")
+        if self.wait_flag:
+            return
+
+        self.worker_task = WorkerTask()
+        try:
+            self.wait_flag = True
+            sgt_obj = self.get_selected_sgt_obj()
+            self.worker = QThreadWorker(func=self.worker_task.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
+            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
+            self.worker.start()
+        except Exception as err:
+            self.wait_flag = False
+            logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
+            self._handle_finished(False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
 
     @Slot()
     def apply_img_scaling(self):

@@ -1,7 +1,7 @@
 import logging
 from PySide6.QtCore import QObject, QThread, Signal
 from ...compute.graph_analyzer import GraphAnalyzer
-from ...utils.sgt_utils import AbortException
+from ...utils.sgt_utils import AbortException, plot_to_opencv
 
 
 
@@ -52,6 +52,16 @@ class WorkerTask (QObject):
             self.taskFinishedSignal.emit(False, ["Apply Filters Failed", "Fatal error while applying filters! "
                                                                          "Change filter settings and try again; "
                                                                          "Or, Close the app and try again."])
+
+    def task_calculate_img_histogram(self, ntwk_p):
+        """"""
+        try:
+            sel_img_batch = ntwk_p.get_selected_batch()
+            hist_images = [plot_to_opencv(obj.plot_img_histogram()) for obj in sel_img_batch.images]
+            self.taskFinishedSignal.emit(True, hist_images)
+        except Exception as err:
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            self.taskFinishedSignal.emit(False, ["Histogram Calculation Failed", "Error while calculating image histogram!"])
 
     def task_extract_graph(self, ntwk_p):
         """"""

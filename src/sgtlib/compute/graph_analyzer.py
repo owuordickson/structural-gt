@@ -918,9 +918,8 @@ class GraphAnalyzer(ProgressUpdate):
                 ax_3.set_axis_off()
                 ax_3.imshow(img_bin, cmap='gray')
 
-                plt_fig_hist = img.plot_img_histogram()
+                img.plot_img_histogram(axes=ax_4)
                 hist_title = f"Frame {i}: Histogram of Processed Image" if is_3d else f"Histogram of Processed Image"
-                ax_4 = plt_fig_hist.get_axes()[0]
                 ax_4.set_title(hist_title)
 
                 """ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
