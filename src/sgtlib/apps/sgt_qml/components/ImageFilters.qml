@@ -34,18 +34,18 @@ Rectangle {
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }
-
             Label {
                 id: lblNoImgFilters
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No image filters to show!\nCreate project/add image."
                 color: "#808080"
-                visible: !mainController.display_image();
+                visible: !mainController.display_image()
             }
             BinaryFilterWidget{}
 
             Rectangle {
+                id: rectHLine1
                 height: 1
                 color: "#d0d0d0"
                 Layout.fillWidth: true
@@ -53,19 +53,38 @@ Rectangle {
                 Layout.topMargin: 20
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
+                visible: mainController.display_image()
             }
 
             Text {
+                id: txtTitleImgFilters
                 text: "Image Filters"
                 font.pixelSize: 12
                 font.bold: true
                 Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
+                visible: mainController.display_image()
             }
-
-
             ImageFilterWidget{}
+
+            Button {
+                id: btnShowImgHistogram
+                text: "Calculate histogram"
+                topPadding: 5
+                bottomPadding: 5
+                leftPadding: 10
+                rightPadding: 10
+                Layout.topMargin: 10
+                Layout.bottomMargin: 5
+                Layout.alignment: Qt.AlignHCenter
+                visible: mainController.display_image()
+                enabled: mainController.display_image()
+                onClicked: {
+                    mainController.compute_img_histogram();
+                    imgHistogramWindow.visible = true;  // Move it to HistWindow Connections
+                }
+            }
 
         }
     }
@@ -76,6 +95,11 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             lblNoImgFilters.visible = !mainController.display_image();
+            btnShowImgHistogram.visible = mainController.display_image();
+            rectHLine1.visible = mainController.display_image();
+            txtTitleImgFilters.visible = mainController.display_image();
+
+            btnShowImgHistogram.enabled = mainController.display_image();
         }
 
     }

@@ -6,7 +6,7 @@ Item {
     id: microscopyProps
     Layout.preferredHeight: 100
     Layout.preferredWidth: parent.width - 75
-    enabled: mainController.display_image();
+    enabled: mainController.display_image()
 
     property int txtWidthSize: 70
     property int lblWidthSize: 80

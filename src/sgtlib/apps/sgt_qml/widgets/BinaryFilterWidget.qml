@@ -9,7 +9,7 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft
-    visible: mainController.display_image();
+    visible: mainController.display_image()
 
     property int idRole: Qt.UserRole + 1
     property int valueRole: Qt.UserRole + 4

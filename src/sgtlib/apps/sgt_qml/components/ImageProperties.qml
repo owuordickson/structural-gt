@@ -32,7 +32,14 @@ Rectangle {
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }
-
+            Label {
+                id: lblNoImgProps
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 20
+                text: "No properties! Add image(s)."
+                color: "#808080"
+                visible: !mainController.display_image()
+            }
             ImagePropertyWidget{}
 
             Rectangle {
@@ -44,6 +51,7 @@ Rectangle {
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
             }
+
             Text {
                 text: "Graph Properties"
                 font.pixelSize: 12
@@ -52,12 +60,11 @@ Rectangle {
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }
-
             Label {
                 id: lblNoGraphProps
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
-                text: "No properties to show!"
+                text: "No graph properties to show!"
                 color: "#808080"
                 visible: graphPropsModel.rowCount() > 0 ? false : true
             }
@@ -73,6 +80,7 @@ Rectangle {
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
             }
+
             Text {
                 text: "Computation Metrics"
                 font.pixelSize: 12
@@ -81,7 +89,6 @@ Rectangle {
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }
-
             Label {
                 id: lblNoGraphParams
                 Layout.alignment: Qt.AlignHCenter
@@ -98,11 +105,13 @@ Rectangle {
         target: mainController
 
         function onImageChangedSignal() {
+            lblNoImgProps.visible = !mainController.display_image();
             lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
             lblNoGraphParams.visible = graphComputeModel.rowCount() > 0 ? false : true;
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
+            lblNoImgProps.visible = !mainController.display_image();
             lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
             lblNoGraphParams.visible = graphComputeModel.rowCount() > 0 ? false : true;
         }

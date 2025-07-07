@@ -70,16 +70,18 @@ Rectangle {
                     icon.width: 21
                     icon.height: 21
                     background: Rectangle { color: "transparent"}
-                    enabled: mainController.display_image();
+                    enabled: mainController.display_image()
                     onClicked: outFolderDialog.open()
                 }
             }
 
             Button {
                 id: btnImportImages
-                Layout.alignment: Qt.AlignHCenter
                 text: "Import image(s)"
-                enabled: mainController.display_image();
+                leftPadding: 10
+                rightPadding: 10
+                Layout.alignment: Qt.AlignHCenter
+                enabled: mainController.display_image()
                 onClicked: imageFileDialog.open()
             }
 

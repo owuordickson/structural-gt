@@ -541,47 +541,16 @@ class MainController(QObject):
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
             sel_batch = sgt_obj.ntwk_p.get_selected_batch()
+            h, w = sel_batch.graph_obj.img_ntwk.shape[:2]
             pipeline = import_file(sel_batch.graph_obj.gsd_file)
             pipeline.add_to_scene()
 
             vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
+            vp.zoom_all((w, h))  # width, height
+
             ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
-            ovito_widget.setMinimumSize(800, 500)
-            vp.zoom_all((800, 500))
+            ovito_widget.setFixedSize(w, h)
             ovito_widget.show()
-
-            """
-            # Find the QML Rectangle to embed into
-            root = self.qml_engine.rootObjects()[0]
-            ntwk_container = root.findChild(QObject, "ntwkContainer")
-
-            if ntwk_container:
-                # Testing
-                # print(f"Found it! {type(ntwk_container)}")
-                # ntwk_container.setProperty("color", "#8b0000")
-
-                # Grab rectangle properties
-                x = ntwk_container.property("x")
-                y = ntwk_container.property("y")
-                w = ntwk_container.property("width")
-                h = ntwk_container.property("height")
-
-                # Create OVITO data pipeline
-                sgt_obj = self.get_selected_sgt_obj()
-                filename, out_dir = sgt_obj.ntwk_p.get_filenames()
-                gsd_filename = filename + "_skel.gsd"
-                gsd_file = str(os.path.join(out_dir, gsd_filename))
-                pipeline = import_file(gsd_file)
-                pipeline.add_to_scene()
-
-                vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
-                ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
-                ovito_widget.setMinimumSize(800, 500)
-                vp.zoom_all((800, 500))
-
-                # Re-parent OVITO QWidget
-                ovito_widget.setGeometry(x, y, w, h)
-                ovito_widget.show()"""
         except Exception as e:
             print("Graph Simulation Error:", e)
 
@@ -694,6 +663,11 @@ class MainController(QObject):
             logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
                                                                                     "image filters. Try again."])
+
+    @Slot()
+    def compute_img_histogram(self):
+        """Calculate the histogram of the image."""
+        print(f"Compute Histogram of processed image!")
 
     @Slot()
     def apply_img_scaling(self):

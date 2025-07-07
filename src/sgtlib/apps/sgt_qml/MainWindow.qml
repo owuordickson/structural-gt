@@ -73,8 +73,12 @@ ApplicationWindow {
         }
 
         // Logging Panel View on the Right side
-        RightLoggingPanel {
+        LoggingWindow {
             id: loggingWindowPanel
+        }
+
+        ImageHistogramWindow {
+            id: imgHistogramWindow
         }
     }
 

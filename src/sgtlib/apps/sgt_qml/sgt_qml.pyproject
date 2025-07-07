@@ -2,8 +2,9 @@
     "files": [
         "LeftContent.qml",
         "CenterMainContent.qml",
-        "RightLoggingPanel.qml",
         "MainWindow.qml",
+        "LoggingWindow.qml",
+        "ImageHistogramWindow.qml",
         "widgets/MenuBarWidget.qml",
         "widgets/StatusBarWidget.qml",
         "widgets/RibbonWidget.qml",
