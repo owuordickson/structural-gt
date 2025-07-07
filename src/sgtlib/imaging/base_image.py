@@ -316,9 +316,10 @@ class BaseImage:
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax.set_title(f"Histogram of Processed Image")
 
-        if self.img_hist is None:
+        if self.img_mod is None:
             return fig
 
+        self.img_hist = cv2.calcHist([self.img_mod], [0], None, [256], [0, 256])
         ax.plot(self.img_hist)
         if self.configs["threshold_type"]["value"] == 0:
             global_val = int(self.configs["global_threshold_value"]["value"])

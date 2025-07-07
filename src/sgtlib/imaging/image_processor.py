@@ -275,7 +275,6 @@ class ImageProcessor(ProgressUpdate):
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
             img_obj.get_pixel_width()
-            img_obj.img_hist = cv2.calcHist([img_obj.img_mod], [0], None, [256], [0, 256])
 
         self.update_status([100, "Image processing complete..."])
 

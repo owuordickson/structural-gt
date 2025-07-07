@@ -922,19 +922,6 @@ class GraphAnalyzer(ProgressUpdate):
                 hist_title = f"Frame {i}: Histogram of Processed Image" if is_3d else f"Histogram of Processed Image"
                 ax_4.set_title(hist_title)
 
-                """ax_4.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-                ax_4.plot(img.img_hist)
-                if opt_img["threshold_type"]["value"] == 0:
-                    thresh_arr = np.array(
-                        [[int(opt_img["global_threshold_value"]["value"]),
-                          int(opt_img["global_threshold_value"]["value"])],
-                         [0, max(img.img_hist)]], dtype='object')
-                    ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-                elif opt_img["threshold_type"]["value"] == 2:
-                    otsu_val = opt_img["otsu"]["value"]
-                    thresh_arr = np.array([[otsu_val, otsu_val],
-                                           [0, max(img.img_hist)]], dtype='object')
-                    ax_4.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')"""
                 plt_figs.append(plt_fig)
             return plt_figs
 
