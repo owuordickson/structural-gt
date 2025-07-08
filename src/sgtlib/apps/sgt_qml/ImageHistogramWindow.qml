@@ -6,8 +6,8 @@ import QtQuick.Window
 
 Window {
     id: imgHistogramWindow
-    width: 480
-    height: 400
+    width: 768
+    height: 720
     x: 1024  // Exactly starts where your app ends
     y: 40
     //flags: Qt.Window | Qt.FramelessWindowHint
@@ -19,14 +19,12 @@ Window {
 
         ScrollView {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: imgHistogramWindow.height - 10
             clip: true  // Ensures contents are clipped to the scroll view bounds
 
             GridView {
                 id: imgHistGridView
-                width: parent.width
-                height: parent.height
-                anchors.centerIn: parent
+                anchors.fill: parent
                 cellWidth: (parent.width / 2)
                 cellHeight: (parent.height / 2)
                 model: imgHistogramModel
@@ -75,8 +73,11 @@ Window {
     Connections {
         target: mainController
 
-        function onImageChangedSignal() {
+        function onShowImageHistogramSignal(allow) {
             // Force refresh
+            if (imgHistogramWindow.visible) {
+                imgHistogramWindow.visible = allow;
+            }
         }
     }
 }

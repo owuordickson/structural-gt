@@ -18,7 +18,10 @@ class ImageProvider(QQuickImageProvider):
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             if sel_img_batch.current_view == "binary":
+                # Apply filters
                 ntwk_p.apply_img_filters(filter_type=2)
+                # Calculate image histogram in different thread
+                self.img_controller.compute_img_histogram()
                 bin_images = [obj.img_bin for obj in sel_img_batch.images]
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
@@ -26,7 +29,10 @@ class ImageProvider(QQuickImageProvider):
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0]
             elif sel_img_batch.current_view  == "processed":
+                # Apply filters
                 ntwk_p.apply_img_filters(filter_type=1)
+                # Calculate image histogram in different thread
+                self.img_controller.compute_img_histogram()
                 mod_images = [obj.img_mod for obj in sel_img_batch.images]
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
@@ -35,6 +41,7 @@ class ImageProvider(QQuickImageProvider):
                     img_cv = mod_images[0]
             elif sel_img_batch.current_view  == "graph":
                 # If any is None, start the task
+                self.img_controller.showImageHistogramSignal.emit(False)
                 if sel_img_batch.graph_obj.img_ntwk is None:
                     self.img_controller.run_extract_graph()
                     # Wait for the task to finish
@@ -45,6 +52,8 @@ class ImageProvider(QQuickImageProvider):
                     img_cv = net_images[0]
             else:
                 # Original
+                # Calculate image histogram in different thread
+                self.img_controller.compute_img_histogram()
                 images = [obj.img_2d for obj in sel_img_batch.images]
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
@@ -56,17 +65,13 @@ class ImageProvider(QQuickImageProvider):
                 # Create Pixmap image
                 img = Image.fromarray(img_cv)
                 self.pixmap = ImageQt.toqpixmap(img)
-                self.img_controller.img_loaded = True
 
             # Reset graph/image configs with selected values - reloads QML
             self.img_controller.update_graph_models(sgt_obj)
 
             # Acknowledge the image load and send the signal to update QML
+            self.img_controller.img_loaded = True
             self.img_controller.imageChangedSignal.emit()
-
-            # Calculate image histogram
-            if sel_img_batch.current_view == "binary" or sel_img_batch.current_view == "processed":
-                self.img_controller.compute_img_histogram()
         else:
             self.img_controller.img_loaded = False
 

@@ -302,24 +302,37 @@ class BaseImage:
         self.configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def plot_img_histogram(self, axes=None):
+    def plot_img_histogram(self, axes=None, curr_view=None):
         """
         Uses Matplotlib to plot the histogram of the processed image.
 
         :param axes: A Matplotlib axes object.
+        :param curr_view: The current visualization type of the image (Original, Processed, Binary).
         """
         fig = plt.figure()
+        plt_title = "Processed Image"
+        if curr_view is not None:
+            plt_title = f"{curr_view} image"
+
         if axes is None:
             ax = fig.add_subplot(1, 1, 1)
         else:
             ax = axes
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
-        ax.set_title(f"Processed Image")
+        ax.set_title(plt_title)
 
-        if self.img_mod is None:
+        img = None
+        if curr_view == "original":
+            img = self.img_2d
+        elif curr_view == "binary":
+            img = self.img_bin
+        else:
+            img = self.img_mod
+
+        if img is None:
             return fig
 
-        self.img_hist = cv2.calcHist([self.img_mod], [0], None, [256], [0, 256])
+        self.img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
         ax.plot(self.img_hist)
         if self.configs["threshold_type"]["value"] == 0:
             global_val = int(self.configs["global_threshold_value"]["value"])

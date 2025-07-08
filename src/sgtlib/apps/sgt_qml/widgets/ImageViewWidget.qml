@@ -267,7 +267,7 @@ ColumnLayout {
                     Rectangle {
                         width: parent.width - 2  // Adds horizontal spacing
                         height: parent.height - 2  // Adds vertical spacing
-                        color: "#d0d0d0"  // Background color for spacing effect
+                        color: "#ffffff"  // Background color for spacing effect
 
                         Image {
                             source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image
@@ -276,7 +276,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             //scale: zoomFactor
                             transformOrigin: Item.Center
-                            fillMode: Image.PreserveAspectFit
+                            fillMode: Image.PreserveAspectCrop
                             //cache: true
                         }
 

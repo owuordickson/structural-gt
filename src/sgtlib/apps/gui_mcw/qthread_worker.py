@@ -57,7 +57,7 @@ class WorkerTask (QObject):
         """"""
         try:
             sel_img_batch = ntwk_p.get_selected_batch()
-            hist_images = [plot_to_opencv(obj.plot_img_histogram()) for obj in sel_img_batch.images]
+            hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=sel_img_batch.current_view)) for obj in sel_img_batch.images]
             self.taskFinishedSignal.emit(True, hist_images)
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})

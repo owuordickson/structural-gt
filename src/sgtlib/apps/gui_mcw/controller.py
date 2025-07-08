@@ -40,6 +40,7 @@ class MainController(QObject):
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal()
     imageChangedSignal = Signal()
+    showImageHistogramSignal = Signal(bool)
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
@@ -56,7 +57,7 @@ class MainController(QObject):
         self.project_data = {"name": "", "file_path": ""}
 
         # Initialize flags
-        self.wait_flag = False
+        self.wait_flag, self.wait_flag_hist = False, False
 
         # Create graph objects
         self.sgt_objs = {}
@@ -82,8 +83,8 @@ class MainController(QObject):
         self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
-        self.worker = QThreadWorker(0, None)
-        self.worker_task = WorkerTask()
+        self.worker, self.worker_task = QThreadWorker(0, None), WorkerTask()
+        self.worker_hist, self.worker_task_hist = QThreadWorker(0, None), WorkerTask()
 
     def update_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -329,6 +330,7 @@ class MainController(QObject):
                                                                                     "'Output Dir'."])
             elif type(result) is list:
                 # Image histogram calculated
+                self.wait_flag_hist = False
                 if len(self.sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
@@ -678,18 +680,19 @@ class MainController(QObject):
     @Slot()
     def compute_img_histogram(self):
         """Calculate the histogram of the image."""
-        if self.wait_flag:
+        if self.wait_flag_hist:
             return
 
-        self.worker_task = WorkerTask()
+        self.showImageHistogramSignal.emit(True)
+        self.worker_task_hist = WorkerTask()
         try:
-            self.wait_flag = True
+            self.wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()
-            self.worker = QThreadWorker(func=self.worker_task.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
-            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-            self.worker.start()
+            self.worker_hist = QThreadWorker(func=self.worker_task_hist.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
+            self.worker_task_hist.taskFinishedSignal.connect(self._handle_finished)
+            self.worker_hist.start()
         except Exception as err:
-            self.wait_flag = False
+            self.wait_flag_hist = False
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_finished(False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
 

@@ -78,8 +78,7 @@ Rectangle {
                 Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
-                visible: mainController.display_image()
-                enabled: mainController.display_image()
+                visible: false
                 onClicked: imgHistogramWindow.visible = true
             }
 
@@ -92,12 +91,12 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             lblNoImgFilters.visible = !mainController.display_image();
-            btnShowImgHistogram.visible = mainController.display_image();
             rectHLine1.visible = mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();
-
-            btnShowImgHistogram.enabled = mainController.display_image();
         }
 
+        function onShowImageHistogramSignal(allow){
+            btnShowImgHistogram.visible = allow;
+        }
     }
 }

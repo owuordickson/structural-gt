@@ -26,6 +26,7 @@ logger = logging.getLogger("SGT App")
 
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.bmp', '*.tif', '*.tiff', '*.qptiff')
+ALLOWED_3D_IMG_EXTENSIONS = ('*.qptiff', '*.nii', '*.nii.gz', '*.dcm')
 
 
 class ImageProcessor(ProgressUpdate):
@@ -711,7 +712,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
-            images = np.array([images[0]])  # REMOVE TO ALLOW 3D
+            #images = np.array([images[0]])  # REMOVE TO ALLOW 3D
             img_batch = ImageProcessor.ImageBatch(
                 numpy_image=images,
                 images=[],
@@ -725,7 +726,7 @@ class ImageProcessor(ProgressUpdate):
                 graph_obj=FiberNetworkBuilder(cfg_file=cfg_file)
             )
             img_info_list.append(img_batch)
-            break  # REMOVE TO ALLOW 3D
+            #break  # REMOVE TO ALLOW 3D
         return img_info_list
 
     @classmethod
@@ -752,6 +753,12 @@ class ImageProcessor(ProgressUpdate):
             is_prefix = False
             img_name_pattern = re.match(r'^\d+([a-zA-Z_]+)(?=\.[a-zA-Z]+$)', img_file)
 
+        # If 3D file (ignore multiple input files)
+        """allowed_3d_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_3D_IMG_EXTENSIONS)
+        if img_path.endswith(allowed_3d_extensions):
+            img_name_pattern = None
+        """
+
         if img_name_pattern:
             img_files.append(img_path)
             f_name = img_name_pattern.group(1)
@@ -777,4 +784,5 @@ class ImageProcessor(ProgressUpdate):
 
         # Create the StructuralGT object
         input_file = img_files if len(img_files) > 1 else str(img_path)
+        print(input_file)
         return cls(input_file, out_dir, config_file, allow_auto_scale), img_file
