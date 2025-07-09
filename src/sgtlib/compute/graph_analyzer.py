@@ -1218,7 +1218,7 @@ class GraphAnalyzer(ProgressUpdate):
                 a (float): fitting parameter
                 k (float): fitting parameter
             """
-            return a * x ** (-k)
+            return a * (x ** (-k))
 
         def truncated_power_law_model(x, a, k, c):
             """
@@ -1344,7 +1344,7 @@ class GraphAnalyzer(ProgressUpdate):
                         opt_params_cutoff[2])
                     # Generate points for the best-fit curve
                     y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
-                    print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
+                    # print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
 
                     # 3c. Plot data (truncated power-law best fit)
                     ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
