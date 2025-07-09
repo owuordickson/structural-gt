@@ -1210,13 +1210,13 @@ class GraphAnalyzer(ProgressUpdate):
         # Define our 'best-fit' model
         def power_law_model(x, a, k):
             """
-            A best-fit model that follows the power law distribution: y = a * x^(-k),
-            where a and k are fitting parameters.
+                A best-fit model that follows the power law distribution: y = a * x^(-k),
+                where a and k are fitting parameters.
 
-            Args:
-                x (np.array): Array of x values
-                a (float): fitting parameter
-                k (float): fitting parameter
+                Args:
+                    x (np.array): Array of x values
+                    a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
+                    k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
             """
             return a * (x ** (-k))
 
