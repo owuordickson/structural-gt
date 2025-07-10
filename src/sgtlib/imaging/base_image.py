@@ -168,8 +168,7 @@ class BaseImage:
                 return cv2.convertScaleAbs(result_img)
             return img
 
-        alpha_channel, _ = BaseImage.check_alpha_channel(image)
-        if alpha_channel:
+        if len(image.shape) == 3:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Apply brightness/contrast
@@ -416,11 +415,11 @@ class BaseImage:
             if channels == 4:
                 return True, "RGBA"
             elif channels == 3:
-                return True, "RGB"
+                return False, "RGB"
             elif channels == 2:
                 return True, "Grayscale + Alpha"
             elif channels == 1:
-                return True, "Grayscale"
+                return False, "Grayscale"
 
         # Unknown Format
         return False, None

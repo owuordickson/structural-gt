@@ -185,9 +185,9 @@ class ImageProcessor(ProgressUpdate):
             if img_data is None:
                 raise ValueError(f"Problem with images in batch {i}!")
 
-            has_alpha, _ = BaseImage.check_alpha_channel(img_data)
+            _, fmt_2d = BaseImage.check_alpha_channel(img_data)
             image_list = []
-            if (len(img_data.shape) >= 3) and (not has_alpha):
+            if (len(img_data.shape) >= 3) and (fmt_2d is None):
                 # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, self.config_file, scale_factor) for img in img_data]
             else:
@@ -196,7 +196,7 @@ class ImageProcessor(ProgressUpdate):
 
             is_2d = True
             if len(image_list) == 1:
-                if len(img_data.shape) == 3 and image_list[0].has_alpha_channel:
+                if len(image_list[0].img_2d.shape) == 3 and image_list[0].has_alpha_channel:
                     logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
                     # self.update_status([101, "Image is 2D with Alpha Channel"])
                 else:
@@ -684,14 +684,14 @@ class ImageProcessor(ProgressUpdate):
                 return None, scale_factor
 
             # if type(image_data) is np.ndarray:
-            has_alpha, _ = BaseImage.check_alpha_channel(image_data)
+            has_alpha, fmt_2d = BaseImage.check_alpha_channel(image_data)
             if (len(image_data.shape) == 2) or has_alpha:
                 # If the image has shape (h, w) or shape (h, w, a), where 'a' - alpha channel which is less than 4
                 img_2d, scale_factor = BaseImage.resize_img(scale_size, image_data)
                 return img_2d, scale_factor
 
             # if type(image_data) is list:
-            if (len(image_data.shape) >= 3) and (not has_alpha):
+            if (len(image_data.shape) >= 3) and (fmt_2d is None):
                 # If the image has shape (d, h, w) and third is not alpha channel
                 img_3d = []
                 for img in image_data:
