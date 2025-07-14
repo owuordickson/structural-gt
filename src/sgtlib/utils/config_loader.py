@@ -213,7 +213,12 @@ def load_gtc_configs(cfg_path: str = ""):
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
         "compute_scaling_behavior": {"id": "compute_scaling_behavior", "text": "Scaling Behavior", "value": 0},
-        #"compute_lang": {"id": "compute_lang", "text": "Programming Language", "value": 'Py'}
+        "scaling_behavior_window_count": {"id": "scaling_behavior_window_count", "text": "Window Count", "value": 10},
+        "scaling_behavior_patch_count_per_window": {"id": "scaling_behavior_patch_count_per_window", "text": "Patch Count per Window", "value": 10},
+        "scaling_behavior_power_law_fit": {"id": "scaling_behavior_power_law_fit", "text": "Power Law Fit", "value": 1},
+        "scaling_behavior_truncated_power_law_fit": {"id": "scaling_behavior_truncated_power_law_fit", "text": "Truncated Power Law Fit", "value": 0},
+        "scaling_behavior_log_normal_fit": {"id": "scaling_behavior_log_normal_fit", "text": "Log-Normal Fit", "value": 0},
+        #"computing_lang": {"id": "computing_lang", "text": "Programming Language", "value": 'Py'}
     }
 
     # Load configuration from the file
@@ -237,7 +242,12 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
         options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
         options_gtc["compute_scaling_behavior"]["value"] = int(config.get('sgt-settings', 'compute_scaling_behavior'))
-        # options_gtc["compute_lang"]["value"] = str(config.get('sgt-settings', 'compute_lang'))
+        options_gtc["scaling_behavior_window_count"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_window_count'))
+        options_gtc["scaling_behavior_patch_count_per_window"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_patch_count_per_window'))
+        options_gtc["scaling_behavior_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_power_law_fit'))
+        options_gtc["scaling_behavior_truncated_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_truncated_power_law_fit'))
+        options_gtc["scaling_behavior_log_normal_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_log_normal_fit'))
+        # options_gtc["computing_lang"]["value"] = str(config.get('sgt-settings', 'computing_lang'))
 
         return options_gtc
     except configparser.NoSectionError:
