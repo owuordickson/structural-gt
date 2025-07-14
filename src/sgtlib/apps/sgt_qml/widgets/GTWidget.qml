@@ -52,6 +52,8 @@ Item {
                                 return ohmsComponent
                             case "compute_avg_node_connectivity":
                                 return avgComponent
+                            case "compute_scaling_behavior":
+                                return scalingComponent
                             default:
                                 return null
                         }
@@ -76,6 +78,14 @@ Item {
         ColumnLayout {
             MicroscopyPropertyWidget {
             }
+        }
+    }
+
+    // Custom component for 'compute_scaling_behavior'
+    Component {
+        id: scalingComponent
+        ColumnLayout {
+
         }
     }
 
