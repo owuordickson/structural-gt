@@ -11,6 +11,7 @@
         "widgets/BinaryFilterWidget.qml",
         "widgets/ImageFilterWidget.qml",
         "widgets/MicroscopyPropertyWidget.qml",
+        "widgets/ScalingBehaviorWidget.qml",
         "widgets/GraphExtractWidget.qml",
         "widgets/GTWidget.qml",
         "widgets/ProjectWidget.qml",

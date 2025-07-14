@@ -85,7 +85,7 @@ Item {
     Component {
         id: scalingComponent
         ColumnLayout {
-
+            ScalingBehaviorWidget{}
         }
     }
 
