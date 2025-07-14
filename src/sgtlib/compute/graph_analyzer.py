@@ -1161,6 +1161,191 @@ class GraphAnalyzer(ProgressUpdate):
                 plt_figs.append(plt_fig)
             return plt_figs
 
+        def plot_scaling_behavior():
+            """"""
+
+            # Define our 'best-fit' model
+            def power_law_model(x, a, k):
+                """
+                    A best-fit model that follows the power law distribution: y = a * x^(-k),
+                    where a and k are fitting parameters.
+
+                    Args:
+                        x (np.array): Array of x values
+                        a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
+                        k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
+                """
+                return a * (x ** (-k))
+
+            def truncated_power_law_model(x, a, k, c):
+                """
+                A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
+                where a, c and k are fitting parameters.
+
+                https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
+
+                Args:
+                    x (np.array): Array of x values
+                    a (float): fitting parameter
+                    k (float): fitting parameter
+                    c (float): cut-off fitting parameter
+                """
+                return a * (x ** (-k)) * np.exp(-c * x)
+
+            def lognormal_model(x, mu, sigma, a):
+                """
+                Log-normal model (Y depends on X, X is log-normal).
+
+                Args:
+                    x (np.array): Array of x values
+                    mu (float): fitting parameter
+                    sigma (float): fitting parameter
+                    a (float): fitting parameter
+
+                Returns:
+
+                """
+                return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
+
+            def plot_axis(subplot_num, plt_type="", plot_err=True):
+                """"""
+                subplot_num += 1
+                axis = plt_fig.add_subplot(2, 2, subplot_num)
+                if plot_err:
+                    axis.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                                  markersize=4, linewidth=1, linestyle='-')
+                axis.set_title(f"{plt_type}\nNodes vs {y_title}", fontsize=10)
+                axis.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
+                # axis.legend()
+                return axis, subplot_num
+
+            # Initialize plot figures
+            plt_figs = []
+            if self.scaling_data is None:
+                return plt_figs
+
+            # Plot scaling behavior
+            i = 0
+            x_label = None
+            x_values, x_avg, x_err = np.nan, np.nan, np.nan
+            plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+            for param_name, plt_dict in self.scaling_data.items():
+                # Retrieve plot data
+                box_labels = sorted(plt_dict.keys())  # Optional: sort heights
+                y_lst = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
+
+                # Pad with NaN
+                max_len = max(len(row) for row in y_lst)
+                padded_lst = [row + [np.nan] * (max_len - len(row)) for row in y_lst]
+
+                # Convert to a Numpy array
+                y_values = np.array(padded_lst).T
+                y_avg = np.nanmean(y_values, axis=0)
+                y_err = np.nanstd(y_values, axis=0, ddof=1) / np.sqrt(y_values.shape[0])
+                if np.any(np.isnan(y_avg)):
+                    # print(f"{param_name} has NaN values: {y_avg}")
+                    continue
+
+                # Plot of the nodes counts against others
+                if x_label is None:
+                    # First Param becomes X-axis: 'No. Of Nodes'
+                    x_label = param_name
+                    # x_values = y_values
+                    x_avg = y_avg
+                    x_err = y_err
+                else:
+                    # 1. Transform to log-log scale
+                    log_x = np.log10(x_avg)
+                    log_y = np.log10(y_avg)
+                    x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+                    y_title = param_name.split('(')[0] if '(' in param_name else param_name
+
+                    # 2a. Perform linear regression in log-log scale
+                    try:
+                        slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
+                        # Compute line of best-fit
+                        log_y_fit = slope * log_x + intercept
+
+                        # 3a. Plot data (Log-Log scale with the line best-fit)
+                        ax, i = plot_axis(i, "Log-Log Plot of", plot_err=False)
+                        ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
+                        ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
+                        ax.legend()
+                    except Exception as err:
+                        logging.exception("Scaling Law (Log-Log Fit) Error: %s", err, extra={'user': 'SGT Logs'})
+
+                    if opt_gtc["scaling_behavior_power_law_fit"]["value"] == 1:
+                        # 2b. Compute the line of best-fit on our data according to our power-law model
+                        try:
+                            init_params = [1.0, 1.0]  # initial guess for [a, k]
+                            optimal_params: np.ndarray = \
+                            sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
+                            a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
+                            # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
+                            # Generate points for the best-fit curve
+                            y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
+
+                            # 3b. Plot data (power-law best fit)
+                            ax, i = plot_axis(i, "Power Law Fit and Plot of")
+                            ax.plot(x_fit, y_fit_pwr, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$',
+                                    color='red')
+                            ax.legend()
+                        except Exception as err:
+                            logging.exception("Scaling Law (Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
+
+                    if opt_gtc["scaling_behavior_truncated_power_law_fit"]["value"] == 1:
+                        # 2c. Compute the line of best-fit according to our truncated power-law model
+                        try:
+                            init_params_cutoff = [1.0, 1.0, 0.1]
+                            opt_params_cutoff: np.ndarray = \
+                                sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
+                            a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(
+                                opt_params_cutoff[1]), float(
+                                opt_params_cutoff[2])
+                            # Generate points for the best-fit curve
+                            y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
+                            # print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
+
+                            # 3c. Plot data (truncated power-law best fit)
+                            ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
+                            ax.plot(x_fit, y_fit_cut,
+                                    label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
+                                    color='red')
+                            ax.legend()
+                        except Exception as err:
+                            logging.exception("Scaling Law (Truncated Power Law Fit) Error: %s", err,
+                                              extra={'user': 'SGT Logs'})
+
+                    if opt_gtc["scaling_behavior_log_normal_fit"]["value"] == 1:
+                        # 2d. Compute best-fit, assuming Log-Normal dependence on X
+                        try:
+                            init_params_log = [1.0, 1.0, 10]
+                            opt_params_log: np.ndarray = \
+                                sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log,
+                                                      bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+                            mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(
+                                opt_params_log[2])
+                            # Generate predicted points for the best-fit curve
+                            y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
+
+                            # 3c. Plot data (Log-normal distribution best fit)
+                            ax, i = plot_axis(i, "Log-Normal Fit and Plot of")
+                            ax.plot(x_fit, y_fit_ln,
+                                    label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
+                                    color='red')
+                            ax.legend()
+                        except Exception as err:
+                            logging.exception("Scaling Law (Log-Normal Fit) Error: %s", err, extra={'user': 'SGT Logs'})
+
+                # Navigate to the next subplot
+                if (i + 1) > 1:
+                    plt_figs.append(plt_fig)
+                    plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+                    i = 0
+
+            plt_figs.append(plt_fig) if i <= 4 else None
+            return plt_figs
+
         # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
         figs = plot_bin_images()
         for fig in figs:
@@ -1183,7 +1368,7 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig_wt)
 
         # 3b. display scaling GT results in a Table
-        figs = GraphAnalyzer.plot_scaling_behavior(self.scaling_data)
+        figs = plot_scaling_behavior()
         for fig in figs:
             out_figs.append(fig)
 
@@ -1204,190 +1389,6 @@ class GraphAnalyzer(ProgressUpdate):
         fig = plot_run_configs()
         out_figs.append(fig)
         return out_figs
-
-    @staticmethod
-    def plot_scaling_behavior(scaling_data: defaultdict = None):
-        """"""
-
-        # Define our 'best-fit' model
-        def power_law_model(x, a, k):
-            """
-                A best-fit model that follows the power law distribution: y = a * x^(-k),
-                where a and k are fitting parameters.
-
-                Args:
-                    x (np.array): Array of x values
-                    a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
-                    k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
-            """
-            return a * (x ** (-k))
-
-        def truncated_power_law_model(x, a, k, c):
-            """
-            A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
-            where a, c and k are fitting parameters.
-
-            https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
-
-            Args:
-                x (np.array): Array of x values
-                a (float): fitting parameter
-                k (float): fitting parameter
-                c (float): cut-off fitting parameter
-            """
-            return a * (x ** (-k)) * np.exp(-c * x)
-
-        def lognormal_model(x, mu, sigma, a):
-            """
-            Log-normal model (Y depends on X, X is log-normal).
-
-            Args:
-                x (np.array): Array of x values
-                mu (float): fitting parameter
-                sigma (float): fitting parameter
-                a (float): fitting parameter
-
-            Returns:
-
-            """
-            return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
-
-        def plot_axis(subplot_num, plt_type="", plot_err=True):
-            """"""
-            subplot_num += 1
-            axis = fig.add_subplot(2, 2, subplot_num)
-            if plot_err:
-                axis.errorbar(x_avg, y_avg, xerr=x_err, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
-                        markersize=4, linewidth=1, linestyle='-')
-            axis.set_title(f"{plt_type}\nNodes vs {y_title}", fontsize=10)
-            axis.set(xlabel='No. of Nodes', ylabel=f'{param_name}')
-            # axis.legend()
-            return axis, subplot_num
-
-        # Initialize plot figures
-        figs = []
-        opt_gtc = self.configs
-        if scaling_data is None:
-            return figs
-
-        # Plot scaling behavior
-        i = 0
-        x_label = None
-        x_values, x_avg, x_err = np.nan, np.nan, np.nan
-        fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-        for param_name, plt_dict in scaling_data.items():
-            # Retrieve plot data
-            box_labels = sorted(plt_dict.keys())  # Optional: sort heights
-            y_lst = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
-
-            # Pad with NaN
-            max_len = max(len(row) for row in y_lst)
-            padded_lst = [row + [np.nan] * (max_len - len(row)) for row in y_lst]
-
-            # Convert to a Numpy array
-            y_values = np.array(padded_lst).T
-            y_avg = np.nanmean(y_values, axis=0)
-            y_err = np.nanstd(y_values, axis=0, ddof=1) / np.sqrt(y_values.shape[0])
-            if np.any(np.isnan(y_avg)):
-                # print(f"{param_name} has NaN values: {y_avg}")
-                continue
-
-            # Plot of the nodes counts against others
-            if x_label is None:
-                # First Param becomes X-axis: 'No. Of Nodes'
-                x_label = param_name
-                # x_values = y_values
-                x_avg = y_avg
-                x_err = y_err
-            else:
-                # 1. Transform to log-log scale
-                log_x = np.log10(x_avg)
-                log_y = np.log10(y_avg)
-                x_fit = np.linspace(min(x_avg), max(x_avg), 100)
-                y_title = param_name.split('(')[0] if '(' in param_name else param_name
-
-                # 2a. Perform linear regression in log-log scale
-                try:
-                    slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
-                    # Compute line of best-fit
-                    log_y_fit = slope * log_x + intercept
-
-                    # 3a. Plot data (Log-Log scale with the line best-fit)
-                    ax, i = plot_axis(i, "Log-Log Plot of", plot_err=False)
-                    ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
-                    ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
-                    ax.legend()
-                except Exception as err:
-                    logging.exception("Scaling Law (Log-Log Fit) Error: %s", err, extra={'user': 'SGT Logs'})
-
-                if opt_gtc["scaling_behavior_power_law_fit"]["value"] == 1:
-                    # 2b. Compute the line of best-fit on our data according to our power-law model
-                    try:
-                        init_params = [1.0, 1.0]  # initial guess for [a, k]
-                        optimal_params: np.ndarray = sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
-                        a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
-                        # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
-                        # Generate points for the best-fit curve
-                        y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
-
-                        # 3b. Plot data (power-law best fit)
-                        ax, i = plot_axis(i, "Power Law Fit and Plot of")
-                        ax.plot(x_fit, y_fit_pwr, label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$',
-                                color='red')
-                        ax.legend()
-                    except Exception as err:
-                        logging.exception("Scaling Law (Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
-
-                if opt_gtc["scaling_behavior_truncated_power_law_fit"]["value"] == 1:
-                    # 2c. Compute the line of best-fit according to our truncated power-law model
-                    try:
-                        init_params_cutoff = [1.0, 1.0, 0.1]
-                        opt_params_cutoff: np.ndarray = \
-                        sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
-                        a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(
-                            opt_params_cutoff[2])
-                        # Generate points for the best-fit curve
-                        y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
-                        # print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
-
-                        # 3c. Plot data (truncated power-law best fit)
-                        ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
-                        ax.plot(x_fit, y_fit_cut,
-                                label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
-                                color='red')
-                        ax.legend()
-                    except Exception as err:
-                        logging.exception("Scaling Law (Truncated Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
-
-                if opt_gtc["scaling_behavior_log_normal_fit"]["value"] == 1:
-                    # 2d. Compute best-fit, assuming Log-Normal dependence on X
-                    try:
-                        init_params_log = [1.0, 1.0, 10]
-                        opt_params_log: np.ndarray = \
-                        sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log,
-                                              bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
-                        mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(
-                            opt_params_log[2])
-                        # Generate predicted points for the best-fit curve
-                        y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
-
-                        # 3c. Plot data (Log-normal distribution best fit)
-                        ax, i = plot_axis(i, "Log-Normal Fit and Plot of")
-                        ax.plot(x_fit, y_fit_ln,
-                                label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
-                                color='red')
-                        ax.legend()
-                    except Exception as err:
-                        logging.exception("Scaling Law (Log-Normal Fit) Error: %s", err, extra={'user': 'SGT Logs'})
-
-            # Navigate to the next subplot
-            if (i + 1) > 1:
-                figs.append(fig)
-                fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-                i = 0
-
-        figs.append(fig) if i <= 4 else None
-        return figs
 
     @staticmethod
     def write_to_pdf(sgt_obj, update_func=None):
