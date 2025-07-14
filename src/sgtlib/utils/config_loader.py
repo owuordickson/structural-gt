@@ -198,27 +198,27 @@ def load_gtc_configs(cfg_path: str = ""):
     """Networkx Calculation Settings"""
 
     options_gtc = {
-        "display_heatmaps": {"id": "display_heatmaps", "text": "Plot Heatmaps", "value": 1},
-        "display_degree_histogram": {"id": "display_degree_histogram", "text": "Average Degree", "value": 1},
-        "compute_network_diameter": {"id": "compute_network_diameter", "text": "Network Diameter", "value": 1},
-        "compute_graph_density": {"id": "compute_graph_density", "text": "Graph Density", "value": 1},
-        "compute_wiener_index": {"id": "compute_wiener_index", "text": "Wiener Index", "value": 1},
-        "compute_avg_node_connectivity": {"id": "compute_avg_node_connectivity", "text": "Average Node Connectivity", "value": 0},
-        "compute_global_efficiency": {"id": "compute_global_efficiency", "text": "Global Coefficient", "value": 1},
-        "compute_avg_clustering_coef": {"id": "compute_avg_clustering_coef", "text": "Average Clustering Coefficient", "value": 1},
-        "compute_assortativity_coef": {"id": "compute_assortativity_coef", "text": "Assortativity Coefficient", "value": 1},
-        "display_betweenness_centrality_histogram": {"id": "display_betweenness_centrality_histogram", "text": "Betweenness Centrality", "value": 1},
-        "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "text": "Closeness Centrality", "value": 1},
-        "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "text": "Eigenvector Centrality", "value": 1},
-        "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "text": "Edge Angle Centrality", "value": 0},
-        "display_ohms_histogram": {"id": "display_ohms_histogram", "text": "Ohms Centrality", "value": 0},
-        "compute_scaling_behavior": {"id": "compute_scaling_behavior", "text": "Scaling Behavior", "value": 0},
-        "scaling_behavior_window_count": {"id": "scaling_behavior_window_count", "text": "Window Count", "value": 10},
-        "scaling_behavior_patch_count_per_window": {"id": "scaling_behavior_patch_count_per_window", "text": "Patch Count per Window", "value": 10},
-        "scaling_behavior_power_law_fit": {"id": "scaling_behavior_power_law_fit", "text": "Power Law Fit", "value": 1},
-        "scaling_behavior_truncated_power_law_fit": {"id": "scaling_behavior_truncated_power_law_fit", "text": "Truncated Power Law Fit", "value": 0},
-        "scaling_behavior_log_normal_fit": {"id": "scaling_behavior_log_normal_fit", "text": "Log-Normal Fit", "value": 0},
-        #"computing_lang": {"id": "computing_lang", "text": "Programming Language", "value": 'Py'}
+        "display_heatmaps": {"id": "display_heatmaps", "type": "gt-metric", "text": "Plot Heatmaps", "value": 1},
+        "display_degree_histogram": {"id": "display_degree_histogram", "type": "gt-metric", "text": "Average Degree", "value": 1},
+        "compute_network_diameter": {"id": "compute_network_diameter", "type": "gt-metric", "text": "Network Diameter", "value": 1},
+        "compute_graph_density": {"id": "compute_graph_density", "type": "gt-metric", "text": "Graph Density", "value": 1},
+        "compute_wiener_index": {"id": "compute_wiener_index", "type": "gt-metric", "text": "Wiener Index", "value": 1},
+        "compute_avg_node_connectivity": {"id": "compute_avg_node_connectivity", "type": "gt-metric", "text": "Average Node Connectivity", "value": 0},
+        "compute_global_efficiency": {"id": "compute_global_efficiency", "type": "gt-metric", "text": "Global Coefficient", "value": 1},
+        "compute_avg_clustering_coef": {"id": "compute_avg_clustering_coef", "type": "gt-metric", "text": "Average Clustering Coefficient", "value": 1},
+        "compute_assortativity_coef": {"id": "compute_assortativity_coef", "type": "gt-metric", "text": "Assortativity Coefficient", "value": 1},
+        "display_betweenness_centrality_histogram": {"id": "display_betweenness_centrality_histogram", "type": "gt-metric", "text": "Betweenness Centrality", "value": 1},
+        "display_closeness_centrality_histogram": {"id": "display_closeness_centrality_histogram", "type": "gt-metric", "text": "Closeness Centrality", "value": 1},
+        "display_eigenvector_centrality_histogram": {"id": "display_eigenvector_centrality_histogram", "type": "gt-metric", "text": "Eigenvector Centrality", "value": 1},
+        "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "type": "gt-metric", "text": "Edge Angle Centrality", "value": 0},
+        "display_ohms_histogram": {"id": "display_ohms_histogram", "type": "gt-metric", "text": "Ohms Centrality", "value": 0},
+        "compute_scaling_behavior": {"id": "compute_scaling_behavior", "type": "gt-metric", "text": "Scaling Behavior", "value": 0},
+        "scaling_behavior_window_count": {"id": "scaling_behavior_window_count", "type": "scaling-param", "text": "Window Count", "value": 10},
+        "scaling_behavior_patch_count_per_window": {"id": "scaling_behavior_patch_count_per_window", "type": "scaling-param", "text": "Patch Count per Window", "value": 10},
+        "scaling_behavior_power_law_fit": {"id": "scaling_behavior_power_law_fit", "type": "scaling-param", "text": "Power Law Fit", "value": 1},
+        "scaling_behavior_truncated_power_law_fit": {"id": "scaling_behavior_truncated_power_law_fit", "type": "scaling-param", "text": "Truncated Power Law Fit", "value": 0},
+        "scaling_behavior_log_normal_fit": {"id": "scaling_behavior_log_normal_fit", "type": "scaling-param", "text": "Log-Normal Fit", "value": 0},
+        #"computing_lang": {"id": "computing_lang", "type": "gt-metric", "text": "Programming Language", "value": 'Py'}
     }
 
     # Load configuration from the file

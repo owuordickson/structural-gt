@@ -67,6 +67,7 @@ Window {
 
                 Button {
                     text: "Clear Logs"
+                    padding: 10
                     onClicked: {
                         logEntries = []
                         refreshLogDisplay()

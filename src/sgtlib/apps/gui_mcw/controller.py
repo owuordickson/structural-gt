@@ -69,6 +69,7 @@ class MainController(QObject):
         self.graphPropsModel = TableModel([])
         self.graphComputeModel = TableModel([])
         self.microscopyPropsModel = CheckBoxModel([])
+        self.gtcScalingModel = CheckBoxModel([])
 
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
@@ -138,10 +139,13 @@ class MainController(QObject):
 
             graph_options = [v for v in option_gte.values() if v["type"] == "graph-extraction"]
             file_options = [v for v in option_gte.values() if v["type"] == "file-options"]
+            compute_options = [v for v in options_gtc.values() if v["type"] == "gt-metric"]
+            scaling_options = [v for v in options_gtc.values() if v["type"] == "scaling-param"]
 
             self.gteTreeModel.reset_data(graph_options)
             self.exportGraphModel.reset_data(file_options)
-            self.gtcListModel.reset_data(list(options_gtc.values()))
+            self.gtcListModel.reset_data(compute_options)
+            self.gtcScalingModel.reset_data(scaling_options)
 
             self.imagePropsModel.reset_data(sel_img_batch.props)
             self.graphPropsModel.reset_data(graph_obj.props)
