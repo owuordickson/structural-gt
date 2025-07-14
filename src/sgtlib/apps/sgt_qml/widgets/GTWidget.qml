@@ -28,6 +28,7 @@ Item {
                     property bool isChecked: model.value === 1
                     checked: isChecked
                     onCheckedChanged: updateValue(isChecked, checked)
+                    visible: !model.id.startsWith("scaling_behavior_")
 
                     function updateValue(isChecked, checked) {
                         if (isChecked !== checked) {  // Only update if there is a change

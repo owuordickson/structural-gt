@@ -444,14 +444,23 @@ class MainController(QObject):
 
     @Slot(result=int)
     def get_selected_img_batch(self):
-        sgt_obj = self.get_selected_sgt_obj()
-        return sgt_obj.ntwk_p.selected_batch
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            return sgt_obj.ntwk_p.selected_batch
+        except AttributeError:
+            logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
+            return 0
+
 
     @Slot(result=str)
     def get_selected_img_type(self):
-        sgt_obj = self.get_selected_sgt_obj()
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-        return sel_img_batch.current_view
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+            return sel_img_batch.current_view
+        except AttributeError:
+            logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
+            return 'original'
 
     @Slot(result=str)
     def get_img_nav_location(self):
