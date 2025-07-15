@@ -14,7 +14,7 @@ Item {
     ColumnLayout {
 
         Repeater {
-            model: gtcListModel
+            model: gtcScalingModel
             delegate: RowLayout {
 
                 Loader {
@@ -46,8 +46,8 @@ Item {
                                 if (isChecked !== checked) {  // Only update if there is a change
                                     isChecked = checked
                                     let val = checked ? 1 : 0;
-                                    let index = gtcListModel.index(model.index, 0);
-                                    gtcListModel.setData(index, val, valueRole);
+                                    let index = gtcScalingModel.index(model.index, 0);
+                                    gtcScalingModel.setData(index, val, valueRole);
                                 }
                             }
                         }
@@ -84,14 +84,14 @@ Item {
                                 id: btnOK
                                 text: ""
                                 Layout.preferredWidth: 40
-                                Layout.preferredHeight: 30
+                                Layout.preferredHeight: 26
                                 Layout.rightMargin: 10
                                 visible: false
                                 onClicked: {
                                     btnOK.visible = false;
 
-                                    let index = gtcListModel.index(model.index, 0);
-                                    gtcListModel.setData(index, txtField.text, valueRole);
+                                    let index = gtcScalingModel.index(model.index, 0);
+                                    gtcScalingModel.setData(index, txtField.text, valueRole);
                                 }
 
                                 Rectangle {

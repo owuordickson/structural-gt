@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: microscopyProps
-    Layout.preferredHeight: 100
+    Layout.preferredHeight: 80
     Layout.preferredWidth: parent.width - 75
 
     property int txtWidthSize: 70
@@ -47,7 +47,7 @@ Item {
                     id: btnOK
                     text: ""
                     Layout.preferredWidth: 40
-                    Layout.preferredHeight: 30
+                    Layout.preferredHeight: 26
                     Layout.rightMargin: 10
                     visible: false
                     onClicked: {
