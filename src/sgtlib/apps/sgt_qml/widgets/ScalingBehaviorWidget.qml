@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: scalingBehaviorContent
-    Layout.preferredHeight: 120
+    Layout.preferredHeight: 140
     Layout.preferredWidth: parent.width - 75
 
     property int txtWidthSize: 70
@@ -26,7 +26,11 @@ Item {
                             model.id === "scaling_behavior_truncated_power_law_fit" ||
                             model.id === "scaling_behavior_log_normal_fit"
                         )
-                            return cbxComponent
+                            if (model.id === "scaling_behavior_power_law_fit" ) {
+                                return cbxComponent_w_Title
+                            } else {
+                                return cbxComponent
+                            }
                         else
                             return null
                     }
@@ -109,6 +113,26 @@ Item {
                                         anchors.centerIn: parent
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: cbxComponent_w_Title
+                        ColumnLayout {
+                            Label {
+                                wrapMode: Text.Wrap
+                                //color: "#2222bc"
+                                font.pixelSize: 12
+                                font.bold: true
+                                Layout.preferredWidth: 150
+                                Layout.topMargin: 5
+                                Layout.leftMargin: 10
+                                text: "Select Curve Fit Model"
+                            }
+
+                            Loader {
+                                sourceComponent: {cbxComponent}
                             }
                         }
                     }
