@@ -96,9 +96,9 @@ class WorkerTask (QObject):
 
     def task_compute_gt(self, sgt_obj):
         """"""
-        success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, self.update_progress)
+        success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, self.update_progress, save_to_pdf=True)
         if success:
-            self.taskFinishedSignal.emit(False, new_sgt)
+            self.taskFinishedSignal.emit(True, new_sgt)
         else:
             self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."])
 

@@ -141,9 +141,9 @@ class TerminalApp:
     def task_compute_gt(self, selected_index: int = 0):
         """"""
         sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
-        success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, TerminalApp.update_progress)
+        success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, TerminalApp.update_progress, save_to_pdf=True)
         if success:
-            GraphAnalyzer.write_to_pdf(new_sgt, TerminalApp.update_progress)
+            # GraphAnalyzer.write_to_pdf(new_sgt, TerminalApp.update_progress)
             return new_sgt
         else:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."

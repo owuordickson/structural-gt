@@ -300,10 +300,10 @@ class MainController(QObject):
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 self.taskTerminatedSignal.emit(success_val, result)
-            elif type(result) is GraphAnalyzer:
-                pdf_saved = GraphAnalyzer.write_to_pdf(result, self._handle_progress_update)
-                if pdf_saved:
-                    self._handle_finished(True, result)
+            # elif type(result) is GraphAnalyzer:
+            #    pdf_saved = GraphAnalyzer.write_to_pdf(result, self._handle_progress_update)
+            #    if pdf_saved:
+            #        self._handle_finished(True, result)
         else:
             if type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
@@ -454,7 +454,6 @@ class MainController(QObject):
         except AttributeError:
             logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
             return 0
-
 
     @Slot(result=str)
     def get_selected_img_type(self):
