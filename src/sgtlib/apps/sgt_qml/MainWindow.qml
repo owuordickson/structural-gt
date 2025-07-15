@@ -576,7 +576,7 @@ ApplicationWindow {
         title: "Select Graph Computations"
         modal: true
         width: 264
-        height: 540
+        height: 560
 
         ColumnLayout {
             anchors.fill: parent
@@ -646,7 +646,7 @@ ApplicationWindow {
         title: "Select Graph Computations"
         modal: true
         width: 264
-        height: 540
+        height: 560
 
         ColumnLayout {
             anchors.fill: parent

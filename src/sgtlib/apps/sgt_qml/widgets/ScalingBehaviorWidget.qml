@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: scalingBehaviorContent
-    Layout.preferredHeight: 100
+    Layout.preferredHeight: 120
     Layout.preferredWidth: parent.width - 75
 
     property int txtWidthSize: 70
@@ -33,21 +33,23 @@ Item {
 
                     Component {
                         id: cbxComponent
-                        CheckBox {
-                            id: checkBox
-                            objectName: model.id
-                            text: model.text
-                            //color: "#2222bc"
-                            font.pixelSize: 10
-                            Layout.leftMargin: 10
-                            property bool isChecked: model.value === 1
-                            checked: isChecked
-                            onCheckedChanged: {
-                                if (isChecked !== checked) {  // Only update if there is a change
-                                    isChecked = checked
-                                    let val = checked ? 1 : 0;
-                                    let index = gtcScalingModel.index(model.index, 0);
-                                    gtcScalingModel.setData(index, val, valueRole);
+                        RowLayout {
+                            CheckBox {
+                                id: checkBox
+                                objectName: model.id
+                                text: model.text
+                                //color: "#2222bc"
+                                font.pixelSize: 10
+                                Layout.leftMargin: 10
+                                property bool isChecked: model.value === 1
+                                checked: isChecked
+                                onCheckedChanged: {
+                                    if (isChecked !== checked) {  // Only update if there is a change
+                                        isChecked = checked
+                                        let val = checked ? 1 : 0;
+                                        let index = gtcScalingModel.index(model.index, 0);
+                                        gtcScalingModel.setData(index, val, valueRole);
+                                    }
                                 }
                             }
                         }
