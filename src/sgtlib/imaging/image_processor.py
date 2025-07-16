@@ -473,12 +473,12 @@ class ImageProcessor(ProgressUpdate):
                 stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
                     (w + (2 * pad_w) - temp_w))
 
-                # (2b) Randomly select stride size so that different sections of image can be sampled to get filter patches.
+                # (2b) Randomly select stride size (r) so that different sections of image can be sampled to
+                # get filter patches. Make sure that the size is: 1 < r < fixed-size above
 
                 # Save filter parameters in dict
                 img_filter = BaseImage.ScalingFilter(
                     image_patches=[],
-                    # graph_patches=[],
                     filter_size=(k_h, k_w),
                     stride=(stride_h, stride_w)
                 )
