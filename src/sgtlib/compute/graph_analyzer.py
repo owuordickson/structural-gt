@@ -173,12 +173,13 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data)
 
-    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True):
+    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True, silent: bool = False):
         """
         Compute unweighted graph theory metrics.
 
         :param graph: NetworkX graph object.
         :param save_histogram: Whether to save the histogram data.
+        :param silent: Whether to send progress status and message (or silence them).
 
         :return: A Pandas DataFrame containing the unweighted graph theory metrics.
         """
@@ -186,7 +187,7 @@ class GraphAnalyzer(ProgressUpdate):
         if graph is None:
             return None
 
-        self.update_status([1, "Performing un-weighted analysis..."])
+        self.update_status([1, "Performing un-weighted analysis..."]) if not silent else None
 
         opt_gtc = self.configs
         data_dict = {"parameter": [], "value": []}
@@ -224,12 +225,12 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["value"].append(round(np.median(angle_arr), 3))
 
         if graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem with graph (change filter and graph options)."])
+            self.update_status([-1, "Problem with graph (change filter and graph options)."]) if not silent else None
             return None
 
         # creating degree histogram
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            self.update_status([5, "Computing graph degree..."])
+            self.update_status([5, "Computing graph degree..."]) if not silent else None
             deg_distribution_1 = dict(nx.degree(graph))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -247,7 +248,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating network diameter
         if opt_gtc["compute_network_diameter"]["value"] == 1:
-            self.update_status([10, "Computing network diameter..."])
+            self.update_status([10, "Computing network diameter..."]) if not silent else None
             if connected_graph:
                 dia = int(diameter(graph))
             else:
@@ -258,16 +259,16 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating average nodal connectivity
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
             if self.abort:
-                self.update_status([-1, "Task aborted."])
+                self.update_status([-1, "Task aborted."]) if not silent else None
                 return None
-            self.update_status([15, "Computing node connectivity..."])
+            self.update_status([15, "Computing node connectivity..."]) if not silent else None
             avg_node_con = self.compute_avg_node_connectivity(graph, connected_graph)
             data_dict["parameter"].append("Average node connectivity")
             data_dict["value"].append(avg_node_con)
 
         # calculating graph density
         if opt_gtc["compute_graph_density"]["value"] == 1:
-            self.update_status([20, "Computing graph density..."])
+            self.update_status([20, "Computing graph density..."]) if not silent else None
             g_density = nx.density(graph)
             g_density = round(g_density, 5)
             data_dict["parameter"].append("Graph density")
@@ -278,14 +279,14 @@ class GraphAnalyzer(ProgressUpdate):
             if self.abort:
                 self.update_status([-1, "Task aborted."])
                 return None
-            self.update_status([25, "Computing global efficiency..."])
+            self.update_status([25, "Computing global efficiency..."]) if not silent else None
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
             data_dict["parameter"].append("Global efficiency")
             data_dict["value"].append(g_eff)
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
-            self.update_status([30, "Computing wiener index..."])
+            self.update_status([30, "Computing wiener index..."]) if not silent else None
             # settings.update_label("Calculating w_index...")
             w_index = wiener_index(graph)
             w_index = round(w_index, 1)
@@ -294,7 +295,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating assortativity coefficient
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
-            self.update_status([35, "Computing assortativity coefficient..."])
+            self.update_status([35, "Computing assortativity coefficient..."]) if not silent else None
             a_coef = degree_assortativity_coefficient(graph)
             a_coef = round(a_coef, 5)
             data_dict["parameter"].append("Assortativity coefficient")
@@ -302,7 +303,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating clustering coefficients
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
-            self.update_status([40, "Computing clustering coefficients..."])
+            self.update_status([40, "Computing clustering coefficients..."]) if not silent else None
             coefficients_1 = clustering(graph)
             cl_coefficients = np.array(list(coefficients_1.values()), dtype=float)
             if save_histogram:
@@ -312,7 +313,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating betweenness centrality histogram
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
-            self.update_status([45, "Computing betweenness centrality..."])
+            self.update_status([45, "Computing betweenness centrality..."]) if not silent else None
             b_distribution_1 = betweenness_centrality(graph)
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -322,7 +323,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating eigenvector centrality
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
-            self.update_status([50, "Computing eigenvector centrality..."])
+            self.update_status([50, "Computing eigenvector centrality..."]) if not silent else None
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
             except nx.exception.PowerIterationFailedConvergence:
@@ -335,7 +336,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating closeness centrality
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            self.update_status([55, "Computing closeness centrality..."])
+            self.update_status([55, "Computing closeness centrality..."]) if not silent else None
             close_distribution_1 = closeness_centrality(graph)
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -345,7 +346,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
-            self.update_status([60, "Computing Ohms centrality..."])
+            self.update_status([60, "Computing Ohms centrality..."]) if not silent else None
             o_distribution_1, res = self.compute_ohms_centrality(graph)
             o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -365,12 +366,13 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None, save_histogram: bool = True):
+    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None, save_histogram: bool = True, silent: bool = False):
         """
         Compute weighted graph theory metrics.
 
         :param graph_obj: GraphExtractor object.
         :param save_histogram: Whether to save histogram data.
+        :param silent: Whether to send progress status and message (or silence them).
 
         :return: A Pandas DataFrame containing the weighted graph theory metrics.
         """
@@ -380,7 +382,7 @@ class GraphAnalyzer(ProgressUpdate):
         if not graph_obj.configs["has_weights"]["value"]:
             return None
 
-        self.update_status([70, "Performing weighted analysis..."])
+        self.update_status([70, "Performing weighted analysis..."]) if not silent else None
 
         graph = graph_obj.nx_giant_graph
         opt_gtc = self.configs
@@ -389,11 +391,11 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict = {"parameter": [], "value": []}
 
         if graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem with graph (change filter and graph options)."])
+            self.update_status([-1, "Problem with graph (change filter and graph options)."]) if not silent else None
             return None
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            self.update_status([72, "Compute weighted graph degree..."])
+            self.update_status([72, "Compute weighted graph degree..."]) if not silent else None
             deg_distribution_1 = dict(nx.degree(graph, weight='weight'))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -402,14 +404,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(round(np.average(deg_distribution), 5))
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
-            self.update_status([74, "Compute weighted wiener index..."])
+            self.update_status([74, "Compute weighted wiener index..."]) if not silent else None
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
             data_dict["parameter"].append("Length-weighted Wiener Index")
             data_dict["value"].append(w_index)
 
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
-            self.update_status([76, "Compute weighted node connectivity..."])
+            self.update_status([76, "Compute weighted node connectivity..."]) if not silent else None
             connected_graph = nx.is_connected(graph)
             if connected_graph:
                 max_flow = float(0)
@@ -427,14 +429,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(max_flow)
 
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
-            self.update_status([78, "Compute weighted assortativity..."])
+            self.update_status([78, "Compute weighted assortativity..."]) if not silent else None
             a_coef = degree_assortativity_coefficient(graph, weight='width')
             a_coef = round(a_coef, 5)
             data_dict["parameter"].append("Width-weighted assortativity coefficient")
             data_dict["value"].append(a_coef)
 
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
-            self.update_status([80, "Compute weighted betweenness centrality..."])
+            self.update_status([80, "Compute weighted betweenness centrality..."]) if not silent else None
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -443,7 +445,7 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(round(np.average(b_distribution), 5))
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            self.update_status([82, "Compute weighted closeness centrality..."])
+            self.update_status([82, "Compute weighted closeness centrality..."]) if not silent else None
             close_distribution_1 = closeness_centrality(graph, distance='length')
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -453,9 +455,9 @@ class GraphAnalyzer(ProgressUpdate):
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             if self.abort:
-                self.update_status([-1, "Task aborted."])
+                self.update_status([-1, "Task aborted."]) if not silent else None
                 return None
-            self.update_status([84, "Compute weighted eigenvector centrality..."])
+            self.update_status([84, "Compute weighted eigenvector centrality..."]) if not silent else None
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.exception.PowerIterationFailedConvergence:
@@ -469,7 +471,7 @@ class GraphAnalyzer(ProgressUpdate):
         # calculate cross-sectional area of edges
         wt_type = graph_obj.get_weight_type()
         if wt_type == 'AREA':
-            self.update_status([68, "Computing average (edge) cross-sectional area..."])
+            self.update_status([88, "Computing average (edge) cross-sectional area..."]) if not silent else None
             temp_distribution = []
             for (s, e) in graph.edges():
                 temp_distribution.append(graph[s][e]['weight'])
@@ -483,7 +485,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def compute_scaling_data(self, full_img_df: pd.DataFrame = None):
         """"""
-        self.update_status([0, "Computing scaling behaviour..."])
+        self.update_status([65, "Computing scaling behaviour..."])
         self.ntwk_p.add_listener(self.track_img_progress)
         # Get from configs
         num_windows = int(self.configs["scaling_behavior_window_count"]["value"])
@@ -496,7 +498,7 @@ class GraphAnalyzer(ProgressUpdate):
         for (h, w), nx_graphs in graph_groups.items():
             num_patches = len(nx_graphs)
             for nx_graph in nx_graphs:
-                temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False)
+                temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False, silent=True)
                 if temp_df is None:
                     # Skip the problematic graph
                     continue
@@ -1170,9 +1172,9 @@ class GraphAnalyzer(ProgressUpdate):
                     if add_plot:
                         plt_figs.append(plt_fig)
                         df_title = f"Nodes-{y_title}"
-                        df_title = f"{df_title[:19]}." if len(df_title) > 20 else df_title
+                        df_title = f"{df_title[:20]}." if len(df_title) > 20 else df_title
                         self.scaling_results[df_title] = data_df
-                        self.scaling_results[f"{df_title} (Fit Data)"] = fit_data_df
+                        self.scaling_results[f"{df_title} (Fitting)"] = fit_data_df
                     plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                     i = 0
 
