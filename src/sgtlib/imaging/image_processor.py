@@ -448,7 +448,7 @@ class ImageProcessor(ProgressUpdate):
                 return []
 
             # Initialize Parameters
-            lst_img_seg = []
+            lst_img_filter = []
 
             # Pad the image
             pad_h, pad_w = padding
@@ -477,20 +477,20 @@ class ImageProcessor(ProgressUpdate):
                     for x in range(0, w - k_w + 1, stride_w):
                         patch = img_padded[y:y + k_h, x:x + k_w]
                         img_scaling.image_patches.append(patch)
-                lst_img_seg.append(img_scaling)
+                lst_img_filter.append(img_scaling)
 
                 # Stop loop if filter size is too small
                 if temp_w <= 50:
                     break
-            return lst_img_seg
+            return lst_img_filter
 
-        if len(img_obj.image_segments) <= 0:
-            img_obj.image_segments = extract_cnn_patches(img_obj.img_bin, num_square_filters, patch_count_per_filter, patch_padding)
+        if len(img_obj.image_filters) <= 0:
+            img_obj.image_filters = extract_cnn_patches(img_obj.img_bin, num_square_filters, patch_count_per_filter, patch_padding)
 
-        seg_count = len(img_obj.image_segments)
+        filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)
-        for i, scale_filter in enumerate(img_obj.image_segments):
-            self.update_status([101, f"Extracting graphs from image filter {i + 1}/{seg_count}..."])
+        for i, scale_filter in enumerate(img_obj.image_filters):
+            self.update_status([101, f"Extracting graphs from image filter {i + 1}/{filter_count}..."])
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs

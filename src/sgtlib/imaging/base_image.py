@@ -49,7 +49,7 @@ class BaseImage:
         self.img_hist: MatLike | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
-        self.image_segments: list[BaseImage.ScalingFilter] = []
+        self.image_filters: list[BaseImage.ScalingFilter] = []
         self.init_image()
 
     def init_image(self):
