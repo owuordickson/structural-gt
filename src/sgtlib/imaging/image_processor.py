@@ -486,6 +486,8 @@ class ImageProcessor(ProgressUpdate):
                 # (3) Sliding-window to extract and store filter patches
                 for y in range(0, h - k_h + 1, stride_h):
                     for x in range(0, w - k_w + 1, stride_w):
+                        # Randomly select stride size (r) so that different sections of image can be sampled to
+                        # get filter patches. Make sure that the size is: 1 < r < img-size
                         patch = img_padded[y:y + k_h, x:x + k_w]
                         img_filter.image_patches.append(patch)
                 lst_img_filter.append(img_filter)
