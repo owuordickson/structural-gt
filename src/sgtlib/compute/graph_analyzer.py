@@ -497,12 +497,12 @@ class GraphAnalyzer(ProgressUpdate):
         num_patches = 1
         for (h, w), nx_graphs in graph_groups.items():
             num_patches = len(nx_graphs)
-            for nx_graph in nx_graphs:
+            for i, nx_graph in enumerate(nx_graphs):
+                self.update_status([101, f"Computing GT metrics for filter {h}x{w}: graph-patch {i + 1}/{num_patches}..."])
                 temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False, silent=True)
                 if temp_df is None:
                     # Skip the problematic graph
                     continue
-
                 for _, row in temp_df.iterrows():
                     x_param = row["parameter"]
                     y_value = row["value"]
