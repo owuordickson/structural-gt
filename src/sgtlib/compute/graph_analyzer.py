@@ -113,7 +113,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.plot_figures: list | None = None
         self.results_df: pd.DataFrame | None = None
         self.weighted_results_df: pd.DataFrame | None = None
-        self.scaling_results: list | None = None
+        self.scaling_results: dict | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -1023,7 +1023,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             # Initialize plot figures
             plt_figs = []
-            plt_dfs = {}
+            self.scaling_results = {}
             if scaling_data is None:
                 return plt_figs
 
@@ -1050,13 +1050,15 @@ class GraphAnalyzer(ProgressUpdate):
                     continue
 
                 # Plot of the nodes counts against others
-                add_plot = True
+                add_plot = False
                 if x_label is None:
                     # First Param becomes X-axis: 'No. Of Nodes'
                     x_label = param_name
                     # x_values = y_values
                     x_avg = y_avg
                     x_err = y_err
+                    y_title = ""
+                    data_df, fit_data_df = None, None
                 else:
                     # 1. Transform to log-log scale
                     log_x = np.log10(x_avg)
@@ -1086,6 +1088,7 @@ class GraphAnalyzer(ProgressUpdate):
                         data_df['log-x'] = log_x
                         data_df['log-y'] = log_y
                         data_df['log-y-fit'] = log_y_fit
+                        add_plot = True
                     except Exception as err:
                         add_plot = False
                         logging.exception("Scaling Law (Log-Log Fit) Error: %s", err, extra={'user': 'SGT Logs'})
@@ -1162,16 +1165,17 @@ class GraphAnalyzer(ProgressUpdate):
                         except Exception as err:
                             logging.exception("Scaling Law (Log-Normal Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
-                    plt_dfs[f"(Nodes-{y_title})"] = data_df
-                    print(f"{data_df}\n{fit_data_df}\n\n")
                 # Navigate to the next subplot
                 if (i + 1) > 1:
-                    plt_figs.append(plt_fig) if add_plot else None
+                    if add_plot:
+                        plt_figs.append(plt_fig)
+                        self.scaling_results[f"Nodes-{y_title}"] = data_df
+                        self.scaling_results[f"Nodes-{y_title} (Fit Data)"] = fit_data_df
                     plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                     i = 0
 
             plt_figs.append(plt_fig) if i <= 4 else None
-            # print(plt_dfs)
+            print(self.scaling_results)
             return plt_figs
 
         def plot_histograms():
