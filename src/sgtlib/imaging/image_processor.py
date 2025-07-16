@@ -467,7 +467,7 @@ class ImageProcessor(ProgressUpdate):
                 temp_w = estimate_filter_width(orig_img_width, k)
                 k_h, k_w = (temp_w, temp_w)
 
-                # (2a) Estimate fixed stride size
+                # (2) Estimate fixed stride size
                 stride_h = int((h + (2 * pad_h) - temp_w) / (num_rows - 1)) if num_rows > 1 else int(
                     (h + (2 * pad_h) - temp_w))
                 stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
