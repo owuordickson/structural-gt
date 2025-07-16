@@ -453,18 +453,29 @@ class ImageProcessor(ProgressUpdate):
             # Pad the image
             pad_h, pad_w = padding
             img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
+
+            # Get largest image dimension (height or width)
             h, w = img.shape[:2]
             orig_img_width = h if h < w else w
+
+            # Estimate how to divide the num_patches (1D) into a 2D shape
             num_rows, num_cols = estimate_patches_count(num_patches)
 
+            # For each filter-window: (1) estimate HxW, (2) stride size and (3) sliding window patch retrieval
             for k in range(num_filters):
+                # (1) Estimate HxW dimensions of filter
                 temp_w = estimate_filter_width(orig_img_width, k)
                 k_h, k_w = (temp_w, temp_w)
+
+                # (2a) Estimate fixed stride size
                 stride_h = int((h + (2 * pad_h) - temp_w) / (num_rows - 1)) if num_rows > 1 else int(
                     (h + (2 * pad_h) - temp_w))
                 stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
                     (w + (2 * pad_w) - temp_w))
 
+                # (2b) Randomly select stride size so that different sections of image can be sampled to get filter patches.
+
+                # Save filter parameters in dict
                 img_filter = BaseImage.ScalingFilter(
                     image_patches=[],
                     # graph_patches=[],
@@ -472,7 +483,7 @@ class ImageProcessor(ProgressUpdate):
                     stride=(stride_h, stride_w)
                 )
 
-                # Sliding-window to extract patches
+                # (3) Sliding-window to extract and store filter patches
                 for y in range(0, h - k_h + 1, stride_h):
                     for x in range(0, w - k_w + 1, stride_w):
                         patch = img_padded[y:y + k_h, x:x + k_w]
