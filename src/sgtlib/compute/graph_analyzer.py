@@ -111,7 +111,6 @@ class GraphAnalyzer(ProgressUpdate):
         self.use_igraph: bool = use_igraph
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
-        self.scaling_data = None
         self.output_df: pd.DataFrame | None = None
         self.weighted_output_df: pd.DataFrame | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
@@ -152,8 +151,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.output_df = self.compute_gt_metrics(graph_obj.nx_giant_graph)  # replace with graph_obj.nx_giant_graph
 
         # 3b. Compute Scaling Scatter Plots
+        scaling_data = None
         if self.configs["compute_scaling_behavior"]["value"] == 1:
-            self.scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
+            scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
@@ -170,7 +170,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.get_compute_props()
 
         # 6. Generate results in PDF
-        self.plot_figures = self.generate_pdf_output(graph_obj)
+        self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data)
 
     def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True):
         """
@@ -839,11 +839,12 @@ class GraphAnalyzer(ProgressUpdate):
             y_value = row["value"]
             self.props.append([x_param, y_value])
 
-    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder):
+    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
         :param graph_obj: Graph extractor object.
+        :param scaling_data: Computed scaling results stored in a dictionary.
 
         :return: List of results.
         """
@@ -1022,7 +1023,7 @@ class GraphAnalyzer(ProgressUpdate):
             # Initialize plot figures
             plt_figs = []
             plt_dfs = {}
-            if self.scaling_data is None:
+            if scaling_data is None:
                 return plt_figs
 
             # Plot scaling behavior
@@ -1030,7 +1031,7 @@ class GraphAnalyzer(ProgressUpdate):
             x_label = None
             x_values, x_avg, x_err = np.nan, np.nan, np.nan
             plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
-            for param_name, plt_dict in self.scaling_data.items():
+            for param_name, plt_dict in scaling_data.items():
                 # Retrieve plot data
                 box_labels = sorted(plt_dict.keys())  # Optional: sort heights
                 y_lst = [plt_dict[h] for h in box_labels]  # shape: (n_samples, n_boxes)
