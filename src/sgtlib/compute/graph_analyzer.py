@@ -1175,7 +1175,6 @@ class GraphAnalyzer(ProgressUpdate):
                     i = 0
 
             plt_figs.append(plt_fig) if i <= 4 else None
-            print(self.scaling_results)
             return plt_figs
 
         def plot_histograms():
@@ -1462,6 +1461,9 @@ class GraphAnalyzer(ProgressUpdate):
                 csv_filename = filename + "_SGT_weighted.csv"
                 csv_file = os.path.join(output_location, csv_filename)
                 sgt_obj.weighted_results_df.to_csv(csv_file, index=False)
+
+            if sgt_obj.scaling_results is not None:
+                pass
 
             return True
         except Exception as err:
