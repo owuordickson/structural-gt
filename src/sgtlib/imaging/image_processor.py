@@ -465,7 +465,7 @@ class ImageProcessor(ProgressUpdate):
                 stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
                     (w + (2 * pad_w) - temp_w))
 
-                img_scaling = BaseImage.ScalingFilter(
+                img_filter = BaseImage.ScalingFilter(
                     image_patches=[],
                     # graph_patches=[],
                     filter_size=(k_h, k_w),
@@ -476,8 +476,8 @@ class ImageProcessor(ProgressUpdate):
                 for y in range(0, h - k_h + 1, stride_h):
                     for x in range(0, w - k_w + 1, stride_w):
                         patch = img_padded[y:y + k_h, x:x + k_w]
-                        img_scaling.image_patches.append(patch)
-                lst_img_filter.append(img_scaling)
+                        img_filter.image_patches.append(patch)
+                lst_img_filter.append(img_filter)
 
                 # Stop loop if filter size is too small
                 if temp_w <= 50:
