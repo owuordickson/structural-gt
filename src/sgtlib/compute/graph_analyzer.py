@@ -111,8 +111,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.use_igraph: bool = use_igraph
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
-        self.output_df: pd.DataFrame | None = None
-        self.weighted_output_df: pd.DataFrame | None = None
+        self.results_df: pd.DataFrame | None = None
+        self.weighted_results_df: pd.DataFrame | None = None
+        self.scaling_results: list | None = None
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -148,19 +149,19 @@ class GraphAnalyzer(ProgressUpdate):
             return
 
         # 3a. Compute Unweighted GT parameters
-        self.output_df = self.compute_gt_metrics(graph_obj.nx_giant_graph)  # replace with graph_obj.nx_giant_graph
+        self.results_df = self.compute_gt_metrics(graph_obj.nx_giant_graph)  # replace with graph_obj.nx_giant_graph
 
         # 3b. Compute Scaling Scatter Plots
         scaling_data = None
         if self.configs["compute_scaling_behavior"]["value"] == 1:
-            scaling_data = self.compute_scaling_data(full_img_df=self.output_df.copy())
+            scaling_data = self.compute_scaling_data(full_img_df=self.results_df.copy())
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
             return
 
         # 4. Compute Weighted GT parameters (skip if MultiGraph)
-        self.weighted_output_df = self.compute_weighted_gt_metrics(graph_obj)
+        self.weighted_results_df = self.compute_weighted_gt_metrics(graph_obj)
 
         if self.abort:
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
@@ -820,9 +821,9 @@ class GraphAnalyzer(ProgressUpdate):
         """
         self.props = []
         # 1. Unweighted parameters
-        if self.output_df is None:
+        if self.results_df is None:
             return
-        param_df = self.output_df.copy()
+        param_df = self.results_df.copy()
         self.props.append(['UN-WEIGHTED', 'PARAMETERS'])
         for _, row in param_df.iterrows():
             x_param = row["parameter"]
@@ -830,9 +831,9 @@ class GraphAnalyzer(ProgressUpdate):
             self.props.append([x_param, y_value])
 
         # 2. Weighted parameters
-        if self.weighted_output_df is None:
+        if self.weighted_results_df is None:
             return
-        param_df = self.weighted_output_df.copy()
+        param_df = self.weighted_results_df.copy()
         self.props.append(['WEIGHTED', 'PARAMETERS'])
         for _, row in param_df.iterrows():
             x_param = row["parameter"]
@@ -866,8 +867,8 @@ class GraphAnalyzer(ProgressUpdate):
             """
 
             opt_gte = graph_obj.configs
-            data = self.output_df
-            w_data = self.weighted_output_df
+            data = self.results_df
+            w_data = self.weighted_results_df
 
             plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             ax = plt_fig.add_subplot(1, 1, 1)
@@ -1049,6 +1050,7 @@ class GraphAnalyzer(ProgressUpdate):
                     continue
 
                 # Plot of the nodes counts against others
+                add_plot = True
                 if x_label is None:
                     # First Param becomes X-axis: 'No. Of Nodes'
                     x_label = param_name
@@ -1063,7 +1065,8 @@ class GraphAnalyzer(ProgressUpdate):
                     y_title = param_name.split('(')[0] if '(' in param_name else param_name
 
                     # Write to DataFrame
-                    data_df = pd.DataFrame({'x-avg': x_avg, 'y-avg': y_avg, 'x-err': x_err, 'y-err': y_err, 'x-fit': x_fit})
+                    data_df = pd.DataFrame({'x-avg': x_avg, 'x-std': x_err})
+                    fit_data_df = pd.DataFrame({'x-fit': x_fit})
 
                     # 2a. Perform linear regression in log-log scale
                     try:
@@ -1078,10 +1081,13 @@ class GraphAnalyzer(ProgressUpdate):
                         ax.legend()
 
                         # Write to DataFrame
+                        data_df['y-avg'] = y_avg
+                        data_df['y-std'] = y_err
                         data_df['log-x'] = log_x
                         data_df['log-y'] = log_y
                         data_df['log-y-fit'] = log_y_fit
                     except Exception as err:
+                        add_plot = False
                         logging.exception("Scaling Law (Log-Log Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
                     if opt_gtc["scaling_behavior_power_law_fit"]["value"] == 1:
@@ -1102,7 +1108,7 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            data_df['Pwr. Law y-fit'] = y_fit_pwr
+                            fit_data_df['Pwr. Law y-fit'] = y_fit_pwr
                         except Exception as err:
                             logging.exception("Scaling Law (Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
@@ -1127,7 +1133,7 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            data_df['Trunc. Pwr. Law y-fit'] = y_fit_cut
+                            fit_data_df['Trunc. Pwr. Law y-fit'] = y_fit_cut
                         except Exception as err:
                             logging.exception("Scaling Law (Truncated Power Law Fit) Error: %s", err,
                                               extra={'user': 'SGT Logs'})
@@ -1152,18 +1158,20 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            data_df['Log-Normal y-fit'] = y_fit_ln
+                            fit_data_df['Log-Normal y-fit'] = y_fit_ln
                         except Exception as err:
                             logging.exception("Scaling Law (Log-Normal Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
                     plt_dfs[f"(Nodes-{y_title})"] = data_df
+                    print(f"{data_df}\n{fit_data_df}\n\n")
                 # Navigate to the next subplot
                 if (i + 1) > 1:
-                    plt_figs.append(plt_fig)
+                    plt_figs.append(plt_fig) if add_plot else None
                     plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                     i = 0
 
             plt_figs.append(plt_fig) if i <= 4 else None
+            # print(plt_dfs)
             return plt_figs
 
         def plot_histograms():
@@ -1441,15 +1449,15 @@ class GraphAnalyzer(ProgressUpdate):
                 for fig in sgt_obj.plot_figures:
                     pdf.savefig(fig)
 
-            if sgt_obj.output_df is not None:
+            if sgt_obj.results_df is not None:
                 csv_filename = filename + "_SGT_unweighted.csv"
                 csv_file = os.path.join(output_location, csv_filename)
-                sgt_obj.output_df.to_csv(csv_file, index=False)
+                sgt_obj.results_df.to_csv(csv_file, index=False)
 
-            if sgt_obj.weighted_output_df is not None:
+            if sgt_obj.weighted_results_df is not None:
                 csv_filename = filename + "_SGT_weighted.csv"
                 csv_file = os.path.join(output_location, csv_filename)
-                sgt_obj.weighted_output_df.to_csv(csv_file, index=False)
+                sgt_obj.weighted_results_df.to_csv(csv_file, index=False)
 
             return True
         except Exception as err:
