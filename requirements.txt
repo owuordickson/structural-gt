@@ -13,3 +13,4 @@ igraph~=0.11.9
 networkx~=3.5
 scikit-image~=0.25.2
 setuptools~=80.9.0
+xlsxwriter~=3.2.5

@@ -1169,8 +1169,10 @@ class GraphAnalyzer(ProgressUpdate):
                 if (i + 1) > 1:
                     if add_plot:
                         plt_figs.append(plt_fig)
-                        self.scaling_results[f"Nodes-{y_title}"] = data_df
-                        self.scaling_results[f"Nodes-{y_title} (Fit Data)"] = fit_data_df
+                        df_title = f"Nodes-{y_title}"
+                        df_title = f"{df_title[:19]}." if len(df_title) > 20 else df_title
+                        self.scaling_results[df_title] = data_df
+                        self.scaling_results[f"{df_title} (Fit Data)"] = fit_data_df
                     plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                     i = 0
 
@@ -1463,8 +1465,12 @@ class GraphAnalyzer(ProgressUpdate):
                 sgt_obj.weighted_results_df.to_csv(csv_file, index=False)
 
             if sgt_obj.scaling_results is not None:
-                pass
-
+                excel_filename = filename + "_SGT_scaling.xlsx"
+                excel_file = os.path.join(output_location, excel_filename)
+                with pd.ExcelWriter(str(excel_file), engine='xlsxwriter') as writer:
+                    # Write each DataFrame to a different sheet
+                    for tbl_title, tbl_df in sgt_obj.scaling_results.items():
+                        tbl_df.to_excel(writer, sheet_name=tbl_title, index=False)
             return True
         except Exception as err:
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
