@@ -19,7 +19,7 @@ Item {
 
                 Loader {
                     sourceComponent: {
-                        if (model.id === "scaling_behavior_window_count" || model.id === "scaling_behavior_patch_count_per_window")
+                        if (model.id === "scaling_behavior_kernel_count" || model.id === "scaling_behavior_patches_per_kernel")
                             return txtComponent
                         else if (
                             model.id === "scaling_behavior_power_law_fit" ||

@@ -213,8 +213,8 @@ def load_gtc_configs(cfg_path: str = ""):
         "display_edge_angle_centrality_histogram": {"id": "display_edge_angle_centrality_histogram", "type": "gt-metric", "text": "Edge Angle Centrality", "value": 0},
         "display_ohms_histogram": {"id": "display_ohms_histogram", "type": "gt-metric", "text": "Ohms Centrality", "value": 0},
         "compute_scaling_behavior": {"id": "compute_scaling_behavior", "type": "gt-metric", "text": "Scaling Behavior", "value": 0},
-        "scaling_behavior_window_count": {"id": "scaling_behavior_window_count", "type": "scaling-param", "text": "Window Count", "value": 10},
-        "scaling_behavior_patch_count_per_window": {"id": "scaling_behavior_patch_count_per_window", "type": "scaling-param", "text": "Patch Count per Window", "value": 10},
+        "scaling_behavior_kernel_count": {"id": "scaling_behavior_kernel_count", "type": "scaling-param", "text": "Kernel Count", "value": 10},
+        "scaling_behavior_patches_per_kernel": {"id": "scaling_behavior_patches_per_kernel", "type": "scaling-param", "text": "No. of Patches per Kernel", "value": 10},
         "scaling_behavior_power_law_fit": {"id": "scaling_behavior_power_law_fit", "type": "scaling-param", "text": "Power Law Fit", "value": 1},
         "scaling_behavior_truncated_power_law_fit": {"id": "scaling_behavior_truncated_power_law_fit", "type": "scaling-param", "text": "Truncated Power Law Fit", "value": 0},
         "scaling_behavior_log_normal_fit": {"id": "scaling_behavior_log_normal_fit", "type": "scaling-param", "text": "Log-Normal Fit", "value": 0},
@@ -242,8 +242,8 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["display_edge_angle_centrality_histogram"]["value"] = int(config.get('sgt-settings', 'display_edge_angle_centrality_histogram'))
         options_gtc["display_ohms_histogram"]["value"] = int(config.get('sgt-settings', 'display_ohms_histogram'))
         options_gtc["compute_scaling_behavior"]["value"] = int(config.get('sgt-settings', 'compute_scaling_behavior'))
-        options_gtc["scaling_behavior_window_count"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_window_count'))
-        options_gtc["scaling_behavior_patch_count_per_window"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_patch_count_per_window'))
+        options_gtc["scaling_behavior_kernel_count"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_kernel_count'))
+        options_gtc["scaling_behavior_patches_per_kernel"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_patches_per_kernel'))
         options_gtc["scaling_behavior_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_power_law_fit'))
         options_gtc["scaling_behavior_truncated_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_truncated_power_law_fit'))
         options_gtc["scaling_behavior_log_normal_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_log_normal_fit'))
