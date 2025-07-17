@@ -488,10 +488,10 @@ class ImageProcessor(ProgressUpdate):
                     for x in range(0, w - k_w + 1, stride_w):
                         # Randomly select stride size (r) so that different sections of image can be sampled to
                         # get filter patches. Make sure that the size is: y < y < stride_h+y (same for x)
-                        rand_y = np.random.randint(low=y, high=(y+stride_h))
-                        rand_x = np.random.randint(low=x, high=(x+stride_w))
-                        random_patch = img_padded[rand_y:(rand_y+k_h), rand_x:(rand_x+k_w)]
-                        #img_filter.image_patches.append(random_patch)
+                        # rand_y = np.random.randint(low=y, high=(y+stride_h))
+                        # rand_x = np.random.randint(low=x, high=(x+stride_w))
+                        # random_patch = img_padded[rand_y:(rand_y+k_h), rand_x:(rand_x+k_w)]
+                        # img_filter.image_patches.append(random_patch)
 
                         # Deterministic patches (same sections of the image are sampled)
                         patch = img_padded[y:(y + k_h), x:(x + k_w)]
