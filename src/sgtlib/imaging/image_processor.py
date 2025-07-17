@@ -488,8 +488,14 @@ class ImageProcessor(ProgressUpdate):
                     for x in range(0, w - k_w + 1, stride_w):
                         # Randomly select stride size (r) so that different sections of image can be sampled to
                         # get filter patches. Make sure that the size is: y < y < stride_h+y (same for x)
-                        patch = img_padded[y:y + k_h, x:x + k_w]
-                        img_filter.image_patches.append(patch)
+                        rand_y = np.random.randint(low=y, high=(y+stride_h))
+                        rand_x = np.random.randint(low=x, high=(x+stride_w))
+                        random_patch = img_padded[rand_y:(rand_y+k_h), rand_x:(rand_x+k_w)]
+                        img_filter.image_patches.append(random_patch)
+
+                        # Deterministic patches (same sections of the image are sampled)
+                        # patch = img_padded[y:(y + k_h), x:(x + k_w)]
+                        # img_filter.image_patches.append(patch)
                 lst_img_filter.append(img_filter)
 
                 # Stop loop if filter size is too small
@@ -503,7 +509,7 @@ class ImageProcessor(ProgressUpdate):
         filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_filters):
-            self.update_status([101, f"Extracting graphs from image filter {i + 1}/{filter_count}..."])
+            self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs
