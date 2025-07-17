@@ -387,7 +387,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
-    def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, patch_padding: tuple = (0, 0)):
+    def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, img_padding: tuple = (0, 0)):
         """
         Extracts graphs from smaller square patches of selected images.
 
@@ -399,7 +399,7 @@ class ImageProcessor(ProgressUpdate):
 
         :param num_kernels: Number of square kernels/filters to generate.
         :param patch_count_per_kernel: Number of patches per filter.
-        :param patch_padding: Padding around each patch.
+        :param img_padding: Padding around the image.
 
         """
         # Get the selected batch
@@ -407,36 +407,12 @@ class ImageProcessor(ProgressUpdate):
         graph_configs = sel_batch.graph_obj.configs
         img_obj = sel_batch.images[0]  # ONLY works for 2D
 
-        def estimate_kernel_size(parent_width, num):
+        def retrieve_kernel_patches(img: MatLike, num_filters: int, num_patches: int, padding: tuple):
             """
-            Applies a non-linear function to compute the width-size of a filter based on its index location.
-            :param parent_width: Width of parent image.
-            :param num: Index of filter.
-            """
-            # return int(parent_width / ((2*num) + 4))
-            # est_w = int((parent_width * np.exp(-0.3 * num) / 4))  # Exponential decay
-            est_w = int((parent_width - 10) * (1 - (num / num_kernels)))
-            return max(50, est_w)  # Avoid too small sizes
-
-        def estimate_patches_count(total_patches_count):
-            """
-            The method computes the best approximate number of patches in a 2D layout that
-            will be equal to total_patches_count: total_n = num_rows * num_patches_per_row
-
-            :param total_patches_count: Total number of patches given by the user
-            :return: row_count, patches_count_per_row
-            """
-            for row_count in range(isqrt(total_patches_count), 0, -1):
-                if total_patches_count % row_count == 0:
-                    num_patches_per_row = total_patches_count // row_count
-                    return row_count, num_patches_per_row
-            return 1, total_patches_count
-
-        def extract_cnn_patches(img: MatLike, num_filters: int, num_patches: int, padding: tuple):
-            """
-            Perform a convolution operation that breaks down an image into smaller square mini-images.
+            Perform an incomplete convolution operation that breaks down an image into smaller square mini-images.
             Extract all patches from the image based on filter size, stride, and padding, similar to
-            CNN convolution but without applying the filter.
+            CNN convolution but without applying the multiplication and addition operations. The kernel patches
+            are retrieved from random/deterministic locations in the image.
 
             :param img: OpenCV image.
             :param num_filters: Number of convolution kernels/filters.
@@ -444,6 +420,89 @@ class ImageProcessor(ProgressUpdate):
             :param padding: Padding value (pad_y, pad_x).
             :return: List of convolved images.
             """
+
+            def estimate_kernel_size(parent_width, num):
+                """
+                Applies a non-linear function to compute the width-size of a filter based on its index location.
+                :param parent_width: Width of parent image.
+                :param num: Index of filter.
+                """
+                # return int(parent_width / ((2*num) + 4))
+                # est_w = int((parent_width * np.exp(-0.3 * num) / 4))  # Exponential decay
+                est_w = int((parent_width - 10) * (1 - (num / num_kernels)))
+                return max(50, est_w)  # Avoid too small sizes
+
+            def get_patches(kernel_dim):
+                """
+                Retrieve kernel patches at deterministic locations in the image.
+
+                Args:
+                    kernel_dim: width of kernel.
+
+                Returns:
+                    list of extracted patches each of size kernel_dim.
+                """
+
+                def estimate_patches_count(total_patches_count):
+                    """
+                    The method computes the best approximate number of patches in a 2D layout that
+                    will be equal to total_patches_count: total_n = num_rows * num_patches_per_row
+
+                    :param total_patches_count: Total number of patches given by the user
+                    :return: row_count, patches_count_per_row
+                    """
+                    for row_count in range(isqrt(total_patches_count), 0, -1):
+                        if total_patches_count % row_count == 0:
+                            num_patches_per_row = total_patches_count // row_count
+                            return row_count, num_patches_per_row
+                    return 1, total_patches_count
+
+                # Estimate how to divide the num_patches (1D) into a 2D shape
+                num_rows, num_cols = estimate_patches_count(num_patches)
+
+                # (2) Estimate fixed stride size
+                stride_h = int((h + (2 * pad_h) - kernel_dim) / (num_rows - 1)) if num_rows > 1 else int(
+                    (h + (2 * pad_h) - kernel_dim))
+                stride_w = int((w + (2 * pad_w) - kernel_dim) / (num_cols - 1)) if num_cols > 1 else int(
+                    (w + (2 * pad_w) - kernel_dim))
+
+                # (2b) Randomly select stride size (r) so that different sections of image can be sampled to
+                # get filter patches. Make sure that the size is: 1 < r < fixed-size above
+
+                # (3) Sliding-window to extract and store filter patches
+                lst_patches = []
+                k_h, k_w = kernel_dim, kernel_dim
+                for y in range(0, h - k_h + 1, stride_h):
+                    for x in range(0, w - k_w + 1, stride_w):
+                        # Deterministic patches (same sections of the image are sampled)
+                        patch = img_padded[y:(y + k_h), x:(x + k_w)]
+                        lst_patches.append(patch)
+                        # print(f"Filter Shape: {patch.shape} at strides: x={x}, y={y}")
+                return lst_patches
+
+            def get_random_patches(kernel_dim):
+                """
+                Retrieve kernel patches at random locations in the image.
+                Args:
+                    kernel_dim: dimension of kernel.
+
+                Returns:
+                    list of extracted patches each of size kernel_dim.
+                """
+
+                lst_patches = []
+                img_h, img_w = img.shape[:2]
+                k_h, k_w = kernel_dim, kernel_dim
+                for _ in range(num_patches):
+                    # Random top-left corner
+                    x = np.random.randint(0, img_w - k_w)
+                    y = np.random.randint(0, img_h - k_h)
+
+                    patch = img[y:y + k_h, x:x + k_w].copy()
+                    lst_patches.append(patch)
+                    # print(f"Filter Shape: {patch.shape} at strides: x={x}, y={y}")
+                return lst_patches
+
             if img is None:
                 return []
 
@@ -452,60 +511,34 @@ class ImageProcessor(ProgressUpdate):
 
             # Pad the image
             pad_h, pad_w = padding
-            img_padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
+            img_padded = np.pad(img.copy(), ((pad_h, pad_h), (pad_w, pad_w)), mode='constant')
 
             # Get largest image dimension (height or width)
             h, w = img.shape[:2]
-            orig_img_width = h if h < w else w
-
-            # Estimate how to divide the num_patches (1D) into a 2D shape
-            num_rows, num_cols = estimate_patches_count(num_patches)
+            max_dim = h if h < w else w
 
             # For each filter-window: (1) estimate HxW, (2) stride size and (3) sliding window patch retrieval
             for k in range(num_filters):
                 # (1) Estimate HxW dimensions of filter
-                temp_kernel_size = estimate_kernel_size(orig_img_width, k)
-                k_h, k_w = temp_kernel_size, temp_kernel_size
+                kernel_size = estimate_kernel_size(max_dim, k)
 
-                # (2) Estimate fixed stride size
-                stride_h = int((h + (2 * pad_h) - temp_kernel_size) / (num_rows - 1)) if num_rows > 1 else int(
-                    (h + (2 * pad_h) - temp_kernel_size))
-                stride_w = int((w + (2 * pad_w) - temp_kernel_size) / (num_cols - 1)) if num_cols > 1 else int(
-                    (w + (2 * pad_w) - temp_kernel_size))
-
-                # (2b) Randomly select stride size (r) so that different sections of image can be sampled to
-                # get filter patches. Make sure that the size is: 1 < r < fixed-size above
+                # (2) Retrieve multiple patches of size (k_h, k_w)
+                lst_kernel_patches = get_random_patches(kernel_size)
 
                 # Save filter parameters in dict
                 img_filter = BaseImage.ScalingKernel(
-                    image_patches=[],
-                    kernel_size=(k_h, k_w),
+                    image_patches=lst_kernel_patches,
+                    kernel_shape=(kernel_size, kernel_size),
                 )
-
-                # (3) Sliding-window to extract and store filter patches
-                for y in range(0, h - k_h + 1, stride_h):
-                    for x in range(0, w - k_w + 1, stride_w):
-                        # Randomly select stride size (r) so that different sections of image can be sampled to
-                        # get filter patches. Make sure that the size is: y < y < stride_h+y (same for x)
-                        rand_y = np.random.randint(low=y, high=(y+stride_h))
-                        rand_x = np.random.randint(low=x, high=(x+stride_w))
-                        random_patch = img_padded[rand_y:(rand_y+k_h), rand_x:(rand_x+k_w)]
-                        img_filter.image_patches.append(random_patch)
-
-                        # Deterministic patches (same sections of the image are sampled)
-                        #patch = img_padded[y:(y + k_h), x:(x + k_w)]
-                        #img_filter.image_patches.append(patch)
-                        #print(f"Filter Shape: {patch.shape} at strides: x={x}, y={y}")
-                        print(f"Random Filter Shape: {random_patch.shape} at strides: x={rand_x}, y={rand_y}")
                 lst_img_filter.append(img_filter)
 
                 # Stop loop if filter size is too small
-                if temp_kernel_size <= 50:
+                if kernel_size <= 50:
                     break
             return lst_img_filter
 
         if len(img_obj.image_filters) <= 0:
-            img_obj.image_filters = extract_cnn_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, patch_padding)
+            img_obj.image_filters = retrieve_kernel_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, img_padding)
 
         filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)
