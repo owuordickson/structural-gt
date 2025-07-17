@@ -27,10 +27,10 @@ class BaseImage:
     """
 
     @dataclass
-    class ScalingFilter:
+    class ScalingKernel:
         image_patches: list[MatLike]
         kernel_size: tuple
-        stride: tuple
+        # stride: tuple
 
     def __init__(self, raw_img: MatLike, cfg_file="", scale_factor=1.0):
         """
@@ -49,7 +49,7 @@ class BaseImage:
         self.img_hist: MatLike | None = None
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
-        self.image_filters: list[BaseImage.ScalingFilter] = []
+        self.image_filters: list[BaseImage.ScalingKernel] = []
         self.init_image()
 
     def init_image(self):
