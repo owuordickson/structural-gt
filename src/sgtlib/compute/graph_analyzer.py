@@ -488,9 +488,9 @@ class GraphAnalyzer(ProgressUpdate):
         self.update_status([65, "Computing scaling behaviour..."])
         self.ntwk_p.add_listener(self.track_img_progress)
         # Get from configs
-        num_windows = int(self.configs["scaling_behavior_kernel_count"]["value"])
+        num_filters = int(self.configs["scaling_behavior_kernel_count"]["value"])
         num_patches = int(self.configs["scaling_behavior_patches_per_kernel"]["value"])
-        graph_groups = self.ntwk_p.build_graph_from_patches(num_square_filters=num_windows, patch_count_per_filter=num_patches)
+        graph_groups = self.ntwk_p.build_graph_from_patches(num_kernels=num_filters, patch_count_per_kernel=num_patches)
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         sorted_plt_data = defaultdict(lambda: defaultdict(list))

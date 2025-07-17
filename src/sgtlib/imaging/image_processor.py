@@ -387,7 +387,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
-    def build_graph_from_patches(self, num_square_filters: int, patch_count_per_filter: int, patch_padding: tuple = (0, 0)):
+    def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, patch_padding: tuple = (0, 0)):
         """
         Extracts graphs from smaller square patches of selected images.
 
@@ -397,8 +397,8 @@ class ImageProcessor(ProgressUpdate):
         For every NxN window, it randomly selects `patch_count_per_filter` (m) patches (aligned with the window)
         from across the entire image.
 
-        :param num_square_filters: Number of square filters to generate.
-        :param patch_count_per_filter: Number of patches per filter.
+        :param num_kernels: Number of square kernels/filters to generate.
+        :param patch_count_per_kernel: Number of patches per filter.
         :param patch_padding: Padding around each patch.
 
         """
@@ -415,7 +415,7 @@ class ImageProcessor(ProgressUpdate):
             """
             # return int(parent_width / ((2*num) + 4))
             # est_w = int((parent_width * np.exp(-0.3 * num) / 4))  # Exponential decay
-            est_w = int((parent_width - 10) * (1 - (num/num_square_filters)))
+            est_w = int((parent_width - 10) * (1 - (num / num_kernels)))
             return max(50, est_w)  # Avoid too small sizes
 
         def estimate_patches_count(total_patches_count):
@@ -439,7 +439,7 @@ class ImageProcessor(ProgressUpdate):
             CNN convolution but without applying the filter.
 
             :param img: OpenCV image.
-            :param num_filters: Number of convolution filters.
+            :param num_filters: Number of convolution kernels/filters.
             :param num_patches: Number of patches to extract per filter window size.
             :param padding: Padding value (pad_y, pad_x).
             :return: List of convolved images.
@@ -479,7 +479,7 @@ class ImageProcessor(ProgressUpdate):
                 # Save filter parameters in dict
                 img_filter = BaseImage.ScalingFilter(
                     image_patches=[],
-                    filter_size=(k_h, k_w),
+                    kernel_size=(k_h, k_w),
                     stride=(stride_h, stride_w)
                 )
 
@@ -504,7 +504,7 @@ class ImageProcessor(ProgressUpdate):
             return lst_img_filter
 
         if len(img_obj.image_filters) <= 0:
-            img_obj.image_filters = extract_cnn_patches(img_obj.img_bin, num_square_filters, patch_count_per_filter, patch_padding)
+            img_obj.image_filters = extract_cnn_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, patch_padding)
 
         filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)

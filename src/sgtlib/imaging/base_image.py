@@ -29,7 +29,7 @@ class BaseImage:
     @dataclass
     class ScalingFilter:
         image_patches: list[MatLike]
-        filter_size: tuple
+        kernel_size: tuple
         stride: tuple
 
     def __init__(self, raw_img: MatLike, cfg_file="", scale_factor=1.0):
