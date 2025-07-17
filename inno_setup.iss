@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "StructuralGT"
-#define MyAppVersion "3.4.4"
+#define MyAppVersion "3.4.6"
 #define MyAppPublisher "Kotov Lab"
 #define MyAppURL "https://kotov.engin.umich.edu/"
 #define MyAppExeName "StructuralGT.exe"
@@ -29,12 +29,12 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\owuor\owProjects\structural-gt\license.txt
+LicenseFile=C:\Users\owuor\owProjects\StructuralGT\license.txt
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
-OutputDir=C:\Users\owuor\owProjects\structural-gt\dist\
+OutputDir=C:\Users\owuor\owProjects\StructuralGT\dist\
 OutputBaseFilename=StructuralGT_WIN_{#MyAppVersion}_amd64_setup
-SetupIconFile=C:\Users\owuor\owProjects\structural-gt\setup_icon.ico
+SetupIconFile=C:\Users\owuor\owProjects\StructuralGT\setup_icon.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -45,7 +45,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\owuor\owProjects\structural-gt\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\owuor\owProjects\StructuralGT\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
