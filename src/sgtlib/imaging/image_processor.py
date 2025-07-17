@@ -407,7 +407,7 @@ class ImageProcessor(ProgressUpdate):
         graph_configs = sel_batch.graph_obj.configs
         img_obj = sel_batch.images[0]  # ONLY works for 2D
 
-        def estimate_filter_width(parent_width, num):
+        def estimate_kernel_size(parent_width, num):
             """
             Applies a non-linear function to compute the width-size of a filter based on its index location.
             :param parent_width: Width of parent image.
@@ -464,14 +464,14 @@ class ImageProcessor(ProgressUpdate):
             # For each filter-window: (1) estimate HxW, (2) stride size and (3) sliding window patch retrieval
             for k in range(num_filters):
                 # (1) Estimate HxW dimensions of filter
-                temp_w = estimate_filter_width(orig_img_width, k)
-                k_h, k_w = (temp_w, temp_w)
+                temp_kernel_size = estimate_kernel_size(orig_img_width, k)
+                k_h, k_w = temp_kernel_size, temp_kernel_size
 
                 # (2) Estimate fixed stride size
-                stride_h = int((h + (2 * pad_h) - temp_w) / (num_rows - 1)) if num_rows > 1 else int(
-                    (h + (2 * pad_h) - temp_w))
-                stride_w = int((w + (2 * pad_w) - temp_w) / (num_cols - 1)) if num_cols > 1 else int(
-                    (w + (2 * pad_w) - temp_w))
+                stride_h = int((h + (2 * pad_h) - temp_kernel_size) / (num_rows - 1)) if num_rows > 1 else int(
+                    (h + (2 * pad_h) - temp_kernel_size))
+                stride_w = int((w + (2 * pad_w) - temp_kernel_size) / (num_cols - 1)) if num_cols > 1 else int(
+                    (w + (2 * pad_w) - temp_kernel_size))
 
                 # (2b) Randomly select stride size (r) so that different sections of image can be sampled to
                 # get filter patches. Make sure that the size is: 1 < r < fixed-size above
@@ -491,15 +491,16 @@ class ImageProcessor(ProgressUpdate):
                         rand_y = np.random.randint(low=y, high=(y+stride_h))
                         rand_x = np.random.randint(low=x, high=(x+stride_w))
                         random_patch = img_padded[rand_y:(rand_y+k_h), rand_x:(rand_x+k_w)]
-                        img_filter.image_patches.append(random_patch)
+                        #img_filter.image_patches.append(random_patch)
 
                         # Deterministic patches (same sections of the image are sampled)
-                        # patch = img_padded[y:(y + k_h), x:(x + k_w)]
-                        # img_filter.image_patches.append(patch)
+                        patch = img_padded[y:(y + k_h), x:(x + k_w)]
+                        img_filter.image_patches.append(patch)
+                        print(f"Filter Shape: {patch.shape}")
                 lst_img_filter.append(img_filter)
 
                 # Stop loop if filter size is too small
-                if temp_w <= 50:
+                if temp_kernel_size <= 50:
                     break
             return lst_img_filter
 
