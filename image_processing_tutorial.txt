@@ -1,0 +1,21 @@
+# Topics
+1. Types of images (.bmp, png, jpeg)
+2. Dimensions of images (2D, 2D+Alpha, 3D)
+3. Image Processing Libraries (open-cv)
+    - BGR vs RGB format
+4. 3D image: a collection/group of 2D images (through space/time). The 2D images can be: RGB, RGBA, Grayscale
+5. How to identify properties of the image (type, no. channels)
+    1. RGB                  (3D matrix) -> HxWx3
+    2. RGBA                 (3D matrix) -> HxWx4
+    3. Grayscale            (2D matrix) -> HxW
+    4. Grayscale+Alpha      (3D matrix) -> HxWx1
+    5. 3D image             (4D - RGBA, 4D - RGB, 3D - Grayscale)
+        Deptth (D) is the number of frames/2D images
+        4D: DxHxWx4
+        4D: DxHxWx3
+        3D: DxHxW
+
+6. Write a function that will identify the type of image:
+    check if it has dimensions > 3 (true-test alpha, false - 2D)
+    if an image has 3D, it has alpha (2D), if does not have alpha (3D)
+    if dimensions > 4 (that is a 3D image)
