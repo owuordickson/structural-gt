@@ -1080,7 +1080,7 @@ class GraphAnalyzer(ProgressUpdate):
                         slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
                         log_y_fit = slope * log_x + intercept  # Compute line of best-fit
 
-                        # 3a. Plot Nodes vs Kernel-size (scatter plot)
+                        # 3a. Plot Nodes vs. Kernel-size (scatter plot)
                         # Plot for each Parameter?
                         ax, i = plot_axis(i, "", plot_err=False)
                         ax.set_title(f"Kernel Size vs No. of Nodes", fontsize=10)
