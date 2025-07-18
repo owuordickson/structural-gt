@@ -1032,11 +1032,13 @@ class GraphAnalyzer(ProgressUpdate):
             # Plot scaling behavior
             i = 0
             x_label = None
-            x_values, x_avg, x_err = np.nan, np.nan, np.nan
+            y_title = ""
+            x_values, x_avg, x_err, x_fit = np.nan, np.nan, np.nan, np.nan
+            data_df, fit_data_df = None, None
             plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             for param_name, plt_dict in scaling_data.items():
                 # Retrieve plot data
-                kernel_dims = sorted(plt_dict.keys())  # Optional: sort heights
+                kernel_dims = np.array(sorted(plt_dict.keys()))  # Optional: sort heights and save as a numpy array
                 y_lst = [plt_dict[d] for d in kernel_dims]  # shape: (n_samples, n_kernels)
 
                 # Pad with NaN
@@ -1059,21 +1061,19 @@ class GraphAnalyzer(ProgressUpdate):
                     #print(kernel_dims)
                     #print(y_values)
                     x_label = param_name
-                    x_values = y_values
+                    # x_values = y_values
                     x_avg = y_avg
                     x_err = y_err
-                    y_title = ""
-                    data_df, fit_data_df = None, None
+                    x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+
+                    # Write to DataFrame
+                    data_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
+                    fit_data_df = pd.DataFrame({'x-fit': x_fit})
                 else:
                     # 1. Transform to log-log scale
                     log_x = np.log10(x_avg)
                     log_y = np.log10(y_avg)
-                    x_fit = np.linspace(min(x_avg), max(x_avg), 100)
                     y_title = param_name.split('(')[0] if '(' in param_name else param_name
-
-                    # Write to DataFrame
-                    data_df = pd.DataFrame({'x-avg': x_avg, 'x-std': x_err})
-                    fit_data_df = pd.DataFrame({'x-fit': x_fit})
 
                     # 2a. Perform linear regression in log-log scale
                     try:
@@ -1095,14 +1095,15 @@ class GraphAnalyzer(ProgressUpdate):
                         ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
                         ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
                         ax.legend()
+                        add_plot = True
 
                         # Write to DataFrame
-                        data_df['y-avg'] = y_avg
-                        data_df['y-std'] = y_err
-                        data_df['log-x'] = log_x
-                        data_df['log-y'] = log_y
-                        data_df['log-y-fit'] = log_y_fit
-                        add_plot = True
+                        if data_df is not None:
+                            data_df['y-avg'] = y_avg
+                            data_df['y-std'] = y_err
+                            data_df['log-x'] = log_x
+                            data_df['log-y'] = log_y
+                            data_df['log-y-fit'] = log_y_fit
                     except Exception as err:
                         add_plot = False
                         logging.exception("Scaling Law (Log-Log Fit) Error: %s", err, extra={'user': 'SGT Logs'})
@@ -1125,7 +1126,8 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            fit_data_df['Pwr. Law y-fit'] = y_fit_pwr
+                            if fit_data_df is not None:
+                                fit_data_df['Pwr. Law y-fit'] = y_fit_pwr
                         except Exception as err:
                             logging.exception("Scaling Law (Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
@@ -1150,7 +1152,8 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            fit_data_df['Trunc. Pwr. Law y-fit'] = y_fit_cut
+                            if fit_data_df is not None:
+                                fit_data_df['Trunc. Pwr. Law y-fit'] = y_fit_cut
                         except Exception as err:
                             logging.exception("Scaling Law (Truncated Power Law Fit) Error: %s", err,
                                               extra={'user': 'SGT Logs'})
@@ -1175,7 +1178,8 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.legend()
 
                             # Write to DataFrame
-                            fit_data_df['Log-Normal y-fit'] = y_fit_ln
+                            if fit_data_df is not None:
+                                fit_data_df['Log-Normal y-fit'] = y_fit_ln
                         except Exception as err:
                             logging.exception("Scaling Law (Log-Normal Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
