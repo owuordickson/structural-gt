@@ -1081,6 +1081,7 @@ class GraphAnalyzer(ProgressUpdate):
                         log_y_fit = slope * log_x + intercept  # Compute line of best-fit
 
                         # 3a. Plot Nodes vs Kernel-size (scatter plot)
+                        # Plot for each Parameter?
                         ax, i = plot_axis(i, "", plot_err=False)
                         ax.set_title(f"Kernel Size vs No. of Nodes", fontsize=10)
                         ax.set(xlabel='Kernel Size', ylabel=f'No. of Nodes')
