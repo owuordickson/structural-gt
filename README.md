@@ -1,4 +1,4 @@
-[![Downloads](https://pepy.tech/badge/structural-gt)](https://pepy.tech/project/structural-gt) [![Downloads](https://pepy.tech/badge/structural-gt/week)](https://pepy.tech/project/structural-gt)
+[![Downloads](https://pepy.tech/badge/sgtlib)](https://pepy.tech/project/sgtlib) [![Downloads](https://pepy.tech/badge/sgtlib/week)](https://pepy.tech/project/sgtlib)
 ![Dependents](https://badgen.net/github/dependents-repo/owuordickson/structural-gt/?icon=github)
 [![DOI](https://zenodo.org/badge/388183952.svg)](https://doi.org/10.5281/zenodo.16281808)
 ![Dependents](https://badgen.net/github/license/owuordickson/structural-gt/?icon=github)
