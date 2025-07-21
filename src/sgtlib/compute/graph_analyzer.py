@@ -1037,6 +1037,9 @@ class GraphAnalyzer(ProgressUpdate):
             data_df, fit_data_df = None, None
             plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
             for param_name, plt_dict in scaling_data.items():
+                # axis title name
+                y_title = param_name.split('(')[0] if '(' in param_name else param_name
+
                 # Retrieve plot data
                 kernel_dims = np.array(sorted(plt_dict.keys()))  # Optional: sort heights and save as a numpy array
                 y_lst = [plt_dict[d] for d in kernel_dims]  # shape: (n_samples, n_kernels)
@@ -1053,18 +1056,42 @@ class GraphAnalyzer(ProgressUpdate):
                     # print(f"{param_name} has NaN values: {y_avg}")
                     continue
 
-                # Plot of the nodes counts against others
+                # Plot (taking Node-count as the independent variable) against other parameters
                 add_plot = False
                 if x_label is None:
                     # First Param becomes X-axis: 'Number of Nodes'
-                    #print(plt_dict)
-                    #print(kernel_dims)
-                    #print(y_values)
                     x_label = param_name
                     # x_values = y_values
                     x_avg = y_avg
                     x_err = y_err
                     x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+
+                    # Add plots to Figure
+                    try:
+                        # a) Plot Nodes vs. Kernel-size (scatter plot)
+                        # Plot for each Parameter?
+                        ax, i = plot_axis(i, "", plot_err=False)
+                        ax.set_title(f"Kernel Size vs {y_title}", fontsize=10)
+                        ax.set(xlabel='Kernel Size', ylabel=y_title)
+                        ax.errorbar(kernel_dims, y_avg, yerr=y_err, label='Data', color='b', capsize=4, marker='s',
+                                    markersize=4, linewidth=1, linestyle='-')
+
+                        # b) Log-log plot of Kernel-size vs. Node-count
+                        log_x = np.log10(kernel_dims)
+                        log_y = np.log10(y_avg)
+                        slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
+                        log_y_fit = slope * log_x + intercept  # Compute line of best-fit
+
+                        ax = plt_fig.add_subplot(2, 2, i+1)
+                        ax.set_title(f"Log-Log Plot of\nKernel Size vs {y_title}", fontsize=10)
+                        ax.set(xlabel='Kernel Size', ylabel=y_title)
+                        ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
+                        ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
+                        ax.legend()
+
+                        plt_figs.append(plt_fig)
+                    except Exception as e:
+                        print(e)
 
                     # Write to DataFrame
                     data_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
@@ -1073,25 +1100,13 @@ class GraphAnalyzer(ProgressUpdate):
                     # 1. Transform to log-log scale
                     log_x = np.log10(x_avg)
                     log_y = np.log10(y_avg)
-                    y_title = param_name.split('(')[0] if '(' in param_name else param_name
 
                     # 2a. Perform linear regression in log-log scale
                     try:
                         slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
                         log_y_fit = slope * log_x + intercept  # Compute line of best-fit
 
-                        # 3a. Plot Nodes vs. Kernel-size (scatter plot)
-                        # Plot for each Parameter?
-                        ax, i = plot_axis(i, "", plot_err=False)
-                        ax.set_title(f"Kernel Size vs No. of Nodes", fontsize=10)
-                        ax.set(xlabel='Kernel Size', ylabel=f'No. of Nodes')
-                        ax.errorbar(kernel_dims, x_avg, yerr=x_err, label='Data', color='b', capsize=4, marker='s',
-                                    markersize=4, linewidth=1, linestyle='-')
-                        #for row in x_values:
-                        #    ax.plot(kernel_dims, row, color='b', marker='o', markersize=3)
-                        # ax.legend()
-
-                        # 3b. Plot data (Log-Log scale with the line best-fit)
+                        # 3. Plot data (Log-Log scale with the line best-fit)
                         ax, i = plot_axis(i, "Log-Log Plot of", plot_err=False)
                         ax.plot(log_x, log_y, label='Data', color='b', marker='s', markersize=3)
                         ax.plot(log_x, log_y_fit, label=f'Fit: slope={slope:.2f}, $R^2$={r_value ** 2:.3f}', color='r')
@@ -1117,6 +1132,7 @@ class GraphAnalyzer(ProgressUpdate):
                             sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
                             a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
                             # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
+
                             # Generate points for the best-fit curve
                             y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
 
