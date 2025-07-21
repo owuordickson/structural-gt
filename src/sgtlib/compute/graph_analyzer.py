@@ -1012,6 +1012,43 @@ class GraphAnalyzer(ProgressUpdate):
                 """
                 return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
+            def find_elbow(x, y):
+                """"""
+                from kneed import KneeLocator
+
+                try:
+                    # First and second derivative
+                    dy = np.gradient(y, x)
+                    ddy = np.gradient(dy, x)
+
+                    is_increasing = np.all(dy > 0)
+                    is_decreasing = np.all(dy < 0)
+                    is_convex = np.all(ddy > 0)
+                    is_concave = np.all(ddy < 0)
+
+                    if is_increasing:
+                        direction = 'increasing'
+                    elif is_decreasing:
+                        direction = 'decreasing'
+                    else:
+                        direction = None
+
+                    if is_convex:
+                        curve = 'convex'
+                    elif is_concave:
+                        curve = 'concave'
+                    else:
+                        curve = None
+
+                    print(f"Curve: {curve}, Direction: {direction}")
+                    if direction is None or curve is None:
+                        return None
+                    elbow = KneeLocator(x, y, S=1.0, curve=curve, direction=direction)
+                    return elbow.knee
+                except Exception as error:
+                    print(error)
+                    return None
+
             def plot_axis(subplot_num, plt_type="", plot_err=True):
                 """"""
                 subplot_num += 1
@@ -1066,6 +1103,9 @@ class GraphAnalyzer(ProgressUpdate):
                     x_avg = y_avg
                     x_err = y_err
                     x_fit = np.linspace(min(x_avg), max(x_avg), 100)
+
+                    best_scale = find_elbow(kernel_dims[:-1], y_avg[:-1])
+                    print(f"Estimated best scale size ({y_title}): {best_scale}")
 
                     # Add plots to Figure
                     try:
