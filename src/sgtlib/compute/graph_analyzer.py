@@ -843,6 +843,7 @@ class GraphAnalyzer(ProgressUpdate):
             self.props.append([x_param, y_value])
 
     def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
+
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
@@ -1097,12 +1098,13 @@ class GraphAnalyzer(ProgressUpdate):
                     data_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
                     fit_data_df = pd.DataFrame({'x-fit': x_fit})
                 else:
-                    # 1. Transform to log-log scale
-                    log_x = np.log10(x_avg)
-                    log_y = np.log10(y_avg)
-
-                    # 2a. Perform linear regression in log-log scale
+                    # 2a. Plot on the Log-Log scale
                     try:
+                        # 1. Transform to log-log scale
+                        log_x = np.log10(x_avg)
+                        log_y = np.log10(y_avg)
+
+                        # 2. Perform linear regression in log-log scale
                         slope, intercept, r_value, p_value, std_err = sp.stats.linregress(log_x, log_y)
                         log_y_fit = slope * log_x + intercept  # Compute line of best-fit
 
