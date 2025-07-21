@@ -1,3 +1,8 @@
+[![Downloads](https://pepy.tech/badge/structural-gt)](https://pepy.tech/project/structural-gt) [![Downloads](https://pepy.tech/badge/structural-gt/week)](https://pepy.tech/project/structural-gt)
+![Dependents](https://badgen.net/github/dependents-repo/owuordickson/structural-gt/?icon=github)
+[![DOI](https://zenodo.org/badge/388183952.svg)](https://doi.org/10.5281/zenodo.16281808)
+![Dependents](https://badgen.net/github/license/owuordickson/structural-gt/?icon=github)
+
 # StructuralGT
 
 A software tool that allows graph theory analysis of nanostructures. This is a modified version of **StructuralGT** initially proposed by Drew A. Vecchio, DOI: [10.1021/acsnano.1c04711](https://pubs.acs.org/doi/10.1021/acsnano.1c04711?ref=pdf).
