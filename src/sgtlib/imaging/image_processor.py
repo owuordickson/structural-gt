@@ -78,62 +78,62 @@ class ImageProcessor(ProgressUpdate):
         self._initialize_image_batches(self._load_img_from_file(img_path))
 
     @property
-    def image_obj(self, as_3d: bool = False) -> BaseImage | list[BaseImage]:
-        """
-        Returns the BaseImage instance of the processed image.
+    def image_obj(self) -> BaseImage:
+        """Returns the first image (2D) object/instance in the batch."""
+        return self.get_selected_batch().images[0]
 
-        Args:
-            as_3d: whether to return as 3D list, otherwise return as 2D (only the first frame/slice of the image)
-
-        Returns:
-            BaseImage | list[BaseImage]
-        """
-        sel_img_batch = self.get_selected_batch()
-        if as_3d:
-            return sel_img_batch.images
-        return sel_img_batch.images[0]
+    @property
+    def image_obj_3d(self) -> list[BaseImage]:
+        """Returns the full image list (3D) BaseImage objects/instances in the batch."""
+        return self.get_selected_batch().images
 
     @property
     def graph(self):
         """Returns the NetworkX graph extracted from the image."""
-        return None
+        return self.get_selected_batch().graph_obj
 
     @property
-    def image(self, as_3d: bool = False):
-        """
-        Returns OpenCV version of the image
-
-        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
-        """
-        img_obj = self.image_obj(as_3d=as_3d)
-        return None
+    def image_histogram(self) -> MatLike:
+        """Returns the image histogram extracted from the image."""
+        return self.image_obj.img_hist
 
     @property
-    def binary_image(self, as_3d: bool = False):
-        """
-        Returns OpenCV version of the binary image
-
-        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
-        """
-        return None
+    def image_2d(self) -> MatLike:
+        """Returns OpenCV 2D version of the image (first slice/frame/image in the batch)."""
+        return self.image_obj.img_2d
 
     @property
-    def modified_image(self, as_3d: bool = False):
-        """
-        Returns the modified OpenCV version of the image
-
-        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
-        """
-        return None
+    def image_3d(self) -> list[MatLike]:
+        """Returns 3D version of the image as a list of OpenCV arrays."""
+        images = [obj.img_2d for obj in self.image_obj_3d]
+        return images
 
     @property
-    def graph_image(self, as_3d: bool = False):
-        """
-        Returns OpenCV version of the extracted graph image
+    def binary_image_2d(self) -> MatLike:
+        """Returns OpenCV version of the binary image (first slice/frame/image in the batch)."""
+        return self.image_obj.img_bin
 
-        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
-        """
-        return None
+    @property
+    def binary_image_3d(self) -> list[MatLike]:
+        """Returns 3D version of the binary image as a list of OpenCV arrays."""
+        bin_images = [obj.img_bin for obj in self.image_obj_3d]
+        return bin_images
+
+    @property
+    def modified_image_2d(self) -> MatLike:
+        """Returns the modified OpenCV version of the image (first slice/frame/image in the batch)."""
+        return self.image_obj.img_mod
+
+    @property
+    def modified_image_3d(self) -> list[MatLike]:
+        """Returns 3D version of the modified image as a list of OpenCV arrays."""
+        mod_images = [obj.img_mod for obj in self.image_obj_3d]
+        return mod_images
+
+    @property
+    def graph_image(self) -> MatLike:
+        """Returns OpenCV version of the extracted graph image (first slice/frame/image in the batch)."""
+        return self.graph.img_ntwk
 
     def _load_img_from_file(self, file: list | str):
         """
