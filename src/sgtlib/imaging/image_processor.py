@@ -98,7 +98,7 @@ class ImageProcessor(ProgressUpdate):
         return sel_images
 
     @property
-    def graph(self):
+    def graph_obj(self):
         """Returns the NetworkX graph extracted from the image."""
         return self.get_selected_batch().graph_obj
 
@@ -146,7 +146,7 @@ class ImageProcessor(ProgressUpdate):
     @property
     def graph_image(self) -> MatLike:
         """Returns OpenCV version of the extracted graph image (first slice/frame/image in the batch)."""
-        return self.graph.img_ntwk
+        return self.graph_obj.img_ntwk
 
     def _load_img_from_file(self, file: list | str):
         """

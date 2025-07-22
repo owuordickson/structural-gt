@@ -42,12 +42,12 @@ class ImageProvider(QQuickImageProvider):
             elif sel_img_batch.current_view  == "graph":
                 # If any is None, start the task
                 self.img_controller.showImageHistogramSignal.emit(False)
-                if sel_img_batch.graph_obj.img_ntwk is None:
+                if ntwk_p.graph_obj.img_ntwk is None:
                     self.img_controller.run_extract_graph()
                     # Wait for the task to finish
                     return
                 else:
-                    net_images = [sel_img_batch.graph_obj.img_ntwk]
+                    net_images = [ntwk_p.graph_obj.img_ntwk]
                     self.img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
                     img_cv = net_images[0]
             else:

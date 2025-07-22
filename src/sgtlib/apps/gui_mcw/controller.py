@@ -96,9 +96,6 @@ class MainController(QObject):
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            #first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
-            # first_index = first_index if first_index is not None else 0  # first image if None
-            # options_img = sel_img_batch.images[first_index].configs
             options_img = ntwk_p.image_obj.configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
@@ -134,7 +131,7 @@ class MainController(QObject):
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            graph_obj = sel_img_batch.graph_obj
+            graph_obj = ntwk_p.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
 
@@ -565,9 +562,8 @@ class MainController(QObject):
 
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
-            sel_batch = sgt_obj.ntwk_p.get_selected_batch()
-            h, w = sel_batch.graph_obj.img_ntwk.shape[:2]
-            pipeline = import_file(sel_batch.graph_obj.gsd_file)
+            h, w = sgt_obj.ntwk_p.img_ntwk.shape[:2]
+            pipeline = import_file(sgt_obj.ntwk_p.graph_obj.gsd_file)
             pipeline.add_to_scene()
 
             vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
@@ -738,12 +734,11 @@ class MainController(QObject):
             filename, out_dir = ntwk_p.get_filenames()
 
             # 2. Update values
-            sel_img_batch = ntwk_p.get_selected_batch()
             for val in self.exportGraphModel.list_data:
-                sel_img_batch.graph_obj.configs[val["id"]]["value"] = val["value"]
+                ntwk_p.graph_obj.configs[val["id"]]["value"] = val["value"]
 
             # 3. Save graph data to the file
-            sel_img_batch.graph_obj.save_graph_to_file(filename, out_dir)
+            ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
@@ -878,7 +873,7 @@ class MainController(QObject):
 
         sgt_obj = self.get_selected_sgt_obj()
         sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-        if sel_img_batch.graph_obj.img_ntwk is None:
+        if sgt_obj.ntwk_p.graph_obj.img_ntwk is None:
             return False
 
         if sel_img_batch.current_view  == "graph":

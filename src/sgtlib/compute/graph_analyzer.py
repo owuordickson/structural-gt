@@ -131,8 +131,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         # 1. Get graph extracted from selected images
-        sel_batch = self.ntwk_p.get_selected_batch()
-        graph_obj = sel_batch.graph_obj
+        graph_obj = self.ntwk_p.graph_obj
 
         # 2. Apply image filters and extract the graph (only if it has not been executed)
         if graph_obj.nx_giant_graph is None:
@@ -142,8 +141,7 @@ class GraphAnalyzer(ProgressUpdate):
             self.ntwk_p.remove_listener(self.track_img_progress)
             self.abort = self.ntwk_p.abort
             self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
-            sel_batch = self.ntwk_p.get_selected_batch()
-            graph_obj = sel_batch.graph_obj
+            graph_obj = self.ntwk_p.graph_obj
 
         if self.abort:
             return
@@ -1620,8 +1618,7 @@ class GraphAnalyzer(ProgressUpdate):
                 i += 1
                 output = status_msg + "\n" + f"Run-time: {str(end - start)}  seconds\n"
                 output += "Results generated for: " + sgt_obj.ntwk_p.img_path + "\n"
-                # sel_batch = sgt_obj.ntwk_p.get_selected_batch()
-                # graph_obj = sel_batch.graph_obj
+                # graph_obj = sgt_obj.ntwk_p.graph_obj
                 # output += "Node Count: " + str(graph_obj.nx_giant_graph.number_of_nodes()) + "\n"
                 # output += "Edge Count: " + str(graph_obj.nx_giant_graph.number_of_edges()) + "\n"
                 # filename, out_dir = sgt_obj.ntwk_p.get_filenames()
