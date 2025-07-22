@@ -47,7 +47,7 @@ class ImageProcessor(ProgressUpdate):
         props: list
         scale_factor: float
         scaling_options: list
-        selected_images: set
+        selected_images_idx: set
         current_view: str
         graph_obj: FiberNetworkBuilder
 
@@ -81,7 +81,7 @@ class ImageProcessor(ProgressUpdate):
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
         sel_img_batch = self.get_selected_batch()
-        first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
+        first_index = next(iter(sel_img_batch.selected_images_idx), None)  # 1st selected image
         first_index = first_index if first_index is not None else 0  # first image if None
         return sel_img_batch.images[first_index]
 
@@ -90,11 +90,12 @@ class ImageProcessor(ProgressUpdate):
         """Returns the full image list (3D) BaseImage objects/instances in the batch."""
         return self.get_selected_batch().images
 
-    # @property
-    # def selected_images(self):
-    #sel_img_batch = self.get_selected_batch()
-    #sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
-    #return sel_images
+    @property
+    def selected_images(self) -> list[BaseImage]:
+        """Returns a list of selected images."""
+        sel_img_batch = self.get_selected_batch()
+        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
+        return sel_images
 
     @property
     def graph(self):
@@ -303,7 +304,7 @@ class ImageProcessor(ProgressUpdate):
             return
 
         if type(selected_images) is set:
-            self.image_batches[sel_batch_idx].selected_images = selected_images
+            self.image_batches[sel_batch_idx].selected_images_idx = selected_images
 
     def track_progress(self, value, msg):
         self.update_status([value, msg])
@@ -328,7 +329,7 @@ class ImageProcessor(ProgressUpdate):
         incr = 90 / len(sel_batch.images) - 1
         for i in range(len(sel_batch.images)):
             img_obj = sel_batch.images[i]
-            if i not in sel_batch.selected_images:
+            if i not in sel_batch.selected_images_idx:
                 img_obj.img_mod, img_obj.img_bin = None, None
                 continue
 
@@ -402,9 +403,9 @@ class ImageProcessor(ProgressUpdate):
         :param actual_h: Height of actual image.
         """
         sel_batch = self.get_selected_batch()
-        if len(sel_batch.selected_images) > 0:
+        if len(sel_batch.selected_images_idx) > 0:
             [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
-             sel_batch.selected_images]
+             sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
         sel_batch.current_view = 'processed'
 
@@ -413,8 +414,8 @@ class ImageProcessor(ProgressUpdate):
         A function that restores the image to its original size.
         """
         sel_batch = self.get_selected_batch()
-        if len(sel_batch.selected_images) > 0:
-            [sel_batch.images[i].init_image() for i in sel_batch.selected_images]
+        if len(sel_batch.selected_images_idx) > 0:
+            [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
 
     def build_graph_network(self):
@@ -656,7 +657,7 @@ class ImageProcessor(ProgressUpdate):
         if selected_batch is None:
             selected_batch = self.get_selected_batch()
 
-        sel_images = [selected_batch.images[i] for i in selected_batch.selected_images]
+        sel_images = [selected_batch.images[i] for i in selected_batch.selected_images_idx]
         return sel_images
 
     def update_image_props(self, selected_batch: ImageBatch = None):
@@ -841,7 +842,7 @@ class ImageProcessor(ProgressUpdate):
                 props=[],
                 scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
-                selected_images=set(range(len(images))),
+                selected_images_idx=set(range(len(images))),
                 current_view='original',  # 'original', 'binary', 'processed', 'graph'
                 graph_obj=FiberNetworkBuilder(cfg_file=cfg_file)
             )

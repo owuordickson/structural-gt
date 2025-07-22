@@ -260,10 +260,9 @@ class MainController(QObject):
         sgt_obj = self.get_selected_sgt_obj()
         ntwk_p = sgt_obj.ntwk_p
         sel_img_batch = ntwk_p.get_selected_batch()
-        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
         if img_view is not None:
             sel_img_batch.current_view = img_view
-        return sel_images
+        return ntwk_p.selected_images
 
     def _handle_progress_update(self, progress_val: int, msg: str):
         """
@@ -339,7 +338,7 @@ class MainController(QObject):
                 if len(self.sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-                    self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images)
+                    self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
 
@@ -529,9 +528,9 @@ class MainController(QObject):
         sgt_obj = self.get_selected_sgt_obj()
         sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
         if selected:
-            sel_img_batch.selected_images.add(img_index)
+            sel_img_batch.selected_images_idx.add(img_index)
         else:
-            sel_img_batch.selected_images.discard(img_index)
+            sel_img_batch.selected_images_idx.discard(img_index)
         self.changeImageSignal.emit()
 
     @Slot(str)

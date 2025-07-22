@@ -24,7 +24,7 @@ class ImageProvider(QQuickImageProvider):
                 self.img_controller.compute_img_histogram()
                 bin_images = ntwk_p.binary_image_3d
                 if self.img_controller.is_img_3d():
-                    self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
+                    self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0]
@@ -35,7 +35,7 @@ class ImageProvider(QQuickImageProvider):
                 self.img_controller.compute_img_histogram()
                 mod_images = ntwk_p.modified_image_3d
                 if self.img_controller.is_img_3d():
-                    self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
+                    self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = mod_images[0]
@@ -48,7 +48,7 @@ class ImageProvider(QQuickImageProvider):
                     return
                 else:
                     net_images = [sel_img_batch.graph_obj.img_ntwk]
-                    self.img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images)
+                    self.img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
                     img_cv = net_images[0]
             else:
                 # Original
@@ -56,7 +56,7 @@ class ImageProvider(QQuickImageProvider):
                 self.img_controller.compute_img_histogram()
                 images = ntwk_p.image_3d
                 if self.img_controller.is_img_3d():
-                    self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
+                    self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = images[0]
