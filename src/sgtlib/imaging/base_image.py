@@ -320,7 +320,6 @@ class BaseImage:
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax.set_title(plt_title)
 
-        img = None
         if curr_view == "original":
             img = self.img_2d
         elif curr_view == "binary":
