@@ -77,6 +77,64 @@ class ImageProcessor(ProgressUpdate):
         self.selected_batch: int = 0
         self._initialize_image_batches(self._load_img_from_file(img_path))
 
+    @property
+    def image_obj(self, as_3d: bool = False) -> BaseImage | list[BaseImage]:
+        """
+        Returns the BaseImage instance of the processed image.
+
+        Args:
+            as_3d: whether to return as 3D list, otherwise return as 2D (only the first frame/slice of the image)
+
+        Returns:
+            BaseImage | list[BaseImage]
+        """
+        sel_img_batch = self.get_selected_batch()
+        if as_3d:
+            return sel_img_batch.images
+        return sel_img_batch.images[0]
+
+    @property
+    def graph(self):
+        """Returns the NetworkX graph extracted from the image."""
+        return None
+
+    @property
+    def image(self, as_3d: bool = False):
+        """
+        Returns OpenCV version of the image
+
+        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
+        """
+        img_obj = self.image_obj(as_3d=as_3d)
+        return None
+
+    @property
+    def binary_image(self, as_3d: bool = False):
+        """
+        Returns OpenCV version of the binary image
+
+        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
+        """
+        return None
+
+    @property
+    def modified_image(self, as_3d: bool = False):
+        """
+        Returns the modified OpenCV version of the image
+
+        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
+        """
+        return None
+
+    @property
+    def graph_image(self, as_3d: bool = False):
+        """
+        Returns OpenCV version of the extracted graph image
+
+        :param as_3d: whether to return as 3D numpy array, otherwise return as 2D (only the first frame/slice of the image)
+        """
+        return None
+
     def _load_img_from_file(self, file: list | str):
         """
         Read the image and save it as an OpenCV object.
