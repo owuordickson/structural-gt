@@ -18,9 +18,8 @@ ntwk_obj.apply_img_filters()
 ntwk_obj.remove_listener(print_updates)
 
 # View images
-sel_img_batch = ntwk_obj.get_selected_batch()
-bin_images = [obj.img_bin for obj in sel_img_batch.images]
-mod_images = [obj.img_mod for obj in sel_img_batch.images]
+bin_images = ntwk_obj.binary_image_3d
+mod_images = ntwk_obj.modified_image_3d
 plt.imshow(bin_images[0])
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
@@ -37,8 +36,8 @@ ntwk_obj.build_graph_network()
 ntwk_obj.remove_listener(print_updates)
 
 # View graph
-net_images = [sel_img_batch.graph_obj.img_ntwk]
-plt.imshow(net_images[0])
+net_image = ntwk_obj.graph_image
+plt.imshow(net_image)
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Graph Image')
 plt.show()

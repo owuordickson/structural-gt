@@ -22,7 +22,7 @@ class ImageProvider(QQuickImageProvider):
                 ntwk_p.apply_img_filters(filter_type=2)
                 # Calculate image histogram in different thread
                 self.img_controller.compute_img_histogram()
-                bin_images = [obj.img_bin for obj in sel_img_batch.images]
+                bin_images = ntwk_p.binary_image_3d
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images)
                 else:
@@ -33,7 +33,7 @@ class ImageProvider(QQuickImageProvider):
                 ntwk_p.apply_img_filters(filter_type=1)
                 # Calculate image histogram in different thread
                 self.img_controller.compute_img_histogram()
-                mod_images = [obj.img_mod for obj in sel_img_batch.images]
+                mod_images = ntwk_p.modified_image_3d
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images)
                 else:
@@ -54,7 +54,7 @@ class ImageProvider(QQuickImageProvider):
                 # Original
                 # Calculate image histogram in different thread
                 self.img_controller.compute_img_histogram()
-                images = [obj.img_2d for obj in sel_img_batch.images]
+                images = ntwk_p.image_3d
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images)
                 else:

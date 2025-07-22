@@ -513,8 +513,8 @@ class GraphAnalyzer(ProgressUpdate):
         # Include the computed GT metrics of the entire image
         if full_img_df is not None:
             # Get full image dimensions
-            sel_batch = self.ntwk_p.get_selected_batch()
-            h, w = sel_batch.images[0].img_bin.shape
+            # sel_batch = self.ntwk_p.get_selected_batch()
+            h, w = self.ntwk_p.binary_image_2d.shape
             for _ in range(num_patches):
                 for _, row in full_img_df.iterrows():
                     x_param = row["parameter"]
@@ -954,8 +954,8 @@ class GraphAnalyzer(ProgressUpdate):
             run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
             # Image Configs
-            sel_img_batch = self.ntwk_p.get_selected_batch()
-            run_info += sel_img_batch.images[0].get_config_info()  # Get configs of first image
+            # sel_img_batch = self.ntwk_p.get_selected_batch()
+            run_info += self.ntwk_p.image_obj.get_config_info()  # Get configs of first image
             run_info += "\n\n"
 
             # Graph Configs

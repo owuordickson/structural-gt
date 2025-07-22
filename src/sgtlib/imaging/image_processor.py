@@ -80,12 +80,21 @@ class ImageProcessor(ProgressUpdate):
     @property
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
-        return self.get_selected_batch().images[0]
+        sel_img_batch = self.get_selected_batch()
+        first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
+        first_index = first_index if first_index is not None else 0  # first image if None
+        return sel_img_batch.images[first_index]
 
     @property
     def image_obj_3d(self) -> list[BaseImage]:
         """Returns the full image list (3D) BaseImage objects/instances in the batch."""
         return self.get_selected_batch().images
+
+    # @property
+    # def selected_images(self):
+    #sel_img_batch = self.get_selected_batch()
+    #sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images]
+    #return sel_images
 
     @property
     def graph(self):

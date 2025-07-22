@@ -96,9 +96,10 @@ class MainController(QObject):
         try:
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
-            first_index = first_index if first_index is not None else 0  # first image if None
-            options_img = sel_img_batch.images[first_index].configs
+            #first_index = next(iter(sel_img_batch.selected_images), None)  # 1st selected image
+            # first_index = first_index if first_index is not None else 0  # first image if None
+            # options_img = sel_img_batch.images[first_index].configs
+            options_img = ntwk_p.image_obj.configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
@@ -247,7 +248,7 @@ class MainController(QObject):
             sgt_obj = self.sgt_objs[key]
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            img_cv = sel_img_batch.images[0].img_2d  # First image, assuming OpenCV image format
+            img_cv = ntwk_p.image_2d
             base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
