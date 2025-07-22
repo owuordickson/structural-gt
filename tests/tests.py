@@ -45,7 +45,7 @@ plt.show()
 # Compute graph theory metrics
 compute_obj = sgt.GraphAnalyzer(ntwk_obj)
 sgt.GraphAnalyzer.safe_run_analyzer(compute_obj, print_updates)
-print(compute_obj.output_df)
+print(compute_obj.results_df)
 
 # Save in PDF
 sgt.GraphAnalyzer.write_to_pdf(compute_obj)
