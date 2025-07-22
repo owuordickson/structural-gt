@@ -1,3 +1,4 @@
+import cv2
 import matplotlib.pyplot as plt
 from sgtlib import modules as sgt
 
@@ -20,12 +21,12 @@ ntwk_obj.remove_listener(print_updates)
 # View images
 bin_images = ntwk_obj.binary_image_3d
 mod_images = ntwk_obj.processed_image_3d
-plt.imshow(bin_images[0])
+plt.imshow(cv2.cvtColor(bin_images[0], cv2.COLOR_BGR2RGB))
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
 plt.show()
 
-plt.imshow(mod_images[0])
+plt.imshow(mod_images[0], cmap='gray')
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Processed Image')
 plt.show()
