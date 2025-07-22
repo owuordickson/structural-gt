@@ -33,7 +33,7 @@ class ImageProvider(QQuickImageProvider):
                 ntwk_p.apply_img_filters(filter_type=1)
                 # Calculate image histogram in different thread
                 self.img_controller.compute_img_histogram()
-                mod_images = ntwk_p.modified_image_3d
+                mod_images = ntwk_p.processed_image_3d
                 if self.img_controller.is_img_3d():
                     self.img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_idx)
                 else:

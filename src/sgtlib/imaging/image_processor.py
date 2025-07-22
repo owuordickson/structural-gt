@@ -110,34 +110,37 @@ class ImageProcessor(ProgressUpdate):
     @property
     def image_2d(self) -> MatLike:
         """Returns OpenCV 2D version of the image (first slice/frame/image in the batch)."""
-        return self.image_obj.img_2d
+        img_2d_rgb = cv2.cvtColor(self.image_obj.img_2d, cv2.COLOR_BGR2RGB)
+        return img_2d_rgb
 
     @property
     def image_3d(self) -> list[MatLike]:
         """Returns 3D version of the image as a list of OpenCV arrays."""
-        images = [obj.img_2d for obj in self.image_obj_3d]
+        images = [cv2.cvtColor(obj.img_2d, cv2.COLOR_BGR2RGB) for obj in self.image_obj_3d]
         return images
 
     @property
     def binary_image_2d(self) -> MatLike:
         """Returns OpenCV version of the binary image (first slice/frame/image in the batch)."""
-        return self.image_obj.img_bin
+        img_bin_rgb = cv2.cvtColor(self.image_obj.img_bin, cv2.COLOR_BGR2RGB)
+        return img_bin_rgb
 
     @property
     def binary_image_3d(self) -> list[MatLike]:
         """Returns 3D version of the binary image as a list of OpenCV arrays."""
-        bin_images = [obj.img_bin for obj in self.image_obj_3d]
+        bin_images = [cv2.cvtColor(obj.img_bin, cv2.COLOR_BGR2RGB) for obj in self.image_obj_3d]
         return bin_images
 
     @property
-    def modified_image_2d(self) -> MatLike:
+    def processed_image_2d(self) -> MatLike:
         """Returns the modified OpenCV version of the image (first slice/frame/image in the batch)."""
-        return self.image_obj.img_mod
+        img_mod_rgb = cv2.cvtColor(self.image_obj.img_mod, cv2.COLOR_BGR2RGB)
+        return img_mod_rgb
 
     @property
-    def modified_image_3d(self) -> list[MatLike]:
+    def processed_image_3d(self) -> list[MatLike]:
         """Returns 3D version of the modified image as a list of OpenCV arrays."""
-        mod_images = [obj.img_mod for obj in self.image_obj_3d]
+        mod_images = [cv2.cvtColor(obj.img_mod, cv2.COLOR_BGR2RGB) for obj in self.image_obj_3d]
         return mod_images
 
     @property

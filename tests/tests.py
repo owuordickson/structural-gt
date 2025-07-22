@@ -19,7 +19,7 @@ ntwk_obj.remove_listener(print_updates)
 
 # View images
 bin_images = ntwk_obj.binary_image_3d
-mod_images = ntwk_obj.modified_image_3d
+mod_images = ntwk_obj.processed_image_3d
 plt.imshow(bin_images[0])
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
