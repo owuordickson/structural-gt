@@ -18,6 +18,7 @@ import igraph as ig
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
+from kneed import KneeLocator
 from collections import defaultdict
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
@@ -165,11 +166,11 @@ class GraphAnalyzer(ProgressUpdate):
             self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
             return
 
-        # 5. Save GT compute metrics into props
-        self.get_compute_props()
-
-        # 6. Generate results in PDF
+        # 5. Generate results in PDF
         self.plot_figures = self.generate_pdf_output(graph_obj, scaling_data)
+
+        # 6. Save GT compute metrics into props
+        self.get_compute_props()
 
     def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True, silent: bool = False):
         """
@@ -841,7 +842,6 @@ class GraphAnalyzer(ProgressUpdate):
             self.props.append([x_param, y_value])
 
     def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
-
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
@@ -857,8 +857,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         sel_batch = self.ntwk_p.get_selected_batch()
         sel_images = self.ntwk_p.get_selected_images(sel_batch)
-        img_3d = [img.img_2d for img in sel_images]
-        img_3d = np.asarray(img_3d)
+        img_3d = np.asarray(self.ntwk_p.image_3d)
 
         def plot_gt_results():
             """
@@ -1012,7 +1011,6 @@ class GraphAnalyzer(ProgressUpdate):
 
             def find_elbow(x, y):
                 """"""
-                from kneed import KneeLocator
 
                 try:
                     # First and second derivative
@@ -1038,13 +1036,13 @@ class GraphAnalyzer(ProgressUpdate):
                     else:
                         curve = None
 
-                    print(f"Curve: {curve}, Direction: {direction}")
+                    # print(f"Curve: {curve}, Direction: {direction}")
                     if direction is None or curve is None:
                         return None
                     elbow = KneeLocator(x, y, S=1.0, curve=curve, direction=direction)
                     return elbow.knee
                 except Exception as error:
-                    print(error)
+                    logging.exception("Scaling Law (Scale Estimation) Error: %s", error, extra={'user': 'SGT Logs'})
                     return None
 
             def plot_axis(subplot_num, plt_type="", plot_err=True):
@@ -1067,7 +1065,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             # Plot scaling behavior
             i = 0
-            x_label = None
+            x_label, best_scale = None, None
             y_title = ""
             x_values, x_avg, x_err, x_fit = np.nan, np.nan, np.nan, np.nan
             data_df, fit_data_df = None, None
@@ -1102,8 +1100,8 @@ class GraphAnalyzer(ProgressUpdate):
                     x_err = y_err
                     x_fit = np.linspace(min(x_avg), max(x_avg), 100)
 
+                    # Estimate best scale
                     best_scale = find_elbow(kernel_dims[:-1], y_avg[:-1])
-                    print(f"Estimated best scale size ({y_title}): {best_scale}")
 
                     # Add plots to Figure
                     try:
@@ -1130,7 +1128,7 @@ class GraphAnalyzer(ProgressUpdate):
 
                         plt_figs.append(plt_fig)
                     except Exception as e:
-                        print(e)
+                        logging.exception("Scaling Law (Kernel-Nodes) Error: %s", e, extra={'user': 'SGT Logs'})
 
                     # Write to DataFrame
                     data_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
@@ -1252,6 +1250,11 @@ class GraphAnalyzer(ProgressUpdate):
                     i = 0
 
             plt_figs.append(plt_fig) if i <= 4 else None
+
+            if best_scale is not None:
+                new_row = {'parameter': 'Optimal Image Scale (px)', 'value': int(best_scale)}
+                self.results_df = pd.concat([self.results_df, pd.DataFrame([new_row])], ignore_index=True)
+
             return plt_figs
 
         def plot_histograms():
@@ -1460,38 +1463,40 @@ class GraphAnalyzer(ProgressUpdate):
                 plt_figs.append(plt_fig)
             return plt_figs
 
-        # 1. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+        # 1. Compute graphs and plots for scaling behavior
+        scaling_figs = plot_scaling_behavior()
+
+        # 2. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
         figs = plot_bin_images()
         for fig in figs:
             out_figs.append(fig)
 
-        # 2a. plotting graph nodes
+        # 3a. plotting graph nodes
         fig = graph_obj.plot_graph_network(image_arr=img_3d, plot_nodes=True, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
-        # 2b. plotting graph edges
+        # 4b. plotting graph edges
         fig = graph_obj.plot_graph_network(image_arr=img_3d, a4_size=True)
         if fig is not None:
             out_figs.append(fig)
 
-        # 3a. displaying all the GT calculations in Table (on the entire page)
+        # 4a. displaying all the GT calculations in Table (on the entire page)
         fig, fig_wt = plot_gt_results()
         out_figs.append(fig)
         if fig_wt:
             out_figs.append(fig_wt)
 
-        # 3b. display scaling GT results in a Table
-        figs = plot_scaling_behavior()
-        for fig in figs:
+        # 4b. display scaling GT results in a Table
+        for fig in scaling_figs:
             out_figs.append(fig)
 
-        # 4. displaying histograms
+        # 5a. displaying histograms
         figs = plot_histograms()
         for fig in figs:
             out_figs.append(fig)
 
-        # 5. displaying heatmaps
+        # 5b. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             figs = plot_heatmaps()
             for fig in figs:
