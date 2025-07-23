@@ -611,10 +611,11 @@ class ImageProcessor(ProgressUpdate):
                 success = graph_patch.extract_graph(img_patch, is_img_2d=True)
                 if success:
                     height, width = img_patch.shape
-                    if num_img_patches == 4:
-                        graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
-                    else:
-                        graph_groups[(height, width)].append(graph_patch.nx_graph)
+                    graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
+                    # if num_img_patches == 4:
+                    #    graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
+                    # else:
+                    #    graph_groups[(height, width)].append(graph_patch.nx_graph)
                 else:
                     self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
 
