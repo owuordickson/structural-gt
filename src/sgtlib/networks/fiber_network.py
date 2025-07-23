@@ -144,8 +144,18 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx_graph[s][e]['angle'] = pix_angle
             nx_graph[s][e]['weight'] = wt
             # print(f"{nx_graph[s][e]}\n")
+
+        # Save NetworkX graph
         self.nx_graph = nx_graph
+        # Save iGraph graph
         self.ig_graph = ig.Graph.from_networkx(nx_graph)
+        # Save giant NetworkX graph
+        connected_components = list(nx.connected_components(nx_graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
+        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        self.nx_giant_graph = giant_graph
         return True
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False):
@@ -229,15 +239,10 @@ class FiberNetworkBuilder(ProgressUpdate):
         if not connected_components:  # In case the graph is empty
             connected_components = []
         sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
-        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
         num_graphs = len(sub_graphs)
-        connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
+        connect_ratio = self.nx_giant_graph.number_of_nodes() / graph.number_of_nodes()
 
-        # 2. Update with the giant graph
-        self.nx_giant_graph = giant_graph
-        # self.ig_graph = igraph.Graph.from_networkx(giant_graph)
-
-        # 3. Populate graph properties
+        # 2. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
         props = [
             ["Weight Type", str(FiberNetworkBuilder.get_weight_options().get(self.get_weight_type()))],

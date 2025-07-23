@@ -471,19 +471,19 @@ class ImageProcessor(ProgressUpdate):
 
         """
         # Get the selected batch
-        sel_batch = self.get_selected_batch()
-        graph_configs = sel_batch.graph_obj.configs
-        img_obj = sel_batch.images[0]  # ONLY works for 2D
+        patch_count_per_kernel = patch_count_per_kernel if patch_count_per_kernel > 5 else 5
+        graph_configs = self.graph_obj.configs
+        img_obj = self.image_obj  # ONLY works for 2D
 
         def extract_cropped_image_patches() -> list[MatLike]:
             """A method that extracts 4 filters from the original binary image. Each filter is the of size approximately
             90% of the original image height and width. This method ensures exactly four patches are extracted from
             the corners. Compute GT descriptors of 90% original image at different locations (to get their averages)
             """
-            # Create a kernel that is 90% the size of the image
+            # Create a kernel that is 95% the size of the image
             img_bin = self.binary_image_2d
             h, w = img_bin.shape
-            k_h, k_w = int(0.9 * h), int(0.9 * w)
+            k_h, k_w = int(0.95 * h), int(0.95 * w)
 
             # Coordinates for the 4 positions (top-left, top-right, bottom-left, bottom-right)
             slide_positions = [
@@ -590,7 +590,7 @@ class ImageProcessor(ProgressUpdate):
             # Get from configs "scaling_behavior_average"
             compute_average = True
             if compute_average:
-                self.update_status([66, "Computing GT descriptors on 90% of image at 4 locations..."])
+                self.update_status([66, "Computing GT descriptors on 95% of image at 4 locations..."])
                 lst_img_filters = extract_cropped_image_patches()
                 c_h, c_w = lst_img_filters[0].shape[:2]
                 crop_filter = BaseImage.ScalingKernel(
@@ -604,13 +604,17 @@ class ImageProcessor(ProgressUpdate):
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_filters):
             self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
+            num_img_patches = len(scale_filter.image_patches)
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs
                 success = graph_patch.extract_graph(img_patch, is_img_2d=True)
                 if success:
                     height, width = img_patch.shape
-                    graph_groups[(height, width)].append(graph_patch.nx_graph)
+                    if num_img_patches == 4:
+                        graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
+                    else:
+                        graph_groups[(height, width)].append(graph_patch.nx_graph)
                 else:
                     self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
 

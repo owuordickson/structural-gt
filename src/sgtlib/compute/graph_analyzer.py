@@ -114,7 +114,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.plot_figures: list | None = None
         self.results_df: pd.DataFrame | None = None
         self.weighted_results_df: pd.DataFrame | None = None
-        self.scaling_results: dict | None = None
+        self.scaling_results: dict = {}
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -492,6 +492,7 @@ class GraphAnalyzer(ProgressUpdate):
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         sorted_plt_data = defaultdict(lambda: defaultdict(list))
+        avg_df = None
         for (h, w), nx_graphs in graph_groups.items():
             num_graphs = len(nx_graphs)
             for i, nx_graph in enumerate(nx_graphs):
@@ -505,7 +506,17 @@ class GraphAnalyzer(ProgressUpdate):
                     y_value = row["value"]
                     if ' edge angle' in x_param:  # Skip this
                         continue
-                    sorted_plt_data[x_param][h].append(y_value)
+                    sorted_plt_data[x_param][h].append(y_value) if num_graphs > 4 else None
+
+                # Save GT descriptors of 90% image to DF
+                if num_graphs > 4:
+                    continue
+                else:
+                    temp_df = temp_df.rename(columns={'value': f'value-{i + 1}'})
+                    if i == 0:
+                        avg_df = temp_df
+                    else:
+                        avg_df = avg_df.merge(temp_df, on='parameter')
         
         # Include the computed GT descriptors of the entire image
         if full_img_df is not None:
@@ -518,6 +529,11 @@ class GraphAnalyzer(ProgressUpdate):
                     y_value = row["value"]
                     # print(f"{x_param}-{h}: {y_value}")
                     sorted_plt_data[x_param][h].append(y_value)
+
+        # Add average to scaling results (for the Excel file)
+        if avg_df is not None:
+            self.scaling_results["Image GT"] = avg_df
+
         return sorted_plt_data
 
     def compute_ohms_centrality(self, nx_graph: nx.Graph):
@@ -1057,7 +1073,6 @@ class GraphAnalyzer(ProgressUpdate):
 
             # Initialize plot figures
             plt_figs = []
-            self.scaling_results = {}
             if scaling_data is None:
                 return plt_figs
 
@@ -1542,13 +1557,15 @@ class GraphAnalyzer(ProgressUpdate):
                 csv_file = os.path.join(output_location, csv_filename)
                 sgt_obj.weighted_results_df.to_csv(csv_file, index=False)
 
-            if sgt_obj.scaling_results is not None:
+            if sgt_obj.scaling_results:
                 excel_filename = filename + "_SGT_scaling.xlsx"
                 excel_file = os.path.join(output_location, excel_filename)
                 with pd.ExcelWriter(str(excel_file), engine='xlsxwriter') as writer:
-                    # Write each DataFrame to a different sheet
                     for tbl_title, tbl_df in sgt_obj.scaling_results.items():
-                        tbl_df.to_excel(writer, sheet_name=tbl_title, index=False)
+                        # Clean sheet name: Excel allows max 31 chars, no : \ / ? * [ ]
+                        safe_title = str(tbl_title)[:31].replace(":", "").replace("\\", "").replace("/", "") \
+                            .replace("?", "").replace("*", "").replace("[", "").replace("]", "")
+                        tbl_df.to_excel(writer, sheet_name=safe_title, index=False)
             return True
         except Exception as err:
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
