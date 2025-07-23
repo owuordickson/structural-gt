@@ -482,22 +482,20 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_scaling_data(self, full_img_df: pd.DataFrame = None):
+    def compute_scaling_data(self, full_img_df: pd.DataFrame = None) -> defaultdict:
         """"""
         self.update_status([65, "Computing scaling behaviour..."])
         self.ntwk_p.add_listener(self.track_img_progress)
-        # Get from configs
         num_filters = int(self.configs["scaling_behavior_kernel_count"]["value"])
         num_patches = int(self.configs["scaling_behavior_patches_per_kernel"]["value"])
         graph_groups = self.ntwk_p.build_graph_from_patches(num_kernels=num_filters, patch_count_per_kernel=num_patches)
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         sorted_plt_data = defaultdict(lambda: defaultdict(list))
-        num_patches = 1
         for (h, w), nx_graphs in graph_groups.items():
-            num_patches = len(nx_graphs)
+            num_graphs = len(nx_graphs)
             for i, nx_graph in enumerate(nx_graphs):
-                self.update_status([101, f"Computing GT metrics for filter {h}x{w}: graph-patch {i + 1}/{num_patches}..."])
+                self.update_status([101, f"Computing GT descriptors for filter {h}x{w}: graph-patch {i + 1}/{num_graphs}..."])
                 temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False, silent=True)
                 if temp_df is None:
                     # Skip the problematic graph
@@ -508,8 +506,8 @@ class GraphAnalyzer(ProgressUpdate):
                     if ' edge angle' in x_param:  # Skip this
                         continue
                     sorted_plt_data[x_param][h].append(y_value)
-
-        # Include the computed GT metrics of the entire image
+        
+        # Include the computed GT descriptors of the entire image
         if full_img_df is not None:
             # Get full image dimensions
             # sel_batch = self.ntwk_p.get_selected_batch()
@@ -1561,7 +1559,7 @@ class GraphAnalyzer(ProgressUpdate):
     @staticmethod
     def safe_run_analyzer(sgt_obj, update_func, save_to_pdf=False):
         """
-        Safely compute GT metrics without raising exceptions or crushing app.
+        Safely compute GT descriptors without raising exceptions or crushing app.
 
         Args:
             sgt_obj: StructuralGT object with calculated GT parameters
@@ -1598,7 +1596,7 @@ class GraphAnalyzer(ProgressUpdate):
     @staticmethod
     def safe_run_multi_analyzer(sgt_objs, update_func):
         """
-        Safely compute GT metrics of multiple images without raising exceptions or crushing the app.
+        Safely compute GT descriptors of multiple images without raising exceptions or crushing the app.
 
         Args:
             sgt_objs: List of StructuralGT objects with calculated GT parameters
