@@ -604,7 +604,7 @@ class ImageProcessor(ProgressUpdate):
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_filters):
             self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
-            num_img_patches = len(scale_filter.image_patches)
+            # num_img_patches = len(scale_filter.image_patches)
             for img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs
