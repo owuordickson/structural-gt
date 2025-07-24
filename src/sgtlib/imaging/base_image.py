@@ -52,7 +52,7 @@ class BaseImage:
         self.image_filters: list[BaseImage.ScalingKernel] = []
         self.init_image()
 
-    def init_image(self):
+    def init_image(self) -> None:
         """
         Initialize the class member variables (or attributes).
         Returns:
@@ -65,10 +65,10 @@ class BaseImage:
         self.has_alpha_channel, _ = BaseImage.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
 
-    def get_pixel_width(self):
+    def get_pixel_width(self) -> None:
         """Compute pixel dimension in nanometers to estimate and update the width of graph edges."""
 
-        def compute_pixel_width(scalebar_val: float, scalebar_pixel_count: int):
+        def compute_pixel_width(scalebar_val: float, scalebar_pixel_count: int) -> float:
             """
             Compute the width of a single pixel in nanometers.
 
@@ -88,7 +88,7 @@ class BaseImage:
             px_width = compute_pixel_width(scale_val, pixel_count)
             opt_img["pixel_width"]["value"] = px_width / self.scale_factor
 
-    def apply_img_crop(self, x: int, y: int, crop_width: int, crop_height: int, actual_w: int, actual_h: int):
+    def apply_img_crop(self, x: int, y: int, crop_width: int, crop_height: int, actual_w: int, actual_h: int) -> None:
         """
         A function that crops images into a new box dimension.
 
@@ -106,7 +106,7 @@ class BaseImage:
         # Crop image
         self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
 
-    def process_img(self, image: MatLike):
+    def process_img(self, image: MatLike) -> MatLike | None:
         """
         Apply filters to the image.
 
@@ -249,7 +249,7 @@ class BaseImage:
 
         return filtered_img
 
-    def binarize_img(self, image: MatLike):
+    def binarize_img(self, image: MatLike) -> MatLike | None:
         """
         Convert image to binary.
 
@@ -301,7 +301,7 @@ class BaseImage:
         self.configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def plot_img_histogram(self, axes=None, curr_view=None):
+    def plot_img_histogram(self, axes=None, curr_view=None) -> plt.Figure:
         """
         Uses Matplotlib to plot the histogram of the processed image.
 
@@ -343,7 +343,7 @@ class BaseImage:
         fig.tight_layout()
         return fig
 
-    def get_config_info(self):
+    def get_config_info(self) -> str:
         """
         Get the user selected parameters and options information.
         :return:
@@ -396,7 +396,7 @@ class BaseImage:
         return run_info
 
     @staticmethod
-    def check_alpha_channel(img: MatLike):
+    def check_alpha_channel(img: MatLike) -> tuple[bool, str | None]:
         """
         A function that checks if an image has an Alpha channel or not. Only works for images with up to 4-Dimensions.
 
@@ -424,7 +424,7 @@ class BaseImage:
         return False, None
 
     @staticmethod
-    def resize_img(size: int, image: MatLike):
+    def resize_img(size: int, image: MatLike) -> tuple[MatLike | None, float | None]:
         """
         Resizes image to specified size.
 

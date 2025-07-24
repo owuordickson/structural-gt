@@ -61,7 +61,7 @@ class MainWindow(QObject):
             sys.exit(-1)
 
 
-def pyside_app():
+def pyside_app() -> None:
     """
     Initialize and run the PySide GUI application.
     Returns:

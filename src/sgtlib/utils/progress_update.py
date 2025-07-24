@@ -26,14 +26,14 @@ class ProgressUpdate:
         self.__listeners = []
         self.abort = False
 
-    def abort_tasks(self):
+    def abort_tasks(self) -> None:
         """
         Set abort flag.
         :return:
         """
         self.abort = True
 
-    def add_listener(self, func):
+    def add_listener(self, func) -> None:
         """
         Add functions from the list of listeners.
         :param func:
@@ -43,7 +43,7 @@ class ProgressUpdate:
             return
         self.__listeners.append(func)
 
-    def remove_listener(self, func):
+    def remove_listener(self, func) -> None:
         """
         Remove functions from the list of listeners.
         :param func:
@@ -53,7 +53,7 @@ class ProgressUpdate:
             return
         self.__listeners.remove(func)
 
-    def update_status(self, args=None):
+    def update_status(self, args=None) -> None:
         """
         Run all the functions that are saved as listeners.
 

@@ -43,7 +43,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
-    def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img"):
+    def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img") -> None:
         """
         Execute a function that builds a NetworkX graph from the binary image.
 
@@ -82,14 +82,14 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(image_file, save_dir)
 
-    def reset_graph(self):
+    def reset_graph(self) -> None:
         """
         Erase the existing data stored in the object.
         :return:
         """
         self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
 
-    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0):
+    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> bool:
         """
         Build a skeleton from the image and use the skeleton to build a NetworkX graph.
 
@@ -158,7 +158,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.nx_giant_graph = giant_graph
         return True
 
-    def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False):
+    def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -199,7 +199,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             ax.set_position([0.05, 0.05, 0.9, 0.9])
         return fig
 
-    def get_config_info(self):
+    def get_config_info(self) -> str:
         """
         Get the user selected parameters and options information.
         :return:
@@ -225,7 +225,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         return run_info
 
-    def get_graph_props(self):
+    def get_graph_props(self) -> list:
         """
         A method that retrieves graph properties and stores them in a list-array.
 
@@ -253,7 +253,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             ["Giant graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
         return props
 
-    def get_weight_type(self):
+    def get_weight_type(self) -> str | None:
         wt_type = None  # Default weight
         if self.configs["has_weights"]["value"] == 0:
             return wt_type
@@ -263,7 +263,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 wt_type = self.configs["has_weights"]["items"][i]["id"]
         return wt_type
 
-    def save_graph_to_file(self, filename: str, out_dir: str):
+    def save_graph_to_file(self, filename: str, out_dir: str) -> None:
         """
         Save graph data into files.
 
@@ -312,7 +312,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 write_gsd_file(self.gsd_file, self.skel_obj.skeleton_3d)
 
     @staticmethod
-    def get_weight_options():
+    def get_weight_options() -> dict:
         """
         Returns the weight options for building the graph edges.
 
@@ -332,7 +332,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3):
+    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
         """
         Plot graph edges on top of the image
 
@@ -370,7 +370,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 node_ax.plot(gn[:, coord_1], gn[:, coord_2], 'b.', markersize=node_marker_size)
                 return None
 
-        def create_plt_axes(pos):
+        def create_plt_axes(pos) -> plt.Figure:
             """
             Create a matplotlib axes object.
             Args:
@@ -388,7 +388,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 new_ax.imshow(image[pos], cmap='gray')
             return new_fig
 
-        def normalize_width(w, new_min=0.5, new_max=5.0):
+        def normalize_width(w, new_min=0.5, new_max=5.0) -> float:
             if max_w == min_w:
                 return (new_min + new_max) / 2  # avoid division by zero
             return new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)

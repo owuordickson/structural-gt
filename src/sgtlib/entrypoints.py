@@ -17,7 +17,7 @@ FORMAT = '%(asctime)s; %(levelname)s: %(message)s'
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
-def main_gui():
+def main_gui() -> None:
     """
     Start the graphical user interface application.
     :return:
@@ -36,7 +36,7 @@ def main_gui():
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
 
 
-def main_cli():
+def main_cli() -> None:
     """
     Start the terminal/CMD application.
     :return:

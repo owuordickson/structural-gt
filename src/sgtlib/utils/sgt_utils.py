@@ -28,7 +28,7 @@ class AbortException(Exception):
     pass
 
 
-def get_num_cores():
+def get_num_cores() -> int | bool:
     """
     Finds the count of CPU cores in a computer or a SLURM supercomputer.
     :return: Number of cpu cores (int)
@@ -64,7 +64,7 @@ def get_num_cores():
     return int(num_cores)
 
 
-def verify_path(a_path):
+def verify_path(a_path) -> tuple[bool, str]:
     if not a_path:
         return False, "No folder/file selected."
 
@@ -85,7 +85,7 @@ def verify_path(a_path):
     return True, a_path
 
 
-def install_package(package):
+def install_package(package) -> None:
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
         logging.info(f"Successfully installed {package}", extra={'user': 'SGT Logs'})
@@ -93,7 +93,7 @@ def install_package(package):
         logging.info(f"Failed to install {package}: ", extra={'user': 'SGT Logs'})
 
 
-def detect_cuda_version():
+def detect_cuda_version() -> str | None:
     """Check if CUDA is installed and return its version."""
     try:
         output = subprocess.check_output(['nvcc', '--version']).decode()
@@ -165,7 +165,7 @@ def detect_cuda_and_install_cupy():
 """
 
 
-def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):
+def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True) -> None:
     """Description
         Writes data into a txt file.
 
@@ -182,7 +182,7 @@ def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True):
         pass
 
 
-def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, data):
+def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, data) -> None:
     """
     Write data to a csv file.
     Args:
@@ -205,7 +205,7 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
     csvfile.close()
 
 
-def write_gsd_file(f_name: str, skeleton: np.ndarray):
+def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
     """
     A function that writes graph particles to a GSD file. Visualize with OVITO software.
 
@@ -223,7 +223,7 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray):
         f.append(s)
 
 
-def img_to_base64(img: MatLike | Image.Image):
+def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
     if img is None:
         return None
@@ -236,11 +236,10 @@ def img_to_base64(img: MatLike | Image.Image):
         np_img = np.array(img)
         img_norm = safe_uint8_image(np_img)
         return opencv_to_base64(img_norm)
-
     return None
 
 
-def opencv_to_base64(img_arr: MatLike):
+def opencv_to_base64(img_arr: MatLike) -> MatLike | None:
     """Convert an OpenCV/Numpy image to a base64 string."""
     success, encoded_img = cv2.imencode('.png', img_arr)
     if success:
@@ -252,7 +251,7 @@ def opencv_to_base64(img_arr: MatLike):
         return None
 
 
-def plot_to_opencv(fig: plt.Figure):
+def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
     """Convert a Matplotlib figure to an OpenCV BGR image (Numpy array), retaining colors."""
     if fig:
         # Save figure to a buffer
@@ -275,17 +274,19 @@ def plot_to_opencv(fig: plt.Figure):
 
         # Convert RGB to BGR to match OpenCV color space
         img_cv_bgr = cv2.cvtColor(img_cv_rgb, cv2.COLOR_RGB2BGR)
-
         return img_cv_bgr
     return None
 
 
-def safe_uint8_image(img: MatLike):
+def safe_uint8_image(img: MatLike) -> MatLike | None:
     """
     Converts an image to uint8 safely:
         - If already uint8, returns as is.
         - If float or other type, normalizes to 0–255 and converts to uint8.
     """
+    if img is None:
+        return None
+
     if img.dtype == np.uint8:
         return img
 

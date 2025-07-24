@@ -15,7 +15,7 @@ from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from ..compute.graph_analyzer import GraphAnalyzer
 
 logger = logging.getLogger("SGT App")
-# logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
+#logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class TerminalApp:
     """Exposes the terminal interface for StructuralGT."""
@@ -30,7 +30,7 @@ class TerminalApp:
         self.allow_auto_scale = True
         self.sgt_objs = {}
 
-    def create_sgt_object(self, img_path, out_dir):
+    def create_sgt_object(self, img_path, out_dir) -> bool:
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
 
@@ -61,7 +61,7 @@ class TerminalApp:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
             return False
 
-    def get_selected_sgt_obj(self, obj_index: int = 0):
+    def get_selected_sgt_obj(self, obj_index: int = 0) -> GraphAnalyzer | None:
         """
         Retrieve the SGT object at a specified index.
         Args:
@@ -76,7 +76,7 @@ class TerminalApp:
             logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
             return None
 
-    def add_single_image(self, image_path, output_dir):
+    def add_single_image(self, image_path, output_dir) -> bool:
         """
         Verify and validate an image path, use it to create an SGT object
 
@@ -89,7 +89,7 @@ class TerminalApp:
             logging.info("Fatal Error: Unable to create SGT object", extra={'user': 'SGT Logs'})
         return is_created
 
-    def add_multiple_images(self, img_dir_path, output_dir):
+    def add_multiple_images(self, img_dir_path, output_dir) -> bool:
         """
         Verify and validate multiple image paths, use each to create an SGT object.
         """
@@ -115,7 +115,7 @@ class TerminalApp:
         else:
             return True
 
-    def task_extract_graph(self, selected_index: int = 0):
+    def task_extract_graph(self, selected_index: int = 0) -> ImageProcessor | None:
         """"""
         sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
         ntwk_p = sgt_obj.ntwk_p
@@ -138,7 +138,7 @@ class TerminalApp:
             logging.info(f"Extract Graph Aborted: {msg}", extra={'user': 'SGT Logs'})
             return None
 
-    def task_compute_gt(self, selected_index: int = 0):
+    def task_compute_gt(self, selected_index: int = 0) -> GraphAnalyzer | None:
         """"""
         sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
         success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, TerminalApp.update_progress, save_to_pdf=True)
@@ -150,7 +150,7 @@ class TerminalApp:
             logging.info(f"SGT Computations Failed: {msg}", extra={'user': 'SGT Logs'})
             return None
 
-    def task_compute_multi_gt(self):
+    def task_compute_multi_gt(self) -> dict[str, GraphAnalyzer] | None:
         """"""
         new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(self.sgt_objs, TerminalApp.update_progress)
         if new_sgt_objs is None:
@@ -159,7 +159,7 @@ class TerminalApp:
         return new_sgt_objs
 
     @staticmethod
-    def update_progress(progress_val, msg):
+    def update_progress(progress_val, msg) -> None:
         """
         Simple method to display progress updates.
 
@@ -181,7 +181,7 @@ class TerminalApp:
             logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
 
     @classmethod
-    def execute(cls):
+    def execute(cls) -> None:
         """Initializes and starts the terminal/CMD the StructuralGT application."""
 
         # Retrieve user settings
@@ -189,7 +189,7 @@ class TerminalApp:
         opt_parser.add_option('-f', '--inputFile',
                              dest='img_path',
                              help='path to image file',
-                             default="",
+                             default="../datasets/InVitroBioFilm.png",
                              type='string')
         opt_parser.add_option('-d', '--inputDir',
                              dest='img_dir_path',

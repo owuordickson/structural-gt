@@ -11,7 +11,7 @@ from typing import Union
 from .sgt_utils import verify_path
 
 
-def strict_read_config_file(config_path, update_func=None):
+def strict_read_config_file(config_path, update_func=None) -> bool:
     """
     Strictly read the contents of the 'configs.ini' file, otherwise stop execution.
 
@@ -22,6 +22,9 @@ def strict_read_config_file(config_path, update_func=None):
     Returns:
         ConfigParser object or None if an error occurs.
     """
+    if config_path == "":
+        return True
+
     success, result = verify_path(config_path)
     if not success:
         if update_func is not None:

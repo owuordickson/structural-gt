@@ -43,7 +43,7 @@ class GraphSkeleton:
         if configs is not None:
             self._build_skeleton()
 
-    def _build_skeleton(self):
+    def _build_skeleton(self) -> None:
         """
         Creates a graph skeleton of the image.
 
@@ -91,7 +91,7 @@ class GraphSkeleton:
         self.skeleton_3d = np.asarray([self.skeleton]) if self.is_2d else self.skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
-                       pixel_dim: float = 1, rho_dim: float = 1):
+                       pixel_dim: float = 1, rho_dim: float = 1) -> tuple[float, float | None, float]:
         """
         Compute and assign weights to a line edge between 2 nodes.
 
