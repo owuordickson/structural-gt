@@ -1257,8 +1257,8 @@ class GraphAnalyzer(ProgressUpdate):
                         plt_figs.append(plt_fig)
                         df_title = f"Nodes-{y_title}"
                         df_title = f"{df_title[:20]}." if len(df_title) > 20 else df_title
-                        self.scaling_results[df_title] = data_df
-                        self.scaling_results[f"{df_title} (Fitting)"] = fit_data_df
+                        self.scaling_results[df_title] = data_df.copy()
+                        self.scaling_results[f"{df_title} (Fitting)"] = fit_data_df.copy()
                     plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
                     i = 0
 
