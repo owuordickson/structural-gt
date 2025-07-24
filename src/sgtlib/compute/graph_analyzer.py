@@ -532,7 +532,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # Add average to scaling results (for the Excel file)
         if avg_df is not None:
-            self.scaling_results["Image GT"] = avg_df
+            self.scaling_results["SGT Descriptors"] = avg_df
 
         return sorted_plt_data
 
