@@ -158,6 +158,7 @@ def load_gte_configs(cfg_path: str = ""):
         "remove_disconnected_segments": {"id": "remove_disconnected_segments", "type": "graph-extraction", "text": "Remove Disconn. Segments", "value": 1, "items": [{"id": "remove_object_size", "text": "", "value": 500}]},
         "remove_self_loops": {"id": "remove_self_loops", "type": "graph-extraction", "text": "Remove Self Loops", "value": 1},
         "display_node_id": {"id": "display_node_id", "type": "graph-extraction", "text": "Display Node ID", "value": 0},
+        "add_width_thickness": {"id": "add_width_thickness", "type": "graph-extraction", "text": "Show Width Thickness", "value": 0},
 
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "type": "file-options", "text": "Export as gexf", "value": 0},
@@ -187,6 +188,7 @@ def load_gte_configs(cfg_path: str = ""):
         for i in range(len(options_gte["has_weights"]["items"])):
             options_gte["has_weights"]["items"][i]["value"] = 1 if options_gte["has_weights"]["items"][i]["id"] == weight_type else 0
         options_gte["display_node_id"]["value"] = int(config.get('extraction-settings', 'display_node_id'))
+        options_gte["add_width_thickness"]["value"] = int(config.get('extraction-settings', 'add_width_thickness'))
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
         options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))

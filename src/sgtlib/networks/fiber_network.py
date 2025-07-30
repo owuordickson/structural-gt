@@ -5,6 +5,7 @@ Builds a graph network from nanoscale microscopy images.
 """
 
 import os
+import numbers
 import itertools
 import numpy as np
 import igraph as ig
@@ -179,13 +180,14 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             nx_graph = self.nx_graph
         show_node_id = (self.configs["display_node_id"]["value"] == 1)
+        add_width_thickness = (self.configs["add_width_thickness"]["value"] == 1)
 
         # Fetch a single 2D image
         if image_arr is None:
             return None
 
         # Create the plot figure(s)
-        fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id)
+        fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id, add_width_thickness=add_width_thickness)
         fig = fig_grp[0]
         if a4_size:
             plt_title = "Graph Node Plot" if plot_nodes else "Graph Edge Plot"
@@ -332,7 +334,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
+    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
         """
         Plot graph edges on top of the image
 
@@ -341,6 +343,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :param node_distribution_data: a list of node distribution data for a heatmap plot;
         :param plot_nodes: whether to plot graph nodes or not;
         :param show_node_id: if True, node IDs are displayed on the plot;
+        :param add_width_thickness: whether to add width thickness to node distribution data;
         :param transparent: whether to draw the image with a transparent background;
         :param edge_color: each edge's line color;
         :param node_marker_size: the size (diameter) of the node marker
@@ -388,10 +391,14 @@ class FiberNetworkBuilder(ProgressUpdate):
                 new_ax.imshow(image[pos], cmap='gray')
             return new_fig
 
-        def normalize_width(w, new_min=0.5, new_max=5.0) -> float:
+        def normalize_width(w:float|numbers.Real|dict, new_min=0.5, new_max=5.0) -> float:
             if max_w == min_w:
                 return (new_min + new_max) / 2  # avoid division by zero
-            return new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
+            if not isinstance(w, numbers.Real):
+                print(f"Invalid width type ({type(w)}); using default normalized width = 1.0")
+                return 1.0
+            norm_w = new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
+            return float(norm_w)
 
         # First, extract all widths to compute min and max
         all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])
@@ -414,7 +421,10 @@ class FiberNetworkBuilder(ProgressUpdate):
 
             for (s, e) in sg.edges():
                 ge = sg[s][e]['pts']
-                edge_w = normalize_width(sg[s][e]['width'])  # Size of the plot line-width depends on width of edge
+                edge_w = 0.8
+                if add_width_thickness:
+                    wt = sg[s][e]['width']
+                    edge_w = normalize_width(wt)  # Size of the plot line-width depends on width of edge
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
                 coord_3 = 0
                 if np.array(ge).shape[1] == 3:
