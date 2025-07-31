@@ -455,7 +455,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([-1, f"Graph Extraction Error: {err}"])
             return
 
-    def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, img_padding: tuple = (0, 0)):
+    def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, img_padding: tuple = (0, 0), compute_avg: bool = False):
         """
         Extracts graphs from smaller square patches of selected images.
 
@@ -468,6 +468,8 @@ class ImageProcessor(ProgressUpdate):
         :param num_kernels: Number of square kernels/filters to generate.
         :param patch_count_per_kernel: Number of patches per filter.
         :param img_padding: Padding around the image.
+        :param compute_avg: If True, allow for computing of GT params from 95% of the original image sampled at different
+        locations (by extracting the graphs at these locations).
 
         """
         # Get the selected batch
@@ -587,9 +589,7 @@ class ImageProcessor(ProgressUpdate):
             lst_filters = retrieve_kernel_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, img_padding)
 
             # Average patches with sizes 90% of image (rectangular kernel)
-            # Get from configs "scaling_behavior_average"
-            compute_average = True
-            if compute_average:
+            if compute_avg:
                 self.update_status([66, "Computing GT descriptors on 95% of image at 4 locations..."])
                 lst_img_filters = extract_cropped_image_patches()
                 c_h, c_w = lst_img_filters[0].shape[:2]

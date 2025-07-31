@@ -488,7 +488,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.ntwk_p.add_listener(self.track_img_progress)
         num_filters = int(self.configs["scaling_behavior_kernel_count"]["value"])
         num_patches = int(self.configs["scaling_behavior_patches_per_kernel"]["value"])
-        graph_groups = self.ntwk_p.build_graph_from_patches(num_kernels=num_filters, patch_count_per_kernel=num_patches)
+        calc_avg = self.configs["scaling_behavior_compute_avg"]["value"]
+        graph_groups = self.ntwk_p.build_graph_from_patches(num_kernels=num_filters, patch_count_per_kernel=num_patches, compute_avg=calc_avg)
         self.ntwk_p.remove_listener(self.track_img_progress)
 
         sorted_plt_data = defaultdict(lambda: defaultdict(list))
