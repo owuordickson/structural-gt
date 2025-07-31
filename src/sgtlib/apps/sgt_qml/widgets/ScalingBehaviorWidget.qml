@@ -22,6 +22,7 @@ Item {
                         if (model.id === "scaling_behavior_kernel_count" || model.id === "scaling_behavior_patches_per_kernel")
                             return txtComponent
                         else if (
+                            model.id === "scaling_behavior_compute_avg" ||
                             model.id === "scaling_behavior_power_law_fit" ||
                             model.id === "scaling_behavior_truncated_power_law_fit" ||
                             model.id === "scaling_behavior_log_normal_fit"
