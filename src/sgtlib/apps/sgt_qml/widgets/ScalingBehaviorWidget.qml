@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Item {
     id: scalingBehaviorContent
-    Layout.preferredHeight: 140
+    Layout.preferredHeight: 168
     Layout.preferredWidth: parent.width - 75
 
     property int txtWidthSize: 70
