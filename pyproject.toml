@@ -22,7 +22,7 @@ dependencies = [
   "xlsxwriter",
   "requests"
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 authors = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"},
   {name = "Drew A. Vecchio", email = "vecdrew@umich.edu"},
@@ -40,6 +40,7 @@ license = {file = "LICENSE"}
 keywords = ["nano-particles", "nano-structures", "graph-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Operating System :: OS Independent",
