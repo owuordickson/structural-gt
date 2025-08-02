@@ -564,7 +564,7 @@ class MainController(QObject):
 
             # Create OVITO data pipeline
             sgt_obj = self.get_selected_sgt_obj()
-            h, w = sgt_obj.ntwk_p.img_ntwk.shape[:2]
+            h, w = sgt_obj.ntwk_p.graph_obj.img_ntwk.shape[:2]
             pipeline = import_file(sgt_obj.ntwk_p.graph_obj.gsd_file)
             pipeline.add_to_scene()
 

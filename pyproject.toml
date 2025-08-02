@@ -6,21 +6,20 @@ build-backend = "setuptools.build_meta"
 name = "sgtlib"
 dynamic = ["version"]
 dependencies = [
-  "numpy",
-  "pandas",
-  "scipy",
-  "gsd",
-  "igraph",
-  "ovito",
-  "matplotlib",
-  "networkx",
-  "scikit-image",
-  "opencv-python",
-  "pillow",
-  "PySide6",
-  "kneed",
-  "xlsxwriter",
-  "requests"
+  "numpy==2.3.2",
+  "pandas==2.3.1",
+  "scipy==1.16.1",
+  "gsd==4.0.0",
+  "igraph==0.11.9",
+  "matplotlib==3.10.5",
+  "networkx==3.5",
+  "scikit-image==0.25.2",
+  "opencv-python==4.12.0",
+  "pillow==11.3.0",
+  "PySide6==6.9.1",
+  "kneed==0.8.5",
+  "xlsxwriter==3.2.5",
+  "requests==2.32.4"
 ]
 requires-python = ">=3.12"
 authors = [
@@ -48,6 +47,8 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 
+[project.optional-dependencies]
+ovito = ["ovito>=3.13.0"]
 # docs = []
 
 [project.urls]
