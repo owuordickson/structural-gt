@@ -6,10 +6,6 @@ import logging
 import requests
 import numpy as np
 from packaging import version
-from ovito import scene
-from ovito.vis import Viewport
-from ovito.io import import_file
-from ovito.gui import create_qwidget
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject,Signal,Slot
@@ -556,6 +552,12 @@ class MainController(QObject):
     def load_graph_simulation(self):
         """Render and visualize OVITO graph network simulation."""
         try:
+            # Import libraries
+            from ovito import scene
+            from ovito.vis import Viewport
+            from ovito.io import import_file
+            from ovito.gui import create_qwidget
+
             # Clear any existing scene
             for p_line in list(scene.pipelines):
                 p_line.remove_from_scene()

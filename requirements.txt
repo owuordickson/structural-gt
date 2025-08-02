@@ -13,4 +13,4 @@ scikit-image~=0.25.2
 setuptools~=80.9.0
 requests~=2.32.4
 kneed~=0.8.5
-xlsxwriter~=3.2.5
+packaging~=25.0
