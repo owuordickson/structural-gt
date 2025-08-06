@@ -245,7 +245,7 @@ class TerminalApp:
         opt_parser.add_option('-t', '--runTask',
                               dest='run_task',
                               help='you can run the following tasks: (1) extract graph; (2) compute GT metrics.',
-                              default=0,
+                              default=2,
                               type='int')
         opt_parser.add_option('-c', '--config',
                               dest='config_file',
