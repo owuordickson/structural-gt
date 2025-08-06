@@ -30,7 +30,7 @@ def main_gui() -> None:
     # detect_cuda_and_install_cupy()
 
     # Start GUI app
-    PySideApp.execute()
+    PySideApp.start()
 
     # Log to show the App stopped
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})
@@ -45,5 +45,5 @@ def main_cli() -> None:
     logging.basicConfig(filename=f_name, encoding='utf-8', level=logging.INFO, format=FORMAT, datefmt=DATE_FORMAT)
     logging.info("SGT application started running...", extra={'user': 'SGT Logs'})
 
-    TerminalApp.execute()
+    TerminalApp.start()
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})

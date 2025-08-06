@@ -62,7 +62,7 @@ class PySideApp(QObject):
             sys.exit(-1)
 
     @classmethod
-    def execute(cls) -> None:
+    def start(cls) -> None:
         """
         Initialize and run the PySide GUI application.
         """

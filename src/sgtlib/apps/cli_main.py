@@ -115,6 +115,26 @@ class TerminalApp:
         else:
             return True
 
+    def task_process_image(self, selected_index: int = 0) -> ImageProcessor | None:
+        """"""
+        sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
+        ntwk_p = sgt_obj.ntwk_p
+        try:
+            ntwk_p.abort = False
+            ntwk_p.add_listener(TerminalApp.update_progress)
+            ntwk_p.apply_img_filters()
+            ntwk_p.remove_listener(TerminalApp.update_progress)
+            if ntwk_p.abort:
+                raise AbortException("Process aborted")
+            TerminalApp.update_progress(100, "Image filters successfully applied!")
+            return ntwk_p
+        except AbortException as err:
+            logging.exception("Task aborted: %s", err, extra={'user': 'SGT Logs'})
+            ntwk_p.remove_listener(TerminalApp.update_progress)
+            msg = "Image processing aborted due to error!"
+            logging.info(f"Apply image filters aborted: {msg}", extra={'user': 'SGT Logs'})
+            return None
+
     def task_extract_graph(self, selected_index: int = 0) -> ImageProcessor | None:
         """"""
         sgt_obj = self.get_selected_sgt_obj(obj_index=selected_index)
@@ -181,7 +201,7 @@ class TerminalApp:
             logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
 
     @classmethod
-    def execute(cls) -> None:
+    def start(cls) -> None:
         """Initializes and starts the terminal/CMD the StructuralGT application."""
 
         # Retrieve user settings

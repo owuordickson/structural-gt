@@ -30,11 +30,11 @@ class ExpressGT:
 
         # Create Terminal App
         self._term_app = TerminalApp(self._config_file)
-        self._term_app.execute()
+        self._term_app.start()
 
     def process_image(self):
         """Runs StructuralGT task that applies the selected filters on the image."""
-        pass
+        self._term_app.task_process_image()
 
     def extract_graph(self):
         """Run StructuralGT task to extract graph."""
