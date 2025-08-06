@@ -239,7 +239,7 @@ def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
     return None
 
 
-def opencv_to_base64(img_arr: MatLike) -> MatLike | None:
+def opencv_to_base64(img_arr: MatLike) -> str | None:
     """Convert an OpenCV/Numpy image to a base64 string."""
     success, encoded_img = cv2.imencode('.png', img_arr)
     if success:

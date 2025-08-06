@@ -7,7 +7,7 @@ Entry points that allow users to execute GUI or Cli programs
 import sys
 import time
 import logging
-from .apps.gui_main import pyside_app
+from .apps.gui_main import PySideApp
 from .apps.cli_main import TerminalApp
 
 
@@ -30,7 +30,7 @@ def main_gui() -> None:
     # detect_cuda_and_install_cupy()
 
     # Start GUI app
-    pyside_app()
+    PySideApp.execute()
 
     # Log to show the App stopped
     logging.info("SGT application stopped running.", extra={'user': 'SGT Logs'})

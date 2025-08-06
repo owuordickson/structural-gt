@@ -14,7 +14,8 @@ from .gui_mcw.controller import MainController
 from .gui_mcw.image_provider import ImageProvider
 
 
-class MainWindow(QObject):
+class PySideApp(QObject):
+
     def __init__(self):
         super().__init__()
         self.app = QApplication(sys.argv)
@@ -60,12 +61,10 @@ class MainWindow(QObject):
         if not self.ui_engine.rootObjects():
             sys.exit(-1)
 
-
-def pyside_app() -> None:
-    """
-    Initialize and run the PySide GUI application.
-    Returns:
-
-    """
-    main_window = MainWindow()
-    sys.exit(main_window.app.exec())
+    @classmethod
+    def execute(cls) -> None:
+        """
+        Initialize and run the PySide GUI application.
+        """
+        gui_app = cls()
+        sys.exit(gui_app.app.exec_())
