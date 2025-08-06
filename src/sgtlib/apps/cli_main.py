@@ -236,7 +236,7 @@ class TerminalApp:
         # 1. Verify config file
         config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
         if not config_file_ok:
-            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c datasets/sgt_configs.ini -t 2 -o results/')
+            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c sgt_configs.ini -t 2 -o results/')
 
         # 2. Get images and process them
         if cfg.img_path != "":
