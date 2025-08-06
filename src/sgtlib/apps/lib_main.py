@@ -5,10 +5,8 @@ Implementations for running StructuralGT via PyPi library
 """
 
 from .cli_main import TerminalApp
-from ..utils.sgt_utils import verify_path, AbortException
 from ..utils.config_loader import strict_read_config_file
 from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
-from ..compute.graph_analyzer import GraphAnalyzer
 
 class ExpressGT:
     """Exposes Terminal app to PyPi."""
@@ -30,22 +28,9 @@ class ExpressGT:
         self._config_file = config_file
         self._output_dir = output_dir
 
-        # 1. Create Terminal App
+        # Create Terminal App
         self._term_app = TerminalApp(self._config_file)
-
-        # 2. Verify config file
-        config_file_ok = strict_read_config_file(self._config_file, self._term_app.update_progress)
-        if not config_file_ok:
-            raise ValueError("Configuration file could not be read. Make sure you respect the format in 'sgt_config.ini'")
-
-        # 2. Get images and process them
-        if self._image_file != "":
-            self._term_app.add_single_image(self._image_file, self._output_dir)
-        elif self._image_dir != "":
-            self._term_app.add_multiple_images(self._image_dir, self._output_dir)
-        else:
-            self._term_app.update_progress(-1, "No image path/image folder provided!")
-            raise FileNotFoundError("No images found in the path/directory provided!")
+        self._term_app.execute()
 
     def process_image(self):
         """Runs StructuralGT task that applies the selected filters on the image."""

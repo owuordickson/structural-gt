@@ -26,9 +26,9 @@ class TerminalApp:
         :param config_path: the path to the configuration file
         """
         # Create graph objects
-        self.config_file = config_path
-        self.allow_auto_scale = True
-        self.sgt_objs = {}
+        self._config_file = config_path
+        self._allow_auto_scale = True
+        self._sgt_objs = {}
 
     def create_sgt_object(self, img_path, out_dir) -> bool:
         """
@@ -53,9 +53,9 @@ class TerminalApp:
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, out_dir, self.config_file, self.allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, out_dir, self._config_file, self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
-            self.sgt_objs[img_file] = sgt_obj
+            self._sgt_objs[img_file] = sgt_obj
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -68,9 +68,9 @@ class TerminalApp:
             obj_index: index of the SGT object to retrieve
         """
         try:
-            keys_list = list(self.sgt_objs.keys())
+            keys_list = list(self._sgt_objs.keys())
             key_at_index = keys_list[obj_index]
-            sgt_obj = self.sgt_objs[key_at_index]
+            sgt_obj = self._sgt_objs[key_at_index]
             return sgt_obj
         except IndexError:
             logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
@@ -109,7 +109,7 @@ class TerminalApp:
                 img_path = os.path.join(str(img_dir_path), a_file)
                 self.create_sgt_object(img_path, output_dir)
 
-        if len(self.sgt_objs) <= 0:
+        if len(self._sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
             return False
         else:
@@ -152,7 +152,7 @@ class TerminalApp:
 
     def task_compute_multi_gt(self) -> dict[str, GraphAnalyzer] | None:
         """"""
-        new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(self.sgt_objs, TerminalApp.update_progress)
+        new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(self._sgt_objs, TerminalApp.update_progress)
         if new_sgt_objs is None:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."
             logging.info(f"SGT Computations Failed: {msg}", extra={'user': 'SGT Logs'})
@@ -209,7 +209,7 @@ class TerminalApp:
         opt_parser.add_option('-t', '--runTask',
                               dest='run_task',
                               help='you can run the following tasks: (1) extract graph; (2) compute GT metrics.',
-                              default=2,
+                              default=0,
                               type='int')
         opt_parser.add_option('-c', '--config',
                               dest='config_file',
@@ -244,11 +244,13 @@ class TerminalApp:
         elif cfg.img_dir_path != "":
             term_app.add_multiple_images(cfg.img_dir_path, cfg.output_dir)
         else:
-            term_app.update_progress(-1, "No image path/image folder provided! System will exit.")
+            term_app.update_progress(-1, "No image(s) found in the path/image folder provided!")
             sys.exit('System exit')
 
         # 3. Execute specific task
-        if cfg.run_task == 1:
+        if cfg.run_task == 0:
+            pass
+        elif cfg.run_task == 1:
             term_app.task_extract_graph()
         elif cfg.run_task == 2:
             run_multi_gt = True if cfg.img_dir_path != "" else False
