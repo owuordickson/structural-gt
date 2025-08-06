@@ -3,5 +3,7 @@
 2. Run this script to re-generate the results we got.
 """
 
-from sgtlib.modules import ImageProcessor, GraphAnalyzer
+from src.sgtlib.modules import ExpressGT
+sgt = ExpressGT(image_file="..\..\..\datasets\InVitroBioFilm.png")
+sgt.compute_gt_descriptors()
 

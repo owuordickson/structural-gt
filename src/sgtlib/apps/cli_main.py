@@ -30,6 +30,22 @@ class TerminalApp:
         self._allow_auto_scale = True
         self._sgt_objs = {}
 
+    def check_image_files(self, img_path: str="", img_dir: str = "", out_dir: str = ""):
+        """"""
+        # 1. Verify config file
+        config_file_ok = strict_read_config_file(self._config_file, self.update_progress)
+        if not config_file_ok:
+            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c sgt_configs.ini -t 2 -o results/')
+
+        # 2. Get images and process them
+        if img_path != "":
+            self.add_single_image(img_path, out_dir)
+        elif img_dir != "":
+            self.add_multiple_images(img_dir, out_dir)
+        else:
+            self.update_progress(-1, "No image(s) found in the path/image folder provided!")
+            sys.exit('System exit')
+
     def create_sgt_object(self, img_path, out_dir) -> bool:
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
@@ -250,22 +266,11 @@ class TerminalApp:
         cfg.auto_scale = bool(cfg.auto_scale)
         # cfg.run_multi_gt = bool(cfg.run_multi_gt)
 
-        # Create Terminal App
+        # 1. Create Terminal App
         term_app = cls(cfg.config_file)
 
-        # 1. Verify config file
-        config_file_ok = strict_read_config_file(cfg.config_file, term_app.update_progress)
-        if not config_file_ok:
-            sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c sgt_configs.ini -t 2 -o results/')
-
-        # 2. Get images and process them
-        if cfg.img_path != "":
-            term_app.add_single_image(cfg.img_path, cfg.output_dir)
-        elif cfg.img_dir_path != "":
-            term_app.add_multiple_images(cfg.img_dir_path, cfg.output_dir)
-        else:
-            term_app.update_progress(-1, "No image(s) found in the path/image folder provided!")
-            sys.exit('System exit')
+        # 2. Verify image files
+        term_app.check_image_files(img_path=cfg.img_path, img_dir=cfg.img_dir_path, out_dir=cfg.output_dir)
 
         # 3. Execute specific task
         if cfg.run_task == 0:

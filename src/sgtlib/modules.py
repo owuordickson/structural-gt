@@ -5,6 +5,7 @@ A group of algorithms and functions for Graph Theory analysis on microscopy imag
 """
 
 # MODULES
+from .apps.lib_main import ExpressGT
 from .imaging.base_image import BaseImage
 from .compute.graph_analyzer import GraphAnalyzer
 from .imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
@@ -17,6 +18,7 @@ from .utils.config_loader import (
 )
 
 __all__ = [
+    "ExpressGT",
     "BaseImage",
     "GraphAnalyzer",
     "ImageProcessor",

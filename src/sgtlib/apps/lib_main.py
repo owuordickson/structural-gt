@@ -4,12 +4,14 @@
 Implementations for running StructuralGT via PyPi library
 """
 
+import sys
+import logging
 from .cli_main import TerminalApp
-from ..utils.config_loader import strict_read_config_file
-from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+logger = logging.getLogger("SGT App")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
 class ExpressGT:
-    """Exposes Terminal app to PyPi."""
+    """Exposes Terminal app to PyPi library."""
 
     def __init__(self, image_dir: str = None, image_file: str = None, output_dir: str = "", config_file: str = ""):
         """
@@ -28,9 +30,11 @@ class ExpressGT:
         self._config_file = config_file
         self._output_dir = output_dir
 
-        # Create Terminal App
+        # 1. Create Terminal App
         self._term_app = TerminalApp(self._config_file)
-        self._term_app.start()
+
+        # 2. Verify image files
+        self._term_app.check_image_files(img_path=self._image_file, img_dir=self._image_dir, out_dir=self._output_dir)
 
     def process_image(self):
         """Runs StructuralGT task that applies the selected filters on the image."""
