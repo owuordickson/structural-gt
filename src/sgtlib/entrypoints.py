@@ -7,8 +7,8 @@ Entry points that allow users to execute GUI or Cli programs
 import sys
 import time
 import logging
-from .apps.gui_main import PySideApp
-from .apps.cli_main import TerminalApp
+from .apps.gui_app import PySideApp
+from .apps.cli_app import TerminalApp
 
 
 logger = logging.getLogger("SGT App")

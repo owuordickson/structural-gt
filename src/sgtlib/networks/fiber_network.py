@@ -155,7 +155,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         if not connected_components:  # In case the graph is empty
             connected_components = []
         sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
-        giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        if sub_graphs:
+            giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        else:
+            giant_graph = nx_graph
+
         self.nx_giant_graph = giant_graph
         return True
 

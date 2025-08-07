@@ -67,4 +67,4 @@ class PySideApp(QObject):
         Initialize and run the PySide GUI application.
         """
         gui_app = cls()
-        sys.exit(gui_app.app.exec_())
+        sys.exit(gui_app.app.exec())

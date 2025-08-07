@@ -6,7 +6,7 @@ Implementations for running StructuralGT via PyPi library
 
 import sys
 import logging
-from .cli_main import TerminalApp
+from .cli_app import TerminalApp
 logger = logging.getLogger("SGT App")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stdout)
 
