@@ -7,19 +7,19 @@ import sys
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
-from mcp.controller import MainController
+from mcp.controller import CustomController
 
-class MainWindow(QObject):
+class MainApp(QObject):
     def __init__(self):
         super().__init__()
         self.app = QApplication(sys.argv)
         self.ui_engine = QQmlApplicationEngine()
 
         # Register Controller for Dynamic Updates
-        controller = MainController()
+        controller = CustomController()
 
         # Set Models/Controllers in QML Context
-        self.ui_engine.rootContext().setContextProperty("mainController", controller)
+        self.ui_engine.rootContext().setContextProperty("controller", controller)
 
         # Load UI
         # Get the directory of the current script
@@ -28,19 +28,11 @@ class MainWindow(QObject):
         qml_path = os.path.join(qml_dir, qml_name)
         self.ui_engine.load(qml_path)
         if not self.ui_engine.rootObjects():
+            print("Could not start GUI")
             sys.exit(-1)
-
-
-def pyside_app() -> None:
-    """
-    Initialize and run the PySide GUI application.
-    Returns:
-
-    """
-    main_window = MainWindow()
-    sys.exit(main_window.app.exec())
 
 
 if __name__ == "__main__":
     # Start GUI app
-    pyside_app()
+    py_app = MainApp()
+    sys.exit(py_app.app.exec())

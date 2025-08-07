@@ -1,13 +1,15 @@
 """Exposes Python methods to be called by the GUI."""
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Signal, Slot
 
 
-class MainController(QObject):
+class CustomController(QObject):
 
-    def __init__(self):
-        super().__init__()
-        
+    showAlertSignal = Signal(str, str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
     @Slot(str, result=str)
     def process_name(self, name: str) -> str:
         """Process the given name and return a greeting message."""
