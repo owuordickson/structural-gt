@@ -40,6 +40,8 @@ class ExpressGT:
         """Runs StructuralGT task that applies the selected filters on the image."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
+            sel_sgt_obj = self._term_app.get_selected_sgt_obj()
+            sel_sgt_obj.ntwk_p.image_obj.configs = config_options
             self._term_app.replicate_sgt_configs()
             keys_list = list(self._term_app.sgt_objs.keys())
             count = len(keys_list)
@@ -55,6 +57,8 @@ class ExpressGT:
         """Run StructuralGT task to extract graph."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
+            sel_sgt_obj = self._term_app.get_selected_sgt_obj()
+            sel_sgt_obj.ntwk_p.graph_obj.configs = config_options
             self._term_app.replicate_sgt_configs()
             keys_list = list(self._term_app.sgt_objs.keys())
             count = len(keys_list)
@@ -70,6 +74,8 @@ class ExpressGT:
         """Run StructuralGT task to compute the selected graph theory descriptors."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
+            sel_sgt_obj = self._term_app.get_selected_sgt_obj()
+            sel_sgt_obj.configs = config_options
             self._term_app.replicate_sgt_configs()
             self._term_app.task_worker.task_compute_multi_gt(self._term_app.sgt_objs)
         else:
