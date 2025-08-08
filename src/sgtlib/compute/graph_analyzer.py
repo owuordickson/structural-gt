@@ -124,10 +124,10 @@ class GraphAnalyzer(ProgressUpdate):
                                "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
                                "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
 
-    def track_img_progress(self, value, msg):
+    def track_img_progress(self, value, msg) -> None:
         self.update_status([value, msg])
 
-    def run_analyzer(self):
+    def run_analyzer(self) -> None:
         """
             Execute functions that will process image filters and extract the graph from the processed image
         """
@@ -173,7 +173,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. Save GT compute metrics into props
         self.get_compute_props()
 
-    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True, silent: bool = False):
+    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True, silent: bool = False) -> None|pd.DataFrame:
         """
         Compute unweighted graph theory metrics.
 
@@ -366,7 +366,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None, save_histogram: bool = True, silent: bool = False):
+    def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder = None, save_histogram: bool = True, silent: bool = False) -> None|pd.DataFrame:
         """
         Compute weighted graph theory metrics.
 
@@ -538,7 +538,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return sorted_plt_data
 
-    def compute_ohms_centrality(self, nx_graph: nx.Graph):
+    def compute_ohms_centrality(self, nx_graph: nx.Graph) -> tuple[dict, dict]:
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
@@ -604,7 +604,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return ohms_dict, res
 
-    def compute_avg_node_connectivity(self, nx_graph: nx.Graph, is_graph_connected=False):
+    def compute_avg_node_connectivity(self, nx_graph: nx.Graph, is_graph_connected=False) -> float:
         r"""Returns the average connectivity of a graph G.
 
         The average connectivity `\bar{\kappa}` of a graph G is the average
@@ -829,7 +829,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return val_max, val_min
 
-    def get_compute_props(self):
+    def get_compute_props(self) -> None:
         """
         A method that retrieves graph theory computed parameters and stores them in a list-array.
 
@@ -857,7 +857,7 @@ class GraphAnalyzer(ProgressUpdate):
             y_value = row["value"]
             self.props.append([x_param, y_value])
 
-    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None):
+    def generate_pdf_output(self, graph_obj: FiberNetworkBuilder, scaling_data=None) -> list[plt.Figure]:
         """
         Generate results as graphs and plots which should be written in a PDF file.
 
@@ -1523,7 +1523,7 @@ class GraphAnalyzer(ProgressUpdate):
         return out_figs
 
     @staticmethod
-    def write_to_pdf(sgt_obj, update_func=None):
+    def write_to_pdf(sgt_obj, update_func=None) -> bool:
         """
         Write results to a PDF file.
 
@@ -1576,7 +1576,7 @@ class GraphAnalyzer(ProgressUpdate):
             return False
 
     @staticmethod
-    def safe_run_analyzer(sgt_obj, update_func, save_to_pdf=False):
+    def safe_run_analyzer(sgt_obj, update_func, save_to_pdf=False) -> tuple[bool, None] | tuple[bool, "GraphAnalyzer"]:
         """
         Safely compute GT descriptors without raising exceptions or crushing app.
 
@@ -1613,7 +1613,7 @@ class GraphAnalyzer(ProgressUpdate):
             return False, None
 
     @staticmethod
-    def safe_run_multi_analyzer(sgt_objs, update_func):
+    def safe_run_multi_analyzer(sgt_objs, update_func) -> None|dict:
         """
         Safely compute GT descriptors of multiple images without raising exceptions or crushing the app.
 
