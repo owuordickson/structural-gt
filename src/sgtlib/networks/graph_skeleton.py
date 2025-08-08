@@ -363,8 +363,6 @@ class GraphSkeleton:
     @classmethod
     def remove_bubbles(cls, img_bin: MatLike, mask_elements: list):
         """Remove bubbles from graph skeleton."""
-        if not isinstance(mask_elements, list):
-            return None
 
         canvas = img_bin.copy()
         for mask_elem in mask_elements:

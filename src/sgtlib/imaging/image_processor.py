@@ -113,7 +113,7 @@ class ImageProcessor(ProgressUpdate):
 
     @property
     def image_3d(self) -> list[MatLike]:
-        """Returns 3D version of the image as a list of OpenCV arrays."""
+        """Returns the 3D version of the image as a list of OpenCV arrays."""
         images = [obj.img_2d for obj in self.image_obj_3d]
         return images
 
@@ -125,7 +125,7 @@ class ImageProcessor(ProgressUpdate):
 
     @property
     def binary_image_3d(self) -> list[MatLike]:
-        """Returns 3D version of the binary image as a list of OpenCV arrays."""
+        """Returns the 3D version of the binary image as a list of OpenCV arrays."""
         bin_images = [obj.img_bin for obj in self.image_obj_3d]
         return bin_images
 
@@ -136,7 +136,7 @@ class ImageProcessor(ProgressUpdate):
 
     @property
     def processed_image_3d(self) -> list[MatLike]:
-        """Returns 3D version of the modified image as a list of OpenCV arrays."""
+        """Returns the 3D version of the modified image as a list of OpenCV arrays."""
         mod_images = [obj.img_mod for obj in self.image_obj_3d]
         return mod_images
 
@@ -468,7 +468,7 @@ class ImageProcessor(ProgressUpdate):
         :param num_kernels: Number of square kernels/filters to generate.
         :param patch_count_per_kernel: Number of patches per filter.
         :param img_padding: Padding around the image.
-        :param compute_avg: If True, allow for computing of GT params from 95% of the original image sampled at different
+        :param compute_avg: If True, allows for computing of GT params from 95% of the original image sampled at different
         locations (by extracting the graphs at these locations).
 
         """
@@ -588,7 +588,7 @@ class ImageProcessor(ProgressUpdate):
             # Scaling patches (square kernel)
             lst_filters = retrieve_kernel_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, img_padding)
 
-            # Average patches with sizes 90% of image (rectangular kernel)
+            # Average patches with sizes 90% of the image (rectangular kernel)
             if compute_avg:
                 self.update_status([66, "Computing GT descriptors on 95% of image at 4 locations..."])
                 lst_img_filters = extract_cropped_image_patches()
