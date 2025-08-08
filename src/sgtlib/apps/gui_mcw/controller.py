@@ -86,6 +86,7 @@ class MainController(BaseController):
             :param sgt_obj: A GraphAnalyzer object with all saved user-selected configurations.
         """
         try:
+            # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             options_img = ntwk_p.image_obj.configs
@@ -111,7 +112,7 @@ class MainController(BaseController):
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
-    def update_graph_models(self, sgt_obj: GraphAnalyzer):
+    def synchronize_graph_models(self, sgt_obj: GraphAnalyzer):
         """
             Reload graph configuration selections and controls from saved dict to QML gui_mcw.
         Args:
@@ -122,7 +123,6 @@ class MainController(BaseController):
         """
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
-            # REMOVE GTE, GTC -- should only be called once during add_image
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             graph_obj = ntwk_p.graph_obj
@@ -254,26 +254,23 @@ class MainController(BaseController):
         else:
             if type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
-                sgt_obj = self.get_selected_sgt_obj()
-                sgt_obj.ntwk_p = result
-
-                # Load the graph image to the app
-                self.changeImageSignal.emit()
-
+                # Update Compute properties
+                # self.changeImageSignal.emit()
+                self.synchronize_graph_models(self.get_selected_sgt_obj())
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is GraphAnalyzer:
                 self._handle_progress_update(100, "GT PDF successfully generated!")
-                # Update graph properties
-                self.update_graph_models(self.get_selected_sgt_obj())
+                # Update Compute properties
+                self.synchronize_graph_models(self.get_selected_sgt_obj())
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(True, ["GT calculations completed", "The image's GT parameters have been "
                                                                                 "calculated. Check out generated PDF in "
                                                                                 "'Output Dir'."])
             elif type(result) is dict:
                 self._handle_progress_update(100, "All GT PDF successfully generated!")
-                # Update graph properties
-                self.update_graph_models(self.get_selected_sgt_obj())
+                # Update Compute properties
+                self.synchronize_graph_models(self.get_selected_sgt_obj())
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                     "images have been calculated. Check "
@@ -450,7 +447,10 @@ class MainController(BaseController):
         try:
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.select_image_batch(batch_index)
+            # Load the SGT Object data of the selected image
             self.synchronize_img_models(sgt_obj)
+            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            # Load the selected image into the view
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
@@ -534,7 +534,9 @@ class MainController(BaseController):
 
             # Load the SGT Object data of the selected image
             self.synchronize_img_models(self.get_selected_sgt_obj())
+            self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
+            # Load the selected image into the view
             self.changeImageSignal.emit()
         except Exception as err:
             self.delete_sgt_object()
@@ -822,7 +824,7 @@ class MainController(BaseController):
         is_successful = self.add_single_image(img_path)
         if is_successful:
             self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.update_graph_models(self.get_selected_sgt_obj())
+            self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
         return is_successful
 
@@ -834,7 +836,7 @@ class MainController(BaseController):
         is_successful = self.add_multiple_images(img_dir_path)
         if is_successful:
             self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.update_graph_models(self.get_selected_sgt_obj())
+            self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
         return is_successful
 
