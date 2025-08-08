@@ -26,7 +26,8 @@ ColumnLayout {
             var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
             var index = imgBinFilterModel.index(0, 0);
             imgBinFilterModel.setData(index, val, valueRole);
-            mainController.apply_img_bin_changes();
+            //mainController.apply_img_bin_changes();
+            mainController.apply_changes();
         }
     }
 

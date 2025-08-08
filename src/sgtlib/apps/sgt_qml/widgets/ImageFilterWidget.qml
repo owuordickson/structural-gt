@@ -41,7 +41,8 @@ Item {
                             let val = checked ? 1 : 0;
                             var index = imgFilterModel.index(model.index, 0);
                             imgFilterModel.setData(index, val, valueRole);
-                            mainController.apply_img_filter_changes()
+                            //mainController.apply_img_filter_changes();
+                            mainController..apply_changes();
                         }
                     }
                 }
