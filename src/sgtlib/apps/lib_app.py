@@ -36,12 +36,12 @@ class ExpressGT:
         # 2. Verify image files
         self._term_app.check_image_files(img_path=self._image_file, img_dir=self._image_dir, out_dir=self._output_dir)
 
-    def process_image(self, config_options: dict = None):
+    def process_image(self, img_configs: dict = None):
         """Runs StructuralGT task that applies the selected filters on the image."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             sel_sgt_obj = self._term_app.get_selected_sgt_obj()
-            sel_sgt_obj.ntwk_p.image_obj.configs = config_options
+            sel_sgt_obj.ntwk_p.image_obj.configs = img_configs
             self._term_app.replicate_sgt_configs()
             keys_list = list(self._term_app.sgt_objs.keys())
             count = len(keys_list)
@@ -53,12 +53,13 @@ class ExpressGT:
             sgt_obj = self._term_app.get_selected_sgt_obj()
             self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
 
-    def extract_graph(self, config_options: dict = None):
+    def extract_graph(self, img_configs: dict = None, graph_configs: dict = None):
         """Run StructuralGT task to extract graph."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             sel_sgt_obj = self._term_app.get_selected_sgt_obj()
-            sel_sgt_obj.ntwk_p.graph_obj.configs = config_options
+            sel_sgt_obj.ntwk_p.image_obj.configs = img_configs
+            sel_sgt_obj.ntwk_p.graph_obj.configs = graph_configs
             self._term_app.replicate_sgt_configs()
             keys_list = list(self._term_app.sgt_objs.keys())
             count = len(keys_list)
@@ -70,12 +71,14 @@ class ExpressGT:
             sgt_obj = self._term_app.get_selected_sgt_obj()
             self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
 
-    def compute_gt_descriptors(self, config_options: dict = None):
+    def compute_gt_descriptors(self, img_configs: dict = None, graph_configs: dict = None, compute_configs: dict = None):
         """Run StructuralGT task to compute the selected graph theory descriptors."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             sel_sgt_obj = self._term_app.get_selected_sgt_obj()
-            sel_sgt_obj.configs = config_options
+            sel_sgt_obj.ntwk_p.image_obj.configs = img_configs
+            sel_sgt_obj.ntwk_p.graph_obj.configs = graph_configs
+            sel_sgt_obj.configs = compute_configs
             self._term_app.replicate_sgt_configs()
             self._term_app.task_worker.task_compute_multi_gt(self._term_app.sgt_objs)
         else:
