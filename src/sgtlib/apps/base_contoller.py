@@ -43,6 +43,9 @@ class BaseController(QObject):
             if key != key_at_current:
                 s_obj = self._sgt_objs[key]
                 s_obj.configs = shared_gtc_configs
+                s_obj.ntwk_p.graph_obj.configs = shared_gte_configs
+                for img_obj in s_obj.ntwk_p.selected_images:
+                    img_obj.configs = shared_img_configs
 
     def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
         """Retrieve the SGT object at a specified index."""

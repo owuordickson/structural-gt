@@ -55,7 +55,6 @@ Item {
 
                         var index = microscopyPropsModel.index(model.index, 0);
                         microscopyPropsModel.setData(index, txtField.text, valueRole);
-                        mainController.apply_microscopy_props_changes();
                         //console.log(txtField.text);
                     }
 

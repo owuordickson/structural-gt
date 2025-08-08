@@ -68,7 +68,7 @@ Item {
 
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        mainController.apply_img_ctrl_changes();
+                        mainController.apply_changes();
                     }
 
                     Rectangle {
@@ -91,7 +91,7 @@ Item {
                         curr_val = val;
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        mainController.apply_img_ctrl_changes();
+                        mainController.apply_changes();
                     }
                 }
 

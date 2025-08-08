@@ -79,7 +79,7 @@ class MainController(BaseController):
         self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
         self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
 
-    def update_img_models(self, sgt_obj: GraphAnalyzer):
+    def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """
             Reload image configuration selections and controls from saved dict to QML gui_mcw after the image is loaded.
 
@@ -121,6 +121,8 @@ class MainController(BaseController):
 
         """
         try:
+            # Models Auto-update with saved sgt_obj configs. No need to re-assign!
+            # REMOVE GTE, GTC -- should only be called once during add_image
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
             graph_obj = ntwk_p.graph_obj
@@ -448,7 +450,7 @@ class MainController(BaseController):
         try:
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.select_image_batch(batch_index)
-            self.update_img_models(sgt_obj)
+            self.synchronize_img_models(sgt_obj)
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
@@ -531,7 +533,7 @@ class MainController(BaseController):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
-            self.update_img_models(self.get_selected_sgt_obj())
+            self.synchronize_img_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             self.changeImageSignal.emit()
         except Exception as err:
@@ -559,72 +561,9 @@ class MainController(BaseController):
         return False
 
     @Slot()
-    def apply_img_ctrl_changes(self):
-        """Retrieve settings from the model and send to Python."""
-        try:
-            sel_images = self.get_selected_images(img_view='processed')
-            if len(sel_images) <= 0:
-                return
-            for val in self.imgControlModel.list_data:
-                for img in sel_images:
-                    img.configs[val["id"]]["value"] = val["value"]
-            self.changeImageSignal.emit()
-        except Exception as err:
-            logging.exception("Unable to Adjust Brightness/Contrast: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Adjust Brightness/Contrast", 
-                                                   "Error trying to adjust image brightness/contrast.Try again."])
-
-    @Slot()
-    def apply_microscopy_props_changes(self):
-        """Retrieve settings from the model and send to Python."""
-        try:
-            sel_images = self.get_selected_images()
-            if len(sel_images) <= 0:
-                return
-            for val in self.microscopyPropsModel.list_data:
-                for img in sel_images:
-                    img.configs[val["id"]]["value"] = val["value"]
-                    img.get_pixel_width()
-        except Exception as err:
-            logging.exception("Unable to Update Microscopy Property Values: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Update Microscopy Values",
-                                                   "Error trying to update microscopy property values.Try again."])
-
-    @Slot()
-    def apply_img_bin_changes(self):
-        """Retrieve settings from the model and send to Python."""
-        try:
-            sel_images = self.get_selected_images()
-            if len(sel_images) <= 0:
-                return
-            for val in self.imgBinFilterModel.list_data:
-                for img in sel_images:
-                    img.configs[val["id"]]["value"] = val["value"]
-            self.changeImageSignal.emit()
-        except Exception as err:
-            logging.exception("Apply Binary Image Filters: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Apply Binary Filters", "Error while tying to apply "
-                                                                                     "binary filters to image. Try again."])
-
-    @Slot()
-    def apply_img_filter_changes(self):
-        """Retrieve settings from the model and send to Python."""
-        try:
-            sel_images = self.get_selected_images()
-            if len(sel_images) <= 0:
-                return
-            for val in self.imgFilterModel.list_data:
-                for img in sel_images:
-                    img.configs[val["id"]]["value"] = val["value"]
-                    try:
-                        img.configs[val["id"]]["dataValue"] = val["dataValue"]
-                    except KeyError:
-                        pass
-            self.changeImageSignal.emit()
-        except Exception as err:
-            logging.exception("Apply Image Filters: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Apply Image Filters", "Error while tying to apply "
-                                                                                    "image filters. Try again."])
+    def apply_changes(self):
+        """Retrieve changes made by user and apply to image/graph."""
+        self.changeImageSignal.emit()
 
     @Slot()
     def compute_img_histogram(self):
@@ -652,8 +591,6 @@ class MainController(BaseController):
             self.set_auto_scale(True)
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.auto_scale = self._allow_auto_scale
-            sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-            sel_img_batch.scaling_options = self.imgScaleOptionModel.list_data
             sgt_obj.ntwk_p.apply_img_scaling()
             self.changeImageSignal.emit()
         except Exception as err:
@@ -674,11 +611,7 @@ class MainController(BaseController):
             ntwk_p = sgt_obj.ntwk_p
             filename, out_dir = ntwk_p.get_filenames()
 
-            # 2. Update values
-            for val in self.exportGraphModel.list_data:
-                ntwk_p.graph_obj.configs[val["id"]]["value"] = val["value"]
-
-            # 3. Save graph data to the file
+            # 2. Save graph data to the file
             ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
             self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
         except Exception as err:
@@ -888,7 +821,7 @@ class MainController(BaseController):
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
         is_successful = self.add_single_image(img_path)
         if is_successful:
-            self.update_img_models(self.get_selected_sgt_obj())
+            self.synchronize_img_models(self.get_selected_sgt_obj())
             self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
         return is_successful
@@ -900,7 +833,7 @@ class MainController(BaseController):
         """
         is_successful = self.add_multiple_images(img_dir_path)
         if is_successful:
-            self.update_img_models(self.get_selected_sgt_obj())
+            self.synchronize_img_models(self.get_selected_sgt_obj())
             self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
         return is_successful
