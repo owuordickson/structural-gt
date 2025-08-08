@@ -5,7 +5,7 @@ A launcher for executing the application as a Window app or a Terminal app.
 """
 
 
-from sgtlib.entrypoints import main_cli
+from sgtlib.entrypoints import main_gui
 
 if __name__ == "__main__":
-    main_cli()
+    main_gui()
