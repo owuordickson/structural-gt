@@ -16,9 +16,10 @@ class BaseController(QObject):
 
     showAlertSignal = Signal(str, str)
 
-    def __init__(self):
+    def __init__(self, config_file: str = ""):
         super().__init__()
         # Create graph objects
+        self._config_file = config_file
         self._sgt_objs = {}
         self._selected_sgt_obj_index = 0
         self._allow_auto_scale = True
@@ -78,7 +79,7 @@ class BaseController(QObject):
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file="", allow_auto_scale=self._allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file=self._config_file, allow_auto_scale=self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application

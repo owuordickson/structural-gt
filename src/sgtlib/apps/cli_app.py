@@ -26,8 +26,7 @@ class TerminalApp(BaseController):
         Exposes methods for running StructuralGT tasks
         :param config_path: the path to the configuration file
         """
-        super().__init__()
-        self._config_file = config_path
+        super().__init__(config_file=config_path)
         self._task_worker = BaseWorker()
         self._task_worker.inProgressSignal.connect(TerminalApp.update_progress)
         self._task_worker.taskFinishedSignal.connect(TerminalApp.task_finished)

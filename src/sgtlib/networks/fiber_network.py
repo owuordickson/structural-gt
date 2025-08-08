@@ -40,7 +40,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.img_ntwk: MatLike | None = None
         self.nx_giant_graph: nx.Graph | None = None
         self.nx_graph: nx.Graph | None = None
-        self.ig_graph: ig.Graph | None = None
+        self.ig_graph: None|ig.Graph = None
         self.gsd_file: str | None = None
         self.skel_obj: GraphSkeleton | None = None
 
@@ -409,7 +409,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         min_w, max_w = min(all_widths), max(all_widths)
 
         fig_group = {}
-        # Create axes for the first frame of image (enough if it is 2D)
+        # Create axes for the first frame of the image (enough if it is 2D)
         fig = create_plt_axes(0)
         fig_group[0] = fig
 
@@ -428,7 +428,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                 edge_w = 0.8
                 if add_width_thickness:
                     wt = sg[s][e]['width']
-                    edge_w = normalize_width(wt)  # Size of the plot line-width depends on width of edge
+                    edge_w = normalize_width(wt)  # The size of the plot line-width depends on width of edge
                 coord_1, coord_2 = 1, 0  # coordinates: (y, x)
                 coord_3 = 0
                 if np.array(ge).shape[1] == 3:

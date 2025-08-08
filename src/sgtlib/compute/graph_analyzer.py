@@ -630,7 +630,7 @@ class GraphAnalyzer(ProgressUpdate):
                 a source node, and a target node. And return a residual network
                 that follows NetworkX conventions (see: meth:`maximum_flow` for
                 details). If flow_func is None, the default maximum flow function
-                (:meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
+                (: meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
                 for details. The choice of the default function may change from
                 version to version and should not be relied on. Default value: None.
 
@@ -998,7 +998,7 @@ class GraphAnalyzer(ProgressUpdate):
             def truncated_power_law_model(x, a, k, c):
                 """
                 A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
-                where a, c and k are fitting parameters.
+                where a, c, and k are fitting parameters.
 
                 https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
 

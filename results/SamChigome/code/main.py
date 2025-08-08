@@ -4,6 +4,6 @@
 """
 
 from src.sgtlib.modules import ExpressGT
-sgt = ExpressGT(image_file="../../../datasets/InVitroBioFilm.png", output_dir="../results")
+sgt = ExpressGT(image_dir="../data", output_dir="../results", config_file="../data/sgt_configs.ini")
 sgt.compute_gt_descriptors()
 
