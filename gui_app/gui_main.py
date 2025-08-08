@@ -4,10 +4,10 @@ Pyside6 implementation of app user interface.
 
 import os
 import sys
-from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication
-from PySide6.QtQml import QQmlApplicationEngine
-from mcp.controller import CustomController
+from PyQt6.QtCore import QObject
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtQml import QQmlApplicationEngine
+from mcp.controller import MainController
 
 class MainApp(QObject):
     def __init__(self):
@@ -16,10 +16,10 @@ class MainApp(QObject):
         self.ui_engine = QQmlApplicationEngine()
 
         # Register Controller for Dynamic Updates
-        controller = CustomController()
+        controller = MainController()
 
         # Set Models/Controllers in QML Context
-        self.ui_engine.rootContext().setContextProperty("controller", controller)
+        self.ui_engine.rootContext().setContextProperty("mainController", controller)
 
         # Load UI
         # Get the directory of the current script
