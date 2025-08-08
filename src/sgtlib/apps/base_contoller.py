@@ -23,6 +23,10 @@ class BaseController(QObject):
         self._selected_sgt_obj_index = 0
         self._allow_auto_scale = True
 
+    @property
+    def sgt_objs(self):
+        return self._sgt_objs
+
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
         # Update Configs
@@ -32,11 +36,13 @@ class BaseController(QObject):
 
         keys_list = list(self._sgt_objs.keys())
         key_at_current = keys_list[self._selected_sgt_obj_index]
-        shared_configs = current_sgt_obj.configs
+        shared_gtc_configs = current_sgt_obj.configs
+        shared_gte_configs = current_sgt_obj.ntwk_p.graph_obj.configs
+        shared_img_configs = current_sgt_obj.ntwk_p.image_obj.configs
         for key in keys_list:
             if key != key_at_current:
                 s_obj = self._sgt_objs[key]
-                s_obj.configs = shared_configs
+                s_obj.configs = shared_gtc_configs
 
     def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
         """Retrieve the SGT object at a specified index."""

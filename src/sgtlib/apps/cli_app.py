@@ -35,10 +35,6 @@ class TerminalApp(BaseController):
         # self.showAlertSignal.connect(self.show_alert)
 
     @property
-    def sgt_objs(self):
-        return self._sgt_objs
-
-    @property
     def task_worker(self):
         return self._task_worker
 

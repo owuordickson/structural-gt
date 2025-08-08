@@ -12,7 +12,7 @@ class ImageProvider(QQuickImageProvider):
         self.img_controller.changeImageSignal.connect(self.handle_change_image)
 
     def handle_change_image(self):
-        if len(self.img_controller._sgt_objs) > 0:
+        if len(self.img_controller.sgt_objs) > 0:
             img_cv = None
             sgt_obj = self.img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
