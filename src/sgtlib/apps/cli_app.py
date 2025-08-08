@@ -34,6 +34,14 @@ class TerminalApp(BaseController):
         self._selected_sgt_obj_index = 0
         # self.showAlertSignal.connect(self.show_alert)
 
+    @property
+    def sgt_objs(self):
+        return self._sgt_objs
+
+    @property
+    def task_worker(self):
+        return self._task_worker
+
     def check_image_files(self, img_path: str="", img_dir: str = "", out_dir: str = ""):
         """"""
         # 1. Verify config file

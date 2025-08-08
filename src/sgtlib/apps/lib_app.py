@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", str
 class ExpressGT:
     """Exposes Terminal app to PyPi library."""
 
-    def __init__(self, image_dir: str = None, image_file: str = None, output_dir: str = "", config_file: str = ""):
+    def __init__(self, image_dir: str = "", image_file: str = "", output_dir: str = "", config_file: str = ""):
         """
         Exposes Terminal app methods for executing StructuralGT tasks. Please provide either
         `image_dir` or `image_path`, but not both.
@@ -38,13 +38,31 @@ class ExpressGT:
 
     def process_image(self):
         """Runs StructuralGT task that applies the selected filters on the image."""
-        self._term_app.task_process_image()
+        run_multi_gt = True if self._image_dir != "" else False
+        if run_multi_gt:
+            self._term_app.replicate_sgt_configs()
+            for sgt_obj in self._term_app.sgt_objs:
+                self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+        else:
+            sgt_obj = self._term_app.get_selected_sgt_obj()
+            self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
 
     def extract_graph(self):
         """Run StructuralGT task to extract graph."""
-        self._term_app.task_extract_graph()
+        run_multi_gt = True if self._image_dir != "" else False
+        if run_multi_gt:
+            self._term_app.replicate_sgt_configs()
+            for sgt_obj in self._term_app.sgt_objs:
+                self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+        else:
+            sgt_obj = self._term_app.get_selected_sgt_obj()
+            self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
 
     def compute_gt_descriptors(self):
         """Run StructuralGT task to compute the selected graph theory descriptors."""
         run_multi_gt = True if self._image_dir != "" else False
-        self._term_app.task_compute_multi_gt() if run_multi_gt else self._term_app.task_compute_gt()
+        if run_multi_gt:
+            self._term_app.replicate_sgt_configs()
+            self._term_app.task_worker.task_compute_multi_gt(self._term_app.sgt_objs)
+        else:
+            self._term_app.task_worker.task_compute_gt(self._term_app.get_selected_sgt_obj())

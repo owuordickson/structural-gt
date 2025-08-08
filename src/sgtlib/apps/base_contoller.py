@@ -86,10 +86,14 @@ class BaseController(QObject):
         if success:
             folder_path = result
         else:
-            logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
-            return
+            try:
+                os.makedirs(folder_path, exist_ok=True)
+            except Exception as err:
+                logging.exception("Folder Creation Error: %s", err, extra={'user': 'SGT Logs'})
+                self.showAlertSignal.emit("Folder Creation Error", f"Error creating output folder: {err}")
+                return
 
+        print(f"Folder path: {folder_path}")
         # Update for all sgt_objs
         key_list = list(self._sgt_objs.keys())
         for key in key_list:
