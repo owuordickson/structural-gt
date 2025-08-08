@@ -725,7 +725,7 @@ ApplicationWindow {
         title: "Select a Folder"
         onAccepted: {
             //console.log("Selected folder:", folder)
-            mainController.add_multiple_images(imageFolderDialog.folder);
+            mainController.upload_multiple_images(imageFolderDialog.folder);
         }
         //onRejected: {console.log("Canceled")}
     }
@@ -736,7 +736,7 @@ ApplicationWindow {
         nameFilters: [mainController.get_file_extensions("img")]
         onAccepted: {
             //console.log("Selected file:", fileDialog.selectedFile)
-            mainController.add_single_image(imageFileDialog.selectedFile);
+            mainController.upload_single_image(imageFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }

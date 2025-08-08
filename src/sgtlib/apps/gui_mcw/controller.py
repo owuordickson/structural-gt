@@ -1,4 +1,4 @@
-
+# SPDX-License-Identifier: GNU GPL v3
 import os
 import sys
 import pickle
@@ -148,6 +148,7 @@ class MainController(QObject):
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
+    # TO BE DELETED (inherit from BaseController)
     def get_selected_sgt_obj(self):
         try:
             keys_list = list(self.sgt_objs.keys())
@@ -159,6 +160,7 @@ class MainController(QObject):
             # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
             return None
 
+    # TO BE DELETED (inherit from BaseController)
     def create_sgt_object(self, img_path):
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
@@ -184,8 +186,6 @@ class MainController(QObject):
 
             # Store the StructuralGT object and sync application
             self.sgt_objs[img_file] = sgt_obj
-            self.update_img_models(self.get_selected_sgt_obj())
-            self.update_graph_models(self.get_selected_sgt_obj())
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -478,9 +478,10 @@ class MainController(QObject):
         """Delete the selected image from the list."""
         self.delete_sgt_object(img_index)
 
+    # TO BE DELETED (inherit from BaseController)
     @Slot(str)
     def set_output_dir(self, folder_path):
-
+        # --- Start Delete
         # Convert QML "file:///" path format to a proper OS path
         if folder_path.startswith("file:///"):
             if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
@@ -494,6 +495,7 @@ class MainController(QObject):
         for key in key_list:
             sgt_obj = self.sgt_objs[key]
             sgt_obj.ntwk_p.output_dir = folder_path
+        # --- End Delete
         self.imageChangedSignal.emit()
 
     @Slot(bool)
@@ -951,18 +953,21 @@ class MainController(QObject):
         else:
             return True
 
+    # TO BE DELETED (inherit from BaseController)
     @Slot(str, result=bool)
-    def add_single_image(self, image_path):
+    def upload_single_image(self, image_path):
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
         is_created = self.create_sgt_object(image_path)
         if is_created:
-            # pos = (len(self.sgt_objs) - 1)
+            self.update_img_models(self.get_selected_sgt_obj())
+            self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
             return True
         return False
 
+    # TO BE DELETED (inherit from BaseController)
     @Slot(str, result=bool)
-    def add_multiple_images(self, img_dir_path):
+    def upload_multiple_images(self, img_dir_path):
         """
         Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view.
         """
@@ -988,7 +993,8 @@ class MainController(QObject):
             self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, .jpg or .jpeg")
             return False
         else:
-            # pos = (len(self.sgt_objs) - 1)
+            self.update_img_models(self.get_selected_sgt_obj())
+            self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
             return True
 
