@@ -9,4 +9,3 @@ from src.sgtlib.modules import ExpressGT
 # The StructuralGT results will be stored in the folder '../results/'
 sgt = ExpressGT(image_dir="../data", output_dir="../results", config_file="../data/sgt_configs.ini")
 sgt.compute_gt_descriptors()
-
