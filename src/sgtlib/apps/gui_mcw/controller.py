@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GNU GPL v3
 import os
-import sys
 import pickle
 import logging
 import requests
@@ -8,7 +7,7 @@ import numpy as np
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QObject,Signal,Slot
+from PySide6.QtCore import Signal,Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -20,6 +19,7 @@ from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker
 from ..base_worker import BaseWorker
+from ..base_contoller import BaseController
 
 from ... import __version__
 from ...utils.sgt_utils import img_to_base64, verify_path
@@ -27,7 +27,7 @@ from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLO
 from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 
 
-class MainController(QObject):
+class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
     showAlertSignal = Signal(str, str)
@@ -44,21 +44,16 @@ class MainController(QObject):
     performCroppingSignal = Signal(bool)
 
     def __init__(self, qml_app: QApplication):
-        super().__init__()  # class C(A, B) -- Calls A, then B, then object
+        super().__init__()
         self.qml_app = qml_app
         self.img_loaded = False
         self.project_open = False
-        self.allow_auto_scale = True
 
         # Project data
         self.project_data = {"name": "", "file_path": ""}
 
         # Initialize flags
         self.wait_flag, self.wait_flag_hist = False, False
-
-        # Create graph objects
-        self.sgt_objs = {}
-        self.selected_sgt_obj_index = 0
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -149,64 +144,20 @@ class MainController(QObject):
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
-    # TO BE DELETED (inherit from BaseController)
-    def get_selected_sgt_obj(self):
-        try:
-            keys_list = list(self.sgt_objs.keys())
-            key_at_index = keys_list[self.selected_sgt_obj_index]
-            sgt_obj = self.sgt_objs[key_at_index]
-            return sgt_obj
-        except IndexError:
-            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
-            # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
-            return None
-
-    # TO BE DELETED (inherit from BaseController)
-    def create_sgt_object(self, img_path):
-        """
-        A function that processes a selected image file and creates an analyzer object with default configurations.
-
-        Args:
-            img_path: file path to image
-
-        Returns:
-        """
-
-        success, result = verify_path(img_path)
-        if success:
-            img_path = result
-        else:
-            logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
-            return False
-
-        # Create an SGT object as a GraphAnalyzer object.
-        try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file="", allow_auto_scale=self.allow_auto_scale)
-            sgt_obj = GraphAnalyzer(ntwk_p)
-
-            # Store the StructuralGT object and sync application
-            self.sgt_objs[img_file] = sgt_obj
-            return True
-        except Exception as err:
-            logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
-            return False
-
     def delete_sgt_object(self, index=None):
         """
         Delete SGT Obj stored at the specified index (if not specified, get the current index).
         """
-        del_index = index if index is not None else self.selected_sgt_obj_index
-        if 0 <= del_index < len(self.sgt_objs):  # Check if the index exists
-            keys_list = list(self.sgt_objs.keys())
-            key_at_del_index = keys_list[self.selected_sgt_obj_index]
+        del_index = index if index is not None else self._selected_sgt_obj_index
+        if 0 <= del_index < len(self._sgt_objs):  # Check if the index exists
+            keys_list = list(self._sgt_objs.keys())
+            key_at_del_index = keys_list[self._selected_sgt_obj_index]
             # Delete the object at index
-            del self.sgt_objs[key_at_del_index]
+            del self._sgt_objs[key_at_del_index]
             # Update Data
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
-            self.selected_sgt_obj_index = 0
+            self._selected_sgt_obj_index = 0
             self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()
 
@@ -221,7 +172,7 @@ class MainController(QObject):
         try:
             file_path = self.project_data["file_path"]
             with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrite[bytes]]
-                pickle.dump(self.sgt_objs, project_file)
+                pickle.dump(self._sgt_objs, project_file)
             return True
         except Exception as err:
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
@@ -232,16 +183,16 @@ class MainController(QObject):
         """
         Get names and base64 data of images to be used in Project List thumbnails.
         """
-        keys_list = list(self.sgt_objs.keys())
+        keys_list = list(self._sgt_objs.keys())
         if len(keys_list) <= 0:
             return None, None
         item_data = []
         image_cache = {}
         for key in keys_list:
             item_data.append([key])  # Store the key
-            sgt_obj = self.sgt_objs[key]
+            sgt_obj = self._sgt_objs[key]
             ntwk_p = sgt_obj.ntwk_p
-            sel_img_batch = ntwk_p.get_selected_batch()
+            # sel_img_batch = ntwk_p.get_selected_batch()
             img_cv = ntwk_p.image_2d
             base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
@@ -329,7 +280,7 @@ class MainController(QObject):
             elif type(result) is list:
                 # Image histogram calculated
                 self.wait_flag_hist = False
-                if len(self.sgt_objs) > 0:
+                if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
                     self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
@@ -337,7 +288,7 @@ class MainController(QObject):
                 self.taskTerminatedSignal.emit(success_val, [])
 
             # Auto-save changes to the project data file
-            if len(self.sgt_objs.items()) <= 10:
+            if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
 
     @Slot(result=str)
@@ -428,7 +379,7 @@ class MainController(QObject):
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
         curr_img_view = np.random.randint(0, 4)
-        unique_num = self.selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
+        unique_num = self._selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
         return "image://imageProvider/" + str(unique_num)
 
     @Slot(result=bool)
@@ -461,7 +412,7 @@ class MainController(QObject):
 
     @Slot(result=str)
     def get_img_nav_location(self):
-        return f"{(self.selected_sgt_obj_index + 1)} / {len(self.sgt_objs)}"
+        return f"{(self._selected_sgt_obj_index + 1)} / {len(self._sgt_objs)}"
 
     @Slot(result=str)
     def get_output_dir(self):
@@ -472,37 +423,22 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def get_auto_scale(self):
-        return self.allow_auto_scale
+        return self._allow_auto_scale
 
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
         """Delete the selected image from the list."""
         self.delete_sgt_object(img_index)
 
-    # TO BE DELETED (inherit from BaseController)
     @Slot(str)
     def set_output_dir(self, folder_path):
-        # --- Start Delete
-        # Convert QML "file:///" path format to a proper OS path
-        if folder_path.startswith("file:///"):
-            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
-                folder_path = folder_path[8:]
-            else:  # macOS/Linux (remove "file://")
-                folder_path = folder_path[7:]
-        folder_path = os.path.normpath(folder_path)  # Normalize the path
-
-        # Update for all sgt_objs
-        key_list = list(self.sgt_objs.keys())
-        for key in key_list:
-            sgt_obj = self.sgt_objs[key]
-            sgt_obj.ntwk_p.output_dir = folder_path
-        # --- End Delete
+        self.update_output_dir(folder_path)
         self.imageChangedSignal.emit()
 
     @Slot(bool)
     def set_auto_scale(self, auto_scale):
         """Set the auto-scale parameter for each image."""
-        self.allow_auto_scale = auto_scale
+        self._allow_auto_scale = auto_scale
 
     @Slot(int)
     def select_img_batch(self, batch_index=-1):
@@ -584,10 +520,10 @@ class MainController(QObject):
     def load_image(self, index=None, reload_thumbnails=False):
         try:
             if index is not None:
-                if index == self.selected_sgt_obj_index:
+                if index == self._selected_sgt_obj_index:
                     return
                 else:
-                    self.selected_sgt_obj_index = index
+                    self._selected_sgt_obj_index = index
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -596,19 +532,19 @@ class MainController(QObject):
 
             # Load the SGT Object data of the selected image
             self.update_img_models(self.get_selected_sgt_obj())
-            self.imgThumbnailModel.set_selected(self.selected_sgt_obj_index)
+            self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             self.changeImageSignal.emit()
         except Exception as err:
             self.delete_sgt_object()
-            self.selected_sgt_obj_index = 0
+            self._selected_sgt_obj_index = 0
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
 
     @Slot(result=bool)
     def load_prev_image(self):
         """Load the previous image in the list into view."""
-        if self.selected_sgt_obj_index > 0:
-            self.selected_sgt_obj_index = self.selected_sgt_obj_index - 1
+        if self._selected_sgt_obj_index > 0:
+            self._selected_sgt_obj_index = self._selected_sgt_obj_index - 1
             self.load_image()
             return True
         return False
@@ -616,8 +552,8 @@ class MainController(QObject):
     @Slot(result=bool)
     def load_next_image(self):
         """Load the next image in the list into view."""
-        if self.selected_sgt_obj_index < (len(self.sgt_objs) - 1):
-            self.selected_sgt_obj_index = self.selected_sgt_obj_index + 1
+        if self._selected_sgt_obj_index < (len(self._sgt_objs) - 1):
+            self._selected_sgt_obj_index = self._selected_sgt_obj_index + 1
             self.load_image()
             return True
         return False
@@ -715,7 +651,7 @@ class MainController(QObject):
         try:
             self.set_auto_scale(True)
             sgt_obj = self.get_selected_sgt_obj()
-            sgt_obj.ntwk_p.auto_scale = self.allow_auto_scale
+            sgt_obj.ntwk_p.auto_scale = self._allow_auto_scale
             sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
             sel_img_batch.scaling_options = self.imgScaleOptionModel.list_data
             sgt_obj.ntwk_p.apply_img_scaling()
@@ -833,17 +769,9 @@ class MainController(QObject):
             self.wait_flag = True
 
             # Update Configs
-            # self.replicate_sgt_configs()
-            current_sgt_obj = self.get_selected_sgt_obj()
-            keys_list = list(self.sgt_objs.keys())
-            key_at_current = keys_list[self.selected_sgt_obj_index]
-            shared_configs = current_sgt_obj.configs
-            for key in keys_list:
-                if key != key_at_current:
-                    s_obj = self.sgt_objs[key]
-                    s_obj.configs = shared_configs
+            self.replicate_sgt_configs()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_multi_gt, args=(self.sgt_objs,))
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_multi_gt, args=(self._sgt_objs,))
             self._task_worker.inProgressSignal.connect(self._handle_progress_update)
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
@@ -874,7 +802,7 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def display_graph(self):
-        if len(self.sgt_objs) <= 0:
+        if len(self._sgt_objs) <= 0:
             return False
 
         sgt_obj = self.get_selected_sgt_obj()
@@ -943,62 +871,39 @@ class MainController(QObject):
 
     @Slot(result=bool)
     def enable_prev_nav_btn(self):
-        if (self.selected_sgt_obj_index == 0) or self.is_task_running():
+        if (self._selected_sgt_obj_index == 0) or self.is_task_running():
             return False
         else:
             return True
 
     @Slot(result=bool)
     def enable_next_nav_btn(self):
-        if (self.selected_sgt_obj_index == (len(self.sgt_objs) - 1)) or self.is_task_running():
+        if (self._selected_sgt_obj_index == (len(self._sgt_objs) - 1)) or self.is_task_running():
             return False
         else:
             return True
 
-    # TO BE DELETED (inherit from BaseController)
     @Slot(str, result=bool)
-    def upload_single_image(self, image_path):
+    def upload_single_image(self, img_path):
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
-        is_created = self.create_sgt_object(image_path)
-        if is_created:
+        is_successful = self.add_single_image(img_path)
+        if is_successful:
             self.update_img_models(self.get_selected_sgt_obj())
             self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
-            return True
-        return False
+        return is_successful
 
-    # TO BE DELETED (inherit from BaseController)
     @Slot(str, result=bool)
     def upload_multiple_images(self, img_dir_path):
         """
         Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view.
         """
-
-        success, result = verify_path(img_dir_path)
-        if success:
-            img_dir_path = result
-        else:
-            logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
-            return False
-
-        files = os.listdir(img_dir_path)
-        files = sorted(files)
-        for a_file in files:
-            allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
-            if a_file.endswith(allowed_extensions):
-                img_path = os.path.join(str(img_dir_path), a_file)
-                _ = self.create_sgt_object(img_path)
-
-        if len(self.sgt_objs) <= 0:
-            logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File Error", "No workable images found! Files have to be either .tif, .png, .jpg or .jpeg")
-            return False
-        else:
+        is_successful = self.add_multiple_images(img_dir_path)
+        if is_successful:
             self.update_img_models(self.get_selected_sgt_obj())
             self.update_graph_models(self.get_selected_sgt_obj())
             self.load_image(reload_thumbnails=True)
-            return True
+        return is_successful
 
     @Slot(str, str, result=bool)
     def create_sgt_project(self, proj_name, dir_path):
@@ -1063,12 +968,12 @@ class MainController(QObject):
 
             # Read and load project data and SGT objects
             with open(str(sgt_path), 'rb') as sgt_file:
-                self.sgt_objs = pickle.load(sgt_file)
+                self._sgt_objs = pickle.load(sgt_file)
 
-            if self.sgt_objs:
-                key_list = list(self.sgt_objs.keys())
+            if self._sgt_objs:
+                key_list = list(self._sgt_objs.keys())
                 for key in key_list:
-                    self.sgt_objs[key].ntwk_p.output_dir = img_dir
+                    self._sgt_objs[key].ntwk_p.output_dir = img_dir
 
             # Update and notify QML
             self.project_data["name"] = proj_name

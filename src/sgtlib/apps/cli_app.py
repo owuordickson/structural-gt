@@ -8,8 +8,8 @@ import sys
 import logging
 from optparse import OptionParser
 
-from .base_contoller import BaseController
 from .base_worker import BaseWorker
+from .base_contoller import BaseController
 from ..compute.graph_analyzer import GraphAnalyzer
 from ..imaging.image_processor import ImageProcessor
 from ..networks.fiber_network import FiberNetworkBuilder

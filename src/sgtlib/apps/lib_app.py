@@ -18,7 +18,7 @@ class ExpressGT:
         Exposes Terminal app methods for executing StructuralGT tasks. Please provide either
         `image_dir` or `image_path`, but not both.
 
-        :param image_dir: Directory containing image files (make sure only the required image files are in this directory).
+        :param image_dir: Directory contains image files (make sure only the required image files are in this directory).
         :param image_file: Path to the image file.
         :param output_dir: Directory where results files of StructuralGT are stored.
         :param config_file: Path to the configuration file (usually 'sgt_config.ini').

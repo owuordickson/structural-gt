@@ -96,9 +96,9 @@ class BaseController(QObject):
             sgt_obj = self._sgt_objs[key]
             sgt_obj.ntwk_p.output_dir = folder_path
 
-    def add_single_image(self, image_path: str) -> bool:
+    def add_single_image(self, img_path: str) -> bool:
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
-        is_created = self.create_sgt_object(image_path)
+        is_created = self.create_sgt_object(img_path)
         if is_created:
             return True
         return False
