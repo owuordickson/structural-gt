@@ -40,7 +40,7 @@ class GraphSkeleton:
         self.is_2d = is_2d
         self.update_progress = progress_func
         self.skeleton, self.skeleton_3d = None, None
-        if configs is not None:
+        if self.configs is not None:
             self._build_skeleton()
 
     def _build_skeleton(self) -> None:
