@@ -19,6 +19,7 @@ import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
 from kneed import KneeLocator
+from matplotlib.axes import Axes
 from collections import defaultdict
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
@@ -112,8 +113,8 @@ class GraphAnalyzer(ProgressUpdate):
         self.use_igraph: bool = use_igraph
         self.ntwk_p: ImageProcessor = imp
         self.plot_figures: list | None = None
-        self.results_df: pd.DataFrame | None = None
-        self.weighted_results_df: pd.DataFrame | None = None
+        self.results_df: None|pd.DataFrame = None
+        self.weighted_results_df: None|pd.DataFrame = None
         self.scaling_results: dict = {}
         self.histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
@@ -1282,7 +1283,7 @@ class GraphAnalyzer(ProgressUpdate):
             opt_gte = graph_obj.configs
             plt_figs = []
 
-            def plot_distribution_histogram(ax: plt.axes, title: str, distribution: list, x_label: str,
+            def plot_distribution_histogram(ax: Axes, title: str, distribution: list, x_label: str,
                                             plt_bins: np.ndarray = None, y_label: str = 'Counts'):
                 """
                 Create a histogram from a distribution dataset.
