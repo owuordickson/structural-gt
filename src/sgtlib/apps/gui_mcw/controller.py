@@ -18,7 +18,8 @@ from .tree_model import TreeModel
 from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
-from .qthread_worker import QThreadWorker, WorkerTask
+from .qthread_worker import QThreadWorker
+from ..base_worker import BaseWorker
 
 from ... import __version__
 from ...utils.sgt_utils import img_to_base64, verify_path
@@ -43,7 +44,7 @@ class MainController(QObject):
     performCroppingSignal = Signal(bool)
 
     def __init__(self, qml_app: QApplication):
-        super().__init__()
+        super().__init__()  # class C(A, B) -- Calls A, then B, then object
         self.qml_app = qml_app
         self.img_loaded = False
         self.project_open = False
@@ -80,8 +81,8 @@ class MainController(QObject):
         self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
-        self.worker, self.worker_task = QThreadWorker(0, None), WorkerTask()
-        self.worker_hist, self.worker_task_hist = QThreadWorker(0, None), WorkerTask()
+        self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
+        self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
 
     def update_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -257,7 +258,7 @@ class MainController(QObject):
             sel_img_batch.current_view = img_view
         return ntwk_p.selected_images
 
-    def _handle_progress_update(self, progress_val: int, msg: str):
+    def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
         Handler function for progress updates for ongoing tasks.
         Args:
@@ -278,7 +279,7 @@ class MainController(QObject):
             logging.exception("Error: %s", msg, extra={'user': 'SGT Logs'})
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success_val: bool, result: None | list | FiberNetworkBuilder | GraphAnalyzer):
+    def _handle_finished(self, success_val: bool, result: None | list | ImageProcessor | FiberNetworkBuilder | GraphAnalyzer) -> None:
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
@@ -696,13 +697,13 @@ class MainController(QObject):
             return
 
         self.showImageHistogramSignal.emit(True)
-        self.worker_task_hist = WorkerTask()
+        self._hist_worker = BaseWorker()
         try:
             self.wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()
-            self.worker_hist = QThreadWorker(func=self.worker_task_hist.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
-            self.worker_task_hist.taskFinishedSignal.connect(self._handle_finished)
-            self.worker_hist.start()
+            self._thread_worker_hist = QThreadWorker(func=self._hist_worker.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
+            self._hist_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker_hist.start()
         except Exception as err:
             self.wait_flag_hist = False
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -777,15 +778,15 @@ class MainController(QObject):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self.worker_task = WorkerTask()
+        self._task_worker = BaseWorker()
         try:
             self.wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
-            self.worker = QThreadWorker(func=self.worker_task.task_extract_graph, args=(sgt_obj.ntwk_p,))
-            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
-            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-            self.worker.start()
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
+            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
         except Exception as err:
             self.wait_flag = False
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
@@ -802,15 +803,15 @@ class MainController(QObject):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self.worker_task = WorkerTask()
+        self._task_worker = BaseWorker()
         try:
             self.wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
-            self.worker = QThreadWorker(func=self.worker_task.task_compute_gt, args=(sgt_obj,))
-            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
-            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-            self.worker.start()
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_gt, args=(sgt_obj,))
+            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
         except Exception as err:
             self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -827,11 +828,12 @@ class MainController(QObject):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self.worker_task = WorkerTask()
+        self._task_worker = BaseWorker()
         try:
             self.wait_flag = True
 
             # Update Configs
+            # self.replicate_sgt_configs()
             current_sgt_obj = self.get_selected_sgt_obj()
             keys_list = list(self.sgt_objs.keys())
             key_at_current = keys_list[self.selected_sgt_obj_index]
@@ -841,10 +843,10 @@ class MainController(QObject):
                     s_obj = self.sgt_objs[key]
                     s_obj.configs = shared_configs
 
-            self.worker = QThreadWorker(func=self.worker_task.task_compute_multi_gt, args=(self.sgt_objs,))
-            self.worker_task.inProgressSignal.connect(self._handle_progress_update)
-            self.worker_task.taskFinishedSignal.connect(self._handle_finished)
-            self.worker.start()
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_multi_gt, args=(self.sgt_objs,))
+            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
         except Exception as err:
             self.wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})

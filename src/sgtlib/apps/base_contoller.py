@@ -5,29 +5,45 @@ Base controller class for StructuralGT.
 """
 
 import os
-import sys
 import logging
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QObject
 
 from ..utils.sgt_utils import verify_path
 from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
 from ..compute.graph_analyzer import GraphAnalyzer
 
-class BaseController:
+class BaseController(QObject):
 
     showAlertSignal = Signal(str, str)
 
     def __init__(self):
+        super().__init__()
         # Create graph objects
-        self.sgt_objs = {}
-        self.selected_sgt_obj_index = 0
-        self.allow_auto_scale = True
+        self._sgt_objs = {}
+        self._selected_sgt_obj_index = 0
+        self._allow_auto_scale = True
 
-    def get_selected_sgt_obj(self):
+    def replicate_sgt_configs(self) -> None:
+        """Replicate the configurations of the selected SGT object to all other SGT objects."""
+        # Update Configs
+        current_sgt_obj = self.get_selected_sgt_obj()
+        if current_sgt_obj is None:
+            return
+
+        keys_list = list(self._sgt_objs.keys())
+        key_at_current = keys_list[self._selected_sgt_obj_index]
+        shared_configs = current_sgt_obj.configs
+        for key in keys_list:
+            if key != key_at_current:
+                s_obj = self._sgt_objs[key]
+                s_obj.configs = shared_configs
+
+    def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
+        """Retrieve the SGT object at a specified index."""
         try:
-            keys_list = list(self.sgt_objs.keys())
-            key_at_index = keys_list[self.selected_sgt_obj_index]
-            sgt_obj = self.sgt_objs[key_at_index]
+            keys_list = list(self._sgt_objs.keys())
+            key_at_index = keys_list[self._selected_sgt_obj_index]
+            sgt_obj = self._sgt_objs[key_at_index]
             return sgt_obj
         except IndexError:
             logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
@@ -53,11 +69,11 @@ class BaseController:
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file="", allow_auto_scale=self.allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file="", allow_auto_scale=self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
-            self.sgt_objs[img_file] = sgt_obj
+            self._sgt_objs[img_file] = sgt_obj
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
@@ -66,18 +82,18 @@ class BaseController:
 
     def update_output_dir(self, folder_path: str) -> None:
         """Update the output directory for storing StructuralGT results."""
-        # Convert QML "file:///" path format to a proper OS path
-        if folder_path.startswith("file:///"):
-            if sys.platform.startswith("win"):  # Windows Fix (remove extra '/')
-                folder_path = folder_path[8:]
-            else:  # macOS/Linux (remove "file://")
-                folder_path = folder_path[7:]
-        folder_path = os.path.normpath(folder_path)  # Normalize the path
+        success, result = verify_path(folder_path)
+        if success:
+            folder_path = result
+        else:
+            logging.info(result, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("File/Directory Error", result)
+            return
 
         # Update for all sgt_objs
-        key_list = list(self.sgt_objs.keys())
+        key_list = list(self._sgt_objs.keys())
         for key in key_list:
-            sgt_obj = self.sgt_objs[key]
+            sgt_obj = self._sgt_objs[key]
             sgt_obj.ntwk_p.output_dir = folder_path
 
     def add_single_image(self, image_path: str) -> bool:
@@ -107,7 +123,7 @@ class BaseController:
                 img_path = os.path.join(str(img_dir_path), a_file)
                 _ = self.create_sgt_object(img_path)
 
-        if len(self.sgt_objs) <= 0:
+        if len(self._sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("File Error",
                                       "No workable images found! Files have to be either .tif, .png, .jpg or .jpeg")
