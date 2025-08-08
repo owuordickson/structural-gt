@@ -9,6 +9,14 @@ ApplicationWindow {
     visible: true
     title: "GUI Tutorial"
 
+    Component.onCompleted: {
+        console.log("Checking controller:", mainController);
+        if (!mainController) {
+            console.error("mainController is undefined!");
+        }
+        //mainController.process_name("Dickson Owuor");
+    }
+
     GridLayout {
         anchors.fill: parent
         rows: 2
@@ -35,6 +43,10 @@ ApplicationWindow {
                     id: txtName
                     Layout.preferredWidth: 100
                     text: ""
+                    onEditingFinished: {
+                        console.log("Editing finished, value:", text)
+                        mainController.process_name(text)
+                    }
                 }
 
                 Button {
@@ -72,6 +84,16 @@ ApplicationWindow {
             }
 
         }
+
+    }
+
+    Connections {
+        target: mainController
+
+       function onUpdateProgress(val, msg) {
+            //lblProgress.text(val + "%: " + msg);
+            console.log(val + "%: " + msg);
+       }
 
     }
 
