@@ -43,10 +43,6 @@ ApplicationWindow {
                     id: txtName
                     Layout.preferredWidth: 100
                     text: ""
-                    onEditingFinished: {
-                        console.log("Editing finished, value:", text)
-                        mainController.process_name(text)
-                    }
                 }
 
                 Button {
@@ -55,6 +51,7 @@ ApplicationWindow {
                     onClicked: {
                         lblName.text = "Welcome " + txtName.text;
                         var response = mainController.process_name(txtName.text);
+                        //mainController.process_image();
                         lblProgress.text = response;
                         console.log(response);
                     }
@@ -76,6 +73,22 @@ ApplicationWindow {
                 spacing: 10
 
                 Label {
+                    id: lblError
+                    text: "No image to display!"
+                    color: "#FF0000"
+                    visible: true
+                }
+
+                Image {
+                    id: imgView
+                    width: 512
+                    height: 512
+                    fillMode: Image.PreserveAspectFit
+                    source: ""
+                    visible: false
+                }
+
+                Label {
                     id: lblProgress
                     Layout.preferredWidth: 100
                     text: "v1.0.0"
@@ -91,8 +104,19 @@ ApplicationWindow {
         target: mainController
 
        function onUpdateProgress(val, msg) {
-            //lblProgress.text(val + "%: " + msg);
+            lblProgress.text = (val + "%: " + msg);
             console.log(val + "%: " + msg);
+       }
+
+       function onImageChangedSignal(show) {
+            if (show) {
+                lblError.visible = false;
+                imgView.visible = true;
+                imgView.source = mainController.get_pixmap();
+            } else {
+                lblError.visible = true;
+                imgView.visible = false;
+            }
        }
 
     }
