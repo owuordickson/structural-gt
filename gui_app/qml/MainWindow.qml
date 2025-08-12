@@ -27,7 +27,7 @@ ApplicationWindow {
             Layout.row: 0
             Layout.column: 0
             Layout.columnSpan: 2
-            Layout.alignment: Qt.AlignVCenter| Qt.AlignHCenter
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             width: 956
             height: 384
             color: "transparent"
@@ -70,7 +70,8 @@ ApplicationWindow {
                 anchors.centerIn: parent
                 visible: false
 
-                ImageFilterWidget {}
+                ImageFilterWidget {
+                }
             }
 
         }
@@ -80,7 +81,7 @@ ApplicationWindow {
             Layout.row: 1
             Layout.column: 0
             Layout.columnSpan: 2
-            Layout.alignment: Qt.AlignVCenter| Qt.AlignHCenter
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             width: 956
             height: 384
             color: "transparent"
@@ -132,12 +133,12 @@ ApplicationWindow {
     Connections {
         target: mainController
 
-       function onUpdateProgress(val, msg) {
+        function onUpdateProgress(val, msg) {
             lblProgress.text = val + "%: " + msg;
             console.log(val + "%: " + msg);
-       }
+        }
 
-       function onImageChangedSignal(show) {
+        function onImageChangedSignal(show) {
             if (show) {
                 lblError.visible = false;
                 imgContainer.visible = true;
@@ -150,7 +151,7 @@ ApplicationWindow {
                 loginControlLayout.visible = true;
                 filterControlLayout.visible = false;
             }
-       }
+        }
 
     }
 
