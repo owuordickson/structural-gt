@@ -70,8 +70,7 @@ ApplicationWindow {
                 anchors.centerIn: parent
                 visible: false
 
-                ImageFilterWidget {
-                }
+                ImageFilterWidget {}
             }
 
         }
