@@ -43,14 +43,4 @@ Item {
             }
         }
     }
-
-    Connections {
-        target: mainController
-
-        function onImageChangedSignal() {
-            // Force refresh
-        }
-
-    }
-
 }
