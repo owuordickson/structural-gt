@@ -564,7 +564,7 @@ class MainController(BaseController):
 
     @Slot()
     def apply_changes(self):
-        """Retrieve changes made by user and apply to image/graph."""
+        """Retrieve changes made by the user and apply to image/graph."""
         self.changeImageSignal.emit()
 
     @Slot()
