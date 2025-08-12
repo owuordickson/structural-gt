@@ -9,13 +9,13 @@ ApplicationWindow {
     visible: true
     title: "GUI Tutorial"
 
-    Component.onCompleted: {
+    /*Component.onCompleted: {
         console.log("Checking controller:", mainController);
         if (!mainController) {
             console.error("mainController is undefined!");
         }
-        //mainController.process_name("Dickson Owuor");
-    }
+        mainController.process_name("Dickson Owuor");
+    }*/
 
     GridLayout {
         anchors.fill: parent
@@ -28,35 +28,49 @@ ApplicationWindow {
             Layout.column: 0
             Layout.columnSpan: 2
             Layout.alignment: Qt.AlignVCenter| Qt.AlignHCenter
+            width: 956
+            height: 384
+            color: "transparent"
 
             ColumnLayout {
                 id: loginControlLayout
                 spacing: 10
+                anchors.centerIn: parent
+                visible: true
 
                 Label {
                     id: lblName
                     Layout.preferredWidth: 100
-                    text: "What is your name?"
+                    text: "Add Image"
                 }
 
-                TextField {
+                /*TextField {
                     id: txtName
                     Layout.preferredWidth: 100
                     text: ""
-                }
+                }*/
 
                 Button {
                     id: btnOK
                     text: "OK"
                     onClicked: {
-                        lblName.text = "Welcome " + txtName.text;
+                        /*lblName.text = "Welcome " + txtName.text;
                         var response = mainController.process_name(txtName.text);
-                        //mainController.process_image();
                         lblProgress.text = response;
-                        console.log(response);
+                        console.log(response);*/
+                        mainController.process_image();
                     }
                 }
 
+            }
+
+            ColumnLayout {
+                id: filterControlLayout
+                spacing: 10
+                anchors.centerIn: parent
+                visible: false
+
+                ImageFilterWidget {}
             }
 
         }
@@ -66,10 +80,14 @@ ApplicationWindow {
             Layout.row: 1
             Layout.column: 0
             Layout.columnSpan: 2
-            Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+            Layout.alignment: Qt.AlignVCenter| Qt.AlignHCenter
+            width: 956
+            height: 384
+            color: "transparent"
 
             ColumnLayout {
                 id: progressLayout
+                anchors.centerIn: parent
                 spacing: 10
 
                 Label {
@@ -79,13 +97,24 @@ ApplicationWindow {
                     visible: true
                 }
 
-                Image {
-                    id: imgView
-                    width: 512
-                    height: 512
-                    fillMode: Image.PreserveAspectFit
-                    source: ""
+                Rectangle {
+                    id: imgContainer
+                    width: 256
+                    height: 256
+                    color: "lightgray"
                     visible: false
+
+                    Image {
+                        id: imgView
+                        anchors.centerIn: parent
+                        source: ""
+                        // Scale to fit while keeping aspect ratio
+                        fillMode: Image.PreserveAspectFit
+                        // Prevent overflow
+                        width: parent.width
+                        height: parent.height
+                        clip: true
+                    }
                 }
 
                 Label {
@@ -104,18 +133,22 @@ ApplicationWindow {
         target: mainController
 
        function onUpdateProgress(val, msg) {
-            lblProgress.text = (val + "%: " + msg);
+            lblProgress.text = val + "%: " + msg;
             console.log(val + "%: " + msg);
        }
 
        function onImageChangedSignal(show) {
             if (show) {
                 lblError.visible = false;
-                imgView.visible = true;
+                imgContainer.visible = true;
                 imgView.source = mainController.get_pixmap();
+                loginControlLayout.visible = false;
+                filterControlLayout.visible = true;
             } else {
                 lblError.visible = true;
-                imgView.visible = false;
+                imgContainer.visible = false;
+                loginControlLayout.visible = true;
+                filterControlLayout.visible = false;
             }
        }
 

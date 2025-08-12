@@ -23,6 +23,7 @@ class MainApp(QObject):
 
         # Set Models/Controllers in QML Context
         self.ui_engine.rootContext().setContextProperty("mainController", controller)
+        self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)
         self.ui_engine.addImageProvider("imageProvider", self.image_provider)
 
         # Load UI
