@@ -20,7 +20,7 @@ class MainController(QObject):
         self.img_cv = None
         dummy_data = [
             {"id": 1, "text": "Apply Median Filter", "value": 0},
-            {"id": 2, "text": "Apply Scharr Filter", "value": 1},
+            {"id": 2, "text": "Apply Scharr Filter", "value": 0},
             {"id": 3, "text": "Swap Threshold", "value": 0}
         ]
         self.imgFilterModel = CheckBoxModel(dummy_data)
@@ -50,6 +50,23 @@ class MainController(QObject):
     @pyqtSlot()
     def apply_filter_changes(self):
         """Retrieve changes made by the user and apply to image/graph."""
+        filter_applied = False
+        for val in self.imgFilterModel.list_data:
+            if val["value"] == 1:
+                filter_applied = True
+                print(val)
+                img_bin = cv2.threshold(self.img_cv.copy(), 128, 255, cv2.THRESH_BINARY_INV)[1]
+                """
+                if val["id"] == 1:
+                    # Apply Median Filter
+                if val["id"] == 2:
+                    # Apply Scharr Filter
+                if val["id"] == 3:
+                    # Swap Threshold
+                """
+                self.img_cv = img_bin
+        if not filter_applied:
+            self.process_image()
         self.changeImageSignal.emit()
 
     @pyqtSlot('QString', result='QString')
