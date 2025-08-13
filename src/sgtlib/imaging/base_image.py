@@ -47,6 +47,7 @@ class BaseImage:
         self.img_bin: MatLike | None = None
         self.img_mod: MatLike | None = None
         self.img_hist: MatLike | None = None
+        self.fractal_dim: float = 0.0
         self.has_alpha_channel: bool = False
         self.scale_factor: float = scale_factor
         self.image_filters: list[BaseImage.ScalingKernel] = []
