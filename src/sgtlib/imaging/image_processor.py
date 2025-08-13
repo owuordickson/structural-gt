@@ -343,6 +343,9 @@ class ImageProcessor(ProgressUpdate):
             if filter_type == 2:
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
+                fd = BaseImage.compute_fractal_dimension(img_obj.img_bin)
+                print(f"Original image -- Fractal Dimension: {fd}")
+                img_obj.img_mod = img_mod
             img_obj.get_pixel_width()
 
         self.update_status([100, "Image processing complete..."])
@@ -605,19 +608,21 @@ class ImageProcessor(ProgressUpdate):
         for i, scale_filter in enumerate(img_obj.image_filters):
             self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
             # num_img_patches = len(scale_filter.image_patches)
-            for img_patch in scale_filter.image_patches:
+            for bin_img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
                 graph_patch.configs = graph_configs
-                success = graph_patch.extract_graph(img_patch, is_img_2d=True)
+                success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
                 if success:
-                    height, width = img_patch.shape
+                    height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
+                    fd = BaseImage.compute_fractal_dimension(bin_img_patch)
+                    print(f"Image patch ({height}x{width}) has Fractal Dimension: {fd}")
                     # if num_img_patches == 4:
                     #    graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
                     # else:
                     #    graph_groups[(height, width)].append(graph_patch.nx_graph)
                 else:
-                    self.update_status([101, f"Filter {img_patch.shape} graph extraction failed!"])
+                    self.update_status([101, f"Filter {bin_img_patch.shape} graph extraction failed!"])
 
         return graph_groups
 
