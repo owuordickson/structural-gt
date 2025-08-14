@@ -35,14 +35,62 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         """
         super(FiberNetworkBuilder, self).__init__()
-        self.configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
-        self.props: list = []
-        self.img_ntwk: MatLike | None = None
-        self.nx_giant_graph: nx.Graph | None = None
-        self.nx_graph: nx.Graph | None = None
-        self.ig_graph: None|ig.Graph = None
-        self.gsd_file: str | None = None
-        self.skel_obj: GraphSkeleton | None = None
+        self._configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
+        self._props: list = []
+        self._img_ntwk: MatLike | None = None
+        self._nx_giant_graph: nx.Graph | None = None
+        self._nx_graph: nx.Graph | None = None
+        self._ig_graph: None | ig.Graph = None
+        self._gsd_file: str | None = None
+        self._skel_obj: GraphSkeleton | None = None
+
+    @property
+    def configs(self) -> dict:
+        return self._configs
+
+    @configs.setter
+    def configs(self, configs: dict):
+        self._configs = configs
+
+    @property
+    def props(self) -> list:
+        return self._props
+
+    @property
+    def img_ntwk(self) -> MatLike | None:
+        return self._img_ntwk
+
+    @img_ntwk.setter
+    def img_ntwk(self, img_ntwk: MatLike | None):
+        self._img_ntwk = img_ntwk
+
+    @property
+    def nx_giant_graph(self) -> nx.Graph | None:
+        return self._nx_giant_graph
+
+    @nx_giant_graph.setter
+    def nx_giant_graph(self, nx_giant_graph: nx.Graph | None):
+        self._nx_giant_graph = nx_giant_graph
+
+    @property
+    def nx_graph(self) -> nx.Graph | None:
+        return self._nx_graph
+
+    @nx_graph.setter
+    def nx_graph(self, nx_graph: nx.Graph | None):
+        self._nx_graph = nx_graph
+
+    @property
+    def ig_graph(self) -> None | ig.Graph:
+        return self._ig_graph
+
+    @property
+    def gsd_file(self) -> str | None:
+        return self._gsd_file
+
+    @property
+    def skel_obj(self):
+        return self._skel_obj
 
     def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img") -> None:
         """
@@ -76,11 +124,11 @@ class FiberNetworkBuilder(ProgressUpdate):
             return
 
         self.update_status([77, "Retrieving graph properties..."])
-        self.props = self.get_graph_props()
+        self._props = self.get_graph_props()
 
         self.update_status([90, "Saving graph network..."])
         # Save graph to GSD/HOOMD - For OVITO rendering
-        self.configs["export_as_gsd"]["value"] = 1
+        self._configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(image_file, save_dir)
 
     def reset_graph(self) -> None:
@@ -88,7 +136,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         Erase the existing data stored in the object.
         :return:
         """
-        self.nx_graph, self.ig_graph, self.img_ntwk = None, None, None
+        self.nx_graph, self._ig_graph, self._img_ntwk = None, None, None
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> bool:
         """
@@ -104,13 +152,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         if image_bin is None:
             return False
 
-        opt_gte = self.configs
+        opt_gte = self._configs
         if opt_gte is None:
             return False
 
         self.update_status([51, "Build graph skeleton from binary image..."])
         graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
-        self.skel_obj = graph_skel
+        self._skel_obj = graph_skel
         img_skel = graph_skel.skeleton
 
         self.update_status([60, "Creating graph network..."])
@@ -149,7 +197,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         # Save NetworkX graph
         self.nx_graph = nx_graph
         # Save iGraph graph
-        self.ig_graph = ig.Graph.from_networkx(nx_graph)
+        self._ig_graph = ig.Graph.from_networkx(nx_graph)
         # Save giant NetworkX graph
         connected_components = list(nx.connected_components(nx_graph))
         if not connected_components:  # In case the graph is empty
@@ -160,7 +208,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         else:
             giant_graph = nx_graph
 
-        self.nx_giant_graph = giant_graph
+        self._nx_giant_graph = giant_graph
         return True
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
@@ -180,11 +228,11 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # Fetch the graph and config options
         if giant_only:
-            nx_graph = self.nx_giant_graph
+            nx_graph = self._nx_giant_graph
         else:
             nx_graph = self.nx_graph
-        show_node_id = (self.configs["display_node_id"]["value"] == 1)
-        add_width_thickness = (self.configs["add_width_thickness"]["value"] == 1)
+        show_node_id = (self._configs["display_node_id"]["value"] == 1)
+        add_width_thickness = (self._configs["add_width_thickness"]["value"] == 1)
 
         # Fetch a single 2D image
         if image_arr is None:
@@ -211,7 +259,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        opt_gte = self.configs
+        opt_gte = self._configs
 
         run_info = "***Graph Extraction Configurations***\n"
         if opt_gte["has_weights"]["value"] == 1:
@@ -246,7 +294,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             connected_components = []
         sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
         num_graphs = len(sub_graphs)
-        connect_ratio = self.nx_giant_graph.number_of_nodes() / graph.number_of_nodes()
+        connect_ratio = self._nx_giant_graph.number_of_nodes() / graph.number_of_nodes()
 
         # 2. Populate graph properties
         self.update_status([80, "Storing graph properties..."])
@@ -261,12 +309,12 @@ class FiberNetworkBuilder(ProgressUpdate):
 
     def get_weight_type(self) -> str | None:
         wt_type = None  # Default weight
-        if self.configs["has_weights"]["value"] == 0:
+        if self._configs["has_weights"]["value"] == 0:
             return wt_type
 
-        for i in range(len(self.configs["has_weights"]["items"])):
-            if self.configs["has_weights"]["items"][i]["value"]:
-                wt_type = self.configs["has_weights"]["items"][i]["id"]
+        for i in range(len(self._configs["has_weights"]["items"])):
+            if self._configs["has_weights"]["items"][i]["value"]:
+                wt_type = self._configs["has_weights"]["items"][i]["id"]
         return wt_type
 
     def save_graph_to_file(self, filename: str, out_dir: str) -> None:
@@ -279,7 +327,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
 
         nx_graph = self.nx_graph.copy()
-        opt_gte = self.configs
+        opt_gte = self._configs
 
         g_filename = filename + "_graph.gexf"
         el_filename = filename + "_EL.csv"
@@ -313,9 +361,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             nx.write_gexf(nx_graph, gexf_file)
 
         if opt_gte["export_as_gsd"]["value"] == 1:
-            self.gsd_file = os.path.join(out_dir, gsd_filename)
-            if self.skel_obj.skeleton_3d is not None:
-                write_gsd_file(self.gsd_file, self.skel_obj.skeleton_3d)
+            self._gsd_file = os.path.join(out_dir, gsd_filename)
+            if self._skel_obj.skeleton_3d is not None:
+                write_gsd_file(self._gsd_file, self._skel_obj.skeleton_3d)
 
     @staticmethod
     def get_weight_options() -> dict:
