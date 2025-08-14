@@ -19,46 +19,41 @@ class PySideApp(QObject):
     def __init__(self):
         super().__init__()
         self.app = QApplication(sys.argv)
-        self.ui_engine = QQmlApplicationEngine()
-
+        self._ui_engine = QQmlApplicationEngine()
         # Register Controller for Dynamic Updates
-        controller = MainController(qml_app=self.app)
+        self._controller = MainController(qml_app=self.app)
         # Register Image Provider
-        self.image_provider = ImageProvider(controller)
-
-        # Test Image
-        # img_path = "../../../../../datasets/InVitroBioFilm.png"
-        # controller.imageChangedSignal.emit(0, img_path)
+        self._image_provider = ImageProvider(self._controller)
+        self._qml_file = 'sgt_qml/MainWindow.qml'
 
         # Set Models in QML Context
-        self.ui_engine.rootContext().setContextProperty("imgThumbnailModel", controller.imgThumbnailModel)
-        self.ui_engine.rootContext().setContextProperty("imagePropsModel", controller.imagePropsModel)
-        self.ui_engine.rootContext().setContextProperty("graphPropsModel", controller.graphPropsModel)
-        self.ui_engine.rootContext().setContextProperty("graphComputeModel", controller.graphComputeModel)
-        self.ui_engine.rootContext().setContextProperty("microscopyPropsModel", controller.microscopyPropsModel)
+        self._ui_engine.rootContext().setContextProperty("imgThumbnailModel", self._controller.imgThumbnailModel)
+        self._ui_engine.rootContext().setContextProperty("imagePropsModel", self._controller.imagePropsModel)
+        self._ui_engine.rootContext().setContextProperty("graphPropsModel", self._controller.graphPropsModel)
+        self._ui_engine.rootContext().setContextProperty("graphComputeModel", self._controller.graphComputeModel)
+        self._ui_engine.rootContext().setContextProperty("microscopyPropsModel", self._controller.microscopyPropsModel)
 
-        self.ui_engine.rootContext().setContextProperty("gteTreeModel", controller.gteTreeModel)
-        self.ui_engine.rootContext().setContextProperty("gtcListModel", controller.gtcListModel)
-        self.ui_engine.rootContext().setContextProperty("gtcScalingModel", controller.gtcScalingModel)
-        self.ui_engine.rootContext().setContextProperty("exportGraphModel", controller.exportGraphModel)
-        self.ui_engine.rootContext().setContextProperty("imgBatchModel", controller.imgBatchModel)
-        self.ui_engine.rootContext().setContextProperty("imgControlModel", controller.imgControlModel)
-        self.ui_engine.rootContext().setContextProperty("imgBinFilterModel", controller.imgBinFilterModel)
-        self.ui_engine.rootContext().setContextProperty("imgFilterModel", controller.imgFilterModel)
-        self.ui_engine.rootContext().setContextProperty("imgScaleOptionModel", controller.imgScaleOptionModel)
-        self.ui_engine.rootContext().setContextProperty("saveImgModel", controller.saveImgModel)
-        self.ui_engine.rootContext().setContextProperty("img3dGridModel", controller.img3dGridModel)
-        self.ui_engine.rootContext().setContextProperty("imgHistogramModel", controller.imgHistogramModel)
-        self.ui_engine.rootContext().setContextProperty("mainController", controller)
-        self.ui_engine.addImageProvider("imageProvider", self.image_provider)
+        self._ui_engine.rootContext().setContextProperty("gteTreeModel", self._controller.gteTreeModel)
+        self._ui_engine.rootContext().setContextProperty("gtcListModel", self._controller.gtcListModel)
+        self._ui_engine.rootContext().setContextProperty("gtcScalingModel", self._controller.gtcScalingModel)
+        self._ui_engine.rootContext().setContextProperty("exportGraphModel", self._controller.exportGraphModel)
+        self._ui_engine.rootContext().setContextProperty("imgBatchModel", self._controller.imgBatchModel)
+        self._ui_engine.rootContext().setContextProperty("imgControlModel", self._controller.imgControlModel)
+        self._ui_engine.rootContext().setContextProperty("imgBinFilterModel", self._controller.imgBinFilterModel)
+        self._ui_engine.rootContext().setContextProperty("imgFilterModel", self._controller.imgFilterModel)
+        self._ui_engine.rootContext().setContextProperty("imgScaleOptionModel", self._controller.imgScaleOptionModel)
+        self._ui_engine.rootContext().setContextProperty("saveImgModel", self._controller.saveImgModel)
+        self._ui_engine.rootContext().setContextProperty("img3dGridModel", self._controller.img3dGridModel)
+        self._ui_engine.rootContext().setContextProperty("imgHistogramModel", self._controller.imgHistogramModel)
+        self._ui_engine.rootContext().setContextProperty("mainController", self._controller)
+        self._ui_engine.addImageProvider("imageProvider", self._image_provider)
 
         # Load UI
         # Get the directory of the current script
         qml_dir = os.path.dirname(os.path.abspath(__file__))
-        qml_name = 'sgt_qml/MainWindow.qml'
-        qml_path = os.path.join(qml_dir, qml_name)
-        self.ui_engine.load(qml_path)
-        if not self.ui_engine.rootObjects():
+        qml_path = os.path.join(qml_dir, self._qml_file)
+        self._ui_engine.load(qml_path)
+        if not self._ui_engine.rootObjects():
             sys.exit(-1)
 
     @classmethod
