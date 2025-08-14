@@ -41,7 +41,7 @@ Item {
                             let val = checked ? 1 : 0;
                             var index = imgFilterModel.index(model.index, 0);
                             imgFilterModel.setData(index, val, valueRole);
-                            mainController.apply_changes();
+                            mainController.apply_changes("binary");
                         }
                     }
                 }
@@ -115,7 +115,7 @@ Item {
                         curr_val = val;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, dataValueRole);
-                        mainController.apply_changes();
+                        mainController.apply_changes("binary");
                     }
                 }
             }

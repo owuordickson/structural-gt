@@ -255,7 +255,7 @@ class MainController(BaseController):
             if type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 # Update Compute properties
-                # self.changeImageSignal.emit()
+                self.changeImageSignal.emit()
                 self.synchronize_graph_models(self.get_selected_sgt_obj())
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
@@ -562,9 +562,13 @@ class MainController(BaseController):
             return True
         return False
 
-    @Slot()
-    def apply_changes(self):
+    @Slot(str)
+    def apply_changes(self, view: str="binary"):
         """Retrieve changes made by the user and apply to image/graph."""
+        print(f"change to {view}")
+        # sgt_obj = self.get_selected_sgt_obj()
+        # sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        # sel_img_batch.current_view = view
         self.changeImageSignal.emit()
 
     @Slot()

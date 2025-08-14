@@ -26,7 +26,7 @@ ColumnLayout {
             var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
             var index = imgBinFilterModel.index(0, 0);
             imgBinFilterModel.setData(index, val, valueRole);
-            mainController.apply_changes();
+            mainController.apply_changes("binary");
         }
     }
 
@@ -59,7 +59,7 @@ ColumnLayout {
 
                 var index = imgBinFilterModel.index(2, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes();
+                mainController.apply_changes("binary");
             }
             validator: IntValidator { bottom: spbAdaptive.from; top: spbAdaptive.to }
         }
@@ -87,7 +87,7 @@ ColumnLayout {
             onValueChanged: {
                 var index = imgBinFilterModel.index(1, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes();
+                mainController.apply_changes("binary");
             }
         }
 
@@ -116,7 +116,7 @@ ColumnLayout {
             var val = checked === true ? 1 : 0;
             var index = imgBinFilterModel.index(4, 0);
             imgBinFilterModel.setData(index, val, valueRole);
-            mainController.apply_changes();
+            mainController.apply_changes("binary");
         }
     }
 
