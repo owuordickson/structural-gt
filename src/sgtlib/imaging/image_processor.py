@@ -39,6 +39,7 @@ class ImageProcessor(ProgressUpdate):
 
     @dataclass
     class ImageBatch:
+        """A class for storing image batch data."""
         numpy_image: np.ndarray
         images: list[BaseImage]
         is_2d: bool
@@ -68,13 +69,47 @@ class ImageProcessor(ProgressUpdate):
         >>> ntwk_p.apply_img_filters()
         """
         super(ImageProcessor, self).__init__()
-        self.img_path: str = img_path if type(img_path) is str else img_path[0]
-        self.output_dir: str = out_dir
-        self.config_file: str = cfg_file
-        self.auto_scale: bool = auto_scale
-        self.image_batches: list[ImageProcessor.ImageBatch] = []
-        self.selected_batch: int = 0
+        self._img_path: str = img_path if type(img_path) is str else img_path[0]
+        self._output_dir: str = out_dir
+        self._config_file: str = cfg_file
+        self._auto_scale: bool = auto_scale
+        self._image_batches: list[ImageProcessor.ImageBatch] = []
+        self._selected_batch: int = 0
         self._initialize_image_batches(self._load_img_from_file(img_path))
+
+    @property
+    def img_path(self) -> str:
+        return self._img_path
+
+    @property
+    def output_dir(self) -> str:
+        return self._output_dir
+
+    @output_dir.setter
+    def output_dir(self, folder: str):
+        self._output_dir = folder
+
+    @property
+    def config_file(self) -> str:
+        return self._config_file
+
+    @property
+    def auto_scale(self) -> bool:
+        return self._auto_scale
+
+    @auto_scale.setter
+    def auto_scale(self, value: bool):
+        self._auto_scale = value
+        
+    @property
+    def image_batches(self) -> list["ImageProcessor.ImageBatch"]:
+        """Returns a list of ImageBatch objects."""
+        return self._image_batches
+
+    @property
+    def selected_batch(self) -> int:
+        """Returns the selected batch index."""
+        return self._selected_batch
 
     @property
     def image_obj(self) -> BaseImage:
@@ -183,8 +218,8 @@ class ImageProcessor(ProgressUpdate):
                     # Cluster the images into batches based on (h, w) size
                     h, w = image.shape[:2]
                     image_groups[(h, w)].append(image)
-                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.config_file,
-                                                                          self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self._config_file,
+                                                                          self._auto_scale)
                 return img_batch_groups
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 image_groups = defaultdict(list)
@@ -209,8 +244,8 @@ class ImageProcessor(ProgressUpdate):
                         except EOFError:
                             # Stop when all frames are read
                             break
-                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self.config_file,
-                                                                          self.auto_scale)
+                img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self._config_file,
+                                                                          self._auto_scale)
                 return img_batch_groups
             elif ext in ['.nii', '.nii.gz']:
                 """# Load NIfTI image using nibabel
@@ -257,9 +292,9 @@ class ImageProcessor(ProgressUpdate):
             image_list = []
             if (len(img_data.shape) >= 3) and (fmt_2d is None):
                 # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
-                image_list = [BaseImage(img, self.config_file, scale_factor) for img in img_data]
+                image_list = [BaseImage(img, self._config_file, scale_factor) for img in img_data]
             else:
-                img_obj = BaseImage(img_data, self.config_file, scale_factor)
+                img_obj = BaseImage(img_data, self._config_file, scale_factor)
                 image_list.append(img_obj)
 
             is_2d = True
@@ -278,7 +313,7 @@ class ImageProcessor(ProgressUpdate):
             img_batch.images = image_list
             img_batch.is_2d = is_2d
             self.update_image_props(img_batch)
-        self.image_batches = img_batches
+        self._image_batches = img_batches
 
     def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
         """
@@ -292,19 +327,19 @@ class ImageProcessor(ProgressUpdate):
 
         """
 
-        if sel_batch_idx >= len(self.image_batches):
+        if sel_batch_idx >= len(self._image_batches):
             raise ValueError(
-                f"Selected image batch {sel_batch_idx} out of range! Select in range 0-{len(self.image_batches)}")
+                f"Selected image batch {sel_batch_idx} out of range! Select in range 0-{len(self._image_batches)}")
 
-        self.selected_batch = sel_batch_idx
-        self.update_image_props(self.image_batches[sel_batch_idx])
+        self._selected_batch = sel_batch_idx
+        self.update_image_props(self._image_batches[sel_batch_idx])
         self.reset_img_filters()
 
         if selected_images is None:
             return
 
         if type(selected_images) is set:
-            self.image_batches[sel_batch_idx].selected_images_idx = selected_images
+            self._image_batches[sel_batch_idx].selected_images_idx = selected_images
 
     def track_progress(self, value, msg):
         self.update_status([value, msg])
@@ -615,7 +650,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
             # num_img_patches = len(scale_filter.image_patches)
             for bin_img_patch in scale_filter.image_patches:
-                graph_patch = FiberNetworkBuilder(cfg_file=self.config_file)
+                graph_patch = FiberNetworkBuilder(cfg_file=self._config_file)
                 graph_patch.configs = graph_configs
                 success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
                 if success:
@@ -639,8 +674,8 @@ class ImageProcessor(ProgressUpdate):
             filename (str): image file name., output_dir (str): image directory path.
         """
 
-        img_dir, filename = os.path.split(self.img_path) if image_path is None else os.path.split(image_path)
-        output_dir = img_dir if self.output_dir == '' else self.output_dir
+        img_dir, filename = os.path.split(self._img_path) if image_path is None else os.path.split(image_path)
+        output_dir = img_dir if self._output_dir == '' else self._output_dir
 
         for ext in ALLOWED_IMG_EXTENSIONS:
             ext = ext.replace('*', '')
@@ -652,7 +687,7 @@ class ImageProcessor(ProgressUpdate):
         """
         Retrieved data of the current selected batch.
         """
-        return self.image_batches[self.selected_batch]
+        return self._image_batches[self._selected_batch]
 
     def get_selected_images(self, selected_batch: ImageBatch):
         """
