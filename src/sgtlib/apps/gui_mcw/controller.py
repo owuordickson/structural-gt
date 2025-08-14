@@ -529,6 +529,7 @@ class MainController(BaseController):
                     # sgt_obj = self.get_selected_sgt_obj()
                     # sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
                     # sel_img_batch.current_view = 'original'
+                    print("change to original")
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)

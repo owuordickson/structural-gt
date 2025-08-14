@@ -46,11 +46,9 @@ class TerminalApp(BaseController):
 
         # 2. Get images and process them
         if img_path != "":
-            self.add_single_image(img_path)
-            self.update_output_dir(out_dir)
+            self.add_single_image(img_path, out_dir)
         elif img_dir != "":
-            self.add_multiple_images(img_dir)
-            self.update_output_dir(out_dir)
+            self.add_multiple_images(img_dir, out_dir)
         else:
             self.update_progress(-1, "No image(s) found in the path/image folder provided!")
             sys.exit('System exit')

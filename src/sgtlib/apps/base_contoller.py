@@ -60,26 +60,31 @@ class BaseController(QObject):
             # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
             return None
 
-    def create_sgt_object(self, img_path: str) -> bool:
+    def create_sgt_object(self, img_path: str, out_dir: str = "") -> bool:
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
 
         Args:
             img_path: file path to image
+            out_dir: output directory path
 
         Returns:
         """
         success, result = verify_path(img_path)
         if success:
             img_path = result
+            success, result = verify_path(out_dir)
+            out_dir = result if success else ""
         else:
             logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
+            self.showAlertSignal.emit("File Error", result)
             return False
 
         # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, config_file=self._config_file, allow_auto_scale=self._allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, out_folder=out_dir,
+                                                                config_file=self._config_file,
+                                                                allow_auto_scale=self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
@@ -103,21 +108,20 @@ class BaseController(QObject):
                 self.showAlertSignal.emit("Folder Creation Error", f"Error creating output folder: {err}")
                 return
 
-        print(f"Folder path: {folder_path}")
         # Update for all sgt_objs
         key_list = list(self._sgt_objs.keys())
         for key in key_list:
             sgt_obj = self._sgt_objs[key]
             sgt_obj.ntwk_p.output_dir = folder_path
 
-    def add_single_image(self, img_path: str) -> bool:
+    def add_single_image(self, img_path: str, out_dir: str = "") -> bool:
         """Verify and validate an image path, use it to create an SGT object and load it in view."""
-        is_created = self.create_sgt_object(img_path)
+        is_created = self.create_sgt_object(img_path, out_dir)
         if is_created:
             return True
         return False
 
-    def add_multiple_images(self, img_dir_path: str) -> bool:
+    def add_multiple_images(self, img_dir_path: str, out_dir: str = "") -> bool:
         """
         Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view.
         """
@@ -126,7 +130,7 @@ class BaseController(QObject):
             img_dir_path = result
         else:
             logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
+            self.showAlertSignal.emit("Directory Error", result)
             return False
 
         files = os.listdir(img_dir_path)
@@ -135,7 +139,7 @@ class BaseController(QObject):
             allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
             if a_file.endswith(allowed_extensions):
                 img_path = os.path.join(str(img_dir_path), a_file)
-                _ = self.create_sgt_object(img_path)
+                _ = self.create_sgt_object(img_path, out_dir)
 
         if len(self._sgt_objs) <= 0:
             logging.info("File Error: Files have to be either .tif .png .jpg .jpeg", extra={'user': 'SGT Logs'})
