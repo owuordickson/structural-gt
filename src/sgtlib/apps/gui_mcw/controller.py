@@ -45,15 +45,15 @@ class MainController(BaseController):
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
-        self.qml_app = qml_app
-        self.img_loaded = False
-        self.project_open = False
+        self._qml_app = qml_app
+        self._img_loaded = False
+        self._project_open = False
 
         # Project data
-        self.project_data = {"name": "", "file_path": ""}
+        self._project_data = {"name": "", "file_path": ""}
 
         # Initialize flags
-        self.wait_flag, self.wait_flag_hist = False, False
+        self._wait_flag, self._wait_flag_hist = False, False
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -169,10 +169,10 @@ class MainController(BaseController):
         Returns: True if successful, False otherwise.
 
         """
-        if not self.project_open:
+        if not self._project_open:
             return False
         try:
-            file_path = self.project_data["file_path"]
+            file_path = self._project_data["file_path"]
             with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrite[bytes]]
                 pickle.dump(self._sgt_objs, project_file)
             return True
@@ -242,7 +242,7 @@ class MainController(BaseController):
         Returns:
 
         """
-        self.wait_flag = False
+        self._wait_flag = False
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
@@ -278,7 +278,7 @@ class MainController(BaseController):
                                                                                     "'Output Dir'."])
             elif type(result) is list:
                 # Image histogram calculated
-                self.wait_flag_hist = False
+                self._wait_flag_hist = False
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
@@ -512,7 +512,7 @@ class MainController(BaseController):
             vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
             vp.zoom_all((w, h))  # width, height
 
-            ovito_widget = create_qwidget(vp, parent=self.qml_app.activeWindow())
+            ovito_widget = create_qwidget(vp, parent=self._qml_app.activeWindow())
             ovito_widget.setFixedSize(w, h)
             ovito_widget.show()
         except Exception as e:
@@ -574,19 +574,19 @@ class MainController(BaseController):
     @Slot()
     def compute_img_histogram(self):
         """Calculate the histogram of the image."""
-        if self.wait_flag_hist:
+        if self._wait_flag_hist:
             return
 
         self.showImageHistogramSignal.emit(True)
         self._hist_worker = BaseWorker()
         try:
-            self.wait_flag_hist = True
+            self._wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()
             self._thread_worker_hist = QThreadWorker(func=self._hist_worker.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
             self._hist_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker_hist.start()
         except Exception as err:
-            self.wait_flag_hist = False
+            self._wait_flag_hist = False
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_finished(False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
 
@@ -648,14 +648,14 @@ class MainController(BaseController):
     def run_extract_graph(self):
         """Retrieve settings from the model and send to Python."""
 
-        if self.wait_flag:
+        if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         self._task_worker = BaseWorker()
         try:
-            self.wait_flag = True
+            self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
@@ -663,7 +663,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self.wait_flag = False
+            self._wait_flag = False
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["Graph Extraction Error",
@@ -673,14 +673,14 @@ class MainController(BaseController):
     @Slot()
     def run_graph_analyzer(self):
         """Retrieve settings from the model and send to Python."""
-        if self.wait_flag:
+        if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         self._task_worker = BaseWorker()
         try:
-            self.wait_flag = True
+            self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_gt, args=(sgt_obj,))
@@ -688,7 +688,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self.wait_flag = False
+            self._wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["GT Computation Error",
@@ -698,14 +698,14 @@ class MainController(BaseController):
     @Slot()
     def run_multi_graph_analyzer(self):
         """"""
-        if self.wait_flag:
+        if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         self._task_worker = BaseWorker()
         try:
-            self.wait_flag = True
+            self._wait_flag = True
 
             # Update Configs
             self.replicate_sgt_configs()
@@ -715,7 +715,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self.wait_flag = False
+            self._wait_flag = False
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["GT Computation Error",
@@ -725,19 +725,19 @@ class MainController(BaseController):
     @Slot(result=bool)
     def run_save_project(self):
         """"""
-        if self.wait_flag:
+        if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
-        self.wait_flag = True
+        self._wait_flag = True
         success_val = self.save_project_data()
-        self.wait_flag = False
+        self._wait_flag = False
         return success_val
 
     @Slot(result=bool)
     def display_image(self):
-        return self.img_loaded
+        return self._img_loaded
 
     @Slot(result=bool)
     def display_graph(self):
@@ -755,7 +755,7 @@ class MainController(BaseController):
 
     @Slot(result=bool)
     def image_batches_exist(self):
-        if not self.img_loaded:
+        if not self._img_loaded:
             return False
 
         sgt_obj = self.get_selected_sgt_obj()
@@ -765,11 +765,11 @@ class MainController(BaseController):
 
     @Slot(result=bool)
     def is_project_open(self):
-        return self.project_open
+        return self._project_open
 
     @Slot(result=bool)
     def is_task_running(self):
-        return self.wait_flag
+        return self._wait_flag
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):
@@ -848,7 +848,7 @@ class MainController(BaseController):
     def create_sgt_project(self, proj_name, dir_path):
         """Creates a '.sgtproj' inside the selected directory"""
 
-        self.project_open = False
+        self._project_open = False
         success, result = verify_path(dir_path)
         if success:
             dir_path = result
@@ -872,9 +872,9 @@ class MainController(BaseController):
                 pass  # Do nothing, just create the file (updates will be done automatically/dynamically)
 
             # Update and notify QML
-            self.project_data["name"] = proj_name
-            self.project_data["file_path"] = proj_path
-            self.project_open = True
+            self._project_data["name"] = proj_name
+            self._project_data["file_path"] = proj_path
+            self._project_open = True
             self.projectOpenedSignal.emit(proj_name)
             logging.info(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
             return True
@@ -886,14 +886,14 @@ class MainController(BaseController):
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
         """Opens and loads the SGT project from the '.sgtproj' file"""
-        if self.wait_flag:
+        if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
         try:
-            self.wait_flag = True
-            self.project_open = False
+            self._wait_flag = True
+            self._project_open = False
             # Verify the path
             success, result = verify_path(sgt_path)
             if success:
@@ -901,7 +901,7 @@ class MainController(BaseController):
             else:
                 logging.info(result, extra={'user': 'SGT Logs'})
                 self.showAlertSignal.emit("File/Directory Error", result)
-                self.wait_flag = False
+                self._wait_flag = False
                 return False
             img_dir, proj_name = os.path.split(str(sgt_path))
 
@@ -915,10 +915,10 @@ class MainController(BaseController):
                     self._sgt_objs[key].ntwk_p.output_dir = img_dir
 
             # Update and notify QML
-            self.project_data["name"] = proj_name
-            self.project_data["file_path"] = str(sgt_path)
-            self.wait_flag = False
-            self.project_open = True
+            self._project_data["name"] = proj_name
+            self._project_data["file_path"] = str(sgt_path)
+            self._wait_flag = False
+            self._project_open = True
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
@@ -926,7 +926,7 @@ class MainController(BaseController):
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
-            self.wait_flag = False
+            self._wait_flag = False
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
                                                             "issue persists, the file may be corrupted or incompatible. "
