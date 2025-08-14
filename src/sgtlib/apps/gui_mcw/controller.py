@@ -526,6 +526,9 @@ class MainController(BaseController):
                     return
                 else:
                     self._selected_sgt_obj_index = index
+                    # sgt_obj = self.get_selected_sgt_obj()
+                    # sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+                    # sel_img_batch.current_view = 'original'
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -548,8 +551,8 @@ class MainController(BaseController):
     def load_prev_image(self):
         """Load the previous image in the list into view."""
         if self._selected_sgt_obj_index > 0:
-            self._selected_sgt_obj_index = self._selected_sgt_obj_index - 1
-            self.load_image()
+            prev_img_idx = self._selected_sgt_obj_index - 1
+            self.load_image(index=prev_img_idx)
             return True
         return False
 
@@ -557,8 +560,8 @@ class MainController(BaseController):
     def load_next_image(self):
         """Load the next image in the list into view."""
         if self._selected_sgt_obj_index < (len(self._sgt_objs) - 1):
-            self._selected_sgt_obj_index = self._selected_sgt_obj_index + 1
-            self.load_image()
+            next_img_idx = self._selected_sgt_obj_index + 1
+            self.load_image(index=next_img_idx)
             return True
         return False
 
