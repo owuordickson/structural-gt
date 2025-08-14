@@ -129,6 +129,11 @@ class GraphAnalyzer(ProgressUpdate):
         """Returns the dictionary containing the parameters and options for computing graph theory metrics."""
         return self._configs
 
+    @configs.setter
+    def configs(self, configs: dict):
+        """Sets the parameters and options for computing graph theory metrics."""
+        self._configs = configs
+
     @property
     def props(self) -> list:
         """Returns the list of properties computed by StructuralGT."""
