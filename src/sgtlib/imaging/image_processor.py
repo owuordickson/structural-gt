@@ -79,28 +79,33 @@ class ImageProcessor(ProgressUpdate):
 
     @property
     def img_path(self) -> str:
+        """Returns the input image path."""
         return self._img_path
 
     @property
     def output_dir(self) -> str:
+        """Returns the output directory path for storing results."""
         return self._output_dir
 
     @output_dir.setter
     def output_dir(self, folder: str):
+        """Sets the output directory path for storing results."""
         self._output_dir = folder
 
     @property
     def config_file(self) -> str:
+        """Returns the configuration file path (usually sgt_configs.ini)."""
         return self._config_file
 
     @property
     def auto_scale(self) -> bool:
+        """Returns whether to automatically scale the image."""
         return self._auto_scale
 
     @auto_scale.setter
     def auto_scale(self, value: bool):
         self._auto_scale = value
-        
+
     @property
     def image_batches(self) -> list["ImageProcessor.ImageBatch"]:
         """Returns a list of ImageBatch objects."""
@@ -763,12 +768,6 @@ class ImageProcessor(ProgressUpdate):
 
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
-
-        """sel_batch = self.get_selected_batch()
-        gsd_filename = img_file_name + "_skel.gsd"
-        gsd_file = os.path.join(out_dir, gsd_filename)
-        if sel_batch.graph_obj.skel_obj.skeleton is not None:
-            write_gsd_file(gsd_file, sel_batch.graph_obj.skel_obj.skeleton)"""
 
     def draw_graph_image(self, sel_batch: ImageBatch, show_giant_only: bool = False):
         """

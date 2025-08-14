@@ -35,13 +35,23 @@ class GraphSkeleton:
         >>> graph_skel = GraphSkeleton(img, opt_gte)
 
         """
-        self.img_bin = img_bin
-        self.configs = configs
-        self.is_2d = is_2d
-        self.update_progress = progress_func
-        self.skeleton, self.skeleton_3d = None, None
-        if self.configs is not None:
+        self._img_bin = img_bin
+        self._configs = configs
+        self._is_2d = is_2d
+        self._update_progress = progress_func
+        self._skeleton, self._skeleton_3d = None, None
+        if self._configs is not None:
             self._build_skeleton()
+
+    @property
+    def skeleton(self):
+        """Returns the skeleton graph in 2D."""
+        return self._skeleton
+
+    @property
+    def skeleton_3d(self):
+        """Returns the skeleton graph in 3D."""
+        return self._skeleton_3d
 
     def _build_skeleton(self) -> None:
         """
@@ -51,8 +61,8 @@ class GraphSkeleton:
         """
 
         # rebuilding the binary image as a boolean for skeletonizing
-        self.img_bin = np.squeeze(self.img_bin)
-        img_bin_int = np.asarray(self.img_bin, dtype=np.uint16)
+        self._img_bin = np.squeeze(self._img_bin)
+        img_bin_int = np.asarray(self._img_bin, dtype=np.uint16)
 
         # making the initial skeleton image
         temp_skeleton = skeletonize(img_bin_int)
@@ -67,28 +77,28 @@ class GraphSkeleton:
             # if self.update_progress is not None:
             # self.update_progress([56, f"Ran remove_bubbles for image skeleton..."])
 
-        if self.configs["merge_nearby_nodes"]["value"] == 1:
+        if self._configs["merge_nearby_nodes"]["value"] == 1:
             node_radius_size = 2 # int(self.configs["merge_nearby_nodes"]["items"][0]["value"])
             temp_skeleton = GraphSkeleton.merge_nodes(temp_skeleton, node_radius_size)
-            if self.update_progress is not None:
-                self.update_progress([52, f"Ran merge_nodes for image skeleton..."])
+            if self._update_progress is not None:
+                self._update_progress([52, f"Ran merge_nodes for image skeleton..."])
 
-        if self.configs["remove_disconnected_segments"]["value"] == 1:
-            min_size = int(self.configs["remove_disconnected_segments"]["items"][0]["value"])
+        if self._configs["remove_disconnected_segments"]["value"] == 1:
+            min_size = int(self._configs["remove_disconnected_segments"]["items"][0]["value"])
             temp_skeleton = remove_small_objects(temp_skeleton, min_size=min_size, connectivity=2)
-            if self.update_progress is not None:
-                self.update_progress([54, f"Ran remove_small_objects for image skeleton..."])
+            if self._update_progress is not None:
+                self._update_progress([54, f"Ran remove_small_objects for image skeleton..."])
 
-        if self.configs["prune_dangling_edges"]["value"] == 1:
+        if self._configs["prune_dangling_edges"]["value"] == 1:
             max_iter = 500 # int(self.configs["prune_dangling_edges"]["items"][0]["value"])
             b_points = GraphSkeleton.get_branched_points(temp_skeleton)
             temp_skeleton = GraphSkeleton.prune_edges(temp_skeleton, max_iter, b_points)
-            if self.update_progress is not None:
-                self.update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
+            if self._update_progress is not None:
+                self._update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
 
-        self.skeleton = np.asarray(temp_skeleton, dtype=np.uint16)
+        self._skeleton = np.asarray(temp_skeleton, dtype=np.uint16)
         # self.skeleton = self.skeleton.astype(int)
-        self.skeleton_3d = np.asarray([self.skeleton]) if self.is_2d else self.skeleton
+        self._skeleton_3d = np.asarray([self._skeleton]) if self._is_2d else self._skeleton
 
     def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1) -> tuple[float, float | None, float]:
@@ -210,7 +220,7 @@ class GraphSkeleton:
         while check == 0:             # iteratively check along orthogonal vector to see if the coordinate is either...
             pt_check = mid_pt + i * ortho  # ... out of bounds, or no longer within the fiber in img_bin
             pt_check = pt_check.astype(int)
-            is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(self._img_bin, pt_check)
 
             if is_in_edge:
                 edge = mid_pt + (i - 1) * ortho
@@ -225,7 +235,7 @@ class GraphSkeleton:
         while check == 0:  # Repeat, but following the negative orthogonal vector
             pt_check = mid_pt - i * ortho
             pt_check = pt_check.astype(int)
-            is_in_edge = GraphSkeleton.point_check(self.img_bin, pt_check)
+            is_in_edge = GraphSkeleton.point_check(self._img_bin, pt_check)
 
             if is_in_edge:
                 edge = mid_pt - (i - 1) * ortho

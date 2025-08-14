@@ -46,46 +46,57 @@ class FiberNetworkBuilder(ProgressUpdate):
 
     @property
     def configs(self) -> dict:
+        """Returns the graph extraction configuration parameters and options."""
         return self._configs
 
     @configs.setter
     def configs(self, configs: dict):
+        """Sets the graph extraction configuration parameters and options."""
         self._configs = configs
 
     @property
     def props(self) -> list:
+        """Returns the computed graph properties as a list-array."""
         return self._props
 
     @property
     def img_ntwk(self) -> MatLike | None:
+        """Returns the processed image with the graph drawn on it."""
         return self._img_ntwk
 
     @img_ntwk.setter
     def img_ntwk(self, img_ntwk: MatLike | None):
+        """Sets the processed image with the graph drawn on it."""
         self._img_ntwk = img_ntwk
 
     @property
     def nx_giant_graph(self) -> nx.Graph | None:
+        """Returns the giant graph of the NetworkX object."""
         return self._nx_giant_graph
 
     @nx_giant_graph.setter
     def nx_giant_graph(self, nx_giant_graph: nx.Graph | None):
+        """Sets the giant graph of the NetworkX object."""
         self._nx_giant_graph = nx_giant_graph
 
     @property
     def nx_graph(self) -> nx.Graph | None:
+        """Returns the NetworkX graph object."""
         return self._nx_graph
 
     @nx_graph.setter
     def nx_graph(self, nx_graph: nx.Graph | None):
+        """Sets the NetworkX graph object."""
         self._nx_graph = nx_graph
 
     @property
     def ig_graph(self) -> None | ig.Graph:
+        """Returns the iGraph graph object."""
         return self._ig_graph
 
     @property
     def gsd_file(self) -> str | None:
+        """Returns the filename of the graph skeleton saved in GSD format."""
         return self._gsd_file
 
     @property
