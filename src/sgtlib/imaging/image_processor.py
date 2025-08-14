@@ -343,7 +343,6 @@ class ImageProcessor(ProgressUpdate):
             if filter_type == 2:
                 img_mod = img_obj.img_mod.copy()
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
-                img_obj.fractal_dim = BaseImage.compute_fractal_dimension(img_obj.img_bin)
                 img_obj.img_mod = img_mod
             img_obj.get_pixel_width()
 
@@ -434,6 +433,13 @@ class ImageProcessor(ProgressUpdate):
             img_bin = [img.img_bin for img in sel_images]
             img_bin = np.asarray(img_bin)
 
+            # Check if filters have been applied
+            if img_bin[0] is None:
+                self.update_status([101, "No filters applied! Applying image filters."])
+                self.apply_img_filters()
+                self.build_graph_network()
+                return
+
             # Get the selected batch's graph object and generate the graph
             px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
             rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
@@ -479,14 +485,6 @@ class ImageProcessor(ProgressUpdate):
         patch_count_per_kernel = patch_count_per_kernel if patch_count_per_kernel > 5 else 5
         graph_configs = self.graph_obj.configs
         img_obj = self.image_obj  # ONLY works for 2D
-
-        def save_fractal_dims_to_file():
-            import pandas as pd
-            fd_df = pd.DataFrame(data=np.array(fd_dict), columns=["Dim.", "FD"])
-            filename, output_location = self.get_filenames()
-            csv_filename = filename + "_SGT_FD.csv"
-            csv_file = os.path.join(output_location, csv_filename)
-            fd_df.to_csv(csv_file, index=False)
 
         def extract_cropped_image_patches() -> list[MatLike]:
             """A method that extracts 4 filters from the original binary image. Each filter is the of size approximately
@@ -613,7 +611,6 @@ class ImageProcessor(ProgressUpdate):
 
         filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)
-        fd_dict = [[img_obj.img_bin.shape[0], img_obj.fractal_dim]]
         for i, scale_filter in enumerate(img_obj.image_filters):
             self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
             # num_img_patches = len(scale_filter.image_patches)
@@ -624,15 +621,12 @@ class ImageProcessor(ProgressUpdate):
                 if success:
                     height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
-                    fd = BaseImage.compute_fractal_dimension(bin_img_patch)
-                    fd_dict.append([height, fd])
                     # if num_img_patches == 4:
                     #    graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
                     # else:
                     #    graph_groups[(height, width)].append(graph_patch.nx_graph)
                 else:
                     self.update_status([101, f"Filter {bin_img_patch.shape} graph extraction failed!"])
-        save_fractal_dims_to_file()
         return graph_groups
 
     def get_filenames(self, image_path: str = None):
