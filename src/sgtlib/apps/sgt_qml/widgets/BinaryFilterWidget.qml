@@ -20,9 +20,26 @@ ColumnLayout {
 
     ButtonGroup {
         id: btnGrpBinary
+        property bool currentCheckedButton: rdoGlobal
+        property bool clickedChange: false
         exclusive: true
-        //checkedButton: rdoGlobal
         onCheckedButtonChanged: {
+            if (clickedChange) {
+                clickedChange = false
+                return
+            }
+
+            if (currentCheckedButton !== checkedButton) {
+                currentCheckedButton = checkedButton;
+                var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
+                var index = imgBinFilterModel.index(0, 0);
+                imgBinFilterModel.setData(index, val, valueRole);
+                mainController.apply_changes("");
+            }
+        }
+        onClicked: {
+            clickedChange = true;
+            currentCheckedButton = checkedButton;
             var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
             var index = imgBinFilterModel.index(0, 0);
             imgBinFilterModel.setData(index, val, valueRole);
@@ -59,7 +76,7 @@ ColumnLayout {
 
                 var index = imgBinFilterModel.index(2, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes("binary");
+                mainController.apply_changes("");
             }
             validator: IntValidator { bottom: spbAdaptive.from; top: spbAdaptive.to }
         }
@@ -87,7 +104,7 @@ ColumnLayout {
             onValueChanged: {
                 var index = imgBinFilterModel.index(1, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes("binary");
+                mainController.apply_changes("");
             }
         }
 
@@ -111,8 +128,26 @@ ColumnLayout {
     CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
+        property bool clickedChange: false
+        property bool isChecked: false
         checked: false
         onCheckedChanged: {
+            if (clickedChange) {
+                clickedChange = false
+                return
+            }
+
+            if (isChecked !== checked) {
+                isChecked = checked;
+                var val = checked === true ? 1 : 0;
+                var index = imgBinFilterModel.index(4, 0);
+                imgBinFilterModel.setData(index, val, valueRole);
+                mainController.apply_changes("");
+            }
+        }
+        onClicked: {
+            clickedChange = true;
+            isChecked = checked;
             var val = checked === true ? 1 : 0;
             var index = imgBinFilterModel.index(4, 0);
             imgBinFilterModel.setData(index, val, valueRole);

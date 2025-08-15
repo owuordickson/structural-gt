@@ -71,6 +71,7 @@ class ImageProvider(QQuickImageProvider):
             self._img_controller.imageChangedSignal.emit()
         else:
             self._img_controller._img_loaded = False
+        self._img_controller._applying_changes = False
 
     def requestPixmap(self, img_id, requested_size, size):
         return self._pixmap

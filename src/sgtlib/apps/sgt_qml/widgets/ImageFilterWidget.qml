@@ -34,15 +34,30 @@ Item {
                     Layout.preferredWidth: cbxWidthSize
                     text: model.text
                     property bool isChecked: model.value
+                    property bool clickedChange: false  // Flag
                     checked: isChecked
                     onCheckedChanged: {
+                        if (clickedChange) {
+                            // Reset flag so the next programmatic change will run normally
+                            clickedChange = false
+                            return
+                        }
+
                         if (isChecked !== checked) {  // Only update if there is a change
                             isChecked = checked
                             let val = checked ? 1 : 0;
                             var index = imgFilterModel.index(model.index, 0);
                             imgFilterModel.setData(index, val, valueRole);
-                            mainController.apply_changes("binary");
+                            mainController.apply_changes(""); // Only runs if not from click
                         }
+                    }
+                    onClicked: {
+                        clickedChange = true;
+                        isChecked = checked
+                        let val = checked ? 1 : 0;
+                        var index = imgFilterModel.index(model.index, 0);
+                        imgFilterModel.setData(index, val, valueRole);
+                        mainController.apply_changes("binary");
                     }
                 }
 
@@ -111,11 +126,11 @@ Item {
                 }
 
                 function updateValue(curr_val, val) {
-                    if (curr_val !== val){
+                    if (curr_val !== val) {
                         curr_val = val;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, dataValueRole);
-                        mainController.apply_changes("binary");
+                        mainController.apply_changes("");
                     }
                 }
             }

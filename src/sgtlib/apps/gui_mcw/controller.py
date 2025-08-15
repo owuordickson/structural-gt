@@ -48,6 +48,7 @@ class MainController(BaseController):
         self._qml_app = qml_app
         self._img_loaded = False
         self._project_open = False
+        self._applying_changes = False
 
         # Project data
         self._project_data = {"name": "", "file_path": ""}
@@ -526,10 +527,9 @@ class MainController(BaseController):
                     return
                 else:
                     self._selected_sgt_obj_index = index
-                    # sgt_obj = self.get_selected_sgt_obj()
-                    # sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-                    # sel_img_batch.current_view = 'original'
-                    print("change to original")
+                    sgt_obj = self.get_selected_sgt_obj()
+                    sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+                    sel_img_batch.current_view = 'original'
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -567,13 +567,16 @@ class MainController(BaseController):
         return False
 
     @Slot(str)
-    def apply_changes(self, view: str="binary"):
+    def apply_changes(self, view: str=""):
         """Retrieve changes made by the user and apply to image/graph."""
-        print(f"change to {view}")
-        # sgt_obj = self.get_selected_sgt_obj()
-        # sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-        # sel_img_batch.current_view = view
-        self.changeImageSignal.emit()
+        if not self._applying_changes:  # Disallow concurrent changes
+            # print(f"change to {view}")
+            self._applying_changes = True
+            if view != "":
+                sgt_obj = self.get_selected_sgt_obj()
+                sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+                sel_img_batch.current_view = view
+            self.changeImageSignal.emit()
 
     @Slot()
     def compute_img_histogram(self):
