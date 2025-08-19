@@ -124,13 +124,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([50, "Extracting the graph network..."])
         success = self.extract_graph(image_bin=img_bin, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         if not success:
-            self.update_status([-1, "Problem encountered, provide GT parameters"])
-            self.abort = True
-            return
-
-        self.update_status([75, "Verifying graph network..."])
-        if self.nx_graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem generating graph (change image/binary filters)"])
+            self.update_status([-1, "Problem encountered, change image/binary filters and graph options. OR change brightness/contrast"])
             self.abort = True
             return
 
@@ -159,68 +153,74 @@ class FiberNetworkBuilder(ProgressUpdate):
         :param rho_val: Resistivity coefficient/value of the material.
         :return:
         """
+        try:
+            if image_bin is None:
+                return False
 
-        if image_bin is None:
-            return False
+            opt_gte = self._configs
+            if opt_gte is None:
+                return False
 
-        opt_gte = self._configs
-        if opt_gte is None:
-            return False
+            self.update_status([51, "Build graph skeleton from binary image..."])
+            graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
+            self._skel_obj = graph_skel
+            img_skel = graph_skel.skeleton
 
-        self.update_status([51, "Build graph skeleton from binary image..."])
-        graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
-        self._skel_obj = graph_skel
-        img_skel = graph_skel.skeleton
+            self.update_status([60, "Creating graph network..."])
+            # nx_graph = sknw.build_sknw(img_skel)
+            nx_graph = build_sknw(img_skel)
 
-        self.update_status([60, "Creating graph network..."])
-        # nx_graph = sknw.build_sknw(img_skel)
-        nx_graph = build_sknw(img_skel)
-
-        if opt_gte["remove_self_loops"]["value"]:
-            self.update_status([64, "Removing self loops from graph network..."])
-
-        self.update_status([66, "Assigning weights to graph network..."])
-        for (s, e) in nx_graph.edges():
             if opt_gte["remove_self_loops"]["value"]:
-                # Removing all instances of edges where the start and end are the same, or "self-loops"
-                if s == e:
-                    nx_graph.remove_edge(s, e)
-                    continue
+                self.update_status([64, "Removing self loops from graph network..."])
 
-            # 'sknw' library stores the length of edge as 'weight', we create an attribute 'length', and update 'weight'
-            nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
-            ge = nx_graph[s][e]['pts']
+            self.update_status([66, "Assigning weights to graph network..."])
+            for (s, e) in list(nx_graph.edges()):
+                if opt_gte["remove_self_loops"]["value"]:
+                    # Removing all instances of edges where the start and end are the same, or "self-loops"
+                    if s == e:
+                        nx_graph.remove_edge(s, e)
+                        continue
 
-            if opt_gte["has_weights"]["value"] == 1:
-                # We update 'weight'
-                wt_type = self.get_weight_type()
-                weight_options = FiberNetworkBuilder.get_weight_options()
-                pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
-                                                                         pixel_dim=px_size, rho_dim=rho_val)
+                # 'sknw' library stores the length of edge as 'weight', we create an attribute 'length', and update 'weight'
+                nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
+                ge = nx_graph[s][e]['pts']
+
+                if opt_gte["has_weights"]["value"] == 1:
+                    # We update 'weight'
+                    wt_type = self.get_weight_type()
+                    weight_options = FiberNetworkBuilder.get_weight_options()
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
+                                                                             pixel_dim=px_size, rho_dim=rho_val)
+                else:
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
+                    del nx_graph[s][e]['weight']            # delete 'weight'
+                nx_graph[s][e]['width'] = pix_width
+                nx_graph[s][e]['angle'] = pix_angle
+                nx_graph[s][e]['weight'] = wt
+                # print(f"{nx_graph[s][e]}\n")
+
+            self.update_status([70, "Verifying graph network..."])
+            if nx_graph.number_of_edges() <= 0 or nx_graph.number_of_nodes() <= 0:
+                return False
+
+            # Save NetworkX graph
+            self.nx_graph = nx_graph
+            # Save iGraph graph
+            self._ig_graph = ig.Graph.from_networkx(nx_graph)
+            # Save giant NetworkX graph
+            connected_components = list(nx.connected_components(nx_graph))
+            if not connected_components:  # In case the graph is empty
+                connected_components = []
+            sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
+            if sub_graphs:
+                giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
             else:
-                pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
-                del nx_graph[s][e]['weight']            # delete 'weight'
-            nx_graph[s][e]['width'] = pix_width
-            nx_graph[s][e]['angle'] = pix_angle
-            nx_graph[s][e]['weight'] = wt
-            # print(f"{nx_graph[s][e]}\n")
+                giant_graph = nx_graph
 
-        # Save NetworkX graph
-        self.nx_graph = nx_graph
-        # Save iGraph graph
-        self._ig_graph = ig.Graph.from_networkx(nx_graph)
-        # Save giant NetworkX graph
-        connected_components = list(nx.connected_components(nx_graph))
-        if not connected_components:  # In case the graph is empty
-            connected_components = []
-        sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
-        if sub_graphs:
-            giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-        else:
-            giant_graph = nx_graph
-
-        self._nx_giant_graph = giant_graph
-        return True
+            self._nx_giant_graph = giant_graph
+            return True
+        except Exception:
+            return False
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
         """
@@ -463,14 +463,16 @@ class FiberNetworkBuilder(ProgressUpdate):
             norm_w = new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
             return float(norm_w)
 
-        # First, extract all widths to compute min and max
-        all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])
-        min_w, max_w = min(all_widths), max(all_widths)
-
         fig_group = {}
         # Create axes for the first frame of the image (enough if it is 2D)
         fig = create_plt_axes(0)
         fig_group[0] = fig
+
+        # First, extract all widths to compute min and max
+        all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])
+        if all_widths.size == 0:
+            return fig_group
+        min_w, max_w = min(all_widths), max(all_widths)
 
         if edge_color == 'black':
             color_list = ['k', 'r', 'g', 'b', 'c', 'm', 'y']
