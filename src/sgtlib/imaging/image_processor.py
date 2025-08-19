@@ -639,7 +639,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Average patches with sizes 90% of the image (rectangular kernel)
             if compute_avg:
-                self.update_status([66, "Computing GT descriptors on 95% of image at 4 locations..."])
+                self.update_status([66, "Computing GT parameters on 95% of image at 4 locations..."])
                 lst_img_filters = extract_cropped_image_patches()
                 c_h, c_w = lst_img_filters[0].shape[:2]
                 crop_filter = BaseImage.ScalingKernel(
@@ -657,14 +657,14 @@ class ImageProcessor(ProgressUpdate):
             for bin_img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self._config_file)
                 graph_patch.configs = graph_configs
-                success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
+                try:
+                    success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
+                except Exception:
+                    self.update_status([101, f"Error extracting graph from filter {bin_img_patch.shape}."])
+                    success = False
                 if success:
                     height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
-                    # if num_img_patches == 4:
-                    #    graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
-                    # else:
-                    #    graph_groups[(height, width)].append(graph_patch.nx_graph)
                 else:
                     self.update_status([101, f"Filter {bin_img_patch.shape} graph extraction failed!"])
         return graph_groups

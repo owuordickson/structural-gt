@@ -226,7 +226,7 @@ class GraphAnalyzer(ProgressUpdate):
         if graph is None:
             return None
 
-        self.update_status([1, "Performing un-weighted analysis..."]) if not silent else None
+        self.update_status([1, "Performing un-weighted GT parameters..."]) if not silent else None
 
         opt_gtc = self._configs
         data_dict = {"parameter": [], "value": []}
@@ -421,7 +421,7 @@ class GraphAnalyzer(ProgressUpdate):
         if not graph_obj.configs["has_weights"]["value"]:
             return None
 
-        self.update_status([70, "Performing weighted analysis..."]) if not silent else None
+        self.update_status([70, "Performing weighted GT parameters..."]) if not silent else None
 
         graph = graph_obj.nx_giant_graph
         opt_gtc = self._configs
@@ -537,7 +537,7 @@ class GraphAnalyzer(ProgressUpdate):
         for (h, w), nx_graphs in graph_groups.items():
             num_graphs = len(nx_graphs)
             for i, nx_graph in enumerate(nx_graphs):
-                self.update_status([101, f"Computing GT descriptors for filter {h}x{w}: graph-patch {i + 1}/{num_graphs}..."])
+                self.update_status([101, f"Computing GT parameters for filter {h}x{w}: graph-patch {i + 1}/{num_graphs}..."])
                 temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False, silent=True)
                 if temp_df is None:
                     # Skip the problematic graph
@@ -549,7 +549,7 @@ class GraphAnalyzer(ProgressUpdate):
                         continue
                     sorted_plt_data[x_param][h].append(y_value) if num_graphs > 4 else None
 
-                # Save GT descriptors of 90% image to DF
+                # Save GT parameters/descriptors of 90% image to DF
                 if num_graphs > 4:
                     continue
                 else:

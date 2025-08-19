@@ -67,7 +67,7 @@ class ExpressGT:
             self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
 
     def compute_gt_descriptors(self):
-        """Run StructuralGT task to compute the selected graph theory descriptors."""
+        """Run StructuralGT task to compute the selected graph theory parameters/descriptors."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             self._term_app.replicate_sgt_configs()
