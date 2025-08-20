@@ -3,14 +3,20 @@
 Function to generate graph images after applying a combination of random image filters.
 """
 
-import random, uuid
+import os, random, uuid
 import pandas as pd
 from pathlib import Path
 from sgtlib import modules as sgt
 from matplotlib import pyplot as plt
 
 
-def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ):
+def print_updates(progress_val, progress_msg):
+    """Function that prints out progress updates."""
+    print(f"{progress_val}: {progress_msg}")
+
+
+
+def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ) -> None:
     """
     Function to generate graph images after applying a combination of random image filters. Steps:
         A. identify an image folder
@@ -34,7 +40,15 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
         return
 
     # 1. Fetch image paths
-    img_paths = [p for p in Path(images_dir).rglob("*") if p.suffix.lower() in sgt.ALLOWED_IMG_EXTENSIONS]
+    files = os.listdir(images_dir)
+    files = sorted(files)
+    img_paths = []
+    for a_file in files:
+        allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in sgt.ALLOWED_IMG_EXTENSIONS)
+        if a_file.endswith(allowed_extensions):
+            img_path = os.path.join(str(images_dir), a_file)
+            img_paths.append(img_path)
+
     if not img_paths:
         print(f"[automated_graph_generator] No images found in {images_dir}")
         return
@@ -45,86 +59,67 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
     out_subdir.mkdir(parents=True, exist_ok=True)
     Path(Path(filter_file).parent).mkdir(parents=True, exist_ok=True)
 
+    # 3. Create column names
     filter_columns = [
         "file_name","Adaptive Kernel","Global Threshold","OTSU","Dark FG","Autolevel",
         "Gaussian Kernel","Laplacian","Sobel","Median","Scharr","Lowpass Window","Gamma","result"
     ]
 
+    # 4. Generate rows of random filters
     for run_idx in range(loops):
-        af_rows = []
+        lst_filters = []
 
         for img_path in img_paths:
             attempt = 0
             success = False
             img_file = None
-            cfg = None  # store the config that succeeded
+            cfgs = {}
+            _, img_file_name = os.path.split(img_path)
 
             while attempt < num_tries and not success:
-                # Generate new random config each retry
-                cfg_try = {
-                    "threshold_type": random.choice([0, 1, 2]),
-                    "global_threshold_value": random.randint(1, 255),
-                    "adaptive_local_threshold_value": random.randrange(1, 1000, 2),
-
-                    "lut_gamma": round(random.randint(1, 500) / 100.0, 2),
-                    "gaussian_blur_size": random.choice([1, 3, 5, 7]),
-                    "autolevel_blur_size": random.choice([1, 3, 5, 7]),
-                    "lowpass_window_size": random.randint(0, 1000),
-                    "laplacian_kernel_size": random.choice([1, 3, 5, 7]),
-                    "sobel_kernel_size": random.choice([1, 3, 5, 7]),
-
-                    "apply_gamma": random.randint(0, 1),
-                    "apply_autolevel": random.randint(0, 1),
-                    "apply_gaussian_blur": random.randint(0, 1),
-                    "apply_lowpass_filter": random.randint(0, 1),
-                    "apply_laplacian_gradient": random.randint(0, 1),
-                    "apply_sobel_gradient": random.randint(0, 1),
-                    "apply_median_filter": random.randint(0, 1),
-                    "apply_scharr_gradient": random.randint(0, 1),
-                    "apply_dark_foreground": random.randint(0, 1),
-                }
-
                 # build SGT object and apply config
                 ntwk_obj, _ = sgt.ImageProcessor.create_imp_object(str(img_path))
                 cfgs = ntwk_obj.image_obj.configs
 
-                cfgs["threshold_type"]["value"] = cfg_try["threshold_type"]
-                cfgs["global_threshold_value"]["value"] = cfg_try["global_threshold_value"]
-                cfgs["adaptive_local_threshold_value"]["value"] = cfg_try["adaptive_local_threshold_value"]
-                cfgs["otsu"]["value"] = 1 if cfg_try["threshold_type"] == 2 else 0
+                # Generate new random config each retry
+                cfgs["threshold_type"]["value"] = random.choice([0, 1, 2])
+                cfgs["global_threshold_value"]["value"] = random.randint(1, 255)
+                cfgs["adaptive_local_threshold_value"]["value"] = random.randrange(1, 1000, 2)
 
-                cfgs["apply_gamma"]["value"] = cfg_try["apply_gamma"]
-                cfgs["apply_gamma"]["dataValue"] = cfg_try["lut_gamma"]
+                cfgs["apply_gamma"]["value"] = random.randint(0, 1)
+                cfgs["apply_gamma"]["dataValue"] = round(random.randint(1, 500) / 100.0, 2)
 
-                cfgs["apply_autolevel"]["value"] = cfg_try["apply_autolevel"]
-                cfgs["apply_autolevel"]["dataValue"] = cfg_try["autolevel_blur_size"]
+                cfgs["apply_autolevel"]["value"] = random.randint(0, 1)
+                cfgs["apply_autolevel"]["dataValue"] = random.choice([1, 3, 5, 7])
 
-                cfgs["apply_gaussian_blur"]["value"] = cfg_try["apply_gaussian_blur"]
-                cfgs["apply_gaussian_blur"]["dataValue"] = cfg_try["gaussian_blur_size"]
+                cfgs["apply_gaussian_blur"]["value"] = random.randint(0, 1)
+                cfgs["apply_gaussian_blur"]["dataValue"] = random.choice([1, 3, 5, 7])
 
-                cfgs["apply_lowpass_filter"]["value"] = cfg_try["apply_lowpass_filter"]
-                cfgs["apply_lowpass_filter"]["dataValue"] = cfg_try["lowpass_window_size"]
+                cfgs["apply_lowpass_filter"]["value"] = random.randint(0, 1)
+                cfgs["apply_lowpass_filter"]["dataValue"] = random.randint(0, 1000)
 
-                cfgs["apply_laplacian_gradient"]["value"] = cfg_try["apply_laplacian_gradient"]
-                cfgs["apply_laplacian_gradient"]["dataValue"] = cfg_try["laplacian_kernel_size"]
+                cfgs["apply_laplacian_gradient"]["value"] = random.randint(0, 1)
+                cfgs["apply_laplacian_gradient"]["dataValue"] = random.choice([1, 3, 5, 7])
 
-                cfgs["apply_sobel_gradient"]["value"] = cfg_try["apply_sobel_gradient"]
-                cfgs["apply_sobel_gradient"]["dataValue"] = cfg_try["sobel_kernel_size"]
+                cfgs["apply_sobel_gradient"]["value"] = random.randint(0, 1)
+                cfgs["apply_sobel_gradient"]["dataValue"] = random.choice([1, 3, 5, 7])
 
-                cfgs["apply_median_filter"]["value"] = cfg_try["apply_median_filter"]
-                cfgs["apply_scharr_gradient"]["value"] = cfg_try["apply_scharr_gradient"]
-                cfgs["apply_dark_foreground"]["value"] = cfg_try["apply_dark_foreground"]
+                cfgs["apply_median_filter"]["value"] = random.randint(0, 1)
+                cfgs["apply_scharr_gradient"]["value"] = random.randint(0, 1)
+                cfgs["apply_dark_foreground"]["value"] = random.randint(0, 1)
 
                 try:
+                    ntwk_obj.add_listener(print_updates)
                     ntwk_obj.apply_img_filters()
                     ntwk_obj.build_graph_network()
+                    ntwk_obj.remove_listener(print_updates)
 
                     if getattr(ntwk_obj, "graph_image", None) is None:
                         attempt += 1
                         continue
 
                     uid = uuid.uuid4().hex[:8]
-                    img_file = f"{img_path.stem}__run{run_idx:05d}__{uid}.png"
+                    img_file = f"{img_file_name}__run{run_idx:05d}__{uid}.png"
                     out_file = out_subdir / img_file
 
                     plt.figure()
@@ -133,38 +128,40 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
                     plt.savefig(out_file, bbox_inches="tight", pad_inches=0)
                     plt.close()
 
-                    cfg = cfg_try  # save the successful config
                     success = True
-                except Exception:
+                except Exception as e:
+                    print(f"[automated_graph_generator] Exception encountered: {e}")
                     attempt += 1
 
             if not success:
-                print(f"Skipping {img_path.name} after {max_iterations} failed attempts.")
+                print(f"Skipping {img_file_name} after {num_tries} failed attempts.")
                 continue
 
-            af_rows.append({
+            lst_filters.append({
                 "file_name": img_file,
-                "Adaptive Kernel": str(cfg["adaptive_local_threshold_value"]) if cfg["threshold_type"] == 1 else "",
-                "Global Threshold": str(cfg["global_threshold_value"]) if cfg["threshold_type"] == 0 else "",
-                "OTSU": "TRUE" if cfg["threshold_type"] == 2 else "",
-                "Dark FG": "TRUE" if cfg["apply_dark_foreground"] == 1 else "",
-                "Autolevel": str(cfg["autolevel_blur_size"]) if cfg["apply_autolevel"] == 1 else "",
-                "Gaussian Kernel": str(cfg["gaussian_blur_size"]) if cfg["apply_gaussian_blur"] == 1 else "",
-                "Laplacian": str(cfg["laplacian_kernel_size"]) if cfg["apply_laplacian_gradient"] == 1 else "",
-                "Sobel": str(cfg["sobel_kernel_size"]) if cfg["apply_sobel_gradient"] == 1 else "",
-                "Median": "TRUE" if cfg["apply_median_filter"] == 1 else "",
-                "Scharr": "TRUE" if cfg["apply_scharr_gradient"] == 1 else "",
-                "Lowpass Window": str(cfg["lowpass_window_size"]) if cfg["apply_lowpass_filter"] == 1 else "",
-                "Gamma": f"{cfg['lut_gamma']:.2f}" if cfg["apply_gamma"] == 1 else "",
+                "Adaptive Kernel": int(cfgs["adaptive_local_threshold_value"]) if cfgs["threshold_type"] == 1 else "",
+                "Global Threshold": int(cfgs["global_threshold_value"]) if cfgs["threshold_type"] == 0 else "",
+                "OTSU": "TRUE" if cfgs["threshold_type"] == 2 else "",
+                "Dark FG": "TRUE" if cfgs["apply_dark_foreground"] == 1 else "",
+                "Autolevel": int(cfgs["autolevel_blur_size"]) if cfgs["apply_autolevel"] == 1 else "",
+                "Gaussian Kernel": int(cfgs["gaussian_blur_size"]) if cfgs["apply_gaussian_blur"] == 1 else "",
+                "Laplacian": int(cfgs["laplacian_kernel_size"]) if cfgs["apply_laplacian_gradient"] == 1 else "",
+                "Sobel": int(cfgs["sobel_kernel_size"]) if cfgs["apply_sobel_gradient"] == 1 else "",
+                "Median": "TRUE" if cfgs["apply_median_filter"] == 1 else "",
+                "Scharr": "TRUE" if cfgs["apply_scharr_gradient"] == 1 else "",
+                "Lowpass Window": int(cfgs["lowpass_window_size"]) if cfgs["apply_lowpass_filter"] == 1 else "",
+                "Gamma": float(cfgs['lut_gamma']) if cfgs["apply_gamma"] == 1 else "",
                 "result": "",
             })
 
         # append this loop’s rows to auto_filter.csv
-        if af_rows:
-            af_df = pd.DataFrame(af_rows, columns=filter_columns)
+        if lst_filters:
+            filter_df = pd.DataFrame(lst_filters, columns=filter_columns)
             if Path(filter_file).exists():
-                af_df.to_csv(filter_file, mode="a", index=False, header=False)
+                filter_df.to_csv(filter_file, mode="a", index=False, header=False)
             else:
-                af_df.to_csv(filter_file, index=False, header=True)
+                filter_df.to_csv(filter_file, index=False, header=True)
 
+    # Completed
     print(f"[automated_graph_generator] Done. Outputs → '{out_dir}', log → '{filter_file}'.")
+    return
