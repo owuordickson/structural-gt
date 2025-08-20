@@ -1,8 +1,0 @@
-1. Analyzing/Interpreting graph descriptors: trying to use graph descriptors (average degree, betweeness etc.) to describe SEM materials.
-2. Spider Plot/Radar Chart/Web Chart
-    For example: line-plot -- compare one variable vs another using one parameter. Variable about employees (Age, Salary), values
-    Spider Plot: compare multiple variables across different parameters. Variables about houses (A, B) - (price, size, work-proximity)
-3. Heatmaps
-    type of visualization that uses colors to show the distribution of values (mostly in a 2D or 3D space)
-
-4. Create a Python environment
