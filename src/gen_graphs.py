@@ -5,14 +5,14 @@ Function to generate graph images after applying a combination of random image f
 
 import os, random, uuid
 import pandas as pd
-from pathlib import Path
-from sgtlib import modules as sgt
+from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor
 from matplotlib import pyplot as plt
 
 
 def print_updates(progress_val, progress_msg):
     """Function that prints out progress updates."""
-    print(f"{progress_val}: {progress_msg}")
+    if progress_val < 0:
+        print(f"{progress_val}: {progress_msg}")
 
 
 
@@ -44,7 +44,7 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
     files = sorted(files)
     img_paths = []
     for a_file in files:
-        allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in sgt.ALLOWED_IMG_EXTENSIONS)
+        allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
         if a_file.endswith(allowed_extensions):
             img_path = os.path.join(str(images_dir), a_file)
             img_paths.append(img_path)
@@ -54,10 +54,8 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
         return
 
     # 2. Make output directory and empty CSV file to store the generated filters
-    filter_file = "auto_filter.csv"
-    out_subdir = Path(out_dir)
-    out_subdir.mkdir(parents=True, exist_ok=True)
-    Path(Path(filter_file).parent).mkdir(parents=True, exist_ok=True)
+    os.makedirs(out_dir, exist_ok=True)
+    filter_file_path = os.path.join(str(out_dir), "auto_filter.csv")
 
     # 3. Create column names
     filter_columns = [
@@ -78,7 +76,7 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
 
             while attempt < num_tries and not success:
                 # build SGT object and apply config
-                ntwk_obj, _ = sgt.ImageProcessor.create_imp_object(str(img_path))
+                ntwk_obj, _ = ImageProcessor.create_imp_object(str(img_path))
                 cfgs = ntwk_obj.image_obj.configs
 
                 # Generate new random config each retry
@@ -120,7 +118,7 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
 
                     uid = uuid.uuid4().hex[:8]
                     img_file = f"{img_file_name}__run{run_idx:05d}__{uid}.png"
-                    out_file = out_subdir / img_file
+                    out_file = os.path.join(str(out_dir), img_file)
 
                     plt.figure()
                     plt.imshow(ntwk_obj.graph_image)
@@ -139,29 +137,36 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
 
             lst_filters.append({
                 "file_name": img_file,
-                "Adaptive Kernel": int(cfgs["adaptive_local_threshold_value"]) if cfgs["threshold_type"] == 1 else "",
-                "Global Threshold": int(cfgs["global_threshold_value"]) if cfgs["threshold_type"] == 0 else "",
-                "OTSU": "TRUE" if cfgs["threshold_type"] == 2 else "",
-                "Dark FG": "TRUE" if cfgs["apply_dark_foreground"] == 1 else "",
-                "Autolevel": int(cfgs["autolevel_blur_size"]) if cfgs["apply_autolevel"] == 1 else "",
-                "Gaussian Kernel": int(cfgs["gaussian_blur_size"]) if cfgs["apply_gaussian_blur"] == 1 else "",
-                "Laplacian": int(cfgs["laplacian_kernel_size"]) if cfgs["apply_laplacian_gradient"] == 1 else "",
-                "Sobel": int(cfgs["sobel_kernel_size"]) if cfgs["apply_sobel_gradient"] == 1 else "",
-                "Median": "TRUE" if cfgs["apply_median_filter"] == 1 else "",
-                "Scharr": "TRUE" if cfgs["apply_scharr_gradient"] == 1 else "",
-                "Lowpass Window": int(cfgs["lowpass_window_size"]) if cfgs["apply_lowpass_filter"] == 1 else "",
-                "Gamma": float(cfgs['lut_gamma']) if cfgs["apply_gamma"] == 1 else "",
+                "Adaptive Kernel": int(cfgs["adaptive_local_threshold_value"]["value"]) if cfgs["threshold_type"]["value"] == 1 else "",
+                "Global Threshold": int(cfgs["global_threshold_value"]["value"]) if cfgs["threshold_type"]["value"] == 0 else "",
+                "OTSU": "TRUE" if cfgs["threshold_type"]["value"] == 2 else "",
+                "Dark FG": "TRUE" if cfgs["apply_dark_foreground"]["value"] == 1 else "",
+                "Autolevel": int(cfgs["apply_gaussian_blur"]["dataValue"]) if cfgs["apply_autolevel"]["value"] == 1 else "",
+                "Gaussian Kernel": int(cfgs["apply_gaussian_blur"]["dataValue"]) if cfgs["apply_gaussian_blur"]["value"] == 1 else "",
+                "Laplacian": int(cfgs["apply_laplacian_gradient"]["dataValue"]) if cfgs["apply_laplacian_gradient"]["value"] == 1 else "",
+                "Sobel": int(cfgs["apply_sobel_gradient"]["dataValue"]) if cfgs["apply_sobel_gradient"]["value"] == 1 else "",
+                "Median": "TRUE" if cfgs["apply_median_filter"]["value"] == 1 else "",
+                "Scharr": "TRUE" if cfgs["apply_scharr_gradient"]["value"] == 1 else "",
+                "Lowpass Window": int(cfgs["apply_lowpass_filter"]["dataValue"] ) if cfgs["apply_lowpass_filter"]["value"] == 1 else "",
+                "Gamma": float(cfgs["apply_gamma"]["dataValue"]) if cfgs["apply_gamma"]["value"] == 1 else "",
                 "result": "",
             })
+            break
 
         # append this loop’s rows to auto_filter.csv
         if lst_filters:
             filter_df = pd.DataFrame(lst_filters, columns=filter_columns)
-            if Path(filter_file).exists():
-                filter_df.to_csv(filter_file, mode="a", index=False, header=False)
+
+            if os.path.exists(filter_file_path):
+                filter_df.to_csv(filter_file_path, mode="a", index=False, header=False)
             else:
-                filter_df.to_csv(filter_file, index=False, header=True)
+                filter_df.to_csv(filter_file_path, index=False, header=True)
 
     # Completed
-    print(f"[automated_graph_generator] Done. Outputs → '{out_dir}', log → '{filter_file}'.")
+    print(f"[automated_graph_generator] Done. Outputs → '{out_dir}', log → '{filter_file_path}'.")
     return
+
+
+
+if __name__ == "__main__":
+    automated_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
