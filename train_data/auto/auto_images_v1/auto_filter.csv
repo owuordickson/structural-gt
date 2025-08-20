@@ -1,0 +1,5 @@
+file_name,Adaptive Kernel,Global Threshold,OTSU,Dark FG,Autolevel,Gaussian Kernel,Laplacian,Sobel,Median,Scharr,Lowpass Window,Gamma,result
+4.tif__run00000__f093db23.png,,,,,,,,,,,,,
+4.tif__run00001__fe686abf.png,,,,,,,,,,,,,
+4.tif__run00000__905066e3.png,,58,,,,7,5,3,TRUE,TRUE,,4.52,
+4.tif__run00001__56cd8d78.png,,,TRUE,TRUE,,,1,7,TRUE,TRUE,496,,
