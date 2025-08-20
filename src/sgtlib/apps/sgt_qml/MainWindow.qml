@@ -11,7 +11,7 @@ ApplicationWindow {
     width: 1024
     height: 800
     visible: true
-    title: "Structural GT"
+    title: mainController.get_sgt_title();
     font.family: "Arial"  // or Qt.application.font.family
 
     menuBar: MenuBarWidget {

@@ -7,7 +7,7 @@ MenuBar {
     property int valueRole: Qt.UserRole + 4
 
     Menu {
-        title: "Structural GT"
+        title: mainController.get_sgt_title()
         MenuItem { text: "&About"; onTriggered: dialogAbout.open(); }
         MenuSeparator{}
         MenuItem { text: "&Quit"; onTriggered: Qt.quit(); }
@@ -29,11 +29,11 @@ MenuBar {
         Menu {
             id: mnuExportGraphAs
             title: "Export GT graph as..."
-            enabled: true
-            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
-            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: false; onTriggered: export_graph_data(2) }
-            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(1) }
-            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: false; onTriggered: export_graph_data(3) }
+            enabled: graphPropsModel.rowCount() > 0
+            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: true; onTriggered: export_graph_data(0) }
+            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: true; onTriggered: export_graph_data(2) }
+            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: true; onTriggered: export_graph_data(1) }
+            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: true; onTriggered: export_graph_data(3) }
 
         }
         MenuSeparator{}
@@ -70,7 +70,7 @@ MenuBar {
     }
     Menu {
         title: "Help"
-        MenuItem { id:mnuHelp; text: "Structural GT Help"; enabled: true; onTriggered: dialogAbout.open() }
+        MenuItem { id:mnuHelp; text: "StructuralGT Help"; enabled: true; onTriggered: dialogAbout.open() }
         MenuItem { id:mnuLogs; text: "View Logs"; enabled: true; onTriggered: loggingWindowPanel.visible = true }
     }
 
@@ -117,12 +117,12 @@ MenuBar {
         function onImageChangedSignal() {
             // Force refresh
             mnuSaveProjAs.enabled = mainController.display_image();
-
-            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            mnuExportAdj.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            mnuExportGexf.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            mnuExportGSD.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            mnuExportAll.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportGraphAs.enabled = true; //graphPropsModel.rowCount() > 0;
+            //mnuExportEdge.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            //mnuExportAdj.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            //mnuExportGexf.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            //mnuExportGSD.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            //mnuExportAll.enabled = graphPropsModel.rowCount() > 0 ? true : false;
 
             //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS
             mnuBrightnessImgCtrl.enabled = mainController.display_image();

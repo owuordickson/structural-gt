@@ -25,7 +25,7 @@ ColumnLayout {
             Label {
                 id: lblWelcome
                 //Layout.preferredWidth:
-                text: "Welcome to Structural GT"
+                text: "Welcome to StructuralGT"
                 color: "blue"
                 //font.bold: true
                 font.pixelSize: 24

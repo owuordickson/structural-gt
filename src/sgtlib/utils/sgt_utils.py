@@ -222,6 +222,68 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
         s.particles.typeid = ["0"] * s.particles.N
         f.append(s)
 
+# def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
+    """Function takes gsd rendering of a skeleton and returns the list of
+    nodes and edges, as calculated by sknw.
+
+    Args:
+        gsd_name (str):
+            The file name to write.
+        sub (optional, bool):
+            Whether to return only to largest connected component. If True, it
+            will reduce the returned graph to the largest connected induced
+            subgraph, resetting node numbers to consecutive integers,
+            starting from 0.
+        _2d (optional, bool):
+            Whether the skeleton is 2D. If True it only ensures additional
+            redundant axes from the position array is removed. It does not
+            guarantee a 3d graph.
+        crop (list):
+            The x, y and (optionally) z coordinates of the cuboid/shape
+            enclosing the skeleton from which a :class:`igraph.Graph` object
+            should be extracted.
+
+    Returns:
+        (:class:`igraph.Graph`): The extracted :class:`igraph.Graph` object.
+    """
+""""    frame = gsd.hoomd.open(name=gsd_name, mode="r")[0]
+    positions = shift(frame.particles.position.astype(int))[0]
+    if crop is not None:
+        from numpy import logical_and as a
+
+        p = positions.T
+        positions = p.T[
+            a(
+                a(a(p[1] >= crop[0], p[1] <= crop[1]), p[2] >= crop[2]),
+                p[2] <= crop[3],
+            )
+        ]
+        positions = shift(positions)[0]
+
+    if sum((positions < 0).ravel()) != 0:
+        positions = shift(positions)[0]
+
+    if _2d:
+        positions = dim_red(positions)
+        new_pos = np.zeros(positions.T.shape)
+        new_pos[0] = positions.T[0]
+        new_pos[1] = positions.T[1]
+        positions = new_pos.T.astype(int)
+
+    canvas = np.zeros(
+        list((max(positions.T[i]) + 1) for i in list(
+            range(min(positions.shape))))
+    )
+    canvas[tuple(list(positions.T))] = 1
+    canvas = canvas.astype(int)
+
+    G = sknwEdits.build_sknw(canvas)
+
+    if sub:
+        G = sub_G(G)
+
+    return G
+"""
 
 def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
@@ -254,7 +316,7 @@ def opencv_to_base64(img_arr: MatLike) -> str | None:
 def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
     """Convert a Matplotlib figure to an OpenCV BGR image (Numpy array), retaining colors."""
     if fig:
-        # Save figure to a buffer
+        # Save a figure to a buffer
         buf = io.BytesIO()
         fig.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
@@ -291,8 +353,8 @@ def safe_uint8_image(img: MatLike) -> MatLike | None:
         return img
 
     # Handle float or other types
-    min_val = np.min(img)
-    max_val = np.max(img)
+    min_val = float(np.min(img))
+    max_val = float(np.max(img))
 
     if min_val == max_val:
         # Avoid divide by zero; return constant grayscale

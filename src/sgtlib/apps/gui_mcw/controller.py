@@ -21,7 +21,7 @@ from .qthread_worker import QThreadWorker
 from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
-from ... import __version__
+from ... import __version__, __title__
 from ...utils.sgt_utils import img_to_base64, verify_path
 from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS
 from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
@@ -292,10 +292,13 @@ class MainController(BaseController):
                 self.save_project_data()
 
     @Slot(result=str)
+    def get_sgt_title(self):
+        return f"{__title__}"
+
+    @Slot(result=str)
     def get_sgt_version(self):
         """"""
-        # Copyright (C) 2024, the Regents of the University of Michigan.
-        # return f"StructuralGT v{__version__}, Computing: {COMPUTING_DEVICE}"
+        # return f"{__title__} v{__version__}, Computing: {COMPUTING_DEVICE}"
         return f"v{__version__}"
 
     @Slot(result=str)
