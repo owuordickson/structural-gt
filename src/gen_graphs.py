@@ -151,7 +151,6 @@ def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000,
                 "Gamma": float(cfgs["apply_gamma"]["dataValue"]) if cfgs["apply_gamma"]["value"] == 1 else "",
                 "result": "",
             })
-            break
 
         # append this loop’s rows to auto_filter.csv
         if lst_filters:
