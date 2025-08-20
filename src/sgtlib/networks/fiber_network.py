@@ -11,6 +11,7 @@ import numpy as np
 import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
+from PyQt6.QtGui.QRawFont import weight
 from cv2.typing import MatLike
 
 from .sknw_mod import build_sknw
@@ -191,12 +192,14 @@ class FiberNetworkBuilder(ProgressUpdate):
                     weight_options = FiberNetworkBuilder.get_weight_options()
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, wt_type, weight_options=weight_options,
                                                                              pixel_dim=px_size, rho_dim=rho_val)
+                    nx_graph[s][e]['width'] = pix_width
+                    nx_graph[s][e]['angle'] = pix_angle
+                    nx_graph[s][e]['weight'] = wt
                 else:
                     pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
+                    nx_graph[s][e]['width'] = pix_width
+                    nx_graph[s][e]['angle'] = pix_angle
                     del nx_graph[s][e]['weight']            # delete 'weight'
-                nx_graph[s][e]['width'] = pix_width
-                nx_graph[s][e]['angle'] = pix_angle
-                nx_graph[s][e]['weight'] = wt
                 # print(f"{nx_graph[s][e]}\n")
 
             self.update_status([70, "Verifying graph network..."])
