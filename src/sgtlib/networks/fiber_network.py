@@ -219,7 +219,8 @@ class FiberNetworkBuilder(ProgressUpdate):
 
             self._nx_giant_graph = giant_graph
             return True
-        except Exception:
+        except Exception as e:
+            self.update_status([-1, f"Problem encountered while extracting graph: {e}"])
             return False
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:

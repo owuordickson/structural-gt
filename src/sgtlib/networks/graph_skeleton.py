@@ -75,26 +75,26 @@ class GraphSkeleton:
         # if self.configs["remove_bubbles"]["value"] == 1:
         #    temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, img_bin_int, mask_elements)
             # if self.update_progress is not None:
-            # self.update_progress([56, f"Ran remove_bubbles for image skeleton..."])
+            # self.update_progress([56, f"Executed: remove_bubbles for image skeleton..."])
 
         if self._configs["merge_nearby_nodes"]["value"] == 1:
             node_radius_size = 2 # int(self.configs["merge_nearby_nodes"]["items"][0]["value"])
             temp_skeleton = GraphSkeleton.merge_nodes(temp_skeleton, node_radius_size)
             if self._update_progress is not None:
-                self._update_progress([52, f"Ran merge_nodes for image skeleton..."])
+                self._update_progress([52, f"Executed: merge_nodes for image skeleton..."])
 
         if self._configs["remove_disconnected_segments"]["value"] == 1:
             min_size = int(self._configs["remove_disconnected_segments"]["items"][0]["value"])
             temp_skeleton = remove_small_objects(temp_skeleton, min_size=min_size, connectivity=2)
             if self._update_progress is not None:
-                self._update_progress([54, f"Ran remove_small_objects for image skeleton..."])
+                self._update_progress([54, f"Executed: remove_small_objects for image skeleton..."])
 
         if self._configs["prune_dangling_edges"]["value"] == 1:
             max_iter = 500 # int(self.configs["prune_dangling_edges"]["items"][0]["value"])
             b_points = GraphSkeleton.get_branched_points(temp_skeleton)
             temp_skeleton = GraphSkeleton.prune_edges(temp_skeleton, max_iter, b_points)
             if self._update_progress is not None:
-                self._update_progress([56, f"Ran prune_dangling_edges for image skeleton..."])
+                self._update_progress([56, f"Executed: prune_dangling_edges for image skeleton..."])
 
         self._skeleton = np.asarray(temp_skeleton, dtype=np.uint16)
         # self.skeleton = self.skeleton.astype(int)

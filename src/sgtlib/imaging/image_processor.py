@@ -475,7 +475,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Check if filters have been applied
             if img_bin[0] is None:
-                self.update_status([101, "No filters applied! Applying image filters."])
+                self.update_status([101, "No filters applied! Please wait, applying image filters."])
                 self.apply_img_filters()
                 self.build_graph_network()
                 return
@@ -662,7 +662,7 @@ class ImageProcessor(ProgressUpdate):
                     height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
                 else:
-                    self.update_status([101, f"Filter {bin_img_patch.shape} graph extraction failed!"])
+                    self.update_status([-1, f"Filter {bin_img_patch.shape} graph extraction failed!"])
         return graph_groups
 
     def get_filenames(self, image_path: str = None):
