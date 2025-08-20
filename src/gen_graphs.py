@@ -16,7 +16,7 @@ def print_updates(progress_val, progress_msg):
 
 
 
-def automated_graph_generator( images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ) -> None:
+def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ) -> None:
     """
     Function to generate graph images after applying a combination of random image filters. Steps:
         A. identify an image folder
