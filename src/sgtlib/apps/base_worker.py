@@ -34,7 +34,9 @@ class BaseWorker(QObject):
     def task_save_images(self, ntwk_p):
         """"""
         try:
+            self.update_progress(25, "Saving Images...")
             ntwk_p.save_images_to_file()
+            self.update_progress(95, "Saving Images...")
             self.taskFinishedSignal.emit(True, "Image files successfully saved in 'Output Dir'")
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
@@ -44,10 +46,13 @@ class BaseWorker(QObject):
         """"""
         try:
             # 1. Get filename
+            self.update_progress(25, "Exporting Graph...")
             filename, out_dir = ntwk_p.get_filenames()
 
             # 2. Save graph data to the file
+            self.update_progress(30, "Exporting Graph...")
             ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
+            self.update_progress(95, "Exporting Graph...")
             self.taskFinishedSignal.emit(True, "Graph successfully exported to file and saved in 'Output Dir'")
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})

@@ -255,6 +255,7 @@ class MainController(BaseController):
         else:
             if type(result) is str:
                 # Saving files to Output Folder
+                self._handle_progress_update(100, "Files Saved!")
                 self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
             elif type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
@@ -625,12 +626,14 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
+        self._handle_progress_update(0, "Exporting Graph Data...")
         self._task_worker = BaseWorker()
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
                 return
 
+            self._handle_progress_update(20, "Exporting Graph Data...")
             self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
@@ -649,16 +652,19 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
+        self._handle_progress_update(0, "Saving Images...")
         self._task_worker = BaseWorker()
         try:
-
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
                 return
+
+            self._handle_progress_update(10, "Saving Images...")
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
 
+            self._handle_progress_update(20, "Saving Images...")
             self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
 
