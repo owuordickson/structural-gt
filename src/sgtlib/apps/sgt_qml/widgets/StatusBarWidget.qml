@@ -4,6 +4,7 @@ import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
+// Icons retrieved from https://www.flaticon.com and used under the CC0 1.0 Universal Public Domain Dedication.
 
 Rectangle {
     id: statusBar
@@ -20,7 +21,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true // Make the row take the full width of the column
             Layout.leftMargin: 36
-            Layout.rightMargin: 36 // Progress bar covers 80% of the width
+            Layout.rightMargin: 36 // Progressbar covers 80% of the width
             spacing: 5
 
             ProgressBar {
@@ -42,7 +43,9 @@ Rectangle {
                 icon.height: 21
                 ToolTip.text: "Cancel task!"
                 ToolTip.visible: btnCancel.hovered
-                background: Rectangle { color: "transparent"}
+                background: Rectangle {
+                    color: "transparent"
+                }
                 visible: mainController.is_task_running()
                 enabled: mainController.is_task_running()
                 onClicked: {
@@ -108,7 +111,7 @@ Rectangle {
                             wrapMode: Text.Wrap
                             textFormat: Text.RichText  // Enable HTML formatting
                             onLinkActivated: (link) => Qt.openUrlExternally(link)  // Opens links in default browser
-                            text: mainController.check_for_updates()
+                            text: mainController.get_software_download_details()
                         }
                     }
 
@@ -135,7 +138,7 @@ Rectangle {
             btnCancel.enabled = mainController.is_task_running();
         }
 
-        function onErrorSignal (msg) {
+        function onErrorSignal(msg) {
             progressBar.value = 0;
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#bc2222";
@@ -145,7 +148,7 @@ Rectangle {
             btnCancel.enabled = mainController.is_task_running();
         }
 
-        function onTaskTerminatedSignal(success_val, msg_data){
+        function onTaskTerminatedSignal(success_val, msg_data) {
             //console.log(success_val);
             if (success_val) {
                 lblStatusMsg.color = "#2222bc";
@@ -162,7 +165,17 @@ Rectangle {
                 dialogAlert.open();
             }
 
-            lblNotifyMsg.text = mainController.check_for_updates();
+            const updates_available = mainController.check_for_updates();
+            lblNotifyMsg.text = mainController.get_software_download_details();
+            if (updates_available) {
+                btnNotify.icon.source = "../assets/icons/notify_active_icon.png";
+                btnNotify.icon.width = 28;
+                btnNotify.icon.height = 28;
+            } else {
+                btnNotify.icon.source = "../assets/icons/notify_icon.png";
+                btnNotify.icon.width = 21;
+                btnNotify.icon.height = 21;
+            }
             progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running();
             btnNotify.visible = !mainController.is_task_running();

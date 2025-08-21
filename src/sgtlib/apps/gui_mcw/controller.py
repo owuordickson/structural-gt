@@ -53,6 +53,7 @@ class MainController(BaseController):
 
         # Project data
         self._project_data = {"name": "", "file_path": ""}
+        self._software_update = "No updates available!"
 
         # Initialize flags
         self._wait_flag, self._wait_flag_hist = False, False
@@ -329,6 +330,10 @@ class MainController(BaseController):
         return f"v{__version__}"
 
     @Slot(result=str)
+    def get_software_download_details(self):
+        return self._software_update
+
+    @Slot(result=str)
     def get_about_details(self):
         about_app = (
             "<html>"
@@ -357,7 +362,7 @@ class MainController(BaseController):
             "</html>")
         return about_app
 
-    @Slot(result=str)
+    @Slot(result=bool)
     def check_for_updates(self):
         """"""
         github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/sgtlib/__init__.py"
@@ -366,8 +371,8 @@ class MainController(BaseController):
             response = requests.get(github_url, timeout=5)
             response.raise_for_status()
         except requests.RequestException as e:
-            msg = f"Error checking for updates: {e}"
-            return msg
+            self._software_update = f"Error checking for updates: {e}"
+            return False
 
         remote_version = None
         for line in response.text.splitlines():
@@ -376,24 +381,25 @@ class MainController(BaseController):
                     remote_version = line.split("=")[1].strip().strip("\"'")
                     break
                 except IndexError:
-                    msg = "Could not connect to server!"
-                    return msg
+                    self._software_update = "Could not connect to server!"
+                    return False
 
         if not remote_version:
-            msg = "Could not find the new version!"
-            return msg
+            self._software_update = "Could not find the new version!"
+            return False
 
         new_version = version.parse(remote_version)
         current_version = version.parse(__version__)
         if new_version > current_version:
             # https://github.com/owuordickson/structural-gt/releases/tag/v3.3.5
-            msg = (
+            self._software_update = (
                 "New version available!<br>"
                 f"Download via this <a href='https://github.com/owuordickson/structural-gt/releases/tag/v{remote_version}'>link</a>"
             )
+            return True
         else:
-            msg = "No updates available."
-        return msg
+            self._software_update = "No updates available."
+            return False
 
     @Slot(str, result=str)
     def get_file_extensions(self, option):
