@@ -7,7 +7,7 @@ import numpy as np
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Property,Signal,Slot
+from PySide6.QtCore import Signal,Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -253,7 +253,10 @@ class MainController(BaseController):
             #    if pdf_saved:
             #        self._handle_finished(True, result)
         else:
-            if type(result) is ImageProcessor:
+            if type(result) is str:
+                # Saving files to Output Folder
+                self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
+            elif type(result) is ImageProcessor:
                 self._handle_progress_update(100, "Graph extracted successfully!")
                 # Update Compute properties
                 self.changeImageSignal.emit()
@@ -617,19 +620,23 @@ class MainController(BaseController):
     @Slot()
     def export_graph_to_file(self):
         """Export graph data and save as a file."""
+        if self._wait_flag:
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        self._task_worker = BaseWorker()
         try:
             sel_images = self.get_selected_images()
             if len(sel_images) <= 0:
                 return
 
-            # 1. Get filename
+            self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
-            ntwk_p = sgt_obj.ntwk_p
-            filename, out_dir = ntwk_p.get_filenames()
 
-            # 2. Save graph data to the file
-            ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
-            self.taskTerminatedSignal.emit(True, ["Exporting Graph", "Exported files successfully stored in 'Output Dir'"])
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_export_graph, args=(sgt_obj.ntwk_p,))
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
@@ -637,6 +644,12 @@ class MainController(BaseController):
     @Slot()
     def save_img_files(self):
         """Retrieve and save images to the file."""
+        if self._wait_flag:
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        self._task_worker = BaseWorker()
         try:
 
             sel_images = self.get_selected_images()
@@ -645,10 +658,13 @@ class MainController(BaseController):
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
+
+            self._wait_flag = True
             sgt_obj = self.get_selected_sgt_obj()
-            sgt_obj.ntwk_p.save_images_to_file()
-            self.taskTerminatedSignal.emit(True,
-                                           ["Save Images", "Image files successfully saved in 'Output Dir'"])
+
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_save_images, args=(sgt_obj.ntwk_p,))
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
         except Exception as err:
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,

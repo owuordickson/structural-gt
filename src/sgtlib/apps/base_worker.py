@@ -31,6 +31,28 @@ class BaseWorker(QObject):
         """
         self.inProgressSignal.emit(value, msg)
 
+    def task_save_images(self, ntwk_p):
+        """"""
+        try:
+            ntwk_p.save_images_to_file()
+            self.taskFinishedSignal.emit(True, "Image files successfully saved in 'Output Dir'")
+        except Exception as err:
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            self.taskFinishedSignal.emit(False, ["Save Images Failed", "Error while saving images!"])
+
+    def task_export_graph(self, ntwk_p):
+        """"""
+        try:
+            # 1. Get filename
+            filename, out_dir = ntwk_p.get_filenames()
+
+            # 2. Save graph data to the file
+            ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
+            self.taskFinishedSignal.emit(True, "Graph successfully exported to file and saved in 'Output Dir'")
+        except Exception as err:
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            self.taskFinishedSignal.emit(False, ["Export Graph Failed", "Error while exporting graph!"])
+
     def task_apply_img_filters(self, ntwk_p):
         """"""
         try:
