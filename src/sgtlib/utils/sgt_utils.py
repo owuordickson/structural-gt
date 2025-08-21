@@ -16,11 +16,13 @@ import logging
 import subprocess
 import gsd.hoomd
 import numpy as np
+import networkx as nx
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
+from ..networks.sknw_mod import build_sknw
 
 
 class AbortException(Exception):
@@ -222,48 +224,28 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
         s.particles.typeid = ["0"] * s.particles.N
         f.append(s)
 
-# def gsd_to_G(gsd_name, sub=False, _2d=False, crop=None):
-    """Function takes gsd rendering of a skeleton and returns the list of
-    nodes and edges, as calculated by sknw.
 
-    Args:
-        gsd_name (str):
-            The file name to write.
-        sub (optional, bool):
-            Whether to return only to largest connected component. If True, it
-            will reduce the returned graph to the largest connected induced
-            subgraph, resetting node numbers to consecutive integers,
-            starting from 0.
-        _2d (optional, bool):
-            Whether the skeleton is 2D. If True it only ensures additional
-            redundant axes from the position array is removed. It does not
-            guarantee a 3d graph.
-        crop (list):
-            The x, y and (optionally) z coordinates of the cuboid/shape
-            enclosing the skeleton from which a :class:`igraph.Graph` object
-            should be extracted.
-
-    Returns:
-        (:class:`igraph.Graph`): The extracted :class:`igraph.Graph` object.
+def gsd_to_graph(gsd_file: str, only_giant: bool = True) -> None|nx.Graph:
     """
-""""    frame = gsd.hoomd.open(name=gsd_name, mode="r")[0]
-    positions = shift(frame.particles.position.astype(int))[0]
-    if crop is not None:
-        from numpy import logical_and as a
+    A function that takes a gsd file and returns a NetworkX graph object.
 
-        p = positions.T
-        positions = p.T[
-            a(
-                a(a(p[1] >= crop[0], p[1] <= crop[1]), p[2] >= crop[2]),
-                p[2] <= crop[3],
-            )
-        ]
-        positions = shift(positions)[0]
+    :param gsd_file: gsd.hoomd file name;
+    :param only_giant: only return the giant graph
+    :return:
+    """
+    frame = gsd.hoomd.open(name=gsd_file, mode="r")[0]
+    positions = shift(frame.particles.position.astype(int))[0]
 
     if sum((positions < 0).ravel()) != 0:
         positions = shift(positions)[0]
 
     if _2d:
+        """
+        _2d (optional, bool):
+            Whether the skeleton is 2D. If True it only ensures additional
+            redundant axes from the position array is removed. It does not
+            guarantee a 3d graph.
+        """
         positions = dim_red(positions)
         new_pos = np.zeros(positions.T.shape)
         new_pos[0] = positions.T[0]
@@ -277,13 +259,18 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
     canvas[tuple(list(positions.T))] = 1
     canvas = canvas.astype(int)
 
-    G = sknwEdits.build_sknw(canvas)
+    nx_graph = build_sknw(canvas)
 
-    if sub:
-        G = sub_G(G)
+    if only_giant:
+        connected_components = list(nx.connected_components(nx_graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
+        if sub_graphs:
+            nx_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
 
-    return G
-"""
+    return nx_graph
+
 
 def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
