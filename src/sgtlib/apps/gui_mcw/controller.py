@@ -7,7 +7,7 @@ import numpy as np
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal,Slot
+from PySide6.QtCore import Property, Signal, Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -30,8 +30,9 @@ from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
-    showAlertSignal = Signal(str, str)
+    _waitFlagChanged = Signal()
     errorSignal = Signal(str)
+    showAlertSignal = Signal(str, str)
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
@@ -55,6 +56,7 @@ class MainController(BaseController):
 
         # Initialize flags
         self._wait_flag, self._wait_flag_hist = False, False
+        self._wait_msg = ""
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -243,7 +245,7 @@ class MainController(BaseController):
         Returns:
 
         """
-        self._wait_flag = False
+        self._stop_wait()
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
@@ -294,6 +296,27 @@ class MainController(BaseController):
             # Auto-save changes to the project data file
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
+
+    def _start_wait(self, msg: str = "please wait..."):
+        """Activate the wait flag and send a wait signal."""
+        self._wait_flag = True
+        self._wait_msg = msg
+        self._waitFlagChanged.emit()
+
+    def _stop_wait(self):
+        """Deactivate the wait flag and send a wait signal."""
+        self._wait_flag = False
+        self._wait_msg = ""
+        self._waitFlagChanged.emit()
+
+    # --- Properties exposed to QML because of "notify" ---
+    @Property(bool, notify=_waitFlagChanged)
+    def wait(self):
+        return self._wait_flag
+
+    @Property(str, notify=_waitFlagChanged)
+    def wait_text(self):
+        return self._wait_msg
 
     @Slot(result=str)
     def get_sgt_title(self):
@@ -634,7 +657,7 @@ class MainController(BaseController):
                 return
 
             self._handle_progress_update(20, "Exporting Graph Data...")
-            self._wait_flag = True
+            self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_export_graph, args=(sgt_obj.ntwk_p,))
@@ -665,7 +688,7 @@ class MainController(BaseController):
                     img.configs[val["id"]]["value"] = val["value"]
 
             self._handle_progress_update(20, "Saving Images...")
-            self._wait_flag = True
+            self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_save_images, args=(sgt_obj.ntwk_p,))
@@ -687,7 +710,7 @@ class MainController(BaseController):
 
         self._task_worker = BaseWorker()
         try:
-            self._wait_flag = True
+            self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
@@ -695,7 +718,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self._wait_flag = False
+            self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["Graph Extraction Error",
@@ -712,7 +735,7 @@ class MainController(BaseController):
 
         self._task_worker = BaseWorker()
         try:
-            self._wait_flag = True
+            self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
             self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_gt, args=(sgt_obj,))
@@ -720,7 +743,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self._wait_flag = False
+            self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["GT Computation Error",
@@ -737,7 +760,7 @@ class MainController(BaseController):
 
         self._task_worker = BaseWorker()
         try:
-            self._wait_flag = True
+            self._start_wait()
 
             # Update Configs
             self.replicate_sgt_configs()
@@ -747,7 +770,7 @@ class MainController(BaseController):
             self._task_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker.start()
         except Exception as err:
-            self._wait_flag = False
+            self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
             self._handle_finished(False, ["GT Computation Error",
@@ -762,9 +785,9 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
-        self._wait_flag = True
+        self._start_wait()
         success_val = self.save_project_data()
-        self._wait_flag = False
+        self._stop_wait()
         return success_val
 
     @Slot(result=bool)
@@ -924,7 +947,7 @@ class MainController(BaseController):
             return False
 
         try:
-            self._wait_flag = True
+            self._start_wait()
             self._project_open = False
             # Verify the path
             success, result = verify_path(sgt_path)
@@ -933,7 +956,7 @@ class MainController(BaseController):
             else:
                 logging.info(result, extra={'user': 'SGT Logs'})
                 self.showAlertSignal.emit("File/Directory Error", result)
-                self._wait_flag = False
+                self._stop_wait()
                 return False
             img_dir, proj_name = os.path.split(str(sgt_path))
 
@@ -949,7 +972,7 @@ class MainController(BaseController):
             # Update and notify QML
             self._project_data["name"] = proj_name
             self._project_data["file_path"] = str(sgt_path)
-            self._wait_flag = False
+            self._stop_wait()
             self._project_open = True
             self.projectOpenedSignal.emit(proj_name)
 
@@ -958,7 +981,7 @@ class MainController(BaseController):
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
-            self._wait_flag = False
+            self._stop_wait()
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
                                                             "issue persists, the file may be corrupted or incompatible. "

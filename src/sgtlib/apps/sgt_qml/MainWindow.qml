@@ -82,6 +82,8 @@ ApplicationWindow {
         }
     }
 
+    LoadingSpinnerWidget{}
+
     function toggleLeftPane(showVal) {
         recLeftPane.visible = showVal;
     }
