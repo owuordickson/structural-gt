@@ -161,7 +161,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             if opt_gte is None:
                 return False
 
-            self.update_status([51, "Build graph skeleton from binary image..."])
+            self.update_status([51, "Building skeleton from binary image..."])
             graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
             self._skel_obj = graph_skel
             img_skel = graph_skel.skeleton
