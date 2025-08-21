@@ -23,28 +23,26 @@ MenuBar {
         }
         MenuSeparator{}
 
-        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: mainController.display_image(); onTriggered: save_project() }
+        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: false; onTriggered: save_project() }
+        MenuSeparator{}
+
+        MenuItem {id:mnuExportAll; text: "Save images"; enabled: false; onTriggered: save_processed_images(0) }
         MenuSeparator{}
 
         Menu {
             id: mnuExportGraphAs
-            title: "Export GT graph as..."
-            enabled: graphPropsModel.rowCount() > 0
-            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: true; onTriggered: export_graph_data(0) }
-            MenuItem {id:mnuExportAdj; text: "Adjacency matix"; enabled: true; onTriggered: export_graph_data(2) }
-            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: true; onTriggered: export_graph_data(1) }
-            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: true; onTriggered: export_graph_data(3) }
+            title: "Export graph as..."
+            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
+            MenuItem {id:mnuExportAdj; text: "Adjacency matrix"; enabled: false; onTriggered: export_graph_data(2) }
+            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(1) }
+            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: false; onTriggered: export_graph_data(3) }
 
         }
-        MenuSeparator{}
-
-        MenuItem {id:mnuExportAll; text: "Save processed images"; enabled: false; onTriggered: save_processed_images(0) }
 
     }
     Menu {
         id: mnuImgCtrls
         title: "Tools"
-        enabled: true
         //MenuItem {id:mnuRescaleImgCtrl; text: "Rescale Image"; enabled: false; onTriggered: dialogRescaleCtrl.open() }
         MenuItem {id:mnuBrightnessImgCtrl; text: "Brightness/Contrast"; enabled: false; onTriggered: dialogBrightnessCtrl.open() }
         MenuItem {id:mnuContrastImgCtrl; text: "Show Graph"; enabled: false; onTriggered: dialogExtractGraph.open() }
@@ -52,7 +50,6 @@ MenuBar {
     Menu {
         id: mnuImgFilters
         title: "Filters"
-        enabled: true
         MenuItem {id:mnuBinImgFilter; text: "Binary Filters"; enabled: false; onTriggered: dialogBinFilters.open() }
 
         MenuSeparator{}
@@ -62,7 +59,6 @@ MenuBar {
     Menu {
         id: mnuAnalyze
         title: "Analyze"
-        enabled: true
         Menu { title: "GT Parameters"
             MenuItem {id:mnuSoloAnalze; text: "Current Image"; enabled: false; onTriggered: dialogRunAnalyzer.open() }
             MenuItem {id:mnuMultiAnalyze; text: "All Images"; enabled: false; onTriggered: dialogRunMultiAnalyzer.open() }
@@ -117,12 +113,11 @@ MenuBar {
         function onImageChangedSignal() {
             // Force refresh
             mnuSaveProjAs.enabled = mainController.display_image();
-            mnuExportGraphAs.enabled = true; //graphPropsModel.rowCount() > 0;
-            //mnuExportEdge.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            //mnuExportAdj.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            //mnuExportGexf.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            //mnuExportGSD.enabled = graphPropsModel.rowCount() > 0 ? true : false;
-            //mnuExportAll.enabled = graphPropsModel.rowCount() > 0 ? true : false;
+            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportAdj.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportGexf.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportAll.enabled = graphPropsModel.rowCount() > 0;
 
             //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS
             mnuBrightnessImgCtrl.enabled = mainController.display_image();
@@ -131,6 +126,14 @@ MenuBar {
             mnuImgFilter.enabled = mainController.display_image();
             mnuSoloAnalze.enabled = mainController.display_image();
             mnuMultiAnalyze.enabled = mainController.display_image();
+        }
+
+        function onTaskTerminatedSignal(success_val, msg_data) {
+            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportAdj.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportGexf.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportAll.enabled = graphPropsModel.rowCount() > 0;
         }
     }
 }

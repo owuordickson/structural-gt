@@ -11,7 +11,6 @@ import numpy as np
 import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
-from PyQt6.QtGui.QRawFont import weight
 from cv2.typing import MatLike
 
 from .sknw_mod import build_sknw

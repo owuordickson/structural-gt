@@ -7,7 +7,7 @@ import numpy as np
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal,Slot
+from PySide6.QtCore import Property,Signal,Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
