@@ -166,6 +166,12 @@ def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, 
     return
 
 
+def genetic_algorithm_generator():
+    """Generate graph images using a genetic algorithm, cost function based on (1) Number of subgraphs and
+     (2) if edges lie on "white" sections of Grayscale image."""
+    # Have many tries to generate many good graphs
+    pass
+
 
 if __name__ == "__main__":
     automated_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
