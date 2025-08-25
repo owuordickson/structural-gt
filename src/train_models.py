@@ -136,7 +136,7 @@ def plot_performance(ntwk: dict, num_epochs: int):
     ax2.legend()
 
     plt.tight_layout()
-    fig.savefig(f"performance_{ntwk["name"]}.png", dpi=300)
+    fig.savefig(f"figs/performance_{ntwk["name"]}.png", dpi=300)
     plt.show()
 
 
