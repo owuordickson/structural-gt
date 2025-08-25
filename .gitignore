@@ -2,7 +2,7 @@
 .DS_STORE
 .idea/
 images/sgt_files/
-trained_models/
+models/
 train_data/
 
 # Byte-compiled / optimized / DLL files

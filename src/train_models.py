@@ -108,8 +108,8 @@ def train_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loader,
               f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
     # Save model
-    os.makedirs("../trained_models/checkpoints", exist_ok=True)
-    torch.save(ntwk["model"].state_dict(), f"../trained_models/checkpoints/sgt_{ntwk["name"]}.pth")
+    os.makedirs("../models/checkpoints", exist_ok=True)
+    torch.save(ntwk["model"].state_dict(), f"../models/checkpoints/sgt_{ntwk["name"]}.pth")
     print("Model saved.")
 
 
