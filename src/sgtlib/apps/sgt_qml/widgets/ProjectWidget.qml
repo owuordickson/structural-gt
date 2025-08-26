@@ -48,12 +48,12 @@ Item {
                     anchors.fill: parent // Make the MouseArea cover the entire Rectangle
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                    // Left-click to select item
+                    // Left-click to select the item
                     onClicked: {
                         mainController.load_image(row);
                     }
 
-                    // Right-click to show context menu
+                    // Right-click to show the context menu
                     onPressed: (mouse) => {
                         if (mouse.button === Qt.RightButton) {
                             contextMenu.x = mouse.x;

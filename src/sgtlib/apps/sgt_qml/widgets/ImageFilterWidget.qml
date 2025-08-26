@@ -7,7 +7,7 @@ Item {
     id: imgFiltersControl  // used for external access
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
-    enabled: mainController.display_image()
+    visible: mainController.display_image()
 
     property int cbxWidthSize: 100
     property int spbWidthSize: 170
@@ -144,7 +144,7 @@ Item {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgFiltersControl.enabled = mainController.display_image();
+            imgFiltersControl.visible = mainController.display_image();
         }
 
     }

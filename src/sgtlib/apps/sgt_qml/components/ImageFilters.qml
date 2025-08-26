@@ -26,11 +26,43 @@ Rectangle {
             width: scrollViewImgFilters.width // Ensures it never exceeds parent width
             Layout.preferredWidth: parent.width // Fills the available width
 
+            RowLayout {
+                id: aiModeContainer
+                spacing: 2
+                Layout.topMargin: 10
+                Layout.bottomMargin: 5
+                Layout.alignment: Qt.AlignHCenter
+                visible: mainController.display_image()
+
+                Label {
+                    id: lblAIMode
+                    //text: "AI Mode"
+                    color: "#d0d0d0"
+                }
+
+                Switch {
+                    id: toggleAIMode
+                    checked: false
+                    enabled: false
+                    onCheckedChanged: {
+                        if (checked) {
+                            // Actions when switched on
+                            lblAIMode.color = "#2266ff";
+                            console.log("AI filter agent activated!");
+                        } else {
+                            // Actions when switched off
+                            lblAIMode.color = "#d0d0d0";
+                            console.log("AI filter agent deactivated!");
+                        }
+                    }
+                }
+            }
+
             Text {
                 text: "Binary Filters"
                 font.pixelSize: 12
                 font.bold: true
-                Layout.topMargin: 10
+                Layout.topMargin: 5
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -42,7 +74,8 @@ Rectangle {
                 color: "#808080"
                 visible: !mainController.display_image()
             }
-            BinaryFilterWidget{}
+            BinaryFilterWidget {
+            }
 
             Rectangle {
                 id: rectHLine1
@@ -66,11 +99,12 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 visible: mainController.display_image()
             }
-            ImageFilterWidget{}
+            ImageFilterWidget {
+            }
 
             Button {
                 id: btnShowImgHistogram
-                text: "Calculate histogram"
+                text: "Calculate Histogram"
                 topPadding: 5
                 bottomPadding: 5
                 leftPadding: 10
@@ -90,12 +124,16 @@ Rectangle {
 
         function onImageChangedSignal() {
             // Force refresh
+            aiModeContainer.visible = mainController.display_image();
             lblNoImgFilters.visible = !mainController.display_image();
             rectHLine1.visible = mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();
+            if (!mainController.display_image()) {
+                btnShowImgHistogram.visible = false;
+            }
         }
 
-        function onShowImageHistogramSignal(allow){
+        function onShowImageHistogramSignal(allow) {
             btnShowImgHistogram.visible = allow;
         }
     }

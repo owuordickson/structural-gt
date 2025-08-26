@@ -163,6 +163,9 @@ class MainController(BaseController):
             # Update Data
             img_list, img_cache = self.get_thumbnail_list()
             self.imgThumbnailModel.update_data(img_list, img_cache)
+            self.imagePropsModel.reset_data([])
+            self.graphPropsModel.reset_data([])
+            self.graphComputeModel.reset_data([])
             self._selected_sgt_obj_index = 0
             self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()

@@ -116,7 +116,7 @@ Rectangle {
 
                             Label {
                                 text: "Auto Scale Image"
-                                color: "#2244bc"
+                                color: "#2266ff"
                             }
 
                             Switch {
