@@ -225,28 +225,76 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
         f.append(s)
 
 
-def gsd_to_graph(gsd_file: str, only_giant: bool = True) -> None|nx.Graph:
+def gsd_to_graph(gsd_file: str, is_2d:bool=False, only_giant: bool = True) -> None|nx.Graph:
     """
     A function that takes a gsd file and returns a NetworkX graph object.
 
     :param gsd_file: gsd.hoomd file name;
-    :param only_giant: only return the giant graph
+    :param is_2d: is the skeleton 2D?
+    :param only_giant: Only return the giant graph
     :return:
     """
+
+    def shift(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Translates all points such that the minimum coordinate in points is the origin.
+
+        Args:
+            points: The points to shift.
+
+        Returns:
+            The shifted points.
+            The applied shift.
+        """
+        if is_2d:
+            shifted_points = np.full(
+                (np.shape(points)[0], 2),
+                [np.min(points.T[0]), np.min(points.T[1])],
+            )
+        else:
+            shifted_points = np.full(
+                (np.shape(points)[0], 3),
+                [
+                    np.min(points.T[0]),
+                    np.min(points.T[1]),
+                    np.min(points.T[2]),
+                ],
+            )
+        points = points - shifted_points
+        return points, shifted_points
+
+    def reduce_dim(all_positions: np.ndarray) -> np.ndarray:
+        """For lists of positions where all elements along one axis have the same
+        value, this returns the same list of positions but with the redundant
+        dimension(s) removed.
+
+        Args:
+            all_positions: The positions to reduce.
+
+        Returns:
+            The reduced positions
+        """
+
+        unique_positions = np.asarray(
+            list(len(np.unique(all_positions.T[i])) for i in range(len(all_positions.T)))
+        )
+        redundant = unique_positions == 1
+        all_positions = all_positions.T[~redundant].T
+        return all_positions
+
     frame = gsd.hoomd.open(name=gsd_file, mode="r")[0]
     positions = shift(frame.particles.position.astype(int))[0]
 
     if sum((positions < 0).ravel()) != 0:
         positions = shift(positions)[0]
 
-    if _2d:
+    if is_2d:
         """
-        _2d (optional, bool):
+        is_2d (optional, bool):
             Whether the skeleton is 2D. If True it only ensures additional
             redundant axes from the position array is removed. It does not
             guarantee a 3d graph.
         """
-        positions = dim_red(positions)
+        positions = reduce_dim(positions)
         new_pos = np.zeros(positions.T.shape)
         new_pos[0] = positions.T[0]
         new_pos[1] = positions.T[1]
