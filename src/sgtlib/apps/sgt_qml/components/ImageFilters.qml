@@ -26,37 +26,7 @@ Rectangle {
             width: scrollViewImgFilters.width // Ensures it never exceeds parent width
             Layout.preferredWidth: parent.width // Fills the available width
 
-            RowLayout {
-                id: aiModeContainer
-                spacing: 2
-                Layout.topMargin: 10
-                Layout.bottomMargin: 5
-                Layout.alignment: Qt.AlignHCenter
-                visible: mainController.display_image()
-
-                Label {
-                    id: lblAIMode
-                    //text: "AI Mode"
-                    color: "#d0d0d0"
-                }
-
-                Switch {
-                    id: toggleAIMode
-                    checked: false
-                    enabled: false
-                    onCheckedChanged: {
-                        if (checked) {
-                            // Actions when switched on
-                            lblAIMode.color = "#2266ff";
-                            console.log("AI filter agent activated!");
-                        } else {
-                            // Actions when switched off
-                            lblAIMode.color = "#d0d0d0";
-                            console.log("AI filter agent deactivated!");
-                        }
-                    }
-                }
-            }
+            AIModeWidget{}
 
             Text {
                 text: "Binary Filters"
@@ -124,7 +94,6 @@ Rectangle {
 
         function onImageChangedSignal() {
             // Force refresh
-            aiModeContainer.visible = mainController.display_image();
             lblNoImgFilters.visible = !mainController.display_image();
             rectHLine1.visible = mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();

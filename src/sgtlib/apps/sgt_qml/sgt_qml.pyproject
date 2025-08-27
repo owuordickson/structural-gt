@@ -38,6 +38,7 @@
         "widgets/GraphPropertyWidget.qml",
         "widgets/GraphComputeWidget.qml",
         "widgets/CreateProjectWidget.qml",
-        "widgets/LoadingSpinnerWidget.qml"
+        "widgets/LoadingSpinnerWidget.qml",
+        "widgets/AIModeWidget.qml"
     ]
 }
