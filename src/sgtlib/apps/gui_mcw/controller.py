@@ -75,6 +75,7 @@ class MainController(BaseController):
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
         self.imgScaleOptionModel = CheckBoxModel([])
+        self.imgViewOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
         self.img3dGridModel = ImageGridModel([], set([]))
         self.imgHistogramModel = ImageGridModel([], set([]))
@@ -100,12 +101,12 @@ class MainController(BaseController):
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
-            options_scaling = sel_img_batch.scaling_options
+
             batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
-
             self.imgBatchModel.reset_data(batch_list)
-            self.imgScaleOptionModel.reset_data(options_scaling)
+            self.imgScaleOptionModel.reset_data(sel_img_batch.scaling_options)
+            self.imgViewOptionModel.reset_data(sel_img_batch.view_options)
 
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
@@ -518,6 +519,7 @@ class MainController(BaseController):
         if sgt_obj is None:
             return
         sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        print(f"User selected view: {sel_img_batch.view_options}")
         if choice is not None:
             sel_img_batch.current_view = choice
         self.changeImageSignal.emit()

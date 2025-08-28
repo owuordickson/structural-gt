@@ -42,6 +42,7 @@ class PySideApp(QObject):
         self._ui_engine.rootContext().setContextProperty("imgBinFilterModel", self._controller.imgBinFilterModel)
         self._ui_engine.rootContext().setContextProperty("imgFilterModel", self._controller.imgFilterModel)
         self._ui_engine.rootContext().setContextProperty("imgScaleOptionModel", self._controller.imgScaleOptionModel)
+        self._ui_engine.rootContext().setContextProperty("imgViewOptionModel", self._controller.imgViewOptionModel)
         self._ui_engine.rootContext().setContextProperty("saveImgModel", self._controller.saveImgModel)
         self._ui_engine.rootContext().setContextProperty("img3dGridModel", self._controller.img3dGridModel)
         self._ui_engine.rootContext().setContextProperty("imgHistogramModel", self._controller.imgHistogramModel)

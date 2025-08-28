@@ -41,14 +41,15 @@ class ImageProcessor(ProgressUpdate):
         """A class for storing image batch data."""
         numpy_image: np.ndarray
         images: list[BaseImage]
+        graph_obj: FiberNetworkBuilder
         is_2d: bool
         shape: tuple
         props: list
         scale_factor: float
-        scaling_options: list
+        scaling_options: list[dict]
         selected_images_idx: set
+        view_options: list[dict]
         current_view: str
-        graph_obj: FiberNetworkBuilder
 
     def __init__(self, img_path, out_dir, cfg_file="", auto_scale=True):
         """
@@ -868,17 +869,24 @@ class ImageProcessor(ProgressUpdate):
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
             images = np.array([images[0]])  # REMOVE TO ALLOW 3D
+            views  = [
+                {"text": "Original Image", "dataValue": "original", "value": 1, "visible": 1 },
+                {"text": "Binary Image", "dataValue": "binary", "value": 0, "visible": 1 },
+                {"text": "Processed Image", "dataValue": "processed", "value": 0, "visible": 1 },
+                {"text": "Extracted Graph", "dataValue": "graph", "value": 0, "visible": 1}
+            ]
             img_batch = ImageProcessor.ImageBatch(
                 numpy_image=images,
                 images=[],
+                graph_obj=FiberNetworkBuilder(cfg_file=cfg_file),
                 is_2d=True,
                 shape=(h, w),
                 props=[],
                 scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
                 selected_images_idx=set(range(len(images))),
-                current_view='original',  # 'original', 'binary', 'processed', 'graph'
-                graph_obj=FiberNetworkBuilder(cfg_file=cfg_file)
+                view_options=views,
+                current_view='original',  # TO BE DELETED
             )
             img_info_list.append(img_batch)
             break  # REMOVE TO ALLOW 3D

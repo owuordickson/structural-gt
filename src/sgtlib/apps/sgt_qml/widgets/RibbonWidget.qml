@@ -51,7 +51,9 @@ Rectangle {
                 icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
                 icon.width: 28
                 icon.height: 28
-                background: Rectangle { color: "transparent" }
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: hidePane ? "Hide left pane" : "Show left pane"
                 ToolTip.visible: btnHideLeftPane.hovered
                 visible: true
@@ -82,7 +84,9 @@ Rectangle {
                 icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
                 icon.width: 20 // Adjust as needed
                 icon.height: 20
-                background: Rectangle { color: "transparent" }
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Re-scale large images"
                 ToolTip.visible: btnRescale.hovered
                 enabled: true
@@ -134,7 +138,8 @@ Rectangle {
                             }
                         }
 
-                        RescaleControlWidget{}
+                        RescaleControlWidget {
+                        }
 
                     }
 
@@ -149,7 +154,9 @@ Rectangle {
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 21 // Adjust as needed
                 icon.height: 21
-                background: Rectangle { color: "transparent" }
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: drpDownBrightness.open()
@@ -172,7 +179,8 @@ Rectangle {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        BrightnessControlWidget{}
+                        BrightnessControlWidget {
+                        }
                     }
 
                 }
@@ -184,7 +192,9 @@ Rectangle {
                 text: ""
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
-                background: Rectangle { color: "transparent"}
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
                 visible: mainController.display_image()
@@ -212,7 +222,9 @@ Rectangle {
                 icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 21 // Adjust as needed
                 icon.height: 21
-                background: Rectangle { color: "transparent"}
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
@@ -227,7 +239,9 @@ Rectangle {
                 icon.source: "../assets/icons/undo_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: Rectangle { color: "transparent"}
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
                 onClicked: mainController.undo_cropping(true)
@@ -247,6 +261,45 @@ Rectangle {
             ComboBox {
                 id: cbImageType
                 Layout.minimumWidth: 150
+                model: imgViewOptionModel    // Python model
+                textRole: "text"
+                valueRole: "dataValue"
+
+                implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+                ToolTip.text: "Change image type"
+                ToolTip.visible: hovered
+                enabled: mainController.display_image()
+
+                /*delegate: ItemDelegate {
+                    text: model.text
+                    enabled: model.visible === 1   // disable if visible == 0
+                    // visible: model.visible === 1   // hide completely if you prefer
+                }*/
+
+                // Pick first item with value == 1 as default
+                Component.onCompleted: {
+                    for (var i = 0; i < model.count; ++i) {
+                        if (model.get(i).value === 1) {
+                            currentIndex = i
+                            break
+                        }
+                    }
+                }
+
+                // Fires only when user selects a new option
+                onActivated: (index) => {
+                    // Update all to 0, only current to 1
+                    for (var i = 0; i < model.count; ++i) {
+                        model.setProperty(i, "value", i === index ? 1 : 0)
+                    }
+                    // Call Python controller
+                    mainController.toggle_current_img_view(currentValue)
+                }
+            }
+
+            /*ComboBox {
+                id: cbImageType
+                Layout.minimumWidth: 150
                 model: ListModel {
                     id: imgTypeModel
                     ListElement { text: "Original Image"; value: "original" }
@@ -261,7 +314,7 @@ Rectangle {
                 ToolTip.visible: cbImageType.hovered
                 enabled: mainController.display_image()
                 onCurrentIndexChanged: mainController.toggle_current_img_view(valueAt(currentIndex))
-            }
+            }*/
 
             Basic.Button {
                 id: btnShowGraph
@@ -271,12 +324,14 @@ Rectangle {
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
-                background: Rectangle { color: "transparent"}
+                background: Rectangle {
+                    color: "transparent"
+                }
                 ToolTip.text: "Show graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: drpDownGraph.open()
                 enabled: mainController.display_image()
-                
+
                 Popup {
                     id: drpDownGraph
                     width: 250
@@ -291,27 +346,28 @@ Rectangle {
                         border.width: 1
                         radius: 2
                     }
-                    
+
                     ColumnLayout {
                         anchors.fill: parent
 
-                        GraphExtractWidget{}
-            
+                        GraphExtractWidget {
+                        }
+
                         RowLayout {
                             spacing: 10
                             Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-            
+
                             Button {
                                 Layout.preferredWidth: 54
                                 Layout.preferredHeight: 30
                                 text: ""
                                 onClicked: drpDownGraph.close()
-            
+
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: 5
                                     color: "#bc0000"
-            
+
                                     Label {
                                         text: "Cancel"
                                         color: "#ffffff"
@@ -319,7 +375,7 @@ Rectangle {
                                     }
                                 }
                             }
-            
+
                             Button {
                                 Layout.preferredWidth: 40
                                 Layout.preferredHeight: 30
@@ -328,12 +384,12 @@ Rectangle {
                                     mainController.run_extract_graph();
                                     drpDownGraph.close();
                                 }
-            
+
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: 5
                                     color: "#22bc55"
-            
+
                                     Label {
                                         text: "OK"
                                         color: "#ffffff"
@@ -343,9 +399,9 @@ Rectangle {
                             }
                         }
                     }
-                    
+
                 }
-                
+
             }
         }
     }
@@ -392,12 +448,12 @@ Rectangle {
             drpDownRescale.height = mainController.display_image() ? 180 : 50;
             //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
-            let curr_view = mainController.get_selected_img_type();
-            for (let i=0; i < cbImageType.model.count; i++) {
-                if (cbImageType.model.get(i).value === curr_view){
+            /*let curr_view = mainController.get_selected_img_type();
+            for (let i = 0; i < cbImageType.model.count; i++) {
+                if (cbImageType.model.get(i).value === curr_view) {
                     cbImageType.currentIndex = i;
                 }
-            }
+            }*/
         }
     }
 
