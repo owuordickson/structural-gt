@@ -24,7 +24,6 @@ ColumnLayout {
         Switch {
             id: toggleAIMode
             checked: false
-            enabled: false
             onCheckedChanged: {
                 if (checked) {
                     // Actions when switched on
@@ -40,7 +39,7 @@ ColumnLayout {
 
         BusyIndicator {
             id: progressAIMode
-            running: false
+            running: toggleAIMode.checked
             width: 36
             height: 36
         }
@@ -51,7 +50,7 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            aiModeControls.visible = mainController.display_image();
+            aiModeControls.visible = false; //mainController.display_image();
         }
     }
 }

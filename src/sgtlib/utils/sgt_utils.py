@@ -210,6 +210,7 @@ def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, da
 def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
     """
     A function that writes graph particles to a GSD file. Visualize with OVITO software.
+    Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
 
     :param f_name: gsd.hoomd file name
     :param skeleton: skimage.morphology skeleton
@@ -228,6 +229,7 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
 def gsd_to_graph(gsd_file: str, is_2d:bool=False, only_giant: bool = True) -> None|nx.Graph:
     """
     A function that takes a gsd file and returns a NetworkX graph object.
+    Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
 
     :param gsd_file: gsd.hoomd file name;
     :param is_2d: is the skeleton 2D?

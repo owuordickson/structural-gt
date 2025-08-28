@@ -372,7 +372,10 @@ class GraphSkeleton:
 
     @classmethod
     def remove_bubbles(cls, img_bin: MatLike, mask_elements: list):
-        """Remove bubbles from graph skeleton."""
+        """
+        Remove bubbles from the graph skeleton.
+        Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
+        """
 
         canvas = img_bin.copy()
         for mask_elem in mask_elements:
