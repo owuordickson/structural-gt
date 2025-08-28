@@ -60,19 +60,19 @@ class BaseController(QObject):
             # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
             return None
 
-    def create_sgt_object(self, img_path: str, out_dir: str = "") -> bool:
+    def create_sgt_object(self, file_path: str, out_dir: str = "") -> bool:
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.
 
         Args:
-            img_path: file path to image
+            file_path: file path to image or graph data file.
             out_dir: output directory path
 
         Returns:
         """
-        success, result = verify_path(img_path)
+        success, result = verify_path(file_path)
         if success:
-            img_path = result
+            file_path = result
             success, result = verify_path(out_dir)
             out_dir = result if success else ""
         else:
@@ -80,9 +80,9 @@ class BaseController(QObject):
             self.showAlertSignal.emit("File Error", result)
             return False
 
-        # Create an SGT object as a GraphAnalyzer object.
         try:
-            ntwk_p, img_file = ImageProcessor.create_imp_object(img_path, out_folder=out_dir,
+            # Create an SGT object as a GraphAnalyzer object.
+            ntwk_p, img_file = ImageProcessor.create_imp_object(file_path, out_folder=out_dir,
                                                                 config_file=self._config_file,
                                                                 allow_auto_scale=self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
@@ -148,3 +148,10 @@ class BaseController(QObject):
             return False
         else:
             return True
+
+    def add_graph(self, graph_file: str, out_dir: str = "") -> bool:
+        """Verify and validate graph file path, use it to create an SGT object and load it in view."""
+        is_created = self.create_sgt_object(graph_file, out_dir)
+        if is_created:
+            return True
+        return False

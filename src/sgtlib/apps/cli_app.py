@@ -109,7 +109,7 @@ class TerminalApp(BaseController):
         # Retrieve user settings
         opt_parser = OptionParser()
         opt_parser.add_option('-f', '--inputFile',
-                             dest='img_path',
+                             dest='file_path',
                              help='path to image file',
                              default="../datasets/InVitroBioFilm.png",
                              type='string')
@@ -156,7 +156,7 @@ class TerminalApp(BaseController):
         term_app = cls(cfg.config_file)
 
         # 2. Verify image files
-        term_app.check_image_files(img_path=cfg.img_path, img_dir=cfg.img_dir_path, out_dir=cfg.output_dir)
+        term_app.check_image_files(img_path=cfg.file_path, img_dir=cfg.img_dir_path, out_dir=cfg.output_dir)
 
         # 3. Execute specific task
         if cfg.run_task == 0:

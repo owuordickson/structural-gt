@@ -15,15 +15,23 @@ MenuBar {
     Menu {
         title: "File"
         MenuItem { text: "Add image"; onTriggered: imageFileDialog.open() }
-        //MenuItem { text: "Add image folder"; onTriggered: console.log("add image folder clicked") }
+        MenuItem { text: "Add image folder"; onTriggered: imageFolderDialog.open() }
+        Menu {
+            id: mnuImportGraphFrom
+            title: "Import graph from..."
+            MenuItem {id: mnuImportEdgeList; text:"Edge list"; enabled: true; onTriggered: console.log("import edge list...");}
+            MenuItem {id: mnuImportAdjMatrix; text:"Adjacency matrix"; enabled: true; onTriggered: console.log("import adjacency matrix...");}
+            MenuItem {id: mnuImportXYZ; text:"XYZ positions"; enabled: true; onTriggered: console.log("import XYZ positions...");}
+            MenuItem {id: mnuImportGSD; text:"GSD/HOOMD"; enabled: true; onTriggered: console.log("import GSD/HOOMD...");}
+        }
+        MenuSeparator{}
 
         Menu { title: "Project..."
             MenuItem { text: "Create project"; onTriggered: createProjectDialog.open() }
             MenuItem { text: "Open project"; onTriggered: projectFileDialog.open() }
         }
-        MenuSeparator{}
 
-        MenuItem {id: mnuSaveProjAs; text: "Save"; enabled: false; onTriggered: save_project() }
+        MenuItem {id: mnuSaveProjAs; text: "Save project"; enabled: false; onTriggered: save_project() }
         MenuSeparator{}
 
         MenuItem {id:mnuExportAll; text: "Save images"; enabled: false; onTriggered: save_processed_images(0) }

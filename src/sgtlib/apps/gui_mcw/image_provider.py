@@ -17,7 +17,16 @@ class ImageProvider(QQuickImageProvider):
             sgt_obj = self._img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.get_selected_batch()
-            if sel_img_batch.current_view == "binary":
+            if sel_img_batch.current_view  == "original":
+                # Calculate image histogram in different thread
+                self._img_controller.compute_img_histogram()
+                images = ntwk_p.image_3d
+                if self._img_controller.is_img_3d():
+                    self._img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
+                else:
+                    # 2D, Do not use if 3D
+                    img_cv = images[0]
+            elif sel_img_batch.current_view == "binary":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=2)
                 # Calculate image histogram in different thread
@@ -51,24 +60,16 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
                     img_cv = net_images[0]
             else:
-                # Original
-                # Calculate image histogram in different thread
-                self._img_controller.compute_img_histogram()
-                images = ntwk_p.image_3d
-                if self._img_controller.is_img_3d():
-                    self._img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
-                else:
-                    # 2D, Do not use if 3D
-                    img_cv = images[0]
+                return
 
             if img_cv is not None:
                 # Create Pixmap image
                 img = Image.fromarray(img_cv)
                 self._pixmap = ImageQt.toqpixmap(img)
 
-            # Acknowledge the image load and send the signal to update QML
-            self._img_controller._img_loaded = True
-            self._img_controller.imageChangedSignal.emit()
+                # Acknowledge the image load and send the signal to update QML
+                self._img_controller._img_loaded = True
+                self._img_controller.imageChangedSignal.emit()
         else:
             self._img_controller._img_loaded = False
         self._img_controller._applying_changes = False
