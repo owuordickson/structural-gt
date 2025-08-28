@@ -16,6 +16,8 @@ Rectangle {
     border.color: "#c0c0c0"
     border.width: 1
 
+    property int modelValueRole: Qt.UserRole + 4
+
     /*DropShadow {
         anchors.fill: rectRibbon
         source: rectRibbon
@@ -278,19 +280,22 @@ Rectangle {
 
                 // Pick first item with value == 1 as default
                 Component.onCompleted: {
-                    for (var i = 0; i < model.count; ++i) {
+                    for (var i = 0; i < imgViewOptionModel.rowCount(); ++i) {
                         if (model.get(i).value === 1) {
                             currentIndex = i
                             break
                         }
+                        console.log("Finished: "+model.get(i).value);
                     }
                 }
 
-                // Fires only when user selects a new option
+                // Fires only when the user selects a new option
                 onActivated: (index) => {
                     // Update all to 0, only current to 1
-                    for (var i = 0; i < model.count; ++i) {
-                        model.setProperty(i, "value", i === index ? 1 : 0)
+                    for (var i = 0; i < imgViewOptionModel.rowCount(); ++i) {
+                        var val = i === index ? 1 : 0;
+                        var idx = imgViewOptionModel.index(i, 0)
+                        imgViewOptionModel.setData(idx, val, modelValueRole);
                     }
                     // Call Python controller
                     mainController.toggle_current_img_view(currentValue)

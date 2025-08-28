@@ -71,7 +71,7 @@ ColumnLayout {
             enabled: rdoAdaptive.checked
             onValueChanged: {
                 if (value % 2 === 0) {
-                    value = value - 1;  // Convert even input to nearest odd
+                    value = value - 1;  // Convert even input to the nearest odd
                 }
 
                 var index = imgBinFilterModel.index(2, 0);
