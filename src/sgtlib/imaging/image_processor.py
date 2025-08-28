@@ -15,7 +15,6 @@ from PIL import Image
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from collections import defaultdict
-
 from ..utils.sgt_utils import plot_to_opencv
 from ..utils.progress_update import ProgressUpdate
 from ..imaging.base_image import BaseImage
@@ -65,7 +64,7 @@ class ImageProcessor(ProgressUpdate):
         >>> i_path = "path/to/image"
         >>> cfg_path = "path/to/sgt_configs.ini"
         >>>
-        >>> ntwk_p, img_file = ImageProcessor.create_imp_object(i_path, config_file=cfg_path)
+        >>> ntwk_p, img_file = ImageProcessor.from_image_file(i_path, config_file=cfg_path)
         >>> ntwk_p.apply_img_filters()
         """
         super(ImageProcessor, self).__init__()
@@ -75,7 +74,7 @@ class ImageProcessor(ProgressUpdate):
         self._auto_scale: bool = auto_scale
         self._image_batches: list[ImageProcessor.ImageBatch] = []
         self._selected_batch: int = 0
-        self._initialize_image_batches(self._load_img_from_file(img_path))
+        # self._initialize_image_batches(self._load_img_from_file(img_path))
 
     @property
     def img_path(self) -> str:
@@ -886,7 +885,7 @@ class ImageProcessor(ProgressUpdate):
         return img_info_list
 
     @classmethod
-    def create_imp_object(cls, img_path: str, out_folder: str = "", config_file: str = "", allow_auto_scale: bool = True):
+    def from_image_file(cls, img_path: str, out_folder: str = "", config_file: str = "", allow_auto_scale: bool = True) -> tuple["ImageProcessor", str]:
         """
         Creates an ImageProcessor object. Make sure the image path exists, is verified, and points to an image.
         :param img_path: Path to the image to be processed
@@ -939,5 +938,34 @@ class ImageProcessor(ProgressUpdate):
 
         # Create the StructuralGT object
         input_file = img_files if len(img_files) > 1 else str(img_path)
-        print(input_file)
-        return cls(input_file, out_dir, config_file, allow_auto_scale), img_file
+        imp_obj = cls(input_file, out_dir, config_file, allow_auto_scale)
+        imp_obj._initialize_image_batches(imp_obj._load_img_from_file(img_path))
+        return imp_obj, img_file
+
+    @classmethod
+    def from_graph_file(cls, file_path: str, out_folder: str = "") -> tuple["ImageProcessor", str]:
+        """
+        Creates an ImageProcessor object. Make sure the graph file path exists, is verified, and points to a
+        CSV file or GSD/HOOMD file.
+        :param file_path: Path to the graph file
+        :param out_folder: Path to the output directory
+        :return: ImageProcessor object.
+        """
+        # Separate graph path and folder
+        file_dir, graph_file = os.path.split(str(file_path))
+        # file_ext = os.path.splitext(graph_file)[1].lower()
+
+        # Create the Output folder if it does not exist
+        if out_folder != "":
+            default_out_dir = out_folder
+        else:
+            out_dir_name = "sgt_files"
+            default_out_dir = os.path.join(file_dir, out_dir_name)
+        out_dir = os.path.normpath(default_out_dir)
+        os.makedirs(out_dir, exist_ok=True)
+
+        # Create the StructuralGT object
+        imp_obj = cls("", out_dir)
+        return imp_obj, graph_file
+
+

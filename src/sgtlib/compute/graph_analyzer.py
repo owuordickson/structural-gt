@@ -101,7 +101,7 @@ class GraphAnalyzer(ProgressUpdate):
         >>> def print_update(progress_val, progress_msg):
         >>>     print(f"{progress_val}: {progress_msg}")
         >>>
-        >>> ntwk_obj, _ = ImageProcessor.create_imp_object(i_path)
+        >>> ntwk_obj, _ = ImageProcessor.from_image_file(i_path)
         >>> metrics_obj = GraphAnalyzer(ntwk_obj)
         >>> GraphAnalyzer.safe_run_analyzer(metrics_obj, print_update, save_to_pdf=True)
 

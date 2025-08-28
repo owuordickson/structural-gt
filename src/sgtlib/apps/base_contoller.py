@@ -82,9 +82,9 @@ class BaseController(QObject):
 
         try:
             # Create an SGT object as a GraphAnalyzer object.
-            ntwk_p, img_file = ImageProcessor.create_imp_object(file_path, out_folder=out_dir,
-                                                                config_file=self._config_file,
-                                                                allow_auto_scale=self._allow_auto_scale)
+            ntwk_p, img_file = ImageProcessor.from_image_file(file_path, out_folder=out_dir,
+                                                              config_file=self._config_file,
+                                                              allow_auto_scale=self._allow_auto_scale)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
