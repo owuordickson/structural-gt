@@ -25,6 +25,7 @@ logger = logging.getLogger("SGT App")
 Image.MAX_IMAGE_PIXELS = None  # Disable limit on maximum image size
 ALLOWED_IMG_EXTENSIONS = ('*.jpg', '*.png', '*.jpeg', '*.bmp', '*.tif', '*.tiff', '*.qptiff')
 ALLOWED_3D_IMG_EXTENSIONS = ('*.qptiff', '*.nii', '*.nii.gz', '*.dcm')
+ALLOWED_GRAPH_FILE_EXTENSIONS = ('*.csv', '*.gsd')
 
 
 class ImageProcessor(ProgressUpdate):
@@ -495,27 +496,35 @@ class ImageProcessor(ProgressUpdate):
             # Get the selected batch
             self.selected_batch_view= 'graph'
             sel_batch = self.selected_batch
-
-            # Get binary image
             sel_images = self.get_batch_images(sel_batch)
-            img_bin = [img.img_bin for img in sel_images]
-            img_bin = np.asarray(img_bin)
 
-            # Check if filters have been applied
-            if img_bin[0] is None:
-                self.update_status([101, "No filters applied! Please wait, applying image filters."])
-                self.apply_img_filters()
-                self.build_graph_network()
-                return
+            if len(sel_images) > 0:
+                # Get binary image
+                self.update_status([20, "Getting image binary..."])
+                img_bin = [img.img_bin for img in sel_images]
+                img_bin = np.asarray(img_bin)
 
-            # Get the selected batch's graph object and generate the graph
-            px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
-            rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
-            f_name, out_dir = self.get_filenames()
+                # Check if filters have been applied
+                if img_bin[0] is None:
+                    self.update_status([101, "No filters applied! Please wait, applying image filters."])
+                    self.apply_img_filters()
+                    self.build_graph_network()
+                    return
 
-            sel_batch.graph_obj.abort = False
-            sel_batch.graph_obj.add_listener(self.track_progress)
-            sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
+                # Get the selected batch's graph object and generate the graph
+                px_size = float(sel_batch.images[0].configs["pixel_width"]["value"])  # First BaseImage in batch
+                rho_val = float(sel_batch.images[0].configs["resistivity"]["value"])  # First BaseImage in batch
+                f_name, out_dir = self.get_filenames()
+
+                sel_batch.graph_obj.abort = False
+                sel_batch.graph_obj.add_listener(self.track_progress)
+                sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
+            else:
+                self.update_status([20, "Reading graph file..."])
+                sel_batch.graph_obj.abort = False
+                sel_batch.graph_obj.add_listener(self.track_progress)
+                sel_batch.graph_obj.create_graph_from_file(file_path)
+                sel_batch.graph_obj.remove_listener(self.track_progress)
 
             self.update_status([95, "Plotting graph network..."])
             self.draw_graph_image(sel_batch)
@@ -982,7 +991,10 @@ class ImageProcessor(ProgressUpdate):
         """
         # Separate graph path and folder
         file_dir, graph_file = os.path.split(str(file_path))
-        # file_ext = os.path.splitext(graph_file)[1].lower()
+        file_ext = os.path.splitext(graph_file)[1].lower()
+        allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_GRAPH_FILE_EXTENSIONS)
+        if not graph_file.endswith(allowed_extensions):
+            raise ValueError(f"Unsupported file format: {file_ext}")
 
         # Create the Output folder if it does not exist
         if out_folder != "":

@@ -322,6 +322,48 @@ def gsd_to_graph(gsd_file: str, is_2d:bool=False, only_giant: bool = True) -> No
     return nx_graph
 
 
+def csv_to_graph(csv_path: str) -> None | nx.Graph:
+    """
+    Load a graph from a file that may contain:
+      - Edge list (2 columns)
+      - Adjacency matrix (square matrix)
+      - XYZ positions (3 columns: x, y, z, edges inferred by distance threshold)
+
+    :param csv_path: Path to the graph file
+    """
+    # Try to read as numeric matrix
+    data = np.loadtxt(csv_path)
+
+    # Case 1: Edge list (two columns)
+    if data.ndim == 2 and data.shape[1] == 2:
+        nx_graph = nx.Graph()
+        for u, v in data.astype(int):
+            nx_graph.add_edge(u, v)
+        return nx_graph
+
+    # Case 2: Adjacency matrix (square matrix)
+    elif data.ndim == 2 and data.shape[0] == data.shape[1]:
+        nx_graph = nx.from_numpy_array(data)
+        return nx_graph
+
+    # Case 3: XYZ positions (three columns)
+    elif data.ndim == 2 and data.shape[1] == 3:
+        from scipy.spatial import distance_matrix
+        # Build graph based on proximity (set threshold distance)
+        threshold = 1.0
+        dist_mat = distance_matrix(data, data)
+        nx_graph = nx.Graph()
+        for i in range(len(data)):
+            nx_graph.add_node(i, pos=data[i])
+        for i in range(len(data)):
+            for j in range(i + 1, len(data)):
+                if dist_mat[i, j] < threshold:
+                    nx_graph.add_edge(i, j, weight=dist_mat[i, j])
+        return nx_graph
+    else:
+        return None
+
+
 def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
     if img is None:

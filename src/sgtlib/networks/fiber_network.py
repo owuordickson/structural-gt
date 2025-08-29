@@ -7,6 +7,8 @@ Builds a graph network from nanoscale microscopy images.
 import os
 import numbers
 import itertools
+from logging import exception
+
 import numpy as np
 import igraph as ig
 import networkx as nx
@@ -17,7 +19,7 @@ from .sknw_mod import build_sknw
 from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_csv_file, write_gsd_file
+from ..utils.sgt_utils import write_csv_file, write_gsd_file, gsd_to_graph, csv_to_graph
 
 
 class FiberNetworkBuilder(ProgressUpdate):
@@ -105,7 +107,7 @@ class FiberNetworkBuilder(ProgressUpdate):
 
     def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img") -> None:
         """
-        Execute a function that builds a NetworkX graph from the binary image.
+        Execute functions that build a NetworkX graph from the binary image.
 
         :param save_dir: Directory to save the graph to.
         :param img_bin: A binary image for building Graph Skeleton for the NetworkX graph.
@@ -223,6 +225,53 @@ class FiberNetworkBuilder(ProgressUpdate):
             return True
         except Exception as e:
             self.update_status([-1, f"Problem encountered while extracting graph: {e}"])
+            return False
+
+    def create_graph_from_file(self, file_path: str) -> bool:
+        """
+        Load a NetworkX graph from a file that may contain:
+          - Edge list (2 columns)
+          - Adjacency matrix (square matrix)
+          - XYZ positions (3 columns: x, y, z, edges inferred by distance threshold)
+
+        :param file_path: Path to the graph file
+        :return: True if the graph is read, False otherwise
+        """
+        try:
+            self.update_status([50, "Creating graph network..."])
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext == ".gsd":
+                self.nx_graph = gsd_to_graph(file_path)
+            elif ext == ".csv":
+                self.nx_graph = csv_to_graph(file_path)
+            else:
+                self.update_status([-1, f"Unsupported file extension: {ext}"])
+                self.abort = True
+
+            if self.nx_graph is None:
+                self.abort = True
+                return False
+            else:
+                self.update_status([60, "Saving graph network..."])
+                # Save iGraph graph
+                self._ig_graph = ig.Graph.from_networkx(self.nx_graph)
+                # Save giant NetworkX graph
+                connected_components = list(nx.connected_components(self.nx_graph))
+                if not connected_components:  # In case the graph is empty
+                    connected_components = []
+                sub_graphs = [self.nx_graph.subgraph(c).copy() for c in connected_components]
+                if sub_graphs:
+                    giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+                else:
+                    giant_graph = self.nx_graph.copy()
+                self._nx_giant_graph = giant_graph
+
+                self.update_status([77, "Retrieving graph properties..."])
+                self._props = self.get_graph_props()
+                return True
+        except Exception as e:
+            self.update_status([-1, f"Problem encountered while extracting graph: {e}"])
+            self.abort = True
             return False
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
