@@ -269,21 +269,21 @@ Rectangle {
                 ToolTip.visible: hovered
                 enabled: mainController.display_image()
 
-                /*delegate: ItemDelegate {
+                delegate: ItemDelegate {
+                    id: control
+                    width: cbImageType.width
                     text: model.text
                     enabled: model.visible === 1   // disable if visible == 0
-                }*/
 
-                // Pick the first item with value == 1 as default
-                /*Component.onCompleted: {
-                    for (var i = 0; i < imgViewOptionModel.rowCount(); ++i) {
-                        if (model.get(i).value === 1) {
-                            currentIndex = i
-                            break
-                        }
-                        console.log("Finished: "+model.get(i).value);
+                    // Keep default ComboBox visuals
+                    font.bold:  index === cbImageType.currentIndex
+
+                    // Optional: custom colors for hover/selection
+                    background: Rectangle {
+                        color: control.hovered ? "#5599ff" : "transparent"
+                        radius: 4
                     }
-                }*/
+                }
 
                 // Fires only when the user selects a new option
                 onActivated: (index) => {
@@ -298,24 +298,6 @@ Rectangle {
                 }
             }
 
-            /*ComboBox {
-                id: cbImageType
-                Layout.minimumWidth: 150
-                model: ListModel {
-                    id: imgTypeModel
-                    ListElement { text: "Original Image"; value: "original" }
-                    ListElement { text: "Binary Image"; value: "binary" }
-                    ListElement { text: "Processed Image"; value: "processed" }
-                    ListElement { text: "Extracted Graph"; value: "graph" }
-                }
-                implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
-                textRole: "text"
-                valueRole: "value"
-                ToolTip.text: "Change image type"
-                ToolTip.visible: cbImageType.hovered
-                enabled: mainController.display_image()
-                onCurrentIndexChanged: mainController.toggle_current_img_view(valueAt(currentIndex))
-            }*/
 
             Basic.Button {
                 id: btnShowGraph
