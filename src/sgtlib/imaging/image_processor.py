@@ -989,6 +989,31 @@ class ImageProcessor(ProgressUpdate):
 
         # Create the StructuralGT object
         imp_obj = cls("", out_dir)
+
+        # Create Graph Object from the added file_path
+        graph_obj = FiberNetworkBuilder(cfg_file="")
+
+        # Create an Image Batch data object and add it to the ImageProcessor object
+        views = [
+            {"text": "Original Image", "dataValue": "original", "value": 0, "visible": 0},
+            {"text": "Binary Image", "dataValue": "binary", "value": 0, "visible": 0},
+            {"text": "Processed Image", "dataValue": "processed", "value": 0, "visible": 0},
+            {"text": "Extracted Graph", "dataValue": "graph", "value": 1, "visible": 1}
+        ]
+        img_batch = ImageProcessor.ImageBatch(
+            numpy_image=np.array([]),
+            images=[],
+            graph_obj=graph_obj,
+            is_2d=True,
+            shape=(0,0),
+            props=[],
+            scale_factor=0.0,
+            scaling_options=[],
+            selected_images_idx=set(),
+            view_options=views,
+        )
+        imp_obj._image_batches = [img_batch]
+
         return imp_obj, graph_file
 
 
