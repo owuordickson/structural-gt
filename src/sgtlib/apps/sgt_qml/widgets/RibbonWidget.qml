@@ -60,11 +60,7 @@ Rectangle {
                 ToolTip.visible: btnHideLeftPane.hovered
                 visible: true
                 onClicked: {
-                    if (hidePane) {
-                        hidePane = false;
-                    } else {
-                        hidePane = true;
-                    }
+                    hidePane = !hidePane;
                     toggleLeftPane(hidePane);
                 }
             }
@@ -263,7 +259,8 @@ Rectangle {
             ComboBox {
                 id: cbImageType
                 Layout.minimumWidth: 150
-                model: imgViewOptionModel    // Python model
+                model: imgViewOptionModel
+                currentIndex: 0
                 textRole: "text"
                 valueRole: "dataValue"
 
@@ -275,11 +272,10 @@ Rectangle {
                 /*delegate: ItemDelegate {
                     text: model.text
                     enabled: model.visible === 1   // disable if visible == 0
-                    // visible: model.visible === 1   // hide completely if you prefer
                 }*/
 
-                // Pick first item with value == 1 as default
-                Component.onCompleted: {
+                // Pick the first item with value == 1 as default
+                /*Component.onCompleted: {
                     for (var i = 0; i < imgViewOptionModel.rowCount(); ++i) {
                         if (model.get(i).value === 1) {
                             currentIndex = i
@@ -287,18 +283,18 @@ Rectangle {
                         }
                         console.log("Finished: "+model.get(i).value);
                     }
-                }
+                }*/
 
                 // Fires only when the user selects a new option
                 onActivated: (index) => {
                     // Update all to 0, only current to 1
-                    for (var i = 0; i < imgViewOptionModel.rowCount(); ++i) {
-                        var val = i === index ? 1 : 0;
-                        var idx = imgViewOptionModel.index(i, 0)
+                    for (let i = 0; i < imgViewOptionModel.rowCount(); ++i) {
+                        let val = i === index ? 1 : 0;
+                        let idx = imgViewOptionModel.index(i, 0)
                         imgViewOptionModel.setData(idx, val, modelValueRole);
                     }
                     // Call Python controller
-                    mainController.toggle_current_img_view(currentValue)
+                    mainController.apply_changes("");
                 }
             }
 
@@ -427,19 +423,11 @@ Rectangle {
         target: mainController
 
         function onShowCroppingToolSignal(allow) {
-            if (allow) {
-                btnCrop.visible = true;
-            } else {
-                btnCrop.visible = false
-            }
+            btnCrop.visible = allow;
         }
 
         function onShowUnCroppingToolSignal(allow) {
-            if (allow) {
-                btnUndo.visible = true
-            } else {
-                btnUndo.visible = false
-            }
+            btnUndo.visible = allow;
         }
 
         function onImageChangedSignal() {
@@ -453,12 +441,15 @@ Rectangle {
             drpDownRescale.height = mainController.display_image() ? 180 : 50;
             //if (drpDownRescale.opened ) { drpDownRescale.close(); }
 
-            /*let curr_view = mainController.get_selected_img_type();
-            for (let i = 0; i < cbImageType.model.count; i++) {
-                if (cbImageType.model.get(i).value === curr_view) {
+            // Update the combobox view
+            for (let i = 0; i < imgViewOptionModel.rowCount(); ++i) {
+                let idx = imgViewOptionModel.index(i, 0);
+                let itemVal = imgViewOptionModel.data(idx, modelValueRole);
+                if (itemVal === 1) {
                     cbImageType.currentIndex = i;
+                    break;
                 }
-            }*/
+            }
         }
     }
 

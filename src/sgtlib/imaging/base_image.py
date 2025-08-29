@@ -377,7 +377,7 @@ class BaseImage:
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def plot_img_histogram(self, axes=None, curr_view=None) -> plt.Figure:
+    def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
         Uses Matplotlib to plot the histogram of the processed image.
 
@@ -386,7 +386,7 @@ class BaseImage:
         """
         fig = plt.figure()
         plt_title = "Processed Image"
-        if curr_view is not None:
+        if curr_view != "":
             plt_title = f"{curr_view} image"
 
         if axes is None:

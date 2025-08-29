@@ -77,8 +77,7 @@ class BaseWorker(QObject):
     def task_calculate_img_histogram(self, ntwk_p):
         """"""
         try:
-            sel_img_batch = ntwk_p.get_selected_batch()
-            hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=sel_img_batch.current_view)) for obj in ntwk_p.image_obj_3d]
+            hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=ntwk_p.selected_batch_view)) for obj in ntwk_p.image_obj_3d]
             self.taskFinishedSignal.emit(True, hist_images)
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})

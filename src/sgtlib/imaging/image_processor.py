@@ -49,7 +49,6 @@ class ImageProcessor(ProgressUpdate):
         scaling_options: list[dict]
         selected_images_idx: set
         view_options: list[dict]
-        current_view: str
 
     def __init__(self, img_path, out_dir, cfg_file="", auto_scale=True):
         """
@@ -74,7 +73,7 @@ class ImageProcessor(ProgressUpdate):
         self._config_file: str = cfg_file
         self._auto_scale: bool = auto_scale
         self._image_batches: list[ImageProcessor.ImageBatch] = []
-        self._selected_batch: int = 0
+        self._selected_batch_index: int = 0
         # self._initialize_image_batches(self._load_img_from_file(img_path))
 
     @property
@@ -112,14 +111,44 @@ class ImageProcessor(ProgressUpdate):
         return self._image_batches
 
     @property
-    def selected_batch(self) -> int:
+    def selected_batch_index(self) -> int:
         """Returns the selected batch index."""
-        return self._selected_batch
+        return self._selected_batch_index
+
+    @property
+    def selected_batch(self):
+        """
+        Retrieved data of the current selected batch.
+        """
+        return self._image_batches[self._selected_batch_index]
+
+    @property
+    def selected_batch_view(self):
+        """Gets the current image batch view."""
+        sel_img_batch = self.selected_batch
+        for view_dict in sel_img_batch.view_options:
+            if view_dict["value"] == 1:
+                return view_dict["dataValue"]
+        return sel_img_batch.view_options[0]["dataValue"]
+
+    @selected_batch_view.setter
+    def selected_batch_view(self, value):
+        """Sets the current image batch view."""
+        sel_img_batch = self.selected_batch
+        for view_dict in sel_img_batch.view_options:
+            view_dict["value"] = 1 if value == view_dict["dataValue"] else 0
+
+    @property
+    def selected_images(self) -> list[BaseImage]:
+        """Returns a list of selected images."""
+        sel_img_batch = self.selected_batch
+        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
+        return sel_images
 
     @property
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
-        sel_img_batch = self.get_selected_batch()
+        sel_img_batch = self.selected_batch
         first_index = next(iter(sel_img_batch.selected_images_idx), None)  # 1st selected image
         first_index = first_index if first_index is not None else 0  # first image if None
         return sel_img_batch.images[first_index]
@@ -127,19 +156,12 @@ class ImageProcessor(ProgressUpdate):
     @property
     def image_obj_3d(self) -> list[BaseImage]:
         """Returns the full image list (3D) BaseImage objects/instances in the batch."""
-        return self.get_selected_batch().images
-
-    @property
-    def selected_images(self) -> list[BaseImage]:
-        """Returns a list of selected images."""
-        sel_img_batch = self.get_selected_batch()
-        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
-        return sel_images
+        return self.selected_batch.images
 
     @property
     def graph_obj(self):
         """Returns the NetworkX graph extracted from the image."""
-        return self.get_selected_batch().graph_obj
+        return self.selected_batch.graph_obj
 
     @property
     def image_histogram(self) -> MatLike:
@@ -336,7 +358,7 @@ class ImageProcessor(ProgressUpdate):
             raise ValueError(
                 f"Selected image batch {sel_batch_idx} out of range! Select in range 0-{len(self._image_batches)}")
 
-        self._selected_batch = sel_batch_idx
+        self._selected_batch_index = sel_batch_idx
         self.update_image_props(self._image_batches[sel_batch_idx])
         self.reset_img_filters()
 
@@ -364,7 +386,7 @@ class ImageProcessor(ProgressUpdate):
         if filter_type == 2:
             self.reset_img_filters()
 
-        sel_batch = self.get_selected_batch()
+        sel_batch = self.selected_batch
         progress = 10
         incr = 90 / len(sel_batch.images) - 1
         for i in range(len(sel_batch.images)):
@@ -390,7 +412,7 @@ class ImageProcessor(ProgressUpdate):
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on the image."""
-        sel_batch = self.get_selected_batch()
+        sel_batch = self.selected_batch
         for img_obj in sel_batch.images:
             img_obj.img_mod, img_obj.img_bin = None, None
             sel_batch.graph_obj.reset_graph()
@@ -399,7 +421,7 @@ class ImageProcessor(ProgressUpdate):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
 
         # scale_factor = 1
-        sel_batch = self.get_selected_batch()
+        sel_batch = self.selected_batch
         if len(sel_batch.images) <= 0:
             return
 
@@ -443,18 +465,18 @@ class ImageProcessor(ProgressUpdate):
         :param actual_w: Width of actual image.
         :param actual_h: Height of actual image.
         """
-        sel_batch = self.get_selected_batch()
+        sel_batch = self.selected_batch
         if len(sel_batch.selected_images_idx) > 0:
             [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
              sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
-        sel_batch.current_view = 'processed'
+        self.selected_batch_view = 'processed'
 
     def undo_cropping(self):
         """
         A function that restores the image to its original size.
         """
-        sel_batch = self.get_selected_batch()
+        sel_batch = self.selected_batch
         if len(sel_batch.selected_images_idx) > 0:
             [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
@@ -465,11 +487,11 @@ class ImageProcessor(ProgressUpdate):
         self.update_status([0, "Starting graph extraction..."])
         try:
             # Get the selected batch
-            sel_batch = self.get_selected_batch()
-            sel_batch.current_view = 'graph'
+            self.selected_batch_view= 'graph'
+            sel_batch = self.selected_batch
 
             # Get binary image
-            sel_images = self.get_selected_images(sel_batch)
+            sel_images = self.get_batch_images(sel_batch)
             img_bin = [img.img_bin for img in sel_images]
             img_bin = np.asarray(img_bin)
 
@@ -495,7 +517,7 @@ class ImageProcessor(ProgressUpdate):
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
-                sel_batch.current_view = 'processed'
+                self.selected_batch_view = 'processed'
                 return
         except Exception as err:
             self.abort = True
@@ -684,19 +706,13 @@ class ImageProcessor(ProgressUpdate):
             filename = re.sub(pattern, '', filename)
         return filename, output_dir
 
-    def get_selected_batch(self):
-        """
-        Retrieved data of the current selected batch.
-        """
-        return self._image_batches[self._selected_batch]
-
-    def get_selected_images(self, selected_batch: ImageBatch):
+    def get_batch_images(self, selected_batch: ImageBatch):
         """
         Get indices of selected images.
         :param selected_batch: The selected batch ImageBatch object.
         """
         if selected_batch is None:
-            selected_batch = self.get_selected_batch()
+            selected_batch = self.selected_batch
 
         sel_images = [selected_batch.images[i] for i in selected_batch.selected_images_idx]
         return sel_images
@@ -744,8 +760,8 @@ class ImageProcessor(ProgressUpdate):
         Write images to a file.
         """
 
-        sel_batch = self.get_selected_batch()
-        sel_images = self.get_selected_images(sel_batch)
+        sel_batch = self.selected_batch
+        sel_images = self.get_batch_images(sel_batch)
         is_3d = True if len(sel_images) > 1 else False
         img_file_name, out_dir = self.get_filenames()
 
@@ -772,7 +788,7 @@ class ImageProcessor(ProgressUpdate):
         :param sel_batch: ImageBatch data object.
         :param show_giant_only: If True, only draw the largest/giant graph on the processed image.
         """
-        sel_images = self.get_selected_images(sel_batch)
+        sel_images = self.get_batch_images(sel_batch)
         img_3d = [img.img_2d for img in sel_images]
         img_3d = np.asarray(img_3d)
 
@@ -886,7 +902,6 @@ class ImageProcessor(ProgressUpdate):
                 scaling_options=scaling_opts,
                 selected_images_idx=set(range(len(images))),
                 view_options=views,
-                current_view='original',  # TO BE DELETED
             )
             img_info_list.append(img_batch)
             break  # REMOVE TO ALLOW 3D

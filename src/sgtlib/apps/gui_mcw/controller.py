@@ -93,7 +93,7 @@ class MainController(BaseController):
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
-            sel_img_batch = ntwk_p.get_selected_batch()
+            sel_img_batch = ntwk_p.selected_batch
             options_img = ntwk_p.image_obj.configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
@@ -129,7 +129,7 @@ class MainController(BaseController):
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
-            sel_img_batch = ntwk_p.get_selected_batch()
+            sel_img_batch = ntwk_p.selected_batch
             graph_obj = ntwk_p.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
@@ -202,21 +202,18 @@ class MainController(BaseController):
             item_data.append([key])  # Store the key
             sgt_obj = self._sgt_objs[key]
             ntwk_p = sgt_obj.ntwk_p
-            # sel_img_batch = ntwk_p.get_selected_batch()
+            # sel_img_batch = ntwk_p.get_selected_batch
             img_cv = ntwk_p.image_2d
             base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
 
-    def get_selected_images(self, img_view: str = None):
+    def get_selected_images(self):
         """
         Get selected images from a specific image batch.
         """
         sgt_obj = self.get_selected_sgt_obj()
         ntwk_p = sgt_obj.ntwk_p
-        sel_img_batch = ntwk_p.get_selected_batch()
-        if img_view is not None:
-            sel_img_batch.current_view = img_view
         return ntwk_p.selected_images
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
@@ -293,7 +290,7 @@ class MainController(BaseController):
                 self._wait_flag_hist = False
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
-                    sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+                    sel_img_batch = sgt_obj.ntwk_p.selected_batch
                     self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
@@ -427,7 +424,7 @@ class MainController(BaseController):
         sgt_obj = self.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        sel_img_batch = sgt_obj.ntwk_p.selected_batch
         is_3d = not sel_img_batch.is_2d
         return is_3d
 
@@ -435,20 +432,10 @@ class MainController(BaseController):
     def get_selected_img_batch(self):
         try:
             sgt_obj = self.get_selected_sgt_obj()
-            return sgt_obj.ntwk_p.selected_batch
+            return sgt_obj.ntwk_p.selected_batch_index
         except AttributeError:
             logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
             return 0
-
-    @Slot(result=str)
-    def get_selected_img_type(self):
-        try:
-            sgt_obj = self.get_selected_sgt_obj()
-            sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-            return sel_img_batch.current_view
-        except AttributeError:
-            logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
-            return 'original'
 
     @Slot(result=str)
     def get_img_nav_location(self):
@@ -501,33 +488,17 @@ class MainController(BaseController):
     @Slot(int, bool)
     def toggle_selected_batch_image(self, img_index, selected):
         sgt_obj = self.get_selected_sgt_obj()
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        sel_img_batch = sgt_obj.ntwk_p.selected_batch
         if selected:
             sel_img_batch.selected_images_idx.add(img_index)
         else:
             sel_img_batch.selected_images_idx.discard(img_index)
         self.changeImageSignal.emit()
 
-    @Slot(str)
-    def toggle_current_img_view(self, choice: str = None):
-        """
-            Change the view of the current image to either: original, binary, processed or graph.
-
-            :param choice: Selected view to be loaded.
-        """
-        sgt_obj = self.get_selected_sgt_obj()
-        if sgt_obj is None:
-            return
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-        print(f"User selected view: {sel_img_batch.view_options}")
-        if choice is not None:
-            sel_img_batch.current_view = choice
-        self.changeImageSignal.emit()
-
     @Slot(bool)
     def reload_graph_image(self, only_giant_graph=False):
         sgt_obj = self.get_selected_sgt_obj()
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
+        sel_img_batch = sgt_obj.ntwk_p.selected_batch
         sgt_obj.ntwk_p.draw_graph_image(sel_img_batch, show_giant_only=only_giant_graph)
         self.changeImageSignal.emit()
 
@@ -569,8 +540,7 @@ class MainController(BaseController):
                 else:
                     self._selected_sgt_obj_index = index
                     sgt_obj = self.get_selected_sgt_obj()
-                    sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-                    sel_img_batch.current_view = 'original'
+                    sgt_obj.ntwk_p.selected_batch_view = 'original'
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -615,8 +585,7 @@ class MainController(BaseController):
             self._applying_changes = True
             if view != "":
                 sgt_obj = self.get_selected_sgt_obj()
-                sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
-                sel_img_batch.current_view = view
+                sgt_obj.ntwk_p.selected_batch_view = view
             self.changeImageSignal.emit()
 
     @Slot()
@@ -811,11 +780,10 @@ class MainController(BaseController):
             return False
 
         sgt_obj = self.get_selected_sgt_obj()
-        sel_img_batch = sgt_obj.ntwk_p.get_selected_batch()
         if sgt_obj.ntwk_p.graph_obj.img_ntwk is None:
             return False
 
-        if sel_img_batch.current_view  == "graph":
+        if sgt_obj.ntwk_p.selected_batch_view == "graph":
             return True
         return False
 

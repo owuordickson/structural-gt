@@ -98,11 +98,13 @@ from sgtlib import modules as sgt
 
 # set paths
 img_path = "path/to/image"
-cfg_file = "path/to/sgt_configs.ini"   # Optional: leave blank
+cfg_file = "path/to/sgt_configs.ini"  # Optional: leave blank
+
 
 # Define a function for receiving progress updates
 def print_updates(progress_val, progress_msg):
     print(f"{progress_val}: {progress_msg}")
+
 
 # Create a Network object
 ntwk_obj, _ = sgt.ImageProcessor.create_imp_object(img_path, config_file=cfg_file)
@@ -113,7 +115,7 @@ ntwk_obj.apply_img_filters()
 ntwk_obj.remove_listener(print_updates)
 
 # View images
-sel_img_batch = ntwk_obj.get_selected_batch()
+sel_img_batch = ntwk_obj.selected_batch()
 bin_images = [obj.img_bin for obj in sel_img_batch.images]
 mod_images = [obj.img_mod for obj in sel_img_batch.images]
 plt.imshow(bin_images[0])

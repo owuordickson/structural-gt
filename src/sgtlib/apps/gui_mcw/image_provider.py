@@ -16,8 +16,8 @@ class ImageProvider(QQuickImageProvider):
             img_cv = None
             sgt_obj = self._img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
-            sel_img_batch = ntwk_p.get_selected_batch()
-            if sel_img_batch.current_view  == "original":
+            sel_img_batch = ntwk_p.selected_batch
+            if ntwk_p.selected_batch_view == "original":
                 # Calculate image histogram in different thread
                 self._img_controller.compute_img_histogram()
                 images = ntwk_p.image_3d
@@ -26,7 +26,7 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = images[0]
-            elif sel_img_batch.current_view == "binary":
+            elif ntwk_p.selected_batch_view == "binary":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=2)
                 # Calculate image histogram in different thread
@@ -37,7 +37,7 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0]
-            elif sel_img_batch.current_view  == "processed":
+            elif ntwk_p.selected_batch_view == "processed":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=1)
                 # Calculate image histogram in different thread
@@ -48,7 +48,7 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = mod_images[0]
-            elif sel_img_batch.current_view  == "graph":
+            elif ntwk_p.selected_batch_view == "graph":
                 # If any is None, start the task
                 self._img_controller.showImageHistogramSignal.emit(False)
                 if ntwk_p.graph_obj.img_ntwk is None:
