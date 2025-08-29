@@ -146,6 +146,12 @@ class ImageProcessor(ProgressUpdate):
         return sel_images
 
     @property
+    def is_graph_only(self) -> bool:
+        """Returns whether the selected batch contains only a graph object."""
+        sel_img_batch = self.selected_batch
+        return True if sel_img_batch.view_options[0]["visible"] == 1 else False
+
+    @property
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
         sel_img_batch = self.selected_batch
@@ -1013,7 +1019,4 @@ class ImageProcessor(ProgressUpdate):
             view_options=views,
         )
         imp_obj._image_batches = [img_batch]
-
         return imp_obj, graph_file
-
-
