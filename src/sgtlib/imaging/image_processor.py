@@ -51,7 +51,7 @@ class ImageProcessor(ProgressUpdate):
         selected_images_idx: set
         view_options: list[dict]
 
-    def __init__(self, img_path, out_dir, cfg_file="", auto_scale=True):
+    def __init__(self, img_path, out_dir, cfg_file="", graph_file="", auto_scale=True):
         """
         A class for processing and preparing microscopy images for building a fiber graph network.
 
@@ -59,6 +59,7 @@ class ImageProcessor(ProgressUpdate):
             img_path (str | list): input image path
             out_dir (str): directory path for storing results
             cfg_file (str): configuration file path
+            graph_file (str): graph file path (when creating the graph from CSV/GSD data)
             auto_scale (bool): whether to automatically scale the image
 
         >>>
@@ -72,6 +73,7 @@ class ImageProcessor(ProgressUpdate):
         self._img_path: str = img_path if type(img_path) is str else img_path[0]
         self._output_dir: str = out_dir
         self._config_file: str = cfg_file
+        self._graph_file: str = graph_file
         self._auto_scale: bool = auto_scale
         self._image_batches: list[ImageProcessor.ImageBatch] = []
         self._selected_batch_index: int = 0
@@ -96,6 +98,11 @@ class ImageProcessor(ProgressUpdate):
     def config_file(self) -> str:
         """Returns the configuration file path (usually sgt_configs.ini)."""
         return self._config_file
+
+    @property
+    def graph_file(self) -> str:
+        """Returns the graph file path."""
+        return self._graph_file
 
     @property
     def auto_scale(self) -> bool:
@@ -523,7 +530,7 @@ class ImageProcessor(ProgressUpdate):
                 self.update_status([20, "Reading graph file..."])
                 sel_batch.graph_obj.abort = False
                 sel_batch.graph_obj.add_listener(self.track_progress)
-                sel_batch.graph_obj.create_graph_from_file(file_path)
+                sel_batch.graph_obj.create_graph_from_file(self._graph_file)
                 sel_batch.graph_obj.remove_listener(self.track_progress)
 
             self.update_status([95, "Plotting graph network..."])
@@ -976,7 +983,7 @@ class ImageProcessor(ProgressUpdate):
 
         # Create the StructuralGT object
         input_file = img_files if len(img_files) > 1 else str(img_path)
-        imp_obj = cls(input_file, out_dir, config_file, allow_auto_scale)
+        imp_obj = cls(input_file, out_dir, config_file, auto_scale=allow_auto_scale)
         imp_obj._initialize_image_batches(imp_obj._load_img_from_file(img_path))
         return imp_obj, img_file
 
@@ -1006,7 +1013,7 @@ class ImageProcessor(ProgressUpdate):
         os.makedirs(out_dir, exist_ok=True)
 
         # Create the StructuralGT object
-        imp_obj = cls("", out_dir)
+        imp_obj = cls("", out_dir, graph_file=str(file_path))
 
         # Create Graph Object from the added file_path
         graph_obj = FiberNetworkBuilder(cfg_file="")

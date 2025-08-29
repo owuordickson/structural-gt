@@ -82,13 +82,18 @@ class BaseController(QObject):
 
         try:
             # Create an SGT object as a GraphAnalyzer object.
-            ntwk_p, img_file = ImageProcessor.from_image_file(file_path, out_folder=out_dir,
+            file_ext = os.path.splitext(file_path)[1].lower()
+            allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
+            if file_ext.endswith(allowed_extensions):
+                ntwk_p, file_name = ImageProcessor.from_image_file(file_path, out_folder=out_dir,
                                                               config_file=self._config_file,
                                                               allow_auto_scale=self._allow_auto_scale)
+            else:
+                ntwk_p, file_name = ImageProcessor.from_graph_file(file_path, out_folder=out_dir,)
             sgt_obj = GraphAnalyzer(ntwk_p)
 
             # Store the StructuralGT object and sync application
-            self._sgt_objs[img_file] = sgt_obj
+            self._sgt_objs[file_name] = sgt_obj
             return True
         except Exception as err:
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
