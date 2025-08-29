@@ -8,6 +8,7 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter
     visible: mainController.display_image()
+    enabled: mainController.enable_img_controls()
 
     RowLayout {
         id: aiModeContainer
@@ -51,6 +52,7 @@ ColumnLayout {
         function onImageChangedSignal() {
             // Force refresh
             aiModeControls.visible = false; //mainController.display_image();
+            aiModeControls.enabled = mainController.enable_img_controls();
         }
     }
 }

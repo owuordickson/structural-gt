@@ -779,7 +779,6 @@ class MainController(BaseController):
         sgt_obj = self.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
-
         return not sgt_obj.ntwk_p.is_graph_only
 
     @Slot(result=bool)

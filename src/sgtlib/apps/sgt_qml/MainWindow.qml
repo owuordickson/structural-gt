@@ -427,6 +427,7 @@ ApplicationWindow {
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 30
                     text: ""
+                    visible: mainController.enable_img_controls()
                     onClicked: {
                         mainController.run_extract_graph();
                         dialogExtractGraph.close();

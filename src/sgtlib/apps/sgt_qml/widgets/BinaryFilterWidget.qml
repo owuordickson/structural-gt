@@ -10,6 +10,7 @@ ColumnLayout {
     Layout.leftMargin: 10
     Layout.alignment: Qt.AlignLeft
     visible: mainController.display_image()
+    enabled: mainController.enable_img_controls()
 
     property int idRole: Qt.UserRole + 1
     property int valueRole: Qt.UserRole + 4
@@ -179,6 +180,7 @@ ColumnLayout {
         function onImageChangedSignal() {
             // Force refresh
             imgBinControls.visible = mainController.display_image();
+            imgBinControls.enabled = mainController.enable_img_controls();
             initializeSelections();
         }
 

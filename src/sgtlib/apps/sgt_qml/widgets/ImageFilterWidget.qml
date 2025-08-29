@@ -8,6 +8,7 @@ Item {
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
     visible: mainController.display_image()
+    enabled: mainController.enable_img_controls()
 
     property int cbxWidthSize: 100
     property int spbWidthSize: 170
@@ -145,6 +146,7 @@ Item {
         function onImageChangedSignal() {
             // Force refresh
             imgFiltersControl.visible = mainController.display_image();
+            imgFiltersControl.enabled = mainController.enable_img_controls();
         }
 
     }

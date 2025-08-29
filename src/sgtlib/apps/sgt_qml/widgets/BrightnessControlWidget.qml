@@ -7,6 +7,7 @@ Item {
     id: brightnessControl  // used for external access
     Layout.preferredHeight: 75
     Layout.preferredWidth: parent.width
+    enabled: mainController.enable_img_controls()
 
     property int spbWidthSize: 75
     property int lblWidthSize: 75
@@ -98,6 +99,14 @@ Item {
 
             }
 
+        }
+    }
+
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            brightnessControl.enabled = mainController.enable_img_controls();
         }
     }
 }

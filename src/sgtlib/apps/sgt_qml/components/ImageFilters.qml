@@ -83,6 +83,7 @@ Rectangle {
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
                 visible: false
+                enabled: mainController.enable_img_controls()
                 onClicked: imgHistogramWindow.visible = true
             }
 
@@ -104,6 +105,7 @@ Rectangle {
 
         function onShowImageHistogramSignal(allow) {
             btnShowImgHistogram.visible = allow;
+            btnShowImgHistogram.enabled = mainController.enable_img_controls();
         }
     }
 }

@@ -196,6 +196,7 @@ Rectangle {
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
                 visible: mainController.display_image()
+                enabled: mainController.enable_img_controls()
                 onClicked: enableRectangularSelect()
 
                 Rectangle {
@@ -363,6 +364,7 @@ Rectangle {
                                 Layout.preferredWidth: 40
                                 Layout.preferredHeight: 30
                                 text: ""
+                                visible: mainController.enable_img_controls()
                                 onClicked: {
                                     mainController.run_extract_graph();
                                     drpDownGraph.close();
@@ -416,6 +418,7 @@ Rectangle {
             // Force refresh
             btnSelect.visible = mainController.display_image();
             allowScalingContainer.visible = !mainController.display_image();
+            btnSelect.enabled = mainController.enable_img_controls();
             btnBrightness.enabled = mainController.display_image();
             cbImageType.enabled = mainController.display_image();
             btnShowGraph.enabled = mainController.display_image();
