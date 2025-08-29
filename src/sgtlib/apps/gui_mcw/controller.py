@@ -771,6 +771,18 @@ class MainController(BaseController):
         return success_val
 
     @Slot(result=bool)
+    def enable_img_controls(self):
+        """Enable image controls."""
+        if len(self._sgt_objs) <= 0:
+            return False
+
+        sgt_obj = self.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return False
+
+        return not sgt_obj.ntwk_p.is_graph_only
+
+    @Slot(result=bool)
     def display_image(self):
         return self._img_loaded
 
@@ -780,6 +792,9 @@ class MainController(BaseController):
             return False
 
         sgt_obj = self.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return False
+
         if sgt_obj.ntwk_p.graph_obj.img_ntwk is None:
             return False
 

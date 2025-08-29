@@ -149,7 +149,7 @@ class ImageProcessor(ProgressUpdate):
     def is_graph_only(self) -> bool:
         """Returns whether the selected batch contains only a graph object."""
         sel_img_batch = self.selected_batch
-        return True if sel_img_batch.view_options[0]["visible"] == 1 else False
+        return False if sel_img_batch.view_options[0]["visible"] == 1 else True
 
     @property
     def image_obj(self) -> BaseImage:
