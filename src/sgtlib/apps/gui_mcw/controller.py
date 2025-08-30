@@ -201,9 +201,10 @@ class MainController(BaseController):
         for key in keys_list:
             item_data.append([key])  # Store the key
             sgt_obj = self._sgt_objs[key]
-            ntwk_p = sgt_obj.ntwk_p
-            # sel_img_batch = ntwk_p.get_selected_batch
-            img_cv = ntwk_p.image_2d
+            if len(sgt_obj.ntwk_p.selected_images) > 0:
+                img_cv = sgt_obj.ntwk_p.image_2d
+            else:
+                img_cv = np.ones((256, 256), dtype=np.uint8) * 255  # Empty white image
             base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
@@ -871,8 +872,18 @@ class MainController(BaseController):
             return True
 
     @Slot(str, result=bool)
+    def upload_graph_file(self, file_path):
+        """Verify and validate the file path, use it to create a new SGT Object and load it into the view."""
+        is_successful = self.add_graph(file_path)
+        if is_successful:
+            self.synchronize_img_models(self.get_selected_sgt_obj())
+            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            self.load_image(reload_thumbnails=True)
+        return is_successful
+
+    @Slot(str, result=bool)
     def upload_single_image(self, img_path):
-        """Verify and validate an image path, use it to create an SGT object and load it in view."""
+        """Verify and validate the image path, use it to create an SGT object and load it in view."""
         is_successful = self.add_single_image(img_path)
         if is_successful:
             self.synchronize_img_models(self.get_selected_sgt_obj())
