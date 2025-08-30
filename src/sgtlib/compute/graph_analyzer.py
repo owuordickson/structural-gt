@@ -562,7 +562,6 @@ class GraphAnalyzer(ProgressUpdate):
         # Include the computed GT descriptors of the entire image
         if full_img_df is not None:
             # Get full image dimensions
-            # sel_batch = self.ntwk_p.selected_batch
             h, w = self._ntwk_p.binary_image_2d.shape
             for _ in range(num_patches):
                 for _, row in full_img_df.iterrows():
@@ -590,8 +589,7 @@ class GraphAnalyzer(ProgressUpdate):
         lst_len = []
         lst_width = []
 
-        sel_batch = self._ntwk_p.selected_batch
-        sel_images = self._ntwk_p.get_batch_images(sel_batch)
+        sel_images = self._ntwk_p.selected_images
         px_sizes = np.array([img.configs["pixel_width"]["value"] for img in sel_images])
         rho_dims = np.array([img.configs["resistivity"]["value"] for img in sel_images])
 
@@ -910,9 +908,8 @@ class GraphAnalyzer(ProgressUpdate):
         opt_gtc = self._configs
         out_figs = []
 
-        sel_batch = self._ntwk_p.selected_batch
-        sel_images = self._ntwk_p.get_batch_images(sel_batch)
-        img_3d = np.asarray(self._ntwk_p.image_3d)
+        sel_images = self._ntwk_p.selected_images
+        img_3d = np.asarray(self._ntwk_p.image_3d) if len(sel_images) > 0 else None
 
         def plot_gt_results():
             """

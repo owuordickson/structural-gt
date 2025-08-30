@@ -155,7 +155,7 @@ class BaseController(QObject):
             return True
 
     def add_graph(self, graph_file: str, out_dir: str = "") -> bool:
-        """Verify and validate graph file path, use it to create an SGT object and load it in view."""
+        """Verify and validate the graph file path, use it to create an SGT object and load it in view."""
         is_created = self.create_sgt_object(graph_file, out_dir)
         if is_created:
             return True

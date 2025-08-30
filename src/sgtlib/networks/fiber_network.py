@@ -7,8 +7,6 @@ Builds a graph network from nanoscale microscopy images.
 import os
 import numbers
 import itertools
-from logging import exception
-
 import numpy as np
 import igraph as ig
 import networkx as nx
@@ -500,6 +498,10 @@ class FiberNetworkBuilder(ProgressUpdate):
             new_fig = plt.Figure()
             new_ax = new_fig.add_axes((0, 0, 1, 1))  # span the whole figure
             new_ax.set_axis_off()
+
+            if image is None:
+                return new_fig
+
             if transparent:
                 new_ax.imshow(image[pos], cmap='gray', alpha=0)  # Alpha=0 makes image 100% transparent
             else:
@@ -515,10 +517,24 @@ class FiberNetworkBuilder(ProgressUpdate):
             norm_w = new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
             return float(norm_w)
 
-        fig_group = {}
-        # Create axes for the first frame of the image (enough if it is 2D)
-        fig = create_plt_axes(0)
-        fig_group[0] = fig
+        fig_group = {0: create_plt_axes(0)}
+        if image is None:
+            # Draw graph using NetworkX library
+            ax = fig_group[0].get_axes()[0]
+            if node_distribution_data is None:
+                nx.draw_planar(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
+            else:
+                # Normalize values for colormap
+                v_min, v_max = min(node_distribution_data), max(node_distribution_data)
+                nx.draw_planar(nx_graph, ax=ax, with_labels=show_node_id,
+                               node_size=node_marker_size, node_color=node_distribution_data, cmap='plasma',
+                               vmin=v_min, vmax=v_max, edge_color=edge_color)
+                # Add colorbar for heatmap
+                sm = plt.cm.ScalarMappable(cmap='plasma', norm=plt.Normalize(vmin=v_min, vmax=v_max))
+                sm.set_array([])  # required for colorbar
+                cbar = fig_group[0].colorbar(sm, ax=ax, orientation='vertical', label='Value')
+                cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
+            return fig_group
 
         # First, extract all widths to compute min and max
         all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])
@@ -526,6 +542,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             return fig_group
         min_w, max_w = min(all_widths), max(all_widths)
 
+        # Create a color cycle for each graph component
         if edge_color == 'black':
             color_list = ['k', 'r', 'g', 'b', 'c', 'm', 'y']
         else:
@@ -550,11 +567,10 @@ class FiberNetworkBuilder(ProgressUpdate):
                     coord_1, coord_2, coord_3 = 2, 1, 0  # coordinates: (z, y, x)
 
                 if coord_3 in fig_group and fig_group[coord_3] is not None:
-                    fig = fig_group[coord_3]
+                    pass
                 else:
-                    fig = create_plt_axes(coord_3)
-                    fig_group[coord_3] = fig
-                ax = fig.get_axes()[0]
+                    fig_group[coord_3] = create_plt_axes(coord_3)
+                ax = fig_group[coord_3].get_axes()[0]
                 ax.plot(ge[:, coord_1], ge[:, coord_2], color, linewidth=edge_w)
 
         if plot_nodes:

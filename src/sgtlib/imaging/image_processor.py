@@ -811,8 +811,12 @@ class ImageProcessor(ProgressUpdate):
         :param show_giant_only: If True, only draw the largest/giant graph on the processed image.
         """
         sel_images = self.get_batch_images(sel_batch)
-        img_3d = [img.img_2d for img in sel_images]
-        img_3d = np.asarray(img_3d)
+
+        if len(sel_images) > 0:
+            img_3d = [img.img_2d for img in sel_images]
+            img_3d = np.asarray(img_3d)
+        else:
+            img_3d = None
 
         if sel_batch.graph_obj is None:
             return
