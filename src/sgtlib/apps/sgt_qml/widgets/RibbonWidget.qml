@@ -361,6 +361,7 @@ Rectangle {
                             }
 
                             Button {
+                                id: btnRunGraph
                                 Layout.preferredWidth: 40
                                 Layout.preferredHeight: 30
                                 text: ""
@@ -416,6 +417,7 @@ Rectangle {
 
         function onImageChangedSignal() {
             // Force refresh
+            btnRunGraph.visible = mainController.enable_img_controls();
             btnSelect.visible = mainController.display_image();
             allowScalingContainer.visible = !mainController.display_image();
             btnSelect.enabled = mainController.enable_img_controls();

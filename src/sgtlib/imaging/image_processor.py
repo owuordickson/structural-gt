@@ -396,6 +396,9 @@ class ImageProcessor(ProgressUpdate):
         :return: None
         """
 
+        if len(self.selected_batch.images) <= 0:
+            return
+
         self.update_status([10, "Processing image..."])
         if filter_type == 2:
             self.reset_img_filters()
@@ -421,7 +424,6 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
                 img_obj.img_mod = img_mod
             img_obj.get_pixel_width()
-
         self.update_status([100, "Image processing complete..."])
 
     def reset_img_filters(self):

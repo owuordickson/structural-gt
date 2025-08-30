@@ -23,7 +23,7 @@ from ..base_contoller import BaseController
 
 from ... import __version__, __title__
 from ...utils.sgt_utils import img_to_base64, verify_path
-from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS
+from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
 from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 
 
@@ -93,6 +93,8 @@ class MainController(BaseController):
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
+            if len(ntwk_p.selected_images) <= 0:
+                return
             sel_img_batch = ntwk_p.selected_batch
             options_img = ntwk_p.image_obj.configs
 
@@ -408,6 +410,9 @@ class MainController(BaseController):
         if option == "img":
             pattern_string = ' '.join(ALLOWED_IMG_EXTENSIONS)
             return f"Image files ({pattern_string})"
+        if option == "graph":
+            pattern_string = ' '.join(ALLOWED_GRAPH_FILE_EXTENSIONS)
+            return f"Graph files ({pattern_string})"
         elif option == "proj":
             return "Project files (*.sgtproj)"
         else:

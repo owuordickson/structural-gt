@@ -424,6 +424,7 @@ ApplicationWindow {
                 }
 
                 Button {
+                    id: btnRunExtractGraph
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 30
                     text: ""
@@ -735,11 +736,20 @@ ApplicationWindow {
 
     QuickDialogs.FileDialog {
         id: imageFileDialog
-        title: "Open file"
+        title: "Open image file"
         nameFilters: [mainController.get_file_extensions("img")]
         onAccepted: {
-            //console.log("Selected file:", fileDialog.selectedFile)
             mainController.upload_single_image(imageFileDialog.selectedFile);
+        }
+        //onRejected: console.log("File selection canceled")
+    }
+
+    QuickDialogs.FileDialog {
+        id: graphFileDialog
+        title: "Open file"
+        nameFilters: [mainController.get_file_extensions("graph")]
+        onAccepted: {
+            mainController.upload_graph_file(graphFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }
@@ -763,6 +773,10 @@ ApplicationWindow {
             lblAlertMsg.text = msg;
             lblAlertMsg.color = "#2255bc";
             dialogAlert.open();
+        }
+
+        function onImageChangedSignal() {
+            btnRunExtractGraph.visible = mainController.enable_img_controls();
         }
 
     }

@@ -25,7 +25,7 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
-                    img_cv = images[0]
+                    img_cv = images[0] if len(images) > 0 else None
             elif ntwk_p.selected_batch_view == "binary":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=2)
@@ -36,7 +36,7 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
-                    img_cv = bin_images[0]
+                    img_cv = bin_images[0] if len(bin_images) > 0 else None
             elif ntwk_p.selected_batch_view == "processed":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=1)
@@ -47,7 +47,7 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_idx)
                 else:
                     # 2D, Do not use if 3D
-                    img_cv = mod_images[0]
+                    img_cv = mod_images[0] if len(mod_images) > 0 else None
             elif ntwk_p.selected_batch_view == "graph":
                 # If any is None, start the task
                 self._img_controller.showImageHistogramSignal.emit(False)
@@ -67,9 +67,9 @@ class ImageProvider(QQuickImageProvider):
                 img = Image.fromarray(img_cv)
                 self._pixmap = ImageQt.toqpixmap(img)
 
-                # Acknowledge the image load and send the signal to update QML
-                self._img_controller._img_loaded = True
-                self._img_controller.imageChangedSignal.emit()
+            # Acknowledge the image load and send the signal to update QML
+            self._img_controller._img_loaded = True
+            self._img_controller.imageChangedSignal.emit()
         else:
             self._img_controller._img_loaded = False
         self._img_controller._applying_changes = False
