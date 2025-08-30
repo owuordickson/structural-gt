@@ -522,6 +522,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             # Draw graph using NetworkX library
             ax = fig_group[0].get_axes()[0]
             if node_distribution_data is None:
+                # Planar: tries to avoid edge crossings, (working only for planar graphs?)
                 nx.draw_planar(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
             else:
                 # Normalize values for colormap
