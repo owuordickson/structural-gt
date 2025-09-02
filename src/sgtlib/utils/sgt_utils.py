@@ -332,6 +332,46 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
     :param csv_path: Path to the graph file
     """
 
+    def node_edge_from_adj(adj_mat: np.ndarray):
+        """
+        Create node_list and edge_list directly from adjacency matrix indices.
+        Each node is placed at pixel (k, l).
+        Each edge connects node positions where adj[k, l] > 0.
+
+        Parameters
+        ----------
+        adj_mat : np.ndarray
+            Square adjacency matrix (0/1 or weighted).
+
+        Returns
+        -------
+        node_list : list of np.ndarray
+            Node positions as numpy arrays([[x, y]]).
+        edge_list : list of (tuple, tuple, np.ndarray)
+            Edge data: (src, dst, coords) with coords = interpolated pixel path.
+        """
+        n = adj_mat.shape[0]
+
+        # collect unique nodes
+        node_list = []
+        edge_list = []
+        for k in range(n):
+            for l in range(k + 1, n):  # avoid duplicates for undirected graph
+                if adj_mat[k, l] > 0:
+                    p = adj_mat[k, l]       # node position
+                    # node_list.append(np.array([k, l]))
+                    # p1 = np.array([k, k])  # node k position
+                    # p2 = np.array([l, l])  # node l position
+                    #
+                    # # interpolate pixels along line between p1 and p2
+                    # num = max(abs(p2[0] - p1[0]), abs(p2[1] - p1[1])) + 1
+                    # xs = np.linspace(p1[0], p2[0], num=num, dtype=int)
+                    # ys = np.linspace(p1[1], p2[1], num=num, dtype=int)
+                    # coords = np.stack((xs, ys), axis=1).astype(np.int16)
+                    #
+                    # edge_list.append(((k, k), (l, l), coords))
+        return node_list, edge_list
+
     # Check if the first line is text (header) instead of numbers
     with open(csv_path, "r") as f:
         first_line = f.readline()
@@ -344,13 +384,11 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
     # Try to read as a numeric matrix
     try:
         data = np.loadtxt(csv_path, delimiter=",", dtype=np.float64, skiprows=skip)
-    except ValueError as err:
-        print(f"Error reading CSV file: {err}")
+    except ValueError:
         return None
 
     if data is None:
         return None
-    print(f"We read the following data: {data.shape}")
 
     # Case 1: Edge list (two columns)
     if data.ndim == 2 and data.shape[1] == 2:

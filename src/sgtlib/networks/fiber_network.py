@@ -148,11 +148,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         if type(input_data) is str:
             self.update_status([50, "Loading graph network from file..."])
             nx_graph = self.create_graph_from_file(input_data)
-        elif type(input_data) is MatLike:
+        elif type(input_data) is np.ndarray:
             self.update_status([50, "Extracting the graph network..."])
             nx_graph = self.extract_graph(image_bin=input_data, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         else:
-            self.update_status([-1, "Invalid input for building a graph network. Either provide a graph file path or a binary image."])
+            self.update_status([-1, "Invalid input for building a graph network. Either provide a graph file path or a binary image as an OpenCV matrix."])
             self.abort = True
             return
 
