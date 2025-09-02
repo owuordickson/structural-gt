@@ -331,8 +331,26 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
 
     :param csv_path: Path to the graph file
     """
-    # Try to read as numeric matrix
-    data = np.loadtxt(csv_path)
+
+    # Check if the first line is text (header) instead of numbers
+    with open(csv_path, "r") as f:
+        first_line = f.readline()
+    try:
+        [float(x) for x in first_line.replace(",", " ").split()]
+        skip = 0  # numeric → no header
+    except ValueError:
+        skip = 1  # not numeric → skip header
+
+    # Try to read as a numeric matrix
+    try:
+        data = np.loadtxt(csv_path, delimiter=",", dtype=np.float64, skiprows=skip)
+    except ValueError as err:
+        print(f"Error reading CSV file: {err}")
+        return None
+
+    if data is None:
+        return None
+    print(f"We read the following data: {data.shape}")
 
     # Case 1: Edge list (two columns)
     if data.ndim == 2 and data.shape[1] == 2:

@@ -259,7 +259,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             elif ext == ".csv":
                 temp_graph = csv_to_graph(file_path)
             else:
-                self.update_status([-1, f"Unsupported file extension: {ext}"])
+                self.update_status([-1, f"Unsupported file extension: {ext}. If CSV, comma as delimiter."])
                 temp_graph = None
 
             # if temp_graph is not None:
