@@ -36,9 +36,9 @@ Rectangle {
                 id: lblNoImgProps
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
-                text: "No properties! Add image(s)."
+                text: "No image properties to show!"
                 color: "#808080"
-                visible: !mainController.display_image()
+                visible: imagePropsModel.rowCount() <= 0
             }
             ImagePropertyWidget{}
 
@@ -66,7 +66,7 @@ Rectangle {
                 Layout.topMargin: 20
                 text: "No graph properties to show!"
                 color: "#808080"
-                visible: graphPropsModel.rowCount() > 0 ? false : true
+                visible: graphPropsModel.rowCount() <= 0
             }
             GraphPropertyWidget{}
 
@@ -95,7 +95,7 @@ Rectangle {
                 Layout.topMargin: 20
                 text: "No metrics to show!"
                 color: "#808080"
-                visible: graphComputeModel.rowCount() > 0 ? false : true
+                visible: graphComputeModel.rowCount() <= 0
             }
             GraphComputeWidget{}
         }
@@ -105,15 +105,15 @@ Rectangle {
         target: mainController
 
         function onImageChangedSignal() {
-            lblNoImgProps.visible = !mainController.display_image();
-            lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
-            lblNoGraphParams.visible = graphComputeModel.rowCount() > 0 ? false : true;
+            lblNoImgProps.visible = imagePropsModel.rowCount() <= 0;
+            lblNoGraphProps.visible = graphPropsModel.rowCount() <= 0;
+            lblNoGraphParams.visible = graphComputeModel.rowCount() <= 0;
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
             lblNoImgProps.visible = !mainController.display_image();
-            lblNoGraphProps.visible = graphPropsModel.rowCount() > 0 ? false : true;
-            lblNoGraphParams.visible = graphComputeModel.rowCount() > 0 ? false : true;
+            lblNoGraphProps.visible = graphPropsModel.rowCount() <= 0;
+            lblNoGraphParams.visible = graphComputeModel.rowCount() <= 0;
         }
 
     }

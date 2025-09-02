@@ -203,10 +203,10 @@ class MainController(BaseController):
         for key in keys_list:
             item_data.append([key])  # Store the key
             sgt_obj = self._sgt_objs[key]
-            if len(sgt_obj.ntwk_p.selected_images) > 0:
-                img_cv = sgt_obj.ntwk_p.image_2d
-            else:
+            if sgt_obj.ntwk_p.selected_batch.is_graph_only:
                 img_cv = np.ones((256, 256), dtype=np.uint8) * 255  # Empty white image
+            else:
+                img_cv = sgt_obj.ntwk_p.image_2d
             base64_data = img_to_base64(img_cv)
             image_cache[key] = base64_data  # Store base64 string
         return item_data, image_cache
@@ -785,7 +785,7 @@ class MainController(BaseController):
         sgt_obj = self.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
-        return not sgt_obj.ntwk_p.is_graph_only
+        return not sgt_obj.ntwk_p.selected_batch.is_graph_only
 
     @Slot(result=bool)
     def display_image(self):

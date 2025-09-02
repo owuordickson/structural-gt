@@ -43,9 +43,10 @@ class ImageProcessor(ProgressUpdate):
         numpy_image: np.ndarray
         images: list[BaseImage]
         graph_obj: FiberNetworkBuilder
-        is_2d: bool
         shape: tuple
         props: list
+        is_2d: bool
+        is_graph_only: bool
         scale_factor: float
         scaling_options: list[dict]
         selected_images_idx: set
@@ -152,12 +153,6 @@ class ImageProcessor(ProgressUpdate):
         sel_img_batch = self.selected_batch
         sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
         return sel_images
-
-    @property
-    def is_graph_only(self) -> bool:
-        """Returns whether the selected batch contains only a graph object."""
-        sel_img_batch = self.selected_batch
-        return False if sel_img_batch.view_options[0]["visible"] == 1 else True
 
     @property
     def image_obj(self) -> BaseImage:
@@ -507,9 +502,17 @@ class ImageProcessor(ProgressUpdate):
             sel_batch = self.selected_batch
             sel_images = self.get_batch_images(sel_batch)
 
-            if len(sel_images) > 0:
+            if sel_batch.is_graph_only:
+                self.update_status([20, "Fetching graph file..."])
+                f_name, out_dir = self.get_filenames(file_path=self._graph_file)
+
+                sel_batch.graph_obj.abort = False
+                sel_batch.graph_obj.add_listener(self.track_progress)
+                sel_batch.graph_obj.fit_graph(out_dir, input_data=self._graph_file, file_name=f_name)
+                sel_batch.graph_obj.remove_listener(self.track_progress)
+            else:
                 # Get binary image
-                self.update_status([20, "Getting image binary..."])
+                self.update_status([20, "Getting binary image..."])
                 img_bin = [img.img_bin for img in sel_images]
                 img_bin = np.asarray(img_bin)
 
@@ -527,13 +530,7 @@ class ImageProcessor(ProgressUpdate):
 
                 sel_batch.graph_obj.abort = False
                 sel_batch.graph_obj.add_listener(self.track_progress)
-                sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, image_file=f_name)
-            else:
-                self.update_status([20, "Reading graph file..."])
-                sel_batch.graph_obj.abort = False
-                sel_batch.graph_obj.add_listener(self.track_progress)
-                sel_batch.graph_obj.create_graph_from_file(self._graph_file)
-                sel_batch.graph_obj.remove_listener(self.track_progress)
+                sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, file_name=f_name)
 
             self.update_status([95, "Plotting graph network..."])
             self.draw_graph_image(sel_batch)
@@ -711,20 +708,30 @@ class ImageProcessor(ProgressUpdate):
                     self.update_status([-1, f"Filter {bin_img_patch.shape} graph extraction failed!"])
         return graph_groups
 
-    def get_filenames(self, image_path: str = None):
+    def get_filenames(self, file_path: str = None):
         """
         Splits the image path into file name and image directory.
 
-        :param image_path: Image directory path.
+        :param file_path: Path to the file of interest.
 
         Returns:
             filename (str): image file name., output_dir (str): image directory path.
         """
 
-        img_dir, filename = os.path.split(self._img_path) if image_path is None else os.path.split(image_path)
+        img_dir, filename = os.path.split(self._img_path) if file_path is None else os.path.split(file_path)
         output_dir = img_dir if self._output_dir == '' else self._output_dir
 
         for ext in ALLOWED_IMG_EXTENSIONS:
+            ext = ext.replace('*', '')
+            pattern = re.escape(ext) + r'$'
+            filename = re.sub(pattern, '', filename)
+
+        for ext in ALLOWED_GRAPH_FILE_EXTENSIONS:
+            ext = ext.replace('*', '')
+            pattern = re.escape(ext) + r'$'
+            filename = re.sub(pattern, '', filename)
+
+        for ext in ALLOWED_3D_IMG_EXTENSIONS:
             ext = ext.replace('*', '')
             pattern = re.escape(ext) + r'$'
             filename = re.sub(pattern, '', filename)
@@ -928,9 +935,10 @@ class ImageProcessor(ProgressUpdate):
                 numpy_image=images,
                 images=[],
                 graph_obj=FiberNetworkBuilder(cfg_file=cfg_file),
-                is_2d=True,
                 shape=(h, w),
                 props=[],
+                is_2d=True,
+                is_graph_only=False,
                 scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
                 selected_images_idx=set(range(len(images))),
@@ -1040,9 +1048,10 @@ class ImageProcessor(ProgressUpdate):
             numpy_image=np.array([]),
             images=[],
             graph_obj=graph_obj,
-            is_2d=True,
             shape=(0,0),
             props=[],
+            is_2d=True,
+            is_graph_only=True,
             scale_factor=0.0,
             scaling_options=[],
             selected_images_idx=set(),

@@ -13,7 +13,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from cv2.typing import MatLike
 
-from .sknw_mod import build_sknw
+from .sknw_mod import build_sknw, build_graph
 from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
@@ -103,26 +103,61 @@ class FiberNetworkBuilder(ProgressUpdate):
     def skel_obj(self):
         return self._skel_obj
 
-    def fit_graph(self, save_dir: str, img_bin: MatLike = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, image_file: str = "img") -> None:
+    def fit_graph(self, save_dir: str, input_data: MatLike | str = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
         """
         Execute functions that build a NetworkX graph from the binary image.
 
         :param save_dir: Directory to save the graph to.
-        :param img_bin: A binary image for building Graph Skeleton for the NetworkX graph.
+        :param input_data: A binary image for building Graph Skeleton for the NetworkX graph OR a file path for loading the NetworkX graph from a file.
         :param is_img_2d: Whether the image is 2D or 3D otherwise.
         :param px_width_sz: Width of a pixel in nanometers.
         :param rho_val: Resistivity coefficient/value of the material.
-        :param image_file: Filename of the binary image.
+        :param file_name: Filename of the binary image.
         :return:
         """
+
+        def verify_graph():
+            """Verify if the NetworkX graph is valid."""
+            if nx_graph is None:
+                return False
+
+            if nx_graph.number_of_edges() <= 0 or nx_graph.number_of_nodes() <= 0:
+                return False
+
+            # Save NetworkX graph
+            self.nx_graph = nx_graph
+            # Save iGraph graph
+            self._ig_graph = ig.Graph.from_networkx(nx_graph)
+            # Save giant NetworkX graph
+            connected_components = list(nx.connected_components(nx_graph))
+            if not connected_components:  # In case the graph is empty
+                connected_components = []
+            sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
+            if sub_graphs:
+                giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+            else:
+                giant_graph = nx_graph
+            self._nx_giant_graph = giant_graph
+            return True
 
         if self.abort:
             self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
                                     "image/binary filters and graph options. OR change brightness/contrast"])
             return
 
-        self.update_status([50, "Extracting the graph network..."])
-        success = self.extract_graph(image_bin=img_bin, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
+        if type(input_data) is str:
+            self.update_status([50, "Loading graph network from file..."])
+            nx_graph = self.create_graph_from_file(input_data)
+        elif type(input_data) is MatLike:
+            self.update_status([50, "Extracting the graph network..."])
+            nx_graph = self.extract_graph(image_bin=input_data, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
+        else:
+            self.update_status([-1, "Invalid input for building a graph network. Either provide a graph file path or a binary image."])
+            self.abort = True
+            return
+
+        self.update_status([70, "Verifying graph network..."])
+        success = verify_graph()
         if not success:
             self.update_status([-1, "Problem encountered, change image/binary filters and graph options. OR change brightness/contrast"])
             self.abort = True
@@ -134,7 +169,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self.update_status([90, "Saving graph network..."])
         # Save graph to GSD/HOOMD - For OVITO rendering
         self._configs["export_as_gsd"]["value"] = 1
-        self.save_graph_to_file(image_file, save_dir)
+        self.save_graph_to_file(file_name, save_dir)
 
     def reset_graph(self) -> None:
         """
@@ -143,7 +178,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         self.nx_graph, self._ig_graph, self._img_ntwk = None, None, None
 
-    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> bool:
+    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
         """
         Build a skeleton from the image and use the skeleton to build a NetworkX graph.
 
@@ -155,11 +190,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         try:
             if image_bin is None:
-                return False
+                return None
 
             opt_gte = self._configs
             if opt_gte is None:
-                return False
+                return None
 
             self.update_status([51, "Building skeleton from binary image..."])
             graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
@@ -201,31 +236,12 @@ class FiberNetworkBuilder(ProgressUpdate):
                     del nx_graph[s][e]['weight']            # delete 'weight'
                 # print(f"{nx_graph[s][e]}\n")
 
-            self.update_status([70, "Verifying graph network..."])
-            if nx_graph.number_of_edges() <= 0 or nx_graph.number_of_nodes() <= 0:
-                return False
-
-            # Save NetworkX graph
-            self.nx_graph = nx_graph
-            # Save iGraph graph
-            self._ig_graph = ig.Graph.from_networkx(nx_graph)
-            # Save giant NetworkX graph
-            connected_components = list(nx.connected_components(nx_graph))
-            if not connected_components:  # In case the graph is empty
-                connected_components = []
-            sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
-            if sub_graphs:
-                giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-            else:
-                giant_graph = nx_graph
-
-            self._nx_giant_graph = giant_graph
-            return True
+            return nx_graph
         except Exception as e:
-            self.update_status([-1, f"Problem encountered while extracting graph: {e}"])
-            return False
+            self.update_status([-1, f"Problem encountered while extracting graph from binary image: {e}"])
+            return None
 
-    def create_graph_from_file(self, file_path: str) -> bool:
+    def create_graph_from_file(self, file_path: str) -> nx.Graph | None:
         """
         Load a NetworkX graph from a file that may contain:
           - Edge list (2 columns)
@@ -236,41 +252,24 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return: True if the graph is read, False otherwise
         """
         try:
-            self.update_status([50, "Creating graph network..."])
+            self.update_status([60, "Reading graph network..."])
             ext = os.path.splitext(file_path)[1].lower()
             if ext == ".gsd":
-                self.nx_graph = gsd_to_graph(file_path)
+                temp_graph = gsd_to_graph(file_path)
             elif ext == ".csv":
-                self.nx_graph = csv_to_graph(file_path)
+                temp_graph = csv_to_graph(file_path)
             else:
                 self.update_status([-1, f"Unsupported file extension: {ext}"])
-                self.abort = True
+                temp_graph = None
 
-            if self.nx_graph is None:
-                self.abort = True
-                return False
-            else:
-                self.update_status([60, "Saving graph network..."])
-                # Save iGraph graph
-                self._ig_graph = ig.Graph.from_networkx(self.nx_graph)
-                # Save giant NetworkX graph
-                connected_components = list(nx.connected_components(self.nx_graph))
-                if not connected_components:  # In case the graph is empty
-                    connected_components = []
-                sub_graphs = [self.nx_graph.subgraph(c).copy() for c in connected_components]
-                if sub_graphs:
-                    giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-                else:
-                    giant_graph = self.nx_graph.copy()
-                self._nx_giant_graph = giant_graph
-
-                self.update_status([77, "Retrieving graph properties..."])
-                self._props = self.get_graph_props()
-                return True
+            # if temp_graph is not None:
+            #    nx_graph = build_graph(np.array(temp_graph.nodes()), np.array(temp_graph.edges()))
+            #    print(f"nx_graph: {nx_graph}")
+            #    return nx_graph
+            return temp_graph
         except Exception as e:
-            self.update_status([-1, f"Problem encountered while extracting graph: {e}"])
-            self.abort = True
-            return False
+            self.update_status([-1, f"Problem encountered while loading graph from file: {e}"])
+            return None
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
         """
@@ -419,8 +418,9 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         if opt_gte["export_as_gsd"]["value"] == 1:
             self._gsd_file = os.path.join(out_dir, gsd_filename)
-            if self._skel_obj.skeleton_3d is not None:
-                write_gsd_file(self._gsd_file, self._skel_obj.skeleton_3d)
+            if self._skel_obj is not None:
+                if self._skel_obj.skeleton_3d is not None:
+                    write_gsd_file(self._gsd_file, self._skel_obj.skeleton_3d)
 
     @staticmethod
     def get_weight_options() -> dict:
@@ -519,11 +519,11 @@ class FiberNetworkBuilder(ProgressUpdate):
             ax = fig_group[0].get_axes()[0]
             if node_distribution_data is None:
                 # Planar: tries to avoid edge crossings, (working only for planar graphs?)
-                nx.draw_planar(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
+                nx.draw(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
             else:
                 # Normalize values for colormap
                 v_min, v_max = min(node_distribution_data), max(node_distribution_data)
-                nx.draw_planar(nx_graph, ax=ax, with_labels=show_node_id,
+                nx.draw(nx_graph, ax=ax, with_labels=show_node_id,
                                node_size=node_marker_size, node_color=node_distribution_data, cmap='plasma',
                                vmin=v_min, vmax=v_max, edge_color=edge_color)
                 # Add colorbar for heatmap
