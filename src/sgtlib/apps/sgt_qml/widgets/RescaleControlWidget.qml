@@ -17,8 +17,7 @@ Item {
         id: scalingContainer
         spacing: 5
         //Layout.alignment: Qt.AlignHCenter
-        visible: mainController.display_image()
-        enabled: mainController.enable_img_controls()
+        visible: mainController.enable_img_controls()
 
         Label {
             id: lblScaling
@@ -77,8 +76,7 @@ Item {
 
         function onImageChangedSignal() {
             // Force refresh
-            scalingContainer.visible = mainController.display_image();
-            scalingContainer.enabled = mainController.enable_img_controls();
+            scalingContainer.visible = mainController.enable_img_controls();
         }
     }
 

@@ -151,6 +151,8 @@ class ImageProcessor(ProgressUpdate):
     def selected_images(self) -> list[BaseImage]:
         """Returns a list of selected images."""
         sel_img_batch = self.selected_batch
+        if sel_img_batch.is_graph_only:
+            return []
         sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
         return sel_images
 
@@ -391,7 +393,7 @@ class ImageProcessor(ProgressUpdate):
         :return: None
         """
 
-        if len(self.selected_batch.images) <= 0:
+        if self.selected_batch.is_graph_only:
             return
 
         self.update_status([10, "Processing image..."])
@@ -768,9 +770,12 @@ class ImageProcessor(ProgressUpdate):
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
         elif len(selected_batch.images) == 1:
-            # (Height, Width, Channels)
-            _, fmt = BaseImage.check_alpha_channel(selected_batch.images[0].img_raw)  # first image
-            num_dim = 2
+            if selected_batch.is_graph_only:
+                return
+            else:
+                # (Height, Width, Channels)
+                _, fmt = BaseImage.check_alpha_channel(selected_batch.images[0].img_raw)  # first image
+                num_dim = 2
         else:
             # No Image Found
             return
@@ -1045,8 +1050,8 @@ class ImageProcessor(ProgressUpdate):
             {"text": "Extracted Graph", "dataValue": "graph", "value": 1, "visible": 1}
         ]
         img_batch = ImageProcessor.ImageBatch(
-            numpy_image=np.array([]),
-            images=[],
+            numpy_image=np.array([None]),
+            images=[BaseImage(None)],
             graph_obj=graph_obj,
             shape=(0,0),
             props=[],

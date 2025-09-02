@@ -426,7 +426,9 @@ Rectangle {
             btnShowGraph.enabled = mainController.display_image();
 
             drpDownRescale.height = mainController.display_image() ? 180 : 50;
-            //if (drpDownRescale.opened ) { drpDownRescale.close(); }
+            if (drpDownRescale.height === 180) {
+                drpDownRescale.height = mainController.enable_img_controls() ? 180 : 0;
+            }
 
             // Update the combobox view
             for (let i = 0; i < imgViewOptionModel.rowCount(); ++i) {

@@ -93,8 +93,6 @@ class MainController(BaseController):
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
-            if len(ntwk_p.selected_images) <= 0:
-                return
             sel_img_batch = ntwk_p.selected_batch
             options_img = ntwk_p.image_obj.configs
 
@@ -546,7 +544,7 @@ class MainController(BaseController):
                 else:
                     self._selected_sgt_obj_index = index
                     sgt_obj = self.get_selected_sgt_obj()
-                    sgt_obj.ntwk_p.selected_batch_view = 'original'
+                    # sgt_obj.ntwk_p.selected_batch_view = 'original'
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -638,8 +636,7 @@ class MainController(BaseController):
         self._handle_progress_update(0, "Exporting Graph Data...")
         self._task_worker = BaseWorker()
         try:
-            sel_images = self.get_selected_images()
-            if len(sel_images) <= 0:
+            if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
             self._handle_progress_update(20, "Exporting Graph Data...")
@@ -664,11 +661,11 @@ class MainController(BaseController):
         self._handle_progress_update(0, "Saving Images...")
         self._task_worker = BaseWorker()
         try:
-            sel_images = self.get_selected_images()
-            if len(sel_images) <= 0:
+            if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
             self._handle_progress_update(10, "Saving Images...")
+            sel_images = self.get_selected_images()
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]

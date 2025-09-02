@@ -589,6 +589,8 @@ class GraphAnalyzer(ProgressUpdate):
         lst_len = []
         lst_width = []
 
+        if self._ntwk_p.selected_batch.is_graph_only:
+            return None, None
         sel_images = self._ntwk_p.selected_images
         px_sizes = np.array([img.configs["pixel_width"]["value"] for img in sel_images])
         rho_dims = np.array([img.configs["resistivity"]["value"] for img in sel_images])

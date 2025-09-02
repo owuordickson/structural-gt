@@ -65,7 +65,7 @@ class BaseController(QObject):
         A function that processes a selected image file and creates an analyzer object with default configurations.
 
         Args:
-            file_path: file path to image or graph data file.
+            file_path: file path to the image or the graph data file.
             out_dir: output directory path
 
         Returns:
@@ -83,8 +83,8 @@ class BaseController(QObject):
         try:
             # Create an SGT object as a GraphAnalyzer object.
             file_ext = os.path.splitext(file_path)[1].lower()
-            allowed_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
-            if file_ext.endswith(allowed_extensions):
+            img_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
+            if file_ext.endswith(img_extensions):
                 ntwk_p, file_name = ImageProcessor.from_image_file(file_path, out_folder=out_dir,
                                                               config_file=self._config_file,
                                                               allow_auto_scale=self._allow_auto_scale)

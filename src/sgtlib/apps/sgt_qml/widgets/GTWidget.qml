@@ -6,7 +6,7 @@ Item {
     id: graphComputationCtrl
     width: parent.width
     implicitHeight: gtComputationLayout.implicitHeight
-    enabled: mainController.enable_img_controls()
+    //enabled: mainController.enable_img_controls()
 
     property int valueRole: Qt.UserRole + 4
 
@@ -107,7 +107,7 @@ Item {
         target: mainController
 
         function onImageChangedSignal() {
-            graphComputationCtrl.enabled = mainController.enable_img_controls();
+            //graphComputationCtrl.enabled = mainController.enable_img_controls();
         }
     }
 }

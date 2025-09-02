@@ -134,9 +134,9 @@ class BaseImage:
         Returns:
 
         """
-        img_data = self._img_raw.copy()
-        if img_data is None:
+        if self._img_raw is None:
             return
+        img_data = self._img_raw.copy()
 
         self._has_alpha_channel, _ = BaseImage.check_alpha_channel(self._img_raw)
         self._img_2d = img_data
@@ -465,9 +465,10 @@ class BaseImage:
         run_info += f"Resistivity = {opt_img["resistivity"]["value"]}" + r"$\Omega$m"
         run_info += "\n\n"
 
-        run_info += "***Image Scale***\n"
-        run_info += f"Size = {self._img_2d.shape[0]} x {self._img_2d.shape[1]} px"
-        run_info += f" || Scale Factor = {self._scale_factor}"
+        if self._img_raw is not None:
+            run_info += "***Image Scale***\n"
+            run_info += f"Size = {self._img_2d.shape[0]} x {self._img_2d.shape[1]} px"
+            run_info += f" || Scale Factor = {self._scale_factor}"
 
         return run_info
 

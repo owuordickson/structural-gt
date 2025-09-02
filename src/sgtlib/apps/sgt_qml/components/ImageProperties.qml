@@ -111,7 +111,7 @@ Rectangle {
         }
 
         function onTaskTerminatedSignal(success_val, msg_data){
-            lblNoImgProps.visible = !mainController.display_image();
+            lblNoImgProps.visible = imagePropsModel.rowCount() <= 0;
             lblNoGraphProps.visible = graphPropsModel.rowCount() <= 0;
             lblNoGraphParams.visible = graphComputeModel.rowCount() <= 0;
         }
