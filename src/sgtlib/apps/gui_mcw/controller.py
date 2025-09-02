@@ -543,8 +543,6 @@ class MainController(BaseController):
                     return
                 else:
                     self._selected_sgt_obj_index = index
-                    sgt_obj = self.get_selected_sgt_obj()
-                    # sgt_obj.ntwk_p.selected_batch_view = 'original'
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
