@@ -202,7 +202,8 @@ class MainController(BaseController):
             item_data.append([key])  # Store the key
             sgt_obj = self._sgt_objs[key]
             if sgt_obj.ntwk_p.selected_batch.is_graph_only:
-                img_cv = np.ones((256, 256), dtype=np.uint8) * 255  # Empty white image
+                empty_cv = np.ones((256, 256), dtype=np.uint8) * 255
+                img_cv = empty_cv if sgt_obj.ntwk_p.graph_obj.img_ntwk is None else sgt_obj.ntwk_p.graph_obj.img_ntwk
             else:
                 img_cv = sgt_obj.ntwk_p.image_2d
             base64_data = img_to_base64(img_cv)

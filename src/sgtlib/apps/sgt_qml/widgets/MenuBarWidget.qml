@@ -19,9 +19,7 @@ MenuBar {
         Menu {
             id: mnuImportGraphFrom
             title: "Import graph from..."
-            MenuItem {id: mnuImportEdgeList; text:"Edge list"; enabled: true; onTriggered: graphFileDialog.open()}
-            MenuItem {id: mnuImportAdjMatrix; text:"Adjacency matrix"; enabled: true; onTriggered: graphFileDialog.open()}
-            MenuItem {id: mnuImportXYZ; text:"XYZ positions"; enabled: true; onTriggered: graphFileDialog.open()}
+            MenuItem {id: mnuImportCSV; text:"CSV (adj. matrix, edge list, xyz)"; enabled: true; onTriggered: graphFileDialog.open()}
             MenuItem {id: mnuImportGSD; text:"GSD/HOOMD"; enabled: true; onTriggered: graphFileDialog.open()}
         }
         MenuSeparator{}
