@@ -760,9 +760,13 @@ class ImageProcessor(ProgressUpdate):
             alpha_channel = selected_batch.images[0].has_alpha_channel  # first image
             fmt = "Multi + Alpha" if alpha_channel else "Multi"
             num_dim = 3
-        else:
+        elif len(selected_batch.images) == 1:
+            # (Height, Width, Channels)
             _, fmt = BaseImage.check_alpha_channel(selected_batch.images[0].img_raw)  # first image
             num_dim = 2
+        else:
+            # No Image Found
+            return
 
         slices = 0
         height, width = selected_batch.images[0].img_2d.shape[:2]  # first image
@@ -825,6 +829,7 @@ class ImageProcessor(ProgressUpdate):
 
         plt_fig = sel_batch.graph_obj.plot_graph_network(image_arr=img_3d, giant_only=show_giant_only)
         if plt_fig is not None:
+            self.update_status([98, "Graph image created."])
             sel_batch.graph_obj.img_ntwk = plot_to_opencv(plt_fig)
 
     # MODIFIED TO EXCLUDE 3D IMAGES (TO BE REVISITED LATER)

@@ -4,11 +4,9 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id:imgBinControls
+    Layout.leftMargin: 10
     Layout.preferredHeight: 120
     Layout.preferredWidth: parent.width
-    Layout.fillWidth: true
-    Layout.leftMargin: 10
-    Layout.alignment: Qt.AlignLeft
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
 

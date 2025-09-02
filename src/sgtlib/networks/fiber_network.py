@@ -295,10 +295,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         show_node_id = (self._configs["display_node_id"]["value"] == 1)
         add_width_thickness = (self._configs["add_width_thickness"]["value"] == 1)
 
-        # Fetch a single 2D image
-        if image_arr is None:
-            return None
-
         # Create the plot figure(s)
         fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id, add_width_thickness=add_width_thickness)
         fig = fig_grp[0]
