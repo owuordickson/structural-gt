@@ -1,3 +1,8 @@
+# SPDX-License-Identifier: GNU GPL v3
+"""
+Functions to train CNN models and run them on graph images.
+"""
+
 
 import os
 import torch
