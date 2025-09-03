@@ -136,6 +136,7 @@ def train_cnn_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loa
     print("Model saved.")
 
 
+
 def run_cnn_model(graph_image_path: str, model_name: str = "resnet50", img_dim: int = 224, norm_file: str = "../train_data/manual/normalization_stats.csv"):
     """
     Load the CNN model and run it on a graph image to get the prediction for good/bad graph.

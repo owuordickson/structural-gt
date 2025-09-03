@@ -18,11 +18,11 @@ def print_updates(progress_val, progress_msg):
 def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ) -> None:
     """
     Function to generate graph images after applying a combination of random image filters. Steps:
-        A. identify an image folder
-        B. Run 1, 2, 3 in a loop (if we want 10k, then the loop should repeat itself 10k times)
-            1. randomly come with image filters
-            2. apply them to all images
-            3. save the graph images (with unique names) and the randomly selected filters
+        A. Identifies an image folder
+        B. Run 1, 2, 3 in a loop (if we want 10k, then the loop should repeat itself 10k times):
+            1. Randomly come with image filters
+            2. Apply them to all images
+            3. Save the graph images (with unique names) and the randomly selected filters
             (used to generate that graph - in CVS file with the file name of the graph image)
     Args:
         images_dir: the folder containing the images to process
@@ -78,7 +78,7 @@ def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, 
                 ntwk_obj, _ = ImageProcessor.create_imp_object(str(img_path))
                 cfgs = ntwk_obj.image_obj.configs
 
-                # Generate new random config each retry
+                # Generate a new random config each retry
                 cfgs["threshold_type"]["value"] = random.choice([0, 1, 2])
                 cfgs["global_threshold_value"]["value"] = random.randint(1, 255)
                 cfgs["adaptive_local_threshold_value"]["value"] = random.randrange(1, 1000, 2)
