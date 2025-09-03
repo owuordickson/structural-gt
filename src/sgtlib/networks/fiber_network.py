@@ -13,11 +13,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from cv2.typing import MatLike
 
-from .sknw_mod import build_sknw, build_graph
+from .sknw_mod import build_sknw#, build_graph
 from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_csv_file, write_gsd_file, gsd_to_graph, csv_to_graph
+from ..utils.sgt_utils import write_csv_file, write_gsd_file, gsd_to_skeleton, csv_to_graph
 
 
 class FiberNetworkBuilder(ProgressUpdate):
@@ -255,18 +255,24 @@ class FiberNetworkBuilder(ProgressUpdate):
             self.update_status([60, "Reading graph network..."])
             ext = os.path.splitext(file_path)[1].lower()
             if ext == ".gsd":
-                temp_graph = gsd_to_graph(file_path)
+                skel = gsd_to_skeleton(file_path)
+                self._skel_obj = GraphSkeleton(np.array([None]))
+                self._skel_obj._skeleton = skel
+                # self._skel_obj._skeleton_3d = np.asarray([skel])
+                nx_graph = build_sknw(skel)
+                for (s, e) in list(nx_graph.edges()):
+                    nx_graph[s][e]['length'] = nx_graph[s][e]['weight']
+                    nx_graph[s][e]['width'] = 1.0
             elif ext == ".csv":
-                temp_graph = csv_to_graph(file_path)
+                nx_graph = csv_to_graph(file_path)
+                # self._skel_obj = GraphSkeleton(np.array([None]))
+                # self._skel_obj._skeleton = skel
+                ## self._skel_obj._skeleton_3d = np.asarray([skel])
+                # nx_graph = build_sknw(skel)
             else:
                 self.update_status([-1, f"Unsupported file extension: {ext}. If CSV, comma as delimiter."])
-                temp_graph = None
-
-            # if temp_graph is not None:
-            #    nx_graph = build_graph(np.array(temp_graph.nodes()), np.array(temp_graph.edges()))
-            #    print(f"nx_graph: {nx_graph}")
-            #    return nx_graph
-            return temp_graph
+                nx_graph = None
+            return nx_graph
         except Exception as e:
             self.update_status([-1, f"Problem encountered while loading graph from file: {e}"])
             return None
@@ -513,25 +519,52 @@ class FiberNetworkBuilder(ProgressUpdate):
             norm_w = new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
             return float(norm_w)
 
+        def get_max_dims():
+            xs, ys = [], []
+            node_list = list(nx_graph.nodes())
+            for i in node_list:
+                pts = nx_graph.nodes[i].get("pts", None)
+                if pts is not None:
+                    pts = np.array(pts)
+                    if pts.ndim == 1:  # single point [x, y]
+                        xs.append(pts[0])
+                        ys.append(pts[1])
+                    elif pts.ndim == 2:  # multiple points [[x,y], [x,y], ...]
+                        xs.extend(pts[:, 0])
+                        ys.extend(pts[:, 1])
+
+            if not xs or not ys:
+                return None, None  # no "pts" found
+
+            max_x = max(xs)
+            max_y = max(ys)
+            return max_x, max_y
+
         fig_group = {0: create_plt_axes(0)}
         if image is None:
-            # Draw graph using NetworkX library
-            ax = fig_group[0].get_axes()[0]
-            if node_distribution_data is None:
-                # Planar: tries to avoid edge crossings, (working only for planar graphs?)
-                nx.draw(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
+            img_w, img_h = get_max_dims()
+            if img_w is not None and img_h is not None:
+                # GSD file has image dimensions but no image data
+                image = np.ones((img_w, img_h), dtype=np.uint8) * 255
+                image = [image]
             else:
-                # Normalize values for colormap
-                v_min, v_max = min(node_distribution_data), max(node_distribution_data)
-                nx.draw(nx_graph, ax=ax, with_labels=show_node_id,
-                               node_size=node_marker_size, node_color=node_distribution_data, cmap='plasma',
-                               vmin=v_min, vmax=v_max, edge_color=edge_color)
-                # Add colorbar for heatmap
-                sm = plt.cm.ScalarMappable(cmap='plasma', norm=plt.Normalize(vmin=v_min, vmax=v_max))
-                sm.set_array([])  # required for colorbar
-                cbar = fig_group[0].colorbar(sm, ax=ax, orientation='vertical', label='Value')
-                cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
-            return fig_group
+                # Draw graph using NetworkX library
+                ax = fig_group[0].get_axes()[0]
+                if node_distribution_data is None:
+                    # Planar: tries to avoid edge crossings, (working only for planar graphs?)
+                    nx.draw(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
+                else:
+                    # Normalize values for colormap
+                    v_min, v_max = min(node_distribution_data), max(node_distribution_data)
+                    nx.draw(nx_graph, ax=ax, with_labels=show_node_id,
+                                   node_size=node_marker_size, node_color=node_distribution_data, cmap='plasma',
+                                   vmin=v_min, vmax=v_max, edge_color=edge_color)
+                    # Add colorbar for heatmap
+                    sm = plt.cm.ScalarMappable(cmap='plasma', norm=plt.Normalize(vmin=v_min, vmax=v_max))
+                    sm.set_array([])  # required for colorbar
+                    cbar = fig_group[0].colorbar(sm, ax=ax, orientation='vertical', label='Value')
+                    cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
+                return fig_group
 
         # First, extract all widths to compute min and max
         all_widths = np.array([nx_graph[s][e]['width'] for s, e in nx_graph.edges()])

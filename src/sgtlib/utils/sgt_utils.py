@@ -226,14 +226,13 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
         f.append(s)
 
 
-def gsd_to_graph(gsd_file: str, is_2d:bool=False, only_giant: bool = True) -> None|nx.Graph:
+def gsd_to_skeleton(gsd_file: str, is_2d:bool=False) -> None | np.ndarray:
     """
     A function that takes a gsd file and returns a NetworkX graph object.
     Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
 
     :param gsd_file: gsd.hoomd file name;
     :param is_2d: is the skeleton 2D?
-    :param only_giant: Only return the giant graph
     :return:
     """
 
@@ -302,24 +301,12 @@ def gsd_to_graph(gsd_file: str, is_2d:bool=False, only_giant: bool = True) -> No
         new_pos[1] = positions.T[1]
         positions = new_pos.T.astype(int)
 
-    canvas = np.zeros(
+    skel_int = np.zeros(
         list((max(positions.T[i]) + 1) for i in list(
             range(min(positions.shape))))
     )
-    canvas[tuple(list(positions.T))] = 1
-    canvas = canvas.astype(int)
-
-    nx_graph = build_sknw(canvas)
-
-    if only_giant:
-        connected_components = list(nx.connected_components(nx_graph))
-        if not connected_components:  # In case the graph is empty
-            connected_components = []
-        sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
-        if sub_graphs:
-            nx_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-
-    return nx_graph
+    skel_int[tuple(list(positions.T))] = 1
+    return skel_int.astype(int)
 
 
 def csv_to_graph(csv_path: str) -> None | nx.Graph:
@@ -331,46 +318,6 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
 
     :param csv_path: Path to the graph file
     """
-
-    def node_edge_from_adj(adj_mat: np.ndarray):
-        """
-        Create node_list and edge_list directly from adjacency matrix indices.
-        Each node is placed at pixel (k, l).
-        Each edge connects node positions where adj[k, l] > 0.
-
-        Parameters
-        ----------
-        adj_mat : np.ndarray
-            Square adjacency matrix (0/1 or weighted).
-
-        Returns
-        -------
-        node_list : list of np.ndarray
-            Node positions as numpy arrays([[x, y]]).
-        edge_list : list of (tuple, tuple, np.ndarray)
-            Edge data: (src, dst, coords) with coords = interpolated pixel path.
-        """
-        n = adj_mat.shape[0]
-
-        # collect unique nodes
-        node_list = []
-        edge_list = []
-        for k in range(n):
-            for l in range(k + 1, n):  # avoid duplicates for undirected graph
-                if adj_mat[k, l] > 0:
-                    p = adj_mat[k, l]       # node position
-                    # node_list.append(np.array([k, l]))
-                    # p1 = np.array([k, k])  # node k position
-                    # p2 = np.array([l, l])  # node l position
-                    #
-                    # # interpolate pixels along line between p1 and p2
-                    # num = max(abs(p2[0] - p1[0]), abs(p2[1] - p1[1])) + 1
-                    # xs = np.linspace(p1[0], p2[0], num=num, dtype=int)
-                    # ys = np.linspace(p1[1], p2[1], num=num, dtype=int)
-                    # coords = np.stack((xs, ys), axis=1).astype(np.int16)
-                    #
-                    # edge_list.append(((k, k), (l, l), coords))
-        return node_list, edge_list
 
     # Check if the first line is text (header) instead of numbers
     with open(csv_path, "r") as f:
