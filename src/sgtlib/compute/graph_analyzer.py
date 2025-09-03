@@ -1229,12 +1229,12 @@ class GraphAnalyzer(ProgressUpdate):
 
                             # Compute Kolmogorov-Smirnov Test & GoodnessOfFit P-Values
                             res_good_fit = sp.stats.goodness_of_fit(sp.stats.powerlaw, y_avg)
-                            ks_stat, ks_pval = res_good_fit.statistic, res_good_fit.pvalue
+                            ks_stat, ks_p_val = res_good_fit.statistic, res_good_fit.pvalue
 
                             # 3b. Plot data (power-law best fit)
                             ax, i = plot_axis(i, "Power Law Fit and Plot of")
                             ax.plot(x_fit, y_fit_pwr,
-                                    label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_pval:.2f}',
+                                    label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_p_val:.2f}',
                                     color='red')
                             ax.legend()
 
