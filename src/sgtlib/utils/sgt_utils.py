@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
-from ..networks.sknw_mod import build_sknw
 
 
 class AbortException(Exception):
