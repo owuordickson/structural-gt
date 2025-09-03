@@ -1,17 +1,22 @@
 
 import os
 import torch
+import numpy as np
 import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
+from PIL import Image
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+from torchvision import datasets, transforms, models
 
-def compute_mean_std(data_dir: str, img_dim: int) -> tuple[list, list]:
+def cnn_normalize_images(data_dir: str, img_dim: int):
     """
     The images are not similar to ImageNet, they are SEM images, then it is always advised to calculate the mean and
-    std of the dataset and use them to normalize the images. Path to your dataset root (which has subfolders "good" and "bad")
+    std of the dataset and use them to normalize the images. Saves the mean and std to a CSV file.
+
+    :param data_dir: path to your dataset root (which has subfolders "good" and "bad")
+    :param img_dim: image dimension (e.g., 224 for ResNet50)
     """
 
     # Temporary transform: only convert to tensor (no normalization yet)
@@ -38,10 +43,28 @@ def compute_mean_std(data_dir: str, img_dim: int) -> tuple[list, list]:
 
     mean /= nb_samples
     std /= nb_samples
-    return mean.tolist(), std.tolist()
+
+    # Convert to lists
+    mean_list = mean.tolist()
+    std_list = std.tolist()
+
+    # Save to CSV inside the dataset folder
+    out_csv = os.path.join(data_dir, "normalization_stats.csv")
+    df = pd.DataFrame({
+        "mean": mean_list,
+        "std": std_list
+    })
+    df.to_csv(out_csv, index=False)
+    print(f"Saved normalization stats to {out_csv}")
 
 
-def get_fc_layer(num_features):
+def get_image_normalizations(stats_file: str):
+    """Loads the normalization stats from a CSV file."""
+    df = pd.read_csv(stats_file)
+    return df["mean"].tolist(), df["std"].tolist()
+
+
+def cnn_fc_layer(num_features):
     fc_layer = torch.nn.Sequential(
         torch.nn.Linear(
             in_features=num_features,
@@ -52,8 +75,8 @@ def get_fc_layer(num_features):
     return fc_layer
 
 
-def train_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loader, train_dataset, val_loader, val_dataset, device) -> None:
-    """Trains CNN model in the dict and updates the dict with the metrics."""
+def train_cnn_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loader, train_dataset, val_loader, val_dataset, device) -> None:
+    """Trains CNN model in the dict and updates the dict with the metrics. Then, saves the model to disk."""
     # Loss and optimizer
     criterion = nn.BCELoss()
     optimizer = optim.Adam(ntwk["model"].parameters(), lr=learning_rate)
@@ -111,6 +134,44 @@ def train_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loader,
     os.makedirs("../models/checkpoints", exist_ok=True)
     torch.save(ntwk["model"].state_dict(), f"../models/checkpoints/sgt_{ntwk["name"]}.pth")
     print("Model saved.")
+
+
+def run_cnn_model(graph_image_path: str, model_name: str = "resnet50", img_dim: int = 224, norm_file: str = "../train_data/manual/normalization_stats.csv"):
+    """
+    Load the CNN model and run it on a graph image to get the prediction for good/bad graph.
+    :param graph_image_path: Graph image path, e.g., "../train_data/manual/good/1234567890.png.
+    :param model_name: Name of the model to use.
+    :param img_dim: Image dimension (e.g., 224 for ResNet50).
+    :param norm_file: Path to the CSV file containing the normalization stats.
+    """
+    # Load image
+    mean, std = get_image_normalizations(norm_file)
+    transform_pipe = transforms.Compose([
+        transforms.Resize((img_dim, img_dim)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)  # same as training
+    ])
+    image = Image.open(graph_image_path).convert("RGB")
+    image = transform_pipe(image).unsqueeze(0)
+
+    # Load model
+    if model_name == "resnet50":
+        model = models.resnet50(weights=None)
+    elif model_name == "vit":
+        model = models.vit_b_16(weights=None)
+    elif model_name == "densenet121":
+        model = models.densenet121(weights=None)
+    else:
+        raise ValueError("Invalid model name.")
+    model.fc = cnn_fc_layer(model.fc.in_features)
+    model.load_state_dict(torch.load(f"../models/checkpoints/sgt_{model_name}.pth"))
+    model.eval()
+
+    # Predict
+    with torch.no_grad():
+        y_pred = model(image)
+        pred_val = y_pred.item()
+        return pred_val
 
 
 
