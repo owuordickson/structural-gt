@@ -377,6 +377,38 @@ class BaseImage:
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
 
+    def evaluate_img_binary(self) -> float|None:
+        """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
+        original image and masking sections of the image that do not intersect with "white" (255) pixels in the
+        binary image. The unmasked sections are typically where generated graph edges and nodes are located. So, the 
+        unmasked sections should have fairly the same pixel values in the original image and the binary image. In the 
+        binary image the pixel values are 255 "white", while in the original image they are typically 0-255, but with 
+        small variations. The Standard Deviation (SD) can help identify how different the pixel values are in the 
+        unmasked sections of the original image. Also, a histogram of the pixel values in the unmasked sections of the 
+        original image can help identify the distribution of pixel values.
+        
+        :return: The Standard Deviation of the unmasked sections (in the original image).
+        """
+        
+        if self._img_2d is None:
+            return None
+        
+        if self._img_bin is None:
+            return None
+
+        # Find pixel positions where the binary image is white (255)
+        white_pixels = np.where(self._img_bin == 255)
+
+        # Get original image values at those positions
+        original_values = self._img_2d[white_pixels]
+
+        # Calculate standard deviation of original values
+        std_dev = np.std(original_values)
+
+        # Create the histogram of original values at white pixel positions
+        # self._img_hist = cv2.calcHist([original_values.astype(np.uint8)], [0], None, [256], [0, 256])
+        return float(std_dev)
+
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
         Uses Matplotlib to plot the histogram of the processed image.
