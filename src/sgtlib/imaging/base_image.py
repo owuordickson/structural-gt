@@ -377,7 +377,7 @@ class BaseImage:
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def evaluate_img_binary(self) -> float|None:
+    def evaluate_img_binary(self) -> tuple[float, np.ndarray] | tuple[None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
         original image and masking sections of the image that do not intersect with "white" (255) pixels in the
         binary image. The unmasked sections are typically where generated graph edges and nodes are located. So, the 
@@ -387,27 +387,31 @@ class BaseImage:
         unmasked sections of the original image. Also, a histogram of the pixel values in the unmasked sections of the 
         original image can help identify the distribution of pixel values.
         
-        :return: The Standard Deviation of the unmasked sections (in the original image).
+        :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
         """
         
         if self._img_2d is None:
-            return None
+            return None, None
         
         if self._img_bin is None:
-            return None
+            return None, None
 
         # Find pixel positions where the binary image is white (255)
-        white_pixels = np.where(self._img_bin == 255)
+        white_pixel_pos = np.argwhere(self._img_bin == 255)  # (row, col)
 
-        # Get original image values at those positions
-        original_values = self._img_2d[white_pixels]
+        # Retrieve corresponding pixel values from img_2d
+        img_rgb = self._img_2d
+        if self._has_alpha_channel:
+            img_rgb = self._img_2d[..., :3]
+        pixel_values = [img_rgb[tuple(p)] for p in white_pixel_pos]
+        pixel_values = np.array(pixel_values)
 
         # Calculate standard deviation of original values
-        std_dev = np.std(original_values)
+        std_dev = np.std(pixel_values)
 
         # Create the histogram of original values at white pixel positions
-        # self._img_hist = cv2.calcHist([original_values.astype(np.uint8)], [0], None, [256], [0, 256])
-        return float(std_dev)
+        eval_hist = cv2.calcHist([pixel_values], [0], None, [256], [0, 256])
+        return float(std_dev), eval_hist
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
@@ -430,6 +434,12 @@ class BaseImage:
 
         if curr_view == "original":
             img = self._img_2d
+            # Evaluate the binary image
+            eval_std, eval_hist = self.evaluate_img_binary()
+            if eval_std is not None:
+                print(f"Evaluating Binary Image (Std. Dev.): {eval_std}")
+                ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
+                ax.legend(loc='upper right')
         elif curr_view == "binary":
             img = self._img_bin
         else:
@@ -439,7 +449,8 @@ class BaseImage:
             return fig
 
         self._img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
-        ax.plot(self._img_hist)
+        ax.plot(self._img_hist, label='Image Histogram')
+        ax.legend(loc='upper right')
         if self._configs["threshold_type"]["value"] == 0:
             global_val = int(self._configs["global_threshold_value"]["value"])
             thresh_arr = np.array([[global_val, global_val], [0, max(self._img_hist)]], dtype='object')
