@@ -43,7 +43,7 @@ class FilterSearchSpace:
     def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> "FilterSearchSpace.SearchSpace":
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
-        The actual search space has over 500M candidates.
+        The actual search space has over 2B candidates.
 
         :param img_obj: The image object.
         :param total_pop: The total population size.
