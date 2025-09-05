@@ -170,3 +170,8 @@ class FilterSearchSpace:
             )
 
 
+
+
+if __name__ == "__main__":
+    s_space = FilterSearchSpace.build_search_space(BaseImage())
+    print(f"Search space size: {len(s_space.candidates)}")
