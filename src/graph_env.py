@@ -56,19 +56,6 @@ class FilterSearchSpace:
         gamma_range = np.arange(0.01, 5.01, 0.01)           # 0.01–5.0
         blurring_window_sizes = list(range(2, 8, 2))        # 2, 4, 6 (even)
         filter_window_sizes = list(range(1, 101))           # 1–100
-        """
-        toggle_filters = [
-            {"apply_dark_foreground": 1, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 1, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0,  "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 1, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 1, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 1, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 1, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 1, "apply_median_filter": 0, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 1, "apply_scharr_gradient": 0},
-            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 1}
-        ]
-        """
 
         # Initialize search space
         pos = 0
@@ -121,9 +108,6 @@ class FilterSearchSpace:
                                                                             )
                                                                             search_space.candidates.append(candidate)
                                                                             pos += 1
-
-
-
 
         return search_space
 
