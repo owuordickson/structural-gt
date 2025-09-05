@@ -107,6 +107,7 @@ class FilterSearchSpace:
                                                                                 img_configs=init_configs.copy()
                                                                             )
                                                                             search_space.candidates.append(candidate)
+                                                                            print(f"Candidate {pos} added to search space.")
                                                                             pos += 1
 
         return search_space
@@ -173,5 +174,5 @@ class FilterSearchSpace:
 
 
 if __name__ == "__main__":
-    s_space = FilterSearchSpace.build_search_space(BaseImage())
+    s_space = FilterSearchSpace.build_search_space(BaseImage(np.ones((256, 256))))
     print(f"Search space size: {len(s_space.candidates)}")
