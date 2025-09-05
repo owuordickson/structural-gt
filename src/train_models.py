@@ -6,7 +6,7 @@ Functions to train CNN models and run them on graph images.
 
 import os
 import torch
-import numpy as np
+# import numpy as np
 import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
@@ -20,8 +20,8 @@ def cnn_normalize_images(data_dir: str, img_dim: int):
     The images are not similar to ImageNet, they are SEM images, then it is always advised to calculate the mean and
     std of the dataset and use them to normalize the images. Saves the mean and std to a CSV file.
 
-    :param data_dir: path to your dataset root (which has subfolders "good" and "bad")
-    :param img_dim: image dimension (e.g., 224 for ResNet50)
+    :param data_dir: Path to your dataset root (which has subfolders "good" and "bad").
+    :param img_dim: Image dimension (e.g., 224 for ResNet50)
     """
 
     # Temporary transform: only convert to tensor (no normalization yet)

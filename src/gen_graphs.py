@@ -75,7 +75,7 @@ def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, 
 
             while attempt < num_tries and not success:
                 # build SGT object and apply config
-                ntwk_obj, _ = ImageProcessor.create_imp_object(str(img_path))
+                ntwk_obj, _ = ImageProcessor.from_image_file(str(img_path))
                 cfgs = ntwk_obj.image_obj.configs
 
                 # Generate a new random config each retry
