@@ -56,7 +56,7 @@ class FilterSearchSpace:
         brightness_levels = list(range(-100, 101))          # -100–100
         contrast_levels = list(range(-100, 101))            # -100–100
         gamma_range = np.arange(0.01, 5.01, 0.01)           # 0.01–5.0
-        blurring_window_sizes = list(range(2, 8, 2))        # 2, 4, 6 (even)
+        blurring_window_sizes = list(range(1, 8, 2))        # 1, 3, 7 (odd)
         filter_window_sizes = list(range(1, 101))           # 1–100
 
         # Initialize search space
