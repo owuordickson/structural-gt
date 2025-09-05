@@ -71,7 +71,8 @@ class FilterSearchSpace:
         """
 
         # Initialize search space
-        init_configs = img_obj.configs
+        pos = 0
+        init_configs = img_obj.configs.copy()
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
 
         for tt in threshold_types:
@@ -84,7 +85,43 @@ class FilterSearchSpace:
                             for gamma_val in gamma_range:
                                 for blur_size in blurring_window_sizes:
                                     for filter_size in filter_window_sizes:
-                                        pass
+                                        init_configs["threshold_type"]["value"] = tt
+                                        init_configs["global_threshold_value"]["value"] = global_thresh
+                                        init_configs["adaptive_local_threshold_value"]["value"] = adaptive_thresh
+                                        init_configs["brightness_level"]["value"] = brightness
+                                        init_configs["contrast_level"]["value"] = contrast
+                                        init_configs["apply_gamma"]["dataValue"] = gamma_val
+                                        init_configs["apply_autolevel"]["dataValue"] = blur_size
+                                        init_configs["apply_gaussian_blur"]["dataValue"] = blur_size
+                                        init_configs["apply_lowpass_filter"]["dataValue"]  = filter_size
+                                        # init_configs["apply_laplacian_gradient"]["dataValue"] = 3
+                                        # init_configs["apply_sobel_gradient"]["dataValue"] = 3
+                                        for apply_dark_fg in [0, 1]:
+                                            for apply_gamma in [0, 1]:
+                                                for apply_auto_lvl in [0, 1]:
+                                                    for apply_laplacian in [0, 1]:
+                                                        for apply_gaussian in [0, 1]:
+                                                            for apply_lowpass in [0, 1]:
+                                                                for apply_sobel in [0, 1]:
+                                                                    for apply_median in [0, 1]:
+                                                                        for apply_scharr in [0, 1]:
+                                                                            init_configs["apply_dark_foreground"]["value"] = apply_dark_fg
+                                                                            init_configs["apply_gamma"]["value"] = apply_gamma
+                                                                            init_configs["apply_autolevel"]["value"] = apply_auto_lvl
+                                                                            init_configs["apply_laplacian_gradient"]["value"] = apply_laplacian
+                                                                            init_configs["apply_gaussian_blur"]["value"] = apply_gaussian
+                                                                            init_configs["apply_lowpass_filter"]["value"] = apply_lowpass
+                                                                            init_configs["apply_sobel_gradient"]["value"] = apply_sobel
+                                                                            init_configs["apply_median_filter"]["value"] = apply_median
+                                                                            init_configs["apply_scharr_gradient"]["value"] = apply_scharr
+                                                                            candidate = FilterSearchSpace.Candidate(
+                                                                                position=pos,
+                                                                                std_cost=None,
+                                                                                img_configs=init_configs.copy()
+                                                                            )
+                                                                            search_space.candidates.append(candidate)
+                                                                            pos += 1
+
 
 
 
