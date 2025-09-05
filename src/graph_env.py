@@ -40,11 +40,13 @@ class FilterSearchSpace:
         pass
 
     @staticmethod
-    def build_search_space(img_obj: BaseImage) -> "FilterSearchSpace.SearchSpace":
+    def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> "FilterSearchSpace.SearchSpace":
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
+        The actual search space has over 500M candidates.
 
         :param img_obj: The image object.
+        :param total_pop: The total population size.
         :return: The search space.
         """
         # Set ranges for each parameter (Discrete action space)
@@ -101,12 +103,12 @@ class FilterSearchSpace:
                                                                             init_configs["apply_sobel_gradient"]["value"] = apply_sobel
                                                                             init_configs["apply_median_filter"]["value"] = apply_median
                                                                             init_configs["apply_scharr_gradient"]["value"] = apply_scharr
-                                                                            candidate = FilterSearchSpace.Candidate(
-                                                                                position=pos,
-                                                                                std_cost=None,
-                                                                                img_configs=init_configs.copy()
-                                                                            )
-                                                                            search_space.candidates.append(candidate)
+                                                                            # candidate = FilterSearchSpace.Candidate(
+                                                                            #     position=pos,
+                                                                            #     std_cost=None,
+                                                                            #     img_configs=init_configs.copy()
+                                                                            # )
+                                                                            # search_space.candidates.append(candidate)
                                                                             print(f"Candidate {pos} added to search space.")
                                                                             pos += 1
 
