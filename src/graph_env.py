@@ -4,6 +4,7 @@ A class for building an MDP environment of image filters for graph generation.
 """
 
 import math
+import numpy as np
 from dataclasses import dataclass
 from sgtlib.modules import BaseImage
 
@@ -39,9 +40,55 @@ class FilterSearchSpace:
         pass
 
     @staticmethod
-    def build_search_space():
-        """Create a search space where each candidate is a combination of image filter configurations."""
-        pass
+    def build_search_space(img_obj: BaseImage) -> "FilterSearchSpace.SearchSpace":
+        """
+        Create a discrete search space where each candidate is a combination of image filter configurations.
+
+        :param img_obj: The image object.
+        :return: The search space.
+        """
+        # Set ranges for each parameter (Discrete action space)
+        threshold_types = [0, 1, 2]                         # global / adaptive / OTSU
+        global_thresh_range = list(range(1, 256))           # 1–255
+        adaptive_local_range = list(range(1, 100, 2))       # 1–99 (odd)
+        brightness_levels = list(range(-100, 101))          # -100–100
+        contrast_levels = list(range(-100, 101))            # -100–100
+        gamma_range = np.arange(0.01, 5.01, 0.01)           # 0.01–5.0
+        blurring_window_sizes = list(range(2, 8, 2))        # 2, 4, 6 (even)
+        filter_window_sizes = list(range(1, 101))           # 1–100
+        """
+        toggle_filters = [
+            {"apply_dark_foreground": 1, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 1, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0,  "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 1, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 1, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 1, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 1, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 1, "apply_median_filter": 0, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 1, "apply_scharr_gradient": 0},
+            {"apply_dark_foreground": 0, "apply_gamma": 0, "apply_autolevel": 0, "apply_laplacian_gradient": 0, "apply_gaussian_blur": 0, "apply_lowpass_filter": 0, "apply_sobel_gradient": 0, "apply_median_filter": 0, "apply_scharr_gradient": 1}
+        ]
+        """
+
+        # Initialize search space
+        init_configs = img_obj.configs
+        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
+
+        for tt in threshold_types:
+            global_range = global_thresh_range if tt == 0 else [128]
+            adaptive_range = adaptive_local_range if tt == 1 else [11]
+            for global_thresh in global_range:
+                for adaptive_thresh in adaptive_range:
+                    for brightness in brightness_levels:
+                        for contrast in contrast_levels:
+                            for gamma_val in gamma_range:
+                                for blur_size in blurring_window_sizes:
+                                    for filter_size in filter_window_sizes:
+                                        pass
+
+
+
+        return search_space
 
     @staticmethod
     def cost_function(candidate: "FilterSearchSpace.Candidate", img_obj: BaseImage) -> None:
