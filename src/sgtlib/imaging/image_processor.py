@@ -702,7 +702,9 @@ class ImageProcessor(ProgressUpdate):
             for bin_img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self._config_file)
                 graph_patch.configs = graph_configs
-                success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
+                nx_graph = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
+                success = graph_patch.verify_graph(nx_graph)
+                # success = graph_patch.extract_graph(bin_img_patch, is_img_2d=True)
                 if success:
                     height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)

@@ -116,30 +116,6 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        def verify_graph():
-            """Verify if the NetworkX graph is valid."""
-            if nx_graph is None:
-                return False
-
-            if nx_graph.number_of_edges() <= 0 or nx_graph.number_of_nodes() <= 0:
-                return False
-
-            # Save NetworkX graph
-            self.nx_graph = nx_graph
-            # Save iGraph graph
-            self._ig_graph = ig.Graph.from_networkx(nx_graph)
-            # Save giant NetworkX graph
-            connected_components = list(nx.connected_components(nx_graph))
-            if not connected_components:  # In case the graph is empty
-                connected_components = []
-            sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
-            if sub_graphs:
-                giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
-            else:
-                giant_graph = nx_graph
-            self._nx_giant_graph = giant_graph
-            return True
-
         if self.abort:
             self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
                                     "image/binary filters and graph options. OR change brightness/contrast"])
@@ -157,7 +133,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             return
 
         self.update_status([70, "Verifying graph network..."])
-        success = verify_graph()
+        success = self.verify_graph(nx_graph)
         if not success:
             self.update_status([-1, "Problem encountered, change image/binary filters and graph options. OR change brightness/contrast"])
             self.abort = True
@@ -177,6 +153,35 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
         self.nx_graph, self._ig_graph, self._img_ntwk = None, None, None
+
+    def verify_graph(self, nx_graph) -> bool:
+        """
+        Verify if the NetworkX graph is valid. If it is valid, save in object members.
+
+        :param nx_graph: The NetworkX graph to verify.
+        :return: True if the graph is valid, False otherwise.
+        """
+        if nx_graph is None:
+            return False
+
+        if nx_graph.number_of_edges() <= 0 or nx_graph.number_of_nodes() <= 0:
+            return False
+
+        # Save NetworkX graph
+        self.nx_graph = nx_graph
+        # Save iGraph graph
+        self._ig_graph = ig.Graph.from_networkx(nx_graph)
+        # Save giant NetworkX graph
+        connected_components = list(nx.connected_components(nx_graph))
+        if not connected_components:  # In case the graph is empty
+            connected_components = []
+        sub_graphs = [nx_graph.subgraph(c).copy() for c in connected_components]
+        if sub_graphs:
+            giant_graph = max(sub_graphs, key=lambda g: g.number_of_nodes())
+        else:
+            giant_graph = nx_graph
+        self._nx_giant_graph = giant_graph
+        return True
 
     def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
         """
