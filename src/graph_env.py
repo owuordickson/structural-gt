@@ -25,7 +25,6 @@ class SGTGraphEnv:
         pass
 
 
-
 class FilterSearchSpace:
     """
     Class for building a discrete search space of image filters. This search space is huge and irregular
@@ -47,9 +46,9 @@ class FilterSearchSpace:
     class Candidate:
         """A candidate in the search space. It contains a position in the search space, the Standard Deviation (SD)
         of the pixel values, and a combination of image filter configurations."""
-        position: int|None = None
-        std_cost: float|None = None
-        img_configs: dict|None = None
+        position: dict | None = None
+        std_cost: float | None = None
+        img_configs: dict | None = None
 
     @dataclass
     class SearchSpace:
@@ -76,14 +75,14 @@ class FilterSearchSpace:
             return None
 
         # Set ranges for each parameter (Discrete action space)
-        threshold_types = [0, 1, 2]                         # global / adaptive / OTSU
-        global_thresh_range = list(range(1, 256))           # 1–255
-        adaptive_local_range = list(range(1, 100, 2))       # 1–99 (odd)
-        brightness_levels = list(range(-100, 101))          # -100–100
-        contrast_levels = list(range(-100, 101))            # -100–100
-        gamma_range = np.arange(0.01, 5.01, 0.01)           # 0.01–5.0
-        blurring_window_sizes = list(range(1, 8, 2))        # 1, 3, 7 (odd)
-        filter_window_sizes = list(range(1, 101))           # 1–100
+        threshold_types = [0, 1, 2]  # global / adaptive / OTSU
+        global_thresh_range = list(range(1, 256))  # 1–255
+        adaptive_local_range = list(range(1, 100, 2))  # 1–99 (odd)
+        brightness_levels = list(range(-100, 101))  # -100–100
+        contrast_levels = list(range(-100, 101))  # -100–100
+        gamma_range = np.arange(0.01, 5.01, 0.01)  # 0.01–5.0
+        blurring_window_sizes = list(range(1, 8, 2))  # 1, 3, 7 (odd)
+        filter_window_sizes = list(range(1, 101))  # 1–100
 
         # Initialize search space
         pos = 0
@@ -108,7 +107,7 @@ class FilterSearchSpace:
                                         init_configs["apply_gamma"]["dataValue"] = gamma_val
                                         init_configs["apply_autolevel"]["dataValue"] = blur_size
                                         init_configs["apply_gaussian_blur"]["dataValue"] = blur_size
-                                        init_configs["apply_lowpass_filter"]["dataValue"]  = filter_size
+                                        init_configs["apply_lowpass_filter"]["dataValue"] = filter_size
                                         # init_configs["apply_laplacian_gradient"]["dataValue"] = 3
                                         # init_configs["apply_sobel_gradient"]["dataValue"] = 3
                                         for apply_dark_fg in [0, 1]:
@@ -120,39 +119,112 @@ class FilterSearchSpace:
                                                                 for apply_sobel in [0, 1]:
                                                                     for apply_median in [0, 1]:
                                                                         for apply_scharr in [0, 1]:
-                                                                            init_configs["apply_dark_foreground"]["value"] = apply_dark_fg
-                                                                            init_configs["apply_gamma"]["value"] = apply_gamma
-                                                                            init_configs["apply_autolevel"]["value"] = apply_auto_lvl
-                                                                            init_configs["apply_laplacian_gradient"]["value"] = apply_laplacian
-                                                                            init_configs["apply_gaussian_blur"]["value"] = apply_gaussian
-                                                                            init_configs["apply_lowpass_filter"]["value"] = apply_lowpass
-                                                                            init_configs["apply_sobel_gradient"]["value"] = apply_sobel
-                                                                            init_configs["apply_median_filter"]["value"] = apply_median
-                                                                            init_configs["apply_scharr_gradient"]["value"] = apply_scharr
+                                                                            init_configs["apply_dark_foreground"][
+                                                                                "value"] = apply_dark_fg
+                                                                            init_configs["apply_gamma"][
+                                                                                "value"] = apply_gamma
+                                                                            init_configs["apply_autolevel"][
+                                                                                "value"] = apply_auto_lvl
+                                                                            init_configs["apply_laplacian_gradient"][
+                                                                                "value"] = apply_laplacian
+                                                                            init_configs["apply_gaussian_blur"][
+                                                                                "value"] = apply_gaussian
+                                                                            init_configs["apply_lowpass_filter"][
+                                                                                "value"] = apply_lowpass
+                                                                            init_configs["apply_sobel_gradient"][
+                                                                                "value"] = apply_sobel
+                                                                            init_configs["apply_median_filter"][
+                                                                                "value"] = apply_median
+                                                                            init_configs["apply_scharr_gradient"][
+                                                                                "value"] = apply_scharr
                                                                             # candidate = FilterSearchSpace.Candidate(
                                                                             #     position=pos,
                                                                             #     std_cost=None,
                                                                             #     img_configs=init_configs.copy()
                                                                             # )
                                                                             # search_space.candidates.append(candidate)
-                                                                            print(f"Candidate {pos} added to search space.")
+                                                                            print(
+                                                                                f"Candidate {pos} added to search space.")
                                                                             pos += 1
         return search_space
+
+    @staticmethod
+    def decode_candidate_position(pos_dict: dict, img_configs: dict) -> dict:
+        """
+        Decode the position of a candidate in the search space into a dictionary of image filter configurations.
+
+        :param pos_dict: The dictionary of position information.
+        :param img_configs: The dictionary of image filter configurations.
+        :return: The dictionary of image filter configurations.
+        """
+
+        return img_configs
 
     @staticmethod
     def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
+        Encodes a combination of image filter configurations as a binary number, then this number is converted into an
+        integer position in the search space.
 
         :param img_obj: The image object.
         :param total_pop: The total population size.
         :return: The search space.
         """
+
+        def encode_filter_combination(
+                threshold_type=1,  # 0, 1, or 2 → needs 2 bits
+                apply_dark_foreground=0,
+                apply_gamma=1,
+                apply_auto_level=0,
+                apply_laplacian_gradient=0,
+                apply_gaussian_blur=0,
+                apply_lowpass_filter=0,
+                apply_sobel_gradient=0,
+                apply_median_filter=0,
+                apply_scharr_gradient=0,
+        )-> tuple[str, int]:
+            """
+            Encode 10 image filter configurations as an 11-bit binary string (2 bits for the threshold type,
+            9 bits for filters).
+            :returns: Both the binary string and integer representation.
+            """
+
+            # --- Step 1: Encode threshold_type into 2 bits ---
+            if threshold_type not in [0, 1, 2]:
+                raise ValueError("threshold_type must be 0, 1, or 2")
+            threshold_bits = format(threshold_type, "02b")  # 2-bit binary
+
+            # --- Step 2: Encode 9 filters into 1 bit each ---
+            filters = [
+                apply_dark_foreground,
+                apply_gamma,
+                apply_auto_level,
+                apply_laplacian_gradient,
+                apply_gaussian_blur,
+                apply_lowpass_filter,
+                apply_sobel_gradient,
+                apply_median_filter,
+                apply_scharr_gradient,
+            ]
+
+            filter_bits = "".join(str(int(f)) for f in filters)
+
+            # --- Step 3: Concatenate ---
+            bitstring = threshold_bits + filter_bits
+
+            # --- Step 4: Convert to integer ---
+            bit_int = int(bitstring, 2)
+            return bitstring, bit_int
+
+        # def encode_filter_
+
         if img_obj is None:
             return None
 
         # Empty candidate template
         init_configs = img_obj.configs.copy()
+        pos_data = {"apply": encode_filter_combination()[1]}
         empty_candidate = FilterSearchSpace.Candidate(
             position=None,
             std_cost=None,
@@ -198,7 +270,8 @@ class FilterSearchSpace:
         candidate.std_cost = eval_std
 
     @staticmethod
-    def evaluate_candidate(search_space: "FilterSearchSpace.SearchSpace", candidate: "FilterSearchSpace.Candidate") -> None:
+    def evaluate_candidate(search_space: "FilterSearchSpace.SearchSpace",
+                           candidate: "FilterSearchSpace.Candidate") -> None:
         """
         Evaluate a candidate in the search space, check if it is better than the best candidate.
 
@@ -223,8 +296,6 @@ class FilterSearchSpace:
                 std_cost=candidate.std_cost,
                 img_configs=candidate.img_configs
             )
-
-
 
 
 if __name__ == "__main__":
