@@ -38,12 +38,16 @@ class FilterSearchSpace:
 
     @dataclass
     class Candidate:
+        """A candidate in the search space. It contains a position in the search space, the Standard Deviation (SD)
+        of the pixel values, and a combination of image filter configurations."""
         position: int|None = None
         std_cost: float|None = None
         img_configs: dict|None = None
 
     @dataclass
     class SearchSpace:
+        """Discrete search space of image filters; where, each candidate is a combination of image filter
+        configurations."""
         candidates: list["FilterSearchSpace.Candidate"] = None
         ignore_candidates: list["FilterSearchSpace.Candidate"] = None
         best_candidate: "FilterSearchSpace.Candidate" = None
@@ -52,15 +56,18 @@ class FilterSearchSpace:
         pass
 
     @staticmethod
-    def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> "FilterSearchSpace.SearchSpace":
+    def _build_full_search_space(img_obj: BaseImage) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
-        The actual search space has over 118k Trillion candidates.
+        The actual search space has over 118k Trillion candidates. This method is used for debugging purposes -- the
+        search space is too large to be used in production.
 
         :param img_obj: The image object.
-        :param total_pop: The total population size.
         :return: The search space.
         """
+        if img_obj is None:
+            return None
+
         # Set ranges for each parameter (Discrete action space)
         threshold_types = [0, 1, 2]                         # global / adaptive / OTSU
         global_thresh_range = list(range(1, 256))           # 1–255
@@ -123,7 +130,23 @@ class FilterSearchSpace:
                                                                             # search_space.candidates.append(candidate)
                                                                             print(f"Candidate {pos} added to search space.")
                                                                             pos += 1
+        return search_space
 
+    @staticmethod
+    def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> SearchSpace | None:
+        """
+        Create a discrete search space where each candidate is a combination of image filter configurations.
+
+        :param img_obj: The image object.
+        :param total_pop: The total population size.
+        :return: The search space.
+        """
+        if img_obj is None:
+            return None
+
+        # Initialize search space
+        init_configs = img_obj.configs.copy()
+        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
         return search_space
 
     @staticmethod
