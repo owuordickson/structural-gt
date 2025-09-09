@@ -23,7 +23,8 @@ class SGTGraphEnv:
 
 
 class FilterSearchSpace:
-    """Class for building a discrete search space of image filters. This search space is huge and irregular
+    """
+    Class for building a discrete search space of image filters. This search space is huge and irregular
     (over 11k Trillion candidates) and does not have the structure of (Markov Decision Process) MDP states. For example,
     if the current state S1 is a combination of image filter configurations, then the decision to select the
     next or future states S2, S3, ... does not depend on the previous state S1 (No Markov Property). For this reason,
