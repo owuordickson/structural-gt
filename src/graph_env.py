@@ -226,7 +226,7 @@ class FilterSearchSpace:
         init_configs = img_obj.configs.copy()
         pos_data = {"apply": encode_filter_combination()[1]}
         empty_candidate = FilterSearchSpace.Candidate(
-            position=None,
+            position=pos_data,
             std_cost=None,
             img_configs=init_configs
         )
