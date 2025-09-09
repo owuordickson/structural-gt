@@ -31,9 +31,16 @@ class FilterSearchSpace:
     Class for building a discrete search space of image filters. This search space is huge and irregular
     (over 11k Trillion candidates) and does not have the structure of (Markov Decision Process) MDP states. For example,
     if the current state S1 is a combination of image filter configurations, then the decision to select the
-    next or future states S2, S3, ... does not depend on the previous state S1 (No Markov Property). For this reason,
-    we use Genetic Algorithm (GA) to find the best combination of image filter configurations. GA is a global optimizer
-    (or global optimization method/algorithm) that finds the best solution in a given search space.
+    next or future states S2, S3, ... does not depend on the previous state S1 (No Markov Property).
+
+    No Markov Property: picking the next candidate (a combination of image filter configurations) does not depend on the
+    previous candidate. No future candidate/state/action is prohibited (or determined) by the
+    current candidate/state/action.
+
+    Markov Property: current candidate determines the next future candidates.
+
+    For this reason, we use Genetic Algorithm (GA) to find the best combination of image filter configurations. GA is
+    a global optimizer (or global optimization method/algorithm) that finds the best solution in a given search space.
     """
 
     @dataclass
@@ -144,9 +151,19 @@ class FilterSearchSpace:
         if img_obj is None:
             return None
 
-        # Initialize search space
+        # Empty candidate template
         init_configs = img_obj.configs.copy()
+        empty_candidate = FilterSearchSpace.Candidate(
+            position=None,
+            std_cost=None,
+            img_configs=init_configs
+        )
+
+        # Initialize search space
+        candidate_pop = [empty_candidate] * total_pop
+
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
+
         return search_space
 
     @staticmethod
