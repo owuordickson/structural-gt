@@ -10,6 +10,10 @@ from sgtlib.modules import BaseImage
 
 
 class SGTGraphEnv:
+    """
+    Class for building a (Markov Decision Process) MDP environment for manipulating the Genetic Algorithm (GA) optimizer
+    into navigating the search space of image filters.
+    """
 
     def __init__(self):
         pass
