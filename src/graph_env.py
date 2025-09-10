@@ -168,16 +168,46 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def decode_candidate_position(pos_data: dict, img_configs: dict) -> dict:
+    def decode_candidate_position(encoded_pos: int, img_configs: dict) -> dict|None:
         """
         Decode the position of a candidate in the search space into a dictionary of image filter configurations.
 
-        :param pos_data: The dictionary of position information.
+        :param encoded_pos: The position of the candidate in the search space.
         :param img_configs: The dictionary of image filter configurations.
         :return: The dictionary of image filter configurations.
         """
+        if encoded_pos is None:
+            return None
+        
+        if img_configs is None:
+            return None
 
+        # Step 1: Convert integer to 11-bit binary string
+        bitstring = format(encoded_pos, "011b")  # always 11 bits
+
+        # Step 2: Extract threshold type (first 2 bits)
+        threshold_bits = bitstring[:2]
+        threshold_type = int(threshold_bits, 2)
+
+        # Step 3: Extract 9 filter bits
+        filter_bits = bitstring[2:]
+        filters = [int(b) for b in filter_bits]
+
+        # Step 4: Map to variable names
+        img_configs["threshold_type"]["value"] = threshold_type
+        img_configs["apply_gamma"]["value"] = filters[0]
+        img_configs["apply_autolevel"]["value"] = filters[1]
+        img_configs["apply_gaussian_blur"]["value"] = filters[2]
+        img_configs["apply_lowpass_filter"]["value"] = filters[3]
+        img_configs["apply_laplacian_gradient"]["value"] = filters[4]
+        img_configs["apply_sobel_gradient"]["value"] = filters[5]
+        img_configs["apply_median_filter"]["value"] = filters[6]
+        img_configs["apply_scharr_gradient"]["value"] = filters[7]
+        img_configs["apply_dark_foreground"]["value"] = filters[8]
         return img_configs
+
+    # @staticmethod
+    # def
 
     @staticmethod
     def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> SearchSpace | None:
@@ -243,12 +273,16 @@ class FilterSearchSpace:
 
         # Empty candidate template
         init_configs = img_obj.configs.copy()
+        empty_candidate = FilterSearchSpace.FilterCandidate(
+            apply_position=640,
+        )
+        """
         pos_data = {"apply": encode_filter_combination()[1]}
         empty_candidate = FilterSearchSpace.Candidate(
             position_data=pos_data,
             std_cost=None,
             img_configs=init_configs
-        )
+        )"""
 
         # Initialize search space
         candidate_pop = [empty_candidate] * total_pop
