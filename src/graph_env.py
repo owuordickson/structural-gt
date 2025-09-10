@@ -61,12 +61,17 @@ class FilterSearchSpace:
     @dataclass
     class FilterCandidate:
         """A filter candidate in the search space. It contains
-        a position in the search space,
-        the Standard Deviation (SD) of the pixel values, and a combination of image filter configurations."""
+        a position in the search space (which encodes a binary number), the position determines the value range of the
+        value search space. It also has the brightness search space, and the cost of applying the filter is calculated by
+        evaluating the binary image and finding the number of white pixels in the image. Retrieve the corresponding pixel
+        values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
+        the combination of image filter configurations."""
         apply_position: int | None = None       # 11 bits long (approx. 2k candidates)
         value_range: list[int] | None = None    # [min, max] values -- 0bits-20bits
-        value_candidate: "FilterSearchSpace.Candidate" = None       # approx. 268M candidates
-        brightness_candidate: "FilterSearchSpace.Candidate" = None  # approx. 256 candidates
+        # value_candidate: "FilterSearchSpace.Candidate" = None
+        # brightness_candidate: "FilterSearchSpace.Candidate" = None
+        value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 268M candidates
+        brightness_space: "FilterSearchSpace.SearchSpace" = None    # approx. 256 candidates
         std_cost: float | None = None
         img_configs: dict | None = None
 
