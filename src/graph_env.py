@@ -54,9 +54,9 @@ class FilterSearchSpace:
         """Discrete search space of image filters; where, each candidate is a combination of image filter
         configurations. We use this template to build 3 search spaces: apply filters, value filters, and brightness
         filters."""
-        candidates: list["FilterSearchSpace.Candidate"] = None
-        ignore_candidates: list["FilterSearchSpace.Candidate"] = None
-        best_candidate: "FilterSearchSpace.Candidate" = None
+        candidates: list = None
+        ignore_candidates: list= None
+        best_candidate = None
 
     @dataclass
     class FilterCandidate:
@@ -168,7 +168,7 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def decode_candidate_position(encoded_pos: int, img_configs: dict) -> dict|None:
+    def decode_candidate_position(encoded_pos: int, img_configs: dict) -> None|dict:
         """
         Decode the position of a candidate in the search space into a dictionary of image filter configurations.
 
@@ -176,60 +176,54 @@ class FilterSearchSpace:
         :param img_configs: The dictionary of image filter configurations.
         :return: The dictionary of image filter configurations.
         """
-        if encoded_pos is None:
-            return None
-        
-        if img_configs is None:
+        if encoded_pos is None or img_configs is None:
             return None
 
-        # Step 1: Convert integer to 11-bit binary string
+            # Step 1: Convert integer to 11-bit binary string
         bitstring = format(encoded_pos, "011b")  # always 11 bits
 
         # Step 2: Extract threshold type (first 2 bits)
         threshold_bits = bitstring[:2]
         threshold_type = int(threshold_bits, 2)
 
-        # Step 3: Extract 9 filter bits
+        # Step 3: Extract 9 filter bits (order consistent with the encoding)
         filter_bits = bitstring[2:]
         filters = [int(b) for b in filter_bits]
 
         # Step 4: Map to variable names
         img_configs["threshold_type"]["value"] = threshold_type
-        img_configs["apply_gamma"]["value"] = filters[0]
-        img_configs["apply_autolevel"]["value"] = filters[1]
-        img_configs["apply_gaussian_blur"]["value"] = filters[2]
-        img_configs["apply_lowpass_filter"]["value"] = filters[3]
-        img_configs["apply_laplacian_gradient"]["value"] = filters[4]
-        img_configs["apply_sobel_gradient"]["value"] = filters[5]
-        img_configs["apply_median_filter"]["value"] = filters[6]
-        img_configs["apply_scharr_gradient"]["value"] = filters[7]
-        img_configs["apply_dark_foreground"]["value"] = filters[8]
+        img_configs["apply_dark_foreground"]["value"] = filters[0]
+        img_configs["apply_gamma"]["value"] = filters[1]
+        img_configs["apply_autolevel"]["value"] = filters[2]
+        img_configs["apply_laplacian_gradient"]["value"] = filters[3]
+        img_configs["apply_gaussian_blur"]["value"] = filters[4]
+        img_configs["apply_lowpass_filter"]["value"] = filters[5]
+        img_configs["apply_sobel_gradient"]["value"] = filters[6]
+        img_configs["apply_median_filter"]["value"] = filters[7]
+        img_configs["apply_scharr_gradient"]["value"] = filters[8]
 
-        # Step 5: Determine value range
-        value_bits = format(0, "01b")
+        """
+        # Step 5: Build value_bits for extra parameter ranges
+        value_bits = ""
         if img_configs["apply_gamma"]["value"] == 1:
-            gamma_bits = format(500, "09b")
-            value_bits += gamma_bits
+            value_bits += format(500, "09b")  # gamma parameter
         if img_configs["apply_autolevel"]["value"] == 1:
-            blur_bits = format(1, "03b")
-            value_bits += blur_bits
+            value_bits += format(1, "03b")  # autolevel param
         if img_configs["apply_gaussian_blur"]["value"] == 1:
-            blur_bits = format(1, "03b")
-            value_bits += blur_bits
+            value_bits += format(1, "03b")  # blur strength
         if img_configs["apply_lowpass_filter"]["value"] == 1:
-            filter_bits = format(3, "07b")
-            value_bits += filter_bits
+            value_bits += format(3, "07b")  # filter kernel
 
-        # Step 6: Convert to integer
-        max_val = int(value_bits, 2)
-        print(f"Binary string: {value_bits}, Max value: {max_val}")
+        # Step 6: Convert extra bits to integer (if any)
+        max_val = int(value_bits, 2) if value_bits else 0
+        """
         return img_configs
 
     # @staticmethod
     # def
 
     @staticmethod
-    def build_search_space(img_obj: BaseImage, total_pop: int = 1000) -> SearchSpace | None:
+    def build_search_space(img_obj: BaseImage, total_pop: int = 1024) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
         Encodes a combination of image filter configurations as a binary number, then this number is converted into an
@@ -240,6 +234,7 @@ class FilterSearchSpace:
         :return: The search space.
         """
 
+        """
         def encode_filter_combination(
                 threshold_type=1,  # 0, 1, or 2 → needs 2 bits
                 apply_dark_foreground=0,
@@ -252,11 +247,9 @@ class FilterSearchSpace:
                 apply_median_filter=0,
                 apply_scharr_gradient=0,
         )-> tuple[str, int]:
-            """
-            Encode 10 image filter configurations as an 11-bit binary string (2 bits for the threshold type,
-            9 bits for filters). The total number of filter combinations is 2^11 = 2048.
-            :returns: Both the binary string and integer representation.
-            """
+            # Encode 10 image filter configurations as an 11-bit binary string (2 bits for the threshold type,
+            # 9 bits for filters). The total number of filter combinations is 2^11 = 2048.
+            # :returns: Both the binary string and integer representation.
 
             # --- Step 1: Encode threshold_type into 2 bits ---
             if threshold_type not in [0, 1, 2]:
@@ -284,34 +277,40 @@ class FilterSearchSpace:
             # --- Step 4: Convert to integer ---
             bit_int = int(bitstring, 2)
             return bitstring, bit_int
-
-        # def encode_filter_
+        """
 
         if img_obj is None:
             return None
 
-        # Empty candidate template
-        init_configs = img_obj.configs.copy()
-        empty_candidate = FilterSearchSpace.FilterCandidate(
-            apply_position=640,
-        )
-        """
-        pos_data = {"apply": encode_filter_combination()[1]}
-        empty_candidate = FilterSearchSpace.Candidate(
-            position_data=pos_data,
-            std_cost=None,
-            img_configs=init_configs
-        )"""
-
         # Initialize search space
-        candidate_pop = [empty_candidate] * total_pop
-
+        init_configs = img_obj.configs.copy()
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
+        for pos in range(2048):
+            img_configs, max_val = FilterSearchSpace.decode_candidate_position(pos, init_configs)
+            print(f"Encoded position: {pos}, Decoded image configs: {img_configs}")
+            if img_configs is not None:
+                empty_candidate = FilterSearchSpace.Candidate(position=None, std_cost=None)
+                val_pop = [empty_candidate] * total_pop
+                b_pop = [empty_candidate] * 256
+                filter_candidate = FilterSearchSpace.FilterCandidate(
+                    apply_position=pos,
+                    value_range=(0, total_pop),
+                    value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[]),
+                    brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[]),
+                    std_cost=None,
+                    best_std_cost=None,
+                    graph_accuracy=None,
+                    img_configs=img_configs,
+                )
+                search_space.candidates.append(filter_candidate)
+                if pos == 640:
+                    # default candidate
+                    search_space.best_candidate = filter_candidate
 
         return search_space
 
     @staticmethod
-    def cost_function(candidate: "FilterSearchSpace.Candidate", img_obj: BaseImage) -> None:
+    def cost_function(candidate: "FilterSearchSpace.FilterCandidate", img_obj: BaseImage) -> None:
         """Calculate and apply the cost of a candidate. Given the image filter configurations, apply them to get a
         binary image and find the number of white pixels in the image. Retrieve the corresponding pixel values from the
         original image and calculate the Standard Deviation (SD) of the pixel values.
@@ -355,18 +354,17 @@ class FilterSearchSpace:
 
         if search_space.best_candidate is None:
             search_space.best_candidate = FilterSearchSpace.Candidate(
-                position_data=candidate.position_data,
-                std_cost=candidate.std_cost,
-                img_configs=candidate.img_configs)
+                position=candidate.position,
+                std_cost=candidate.std_cost
+            )
 
-        if candidate.position_data in search_space.ignore_candidates:
+        if candidate.position in search_space.ignore_candidates:
             return
 
         elif candidate.std_cost < search_space.best_candidate.std_cost:
             search_space.best_candidate = FilterSearchSpace.Candidate(
-                position_data=candidate.position_data,
+                position=candidate.position,
                 std_cost=candidate.std_cost,
-                img_configs=candidate.img_configs
             )
 
 
