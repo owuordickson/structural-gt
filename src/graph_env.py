@@ -286,8 +286,8 @@ class FilterSearchSpace:
         init_configs = img_obj.configs.copy()
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
         for pos in range(2048):
-            img_configs, max_val = FilterSearchSpace.decode_candidate_position(pos, init_configs)
-            print(f"Encoded position: {pos}, Decoded image configs: {img_configs}")
+            img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
+            print(f"Encoded position: {pos}, Decoded image configs: {img_configs}") if int(pos%100) == 0 else None
             if img_configs is not None:
                 empty_candidate = FilterSearchSpace.Candidate(position=None, std_cost=None)
                 val_pop = [empty_candidate] * total_pop
@@ -300,11 +300,12 @@ class FilterSearchSpace:
                     std_cost=None,
                     best_std_cost=None,
                     graph_accuracy=None,
-                    img_configs=img_configs,
+                    img_configs=img_configs.copy(),
                 )
                 search_space.candidates.append(filter_candidate)
                 if pos == 640:
                     # default candidate
+                    print(f"Default position: {pos}, Decoded image configs: {img_configs}")
                     search_space.best_candidate = filter_candidate
 
         return search_space
