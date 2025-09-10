@@ -66,13 +66,15 @@ class FilterSearchSpace:
         evaluating the binary image and finding the number of white pixels in the image. Retrieve the corresponding pixel
         values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
         the combination of image filter configurations."""
-        apply_position: int | None = None       # 11 bits long (approx. 2k candidates)
-        value_range: list[int] | None = None    # [min, max] values -- 0bits-20bits
+        apply_position: int | None = None               # 11 bits long (approx. 2k candidates)
+        value_range: tuple[int, int] | None = None      # [min, max] values -- 0bits-20bits
         # value_candidate: "FilterSearchSpace.Candidate" = None
         # brightness_candidate: "FilterSearchSpace.Candidate" = None
         value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 268M candidates
         brightness_space: "FilterSearchSpace.SearchSpace" = None    # approx. 256 candidates
         std_cost: float | None = None
+        best_std_cost: float | None = None      # cost of the best candidate in the value space or brightness space
+        graph_accuracy: float | None = None     # CNN model prediction accuracy of the generated graph
         img_configs: dict | None = None
 
     def __init__(self):
