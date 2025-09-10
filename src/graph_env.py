@@ -204,6 +204,25 @@ class FilterSearchSpace:
         img_configs["apply_median_filter"]["value"] = filters[6]
         img_configs["apply_scharr_gradient"]["value"] = filters[7]
         img_configs["apply_dark_foreground"]["value"] = filters[8]
+
+        # Step 5: Determine value range
+        value_bits = format(0, "01b")
+        if img_configs["apply_gamma"]["value"] == 1:
+            gamma_bits = format(500, "09b")
+            value_bits += gamma_bits
+        if img_configs["apply_autolevel"]["value"] == 1:
+            blur_bits = format(1, "03b")
+            value_bits += blur_bits
+        if img_configs["apply_gaussian_blur"]["value"] == 1:
+            blur_bits = format(1, "03b")
+            value_bits += blur_bits
+        if img_configs["apply_lowpass_filter"]["value"] == 1:
+            filter_bits = format(3, "07b")
+            value_bits += filter_bits
+
+        # Step 6: Convert to integer
+        max_val = int(value_bits, 2)
+        print(f"Binary string: {value_bits}, Max value: {max_val}")
         return img_configs
 
     # @staticmethod
