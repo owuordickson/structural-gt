@@ -4,6 +4,7 @@ A class for building an MDP environment of image filters for graph generation.
 """
 
 import math
+import random
 import numpy as np
 from dataclasses import dataclass
 from sgtlib.modules import BaseImage
@@ -67,10 +68,10 @@ class FilterSearchSpace:
         values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
         the combination of image filter configurations."""
         apply_position: int | None = None               # 11 bits long (approx. 2k candidates)
-        value_range: tuple[int, int] | None = None      # [min, max] values -- 0bits-20bits
+        value_range: tuple[int, int] | None = None                  # [min, max] values -- 0bits-20bits
         # value_candidate: "FilterSearchSpace.Candidate" = None
         # brightness_candidate: "FilterSearchSpace.Candidate" = None
-        value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 268M candidates
+        value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 1B candidates
         brightness_space: "FilterSearchSpace.SearchSpace" = None    # approx. 256 candidates
         std_cost: float | None = None
         best_std_cost: float | None = None      # cost of the best candidate in the value space or brightness space
@@ -282,16 +283,22 @@ class FilterSearchSpace:
         if img_obj is None:
             return None
 
+        # Parameters
+        apply_pop = 2**11
+        value_pop = (2**22, 2**30)
+        brightness_pop = 2**8
+        # print(f"Apply candidates: {apply_pop}, Value candidates: {value_pop}, Brightness candidates: {brightness_pop}")
+
         # Initialize search space
         init_configs = img_obj.configs.copy()
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
-        for pos in range(2048):
+        for pos in range(apply_pop):
             img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
-            print(f"Encoded position: {pos}, Decoded image configs: {img_configs}") if int(pos%100) == 0 else None
             if img_configs is not None:
-                empty_candidate = FilterSearchSpace.Candidate(position=None, std_cost=None)
-                val_pop = [empty_candidate] * total_pop
-                b_pop = [empty_candidate] * 256
+                # Create an empty candidate
+                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(value_pop[0], value_pop[1]), std_cost=None) for _ in range(total_pop)]
+                b_pop = [FilterSearchSpace.Candidate(position=i, std_cost=None) for i in range(brightness_pop)]
+
                 filter_candidate = FilterSearchSpace.FilterCandidate(
                     apply_position=pos,
                     value_range=(0, total_pop),
@@ -306,6 +313,7 @@ class FilterSearchSpace:
                 if pos == 640:
                     # default candidate
                     print(f"Default position: {pos}, Decoded image configs: {img_configs}")
+                    print(f"Value Pos: {filter_candidate.value_space.candidates}")
                     search_space.best_candidate = filter_candidate
 
         return search_space
