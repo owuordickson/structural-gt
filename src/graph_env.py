@@ -44,19 +44,31 @@ class FilterSearchSpace:
 
     @dataclass
     class Candidate:
-        """A candidate in the search space. It contains a position in the search space, the Standard Deviation (SD)
-        of the pixel values, and a combination of image filter configurations."""
-        position: dict | None = None
+        """A candidate in the search space. It contains a position in the search space and, the Standard Deviation (SD)
+        of the pixel values."""
+        position: int | None = None
         std_cost: float | None = None
-        img_configs: dict | None = None
 
     @dataclass
     class SearchSpace:
         """Discrete search space of image filters; where, each candidate is a combination of image filter
-        configurations."""
+        configurations. We use this template to build 3 search spaces: apply filters, value filters, and brightness
+        filters."""
         candidates: list["FilterSearchSpace.Candidate"] = None
         ignore_candidates: list["FilterSearchSpace.Candidate"] = None
         best_candidate: "FilterSearchSpace.Candidate" = None
+
+    @dataclass
+    class FilterCandidate:
+        """A filter candidate in the search space. It contains
+        a position in the search space,
+        the Standard Deviation (SD) of the pixel values, and a combination of image filter configurations."""
+        apply_position: int | None = None       # 11 bits long (approx. 2k candidates)
+        value_range: list[int] | None = None    # [min, max] values -- 0bits-20bits
+        value_candidate: "FilterSearchSpace.Candidate" = None       # approx. 268M candidates
+        brightness_candidate: "FilterSearchSpace.Candidate" = None  # approx. 256 candidates
+        std_cost: float | None = None
+        img_configs: dict | None = None
 
     def __init__(self):
         pass
@@ -149,11 +161,11 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def decode_candidate_position(pos_dict: dict, img_configs: dict) -> dict:
+    def decode_candidate_position(pos_data: dict, img_configs: dict) -> dict:
         """
         Decode the position of a candidate in the search space into a dictionary of image filter configurations.
 
-        :param pos_dict: The dictionary of position information.
+        :param pos_data: The dictionary of position information.
         :param img_configs: The dictionary of image filter configurations.
         :return: The dictionary of image filter configurations.
         """
@@ -186,7 +198,7 @@ class FilterSearchSpace:
         )-> tuple[str, int]:
             """
             Encode 10 image filter configurations as an 11-bit binary string (2 bits for the threshold type,
-            9 bits for filters).
+            9 bits for filters). The total number of filter combinations is 2^11 = 2048.
             :returns: Both the binary string and integer representation.
             """
 
@@ -226,7 +238,7 @@ class FilterSearchSpace:
         init_configs = img_obj.configs.copy()
         pos_data = {"apply": encode_filter_combination()[1]}
         empty_candidate = FilterSearchSpace.Candidate(
-            position=pos_data,
+            position_data=pos_data,
             std_cost=None,
             img_configs=init_configs
         )
@@ -283,16 +295,16 @@ class FilterSearchSpace:
 
         if search_space.best_candidate is None:
             search_space.best_candidate = FilterSearchSpace.Candidate(
-                position=candidate.position,
+                position_data=candidate.position_data,
                 std_cost=candidate.std_cost,
                 img_configs=candidate.img_configs)
 
-        if candidate.position in search_space.ignore_candidates:
+        if candidate.position_data in search_space.ignore_candidates:
             return
 
         elif candidate.std_cost < search_space.best_candidate.std_cost:
             search_space.best_candidate = FilterSearchSpace.Candidate(
-                position=candidate.position,
+                position_data=candidate.position_data,
                 std_cost=candidate.std_cost,
                 img_configs=candidate.img_configs
             )
