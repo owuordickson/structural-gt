@@ -128,8 +128,8 @@ class FilterSearchSpace:
                                         init_configs["apply_autolevel"]["dataValue"] = blur_size
                                         init_configs["apply_gaussian_blur"]["dataValue"] = blur_size
                                         init_configs["apply_lowpass_filter"]["dataValue"] = filter_size
-                                        # init_configs["apply_laplacian_gradient"]["dataValue"] = 3
-                                        # init_configs["apply_sobel_gradient"]["dataValue"] = 3
+                                        init_configs["apply_laplacian_gradient"]["dataValue"] = blur_size
+                                        init_configs["apply_sobel_gradient"]["dataValue"] = blur_size
                                         for apply_dark_fg in [0, 1]:
                                             for apply_gamma in [0, 1]:
                                                 for apply_auto_lvl in [0, 1]:
@@ -220,8 +220,68 @@ class FilterSearchSpace:
         """
         return img_configs
 
-    # @staticmethod
-    # def
+    @staticmethod
+    def decode_filter_values(candidate: "FilterSearchSpace.FilterCandidate", img_configs: dict, include_brightness: bool=False) -> dict|None:
+        """
+        Decode the image filter configurations of a candidate into a dictionary.
+
+        :param candidate: The image filter candidate.
+        :param img_configs: The dictionary of image filter configurations.
+        :param include_brightness: Include brightness image filter configurations?
+        :return: The dictionary of image filter configurations.
+        """
+        if candidate is None or img_configs is None:
+            return None
+
+        if candidate.value_space.best_candidate is not None:
+            encoded_val_pos = candidate.value_space.best_candidate.position
+            if encoded_val_pos is None:
+                return None
+            bit_str = format(encoded_val_pos, "030b")
+            threshold_val = int(bit_str[:8], 2)
+            gamma_val = int(bit_str[8:17], 2)
+            autolevel_val = int(bit_str[17:19], 2)
+            gaussian_val = int(bit_str[19:21], 2)
+            laplacian_val = int(bit_str[21:23], 2)
+            lowpass_val = int(bit_str[23:30], 2)
+            blur_window_size = [1, 3, 5, 7]
+
+            if img_configs["threshold_type"]["value"] == 0:
+                img_configs["global_threshold_value"]["value"] = threshold_val
+
+            if img_configs["threshold_type"]["value"] == 1:
+                # Should be an Odd number
+                threshold_val = threshold_val+1 if threshold_val%2==0 else threshold_val
+                img_configs["adaptive_local_threshold_value"]["value"] = threshold_val
+
+            img_configs["apply_gamma"]["dataValue"] = round(gamma_val / 100.0, 2)
+            img_configs["apply_lowpass_filter"]["dataValue"] = lowpass_val
+            img_configs["apply_autolevel"]["dataValue"] = blur_window_size[autolevel_val]
+            img_configs["apply_gaussian_blur"]["dataValue"] = blur_window_size[gaussian_val]
+            img_configs["apply_laplacian_gradient"]["dataValue"] = blur_window_size[laplacian_val]
+            # img_configs["apply_sobel_gradient"]["dataValue"] = random.choice([1, 3, 5, 7])
+            print(f"Threshold: {threshold_val}, Gamma: {gamma_val}, Autolevel: {blur_window_size[autolevel_val]}, "
+                  f"Filter: {lowpass_val}")
+
+        if include_brightness:
+            if candidate.brightness_space.best_candidate is not None:
+                encoded_brightness_pos = candidate.brightness_space.best_candidate.position
+                if encoded_brightness_pos is None:
+                    return None
+                bit_str = format(encoded_brightness_pos, "016b")
+                is_brightness_neg = bit_str[0]
+                brightness_val = int(bit_str[1:8], 2)
+                if is_brightness_neg == "1":
+                    brightness_val = -brightness_val
+
+                is_contrast_neg = bit_str[8]
+                contrast_val = int(bit_str[9:16], 2)
+                if is_contrast_neg == "1":
+                    contrast_val = -contrast_val
+
+                img_configs["contrast_level"]["value"] = contrast_val
+                img_configs["brightness_level"]["value"] = brightness_val
+        return img_configs
 
     @staticmethod
     def build_search_space(img_obj: BaseImage, total_pop: int = 1024) -> SearchSpace | None:
@@ -285,8 +345,8 @@ class FilterSearchSpace:
 
         # Parameters
         apply_pop = 2**11
-        value_pop = (2**22, 2**30)
-        brightness_pop = 2**8
+        value_pop = (2**22, 2**30)  # minimum, maximum value range for search space
+        brightness_pop = (0, 2**16)
         # print(f"Apply candidates: {apply_pop}, Value candidates: {value_pop}, Brightness candidates: {brightness_pop}")
 
         # Initialize search space
@@ -297,7 +357,7 @@ class FilterSearchSpace:
             if img_configs is not None:
                 # Create an empty candidate
                 val_pop = [FilterSearchSpace.Candidate(position=random.randrange(value_pop[0], value_pop[1]), std_cost=None) for _ in range(total_pop)]
-                b_pop = [FilterSearchSpace.Candidate(position=i, std_cost=None) for i in range(brightness_pop)]
+                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(brightness_pop[0], brightness_pop[1]), std_cost=None) for _ in range(256)]
 
                 filter_candidate = FilterSearchSpace.FilterCandidate(
                     apply_position=pos,
@@ -312,9 +372,12 @@ class FilterSearchSpace:
                 search_space.candidates.append(filter_candidate)
                 if pos == 640:
                     # default candidate
-                    print(f"Default position: {pos}, Decoded image configs: {img_configs}")
-                    print(f"Value Pos: {filter_candidate.value_space.candidates}")
                     search_space.best_candidate = filter_candidate
+                    search_space.best_candidate.value_space.best_candidate = FilterSearchSpace.Candidate(position=2**22, std_cost=None)
+                    search_space.best_candidate.brightness_space.best_candidate = FilterSearchSpace.Candidate(position=0, std_cost=None)
+                    print(f"Default position: {pos}, Decoded image configs: {img_configs}")
+                    print(f"Value Pos: {filter_candidate.value_space.best_candidate.position}, Brightness Pos: {filter_candidate.brightness_space.best_candidate.position}")
+                    FilterSearchSpace.decode_filter_values(filter_candidate, img_configs)
 
         return search_space
 
