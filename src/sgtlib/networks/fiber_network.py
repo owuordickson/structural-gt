@@ -8,6 +8,7 @@ import os
 import numbers
 import itertools
 import numpy as np
+import pandas as pd
 import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ from .sknw_mod import build_sknw#, build_graph
 from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_csv_file, write_gsd_file, gsd_to_skeleton, csv_to_graph
+from ..utils.sgt_utils import write_gsd_file, gsd_to_skeleton, csv_to_graph
 
 
 class FiberNetworkBuilder(ProgressUpdate):
@@ -397,11 +398,13 @@ class FiberNetworkBuilder(ProgressUpdate):
         opt_gte = self._configs
 
         g_filename = filename + "_graph.gexf"
-        el_filename = filename + "_EL.csv"
-        adj_filename = filename + "_adj.csv"
+        edges_filename = filename + "_EdgeList.csv"
+        nodes_filename = filename + "_NodePositions.csv"
+        adj_filename = filename + "_AdjMat.csv"
         gsd_filename = filename + "_skel.gsd"
         gexf_file = os.path.join(out_dir, g_filename)
-        csv_file = os.path.join(out_dir, el_filename)
+        edges_file = os.path.join(out_dir, edges_filename)
+        nodes_file = os.path.join(out_dir, nodes_filename)
         adj_file = os.path.join(out_dir, adj_filename)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
@@ -410,13 +413,31 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         if opt_gte["export_edge_list"]["value"] == 1:
             if opt_gte["has_weights"]["value"] == 1:
-                fields = ['Source', 'Target', 'Weight', 'Length']
-                el = nx.generate_edgelist(nx_graph, delimiter=',', data=True)
-                write_csv_file(csv_file, fields, el)
+                cols = ['Source', 'Target', 'Weight', 'Length', 'Width', 'Angle']
+                lst_edges = []
+                for (s, e) in list(nx_graph.edges()):
+                    weight = (nx_graph[s][e]['weight'])
+                    length = nx_graph[s][e]['length']
+                    width = nx_graph[s][e]['width']
+                    angle = nx_graph[s][e]['angle']
+                    el = [s, e, weight, length, width, angle]
+                    lst_edges.append(el)
+                df_edges = pd.DataFrame(lst_edges, columns=cols)
+                df_edges.to_csv(edges_file, index=False)
             else:
-                fields = ['Source', 'Target']
-                el = nx.generate_edgelist(nx_graph, delimiter=',', data=False)
-                write_csv_file(csv_file, fields, el)
+                cols = ['Source', 'Target']
+                lst_edges = []
+                for (s, e) in list(nx_graph.edges()):
+                    el = [s, e]
+                    lst_edges.append(el)
+                df_edges = pd.DataFrame(lst_edges, columns=cols)
+                df_edges.to_csv(edges_file, index=False)
+
+        if opt_gte["export_node_positions"]["value"] == 1:
+            node_list = list(nx_graph.nodes())
+            node_pos = np.array([nx_graph.nodes[i]['o'] for i in node_list])
+            df_node_pos = pd.DataFrame(node_pos, columns=['x', 'y'])
+            df_node_pos.to_csv(nodes_file, index=False)
 
         if opt_gte["export_as_gexf"]["value"] == 1:
             # deleting extraneous info and then exporting the final skeleton

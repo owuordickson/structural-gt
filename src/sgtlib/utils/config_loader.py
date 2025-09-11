@@ -161,6 +161,7 @@ def load_gte_configs(cfg_path: str = ""):
         "add_width_thickness": {"id": "add_width_thickness", "type": "graph-extraction", "text": "Show Width Thickness", "value": 0},
 
         "export_edge_list": {"id": "export_edge_list", "type": "file-options", "text": "Export Edge List", "value": 0},
+        "export_node_positions": {"id": "export_node_positions", "type": "file-options", "text": "Export Node Positions", "value": 0},
         "export_as_gexf": {"id": "export_as_gexf", "type": "file-options", "text": "Export as gexf", "value": 0},
         "export_adj_mat": {"id": "export_adj_mat", "type": "file-options", "text": "Export Adjacency Matrix", "value": 0},
         "export_as_gsd": {"id": "export_as_gsd", "type": "file-options", "text": "Export as GSD/HOOMD", "value": 0},
@@ -190,6 +191,7 @@ def load_gte_configs(cfg_path: str = ""):
         options_gte["display_node_id"]["value"] = int(config.get('extraction-settings', 'display_node_id'))
         options_gte["add_width_thickness"]["value"] = int(config.get('extraction-settings', 'add_width_thickness'))
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
+        options_gte["export_node_positions"]["value"] = int(config.get('extraction-settings', 'export_node_positions'))
         options_gte["export_as_gexf"]["value"] = int(config.get('extraction-settings', 'export_as_gexf'))
         options_gte["export_adj_mat"]["value"] = int(config.get('extraction-settings', 'export_adj_mat'))
         options_gte["export_as_gsd"]["value"] = int(config.get('extraction-settings', 'export_as_gsd'))

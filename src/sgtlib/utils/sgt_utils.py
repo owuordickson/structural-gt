@@ -183,29 +183,6 @@ def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True) -> Non
         pass
 
 
-def write_csv_file(csv_file: LiteralString | str | bytes, column_tiles: list, data) -> None:
-    """
-    Write data to a csv file.
-    Args:
-        csv_file: name of the csv file
-        column_tiles: list of column names
-        data: list of data
-    Returns:
-
-    """
-    with open(csv_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(column_tiles)
-        for line in data:
-            line = str(line)
-            row = line.split(',')
-            try:
-                writer.writerow(row)
-            except csv.Error:
-                pass
-    csvfile.close()
-
-
 def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
     """
     A function that writes graph particles to a GSD file. Visualize with OVITO software.

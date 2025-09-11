@@ -38,11 +38,11 @@ MenuBar {
         Menu {
             id: mnuExportGraphAs
             title: "Export graph as..."
-            MenuItem {id:mnuExportEdge; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
-            MenuItem {id:mnuExportAdj; text: "Adjacency matrix"; enabled: false; onTriggered: export_graph_data(2) }
-            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(1) }
-            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: false; onTriggered: export_graph_data(3) }
-
+            MenuItem {id:mnuExportEdges; text: "Edge list"; enabled: false; onTriggered: export_graph_data(0) }
+            MenuItem {id:mnuExportNodes; text: "Node positions"; enabled: false; onTriggered: export_graph_data(1) }
+            MenuItem {id:mnuExportAdj; text: "Adjacency matrix"; enabled: false; onTriggered: export_graph_data(3) }
+            MenuItem {id:mnuExportGexf; text: "As gexf"; enabled: false; onTriggered: export_graph_data(2) }
+            MenuItem {id:mnuExportGSD; text: "As GSD/HOOMD"; enabled: false; onTriggered: export_graph_data(4) }
         }
 
     }
@@ -119,7 +119,8 @@ MenuBar {
         function onImageChangedSignal() {
             // Force refresh
             mnuSaveProjAs.enabled = mainController.display_image();
-            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportEdges.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportNodes.enabled = graphPropsModel.rowCount() > 0;
             mnuExportAdj.enabled = graphPropsModel.rowCount() > 0;
             mnuExportGexf.enabled = graphPropsModel.rowCount() > 0;
             mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
@@ -135,7 +136,8 @@ MenuBar {
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
-            mnuExportEdge.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportEdges.enabled = graphPropsModel.rowCount() > 0;
+            mnuExportNodes.enabled = graphPropsModel.rowCount() > 0;
             mnuExportAdj.enabled = graphPropsModel.rowCount() > 0;
             mnuExportGexf.enabled = graphPropsModel.rowCount() > 0;
             mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
