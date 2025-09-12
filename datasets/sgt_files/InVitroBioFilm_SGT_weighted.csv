@@ -1,2 +1,6 @@
 parameter,value
-Diameter-weighted average degree,38.6572
+Diameter-weighted average degree,0.0
+Width-weighted assortativity coefficient,0.50535
+Diameter-weighted betweenness centrality,0.04047
+Length-weighted average closeness centrality,0.00195
+Diameter-weighted average eigenvector centrality,0.0449

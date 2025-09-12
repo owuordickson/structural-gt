@@ -277,18 +277,18 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["parameter"].append("Average degree")
             data_dict["value"].append(round(np.average(deg_distribution), 5))
 
-        connected_graph = None
+        is_connected = None
         if (opt_gtc["compute_network_diameter"]["value"] == 1) or (
                 opt_gtc["compute_avg_node_connectivity"]["value"] == 1):
             try:
-                connected_graph = nx.is_connected(graph)
+                is_connected = nx.is_connected(graph)
             except nx.exception.NetworkXPointlessConcept:
                 pass
 
         # calculating network diameter
         if opt_gtc["compute_network_diameter"]["value"] == 1:
             self.update_status([10, "Computing network diameter..."]) if not silent else None
-            if connected_graph:
+            if is_connected:
                 dia = int(diameter(graph))
             else:
                 dia = np.nan
@@ -301,7 +301,7 @@ class GraphAnalyzer(ProgressUpdate):
                 self.update_status([-1, "Task aborted."]) if not silent else None
                 return None
             self.update_status([15, "Computing node connectivity..."]) if not silent else None
-            avg_node_con = self.compute_avg_node_connectivity(graph, connected_graph)
+            avg_node_con = self.compute_avg_node_connectivity(graph, is_connected)
             data_dict["parameter"].append("Average node connectivity")
             data_dict["value"].append(avg_node_con)
 
