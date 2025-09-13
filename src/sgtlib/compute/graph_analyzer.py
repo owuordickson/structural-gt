@@ -576,7 +576,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return sorted_plt_data
 
-    def compute_ohms_centrality(self, nx_graph: nx.Graph) -> tuple[dict, dict]:
+    def compute_ohms_centrality(self, nx_graph: nx.Graph) -> tuple[dict, dict] | tuple[None, None]:
         r"""
         Computes Ohms centrality value for each node based on actual pixel width and length of edges in meters.
 
