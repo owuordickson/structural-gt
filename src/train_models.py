@@ -6,7 +6,6 @@ Functions to train CNN models and run them on graph images.
 
 import os
 import torch
-# import numpy as np
 import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
@@ -145,7 +144,7 @@ def train_cnn_model(ntwk: dict, num_epochs: int, learning_rate: float, train_loa
 def run_cnn_model(graph_image_path: str, model_name: str = "resnet50", img_dim: int = 224, norm_file: str = "../train_data/manual/normalization_stats.csv"):
     """
     Load the CNN model and run it on a graph image to get the prediction for good/bad graph.
-    :param graph_image_path: Graph image path, e.g., "../train_data/manual/good/1234567890.png.
+    :param graph_image_path: Graph image path, e.g., '../train_data/manual/good/1234567890.png'.
     :param model_name: Name of the model to use.
     :param img_dim: Image dimension (e.g., 224 for ResNet50).
     :param norm_file: Path to the CSV file containing the normalization stats.

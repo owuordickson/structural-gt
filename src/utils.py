@@ -181,6 +181,17 @@ def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover
     pass
 
 
+def sgt_hill_climbing_algorithm(max_iters: int = 10, step_size: float = 0.5):
+    """Executes the hill climbing algorithm to find the best candidate from a small search space."""
+    pass
+
+
+def metaheuristic_image_configs():
+    """A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
+    image configurations for extracting accurate graphs from SEM images."""
+    pass
+
+
 if __name__ == "__main__":
     print("Starting main...")
     # auto_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
