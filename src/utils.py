@@ -15,7 +15,7 @@ def print_updates(progress_val, progress_msg):
         print(f"{progress_val}: {progress_msg}")
 
 
-def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5 ) -> None:
+def auto_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_tries: int = 5) -> None:
     """
     Function to generate graph images after applying a combination of random image filters. Steps:
         A. Identifies an image folder
@@ -165,12 +165,22 @@ def automated_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, 
     return
 
 
-def genetic_algorithm_generator():
+def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover: float = 0.5, pct_mutate: float = 0.1, gamma: float = 0.9, sigma: float = 0.9):
     """Generate graph images using a genetic algorithm, cost function based on (1) Number of subgraphs and
      (2) if edges lie on "white" sections of Grayscale image."""
+
+    def _crossover(parent1, parent2):
+        """Cross over two parents to generate two children."""
+        pass
+
+    def _mutate(parent):
+        """Mutate a parent to generate a new child."""
+        pass
+
     # Have many tries to generate many good graphs
     pass
 
 
 if __name__ == "__main__":
-    automated_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
+    print("Starting main...")
+    # auto_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)

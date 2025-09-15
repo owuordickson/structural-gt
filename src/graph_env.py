@@ -259,9 +259,8 @@ class FilterSearchSpace:
             img_configs["apply_autolevel"]["dataValue"] = blur_window_size[autolevel_val]
             img_configs["apply_gaussian_blur"]["dataValue"] = blur_window_size[gaussian_val]
             img_configs["apply_laplacian_gradient"]["dataValue"] = blur_window_size[laplacian_val]
-            # img_configs["apply_sobel_gradient"]["dataValue"] = random.choice([1, 3, 5, 7])
-            print(f"Threshold: {threshold_val}, Gamma: {gamma_val}, Autolevel: {blur_window_size[autolevel_val]}, "
-                  f"Filter: {lowpass_val}")
+            # To Be Updated (we need to keep bit_str less than 30 bits)
+            img_configs["apply_sobel_gradient"]["dataValue"] = blur_window_size[laplacian_val] # re-use laplacian gradient
 
         if include_brightness:
             if candidate.brightness_space.best_candidate is not None:
@@ -375,10 +374,6 @@ class FilterSearchSpace:
                     search_space.best_candidate = filter_candidate
                     search_space.best_candidate.value_space.best_candidate = FilterSearchSpace.Candidate(position=2**22, std_cost=None)
                     search_space.best_candidate.brightness_space.best_candidate = FilterSearchSpace.Candidate(position=0, std_cost=None)
-                    print(f"Default position: {pos}, Decoded image configs: {img_configs}")
-                    print(f"Value Pos: {filter_candidate.value_space.best_candidate.position}, Brightness Pos: {filter_candidate.brightness_space.best_candidate.position}")
-                    FilterSearchSpace.decode_filter_values(filter_candidate, img_configs)
-
         return search_space
 
     @staticmethod
