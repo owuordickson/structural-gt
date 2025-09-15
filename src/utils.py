@@ -166,15 +166,14 @@ def auto_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_t
 
 
 def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover: float = 0.5, pct_mutate: float = 0.1, gamma: float = 0.9, sigma: float = 0.9):
-    """Generate graph images using a genetic algorithm, cost function based on (1) Number of subgraphs and
-     (2) if edges lie on "white" sections of Grayscale image."""
+    """Executes the genetic algorithm to find the best candidate from a huge search space."""
 
-    def _crossover(parent1, parent2):
+    def _crossover(parent_1, parent_2):
         """Cross over two parents to generate two children."""
         pass
 
-    def _mutate(parent):
-        """Mutate a parent to generate a new child."""
+    def _mutate(individual):
+        """Mutate an individual to generate a new individual."""
         pass
 
     # Have many tries to generate many good graphs
