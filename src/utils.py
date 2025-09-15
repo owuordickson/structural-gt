@@ -166,7 +166,9 @@ def auto_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_t
 
 
 def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover: float = 0.5, pct_mutate: float = 0.1, gamma: float = 0.9, sigma: float = 0.9):
-    """Executes the genetic algorithm to find the best candidate from a huge search space."""
+    """
+    Executes the genetic algorithm to find the best candidate from a huge search space.
+    """
 
     def _crossover(parent_1, parent_2):
         """Cross over two parents to generate two children."""
@@ -181,13 +183,17 @@ def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover
 
 
 def sgt_hill_climbing_algorithm(max_iters: int = 10, step_size: float = 0.5):
-    """Executes the hill climbing algorithm to find the best candidate from a small search space."""
+    """
+    Executes the hill climbing algorithm to find the best candidate from a small search space.
+    """
     pass
 
 
 def metaheuristic_image_configs():
-    """A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
-    image configurations for extracting accurate graphs from SEM images."""
+    """
+    A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
+    image configurations for extracting accurate graphs from SEM images.
+    """
     pass
 
 
