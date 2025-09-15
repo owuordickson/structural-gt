@@ -499,6 +499,9 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     Returns: None or a Matplotlib figure.
     """
 
+    if df_sgt is None or materials is None or parameters is None:
+        return None
+
     param_rename_map = {
         "Number of nodes": "Nodes",
         "Number of edges": "Edges",
