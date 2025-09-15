@@ -55,6 +55,8 @@ class FilterSearchSpace:
         """Discrete search space of image filters; where, each candidate is a combination of image filter
         configurations. We use this template to build 3 search spaces: apply filters, value filters, and brightness
         filters."""
+        min_pos: int = 0
+        max_pos: int = 0
         candidates: list = None
         ignore_candidates: list= None
         best_candidate = None
@@ -81,8 +83,8 @@ class FilterSearchSpace:
     def __init__(self):
         pass
 
-    @staticmethod
-    def _build_full_search_space(img_obj: BaseImage) -> SearchSpace | None:
+    @classmethod
+    def _build_full_search_space(cls, img_obj: BaseImage) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
         The actual search space has over 118k Trillion candidates. This method is used for debugging purposes -- the
@@ -344,25 +346,25 @@ class FilterSearchSpace:
 
         # Parameters
         apply_pop = 2**11
-        value_pop = (2**22, 2**30)  # minimum, maximum value range for search space
-        brightness_pop = (0, 2**16)
-        # print(f"Apply candidates: {apply_pop}, Value candidates: {value_pop}, Brightness candidates: {brightness_pop}")
+        val_range = (2**22, 2**30)  # minimum, maximum value range for search space
+        bri_range = (0, 2**16)
+        # print(f"Apply candidates: {apply_pop}, Value candidates: {val_range}, Brightness candidates: {bri_range}")
 
         # Initialize search space
         init_configs = img_obj.configs.copy()
-        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[])
+        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[], min_pos=0, max_pos=apply_pop-1)
         for pos in range(apply_pop):
             img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
             if img_configs is not None:
                 # Create an empty candidate
-                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(value_pop[0], value_pop[1]), std_cost=None) for _ in range(total_pop)]
-                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(brightness_pop[0], brightness_pop[1]), std_cost=None) for _ in range(256)]
+                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(total_pop)]
+                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(256)]
 
                 filter_candidate = FilterSearchSpace.FilterCandidate(
                     apply_position=pos,
                     value_range=(0, total_pop),
-                    value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[]),
-                    brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[]),
+                    value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[], min_pos=val_range[0], max_pos=val_range[1]),
+                    brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[], min_pos=bri_range[0], max_pos=bri_range[0]),
                     std_cost=None,
                     best_std_cost=None,
                     graph_accuracy=None,

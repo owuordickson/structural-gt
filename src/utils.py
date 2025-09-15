@@ -7,6 +7,7 @@ import os, random, uuid
 import pandas as pd
 from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor
 from matplotlib import pyplot as plt
+from graph_env import FilterSearchSpace
 
 
 def print_updates(progress_val, progress_msg):
@@ -165,7 +166,7 @@ def auto_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_t
     return
 
 
-def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover: float = 0.5, pct_mutate: float = 0.1, gamma: float = 0.9, sigma: float = 0.9):
+def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iters: int = 1000, n_pop: int = 100, pct_crossover: float = 0.5, pct_mutate: float = 0.1, gamma: float = 0.9, sigma: float = 0.9):
     """
     Executes the genetic algorithm to find the best candidate from a huge search space.
     """
@@ -178,25 +179,73 @@ def sgt_genetic_algorithm(max_iters: int = 1000, n_pop: int = 100, pct_crossover
         """Mutate an individual to generate a new individual."""
         pass
 
-    # Have many tries to generate many good graphs
-    pass
+    if s_space is None:
+        print("Search space cannot be None")
+        return
 
 
-def sgt_hill_climbing_algorithm(max_iters: int = 10, step_size: float = 0.5):
+def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iters: int = 10, step_size: int = 1):
     """
     Executes the hill climbing algorithm to find the best candidate from a small search space.
     """
-    pass
+
+    def _generate_neighbors():
+        """Generate neighbors by slightly modifying the current candidate."""
+        lst_neighbor = []
+        for i in range(5):
+            center_pos = current_sol.position
+            left_pos = max(s_space.min_pos, center_pos - step_size)
+            right_pos = min(s_space.max_pos, center_pos + step_size)
+            if type(current_sol) is FilterSearchSpace.Candidate:
+                lst_neighbor.extend([item for item in s_space.candidates if (item.position == left_pos or item.position == center_pos or item.position == right_pos)])
+            elif type(current_sol) is FilterSearchSpace.FilterCandidate:
+                lst_neighbor.extend([item for item in s_space.candidates if (item.position == left_pos or item.position == center_pos or item.position == right_pos)])
+        return lst_neighbor
+
+    if s_space is None:
+        print("Search space cannot be None")
+        return
+
+    # 1. Run the hill climbing algorithm
+    current_sol = s_space.best_candidate.copy()
+    for _ in range(max_iters):
+        # Get neighbors to the current best candidate
+        neighbors = _generate_neighbors()
+        best_neighbor = None
+
+        # Find the best neighbor among the neighbors
+        for neighbor in neighbors:
+            if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
+                best_neighbor = neighbor
+
+        # Update the current best candidate
+        if best_neighbor is not None and best_neighbor.std_cost < current_sol.std_cost:
+            current_sol = best_neighbor
+        else:
+            # No improvement found, reached a local optimum
+            print("Reached a local optimum.")
+            break
 
 
-def metaheuristic_image_configs():
+def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 1000):
     """
     A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
     image configurations for extracting accurate graphs from SEM images.
     """
-    pass
+    # 1. Create a search space
+    filter_space = FilterSearchSpace.build_search_space(ntwk_obj.image_obj, total_pop=256)
+    print(f"Best candidate\nConfigs: {filter_space.best_candidate.img_configs}\nCost: {filter_space.best_candidate.std_cost}\nGraph Accuracy: {filter_space.best_candidate.graph_accuracy}")
+
+    # 2. Run the Hill-climbing algorithm to find the best "image config combination"
 
 
 if __name__ == "__main__":
     print("Starting main...")
+    # 1. Automatically generate graph images
     # auto_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
+
+    # 2. Run metaheuristic algorithms
+    img_path = "../images/4_002.tif"
+    res_dir = "../train_data/sgt_files"
+    ntwk_obj, _ = ImageProcessor.from_image_file(img_path, out_folder=res_dir)
+    metaheuristic_image_configs(ntwk_obj)
