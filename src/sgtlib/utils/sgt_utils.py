@@ -537,8 +537,7 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     # Radar chart setup
     num_vars = len(parameters)
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-    parameters += [parameters[0]]  # close the loop
-    angles += [angles[0]]
+    angles_closed = angles + [angles[0]]  # close the loop without mutating the input list
 
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
@@ -551,8 +550,8 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
         errors = df_std.loc[mat].tolist()
         errors += [errors[0]]
 
-        ax.plot(angles, values, label=mat)
-        ax.fill_between(angles,
+        ax.plot(angles_closed, values, label=mat)
+        ax.fill_between(angles_closed,
                         np.array(values) - np.array(errors),
                         np.array(values) + np.array(errors),
                         alpha=0.1)
@@ -560,7 +559,7 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     # Final touches
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
-    ax.set_thetagrids(np.degrees(angles[:-1]), parameters[:-1])
+    ax.set_thetagrids(np.degrees(angles), parameters)
     ax.set_title("Spider Plot with Std. Dev. Error Bands", fontsize=14)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
