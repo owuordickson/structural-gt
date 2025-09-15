@@ -1,12 +1,7 @@
 numpy
 pandas
-seaborn
 matplotlib
 sgtlib
-scikit-learn
-tensorflow
-torch
+torchvision
 Pillow
 opencv-python
-tqdm
-pyyaml
