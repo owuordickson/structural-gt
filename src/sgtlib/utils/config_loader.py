@@ -261,3 +261,26 @@ def load_gtc_configs(cfg_path: str = ""):
         return options_gtc
     except configparser.NoSectionError:
         return options_gtc
+
+
+def load_model_configs(cfg_path: str = ""):
+    """ML/AI model settings for finding the best image filters for graph extraction"""
+
+    options_model = {
+        "find_filter_selections": {"id": "find_filter_selections", "type": "model-settings", "text": "Find Best Image Filter Combination", "value": 0},
+        "find_filter_values": {"id": "find_filter_values", "type": "model-settings", "text": "Estimate Image Filter Values", "value": 0},
+        "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "model-settings", "text": "Estimate Brightness and Contrast Values", "value": 0},
+    }
+
+    config = read_config_file(cfg_path)
+    if config is None:
+        return options_model
+
+    try:
+        options_model["find_filter_selections"]["value"] = int(config.get('sgt-model', 'find_filter_selections'))
+        options_model["find_filter_values"]["value"] = int(config.get('sgt-model', 'find_filter_values'))
+        options_model["find_brightness_contrast"]["value"] = int(config.get('sgt-model', 'find_brightness_contrast'))
+
+        return options_model
+    except configparser.NoSectionError:
+        return options_model

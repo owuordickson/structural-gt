@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 from ..utils.sgt_utils import plot_to_opencv
 from ..utils.progress_update import ProgressUpdate
+from ..utils.config_loader import load_model_configs
 from ..imaging.base_image import BaseImage
 from ..networks.fiber_network import FiberNetworkBuilder
 
@@ -71,6 +72,7 @@ class ImageProcessor(ProgressUpdate):
         >>> ntwk_p.apply_img_filters()
         """
         super(ImageProcessor, self).__init__()
+        self._configs = load_model_configs(cfg_file)
         self._img_path: str = img_path if type(img_path) is str else img_path[0]
         self._output_dir: str = out_dir
         self._config_file: str = cfg_file
@@ -79,6 +81,16 @@ class ImageProcessor(ProgressUpdate):
         self._image_batches: list[ImageProcessor.ImageBatch] = []
         self._selected_batch_index: int = 0
         # self._initialize_image_batches(self._load_img_from_file(img_path))
+
+    @property
+    def configs(self):
+        """Returns the configuration (ML model) settings for the image processor."""
+        return self._configs
+
+    @configs.setter
+    def configs(self, configs):
+        """Sets the configuration (ML model) settings for the image processor."""
+        self._configs = configs
 
     @property
     def img_path(self) -> str:

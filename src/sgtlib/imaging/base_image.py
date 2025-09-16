@@ -33,7 +33,7 @@ class BaseImage:
         kernel_shape: tuple
         # stride: tuple
 
-    def __init__(self, raw_img: MatLike, cfg_file="", scale_factor=1.0):
+    def __init__(self, raw_img: MatLike|None, cfg_file="", scale_factor=1.0):
         """
         A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
