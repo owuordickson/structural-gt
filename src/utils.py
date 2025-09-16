@@ -393,28 +393,33 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga
             f"Graph Accuracy: {filter_space.best_candidate.graph_accuracy}\n"
             f"")
 
+    alg_options = {"apply_selections": 1, "filter_values": 1, "brightness_contrast": 1}
+
     # 1. Create a search space
     filter_space = FilterSearchSpace.build_search_space(ntwk_obj.image_obj, initial_pop=ga_init_pop)
     _print_configs("Default Configs")
 
-    # 2. Run the Hill-climbing algorithm to find the best "image config combination"
-    # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
-    sgt_hill_climbing_algorithm(filter_space, ntwk_obj.image_obj, max_iters=max_iters)
-    _print_configs("Selected Configs")
+    if alg_options["apply_selections"] == 1:
+        # 2. Run the Hill-climbing algorithm to find the best "image config combination"
+        # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
+        sgt_hill_climbing_algorithm(filter_space, ntwk_obj.image_obj, max_iters=max_iters)
+        _print_configs("Selected Configs")
 
-    # 3. Run the Genetic Algorithm to find the best "image filter values"
-    val_search_space = filter_space.best_candidate.value_space
-    val_img_configs = sgt_genetic_algorithm(val_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
-    filter_space.best_candidate.std_cost = val_search_space.best_candidate.std_cost
-    filter_space.img_configs = val_img_configs
-    _print_configs("Best Image Configs")
+    if alg_options["filter_values"] == 1:
+        # 3. Run the Genetic Algorithm to find the best "image filter values"
+        val_search_space = filter_space.best_candidate.value_space
+        val_img_configs = sgt_genetic_algorithm(val_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
+        filter_space.best_candidate.std_cost = val_search_space.best_candidate.std_cost
+        filter_space.img_configs = val_img_configs
+        _print_configs("Best Image Configs")
 
-    # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
-    bright_search_space = filter_space.best_candidate.brightness_space
-    brt_img_configs = sgt_genetic_algorithm(bright_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
-    filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost
-    filter_space.img_configs = brt_img_configs
-    _print_configs("Best Brightness/Contrast Configs")
+    if alg_options["brightness_contrast"] == 1:
+        # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
+        bright_search_space = filter_space.best_candidate.brightness_space
+        brt_img_configs = sgt_genetic_algorithm(bright_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
+        filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost
+        filter_space.img_configs = brt_img_configs
+        _print_configs("Best Brightness/Contrast Configs")
     return filter_space.best_candidate.img_configs
 
 
