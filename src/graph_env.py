@@ -75,7 +75,6 @@ class FilterSearchSpace:
         value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 1B candidates
         brightness_space: "FilterSearchSpace.SearchSpace" = None    # approx. 256 candidates
         std_cost: float | None = None
-        best_std_cost: float | None = None      # cost of the best candidate in the value space or brightness space
         graph_accuracy: float | None = None     # CNN model prediction accuracy of the generated graph
         img_configs: dict | None = None
 
@@ -255,13 +254,24 @@ class FilterSearchSpace:
                 threshold_val = threshold_val+1 if threshold_val%2==0 else threshold_val
                 img_configs["adaptive_local_threshold_value"]["value"] = threshold_val
 
-            img_configs["apply_gamma"]["dataValue"] = round(gamma_val / 100.0, 2) if gamma_val > 0 else 0.01
-            img_configs["apply_lowpass_filter"]["dataValue"] = lowpass_val
-            img_configs["apply_autolevel"]["dataValue"] = blur_window_size[autolevel_val]
-            img_configs["apply_gaussian_blur"]["dataValue"] = blur_window_size[gaussian_val]
-            img_configs["apply_laplacian_gradient"]["dataValue"] = blur_window_size[laplacian_val]
-            # To Be Updated (we need to keep bit_str less than 30 bits)
-            img_configs["apply_sobel_gradient"]["dataValue"] = blur_window_size[laplacian_val] # re-use laplacian gradient
+            if img_configs["apply_gamma"]["value"] == 1:
+                img_configs["apply_gamma"]["dataValue"] = round(gamma_val / 100.0, 2) if gamma_val > 0 else 0.01
+
+            if img_configs["apply_lowpass_filter"]["value"] == 1:
+                img_configs["apply_lowpass_filter"]["dataValue"] = lowpass_val
+
+            if img_configs["apply_autolevel"]["value"] == 1:
+                img_configs["apply_autolevel"]["dataValue"] = blur_window_size[autolevel_val]
+
+            if img_configs["apply_gaussian_blur"]["value"] == 1:
+                img_configs["apply_gaussian_blur"]["dataValue"] = blur_window_size[gaussian_val]
+
+            if img_configs["apply_laplacian_gradient"]["value"] == 1:
+                img_configs["apply_laplacian_gradient"]["dataValue"] = blur_window_size[laplacian_val]
+
+            if img_configs["apply_sobel_gradient"]["value"] == 1:
+                # To Be Updated (we need to keep bit_str less than 30 bits)
+                img_configs["apply_sobel_gradient"]["dataValue"] = blur_window_size[laplacian_val] # re-use laplacian gradient
 
         if bright_candidate is not None:
             encoded_brightness_pos = bright_candidate.position
@@ -283,14 +293,14 @@ class FilterSearchSpace:
         return img_configs
 
     @staticmethod
-    def build_search_space(img_obj: BaseImage, total_pop: int = 1024) -> SearchSpace | None:
+    def build_search_space(img_obj: BaseImage, initial_pop: int = 256) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
         Encodes a combination of image filter configurations as a binary number, then this number is converted into an
         integer position in the search space.
 
         :param img_obj: The image object.
-        :param total_pop: The total population size.
+        :param initial_pop: The total population size for Genetic Algorithm search space. Default is 256.
         :return: The search space.
         """
 
@@ -355,16 +365,15 @@ class FilterSearchSpace:
             img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
             if img_configs is not None:
                 # Create an empty candidate
-                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(total_pop)]
+                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(initial_pop)]
                 b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(256)]
 
                 filter_candidate = FilterSearchSpace.FilterCandidate(
                     position=pos,
-                    value_range=(0, total_pop),
+                    value_range=(0, initial_pop),
                     value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[], min_pos=val_range[0], max_pos=val_range[1]),
                     brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[], min_pos=bri_range[0], max_pos=bri_range[0]),
                     std_cost=None,
-                    best_std_cost=None,
                     graph_accuracy=None,
                     img_configs=img_configs.copy(),
                 )
