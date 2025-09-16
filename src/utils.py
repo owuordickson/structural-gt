@@ -364,6 +364,8 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
             print("Reached a local optimum.")
             break
     s_space.best_candidate = best_sol
+    return None
+
 
 
 def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga_init_pop: int = 8) -> dict|None:
@@ -383,9 +385,8 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga
         return None
 
     def _print_configs(title: str = ""):
-        print(f"{title}\n")
+        print(f"{title}")
         print(
-            f"Best candidate\n"
             f"Configs: {filter_space.best_candidate.img_configs}\n"
             f"Cost: {filter_space.best_candidate.std_cost}\n"
             f"Graph Accuracy: {filter_space.best_candidate.graph_accuracy}\n"
@@ -406,7 +407,7 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga
     filter_space.img_configs = val_img_configs
     _print_configs("Best Image Configs")
 
-    # 4. Run the Genetic Algorithm to find the best "brightness/contrast values"
+    # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
     bright_search_space = filter_space.best_candidate.brightness_space
     brt_img_configs = sgt_genetic_algorithm(bright_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
     filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost

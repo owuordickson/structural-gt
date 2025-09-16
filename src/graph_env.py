@@ -366,13 +366,13 @@ class FilterSearchSpace:
             if img_configs is not None:
                 # Create an empty candidate
                 val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(initial_pop)]
-                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(256)]
+                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(initial_pop)]
 
                 filter_candidate = FilterSearchSpace.FilterCandidate(
                     position=pos,
                     value_range=(0, initial_pop),
                     value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[], min_pos=val_range[0], max_pos=val_range[1]),
-                    brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[], min_pos=bri_range[0], max_pos=bri_range[0]),
+                    brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[], min_pos=bri_range[0], max_pos=bri_range[1]),
                     std_cost=None,
                     graph_accuracy=None,
                     img_configs=img_configs.copy(),
