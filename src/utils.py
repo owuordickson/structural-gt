@@ -394,7 +394,7 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor) -> dict|None:
         "find_filter_selections": {"id": "find_filter_selections", "type": "model-settings",
                                    "text": "Find Best Image Filter Combination", "value": 1},
         "find_filter_values": {"id": "find_filter_values", "type": "model-settings",
-                               "text": "Estimate Image Filter Values", "value": 0},
+                               "text": "Estimate Image Filter Values", "value": 1},
         "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "model-settings",
                                      "text": "Estimate Brightness and Contrast Values", "value": 1},
         "max_iterations": {"id": "max_iterations", "type": "model-settings", "text": "Max. Algorithm Iterations",
