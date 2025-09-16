@@ -221,9 +221,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
         print("Search space cannot be None")
         return None
 
-    idx = random.randint(0, len(s_space.candidates) - 1)
-    random_sol = s_space.best_candidate if s_space.best_candidate is not None else s_space.candidates[idx]
-    best_sol = FilterSearchSpace.Candidate(position=random_sol.position, std_cost=np.inf)
+    best_sol = FilterSearchSpace.get_initial_candidate(s_space)
     best_configs = img_obj.configs.copy()
     for _ in range(generations):
         best_individual = None
@@ -310,21 +308,22 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
         print("Search space or ImageObject cannot be None")
         return None
 
-    # 1. Run the hill climbing algorithm
+    # 1. Initialize the current best candidate
+    init_sol = FilterSearchSpace.get_initial_candidate(s_space)
     if isinstance(s_space.best_candidate, FilterSearchSpace.FilterCandidate):
         best_sol = FilterSearchSpace.FilterCandidate(
-            position=s_space.best_candidate.position,
-            value_range=s_space.best_candidate.value_range,
-            value_space=s_space.best_candidate.value_space,
-            brightness_space=s_space.best_candidate.brightness_space,
+            position=init_sol.position,
+            value_range=init_sol.value_range,
+            value_space=init_sol.value_space,
+            brightness_space=init_sol.brightness_space,
             std_cost=np.inf,
             graph_accuracy=0,
-            img_configs=s_space.best_candidate.img_configs,
+            img_configs=init_sol.img_configs,
         )
     else:
-        idx = random.randint(0, len(s_space.candidates) - 1)
-        random_sol = s_space.best_candidate if s_space.best_candidate is not None else s_space.candidates[idx]
-        best_sol = FilterSearchSpace.Candidate(position=random_sol.position, std_cost=np.inf)
+        best_sol = FilterSearchSpace.Candidate(position=init_sol.position, std_cost=np.inf)
+
+    # 2. Run the hill climbing algorithm
     for _ in range(max_iters):
         # Get neighbors to the current best candidate
         neighbors = _generate_neighbors()
@@ -363,6 +362,8 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
             # No improvement found, reached a local optimum
             print("Reached a local optimum.")
             break
+
+    # 3. Update the current best candidate
     s_space.best_candidate = best_sol
     return None
 
@@ -397,6 +398,7 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga
     _print_configs("Default Configs")
 
     # 2. Run the Hill-climbing algorithm to find the best "image config combination"
+    # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
     sgt_hill_climbing_algorithm(filter_space, ntwk_obj.image_obj, max_iters=max_iters)
     _print_configs("Selected Configs")
 

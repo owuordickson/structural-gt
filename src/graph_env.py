@@ -169,6 +169,22 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
+    def get_initial_candidate(search_space: "FilterSearchSpace.SearchSpace"):
+        """
+        Get the initial candidate.
+
+        :param search_space: The search space.
+        """
+        idx = random.randint(0, len(search_space.candidates) - 1)
+        if search_space.best_candidate is None:
+            init_candidate = search_space.candidates[idx]
+        elif search_space.best_candidate.position in search_space.ignore_candidates:
+            init_candidate = search_space.candidates[idx]
+        else:
+            init_candidate = search_space.best_candidate
+        return init_candidate
+
+    @staticmethod
     def decode_candidate_position(encoded_pos: int, img_configs: dict) -> None|dict:
         """
         Decode the position of a candidate in the search space into a dictionary of image filter configurations.
