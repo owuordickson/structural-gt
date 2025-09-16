@@ -4,7 +4,6 @@ Function to generate graph images after applying a combination of random image f
 """
 
 import os, random, uuid
-
 import numpy as np
 import pandas as pd
 from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor, BaseImage
@@ -168,7 +167,7 @@ def auto_graph_generator(images_dir: str, out_dir: str, loops: int = 1000, num_t
     return
 
 
-def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, generations: int = 5, pop_size: int = 32, gamma: float = 1.0, mu: float = 0.1, sigma: float = 0.9):
+def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.1, sigma: float = 0.9) -> dict|None:
     """
     Executes the genetic algorithm to find the best candidate from a huge search space.
     """
@@ -186,12 +185,12 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
     def _crossover(parent_1, parent_2):
         """Cross over two parents to generate two children."""
         if isinstance(parent_1, FilterSearchSpace.Candidate):
-            alpha = np.random.uniform(0, gamma, 1)
+            alpha = random.uniform(0, gamma)
             child_1 = FilterSearchSpace.Candidate()
             child_2 = FilterSearchSpace.Candidate()
             # Apply crossover and ensure positions are within bounds
-            child_1.position = int(np.clip(parent_1.position * alpha + parent_2.position * (1 - alpha), s_space.min_pos, s_space.max_pos))
-            child_2.position = int(np.clip(parent_2.position * alpha + parent_1.position * (1 - alpha), s_space.min_pos, s_space.max_pos))
+            child_1.position = int(max(s_space.min_pos, min(parent_1.position * alpha + parent_2.position * (1 - alpha), s_space.max_pos)))
+            child_2.position = int(max(s_space.min_pos, min(parent_2.position * alpha + parent_1.position * (1 - alpha), s_space.max_pos)))
             return child_1, child_2
         else:
             return parent_1, parent_2
@@ -210,7 +209,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
 
     if s_space is None:
         print("Search space cannot be None")
-        return
+        return None
 
     idx = random.randint(0, len(s_space.candidates) - 1)
     random_sol = s_space.best_candidate if s_space.best_candidate is not None else s_space.candidates[idx]
@@ -303,7 +302,6 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
         value_space=s_space.best_candidate.value_space,
         brightness_space=s_space.best_candidate.brightness_space,
         std_cost=np.inf,
-        best_std_cost=np.inf,
         graph_accuracy=0,
         img_configs=s_space.best_candidate.img_configs,
     )
@@ -352,13 +350,14 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
     s_space.best_candidate = best_sol
 
 
-def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 10, ga_init_pop: int = 16):
+def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga_init_pop: int = 16):
     """
     A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
     image configurations for extracting accurate graphs from SEM images.
     """
 
-    def _print_configs():
+    def _print_configs(title: str = ""):
+        print(f"{title}\n")
         print(
             f"Best candidate\n"
             f"Configs: {filter_space.best_candidate.img_configs}\n"
@@ -368,23 +367,25 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 10, g
 
     # 1. Create a search space
     filter_space = FilterSearchSpace.build_search_space(ntwk_obj.image_obj, initial_pop=ga_init_pop)
-    _print_configs()
+    _print_configs("Default Configs")
 
     # 2. Run the Hill-climbing algorithm to find the best "image config combination"
     sgt_hill_climbing_algorithm(filter_space, ntwk_obj.image_obj, max_iters=max_iters)
-    _print_configs()
+    _print_configs("Selected Configs")
 
     # 3. Run the Genetic Algorithm to find the best "image filter values"
     val_search_space = filter_space.best_candidate.value_space
-    new_img_configs = sgt_genetic_algorithm(val_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
+    val_img_configs = sgt_genetic_algorithm(val_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
     filter_space.best_candidate.std_cost = val_search_space.best_candidate.std_cost
-    filter_space.img_configs = new_img_configs
-    _print_configs()
+    filter_space.img_configs = val_img_configs
+    _print_configs("Best Image Configs")
 
     # 4. Run the Genetic Algorithm to find the best "brightness/contrast values"
-    #bright_search_space = filter_space.best_candidate.brightness_space
-    #sgt_genetic_algorithm(bright_search_space, ntwk_obj.image_obj, max_iters=max_iters)
-    #_print_configs()
+    bright_search_space = filter_space.best_candidate.brightness_space
+    brt_img_configs = sgt_genetic_algorithm(bright_search_space, ntwk_obj.image_obj, generations=max_iters, pop_size=ga_init_pop)
+    filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost
+    filter_space.img_configs = brt_img_configs
+    _print_configs("Best Brightness/Contrast Configs")
 
 
 if __name__ == "__main__":
