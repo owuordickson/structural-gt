@@ -256,7 +256,7 @@ class FilterSearchSpace:
                 threshold_val = threshold_val+1 if threshold_val%2==0 else threshold_val
                 img_configs["adaptive_local_threshold_value"]["value"] = threshold_val
 
-            img_configs["apply_gamma"]["dataValue"] = round(gamma_val / 100.0, 2)
+            img_configs["apply_gamma"]["dataValue"] = round(gamma_val / 100.0, 2) if gamma_val > 0 else 0.01
             img_configs["apply_lowpass_filter"]["dataValue"] = lowpass_val
             img_configs["apply_autolevel"]["dataValue"] = blur_window_size[autolevel_val]
             img_configs["apply_gaussian_blur"]["dataValue"] = blur_window_size[gaussian_val]
@@ -396,7 +396,7 @@ class FilterSearchSpace:
             return
 
         # Copy image filter configurations to the image object
-        img_obj.configs = candidate.img_configs
+        img_obj.configs = candidate.img_configs.copy()
         # Reset image filters
         img_obj.img_mod, img_obj.img_bin = None, None
         # Apply image filters

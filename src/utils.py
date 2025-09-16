@@ -4,6 +4,8 @@ Function to generate graph images after applying a combination of random image f
 """
 
 import os, random, uuid
+
+import numpy as np
 import pandas as pd
 from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor, BaseImage
 from matplotlib import pyplot as plt
@@ -184,7 +186,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iters: int
         return
 
 
-def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, max_iters: int = 10, step_size: int = 1):
+def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, max_iters: int = 5, step_size: int = 1):
     """
     Executes the hill climbing algorithm to find the best candidate from a small search space.
     """
@@ -193,14 +195,13 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
         """Generate neighbors by slightly modifying the current candidate."""
         lst_neighbor = []
         for i in range(5):
-            center_pos = current_sol.position
+            center_pos = best_sol.position
             left_pos = max(s_space.min_pos, center_pos - step_size)
             right_pos = min(s_space.max_pos, center_pos + step_size)
-            if isinstance(current_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
-                lst_neighbor.extend([item for item in s_space.candidates if
-                                     (item.position == left_pos or
-                                      item.position == center_pos or
-                                      item.position == right_pos)])
+            if isinstance(best_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
+                for item in s_space.candidates:
+                    if (item.position in (left_pos, center_pos, right_pos)) and (item.position not in s_space.ignore_candidates):
+                        lst_neighbor.append(item)
         return lst_neighbor
 
     if s_space is None or img_obj is None:
@@ -208,7 +209,19 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
         return
 
     # 1. Run the hill climbing algorithm
-    current_sol = s_space.best_candidate.copy()
+    if isinstance(s_space.best_candidate, FilterSearchSpace.FilterCandidate):
+        best_sol = FilterSearchSpace.FilterCandidate(
+            position=s_space.best_candidate.position,
+            value_range=s_space.best_candidate.value_range,
+            value_space=s_space.best_candidate.value_space,
+            brightness_space=s_space.best_candidate.brightness_space,
+            std_cost=np.inf,
+            best_std_cost=np.inf,
+            graph_accuracy=0,
+            img_configs=s_space.best_candidate.img_configs,
+        )
+    else:
+        best_sol = FilterSearchSpace.Candidate(position=s_space.best_candidate.position, std_cost=np.inf)
     for _ in range(max_iters):
         # Get neighbors to the current best candidate
         neighbors = _generate_neighbors()
@@ -223,29 +236,37 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
 
                 if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
                     best_neighbor = neighbor
-            else:
-                print("Warning: unable to decode neighbor")
-                break
 
         # Update the current best candidate
-        if best_neighbor is not None and best_neighbor.std_cost < current_sol.std_cost:
-            current_sol = best_neighbor
+        if best_neighbor is None:
+            print("No neighbor found.")
+            break
+
+        if best_neighbor.std_cost is None:
+            print("No cost found.")
+            break
+
+        if best_neighbor is not None and best_neighbor.std_cost < best_sol.std_cost:
+            best_sol = best_neighbor
         else:
             # No improvement found, reached a local optimum
             print("Reached a local optimum.")
             break
+    s_space.best_candidate = best_sol
 
 
-def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 1000):
+def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 10):
     """
     A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
     image configurations for extracting accurate graphs from SEM images.
     """
     # 1. Create a search space
     filter_space = FilterSearchSpace.build_search_space(ntwk_obj.image_obj, total_pop=256)
-    print(f"Best candidate\nConfigs: {filter_space.best_candidate.img_configs}\nCost: {filter_space.best_candidate.std_cost}\nGraph Accuracy: {filter_space.best_candidate.graph_accuracy}")
+    print(f"Best candidate\nConfigs: {filter_space.best_candidate.img_configs}\nCost: {filter_space.best_candidate.std_cost}\nGraph Accuracy: {filter_space.best_candidate.graph_accuracy}\n")
 
     # 2. Run the Hill-climbing algorithm to find the best "image config combination"
+    sgt_hill_climbing_algorithm(filter_space, ntwk_obj.image_obj, max_iters=max_iters)
+    print(f"Best candidate\nConfigs: {filter_space.best_candidate.img_configs}\nCost: {filter_space.best_candidate.std_cost}\nGraph Accuracy: {filter_space.best_candidate.graph_accuracy}\n")
 
 
 if __name__ == "__main__":
@@ -254,7 +275,7 @@ if __name__ == "__main__":
     # auto_graph_generator(images_dir="../images", out_dir="../train_data/auto/auto_images", loops=10000)
 
     # 2. Run metaheuristic algorithms
-    img_path = "../images/4_002.tif"
+    image_path = "../images/4_002.tif"
     res_dir = "../train_data/sgt_files"
-    ntwk_obj, _ = ImageProcessor.from_image_file(img_path, out_folder=res_dir)
-    metaheuristic_image_configs(ntwk_obj)
+    ntwk_p, _ = ImageProcessor.from_image_file(image_path, out_folder=res_dir)
+    metaheuristic_image_configs(ntwk_p)
