@@ -270,6 +270,8 @@ def load_model_configs(cfg_path: str = ""):
         "find_filter_selections": {"id": "find_filter_selections", "type": "model-settings", "text": "Find Best Image Filter Combination", "value": 0},
         "find_filter_values": {"id": "find_filter_values", "type": "model-settings", "text": "Estimate Image Filter Values", "value": 0},
         "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "model-settings", "text": "Estimate Brightness and Contrast Values", "value": 0},
+        "max_iterations": {"id": "max_iterations", "type": "model-settings", "text": "Max. Algorithm Iterations", "value": 16},
+        "genetic_alg_initial_pop": {"id": "genetic_alg_initial_pop", "type": "model-settings", "text": "Initial (Genetic Algorithm) Population Size", "value": 8},
     }
 
     config = read_config_file(cfg_path)
@@ -280,6 +282,8 @@ def load_model_configs(cfg_path: str = ""):
         options_model["find_filter_selections"]["value"] = int(config.get('sgt-model', 'find_filter_selections'))
         options_model["find_filter_values"]["value"] = int(config.get('sgt-model', 'find_filter_values'))
         options_model["find_brightness_contrast"]["value"] = int(config.get('sgt-model', 'find_brightness_contrast'))
+        options_model["max_iterations"]["value"] = int(config.get('sgt-model', 'max_iterations'))
+        options_model["genetic_alg_initial_pop"]["value"] = int(config.get('sgt-model', 'genetic_alg_initial_pop'))
 
         return options_model
     except configparser.NoSectionError:
