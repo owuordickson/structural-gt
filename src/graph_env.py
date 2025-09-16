@@ -182,6 +182,7 @@ class FilterSearchSpace:
             init_candidate = search_space.candidates[idx]
         else:
             init_candidate = search_space.best_candidate
+        init_candidate.std_cost = np.inf
         return init_candidate
 
     @staticmethod

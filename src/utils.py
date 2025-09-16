@@ -235,7 +235,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
                 else:
                     new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=individual)
                 individual.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj)
-                if best_individual is None or individual.std_cost < best_individual.std_cost:
+                if best_individual is None or best_individual.std_cost is None or individual.std_cost < best_individual.std_cost:
                     best_individual = individual
                     temp_configs = new_configs.copy()
 
@@ -369,15 +369,12 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
 
 
 
-def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga_init_pop: int = 8) -> dict|None:
+def metaheuristic_image_configs(ntwk_obj: ImageProcessor) -> dict|None:
     """
     A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
     image configurations for extracting accurate graphs from SEM images.
 
     :param ntwk_obj: ImageProcessor object.
-    :param max_iters: Maximum number of iterations to run the Genetic Algorithm and Hill-climbing Algorithm for.
-    :param ga_init_pop: Initial size of the population for the Genetic Algorithm.
-
     :return: A dictionary containing the best candidate's image configuration settings.
     """
 
@@ -397,10 +394,16 @@ def metaheuristic_image_configs(ntwk_obj: ImageProcessor, max_iters: int = 4, ga
         "find_filter_selections": {"id": "find_filter_selections", "type": "model-settings",
                                    "text": "Find Best Image Filter Combination", "value": 1},
         "find_filter_values": {"id": "find_filter_values", "type": "model-settings",
-                               "text": "Estimate Image Filter Values", "value": 1},
+                               "text": "Estimate Image Filter Values", "value": 0},
         "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "model-settings",
                                      "text": "Estimate Brightness and Contrast Values", "value": 1},
+        "max_iterations": {"id": "max_iterations", "type": "model-settings", "text": "Max. Algorithm Iterations",
+                           "value": 4},
+        "genetic_alg_initial_pop": {"id": "genetic_alg_initial_pop", "type": "model-settings",
+                                    "text": "Initial (Genetic Algorithm) Population Size", "value": 8},
     }
+    max_iters = options_model["max_iterations"]["value"]
+    ga_init_pop = options_model["genetic_alg_initial_pop"]["value"]
 
     # 1. Create a search space
     filter_space = FilterSearchSpace.build_search_space(ntwk_obj.image_obj, initial_pop=ga_init_pop)
