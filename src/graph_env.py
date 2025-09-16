@@ -69,7 +69,7 @@ class FilterSearchSpace:
         evaluating the binary image and finding the number of white pixels in the image. Retrieve the corresponding pixel
         values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
         the combination of image filter configurations."""
-        apply_position: int | None = None               # 11 bits long (approx. 2k candidates)
+        position: int | None = None               # 11 bits long (approx. 2k candidates)
         value_range: tuple[int, int] | None = None                  # [min, max] values -- 0bits-20bits
         # value_candidate: "FilterSearchSpace.Candidate" = None
         # brightness_candidate: "FilterSearchSpace.Candidate" = None
@@ -361,7 +361,7 @@ class FilterSearchSpace:
                 b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(256)]
 
                 filter_candidate = FilterSearchSpace.FilterCandidate(
-                    apply_position=pos,
+                    position=pos,
                     value_range=(0, total_pop),
                     value_space=FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=[], min_pos=val_range[0], max_pos=val_range[1]),
                     brightness_space=FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=[], min_pos=bri_range[0], max_pos=bri_range[0]),

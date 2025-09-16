@@ -5,7 +5,7 @@ Function to generate graph images after applying a combination of random image f
 
 import os, random, uuid
 import pandas as pd
-from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor
+from sgtlib.modules import ALLOWED_IMG_EXTENSIONS, ImageProcessor, BaseImage
 from matplotlib import pyplot as plt
 from graph_env import FilterSearchSpace
 
@@ -184,7 +184,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iters: int
         return
 
 
-def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iters: int = 10, step_size: int = 1):
+def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, max_iters: int = 10, step_size: int = 1):
     """
     Executes the hill climbing algorithm to find the best candidate from a small search space.
     """
@@ -196,14 +196,15 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iter
             center_pos = current_sol.position
             left_pos = max(s_space.min_pos, center_pos - step_size)
             right_pos = min(s_space.max_pos, center_pos + step_size)
-            if type(current_sol) is FilterSearchSpace.Candidate:
-                lst_neighbor.extend([item for item in s_space.candidates if (item.position == left_pos or item.position == center_pos or item.position == right_pos)])
-            elif type(current_sol) is FilterSearchSpace.FilterCandidate:
-                lst_neighbor.extend([item for item in s_space.candidates if (item.position == left_pos or item.position == center_pos or item.position == right_pos)])
+            if isinstance(current_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
+                lst_neighbor.extend([item for item in s_space.candidates if
+                                     (item.position == left_pos or
+                                      item.position == center_pos or
+                                      item.position == right_pos)])
         return lst_neighbor
 
-    if s_space is None:
-        print("Search space cannot be None")
+    if s_space is None or img_obj is None:
+        print("Search space or ImageObject cannot be None")
         return
 
     # 1. Run the hill climbing algorithm
@@ -215,8 +216,16 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, max_iter
 
         # Find the best neighbor among the neighbors
         for neighbor in neighbors:
-            if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
-                best_neighbor = neighbor
+            if isinstance(neighbor, FilterSearchSpace.FilterCandidate):
+                FilterSearchSpace.decode_candidate_position(neighbor.position, neighbor.img_configs)
+                FilterSearchSpace.decode_filter_values(neighbor, neighbor.img_configs)
+                FilterSearchSpace.cost_function(neighbor, img_obj)
+
+                if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
+                    best_neighbor = neighbor
+            else:
+                print("Warning: unable to decode neighbor")
+                break
 
         # Update the current best candidate
         if best_neighbor is not None and best_neighbor.std_cost < current_sol.std_cost:
