@@ -3,7 +3,6 @@
 A class for building an MDP environment of image filters for graph generation.
 """
 
-import math
 import random
 import numpy as np
 from dataclasses import dataclass
@@ -223,20 +222,20 @@ class FilterSearchSpace:
         return img_configs
 
     @staticmethod
-    def decode_filter_values(candidate: "FilterSearchSpace.FilterCandidate", img_configs: dict, include_brightness: bool=False) -> dict|None:
+    def decode_filter_values(img_configs: dict, value_candidate: "FilterSearchSpace.Candidate"=None, bright_candidate: "FilterSearchSpace.Candidate"=None) -> dict|None:
         """
         Decode the image filter configurations of a candidate into a dictionary.
 
-        :param candidate: The image filter candidate.
         :param img_configs: The dictionary of image filter configurations.
-        :param include_brightness: Include brightness image filter configurations?
+        :param value_candidate: The filter-value candidate for updating image filter value configurations.
+        :param bright_candidate: The brightness-value candidate for updating image brightness/contrast configurations.
         :return: The dictionary of image filter configurations.
         """
-        if candidate is None or img_configs is None:
+        if img_configs is None:
             return None
 
-        if candidate.value_space.best_candidate is not None:
-            encoded_val_pos = candidate.value_space.best_candidate.position
+        if value_candidate is not None:
+            encoded_val_pos = value_candidate.position
             if encoded_val_pos is None:
                 return None
             bit_str = format(encoded_val_pos, "030b")
@@ -264,24 +263,23 @@ class FilterSearchSpace:
             # To Be Updated (we need to keep bit_str less than 30 bits)
             img_configs["apply_sobel_gradient"]["dataValue"] = blur_window_size[laplacian_val] # re-use laplacian gradient
 
-        if include_brightness:
-            if candidate.brightness_space.best_candidate is not None:
-                encoded_brightness_pos = candidate.brightness_space.best_candidate.position
-                if encoded_brightness_pos is None:
-                    return None
-                bit_str = format(encoded_brightness_pos, "016b")
-                is_brightness_neg = bit_str[0]
-                brightness_val = int(bit_str[1:8], 2)
-                if is_brightness_neg == "1":
-                    brightness_val = -brightness_val
+        if bright_candidate is not None:
+            encoded_brightness_pos = bright_candidate.position
+            if encoded_brightness_pos is None:
+                return None
+            bit_str = format(encoded_brightness_pos, "016b")
+            is_brightness_neg = bit_str[0]
+            brightness_val = int(bit_str[1:8], 2)
+            if is_brightness_neg == "1":
+                brightness_val = -brightness_val
 
-                is_contrast_neg = bit_str[8]
-                contrast_val = int(bit_str[9:16], 2)
-                if is_contrast_neg == "1":
-                    contrast_val = -contrast_val
+            is_contrast_neg = bit_str[8]
+            contrast_val = int(bit_str[9:16], 2)
+            if is_contrast_neg == "1":
+                contrast_val = -contrast_val
 
-                img_configs["contrast_level"]["value"] = contrast_val
-                img_configs["brightness_level"]["value"] = brightness_val
+            img_configs["contrast_level"]["value"] = contrast_val
+            img_configs["brightness_level"]["value"] = brightness_val
         return img_configs
 
     @staticmethod
@@ -379,24 +377,23 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def cost_function(candidate: "FilterSearchSpace.FilterCandidate", img_obj: BaseImage) -> None:
+    def cost_function(new_img_configs: dict, img_obj: BaseImage) -> float:
         """Calculate and apply the cost of a candidate. Given the image filter configurations, apply them to get a
         binary image and find the number of white pixels in the image. Retrieve the corresponding pixel values from the
         original image and calculate the Standard Deviation (SD) of the pixel values.
 
-        :param candidate: A candidate in the search space.
+        :param new_img_configs: The dictionary of image filter configurations.
         :param img_obj: The image object.
         """
 
         if img_obj is None:
-            return
+            return np.inf
 
-        if candidate.img_configs is None:
-            candidate.std_cost = math.inf
-            return
+        if new_img_configs is None:
+            return np.inf
 
         # Copy image filter configurations to the image object
-        img_obj.configs = candidate.img_configs.copy()
+        img_obj.configs = new_img_configs.copy()
         # Reset image filters
         img_obj.img_mod, img_obj.img_bin = None, None
         # Apply image filters
@@ -407,7 +404,7 @@ class FilterSearchSpace:
         img_obj.img_mod = img_mod
         # Compute SD as cost
         eval_std, eval_hist = img_obj.evaluate_img_binary()
-        candidate.std_cost = eval_std
+        return eval_std
 
     @staticmethod
     def evaluate_candidate(search_space: "FilterSearchSpace.SearchSpace",
