@@ -83,6 +83,7 @@ class ImageProcessor(ProgressUpdate):
         self._auto_scale: bool = auto_scale
         self._image_batches: list[ImageProcessor.ImageBatch] = []
         self._selected_batch_index: int = 0
+        self._filter_space: FilterSearchSpace.SearchSpace|None = None
         # self._initialize_image_batches(self._load_img_from_file(img_path))
 
     @property
@@ -527,10 +528,8 @@ class ImageProcessor(ProgressUpdate):
                 f"")
 
         self.update_status([0, "Starting image-filter search..."])
+        filter_space = self._filter_space
         opt_model = self._configs
-        opt_model["find_filter_selections"]["value"] = 1    # TO BE DELETED
-        opt_model["find_filter_values"]["value"] = 1        # TO BE DELETED
-        opt_model["find_brightness_contrast"]["value"] = 1  # TO BE DELETED
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
@@ -539,8 +538,9 @@ class ImageProcessor(ProgressUpdate):
             return None
 
         # 1. Create a search space
-        self.update_status([20, "Creating search space..."])
-        filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
+        if filter_space is None:
+            self.update_status([20, "Creating search space..."])
+            filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
         _print_configs("Default Configs")
 
         if opt_model["find_filter_selections"]["value"] == 1:
