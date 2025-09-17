@@ -6,18 +6,18 @@ Pyside6 implementation of StructuralGT user interface.
 
 import os
 import sys
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from .gui_mcw.controller import MainController
 from .gui_mcw.image_provider import ImageProvider
 
-
 class PySideApp(QObject):
 
     def __init__(self):
         super().__init__()
+        # force_backend()
         self.app = QApplication(sys.argv)
         self._ui_engine = QQmlApplicationEngine()
         # Register Controller for Dynamic Updates
@@ -64,3 +64,19 @@ class PySideApp(QObject):
         """
         gui_app = cls()
         sys.exit(gui_app.app.exec())
+
+
+
+def force_backend():
+    # High DPI fixes
+    # QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+    # QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+
+    # Force OpenGL backend for QML rendering (instead of D3D11)
+    os.environ["QSG_RHI_BACKEND"] = "opengl"
+
+    # Ensure Qt finds the right plugins (like when bundled)
+    # Adjust the path if PySide6 is installed elsewhere
+    import PySide6
+    qt_plugins = os.path.join(os.path.dirname(PySide6.__file__), "plugins")
+    os.environ["QT_PLUGIN_PATH"] = qt_plugins

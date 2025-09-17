@@ -41,8 +41,9 @@ ColumnLayout {
         BusyIndicator {
             id: progressAIMode
             running: toggleAIMode.checked
-            width: 21
-            height: 21
+            width: 32
+            height: 32
+            //antialiasing: true
         }
     }
 
