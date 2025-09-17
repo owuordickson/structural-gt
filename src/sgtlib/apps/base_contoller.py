@@ -6,7 +6,7 @@ Base controller class for StructuralGT.
 
 import os
 import logging
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import Property, Signal, Slot, QObject
 
 from ..utils.sgt_utils import verify_path
 from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
@@ -14,19 +14,63 @@ from ..compute.graph_analyzer import GraphAnalyzer
 
 class BaseController(QObject):
 
+    _waitChanged = Signal()
+    _waitTextChanged = Signal()
+    _aiModeChanged = Signal()
     showAlertSignal = Signal(str, str)
 
     def __init__(self, config_file: str = ""):
-        super().__init__()
+        QObject.__init__(self)
+        # Initialize flags
+        self._ai_mode_active = False
+        self._wait_flag = False
+        self._wait_flag_hist = False
+        self._wait_msg = ""
+
         # Create graph objects
         self._config_file = config_file
         self._sgt_objs = {}
         self._selected_sgt_obj_index = 0
         self._allow_auto_scale = True
 
+    # --- Properties ---
     @property
     def sgt_objs(self):
         return self._sgt_objs
+
+    # --- Properties exposed to QML because of "notify" ---
+    @Property(bool, notify=_waitChanged)
+    def wait(self):
+        return self._wait_flag
+
+    @Property(str, notify=_waitTextChanged)
+    def wait_text(self):
+        return self._wait_msg
+
+    @Property(bool, notify=_aiModeChanged)
+    def ai_mode_active(self):
+        return self._ai_mode_active
+
+    @Slot(bool)
+    def toggle_ai_mode(self, activate):
+        """Toggle AI mode."""
+        self._ai_mode_active = activate
+        self._aiModeChanged.emit()
+        print(f"AI Mode Active: {self._ai_mode_active}")
+
+    def _start_wait(self, msg: str = "please wait..."):
+        """Activate the wait flag and send a wait signal."""
+        self._wait_flag = True
+        self._wait_msg = msg
+        self._waitChanged.emit()
+        self._waitTextChanged.emit()
+
+    def _stop_wait(self):
+        """Deactivate the wait flag and send a wait signal."""
+        self._wait_flag = False
+        self._wait_msg = ""
+        self._waitChanged.emit()
+        self._waitTextChanged.emit()
 
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""

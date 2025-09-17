@@ -1,6 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls
+//import QtQuick.Controls.Basic as Basic
 
 ColumnLayout {
     id: aiModeControls
@@ -24,16 +25,16 @@ ColumnLayout {
 
         Switch {
             id: toggleAIMode
-            checked: false
+            checked: mainController.ai_mode_active
             onCheckedChanged: {
                 if (checked) {
                     // Actions when switched on
                     lblAIMode.color = "#2266ff";
-                    console.log("AI filter agent activated!");
+                    mainController.toggle_ai_mode(true);
                 } else {
                     // Actions when switched off
                     lblAIMode.color = "#d0d0d0";
-                    console.log("AI filter agent deactivated!");
+                    mainController.toggle_ai_mode(false);
                 }
             }
         }

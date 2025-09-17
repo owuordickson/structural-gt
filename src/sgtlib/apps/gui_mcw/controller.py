@@ -7,7 +7,7 @@ import numpy as np
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Property, Signal, Slot
+from PySide6.QtCore import Signal, Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -30,9 +30,8 @@ from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
-    _waitFlagChanged = Signal()
     errorSignal = Signal(str)
-    showAlertSignal = Signal(str, str)
+    # showAlertSignal = Signal(str, str)
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
@@ -54,10 +53,6 @@ class MainController(BaseController):
         # Project data
         self._project_data = {"name": "", "file_path": ""}
         self._software_update = "No updates available!"
-
-        # Initialize flags
-        self._wait_flag, self._wait_flag_hist = False, False
-        self._wait_msg = ""
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
@@ -300,27 +295,6 @@ class MainController(BaseController):
             # Auto-save changes to the project data file
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
-
-    def _start_wait(self, msg: str = "please wait..."):
-        """Activate the wait flag and send a wait signal."""
-        self._wait_flag = True
-        self._wait_msg = msg
-        self._waitFlagChanged.emit()
-
-    def _stop_wait(self):
-        """Deactivate the wait flag and send a wait signal."""
-        self._wait_flag = False
-        self._wait_msg = ""
-        self._waitFlagChanged.emit()
-
-    # --- Properties exposed to QML because of "notify" ---
-    @Property(bool, notify=_waitFlagChanged)
-    def wait(self):
-        return self._wait_flag
-
-    @Property(str, notify=_waitFlagChanged)
-    def wait_text(self):
-        return self._wait_msg
 
     @Slot(result=str)
     def get_sgt_title(self):
@@ -939,6 +913,7 @@ class MainController(BaseController):
             logging.info(f"File '{proj_name}' created successfully in '{dir_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
+            # self._project_open = False
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
             return False

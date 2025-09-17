@@ -1,7 +1,7 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
-import QtQuick.Layouts
 
 Item {
     id: waitOverlay
