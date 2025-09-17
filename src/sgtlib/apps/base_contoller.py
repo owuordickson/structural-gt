@@ -16,22 +16,24 @@ class BaseController(QObject):
 
     _waitChanged = Signal()
     _waitTextChanged = Signal()
+    _aiBusyChanged = Signal()
     _aiModeChanged = Signal()
     showAlertSignal = Signal(str, str)
 
     def __init__(self, config_file: str = ""):
         QObject.__init__(self)
         # Initialize flags
-        self._ai_mode_active = False
         self._wait_flag = False
-        self._wait_flag_hist = False
         self._wait_msg = ""
+        self._wait_flag_ai = False
+        self._wait_flag_hist = False
 
         # Create graph objects
         self._config_file = config_file
         self._sgt_objs = {}
         self._selected_sgt_obj_index = 0
         self._allow_auto_scale = True
+        self._ai_mode_active = False
 
     # --- Properties ---
     @property
@@ -47,6 +49,10 @@ class BaseController(QObject):
     def wait_text(self):
         return self._wait_msg
 
+    @Property(bool, notify=_aiBusyChanged)
+    def ai_busy(self):
+        return self._wait_flag_ai
+
     @Property(bool, notify=_aiModeChanged)
     def ai_mode_active(self):
         return self._ai_mode_active
@@ -56,7 +62,6 @@ class BaseController(QObject):
         """Toggle AI mode."""
         self._ai_mode_active = activate
         self._aiModeChanged.emit()
-        print(f"AI Mode Active: {self._ai_mode_active}")
 
     def _start_wait(self, msg: str = "please wait..."):
         """Activate the wait flag and send a wait signal."""

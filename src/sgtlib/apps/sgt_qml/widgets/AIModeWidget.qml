@@ -41,7 +41,7 @@ ColumnLayout {
 
         BusyIndicator {
             id: progressAIMode
-            running: toggleAIMode.checked
+            running: mainController.ai_busy
             width: 32
             height: 32
             //antialiasing: true
