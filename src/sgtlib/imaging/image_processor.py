@@ -21,7 +21,8 @@ from ..models.filter_env import FilterSearchSpace
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.progress_update import ProgressUpdate
 from ..utils.config_loader import load_model_configs
-from ..utils.sgt_utils import plot_to_opencv, sgt_genetic_algorithm, sgt_hill_climbing_algorithm, AbortException
+from ..utils.sgt_utils import plot_to_opencv, AbortException
+from ..models.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
 
 logger = logging.getLogger("SGT App")
 
