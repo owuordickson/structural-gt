@@ -15,14 +15,16 @@ from .imaging.image_processor import (
 )
 from .models.filter_env import FilterSearchSpace
 from .models.mdp_env import SGTGraphEnv
+from .models.filter_env import (
+    sgt_genetic_algorithm,
+    sgt_hill_climbing_algorithm
+)
 from .networks.fiber_network import FiberNetworkBuilder
 from .networks.graph_skeleton import GraphSkeleton
 from .utils.sgt_utils import (
     gsd_to_skeleton,
     csv_to_graph,
-    write_gsd_file,
-    sgt_genetic_algorithm,
-    sgt_hill_climbing_algorithm
+    write_gsd_file
 )
 from .utils.config_loader import (
     load_gtc_configs,
