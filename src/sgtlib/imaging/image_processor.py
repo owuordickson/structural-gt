@@ -528,7 +528,6 @@ class ImageProcessor(ProgressUpdate):
                 f"")
 
         self.update_status([0, "Starting image-filter search..."])
-        filter_space = self._filter_space
         opt_model = self._configs
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
@@ -538,9 +537,10 @@ class ImageProcessor(ProgressUpdate):
             return None
 
         # 1. Create a search space
-        if filter_space is None:
+        if self._filter_space is None:
             self.update_status([20, "Creating search space..."])
-            filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
+            self._filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
+        filter_space = self._filter_space
         _print_configs("Default Configs")
 
         if opt_model["find_filter_selections"]["value"] == 1:
