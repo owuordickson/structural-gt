@@ -95,7 +95,7 @@ Rectangle {
                 Layout.rightMargin: 20
             }
             Text {
-                text: "Image List"
+                text: "Loaded Images"
                 font.pixelSize: 12
                 font.bold: true
                 Layout.topMargin: 5

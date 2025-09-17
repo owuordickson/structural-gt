@@ -32,7 +32,7 @@ Rectangle {
                 text: "Binary Filters"
                 font.pixelSize: 12
                 font.bold: true
-                Layout.topMargin: 5
+                Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
             }

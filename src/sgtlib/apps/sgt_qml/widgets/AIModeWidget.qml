@@ -13,8 +13,8 @@ ColumnLayout {
     RowLayout {
         id: aiModeContainer
         spacing: 2
-        Layout.topMargin: 10
-        Layout.bottomMargin: 5
+        //Layout.topMargin: 5
+        //Layout.bottomMargin: 10
 
         Label {
             id: lblAIMode
@@ -41,8 +41,8 @@ ColumnLayout {
         BusyIndicator {
             id: progressAIMode
             running: toggleAIMode.checked
-            width: 36
-            height: 36
+            width: 21
+            height: 21
         }
     }
 
@@ -51,7 +51,7 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            aiModeControls.visible = false; //mainController.display_image();
+            aiModeControls.visible = mainController.display_image();
             aiModeControls.enabled = mainController.enable_img_controls();
         }
     }

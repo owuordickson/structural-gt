@@ -1017,7 +1017,6 @@ class GraphAnalyzer(ProgressUpdate):
 
         def plot_scaling_behavior():
             """"""
-            self.update_status([91, "Plotting scaling behavior..."])
 
             # Define our 'best-fit' model
             def power_law_model(x, a, k):
@@ -1118,6 +1117,7 @@ class GraphAnalyzer(ProgressUpdate):
                 return plt_figs
 
             # Plot scaling behavior
+            self.update_status([91, "Plotting scaling behavior..."])
             i = 0
             x_label, best_scale = None, None
             y_title = ""
