@@ -53,7 +53,9 @@ class BaseWorker(QObject):
             self.update_progress(30, "Exporting Graph...")
             ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
             self.update_progress(95, "Exporting Graph...")
-            self.taskFinishedSignal.emit(True, "Graph successfully exported to file and saved in 'Output Dir'")
+            task_data = TaskResult(task_id="Export Graph", status="Finished",
+                                   message="Graph successfully exported to file and saved in 'Output Dir'")
+            self.taskFinishedSignal.emit(True, task_data)
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self.taskFinishedSignal.emit(False, ["Export Graph Failed", "Error while exporting graph!"])
@@ -64,7 +66,8 @@ class BaseWorker(QObject):
             ntwk_p.add_listener(self.update_progress)
             ntwk_p.apply_img_filters()
             ntwk_p.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, ntwk_p)
+            task_data = TaskResult(task_id="Apply Filters", status="Finished")
+            self.taskFinishedSignal.emit(True, task_data)
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             # self.abort = True
@@ -139,7 +142,9 @@ class BaseWorker(QObject):
         try:
             if ntwk_p.filter_space is not None:
                 if ntwk_p.filter_space.best_candidate is not None:
-                    self.taskFinishedSignal.emit(False, ["Metaheuristic Search", "Filters already found."])
+                    # Filters already selected and values estimated
+                    task_data = TaskResult(task_id="Metaheuristic Search", status="Stopped")
+                    self.taskFinishedSignal.emit(True, task_data)
                     return
 
             ntwk_p.abort = False
@@ -149,7 +154,8 @@ class BaseWorker(QObject):
                 raise AbortException("Task stopped")
             ntwk_p.image_obj.configs = img_configs.copy()
             ntwk_p.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, img_configs)
+            task_data = TaskResult(task_id="Metaheuristic Search", status="Finished")
+            self.taskFinishedSignal.emit(True, task_data)
         except AbortException as err:
             logging.exception("Task Stopped: %s", err, extra={'user': 'SGT Logs'})
             ntwk_p.remove_listener(self.update_progress)

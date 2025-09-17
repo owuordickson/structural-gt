@@ -31,7 +31,9 @@ from dataclasses import dataclass
 class TaskResult:
     task_id: str = ""
     status: str = ""
+    message: str = ""
     data = None
+
 
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""

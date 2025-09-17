@@ -254,41 +254,47 @@ class MainController(BaseController):
             #    if pdf_saved:
             #        self._handle_finished(True, result)
         else:
-            if type(result) is str:
-                # Saving files to Output Folder
-                self._handle_progress_update(100, "Files Saved!")
-                self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
-            elif isinstance(result, TaskResult):
+            if isinstance(result, TaskResult):
+                if result.task_id == "Extract Graph":
+                    # Saving files to Output Folder
+                    self._handle_progress_update(100, "Files Saved!")
+                    self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
                 if result.task_id == "Extract Graph":
                     self._handle_progress_update(100, "Graph extracted successfully!")
                     # Update QML to visualize graph
                     self.changeImageSignal.emit()
+                    # Update Compute properties
+                    self.synchronize_graph_models(self.get_selected_sgt_obj())
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
-                elif result.task_id == "Compute GT":
+                if result.task_id == "Compute GT":
                     self._handle_progress_update(100, "GT PDF successfully generated!")
+                    # Update Compute properties
+                    self.synchronize_graph_models(self.get_selected_sgt_obj())
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True,
                                                    ["GT calculations completed", "The image's GT parameters have been "
                                                                                  "calculated. Check out generated PDF in "
                                                                                  "'Output Dir'."])
-                elif result.task_id == "Compute Multi GT":
+                if result.task_id == "Compute Multi GT":
                     self._handle_progress_update(100, "All GT PDF successfully generated!")
+                    # Update Compute properties
+                    self.synchronize_graph_models(self.get_selected_sgt_obj())
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                            "images have been calculated. Check "
                                                                                            "out all the generated PDFs in "
                                                                                            "'Output Dir'."])
-                # Update Compute properties
-                self.synchronize_graph_models(self.get_selected_sgt_obj())
-            elif type(result) is dict:
-                # AI Mode search results (image configs)
-                self._stop_ai_search()
-                # Update image configs and load Binary Image
-                self.synchronize_img_models(self.get_selected_sgt_obj())
-                self.changeImageSignal.emit()
-                # Send task termination signal to QML
-                self.taskTerminatedSignal.emit(success_val, [])
+                if result.task_id == "Metaheuristic Search":
+                    # AI Mode search results (image configs)
+                    self._stop_ai_search()
+                    if result.status == "Finished":
+                        self._handle_progress_update(100, "AI Mode search completed!")
+                        # Update image configs and load Binary Image
+                        self.synchronize_img_models(self.get_selected_sgt_obj())
+                        self.changeImageSignal.emit()
+                    # Send task termination signal to QML
+                    self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is list:
                 # Image histogram calculated
                 self._wait_flag_hist = False

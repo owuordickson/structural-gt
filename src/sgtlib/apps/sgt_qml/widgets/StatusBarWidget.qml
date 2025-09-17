@@ -65,9 +65,19 @@ Rectangle {
             spacing: 5
 
             Label {
-                id: lblStatusMsg
+                id: lblVersion
                 Layout.alignment: Qt.AlignLeft
                 text: mainController.get_sgt_version()
+                visible: !mainController.is_task_running()
+                Layout.fillWidth: true
+                color: "#2222bc"
+            }
+
+            Label {
+                id: lblStatusMsg
+                Layout.alignment: Qt.AlignLeft
+                text: "Please wait..."
+                visible: mainController.is_task_running()
                 Layout.fillWidth: true
                 color: "#2222bc"
             }
@@ -132,6 +142,9 @@ Rectangle {
             }
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#008b00";
+
+            lblVersion.visible = !mainController.is_task_running();
+            lblStatusMsg.visible = mainController.is_task_running();
             progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running();
             btnNotify.visible = !mainController.is_task_running();
@@ -142,6 +155,9 @@ Rectangle {
             progressBar.value = 0;
             lblStatusMsg.text = msg;
             lblStatusMsg.color = "#bc2222";
+
+            lblVersion.visible = !mainController.is_task_running();
+            lblStatusMsg.visible = mainController.is_task_running();
             progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running();
             btnNotify.visible = !mainController.is_task_running();
@@ -152,7 +168,7 @@ Rectangle {
             //console.log(success_val);
             if (success_val) {
                 lblStatusMsg.color = "#2222bc";
-                lblStatusMsg.text = mainController.get_sgt_version();
+                lblStatusMsg.text = "Please wait...";
             } else {
                 lblStatusMsg.color = "#bc2222";
                 lblStatusMsg.text = "Task terminated due to an error. Try again.";
@@ -176,6 +192,9 @@ Rectangle {
                 btnNotify.icon.width = 21;
                 btnNotify.icon.height = 21;
             }
+
+            lblVersion.visible = !mainController.is_task_running();
+            lblStatusMsg.visible = mainController.is_task_running();
             progressBar.visible = mainController.is_task_running();
             btnCancel.visible = mainController.is_task_running();
             btnNotify.visible = !mainController.is_task_running();

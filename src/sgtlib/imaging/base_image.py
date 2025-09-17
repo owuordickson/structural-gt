@@ -437,7 +437,7 @@ class BaseImage:
             # Evaluate the binary image
             eval_std, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
-                print(f"Evaluating Binary Image (Std. Dev.): {eval_std}")
+                print(f"Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}")
                 ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
                 ax.legend(loc='upper right')
         elif curr_view == "binary":
