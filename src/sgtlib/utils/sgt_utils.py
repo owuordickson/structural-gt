@@ -9,6 +9,7 @@ import io
 import sys
 import cv2
 import base64
+import random
 # import socket
 import logging
 # import platform
@@ -22,6 +23,9 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from typing import LiteralString
 from cv2.typing import MatLike
+
+from ..imaging.base_image import BaseImage
+from ..models.filter_env import FilterSearchSpace
 
 
 class AbortException(Exception):
@@ -567,3 +571,198 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
     return fig
+
+
+
+def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.9, sigma: float = 0.9) -> dict|None:
+    """
+    Executes the genetic algorithm to find the best candidate from a huge search space.
+
+    :param s_space: Search space object.
+    :param img_obj: BaseImage object which contains the image itself and the image configurations.
+    :param generations: Number of family generations to run the algorithm for.
+    :param pop_size: Initial size of the population.
+    :param gamma: Crossover probability.
+    :param mu: Mutation probability.
+    :param sigma: Standard deviation of the Gaussian mutation.
+
+    :return: A dictionary containing the best candidate's image configuration settings.
+    """
+
+    def _select_parents():
+        """Select parents for crossover."""
+
+        # Select a random parent population (1/3 of the population)
+        q = np.random.permutation(pop_size)
+        parent_pop = []
+        for i in range(pop_size//3):
+            parent_pop.append(s_space.candidates[q[i]])
+        return parent_pop
+
+    def _crossover(parent_1, parent_2):
+        """Cross over two parents to generate two children."""
+        if isinstance(parent_1, FilterSearchSpace.Candidate):
+            alpha = random.uniform(0, gamma)
+            child_1 = FilterSearchSpace.Candidate()
+            child_2 = FilterSearchSpace.Candidate()
+            # Apply crossover and ensure positions are within bounds
+            child_1.position = int(max(s_space.min_pos, min(parent_1.position * alpha + parent_2.position * (1 - alpha), s_space.max_pos)))
+            child_2.position = int(max(s_space.min_pos, min(parent_2.position * alpha + parent_1.position * (1 - alpha), s_space.max_pos)))
+            return child_1, child_2
+        else:
+            return parent_1, parent_2
+
+    def _mutate(x):
+        """Mutate an individual x to generate a new individual y."""
+        if isinstance(x, FilterSearchSpace.Candidate):
+            y = FilterSearchSpace.Candidate()
+            # Apply Gaussian mutation with mean mu and standard deviation sigma
+            mutation_value = np.random.normal(mu, sigma)
+            # Mutate the position and ensure it stays within bounds
+            y.position = int(np.clip(x.position + mutation_value, s_space.min_pos, s_space.max_pos))
+            return y
+        else:
+            return x
+
+    if s_space is None:
+        raise AbortException("Search space cannot be None")
+
+    best_sol = FilterSearchSpace.get_initial_candidate(s_space)
+    best_configs = img_obj.configs.copy()
+    for _ in range(generations):
+        best_individual = None
+        temp_configs = None
+
+        # 1. Compute fitness for each individual in the population/search space
+        for individual in s_space.candidates:
+            if isinstance(individual, FilterSearchSpace.Candidate):
+                if s_space.max_pos >= 2**30:
+                    new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), value_candidate=individual)
+                else:
+                    new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=individual)
+                individual.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj)
+                if best_individual is None or best_individual.std_cost is None or individual.std_cost < best_individual.std_cost:
+                    best_individual = individual
+                    temp_configs = new_configs.copy()
+
+        # 1.1. Update the current best candidate
+        if best_individual is None:
+            break
+
+        # 1.2. Check if fitness is valid
+        if best_individual.std_cost is None:
+            break
+
+        # 1.3. Update the current best candidate
+        if best_individual is not None and best_individual.std_cost < best_sol.std_cost:
+            best_sol = best_individual
+            best_configs = temp_configs.copy()
+
+        # 2. Select parents
+        parents = _select_parents()
+
+        # 3. Create offspring through crossover and mutation
+        new_population = []
+        for _ in range(pop_size // 2):
+            p_1, p_2 = np.random.choice(parents, size=2, replace=False)
+
+            # 3.1. Crossover parents to generate two children
+            c_1, c_2 = _crossover(p_1, p_2)
+
+            # 3.1. Mutate children to generate new candidates
+            x_1 = _mutate(c_1)
+            x_2 = _mutate(c_2)
+
+            # 3.3. Add children to the new population
+            new_population.append(x_1) if x_1.position not in s_space.ignore_candidates else None
+            new_population.append(x_2) if x_2.position not in s_space.ignore_candidates else None
+        # 4. Apply replacement/elitism if desired
+        s_space.candidates = new_population
+    s_space.best_candidate = best_sol
+    return best_configs
+
+
+
+def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, max_iters: int = 5, step_size: int = 1) -> None:
+    """
+    Executes the hill climbing algorithm to find the best candidate from a small search space.
+
+    :param s_space: Search space object.
+    :param img_obj: BaseImage object which contains the image itself and the image configurations.
+    :param max_iters: Maximum number of iterations to run the algorithm for.
+    :param step_size: Step size to move the current candidate.
+
+    :return: None
+    """
+
+    def _generate_neighbors():
+        """Generate neighbors by slightly modifying the current candidate."""
+        lst_neighbor = []
+        for i in range(5):
+            center_pos = best_sol.position
+            left_pos = max(s_space.min_pos, center_pos - step_size)
+            right_pos = min(s_space.max_pos, center_pos + step_size)
+            if isinstance(best_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
+                for item in s_space.candidates:
+                    if (item.position in (left_pos, center_pos, right_pos)) and (item.position not in s_space.ignore_candidates):
+                        lst_neighbor.append(item)
+        return lst_neighbor
+
+    if s_space is None or img_obj is None:
+        raise AbortException("Search space or ImageObject cannot be None")
+
+    # 1. Initialize the current best candidate
+    init_sol = FilterSearchSpace.get_initial_candidate(s_space)
+    if isinstance(s_space.best_candidate, FilterSearchSpace.FilterCandidate):
+        best_sol = FilterSearchSpace.FilterCandidate(
+            position=init_sol.position,
+            value_range=init_sol.value_range,
+            value_space=init_sol.value_space,
+            brightness_space=init_sol.brightness_space,
+            std_cost=np.inf,
+            graph_accuracy=0,
+            img_configs=init_sol.img_configs,
+        )
+    else:
+        best_sol = FilterSearchSpace.Candidate(position=init_sol.position, std_cost=np.inf)
+
+    # 2. Run the hill climbing algorithm
+    for _ in range(max_iters):
+        # Get neighbors to the current best candidate
+        neighbors = _generate_neighbors()
+        best_neighbor = None
+
+        # Find the best neighbor among the neighbors
+        for neighbor in neighbors:
+            if isinstance(neighbor, FilterSearchSpace.FilterCandidate):
+                FilterSearchSpace.decode_candidate_position(neighbor.position, neighbor.img_configs)
+                val_sol = neighbor.value_space.best_candidate
+                bri_sol = neighbor.brightness_space.best_candidate
+                FilterSearchSpace.decode_filter_values(neighbor.img_configs, val_sol, bri_sol)
+                neighbor.std_cost = FilterSearchSpace.cost_function(neighbor.img_configs, img_obj)
+
+                if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
+                    best_neighbor = neighbor
+            elif isinstance(neighbor, FilterSearchSpace.Candidate):
+                 new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=neighbor)
+                 neighbor.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj)
+
+                 if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
+                     best_neighbor = neighbor
+
+        # Update the current best candidate
+        if best_neighbor is None:
+            break
+
+        if best_neighbor.std_cost is None:
+            break
+
+        if best_neighbor is not None and best_neighbor.std_cost < best_sol.std_cost:
+            best_sol = best_neighbor
+        else:
+            # No improvement found, reached a local optimum
+            break
+
+    # 3. Update the current best candidate
+    s_space.best_candidate = best_sol
+    return None

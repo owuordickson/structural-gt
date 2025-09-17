@@ -15,11 +15,13 @@ from PIL import Image
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from collections import defaultdict
-from ..utils.sgt_utils import plot_to_opencv
+
+from ..imaging.base_image import BaseImage
+from ..models.filter_env import FilterSearchSpace
+from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.progress_update import ProgressUpdate
 from ..utils.config_loader import load_model_configs
-from ..imaging.base_image import BaseImage
-from ..networks.fiber_network import FiberNetworkBuilder
+from ..utils.sgt_utils import plot_to_opencv, sgt_genetic_algorithm, sgt_hill_climbing_algorithm, AbortException
 
 logger = logging.getLogger("SGT App")
 
@@ -505,6 +507,86 @@ class ImageProcessor(ProgressUpdate):
         if len(sel_batch.selected_images_idx) > 0:
             [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
+
+    def metaheuristic_image_configs(self) -> dict | None:
+        """
+        A function that runs metaheuristic algorithms (Genetic Algorithm and Hill-climbing Algorithm) to find the best
+        image configurations for extracting accurate graphs from SEM images.
+
+        :return: A dictionary containing the best candidate's image configuration settings.
+        """
+
+        # TO BE DELETED
+        def _print_configs(title: str = ""):
+            print(f"{title}")
+            print(
+                f"Configs: {filter_space.best_candidate.img_configs}\n"
+                f"Cost: {filter_space.best_candidate.std_cost}\n"
+                f"Graph Accuracy: {filter_space.best_candidate.graph_accuracy}\n"
+                f"")
+
+        self.update_status([0, "Starting image-filter search..."])
+        opt_model = self._configs
+        opt_model["find_filter_selections"]["value"] = 1    # TO BE DELETED
+        opt_model["find_filter_values"]["value"] = 1        # TO BE DELETED
+        opt_model["find_brightness_contrast"]["value"] = 1  # TO BE DELETED
+        max_iters = opt_model["max_iterations"]["value"]
+        ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
+
+        if self.abort:
+            self.update_status([-1, "Task aborted!"])
+            return None
+
+        # 1. Create a search space
+        self.update_status([20, "Creating search space..."])
+        filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
+        _print_configs("Default Configs")
+
+        if opt_model["find_filter_selections"]["value"] == 1:
+            # 2. Run the Hill-climbing algorithm to find the best "image config combination"
+            self.update_status([50, "Searching for best image filter selections..."])
+            try:
+                # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
+                sgt_hill_climbing_algorithm(filter_space, self.image_obj, max_iters=max_iters)
+                _print_configs("Selected Configs")
+            except AbortException as err:
+                self.abort = True
+                logging.exception(f"Error finding best apply selections:", err, extra={'user': 'SGT Logs'})
+                self.update_status([-1, f"Find Filter Selections Error: {err}"])
+                return None
+
+        if opt_model["find_filter_values"]["value"] == 1:
+            # 3. Run the Genetic Algorithm to find the best "image filter values"
+            self.update_status([65, "Searching for best image filter values..."])
+            try:
+                val_search_space = filter_space.best_candidate.value_space
+                val_img_configs = sgt_genetic_algorithm(val_search_space, self.image_obj, generations=max_iters,
+                                                        pop_size=ga_init_pop)
+                filter_space.best_candidate.std_cost = val_search_space.best_candidate.std_cost
+                filter_space.img_configs = val_img_configs
+                _print_configs("Best Image Configs")
+            except AbortException as err:
+                self.abort = True
+                logging.exception(f"Error best filter values:", err, extra={'user': 'SGT Logs'})
+                self.update_status([-1, f"Find Filter Values Error: {err}"])
+                return None
+
+        if opt_model["find_brightness_contrast"]["value"] == 1:
+            # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
+            self.update_status([80, "Searching for best image filter values..."])
+            try:
+                bright_search_space = filter_space.best_candidate.brightness_space
+                brt_img_configs = sgt_genetic_algorithm(bright_search_space, self.image_obj, generations=max_iters,
+                                                        pop_size=ga_init_pop)
+                filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost
+                filter_space.img_configs = brt_img_configs
+                _print_configs("Best Brightness/Contrast Configs")
+            except AbortException as err:
+                self.abort = True
+                logging.exception(f"Error best brightness/contrast values:", err, extra={'user': 'SGT Logs'})
+                self.update_status([-1, f"Find Brightness/Contrast Error: {err}"])
+                return None
+        return filter_space.best_candidate.img_configs
 
     def build_graph_network(self):
         """Generates or extracts graphs of selected images."""
