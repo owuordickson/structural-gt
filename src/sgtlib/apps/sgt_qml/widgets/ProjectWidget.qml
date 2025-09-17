@@ -37,6 +37,7 @@ Item {
             //columnSpacing: 2
             model: imgThumbnailModel
             visible: imgThumbnailModel.rowCount() > 0 ? true : false
+            enabled: !mainController.is_task_running();
 
             delegate: Rectangle {
                 implicitWidth: tableView.width

@@ -77,6 +77,7 @@ class MainController(BaseController):
 
         # Create QThreadWorker for long tasks
         self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
+        self._thread_worker_ai, self._ai_worker = QThreadWorker(0, None), BaseWorker()
         self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
@@ -759,15 +760,15 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another AI task is running!")
             return
 
-        self._task_worker = BaseWorker()
+        self._ai_worker = BaseWorker()
         try:
             self._start_ai_search()
             sgt_obj = self.get_selected_sgt_obj()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_metaheuristic_search, args=(sgt_obj.ntwk_p,))
-            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            self._thread_worker_ai = QThreadWorker(func=self._ai_worker.task_metaheuristic_search, args=(sgt_obj.ntwk_p,))
+            self._ai_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._ai_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker_ai.start()
         except Exception as err:
             self._stop_ai_search()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
