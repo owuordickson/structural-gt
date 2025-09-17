@@ -518,14 +518,12 @@ class ImageProcessor(ProgressUpdate):
         :return: A dictionary containing the best candidate's image configuration settings.
         """
 
-        # TO BE DELETED
-        def _print_configs(title: str = ""):
-            print(f"{title}")
-            print(
-                f"Configs: {filter_space.best_candidate.img_configs}\n"
-                f"Cost: {filter_space.best_candidate.std_cost}\n"
-                f"Graph Accuracy: {filter_space.best_candidate.graph_accuracy}\n"
-                f"")
+        def _run_genetic_algorithm(search_space):
+            """Runs the Genetic Algorithm to find the best candidate image configuration."""
+            new_img_configs = sgt_genetic_algorithm(search_space, self.image_obj, generations=max_iters,
+                                                    pop_size=ga_init_pop)
+            filter_space.best_candidate.std_cost = search_space.best_candidate.std_cost
+            filter_space.img_configs = new_img_configs
 
         self.update_status([0, "Starting image-filter search..."])
         opt_model = self._configs
@@ -541,7 +539,6 @@ class ImageProcessor(ProgressUpdate):
             self.update_status([20, "Creating search space..."])
             self._filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
         filter_space = self._filter_space
-        _print_configs("Default Configs")
 
         if opt_model["find_filter_selections"]["value"] == 1:
             # 2. Run the Hill-climbing algorithm to find the best "image config combination"
@@ -549,7 +546,6 @@ class ImageProcessor(ProgressUpdate):
             try:
                 # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
                 sgt_hill_climbing_algorithm(filter_space, self.image_obj, max_iters=max_iters)
-                _print_configs("Selected Configs")
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error finding best apply selections:", err, extra={'user': 'SGT Logs'})
@@ -560,12 +556,7 @@ class ImageProcessor(ProgressUpdate):
             # 3. Run the Genetic Algorithm to find the best "image filter values"
             self.update_status([65, "Searching for best image filter values..."])
             try:
-                val_search_space = filter_space.best_candidate.value_space
-                val_img_configs = sgt_genetic_algorithm(val_search_space, self.image_obj, generations=max_iters,
-                                                        pop_size=ga_init_pop)
-                filter_space.best_candidate.std_cost = val_search_space.best_candidate.std_cost
-                filter_space.img_configs = val_img_configs
-                _print_configs("Best Image Configs")
+                _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best filter values:", err, extra={'user': 'SGT Logs'})
@@ -576,12 +567,7 @@ class ImageProcessor(ProgressUpdate):
             # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
             self.update_status([80, "Searching for best image filter values..."])
             try:
-                bright_search_space = filter_space.best_candidate.brightness_space
-                brt_img_configs = sgt_genetic_algorithm(bright_search_space, self.image_obj, generations=max_iters,
-                                                        pop_size=ga_init_pop)
-                filter_space.best_candidate.std_cost = bright_search_space.best_candidate.std_cost
-                filter_space.img_configs = brt_img_configs
-                _print_configs("Best Brightness/Contrast Configs")
+                _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best brightness/contrast values:", err, extra={'user': 'SGT Logs'})
