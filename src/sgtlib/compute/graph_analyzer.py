@@ -18,7 +18,6 @@ import igraph as ig
 import networkx as nx
 import matplotlib.table as tbl
 import matplotlib.pyplot as plt
-from kneed import KneeLocator
 from matplotlib.axes import Axes
 from collections import defaultdict
 from statistics import stdev, StatisticsError
@@ -1067,6 +1066,8 @@ class GraphAnalyzer(ProgressUpdate):
                 """"""
 
                 try:
+                    from kneed import KneeLocator
+
                     # First and second derivative
                     dy = np.gradient(y, x)
                     ddy = np.gradient(dy, x)
