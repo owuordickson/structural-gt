@@ -764,8 +764,9 @@ class MainController(BaseController):
         try:
             self._start_ai_search()
             sgt_obj = self.get_selected_sgt_obj()
+            ntwk_p = sgt_obj.ntwk_p
 
-            self._thread_worker_ai = QThreadWorker(func=self._ai_worker.task_metaheuristic_search, args=(sgt_obj.ntwk_p,))
+            self._thread_worker_ai = QThreadWorker(func=self._ai_worker.task_metaheuristic_search, args=(ntwk_p,))
             self._ai_worker.inProgressSignal.connect(self._handle_progress_update)
             self._ai_worker.taskFinishedSignal.connect(self._handle_finished)
             self._thread_worker_ai.start()
