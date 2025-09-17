@@ -22,7 +22,7 @@ from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
 from ... import __version__, __title__
-from ...utils.sgt_utils import img_to_base64, verify_path
+from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult
 from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
 from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
 
@@ -258,30 +258,37 @@ class MainController(BaseController):
                 # Saving files to Output Folder
                 self._handle_progress_update(100, "Files Saved!")
                 self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
-            elif type(result) is ImageProcessor:
-                self._handle_progress_update(100, "Graph extracted successfully!")
+            elif isinstance(result, TaskResult):
+                if result.task_id == "Extract Graph":
+                    self._handle_progress_update(100, "Graph extracted successfully!")
+                    # Update QML to visualize graph
+                    self.changeImageSignal.emit()
+                    # Send task termination signal to QML
+                    self.taskTerminatedSignal.emit(success_val, [])
+                elif result.task_id == "Compute GT":
+                    self._handle_progress_update(100, "GT PDF successfully generated!")
+                    # Send task termination signal to QML
+                    self.taskTerminatedSignal.emit(True,
+                                                   ["GT calculations completed", "The image's GT parameters have been "
+                                                                                 "calculated. Check out generated PDF in "
+                                                                                 "'Output Dir'."])
+                elif result.task_id == "Compute Multi GT":
+                    self._handle_progress_update(100, "All GT PDF successfully generated!")
+                    # Send task termination signal to QML
+                    self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
+                                                                                           "images have been calculated. Check "
+                                                                                           "out all the generated PDFs in "
+                                                                                           "'Output Dir'."])
                 # Update Compute properties
-                self.changeImageSignal.emit()
                 self.synchronize_graph_models(self.get_selected_sgt_obj())
+            elif type(result) is dict:
+                # AI Mode search results (image configs)
+                self._stop_ai_search()
+                # Update image configs and load Binary Image
+                self.synchronize_img_models(self.get_selected_sgt_obj())
+                self.changeImageSignal.emit()
                 # Send task termination signal to QML
                 self.taskTerminatedSignal.emit(success_val, [])
-            elif type(result) is GraphAnalyzer:
-                self._handle_progress_update(100, "GT PDF successfully generated!")
-                # Update Compute properties
-                self.synchronize_graph_models(self.get_selected_sgt_obj())
-                # Send task termination signal to QML
-                self.taskTerminatedSignal.emit(True, ["GT calculations completed", "The image's GT parameters have been "
-                                                                                "calculated. Check out generated PDF in "
-                                                                                "'Output Dir'."])
-            elif type(result) is dict:
-                self._handle_progress_update(100, "All GT PDF successfully generated!")
-                # Update Compute properties
-                self.synchronize_graph_models(self.get_selected_sgt_obj())
-                # Send task termination signal to QML
-                self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
-                                                                                    "images have been calculated. Check "
-                                                                                    "out all the generated PDFs in "
-                                                                                    "'Output Dir'."])
             elif type(result) is list:
                 # Image histogram calculated
                 self._wait_flag_hist = False
@@ -530,6 +537,8 @@ class MainController(BaseController):
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             # Load the selected image into the view
             self.changeImageSignal.emit()
+            # Run AI search (if enabled)
+            self.run_ai_filter_search()
         except Exception as err:
             self.delete_sgt_object()
             self._selected_sgt_obj_index = 0
@@ -732,6 +741,30 @@ class MainController(BaseController):
             self._handle_finished(False, ["GT Computation Error",
                                                           "Fatal error while trying calculate GT parameters. "
                                                           "Close the app and try again."])
+
+    @Slot()
+    def run_ai_filter_search(self):
+        """Run AI filter search on the selected SGT object."""
+        if not self._ai_mode_active:
+            return
+
+        if self._wait_flag_ai:
+            logging.info("Another AI task is running!", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "Another AI task is running!")
+            return
+
+        self._task_worker = BaseWorker()
+        try:
+            self._start_ai_search()
+            sgt_obj = self.get_selected_sgt_obj()
+
+            self._thread_worker = QThreadWorker(func=self._task_worker.task_metaheuristic_search, args=(sgt_obj.ntwk_p,))
+            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._thread_worker.start()
+        except Exception as err:
+            self._stop_ai_search()
+            logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot(result=bool)
     def run_save_project(self):

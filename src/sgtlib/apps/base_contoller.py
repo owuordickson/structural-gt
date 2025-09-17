@@ -77,6 +77,16 @@ class BaseController(QObject):
         self._waitChanged.emit()
         self._waitTextChanged.emit()
 
+    def _start_ai_search(self):
+        """Activate the AI running (or busy) flag."""
+        self._wait_flag_ai = True
+        self._aiBusyChanged.emit()
+
+    def _stop_ai_search(self):
+        """Deactivate the AI running (or busy) flag."""
+        self._wait_flag_ai = False
+        self._aiBusyChanged.emit()
+
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
         # Update Configs

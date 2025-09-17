@@ -21,9 +21,17 @@ import networkx as nx
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from PIL import Image
-from typing import LiteralString
 from cv2.typing import MatLike
+from typing import LiteralString
+from dataclasses import dataclass
 
+
+
+@dataclass
+class TaskResult:
+    task_id: str = ""
+    status: str = ""
+    data = None
 
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""

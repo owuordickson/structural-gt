@@ -31,6 +31,7 @@ ColumnLayout {
                     // Actions when switched on
                     lblAIMode.color = "#2266ff";
                     mainController.toggle_ai_mode(true);
+                    mainController.run_ai_filter_search();
                 } else {
                     // Actions when switched off
                     lblAIMode.color = "#d0d0d0";

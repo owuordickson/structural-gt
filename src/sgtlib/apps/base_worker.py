@@ -7,7 +7,7 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 import logging
 from PySide6.QtCore import QObject, Signal
 from ..compute.graph_analyzer import GraphAnalyzer
-from ..utils.sgt_utils import AbortException, plot_to_opencv
+from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult
 
 
 class BaseWorker(QObject):
@@ -93,7 +93,8 @@ class BaseWorker(QObject):
             if ntwk_p.abort:
                 raise AbortException("Process aborted")
             ntwk_p.remove_listener(self.update_progress)
-            self.taskFinishedSignal.emit(True, ntwk_p)
+            task_data = TaskResult(task_id="Extract Graph", status="Finished")
+            self.taskFinishedSignal.emit(True, task_data)
         except AbortException as err:
             logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})
             # Clean up listeners before exiting
@@ -118,7 +119,8 @@ class BaseWorker(QObject):
         """"""
         success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, self.update_progress, save_to_pdf=True)
         if success:
-            self.taskFinishedSignal.emit(True, new_sgt)
+            task_data = TaskResult(task_id="Compute GT", status="Finished")
+            self.taskFinishedSignal.emit(True, task_data)
         else:
             self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."])
 
@@ -126,7 +128,33 @@ class BaseWorker(QObject):
         """"""
         new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(sgt_objs, self.update_progress)
         if new_sgt_objs is not None:
-            self.taskFinishedSignal.emit(True, sgt_objs)
+            task_data = TaskResult(task_id="Compute Multi GT", status="Finished")
+            self.taskFinishedSignal.emit(True, task_data)
         else:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."
             self.taskFinishedSignal.emit(False, ["SGT Computations Aborted/Failed", msg])
+
+    def task_metaheuristic_search(self, ntwk_p):
+        """"""
+        try:
+            if ntwk_p.filter_space is not None:
+                if ntwk_p.filter_space.best_candidate is not None:
+                    self.taskFinishedSignal.emit(False, ["Metaheuristic Search", "Filters already found."])
+                    return
+
+            ntwk_p.abort = False
+            ntwk_p.add_listener(self.update_progress)
+            img_configs = ntwk_p.metaheuristic_image_configs()
+            if ntwk_p.abort:
+                raise AbortException("Task stopped")
+            ntwk_p.image_obj.configs = img_configs.copy()
+            ntwk_p.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(True, img_configs)
+        except AbortException as err:
+            logging.exception("Task Stopped: %s", err, extra={'user': 'SGT Logs'})
+            ntwk_p.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(False, ["Metaheuristic Search Stopped", "Search stopped by user or due to error!"])
+        except Exception as err:
+            logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
+            ntwk_p.remove_listener(self.update_progress)
+            self.taskFinishedSignal.emit(False, ["Metaheuristic Search Failed", "Error occurred while running metaheuristic search!"])

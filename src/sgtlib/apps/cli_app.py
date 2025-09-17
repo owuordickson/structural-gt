@@ -9,6 +9,7 @@ import logging
 from optparse import OptionParser
 
 from .base_worker import BaseWorker
+from ..utils.sgt_utils import TaskResult
 from .base_contoller import BaseController
 from ..compute.graph_analyzer import GraphAnalyzer
 from ..imaging.image_processor import ImageProcessor
@@ -69,12 +70,13 @@ class TerminalApp(BaseController):
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 TerminalApp.update_progress(101, f"{result[0]}: {result[1]}")
         else:
-            if type(result) is ImageProcessor:
-                TerminalApp.update_progress(100, "Graph extracted successfully!")
-            elif type(result) is GraphAnalyzer:
-                TerminalApp.update_progress(100, "GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
-            elif type(result) is dict:
-                TerminalApp.update_progress(100, "All GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
+            if isinstance(result, TaskResult):
+                if result.task_id == "Extract Graph":
+                    TerminalApp.update_progress(100, "Graph extracted successfully!")
+                elif result.task_id == "Compute GT":
+                    TerminalApp.update_progress(100, "GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
+                elif result.task_id == "Compute Multi GT":
+                    TerminalApp.update_progress(100, "All GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
             elif type(result) is list:
                 # Histogram data
                 pass
