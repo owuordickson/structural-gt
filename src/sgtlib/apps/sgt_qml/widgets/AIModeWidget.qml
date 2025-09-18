@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
-//import QtQuick.Controls.Basic as Basic
 
 Rectangle {
     id: aiModeControls
@@ -10,34 +9,28 @@ Rectangle {
     height: 72
     radius: 5
     color: "#f0fff0"
-    Layout.topMargin: 5
-    Layout.leftMargin: 5
-    Layout.rightMargin: 5
+    Layout.margins: 5   // shorthand for top/left/right/bottom
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
 
     layer.enabled: true
     layer.effect: MultiEffect {
-        anchors.fill: parent
         shadowEnabled: true
         shadowColor: "#80000000"
-        shadowBlur: 0.3      // 0.0 - 1.0
+        shadowBlur: 0.3
         shadowHorizontalOffset: 0
-        shadowVerticalOffset: 8
+        shadowVerticalOffset: 2
     }
-
 
     ColumnLayout {
         anchors.fill: parent
-        Layout.alignment: Qt.AlignHCenter
+        spacing: 4
 
         RowLayout {
             id: aiModeContainer
-            spacing: 2
+            spacing: 6
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            //Layout.topMargin: 5
-            //Layout.bottomMargin: 10
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
             Label {
                 id: lblAIMode
@@ -50,12 +43,10 @@ Rectangle {
                 checked: mainController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
-                        // Actions when switched on
                         lblAIMode.color = "#2266ff";
                         mainController.toggle_ai_mode(true);
                         mainController.run_ai_filter_search();
                     } else {
-                        // Actions when switched off
                         lblAIMode.color = "#d0d0d0";
                         mainController.toggle_ai_mode(false);
                     }
@@ -65,16 +56,14 @@ Rectangle {
             BusyIndicator {
                 id: progressAIMode
                 running: mainController.ai_busy
-                width: 32
-                height: 32
-                //antialiasing: true
+                width: 28
+                height: 28
             }
         }
 
         RowLayout {
             id: aiControls
-            Layout.bottomMargin: 10
-            spacing: 2
+            spacing: 6
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
 
@@ -89,16 +78,12 @@ Rectangle {
                 text: "Brightness/Contrast"
                 checked: false
             }
-
         }
-
     }
 
     Connections {
         target: mainController
-
         function onImageChangedSignal() {
-            // Force refresh
             aiModeControls.visible = mainController.display_image();
             aiModeControls.enabled = mainController.enable_img_controls();
         }

@@ -256,10 +256,10 @@ class MainController(BaseController):
             #        self._handle_finished(True, result)
         else:
             if isinstance(result, TaskResult):
-                if result.task_id == "Extract Graph":
+                if result.task_id == "Export Graph" or result.task_id == "Save Images":
                     # Saving files to Output Folder
                     self._handle_progress_update(100, "Files Saved!")
-                    self.taskTerminatedSignal.emit(success_val, ["Files Saved", result])
+                    self.taskTerminatedSignal.emit(success_val, ["Files Saved", result.message])
                 if result.task_id == "Extract Graph":
                     self._handle_progress_update(100, "Graph extracted successfully!")
                     # Update QML to visualize graph

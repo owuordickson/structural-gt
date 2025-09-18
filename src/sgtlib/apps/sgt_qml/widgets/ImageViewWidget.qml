@@ -189,7 +189,9 @@ ColumnLayout {
             Switch {
                 id: toggleShowGiantGraph
                 visible: mainController.display_graph()
-                text: "only giant graph"
+                text: "only giant"
+                ToolTip.text: "Display only the giant graph network."
+                ToolTip.visible: toggleShowGiantGraph.hovered
                 checked: false // Initial state
                 onCheckedChanged: {
                     if (checked) {
@@ -204,9 +206,20 @@ ColumnLayout {
 
             Button {
                 id: btnLoad3DGraph
-                text: "view 3D graph"
+                text: "view in 3D"
+                ToolTip.text: "Load OVITO 3D graph visualization."
+                ToolTip.visible: btnLoad3DGraph.hovered
                 visible: mainController.display_graph()
                 onClicked: mainController.load_graph_simulation()
+            }
+
+            Button {
+                id: btnRateGraph
+                text: "rate graph"
+                ToolTip.text: "How good is the graph? Give a score..."
+                ToolTip.visible: btnRateGraph.hovered
+                visible: mainController.display_graph()
+                onClicked: {console.log("Rated 5/5");}
             }
         }
     }
@@ -527,6 +540,7 @@ ColumnLayout {
             cbBatchSelector.visible = mainController.image_batches_exist();
             toggleShowGiantGraph.visible = mainController.display_graph();
             btnLoad3DGraph.visible = mainController.display_graph();
+            btnRateGraph.visible = mainController.display_graph();
 
             if (!mainController.is_img_3d()) {
                 imgView.source = mainController.get_pixmap();

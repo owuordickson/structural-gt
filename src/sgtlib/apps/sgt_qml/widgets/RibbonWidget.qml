@@ -311,7 +311,7 @@ Rectangle {
                 background: Rectangle {
                     color: "transparent"
                 }
-                ToolTip.text: "Show graph"
+                ToolTip.text: "Extract graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: drpDownGraph.open()
                 enabled: mainController.display_image()
