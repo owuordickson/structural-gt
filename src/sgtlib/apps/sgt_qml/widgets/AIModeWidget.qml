@@ -5,7 +5,7 @@ import QtQuick.Controls
 
 ColumnLayout {
     id: aiModeControls
-    Layout.preferredHeight: 40
+    Layout.preferredHeight: 64
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignHCenter
     visible: mainController.display_image()
@@ -51,7 +51,7 @@ ColumnLayout {
         }
     }
 
-    /*RowLayout {
+    RowLayout {
         id: aiControls
         spacing: 2
         Layout.fillWidth: true
@@ -69,7 +69,7 @@ ColumnLayout {
             checked: false
         }
 
-    }*/
+    }
 
     Connections {
         target: mainController
