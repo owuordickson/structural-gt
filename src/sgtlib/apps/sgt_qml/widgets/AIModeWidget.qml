@@ -31,7 +31,7 @@ Rectangle {
             id: aiModeContainer
             spacing: 2
             //Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            Layout.alignment: Qt.AlignHCenter
 
             Label {
                 id: lblAIMode
@@ -57,8 +57,6 @@ Rectangle {
             Basic.Button {
                 id: btnRunAI
                 text: ""
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 icon.source: "../assets/icons/play_icon.png"
                 icon.width: 24
                 icon.height: 24
@@ -82,11 +80,9 @@ Rectangle {
             Basic.Button {
                 id: btnStopAI
                 text: ""
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 icon.source: "../assets/icons/stop_icon.png"
-                icon.width: 28
-                icon.height: 28
+                icon.width: 24
+                icon.height: 24
                 icon.color: "transparent"   // important for PNGs
                 background: Rectangle {
                     color: "transparent"
@@ -103,6 +99,7 @@ Rectangle {
             spacing: 6
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
+            visible: !mainController.ai_busy
 
             CheckBox {
                 id: cbxFilters
@@ -116,10 +113,22 @@ Rectangle {
                 checked: false
             }
         }
+
+        Label {
+            id: lblAIStatusMsg
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+            Layout.leftMargin: 10
+            Layout.bottomMargin: 5
+            color: "#2266ff"
+            text: "please wait..."
+            visible: mainController.ai_busy
+        }
     }
 
     Connections {
         target: mainController
+
         function onImageChangedSignal() {
             aiModeControls.visible = mainController.display_image();
             aiModeControls.enabled = mainController.enable_img_controls();

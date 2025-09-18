@@ -46,8 +46,6 @@ Rectangle {
 
             Basic.Button {
                 id: btnHideLeftPane
-                Layout.preferredWidth: 40
-                Layout.preferredHeight: 36
                 text: ""
                 property bool hidePane: true
                 icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
@@ -76,8 +74,6 @@ Rectangle {
 
             Basic.Button {
                 id: btnRescale
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 text: ""
                 icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
                 icon.width: 20 // Adjust as needed
@@ -146,12 +142,10 @@ Rectangle {
 
             Basic.Button {
                 id: btnBrightness
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 text: ""
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
-                icon.width: 21 // Adjust as needed
-                icon.height: 21
+                icon.width: 24 // Adjust as needed
+                icon.height: 24
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -216,8 +210,6 @@ Rectangle {
             Basic.Button {
                 id: btnCrop
                 text: ""
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                 icon.width: 21 // Adjust as needed
                 icon.height: 21
@@ -233,8 +225,6 @@ Rectangle {
             Basic.Button {
                 id: btnUndo
                 text: ""
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 icon.source: "../assets/icons/undo_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
@@ -303,8 +293,6 @@ Rectangle {
             Basic.Button {
                 id: btnShowGraph
                 text: ""
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
