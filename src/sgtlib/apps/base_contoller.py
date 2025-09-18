@@ -61,6 +61,8 @@ class BaseController(QObject):
     def toggle_ai_mode(self, activate):
         """Toggle AI mode."""
         self._ai_mode_active = activate
+        # if not activate:
+        #    self._stop_ai_search()
         self._aiModeChanged.emit()
 
     def _start_wait(self, msg: str = "please wait..."):

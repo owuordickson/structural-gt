@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
+import QtQuick.Controls.Basic as Basic
 
 Rectangle {
     id: aiModeControls
@@ -28,8 +29,8 @@ Rectangle {
 
         RowLayout {
             id: aiModeContainer
-            spacing: 6
-            Layout.fillWidth: true
+            spacing: 2
+            //Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
             Label {
@@ -53,11 +54,47 @@ Rectangle {
                 }
             }
 
+            Basic.Button {
+                id: btnRunAI
+                text: ""
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                icon.source: "../assets/icons/play_icon.png"
+                icon.width: 24
+                icon.height: 24
+                icon.color: "transparent"   // important for PNGs
+                background: Rectangle {
+                    color: "transparent"
+                }
+                ToolTip.text: "Re-run AI search."
+                ToolTip.visible: btnRunAI.hovered
+                visible: !mainController.ai_busy && mainController.ai_mode_active
+                onClicked: console.log("Run AI")
+            }
+
             BusyIndicator {
                 id: progressAIMode
                 running: mainController.ai_busy
                 width: 28
                 height: 28
+            }
+
+            Basic.Button {
+                id: btnStopAI
+                text: ""
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                icon.source: "../assets/icons/stop_icon.png"
+                icon.width: 28
+                icon.height: 28
+                icon.color: "transparent"   // important for PNGs
+                background: Rectangle {
+                    color: "transparent"
+                }
+                ToolTip.text: "Stop the current AI task!"
+                ToolTip.visible: btnStopAI.hovered
+                visible: mainController.ai_busy
+                onClicked: console.log("Stop AI task!")
             }
         }
 

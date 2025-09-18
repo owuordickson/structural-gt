@@ -218,16 +218,87 @@ ColumnLayout {
             }
 
             Button {
-                id: btnRateGraph
+                id: btnGraphRating
                 text: " rate"
                 icon.source: "../assets/icons/thumbs-up-emoji.png"
                 icon.width: 21
                 icon.height: 21
                 icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "How good is the graph? Give a score..."
-                ToolTip.visible: btnRateGraph.hovered
+                ToolTip.visible: btnGraphRating.hovered
                 visible: mainController.display_graph()
-                onClicked: console.log("Rated 5/5")
+                onClicked: drpDownRating.open()
+
+                Popup {
+                    id: drpDownRating
+                    width: 400
+                    height: 160
+                    modal: true
+                    focus: false
+                    x: -225
+                    y: 32
+                    background: Rectangle {
+                        color: "#f0f0f0"
+                        border.color: "#d0d0d0"
+                        border.width: 1
+                        radius: 2
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        // ADD RATING WIDGET HERE
+
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+
+                            Button {
+                                Layout.preferredWidth: 54
+                                Layout.preferredHeight: 30
+                                text: ""
+                                onClicked: drpDownRating.close()
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#bc0000"
+
+                                    Label {
+                                        text: "Cancel"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+
+                            Button {
+                                id: btnSendRating
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 30
+                                text: ""
+                                visible: mainController.enable_img_controls()
+                                onClicked: {
+                                    //mainController.update_graph_rating();
+                                    drpDownRating.close();
+                                }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "#22bc55"
+
+                                    Label {
+                                        text: "OK"
+                                        color: "#ffffff"
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
         }
     }
@@ -548,7 +619,8 @@ ColumnLayout {
             cbBatchSelector.visible = mainController.image_batches_exist();
             toggleShowGiantGraph.visible = mainController.display_graph();
             btnLoad3DGraph.visible = mainController.display_graph();
-            btnRateGraph.visible = mainController.display_graph();
+            btnGraphRating.visible = mainController.display_graph();
+            btnSendRating.visible = mainController.enable_img_controls();
 
             if (!mainController.is_img_3d()) {
                 imgView.source = mainController.get_pixmap();
