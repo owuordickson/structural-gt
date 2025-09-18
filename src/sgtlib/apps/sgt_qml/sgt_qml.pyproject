@@ -38,6 +38,8 @@
         "assets/icons/star-none.png",
         "assets/icons/play_icon.png",
         "assets/icons/stop_icon.png",
+        "assets/icons/3d_icon.png",
+        "assets/icons/rate_icon.png",
         "assets/icons/thumbs-up-emoji.png",
         "widgets/BrightnessControlWidget.qml",
         "widgets/RescaleControlWidget.qml",

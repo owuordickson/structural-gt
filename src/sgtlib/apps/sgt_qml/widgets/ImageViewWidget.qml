@@ -206,7 +206,11 @@ ColumnLayout {
 
             Button {
                 id: btnLoad3DGraph
-                text: "view in 3D"
+                text: " view"
+                icon.source: "../assets/icons/3d_icon.png"
+                icon.width: 21
+                icon.height: 21
+                icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "Load OVITO 3D graph visualization."
                 ToolTip.visible: btnLoad3DGraph.hovered
                 visible: mainController.display_graph()
@@ -215,11 +219,15 @@ ColumnLayout {
 
             Button {
                 id: btnRateGraph
-                text: "rate graph"
+                text: " rate"
+                icon.source: "../assets/icons/thumbs-up-emoji.png"
+                icon.width: 21
+                icon.height: 21
+                icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "How good is the graph? Give a score..."
                 ToolTip.visible: btnRateGraph.hovered
                 visible: mainController.display_graph()
-                onClicked: {console.log("Rated 5/5");}
+                onClicked: console.log("Rated 5/5")
             }
         }
     }
