@@ -6,7 +6,7 @@ import QtQuick.Controls
 ColumnLayout {
     id: aiModeControls
     Layout.preferredHeight: 40
-    Layout.fillWidth: true
+    Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignHCenter
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
@@ -14,6 +14,8 @@ ColumnLayout {
     RowLayout {
         id: aiModeContainer
         spacing: 2
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
         //Layout.topMargin: 5
         //Layout.bottomMargin: 10
 
@@ -47,6 +49,32 @@ ColumnLayout {
             height: 32
             //antialiasing: true
         }
+    }
+
+    RowLayout {
+        id: aiControls
+        spacing: 2
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
+
+        /*CheckBox {
+            id: cbxApply
+            text: "Select Filters"
+            checked: true
+        }*/
+
+        CheckBox {
+            id: cbxFilters
+            text: "Estimate Values"
+            checked: true
+        }
+
+        CheckBox {
+            id: cbxBrightness
+            text: "Brightness/Contrast"
+            checked: false
+        }
+
     }
 
     Connections {
