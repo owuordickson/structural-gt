@@ -104,12 +104,12 @@ Rectangle {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 5
+            visible: mainController.ai_busy
 
             Label {
                 id: lblAIStatusMsg
                 color: "#909090"
                 text: "please wait..."
-                visible: mainController.ai_busy
             }
         }
     }

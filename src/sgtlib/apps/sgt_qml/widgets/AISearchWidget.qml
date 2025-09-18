@@ -5,7 +5,7 @@ import QtQuick.Layouts
 RowLayout {
     Layout.preferredWidth: parent.width
     Layout.leftMargin: 10
-    visible: !mainController.ai_busy
+    visible: !mainController.ai_busy && mainController.ai_mode_active
 
     property int valueRole: Qt.UserRole + 4
 
