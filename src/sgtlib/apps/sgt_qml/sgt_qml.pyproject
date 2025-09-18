@@ -49,5 +49,7 @@
         "widgets/CreateProjectWidget.qml",
         "widgets/LoadingSpinnerWidget.qml",
         "widgets/AIModeWidget.qml"
+        "widgets/AIModeWidget.qml",
+        "widgets/GraphRatingWidget.qml",
     ]
 }

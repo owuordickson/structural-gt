@@ -232,7 +232,7 @@ ColumnLayout {
                 Popup {
                     id: drpDownRating
                     width: 400
-                    height: 160
+                    height: 128
                     modal: true
                     focus: false
                     x: -225
@@ -246,8 +246,9 @@ ColumnLayout {
 
                     ColumnLayout {
                         anchors.fill: parent
+                        spacing: 2
 
-                        // ADD RATING WIDGET HERE
+                        GraphRatingWidget{}
 
                         RowLayout {
                             spacing: 10

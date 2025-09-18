@@ -98,12 +98,12 @@ Rectangle {
             }
         }
 
+        AISearchWidget{}
+
         RowLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 5
-
-            AISearchWidget{}
 
             Label {
                 id: lblAIStatusMsg
