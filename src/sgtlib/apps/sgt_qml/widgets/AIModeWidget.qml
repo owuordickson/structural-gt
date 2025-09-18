@@ -29,7 +29,7 @@ Rectangle {
 
         RowLayout {
             id: aiModeContainer
-            spacing: 2
+            spacing: 1
             //Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
 
@@ -41,6 +41,8 @@ Rectangle {
 
             Switch {
                 id: toggleAIMode
+                ToolTip.text: "Activate/Deactivate AI Mode"
+                ToolTip.visible: toggleAIMode.hovered
                 checked: mainController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
@@ -57,9 +59,9 @@ Rectangle {
             Basic.Button {
                 id: btnRunAI
                 text: ""
-                icon.source: "../assets/icons/play_icon.png"
-                icon.width: 24
-                icon.height: 24
+                icon.source: "../assets/icons/replay_icon.png"
+                icon.width: 28
+                icon.height: 28
                 icon.color: "transparent"   // important for PNGs
                 background: Rectangle {
                     color: "transparent"
@@ -95,34 +97,34 @@ Rectangle {
         }
 
         RowLayout {
-            id: aiControls
-            spacing: 6
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
-            visible: !mainController.ai_busy
-
-            CheckBox {
-                id: cbxFilters
-                text: "Estimate Values"
-                checked: true
-            }
-
-            CheckBox {
-                id: cbxBrightness
-                text: "Brightness/Contrast"
-                checked: false
-            }
-        }
-
-        Label {
-            id: lblAIStatusMsg
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            Layout.leftMargin: 10
             Layout.bottomMargin: 5
-            color: "#2266ff"
-            text: "please wait..."
-            visible: mainController.ai_busy
+
+            RowLayout {
+                id: aiControls
+                spacing: 2
+                visible: !mainController.ai_busy
+
+                CheckBox {
+                    id: cbxFilters
+                    text: "Estimate Values"
+                    checked: true
+                }
+
+                CheckBox {
+                    id: cbxBrightness
+                    text: "Brightness/Contrast"
+                    checked: false
+                }
+            }
+
+            Label {
+                id: lblAIStatusMsg
+                color: "#909090"
+                text: "please wait..."
+                visible: mainController.ai_busy
+            }
         }
     }
 

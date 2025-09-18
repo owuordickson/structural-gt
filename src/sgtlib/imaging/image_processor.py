@@ -20,7 +20,7 @@ from ..imaging.base_image import BaseImage
 from ..models.filter_env import FilterSearchSpace
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.progress_update import ProgressUpdate
-from ..utils.config_loader import load_model_configs
+from ..utils.config_loader import load_ai_configs
 from ..utils.sgt_utils import plot_to_opencv, AbortException
 from ..models.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
 
@@ -75,7 +75,7 @@ class ImageProcessor(ProgressUpdate):
         >>> ntwk_p.apply_img_filters()
         """
         super(ImageProcessor, self).__init__()
-        self._configs = load_model_configs(cfg_file)
+        self._configs = load_ai_configs(cfg_file)
         self._img_path: str = img_path if type(img_path) is str else img_path[0]
         self._output_dir: str = out_dir
         self._config_file: str = cfg_file
