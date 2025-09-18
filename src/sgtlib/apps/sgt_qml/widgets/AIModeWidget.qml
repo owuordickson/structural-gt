@@ -41,16 +41,18 @@ Rectangle {
 
             Switch {
                 id: toggleAIMode
-                ToolTip.text: "Activate/Deactivate AI Mode"
+                ToolTip.text: "Activate"
                 ToolTip.visible: toggleAIMode.hovered
                 checked: mainController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
                         lblAIMode.color = "#2266ff";
+                        toggleAIMode.ToolTip.text = "Deactivate";
                         mainController.toggle_ai_mode(true);
                         mainController.run_ai_filter_search();
                     } else {
                         lblAIMode.color = "#d0d0d0";
+                        toggleAIMode.ToolTip.text = "Activate";
                         mainController.toggle_ai_mode(false);
                     }
                 }
@@ -66,7 +68,7 @@ Rectangle {
                 background: Rectangle {
                     color: "transparent"
                 }
-                ToolTip.text: "Re-run AI search."
+                ToolTip.text: "Re-run"
                 ToolTip.visible: btnRunAI.hovered
                 visible: !mainController.ai_busy && mainController.ai_mode_active
                 onClicked: console.log("Run AI")
@@ -89,7 +91,7 @@ Rectangle {
                 background: Rectangle {
                     color: "transparent"
                 }
-                ToolTip.text: "Stop the current AI task!"
+                ToolTip.text: "Stop!"
                 ToolTip.visible: btnStopAI.hovered
                 visible: mainController.ai_busy
                 onClicked: console.log("Stop AI task!")
@@ -101,23 +103,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 5
 
-            RowLayout {
-                id: aiControls
-                spacing: 2
-                visible: !mainController.ai_busy
-
-                CheckBox {
-                    id: cbxFilters
-                    text: "Estimate Values"
-                    checked: true
-                }
-
-                CheckBox {
-                    id: cbxBrightness
-                    text: "Brightness/Contrast"
-                    checked: false
-                }
-            }
+            AISearchWidget{}
 
             Label {
                 id: lblAIStatusMsg

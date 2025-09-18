@@ -69,6 +69,8 @@ class MainController(BaseController):
         self.imgControlModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
+        self.aiSearchModel = CheckBoxModel([])
+
         self.imgScaleOptionModel = CheckBoxModel([])
         self.imgViewOptionModel = CheckBoxModel([])
         self.saveImgModel = CheckBoxModel([])
@@ -90,6 +92,7 @@ class MainController(BaseController):
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.selected_batch
+            options_ai = ntwk_p.configs
             options_img = ntwk_p.image_obj.configs
 
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
@@ -97,6 +100,7 @@ class MainController(BaseController):
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
+            ai_search_params = [v for v in options_ai.values() if v["type"] == "search-params"]
 
             batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
@@ -107,6 +111,7 @@ class MainController(BaseController):
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
+            self.aiSearchModel.reset_data(ai_search_params)
             self.microscopyPropsModel.reset_data(img_properties)
             self.saveImgModel.reset_data(file_options)
         except Exception as err:

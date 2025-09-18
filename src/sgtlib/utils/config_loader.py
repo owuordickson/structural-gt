@@ -267,11 +267,11 @@ def load_ai_configs(cfg_path: str = ""):
     """ML/AI model settings for finding the best image filters for graph extraction"""
 
     options_model = {
-        "find_filter_selections": {"id": "find_filter_selections", "type": "model-settings", "text": "Find Best Image Filter Combination", "visible": 1, "value": 0},
-        "find_filter_values": {"id": "find_filter_values", "type": "model-settings", "text": "Estimate Image Filter Values", "visible": 1, "value": 0},
-        "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "model-settings", "text": "Estimate Brightness and Contrast Values", "visible": 1, "value": 0},
-        "max_iterations": {"id": "max_iterations", "type": "model-settings", "text": "Max. Algorithm Iterations", "visible": 0, "value": 16},
-        "genetic_alg_initial_pop": {"id": "genetic_alg_initial_pop", "type": "model-settings", "text": "Initial (Genetic Algorithm) Population Size", "visible": 0, "value": 8},
+        "find_filter_selections": {"id": "find_filter_selections", "type": "search-params", "text": "Selections", "tooltip": "Search for best image filter combination selections.", "visible": 1, "value": 0},
+        "find_filter_values": {"id": "find_filter_values", "type": "search-params", "text": "Values", "tooltip": "Estimate image filter values.", "visible": 1, "value": 0},
+        "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "search-params", "text": "Brightness/Contrast", "tooltip": "Estimate brightness and contrast values.", "visible": 1, "value": 0},
+        "max_iterations": {"id": "max_iterations", "type": "search-params", "text": "Max. Algorithm Iterations", "tooltip": "", "visible": 0, "value": 16},
+        "genetic_alg_initial_pop": {"id": "genetic_alg_initial_pop", "type": "search-params", "text": "Initial (Genetic Algorithm) Population Size", "tooltip": "", "visible": 0, "value": 8},
     }
 
     config = read_config_file(cfg_path)

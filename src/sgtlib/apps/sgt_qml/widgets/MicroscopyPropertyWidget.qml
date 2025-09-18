@@ -53,7 +53,7 @@ Item {
                     onClicked: {
                         btnOK.visible = false;
 
-                        var index = microscopyPropsModel.index(model.index, 0);
+                        let index = microscopyPropsModel.index(model.index, 0);
                         microscopyPropsModel.setData(index, txtField.text, valueRole);
                         //console.log(txtField.text);
                     }

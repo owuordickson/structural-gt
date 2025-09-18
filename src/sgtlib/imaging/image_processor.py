@@ -570,7 +570,7 @@ class ImageProcessor(ProgressUpdate):
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
             # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
-            self.update_status([80, "AI Mode: Searching for best image filter values..."])
+            self.update_status([80, "AI Mode: Searching for best brightness/contrast values..."])
             try:
                 _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
