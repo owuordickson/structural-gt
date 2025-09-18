@@ -51,17 +51,11 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
+    /*RowLayout {
         id: aiControls
         spacing: 2
         Layout.fillWidth: true
         Layout.alignment: Qt.AlignHCenter
-
-        /*CheckBox {
-            id: cbxApply
-            text: "Select Filters"
-            checked: true
-        }*/
 
         CheckBox {
             id: cbxFilters
@@ -75,7 +69,7 @@ ColumnLayout {
             checked: false
         }
 
-    }
+    }*/
 
     Connections {
         target: mainController
