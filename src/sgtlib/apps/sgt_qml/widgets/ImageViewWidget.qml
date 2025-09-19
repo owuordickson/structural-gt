@@ -232,7 +232,7 @@ ColumnLayout {
                 Popup {
                     id: drpDownRating
                     width: 400
-                    height: 128
+                    height: 172
                     modal: true
                     focus: false
                     x: -225

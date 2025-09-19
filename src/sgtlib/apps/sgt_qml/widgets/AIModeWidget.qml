@@ -117,6 +117,14 @@ Rectangle {
     Connections {
         target: mainController
 
+        function onUpdateProgressSignal(val, msg) {
+            if (val <= 100) {
+                lblAIStatusMsg.text = val + "%: " +msg;
+            } else {
+                lblAIStatusMsg.text = msg;
+            }
+        }
+
         function onImageChangedSignal() {
             aiModeControls.visible = mainController.display_image();
             aiModeControls.enabled = mainController.enable_img_controls();

@@ -295,7 +295,7 @@ class MainController(BaseController):
                     # AI Mode search results (image configs)
                     self._stop_ai_search()
                     if result.status == "Finished":
-                        self._handle_progress_update(100, "AI Mode search completed!")
+                        self._handle_progress_update(100, "Search completed!")
                         # Update image configs and load Binary Image
                         self.synchronize_img_models(self.get_selected_sgt_obj())
                         self.changeImageSignal.emit()
@@ -334,11 +334,11 @@ class MainController(BaseController):
         about_app = (
             "<html>"
             "<p>"
-            "A software tool for performing Graph Theory analysis on <br>microscopy images. This is a modified version "
-            "of StructuralGT <br>initially proposed by Drew A. Vecchio,<br>"
-            "<b>DOI:</b> <a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a>"
-            "</p><p>"
-            "<b>Main Contributors:</b><br>"
+            "A software tool for performing Graph Theory analysis on microscopy <br>"
+            "images. This is a modified version of StructuralGT initially <br>"
+            "proposed by Drew A. Vecchio, DOI:</b> <a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a>"
+            "<br></p><p>"
+            "<b>Main Contributors:</b>"
             "<table border='0.5' cellspacing='0' cellpadding='4'>"
             # "<tr><th>Name</th><th>Email</th></tr>"
             "<tr><td>Dickson Owuor</td><td>owuor@umich.edu</td></tr>"
@@ -347,11 +347,19 @@ class MainController(BaseController):
             "<tr><td>Xiong Ye Xiao</td><td>xiongyex@usc.edu</td></tr>"
             "<tr><td>Kotov Lab</td><td></td></tr>"
             "<tr><td>COMPASS</td><td></td></tr>"
-            "</table></p><p><br><br>"
+            "</table>"
+            "<br></p><p>"
             "<b>Documentation:</b> <a href='https://structural-gt.readthedocs.io'>structural-gt.readthedocs.io</a>"
-            "<br>"
-            f"<b> Version: </b> {self.get_sgt_version()}<br>"
+            "</p><p>"
+            f"<b> Version: </b> {self.get_sgt_version()}"
+            "</p><p>"
             "<b>License:</b> GPL GNU v3"
+            "</p><p>"
+            "<b>Icon Acknowledgements:</b><br>"
+            "<ol>"
+            "<li> <a href='https://www.iconfinder.com/'>IconFinder Library</a></li>"
+            "<li> <a href='https://www.flaticon.com/'>Flaticon</a> </li>"
+            "</ol>"
             "</p><p>"
             "Copyright (C) 2018-2025<br>The Regents of the University of Michigan."
             "</p>"

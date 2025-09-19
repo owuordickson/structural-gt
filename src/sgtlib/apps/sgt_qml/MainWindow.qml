@@ -96,8 +96,8 @@ ApplicationWindow {
         modal: true
         standardButtons: Dialog.Ok
         anchors.centerIn: parent
-        width: 348
-        height: 420
+        width: 436
+        height: 640
 
         ColumnLayout {
             anchors.fill: parent
