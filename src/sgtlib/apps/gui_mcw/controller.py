@@ -5,9 +5,10 @@ import logging
 import requests
 import numpy as np
 from packaging import version
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Signal, Slot, QTimer
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -18,6 +19,7 @@ from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker
+from .process_worker import ProcessWorker
 from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
@@ -42,6 +44,12 @@ class MainController(BaseController):
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
+
+    @dataclass
+    class SGTWorker:
+        base_funcs = BaseWorker()
+        process_worker: ProcessWorker|None = None
+        process_timer = QTimer()
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
@@ -81,6 +89,11 @@ class MainController(BaseController):
         self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
         self._thread_worker_ai, self._ai_worker = QThreadWorker(0, None), BaseWorker()
         self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
+
+        # Create Worker Functions, Process and Timer
+        self._gt_worker = MainController.SGTWorker()
+        self._ai_worker = MainController.SGTWorker()
+        self._hist_worker = MainController.SGTWorker()
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -219,6 +232,10 @@ class MainController(BaseController):
         ntwk_p = sgt_obj.ntwk_p
         return ntwk_p.selected_images
 
+    def _poll_progress(self):
+        if self._gt_worker.process_worker:
+            self._gt_worker.process_worker.poll()
+
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
         Handler function for progress updates for ongoing tasks.
@@ -229,6 +246,9 @@ class MainController(BaseController):
         Returns:
 
         """
+        if progress_val is None:
+            print(msg)
+            return
 
         if 0 <= progress_val <= 100:
             self.updateProgressSignal.emit(progress_val, msg)
@@ -237,7 +257,7 @@ class MainController(BaseController):
             self.updateProgressSignal.emit(progress_val, msg)
             logging.info(f"{msg}", extra={'user': 'SGT Logs'})
         else:
-            logging.exception("Error: %s", msg, extra={'user': 'SGT Logs'})
+            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
             self.errorSignal.emit(msg)
 
     def _handle_finished(self, success_val: bool, result: None | list | ImageProcessor | FiberNetworkBuilder | GraphAnalyzer) -> None:
@@ -251,6 +271,7 @@ class MainController(BaseController):
 
         """
         self._stop_wait()
+        self._gt_worker.process_timer.stop()
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
@@ -266,6 +287,8 @@ class MainController(BaseController):
                     self._handle_progress_update(100, "Files Saved!")
                     self.taskTerminatedSignal.emit(success_val, ["Files Saved", result.message])
                 if result.task_id == "Extract Graph":
+                    sgt_obj = self.get_selected_sgt_obj()
+                    sgt_obj.ntwk_p = result.data
                     self._handle_progress_update(100, "Graph extracted successfully!")
                     # Update QML to visualize graph
                     self.changeImageSignal.emit()
@@ -314,6 +337,18 @@ class MainController(BaseController):
             # Auto-save changes to the project data file
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
+
+    @Slot(int)
+    def stop_current_task(self, thread_id: int = 1):
+        """Stop a background thread and its associated worker."""
+        if thread_id == 1:
+            self._gt_worker.process_worker.stop() if self._gt_worker.process_worker else None
+            self._gt_worker.process_timer.stop() if self._gt_worker.process_timer else None
+            self._handle_finished(True, None)
+
+        if thread_id == 2:
+            pass
+
 
     @Slot(result=str)
     def get_sgt_title(self):
@@ -693,15 +728,27 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self._task_worker = BaseWorker()
+        # self._task_worker = BaseWorker()
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
-            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            # self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
+            # self._task_worker.inProgressSignal.connect(self._handle_progress_update)
+            # self._task_worker.taskFinishedSignal.connect(self._handle_finished)
+            # self._thread_worker.start()
+            from ..base_worker_2 import BaseWorker
+            self._gt_worker = MainController.SGTWorker()
+            self._gt_worker.base_funcs = BaseWorker()
+            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
+            self._gt_worker.process_worker = ProcessWorker(func=self._gt_worker.base_funcs.task_extract_graph, args=(sgt_obj.ntwk_p,))
+            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
+            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            # self._gt_worker.base_funcs.inProgressSignal.connect(self._handle_progress_update)
+            # self._gt_worker.base_funcs.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.start()
+            self._gt_worker.process_timer.start(100)
         except Exception as err:
             self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})

@@ -32,7 +32,7 @@ class TaskResult:
     task_id: str = ""
     status: str = ""
     message: str = ""
-    data = None
+    data: object|None = None
 
 
 class AbortException(Exception):

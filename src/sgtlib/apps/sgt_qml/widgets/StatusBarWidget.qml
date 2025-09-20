@@ -49,7 +49,7 @@ Rectangle {
                 onClicked: {
                     btnCancel.visible = false;
                     lblStatusMsg.text = "initiating abort...";
-                    console.log("Progress canceled")
+                    mainController.stop_current_task(1);
                 }
             }
         }

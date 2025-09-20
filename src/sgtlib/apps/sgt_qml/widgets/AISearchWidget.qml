@@ -31,9 +31,6 @@ RowLayout {
                     aiSearchModel.setData(index, val, valueRole);
                 }
             }
-
         }
-
     }
-
 }
