@@ -20,7 +20,7 @@ from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
 from .qthread_worker import QThreadWorker
 from .process_worker import ProcessWorker
-from ..base_worker import BaseWorker
+from ..base_worker_2 import BaseWorker
 from ..base_contoller import BaseController
 
 from ... import __version__, __title__
@@ -46,7 +46,7 @@ class MainController(BaseController):
     performCroppingSignal = Signal(bool)
 
     @dataclass
-    class SGTWorker:
+    class SGTProcessWorker:
         base_funcs = BaseWorker()
         process_worker: ProcessWorker|None = None
         process_timer = QTimer()
@@ -91,9 +91,9 @@ class MainController(BaseController):
         self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
 
         # Create Worker Functions, Process and Timer
-        self._gt_worker = MainController.SGTWorker()
-        self._ai_worker = MainController.SGTWorker()
-        self._hist_worker = MainController.SGTWorker()
+        self._gt_worker = MainController.SGTProcessWorker()
+        self._ai_worker = MainController.SGTProcessWorker()
+        self._hist_worker = MainController.SGTProcessWorker()
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -232,9 +232,17 @@ class MainController(BaseController):
         ntwk_p = sgt_obj.ntwk_p
         return ntwk_p.selected_images
 
+    def _stop_wait(self):
+        super()._stop_wait()
+        self._gt_worker.process_timer.stop()
+        self._ai_worker.process_timer.stop()
+
     def _poll_progress(self):
         if self._gt_worker.process_worker:
             self._gt_worker.process_worker.poll()
+
+        if self._ai_worker.process_worker:
+            self._ai_worker.process_worker.poll()
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
@@ -271,7 +279,6 @@ class MainController(BaseController):
 
         """
         self._stop_wait()
-        self._gt_worker.process_timer.stop()
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
@@ -347,8 +354,9 @@ class MainController(BaseController):
             self._handle_finished(True, None)
 
         if thread_id == 2:
-            pass
-
+            self._ai_worker.process_worker.stop() if self._ai_worker.process_worker else None
+            self._ai_worker.process_timer.stop() if self._ai_worker.process_timer else None
+            self._handle_finished(True, None)
 
     @Slot(result=str)
     def get_sgt_title(self):
@@ -733,20 +741,12 @@ class MainController(BaseController):
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
-            # self._thread_worker = QThreadWorker(func=self._task_worker.task_extract_graph, args=(sgt_obj.ntwk_p,))
-            # self._task_worker.inProgressSignal.connect(self._handle_progress_update)
-            # self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            # self._thread_worker.start()
-            from ..base_worker_2 import BaseWorker
-            self._gt_worker = MainController.SGTWorker()
-            self._gt_worker.base_funcs = BaseWorker()
+            self._gt_worker = MainController.SGTProcessWorker()
             self._gt_worker.process_timer.timeout.connect(self._poll_progress)
             self._gt_worker.process_worker = ProcessWorker(func=self._gt_worker.base_funcs.task_extract_graph, args=(sgt_obj.ntwk_p,))
             self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
             self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
             self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            # self._gt_worker.base_funcs.inProgressSignal.connect(self._handle_progress_update)
-            # self._gt_worker.base_funcs.taskFinishedSignal.connect(self._handle_finished)
             self._gt_worker.process_worker.start()
             self._gt_worker.process_timer.start(100)
         except Exception as err:

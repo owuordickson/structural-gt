@@ -94,7 +94,7 @@ Rectangle {
                 ToolTip.text: "Stop!"
                 ToolTip.visible: btnStopAI.hovered
                 visible: mainController.ai_busy
-                onClicked: console.log("Stop AI task!")
+                onClicked: mainController.stop_current_task(2)
             }
         }
 
