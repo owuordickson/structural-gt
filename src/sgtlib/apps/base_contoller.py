@@ -121,6 +121,20 @@ class BaseController(QObject):
             # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
             return None
 
+    def update_sgt_obj(self, sgt_data: GraphAnalyzer|dict|None = None):
+        """Update the SGT object at a specified index."""
+        if sgt_data is None:
+            return
+
+        if isinstance(sgt_data, GraphAnalyzer):
+            keys_list = list(self._sgt_objs.keys())
+            key_at_index = keys_list[self._selected_sgt_obj_index]
+            self._sgt_objs[key_at_index] = sgt_data
+
+        if type(sgt_data) is dict:
+            for key, obj in sgt_data.items():
+                self._sgt_objs[key] = obj
+
     def create_sgt_object(self, file_path: str, out_dir: str = "") -> bool:
         """
         A function that processes a selected image file and creates an analyzer object with default configurations.

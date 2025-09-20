@@ -18,7 +18,7 @@ from .tree_model import TreeModel
 from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
-from .qthread_worker import QThreadWorker
+# from .qthread_worker import QThreadWorker
 from .process_worker import ProcessWorker
 from ..base_worker_2 import BaseWorker
 from ..base_contoller import BaseController
@@ -86,9 +86,9 @@ class MainController(BaseController):
         self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create QThreadWorker for long tasks
-        self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
-        self._thread_worker_ai, self._ai_worker = QThreadWorker(0, None), BaseWorker()
-        self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
+        # self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
+        # self._thread_worker_ai, self._ai_worker = QThreadWorker(0, None), BaseWorker()
+        # self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
 
         # Create Worker Functions, Process and Timer
         self._gt_worker = MainController.SGTProcessWorker()
@@ -305,6 +305,7 @@ class MainController(BaseController):
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
                     self._handle_progress_update(100, "GT PDF successfully generated!")
+                    self.update_sgt_obj(result.data)
                     # Update Compute properties
                     self.synchronize_graph_models(self.get_selected_sgt_obj())
                     # Send task termination signal to QML
@@ -314,6 +315,7 @@ class MainController(BaseController):
                                                                                  "'Output Dir'."])
                 if result.task_id == "Compute Multi GT":
                     self._handle_progress_update(100, "All GT PDF successfully generated!")
+                    self.update_sgt_obj(result.data)
                     # Update Compute properties
                     self.synchronize_graph_models(self.get_selected_sgt_obj())
                     # Send task termination signal to QML
@@ -326,6 +328,8 @@ class MainController(BaseController):
                     self._stop_ai_search()
                     if result.status == "Finished":
                         self._handle_progress_update(100, "Search completed!")
+                        sgt_obj = self.get_selected_sgt_obj()
+                        sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
                         self.synchronize_img_models(self.get_selected_sgt_obj())
                         self.changeImageSignal.emit()
@@ -644,13 +648,16 @@ class MainController(BaseController):
             return
 
         self.showImageHistogramSignal.emit(True)
-        self._hist_worker = BaseWorker()
         try:
             self._wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()
-            self._thread_worker_hist = QThreadWorker(func=self._hist_worker.task_calculate_img_histogram, args=(sgt_obj.ntwk_p,))
-            self._hist_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker_hist.start()
+
+            self._hist_worker = MainController.SGTProcessWorker()
+            self._hist_worker.process_worker = ProcessWorker(
+                func=self._hist_worker.base_funcs.task_calculate_img_histogram,
+                args=(sgt_obj.ntwk_p,))
+            self._hist_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._hist_worker.process_worker.start()
         except Exception as err:
             self._wait_flag_hist = False
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -679,7 +686,6 @@ class MainController(BaseController):
             return
 
         self._handle_progress_update(0, "Exporting Graph Data...")
-        self._task_worker = BaseWorker()
         try:
             if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
@@ -688,9 +694,16 @@ class MainController(BaseController):
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_export_graph, args=(sgt_obj.ntwk_p,))
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            self._gt_worker = MainController.SGTProcessWorker()
+            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
+            self._gt_worker.process_worker = ProcessWorker(
+                func=self._gt_worker.base_funcs.task_export_graph,
+                args=(sgt_obj.ntwk_p,))
+            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
+            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._gt_worker.process_worker.start()
+            self._gt_worker.process_timer.start(100)
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
@@ -704,7 +717,6 @@ class MainController(BaseController):
             return
 
         self._handle_progress_update(0, "Saving Images...")
-        self._task_worker = BaseWorker()
         try:
             if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
@@ -719,9 +731,16 @@ class MainController(BaseController):
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_save_images, args=(sgt_obj.ntwk_p,))
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            self._gt_worker = MainController.SGTProcessWorker()
+            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
+            self._gt_worker.process_worker = ProcessWorker(
+                func=self._gt_worker.base_funcs.task_save_images,
+                args=(sgt_obj.ntwk_p,))
+            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
+            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._gt_worker.process_worker.start()
+            self._gt_worker.process_timer.start(100)
         except Exception as err:
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,
@@ -736,14 +755,15 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        # self._task_worker = BaseWorker()
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
             self._gt_worker = MainController.SGTProcessWorker()
             self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(func=self._gt_worker.base_funcs.task_extract_graph, args=(sgt_obj.ntwk_p,))
+            self._gt_worker.process_worker = ProcessWorker(
+                func=self._gt_worker.base_funcs.task_extract_graph,
+                args=(sgt_obj.ntwk_p,))
             self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
             self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
             self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
@@ -765,15 +785,20 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self._task_worker = BaseWorker()
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_gt, args=(sgt_obj,))
-            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            self._gt_worker = MainController.SGTProcessWorker()
+            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
+            self._gt_worker.process_worker = ProcessWorker(
+                func=self._gt_worker.base_funcs.task_compute_gt,
+                args=(sgt_obj,))
+            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
+            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._gt_worker.process_worker.start()
+            self._gt_worker.process_timer.start(100)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -790,17 +815,22 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self._task_worker = BaseWorker()
         try:
             self._start_wait()
 
             # Update Configs
             self.replicate_sgt_configs()
 
-            self._thread_worker = QThreadWorker(func=self._task_worker.task_compute_multi_gt, args=(self._sgt_objs,))
-            self._task_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._task_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker.start()
+            self._gt_worker = MainController.SGTProcessWorker()
+            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
+            self._gt_worker.process_worker = ProcessWorker(
+                func=self._gt_worker.base_funcs.task_compute_multi_gt,
+                args=(self._sgt_objs,))
+            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
+            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._gt_worker.process_worker.start()
+            self._gt_worker.process_timer.start(100)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -820,16 +850,20 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another AI task is running!")
             return
 
-        self._ai_worker = BaseWorker()
         try:
             self._start_ai_search()
             sgt_obj = self.get_selected_sgt_obj()
-            ntwk_p = sgt_obj.ntwk_p
 
-            self._thread_worker_ai = QThreadWorker(func=self._ai_worker.task_metaheuristic_search, args=(ntwk_p,))
-            self._ai_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._ai_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._thread_worker_ai.start()
+            self._ai_worker = MainController.SGTProcessWorker()
+            self._ai_worker.process_timer.timeout.connect(self._poll_progress)
+            self._ai_worker.process_worker = ProcessWorker(
+                func=self._ai_worker.base_funcs.task_metaheuristic_search,
+                args=(sgt_obj.ntwk_p,))
+            self._ai_worker.base_funcs.progress_queue = self._ai_worker.process_worker.queue
+            self._ai_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+            self._ai_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            self._ai_worker.process_worker.start()
+            self._ai_worker.process_timer.start(100)
         except Exception as err:
             self._stop_ai_search()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
