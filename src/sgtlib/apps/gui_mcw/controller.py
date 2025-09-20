@@ -349,6 +349,10 @@ class MainController(BaseController):
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
 
+    def _start_process_worker(self) -> None:
+        """Start a background thread and its associated worker."""
+        pass
+
     @Slot(int)
     def stop_current_task(self, thread_id: int = 1):
         """Stop a background thread and its associated worker."""
