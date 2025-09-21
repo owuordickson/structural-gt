@@ -5,7 +5,7 @@ Process worker class for running StructuralGT tasks in the background.
 """
 
 from multiprocessing import Process, Queue
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QThread
 
 
 def _run_wrapper(func, args, queue):
@@ -15,6 +15,34 @@ def _run_wrapper(func, args, queue):
         queue.put((success, data))
     except Exception as e:
         queue.put((False, str(e)))
+
+
+class QueueListener(QThread):
+    """Thread that listens to the multiprocessing.Queue and emits signals into QML UI."""
+    progress = Signal(int, str)
+    finished = Signal(bool, object)
+
+    def __init__(self, queue: Queue):
+        super().__init__()
+        self.queue = queue
+        self._running = True
+
+    def run(self):
+        while self._running:
+            try:
+                status, payload = self.queue.get()  # blocking wait
+                if type(status) is str:
+                    percent, message = payload
+                    self.progress.emit(percent, message)
+                else:
+                    self.finished.emit(status, payload)
+                    break  # stop after completion
+            except Exception as e:
+                self.finished.emit(False, str(e))
+                break
+
+    def stop(self):
+        self._running = False
 
 
 class ProcessWorker(QObject):
@@ -30,6 +58,7 @@ class ProcessWorker(QObject):
         self._worker_id = worker_id
         self._process = None
         self._queue = Queue()
+        self._listener = None
 
     @property
     def queue(self):
@@ -41,6 +70,14 @@ class ProcessWorker(QObject):
             self._process = Process(target=_run_wrapper, args=(self.func, self.args, self._queue))
             self._process.start()
 
+            # start queue listener thread
+            self._listener = QueueListener(self._queue)
+            self._listener.progress.connect(self.inProgressSignal)
+            self._listener.finished.connect(
+                lambda success, result: self.taskFinishedSignal.emit(self._worker_id, success, result)
+            )
+            self._listener.start()
+
     def stop(self):
         """Force terminate the worker process."""
         if self._process and self._process.is_alive():
@@ -48,15 +85,8 @@ class ProcessWorker(QObject):
             self._process.join()
         self._process = None
 
-    def poll(self):
-        """Check if the worker finished and emit signals (should be polled by a QTimer)."""
-        try:
-            while not self._queue.empty():
-                status, payload = self._queue.get_nowait()
-                if type(status) is str:
-                    percent, message = payload
-                    self.inProgressSignal.emit(int(percent), message)
-                else:
-                    self.taskFinishedSignal.emit(self._worker_id, status, payload)
-        except Exception as e:
-            self.taskFinishedSignal.emit(self._worker_id, False, f"Error: {e}")
+        if self._listener and self._listener.isRunning():
+            self._listener.stop()
+            self._listener.quit()
+            self._listener.wait()
+        self._listener = None

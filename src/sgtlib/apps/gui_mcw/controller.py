@@ -8,7 +8,7 @@ from packaging import version
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal, Slot, QTimer
+from PySide6.QtCore import Signal, Slot
 
 if TYPE_CHECKING:
     # False at run time, only for a type-checker
@@ -33,7 +33,6 @@ class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
     errorSignal = Signal(str)
-    # showAlertSignal = Signal(str, str)
     updateProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
@@ -49,7 +48,6 @@ class MainController(BaseController):
     class SGTProcessWorker:
         base_funcs = BaseWorker()
         process_worker: ProcessWorker | None = None
-        process_timer = QTimer()
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
@@ -230,19 +228,15 @@ class MainController(BaseController):
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
             self._stop_wait()
-            self._gt_worker.process_timer.stop()
+            self._gt_worker.process_worker = None
 
         if worker_id == 2:
             self._stop_ai_search()
-            self._ai_worker.process_timer.stop()
+            self._ai_worker.process_worker = None
+
+        if worker_id == 3:
+            self._hist_worker.process_worker = None
         print(f"We stopped {worker_id}")
-
-    def _poll_progress(self):
-        if self._gt_worker.process_worker:
-            self._gt_worker.process_worker.poll()
-
-        if self._ai_worker.process_worker:
-            self._ai_worker.process_worker.poll()
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
@@ -395,10 +389,8 @@ class MainController(BaseController):
         bg_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
 
         if track_updates:
-            bg_worker.process_timer.timeout.connect(self._poll_progress)
             bg_worker.base_funcs.progress_queue = bg_worker.process_worker.queue
             bg_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            bg_worker.process_timer.start(500)  # poll after every 500 ms
         bg_worker.process_worker.start()
 
     @Slot(int)
