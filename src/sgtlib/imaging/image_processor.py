@@ -897,7 +897,7 @@ class ImageProcessor(ProgressUpdate):
             if img.configs["save_images"]["value"] == 0:
                 continue
 
-            filename = f"{img_file_name}_Frame{i}" if is_3d else ''
+            filename = f"{img_file_name}_Frame{i}" if is_3d else img_file_name
             pr_filename = filename + "_processed.jpg"
             bin_filename = filename + "_binary.jpg"
             img_file = os.path.join(out_dir, pr_filename)

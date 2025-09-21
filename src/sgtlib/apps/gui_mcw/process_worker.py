@@ -21,12 +21,13 @@ class ProcessWorker(QObject):
     """Wrapper around multiprocessing.Process for QML integration."""
 
     inProgressSignal = Signal(int, str)  # progress-value (0-100), progress-message (str)
-    taskFinishedSignal = Signal(bool, object)  # success/fail (True/False), result (object)
+    taskFinishedSignal = Signal(int, bool, object)  # worker-id, success/fail, result (object)
 
-    def __init__(self, func, args=(), parent=None):
+    def __init__(self, worker_id, func, args=(), parent=None):
         super().__init__(parent)
         self.func = func
         self.args = args
+        self._worker_id = worker_id
         self._process = None
         self._queue = Queue()
 
@@ -56,6 +57,6 @@ class ProcessWorker(QObject):
                     percent, message = payload
                     self.inProgressSignal.emit(int(percent), message)
                 else:
-                    self.taskFinishedSignal.emit(status, payload)
+                    self.taskFinishedSignal.emit(self._worker_id, status, payload)
         except Exception as e:
-            self.taskFinishedSignal.emit(False, f"Error: {e}")
+            self.taskFinishedSignal.emit(self._worker_id, False, f"Error: {e}")

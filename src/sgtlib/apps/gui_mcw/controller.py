@@ -25,8 +25,8 @@ from ..base_contoller import BaseController
 
 from ... import __version__, __title__
 from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult
-from ...imaging.image_processor import ImageProcessor, FiberNetworkBuilder, ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
-from ...compute.graph_analyzer import GraphAnalyzer#, COMPUTING_DEVICE
+from ...imaging.image_processor import ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
+from ...compute.graph_analyzer import GraphAnalyzer  # , COMPUTING_DEVICE
 
 
 class MainController(BaseController):
@@ -48,7 +48,7 @@ class MainController(BaseController):
     @dataclass
     class SGTProcessWorker:
         base_funcs = BaseWorker()
-        process_worker: ProcessWorker|None = None
+        process_worker: ProcessWorker | None = None
         process_timer = QTimer()
 
     def __init__(self, qml_app: QApplication):
@@ -85,11 +85,6 @@ class MainController(BaseController):
         self.img3dGridModel = ImageGridModel([], set([]))
         self.imgHistogramModel = ImageGridModel([], set([]))
 
-        # Create QThreadWorker for long tasks
-        # self._thread_worker, self._task_worker = QThreadWorker(0, None), BaseWorker()
-        # self._thread_worker_ai, self._ai_worker = QThreadWorker(0, None), BaseWorker()
-        # self._thread_worker_hist, self._hist_worker = QThreadWorker(0, None), BaseWorker()
-
         # Create Worker Functions, Process and Timer
         self._gt_worker = MainController.SGTProcessWorker()
         self._ai_worker = MainController.SGTProcessWorker()
@@ -115,7 +110,7 @@ class MainController(BaseController):
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
             ai_search_params = [v for v in options_ai.values() if v["type"] == "search-params"]
 
-            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i+1}", "value": i}
+            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i + 1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
             self.imgBatchModel.reset_data(batch_list)
             self.imgScaleOptionModel.reset_data(sel_img_batch.scaling_options)
@@ -232,10 +227,15 @@ class MainController(BaseController):
         ntwk_p = sgt_obj.ntwk_p
         return ntwk_p.selected_images
 
-    def _stop_wait(self):
-        super()._stop_wait()
-        self._gt_worker.process_timer.stop()
-        self._ai_worker.process_timer.stop()
+    def _cancel_loading(self, worker_id):
+        if worker_id == 1:
+            self._stop_wait()
+            self._gt_worker.process_timer.stop()
+
+        if worker_id == 2:
+            self._stop_ai_search()
+            self._ai_worker.process_timer.stop()
+        print(f"We stopped {worker_id}")
 
     def _poll_progress(self):
         if self._gt_worker.process_worker:
@@ -268,17 +268,17 @@ class MainController(BaseController):
             logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
             self.errorSignal.emit(msg)
 
-    def _handle_finished(self, success_val: bool, result: None | list | ImageProcessor | FiberNetworkBuilder | GraphAnalyzer) -> None:
+    def _handle_finished(self, worker_id: int, success_val: bool, result: None | list | TaskResult) -> None:
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
-            success_val:
-            result:
-
+            worker_id: The process worker ID.
+            success_val: True if the task was successful, False otherwise.
+            result: The result of the task.
         Returns:
-
+            None
         """
-        self._stop_wait()
+        self._cancel_loading(worker_id)
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
@@ -297,17 +297,22 @@ class MainController(BaseController):
                     sgt_obj = self.get_selected_sgt_obj()
                     sgt_obj.ntwk_p = result.data
                     self._handle_progress_update(100, "Graph extracted successfully!")
+                    # Update image configs
+                    self.synchronize_img_models(sgt_obj)
                     # Update QML to visualize graph
                     self.changeImageSignal.emit()
-                    # Update Compute properties
-                    self.synchronize_graph_models(self.get_selected_sgt_obj())
+                    # Update Graph & Compute properties
+                    self.synchronize_graph_models(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
                     self._handle_progress_update(100, "GT PDF successfully generated!")
                     self.update_sgt_obj(result.data)
+                    sgt_obj = self.get_selected_sgt_obj()
+                    # Update image configs
+                    self.synchronize_img_models(sgt_obj)
                     # Update Compute properties
-                    self.synchronize_graph_models(self.get_selected_sgt_obj())
+                    self.synchronize_graph_models(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True,
                                                    ["GT calculations completed", "The image's GT parameters have been "
@@ -316,8 +321,11 @@ class MainController(BaseController):
                 if result.task_id == "Compute Multi GT":
                     self._handle_progress_update(100, "All GT PDF successfully generated!")
                     self.update_sgt_obj(result.data)
+                    sgt_obj = self.get_selected_sgt_obj()
+                    # Update image configs
+                    self.synchronize_img_models(sgt_obj)
                     # Update Compute properties
-                    self.synchronize_graph_models(self.get_selected_sgt_obj())
+                    self.synchronize_graph_models(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                            "images have been calculated. Check "
@@ -325,13 +333,12 @@ class MainController(BaseController):
                                                                                            "'Output Dir'."])
                 if result.task_id == "Metaheuristic Search":
                     # AI Mode search results (image configs)
-                    self._stop_ai_search()
                     if result.status == "Finished":
                         self._handle_progress_update(100, "Search completed!")
                         sgt_obj = self.get_selected_sgt_obj()
                         sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
-                        self.synchronize_img_models(self.get_selected_sgt_obj())
+                        self.synchronize_img_models(sgt_obj)
                         self.changeImageSignal.emit()
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
@@ -349,22 +356,61 @@ class MainController(BaseController):
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
 
-    def _start_process_worker(self) -> None:
+    def _start_process_worker(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
         """Start a background thread and its associated worker."""
-        pass
+
+        if task_fxn is None or worker_id is None:
+            return
+
+        if worker_id == 1:
+            self._gt_worker = MainController.SGTProcessWorker()
+            bg_worker = self._gt_worker
+        elif worker_id == 2:
+            self._ai_worker = MainController.SGTProcessWorker()
+            bg_worker = self._ai_worker
+        elif worker_id == 3:
+            self._hist_worker = MainController.SGTProcessWorker()
+            bg_worker = self._hist_worker
+        else:
+            return
+
+        if task_fxn == "Calculate-Histogram":
+            target = bg_worker.base_funcs.task_calculate_img_histogram
+        elif task_fxn == "Extract-Graph":
+            target = bg_worker.base_funcs.task_extract_graph
+        elif task_fxn == "Compute-GT":
+            target = bg_worker.base_funcs.task_compute_gt
+        elif task_fxn == "Compute-Multi-GT":
+            target = bg_worker.base_funcs.task_compute_multi_gt
+        elif task_fxn == "Export-Graph":
+            target = bg_worker.base_funcs.task_export_graph
+        elif task_fxn == "Save-Images":
+            target = bg_worker.base_funcs.task_save_images
+        elif task_fxn == "Metaheuristic-Search":
+            target = bg_worker.base_funcs.task_metaheuristic_search
+        else:
+            return
+
+        bg_worker.process_worker = ProcessWorker(worker_id, func=target, args=fxn_args)
+        bg_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+
+        if track_updates:
+            bg_worker.process_timer.timeout.connect(self._poll_progress)
+            bg_worker.base_funcs.progress_queue = bg_worker.process_worker.queue
+            bg_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
+            bg_worker.process_timer.start(500)  # poll after every 500 ms
+        bg_worker.process_worker.start()
 
     @Slot(int)
-    def stop_current_task(self, thread_id: int = 1):
+    def stop_current_task(self, worker_id: int = 1):
         """Stop a background thread and its associated worker."""
-        if thread_id == 1:
+        if worker_id == 1:
             self._gt_worker.process_worker.stop() if self._gt_worker.process_worker else None
-            self._gt_worker.process_timer.stop() if self._gt_worker.process_timer else None
-            self._handle_finished(True, None)
+            self._handle_finished(worker_id, True, None)
 
-        if thread_id == 2:
+        if worker_id == 2:
             self._ai_worker.process_worker.stop() if self._ai_worker.process_worker else None
-            self._ai_worker.process_timer.stop() if self._ai_worker.process_timer else None
-            self._handle_finished(True, None)
+            self._handle_finished(worker_id, True, None)
 
     @Slot(result=str)
     def get_sgt_title(self):
@@ -635,7 +681,7 @@ class MainController(BaseController):
         return False
 
     @Slot(str)
-    def apply_changes(self, view: str=""):
+    def apply_changes(self, view: str = ""):
         """Retrieve changes made by the user and apply to image/graph."""
         if not self._applying_changes:  # Disallow concurrent changes
             # print(f"change to {view}")
@@ -655,17 +701,11 @@ class MainController(BaseController):
         try:
             self._wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._hist_worker = MainController.SGTProcessWorker()
-            self._hist_worker.process_worker = ProcessWorker(
-                func=self._hist_worker.base_funcs.task_calculate_img_histogram,
-                args=(sgt_obj.ntwk_p,))
-            self._hist_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._hist_worker.process_worker.start()
+            self._start_process_worker(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
         except Exception as err:
             self._wait_flag_hist = False
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_finished(False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
+            self._handle_finished(3, False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
 
     @Slot()
     def apply_img_scaling(self):
@@ -697,20 +737,11 @@ class MainController(BaseController):
             self._handle_progress_update(20, "Exporting Graph Data...")
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._gt_worker = MainController.SGTProcessWorker()
-            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(
-                func=self._gt_worker.base_funcs.task_export_graph,
-                args=(sgt_obj.ntwk_p,))
-            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
-            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._gt_worker.process_worker.start()
-            self._gt_worker.process_timer.start(100)
+            self._start_process_worker(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Export Graph", "Error exporting graph to file. Try again."])
+            self.taskTerminatedSignal.emit(False,
+                                           ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
     @Slot()
     def save_img_files(self):
@@ -734,17 +765,7 @@ class MainController(BaseController):
             self._handle_progress_update(20, "Saving Images...")
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._gt_worker = MainController.SGTProcessWorker()
-            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(
-                func=self._gt_worker.base_funcs.task_save_images,
-                args=(sgt_obj.ntwk_p,))
-            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
-            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._gt_worker.process_worker.start()
-            self._gt_worker.process_timer.start(100)
+            self._start_process_worker(1, "Save-Images", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,
@@ -762,24 +783,14 @@ class MainController(BaseController):
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._gt_worker = MainController.SGTProcessWorker()
-            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(
-                func=self._gt_worker.base_funcs.task_extract_graph,
-                args=(sgt_obj.ntwk_p,))
-            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
-            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._gt_worker.process_worker.start()
-            self._gt_worker.process_timer.start(100)
+            self._start_process_worker(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
-            self._handle_finished(False, ["Graph Extraction Error",
-                                                          "Fatal error while trying to extract graph. "
-                                                          "Close the app and try again."])
+            self._handle_finished(1,False, ["Graph Extraction Error",
+                                          "Fatal error while trying to extract graph. "
+                                          "Close the app and try again."])
 
     @Slot()
     def run_graph_analyzer(self):
@@ -792,24 +803,14 @@ class MainController(BaseController):
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._gt_worker = MainController.SGTProcessWorker()
-            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(
-                func=self._gt_worker.base_funcs.task_compute_gt,
-                args=(sgt_obj,))
-            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
-            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._gt_worker.process_worker.start()
-            self._gt_worker.process_timer.start(100)
+            self._start_process_worker(1, "Compute-GT", (sgt_obj,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
-            self._handle_finished(False, ["GT Computation Error",
-                                                          "Fatal error while trying calculate GT parameters. "
-                                                          "Close the app and try again."])
+            self._handle_finished(1, False, ["GT Computation Error",
+                                          "Fatal error while trying calculate GT parameters. "
+                                          "Close the app and try again."])
 
     @Slot()
     def run_multi_graph_analyzer(self):
@@ -821,27 +822,17 @@ class MainController(BaseController):
 
         try:
             self._start_wait()
-
             # Update Configs
             self.replicate_sgt_configs()
-
-            self._gt_worker = MainController.SGTProcessWorker()
-            self._gt_worker.process_timer.timeout.connect(self._poll_progress)
-            self._gt_worker.process_worker = ProcessWorker(
-                func=self._gt_worker.base_funcs.task_compute_multi_gt,
-                args=(self._sgt_objs,))
-            self._gt_worker.base_funcs.progress_queue = self._gt_worker.process_worker.queue
-            self._gt_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._gt_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._gt_worker.process_worker.start()
-            self._gt_worker.process_timer.start(100)
+            # Start Background Process
+            self._start_process_worker(1, "Compute-Multi-GT", (self._sgt_objs,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
-            self._handle_finished(False, ["GT Computation Error",
-                                                          "Fatal error while trying calculate GT parameters. "
-                                                          "Close the app and try again."])
+            self._handle_finished(1,False, ["GT Computation Error",
+                                          "Fatal error while trying calculate GT parameters. "
+                                          "Close the app and try again."])
 
     @Slot()
     def run_ai_filter_search(self):
@@ -857,17 +848,7 @@ class MainController(BaseController):
         try:
             self._start_ai_search()
             sgt_obj = self.get_selected_sgt_obj()
-
-            self._ai_worker = MainController.SGTProcessWorker()
-            self._ai_worker.process_timer.timeout.connect(self._poll_progress)
-            self._ai_worker.process_worker = ProcessWorker(
-                func=self._ai_worker.base_funcs.task_metaheuristic_search,
-                args=(sgt_obj.ntwk_p,))
-            self._ai_worker.base_funcs.progress_queue = self._ai_worker.process_worker.queue
-            self._ai_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
-            self._ai_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-            self._ai_worker.process_worker.start()
-            self._ai_worker.process_timer.start(100)
+            self._start_process_worker(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_ai_search()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
@@ -942,7 +923,7 @@ class MainController(BaseController):
     def perform_cropping(self, allowed):
         self.performCroppingSignal.emit(allowed)
 
-    @Slot( int, int, int, int, int, int)
+    @Slot(int, int, int, int, int, int)
     def crop_image(self, x, y, crop_width, crop_height, qimg_width, qimg_height):
         """Crop image using PIL and save it."""
         try:
@@ -955,7 +936,8 @@ class MainController(BaseController):
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Cropping Error", "Error occurred while cropping image. Close the app and try again.")
+            self.showAlertSignal.emit("Cropping Error",
+                                      "Error occurred while cropping image. Close the app and try again.")
 
     @Slot(bool)
     def undo_cropping(self, undo: bool = True):
@@ -1054,7 +1036,8 @@ class MainController(BaseController):
         except Exception as err:
             # self._project_open = False
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Create Project Error", "Failed to create SGT project. Close the app and try again.")
+            self.showAlertSignal.emit("Create Project Error",
+                                      "Failed to create SGT project. Close the app and try again.")
             return False
 
     @Slot(str, result=bool)
