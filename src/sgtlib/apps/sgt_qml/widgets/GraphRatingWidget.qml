@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ColumnLayout {
-    id: starRating
+    id: ratingContainer
     width: 384
     height: 64
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
@@ -13,7 +13,7 @@ ColumnLayout {
 
     Label {
         Layout.alignment: Qt.AlignHCenter
-        text: "How good is the graph? Pick a score: 0 - 10"
+        text: "How good is the graph? Pick a score: 0 - 9."
         color: "#2266ff"
     }
 
@@ -44,16 +44,16 @@ ColumnLayout {
                             // Determine if clicked left or right half for half/full star
                             let localX = mouse.x
                             if (localX < starItem.width / 2)
-                                starRating.rating = index + 0.5
+                                ratingContainer.rating = index + 0.5
                             else
-                                starRating.rating = index + 1
+                                ratingContainer.rating = index + 1
                         }
                     }
                 }
 
                 Label {
                     Layout.alignment: Qt.AlignHCenter
-                    text: index + 1
+                    text: index
                     font.pixelSize: 10
                 }
             }

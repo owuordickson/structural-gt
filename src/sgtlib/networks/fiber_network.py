@@ -39,6 +39,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self._configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
         self._props: list = []
         self._img_ntwk: MatLike | None = None
+        self._score_rating: float = -1.0
         self._nx_giant_graph: nx.Graph | None = None
         self._nx_graph: nx.Graph | None = None
         self._ig_graph: None | ig.Graph = None
@@ -103,6 +104,17 @@ class FiberNetworkBuilder(ProgressUpdate):
     @property
     def skel_obj(self):
         return self._skel_obj
+
+    @property
+    def score_rating(self) -> float:
+        """Returns the score rating of the graph."""
+        return self._score_rating
+
+    @score_rating.setter
+    def score_rating(self, score: float):
+        """Sets the score rating of the graph."""
+        if 0 <= score <= 100.0:
+            self._score_rating = score
 
     def fit_graph(self, save_dir: str, input_data: MatLike | str = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
         """
@@ -372,7 +384,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             ["Node Count", str(graph.number_of_nodes())],
             ["Graph Count", str(len(connected_components))],
             ["Sub-graph Count", str(num_graphs)],
-            ["Giant graph ratio", f"{round((connect_ratio * 100), 3)}%"]]
+            ["Giant graph ratio", f"{round((connect_ratio * 100), 3)}%"],
+            ["Accuracy Score"], f"{self._score_rating}%" if self._score_rating > 0 else "N/A"
+        ]
         return props
 
     def get_weight_type(self) -> str | None:

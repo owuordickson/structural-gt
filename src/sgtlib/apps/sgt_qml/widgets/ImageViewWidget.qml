@@ -248,7 +248,9 @@ ColumnLayout {
                         anchors.fill: parent
                         spacing: 2
 
-                        GraphRatingWidget{}
+                        GraphRatingWidget{
+                            id: graphRating
+                        }
 
                         RowLayout {
                             spacing: 10
@@ -280,7 +282,7 @@ ColumnLayout {
                                 text: ""
                                 visible: mainController.enable_img_controls()
                                 onClicked: {
-                                    //mainController.update_graph_rating();
+                                    mainController.rate_graph(graphRating.rating);
                                     drpDownRating.close();
                                 }
 

@@ -783,6 +783,17 @@ class MainController(BaseController):
                                           "Fatal error while trying to extract graph. "
                                           "Close the app and try again."])
 
+    @Slot(float)
+    def rate_graph(self, rating: float):
+        """Rate extracted graph on a scale of 1-10"""
+        # 1. Convert the score from 1-10 to range 0-100
+        percent_rating = rating * 10
+        updated = self.get_selected_sgt_obj().ntwk_p.update_graph_rating(percent_rating)
+        if updated:
+            # Send the file and rating to my email address (in the future, to the server)
+            self.showAlertSignal.emit("Graph Rated", "Graph successfully rated!")
+        print(f"{updated} -- Graph scored {percent_rating}%")
+
     @Slot()
     def run_graph_analyzer(self):
         """Retrieve settings from the model and send to Python."""
