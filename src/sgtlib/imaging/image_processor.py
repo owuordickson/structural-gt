@@ -457,15 +457,18 @@ class ImageProcessor(ProgressUpdate):
         """
         opt_model = self._configs
         if opt_model["find_filter_selections"]["value"] == 1:
-            self._filter_space.ignore_candidates.append(self._filter_space.best_candidate.position)
+            if self._filter_space.best_candidate is not None:
+                self._filter_space.ignore_candidates.append(self._filter_space.best_candidate.position)
 
         if opt_model["find_filter_values"]["value"] == 1:
             val_space = self._filter_space.best_candidate.value_space
-            val_space.ignore_candidates.append(val_space.best_candidate.position)
+            if val_space.best_candidate is not None:
+                val_space.ignore_candidates.append(val_space.best_candidate.position)
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
             bright_space = self._filter_space.best_candidate.brightness_space
-            bright_space.ignore_candidates.append(bright_space.best_candidate.position)
+            if bright_space.best_candidate is not None:
+                bright_space.ignore_candidates.append(bright_space.best_candidate.position)
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""

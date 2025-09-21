@@ -369,7 +369,12 @@ class FilterSearchSpace:
         img_obj.img_bin = img_obj.binarize_img(img_mod)
         img_obj.img_mod = img_mod
         # Compute SD as cost
-        eval_std, eval_hist = img_obj.evaluate_img_binary()
+        try:
+            eval_std, eval_hist = img_obj.evaluate_img_binary()
+        except Exception as e:
+            print(f"Error in cost function: {e}")
+            eval_std = np.inf
+        eval_std = np.inf if eval_std is None else eval_std
         return eval_std
 
     @staticmethod
@@ -480,7 +485,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
             break
 
         # 1.3. Update the current best candidate
-        if best_individual is not None and best_individual.std_cost < best_sol.std_cost:
+        if best_individual.std_cost < best_sol.std_cost:
             best_sol = best_individual
             best_configs = temp_configs.copy()
 
@@ -567,7 +572,11 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
                 FilterSearchSpace.decode_filter_values(neighbor.img_configs, val_sol, bri_sol)
                 neighbor.std_cost = FilterSearchSpace.cost_function(neighbor.img_configs, img_obj)
 
-                if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
+                if best_neighbor is None:
+                    best_neighbor = neighbor
+                if best_neighbor.std_cost is None:
+                    best_neighbor = neighbor
+                if neighbor.std_cost < best_neighbor.std_cost:
                     best_neighbor = neighbor
             elif isinstance(neighbor, FilterSearchSpace.Candidate):
                  new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=neighbor)
@@ -583,7 +592,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
         if best_neighbor.std_cost is None:
             break
 
-        if best_neighbor is not None and best_neighbor.std_cost < best_sol.std_cost:
+        if best_neighbor.std_cost < best_sol.std_cost:
             best_sol = best_neighbor
         else:
             # No improvement found, reached a local optimum
