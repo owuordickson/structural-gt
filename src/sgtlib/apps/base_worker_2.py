@@ -141,7 +141,7 @@ class BaseWorker:
         """"""
         try:
             if ntwk_p.filter_space is not None:
-                if ntwk_p.filter_space.best_candidate is not None:
+                if ntwk_p.filter_space.best_candidate.position not in ntwk_p.filter_space.ignore_candidates:
                     # Filters already selected and values estimated
                     task_data = TaskResult(task_id="Metaheuristic Search", status="Stopped", data=ntwk_p)
                     return True, task_data

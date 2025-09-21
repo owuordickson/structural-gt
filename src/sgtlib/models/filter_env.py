@@ -306,51 +306,6 @@ class FilterSearchSpace:
         :return: The search space.
         """
 
-        """
-        def encode_filter_combination(
-                threshold_type=1,  # 0, 1, or 2 → needs 2 bits
-                apply_dark_foreground=0,
-                apply_gamma=1,
-                apply_auto_level=0,
-                apply_laplacian_gradient=0,
-                apply_gaussian_blur=0,
-                apply_lowpass_filter=0,
-                apply_sobel_gradient=0,
-                apply_median_filter=0,
-                apply_scharr_gradient=0,
-        )-> tuple[str, int]:
-            # Encode 10 image filter configurations as an 11-bit binary string (2 bits for the threshold type,
-            # 9 bits for filters). The total number of filter combinations is 2^11 = 2048.
-            # :returns: Both the binary string and integer representation.
-
-            # --- Step 1: Encode threshold_type into 2 bits ---
-            if threshold_type not in [0, 1, 2]:
-                raise ValueError("threshold_type must be 0, 1, or 2")
-            threshold_bits = format(threshold_type, "02b")  # 2-bit binary
-
-            # --- Step 2: Encode 9 filters into 1 bit each ---
-            filters = [
-                apply_dark_foreground,
-                apply_gamma,
-                apply_auto_level,
-                apply_laplacian_gradient,
-                apply_gaussian_blur,
-                apply_lowpass_filter,
-                apply_sobel_gradient,
-                apply_median_filter,
-                apply_scharr_gradient,
-            ]
-
-            filter_bits = "".join(str(int(f)) for f in filters)
-
-            # --- Step 3: Concatenate ---
-            bitstring = threshold_bits + filter_bits
-
-            # --- Step 4: Convert to integer ---
-            bit_int = int(bitstring, 2)
-            return bitstring, bit_int
-        """
-
         if img_obj is None:
             return None
 

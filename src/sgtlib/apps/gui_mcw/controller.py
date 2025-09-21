@@ -236,7 +236,6 @@ class MainController(BaseController):
 
         if worker_id == 3:
             self._hist_worker.process_worker = None
-        print(f"We stopped {worker_id}")
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
@@ -249,7 +248,6 @@ class MainController(BaseController):
 
         """
         if progress_val is None:
-            print(msg)
             return
 
         if 0 <= progress_val <= 100:
@@ -676,7 +674,6 @@ class MainController(BaseController):
     def apply_changes(self, view: str = ""):
         """Retrieve changes made by the user and apply to image/graph."""
         if not self._applying_changes:  # Disallow concurrent changes
-            # print(f"change to {view}")
             self._applying_changes = True
             if view != "":
                 sgt_obj = self.get_selected_sgt_obj()
@@ -844,6 +841,13 @@ class MainController(BaseController):
         except Exception as err:
             self._stop_ai_search()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
+
+    @Slot()
+    def reset_ai_filter_results(self):
+        """Reset the results by moving the best candidate to the ignore list"""
+        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj.ntwk_p.reset_metaheuristic_search()
+        self.run_ai_filter_search()
 
     @Slot(result=bool)
     def run_save_project(self):

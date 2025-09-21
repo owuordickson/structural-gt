@@ -451,6 +451,22 @@ class ImageProcessor(ProgressUpdate):
             img_obj.img_mod, img_obj.img_bin = None, None
             sel_batch.graph_obj.reset_graph()
 
+    def reset_metaheuristic_search(self):
+        """
+        Reset the search results for the metaheuristic algorithm by moving the 'best candidate' to the 'ignore list'
+        """
+        opt_model = self._configs
+        if opt_model["find_filter_selections"]["value"] == 1:
+            self._filter_space.ignore_candidates.append(self._filter_space.best_candidate.position)
+
+        if opt_model["find_filter_values"]["value"] == 1:
+            val_space = self._filter_space.best_candidate.value_space
+            val_space.ignore_candidates.append(val_space.best_candidate.position)
+
+        if opt_model["find_brightness_contrast"]["value"] == 1:
+            bright_space = self._filter_space.best_candidate.brightness_space
+            bright_space.ignore_candidates.append(bright_space.best_candidate.position)
+
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
 

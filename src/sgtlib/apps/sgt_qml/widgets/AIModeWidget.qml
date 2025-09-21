@@ -71,7 +71,7 @@ Rectangle {
                 ToolTip.text: "Re-run"
                 ToolTip.visible: btnRunAI.hovered
                 visible: !mainController.ai_busy && mainController.ai_mode_active
-                onClicked: console.log("Run AI")
+                onClicked: mainController.reset_ai_filter_results()
             }
 
             BusyIndicator {
