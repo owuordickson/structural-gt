@@ -303,7 +303,7 @@ class MainController(BaseController):
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)
-                    # Update Compute properties
+                    # Update Graph & Compute properties
                     self.synchronize_graph_models(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True,
@@ -316,7 +316,7 @@ class MainController(BaseController):
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)
-                    # Update Compute properties
+                    # Update Graph & Compute properties
                     self.synchronize_graph_models(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
@@ -331,6 +331,8 @@ class MainController(BaseController):
                         sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
                         self.synchronize_img_models(sgt_obj)
+                        # Update Graph & Compute properties
+                        self.synchronize_graph_models(sgt_obj)
                         self.changeImageSignal.emit()
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
