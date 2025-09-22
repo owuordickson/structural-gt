@@ -11,7 +11,7 @@ Basic.BusyIndicator {
     height: (control.implicitHeight > 0 ? control.implicitHeight : defaultSize)
 
     // Make running externally controllable
-    property bool running: true
+    //property bool running: true
 
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
