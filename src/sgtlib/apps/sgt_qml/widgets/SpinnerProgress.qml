@@ -10,10 +10,9 @@ Basic.BusyIndicator {
     width: (control.implicitWidth > 0 ? control.implicitWidth : defaultSize)
     height: (control.implicitHeight > 0 ? control.implicitHeight : defaultSize)
 
-    // Make running externally controllable
-    //property bool running: true
-
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+
+    property double markerSize: control.width > 48 ? 5 : 2.5
 
     contentItem: Item {
         implicitWidth: control.defaultSize
@@ -47,8 +46,8 @@ Basic.BusyIndicator {
                     id: delegate
                     x: item.width / 2 - width / 2
                     y: item.height / 2 - height / 2
-                    implicitWidth: 10
-                    implicitHeight: 10
+                    implicitWidth: markerSize * 2
+                    implicitHeight: markerSize * 2
                     radius: 5
                     color: "#2299ff"
 
@@ -56,12 +55,12 @@ Basic.BusyIndicator {
 
                     transform: [
                         Translate {
-                            y: -Math.min(item.width, item.height) * 0.5 + 5
+                            y: -Math.min(item.width, item.height) * 0.5 + markerSize
                         },
                         Rotation {
                             angle: delegate.index / repeater.count * 360
-                            origin.x: 5
-                            origin.y: 5
+                            origin.x: markerSize
+                            origin.y: markerSize
                         }
                     ]
                 }

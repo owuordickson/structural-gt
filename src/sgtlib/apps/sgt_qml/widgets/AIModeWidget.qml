@@ -74,11 +74,12 @@ Rectangle {
                 onClicked: mainController.reset_ai_filter_results()
             }
 
-            BusyIndicator {
-                id: progressAIMode
-                running: mainController.ai_busy
-                width: 28
-                height: 28
+            Column {
+                SpinnerProgress {
+                    running: mainController.ai_busy
+                    width: 24
+                    height: 24
+                }
             }
 
             Basic.Button {
@@ -98,7 +99,8 @@ Rectangle {
             }
         }
 
-        AISearchWidget{}
+        AISearchWidget {
+        }
 
         RowLayout {
             Layout.fillWidth: true
@@ -119,7 +121,7 @@ Rectangle {
 
         function onUpdateProgressSignal(val, msg) {
             if (val <= 100) {
-                lblAIStatusMsg.text = val + "%: " +msg;
+                lblAIStatusMsg.text = val + "%: " + msg;
             } else {
                 lblAIStatusMsg.text = msg;
             }
