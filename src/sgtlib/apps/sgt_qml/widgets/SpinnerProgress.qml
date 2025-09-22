@@ -4,27 +4,30 @@ import QtQuick.Controls.Basic as Basic
 
 Basic.BusyIndicator {
     id: control
-    running: mainController.wait
-    width: 64
-    height: 64
-    anchors.horizontalCenter: parent.horizontalCenter
+
+    // Allow user to override width/height, default to 64
+    property int defaultSize: 64
+    width: (control.implicitWidth > 0 ? control.implicitWidth : defaultSize)
+    height: (control.implicitHeight > 0 ? control.implicitHeight : defaultSize)
+
+    // Make running externally controllable
+    property bool running: true
+
+    anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
     contentItem: Item {
-        implicitWidth: 64
-        implicitHeight: 64
+        implicitWidth: control.defaultSize
+        implicitHeight: control.defaultSize
 
         Item {
             id: item
-            x: parent.width / 2 - 32
-            y: parent.height / 2 - 32
-            width: 64
-            height: 64
+            anchors.centerIn: parent
+            width: control.width
+            height: control.height
             opacity: control.running ? 1 : 0
 
             Behavior on opacity {
-                OpacityAnimator {
-                    duration: 250
-                }
+                OpacityAnimator { duration: 250 }
             }
 
             RotationAnimator {

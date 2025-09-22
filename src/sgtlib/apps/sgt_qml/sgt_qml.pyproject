@@ -51,5 +51,6 @@
         "widgets/AIModeWidget.qml"
         "widgets/AIModeWidget.qml",
         "widgets/GraphRatingWidget.qml",
+        "widgets/SpinnerProgress.qml",
     ]
 }

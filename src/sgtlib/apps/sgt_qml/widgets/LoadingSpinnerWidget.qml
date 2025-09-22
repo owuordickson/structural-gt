@@ -18,7 +18,13 @@ Item {
         anchors.centerIn: parent
         spacing: 12
 
-        Basic.BusyIndicator {
+        SpinnerProgress{
+            running: mainController.wait
+            width: 32
+            height: 32
+        }
+
+        /*Basic.BusyIndicator {
             id: control
             running: mainController.wait
             width: 64
@@ -81,7 +87,7 @@ Item {
                     }
                 }
             }
-        }
+        }*/
 
         Label {
             text: mainController.wait_text
