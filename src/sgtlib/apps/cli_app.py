@@ -8,12 +8,9 @@ import sys
 import logging
 from optparse import OptionParser
 
-from .base_worker import BaseWorker
+from .base_worker import BaseWorkerTerm
 from ..utils.sgt_utils import TaskResult
 from .base_contoller import BaseController
-from ..compute.graph_analyzer import GraphAnalyzer
-from ..imaging.image_processor import ImageProcessor
-from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.config_loader import strict_read_config_file
 
 logger = logging.getLogger("SGT App")
@@ -28,9 +25,8 @@ class TerminalApp(BaseController):
         :param config_path: the path to the configuration file
         """
         super().__init__(config_file=config_path)
-        self._task_worker = BaseWorker()
+        self._task_worker = BaseWorkerTerm()
         self._task_worker.inProgressSignal.connect(TerminalApp.update_progress)
-        self._task_worker.taskFinishedSignal.connect(TerminalApp.task_finished)
         self._selected_sgt_obj_index = 0
         # self.showAlertSignal.connect(self.show_alert)
 
@@ -55,7 +51,7 @@ class TerminalApp(BaseController):
             sys.exit('System exit')
 
     @staticmethod
-    def task_finished(success_val: bool, result: None|list|ImageProcessor|FiberNetworkBuilder|GraphAnalyzer) -> None:
+    def task_finished(success_val: bool, result: None | list | TaskResult) -> None:
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
@@ -71,12 +67,19 @@ class TerminalApp(BaseController):
                 TerminalApp.update_progress(101, f"{result[0]}: {result[1]}")
         else:
             if isinstance(result, TaskResult):
+                if result.task_id == "Apply Filters":
+                    TerminalApp.update_progress(100, "Filters applied successfully!")
+                if result.task_id == "Export Graph" or result.task_id == "Save Images":
+                    TerminalApp.update_progress(100, "Files Saved!")
                 if result.task_id == "Extract Graph":
                     TerminalApp.update_progress(100, "Graph extracted successfully!")
-                elif result.task_id == "Compute GT":
+                if result.task_id == "Compute GT":
                     TerminalApp.update_progress(100, "GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
-                elif result.task_id == "Compute Multi GT":
+                if result.task_id == "Compute Multi GT":
                     TerminalApp.update_progress(100, "All GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
+                if result.task_id == "Metaheuristic Search":
+                    if result.status == "Finished":
+                        TerminalApp.update_progress(100, "Search completed!")
             elif type(result) is list:
                 # Histogram data
                 pass
@@ -165,14 +168,17 @@ class TerminalApp(BaseController):
             pass
         elif cfg.run_task == 1:
             sgt_obj = term_app.get_selected_sgt_obj()
-            term_app._task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            status, result = term_app._task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            TerminalApp.task_finished(status, result)
         elif cfg.run_task == 2:
             run_multi_gt = True if cfg.img_dir_path != "" else False
             if run_multi_gt:
                 term_app.replicate_sgt_configs()
-                term_app._task_worker.task_compute_multi_gt(term_app._sgt_objs)
+                status, result = term_app._task_worker.task_compute_multi_gt(term_app._sgt_objs)
+                TerminalApp.task_finished(status, result)
             else:
-                term_app._task_worker.task_compute_gt(term_app.get_selected_sgt_obj())
+                status, result = term_app._task_worker.task_compute_gt(term_app.get_selected_sgt_obj())
+                TerminalApp.task_finished(status, result)
         else:
             term_app.update_progress(-1, "Invalid GT task selected! System will exit.")
             sys.exit('System exit')

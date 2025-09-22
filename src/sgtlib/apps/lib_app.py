@@ -46,10 +46,12 @@ class ExpressGT:
             for i, key in enumerate(self._term_app.sgt_objs):
                 sgt_obj = self._term_app.sgt_objs[key]
                 TerminalApp.update_progress(101, f"Processing Image {i+1} of {count}")
-                self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+                status, result = self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+                TerminalApp.task_finished(status, result)
         else:
             sgt_obj = self._term_app.get_selected_sgt_obj()
-            self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+            status, result = self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+            TerminalApp.task_finished(status, result)
 
     def extract_graph(self):
         """Run StructuralGT task to extract graph."""
@@ -61,16 +63,20 @@ class ExpressGT:
             for i, key in enumerate(self._term_app.sgt_objs):
                 sgt_obj = self._term_app.sgt_objs[key]
                 TerminalApp.update_progress(101, f"Extracting Graph {i+1} of {count}")
-                self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+                status, result = self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+                TerminalApp.task_finished(status, result)
         else:
             sgt_obj = self._term_app.get_selected_sgt_obj()
-            self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            status, result = self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            TerminalApp.task_finished(status, result)
 
     def compute_gt_descriptors(self):
         """Run StructuralGT task to compute the selected graph theory parameters/descriptors."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             self._term_app.replicate_sgt_configs()
-            self._term_app.task_worker.task_compute_multi_gt(self._term_app.sgt_objs)
+            status, result = self._term_app.task_worker.task_compute_multi_gt(self._term_app.sgt_objs)
+            TerminalApp.task_finished(status, result)
         else:
-            self._term_app.task_worker.task_compute_gt(self._term_app.get_selected_sgt_obj())
+            status, result = self._term_app.task_worker.task_compute_gt(self._term_app.get_selected_sgt_obj())
+            TerminalApp.task_finished(status, result)

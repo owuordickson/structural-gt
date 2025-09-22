@@ -20,7 +20,7 @@ from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
 # from .qthread_worker import QThreadWorker
 from .process_worker import ProcessWorker
-from ..base_worker_2 import BaseWorker
+from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
 from ... import __version__, __title__

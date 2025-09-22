@@ -10,26 +10,25 @@ from ..compute.graph_analyzer import GraphAnalyzer
 from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult
 
 
-class BaseWorker(QObject):
-
-    inProgressSignal = Signal(int, str)         # progress-value (0-100), progress-message (str)
-    taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
+class BaseWorker:
 
     def __init__(self):
-        super().__init__()
+        self.progress_queue = None
 
-    def _update_progress(self, value, msg):
+    def _update_progress(self, percent, msg):
         """
         Send the update_progress signal to all listeners.
         Progress-value (0-100), progress-message (str)
         Args:
-            value: progress value (0-100), (-1, if it is an error), (101, if it is the nav-control message)
+            percent: progress value (0-100), (-1, if it is an error), (101, if it is the nav-control message)
             msg: progress message (str)
 
         Returns:
 
         """
-        self.inProgressSignal.emit(value, msg)
+        if self.progress_queue is None:
+            return
+        self.progress_queue.put(("progress", (percent, msg)))
 
     def task_save_images(self, ntwk_p):
         """"""
@@ -39,10 +38,10 @@ class BaseWorker(QObject):
             self._update_progress(95, "Saving Images...")
             task_data = TaskResult(task_id="Save Images", status="Finished",
                                    message="Image files successfully saved in 'Output Dir'")
-            self.taskFinishedSignal.emit(True, task_data)
+            return True, task_data
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
-            self.taskFinishedSignal.emit(False, ["Save Images Failed", "Error while saving images!"])
+            return False, ["Save Images Failed", "Error while saving images!"]
 
     def task_export_graph(self, ntwk_p):
         """"""
@@ -57,10 +56,10 @@ class BaseWorker(QObject):
             self._update_progress(95, "Exporting Graph...")
             task_data = TaskResult(task_id="Export Graph", status="Finished",
                                    message="Graph successfully exported to file and saved in 'Output Dir'")
-            self.taskFinishedSignal.emit(True, task_data)
+            return True, task_data
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
-            self.taskFinishedSignal.emit(False, ["Export Graph Failed", "Error while exporting graph!"])
+            return False, ["Export Graph Failed", "Error while exporting graph!"]
 
     def task_apply_img_filters(self, ntwk_p):
         """"""
@@ -68,25 +67,26 @@ class BaseWorker(QObject):
             ntwk_p.add_listener(self._update_progress)
             ntwk_p.apply_img_filters()
             ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Apply Filters", status="Finished")
-            self.taskFinishedSignal.emit(True, task_data)
+            task_data = TaskResult(task_id="Apply Filters", status="Finished", data=ntwk_p)
+            return True, task_data
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             # self.abort = True
             self._update_progress(-1, "Error encountered! Try again")
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, ["Apply Filters Failed", "Fatal error while applying filters! "
+            return False, ["Apply Filters Failed", "Fatal error while applying filters! "
                                                                          "Change filter settings and try again; "
-                                                                         "Or, Close the app and try again."])
+                                                                         "Or, Close the app and try again."]
 
     def task_calculate_img_histogram(self, ntwk_p):
         """"""
         try:
             hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=ntwk_p.selected_batch_view)) for obj in ntwk_p.image_obj_3d]
-            self.taskFinishedSignal.emit(True, hist_images)
+            self._update_progress(101, "Histogram Calculation Finished")
+            return True, hist_images
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
-            self.taskFinishedSignal.emit(False, ["Histogram Calculation Failed", "Error while calculating image histogram!"])
+            return False, ["Histogram Calculation Failed", "Error while calculating image histogram!"]
 
     def task_extract_graph(self, ntwk_p):
         """"""
@@ -98,56 +98,54 @@ class BaseWorker(QObject):
             if ntwk_p.abort:
                 raise AbortException("Process aborted")
             ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Extract Graph", status="Finished")
-            self.taskFinishedSignal.emit(True, task_data)
+            task_data = TaskResult(task_id="Extract Graph", status="Finished", message="", data=ntwk_p)
+            return True, task_data
         except AbortException as err:
             logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})
             # Clean up listeners before exiting
             ntwk_p.remove_listener(self._update_progress)
-            # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, ["Extract Graph Aborted", "Graph extraction aborted due to error! "
+            return False, ["Extract Graph Aborted", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
                                                                           "and try again. If error persists then close "
-                                                                          "the app and try again."])
+                                                                          "the app and try again."]
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             self._update_progress(-1, "Error encountered! Try again")
             # Clean up listeners before exiting
             ntwk_p.remove_listener(self._update_progress)
             # Emit failure signal (aborted)
-            self.taskFinishedSignal.emit(False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
+            return False, ["Extract Graph Failed", "Graph extraction aborted due to error! "
                                                                           "Change image filters and/or graph settings "
                                                                           "and try again. If error persists then close "
-                                                                          "the app and try again."])
+                                                                          "the app and try again."]
 
     def task_compute_gt(self, sgt_obj):
         """"""
         success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, self._update_progress, save_to_pdf=True)
         if success:
-            task_data = TaskResult(task_id="Compute GT", status="Finished")
-            self.taskFinishedSignal.emit(True, task_data)
+            task_data = TaskResult(task_id="Compute GT", status="Finished", data=new_sgt)
+            return True, task_data
         else:
-            self.taskFinishedSignal.emit(False, ["SGT Computations Failed", "Fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."])
+            return False, ["SGT Computations Failed", "Fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."]
 
     def task_compute_multi_gt(self, sgt_objs):
         """"""
         new_sgt_objs = GraphAnalyzer.safe_run_multi_analyzer(sgt_objs, self._update_progress)
         if new_sgt_objs is not None:
-            task_data = TaskResult(task_id="Compute Multi GT", status="Finished")
-            self.taskFinishedSignal.emit(True, task_data)
+            task_data = TaskResult(task_id="Compute Multi GT", status="Finished", data=new_sgt_objs)
+            return True, task_data
         else:
             msg = "Either task was aborted by user or a fatal error occurred while computing GT parameters. Change image filters and/or graph settings and try again. If error persists then close the app and try again."
-            self.taskFinishedSignal.emit(False, ["SGT Computations Aborted/Failed", msg])
+            return False, ["SGT Computations Aborted/Failed", msg]
 
     def task_metaheuristic_search(self, ntwk_p):
         """"""
         try:
             if ntwk_p.filter_space is not None:
-                if ntwk_p.filter_space.best_candidate is not None:
+                if ntwk_p.filter_space.best_candidate.position not in ntwk_p.filter_space.ignore_candidates:
                     # Filters already selected and values estimated
-                    task_data = TaskResult(task_id="Metaheuristic Search", status="Stopped")
-                    self.taskFinishedSignal.emit(True, task_data)
-                    return
+                    task_data = TaskResult(task_id="Metaheuristic Search", status="Stopped", data=ntwk_p)
+                    return True, task_data
 
             ntwk_p.abort = False
             ntwk_p.add_listener(self._update_progress)
@@ -156,13 +154,28 @@ class BaseWorker(QObject):
                 raise AbortException("Task stopped")
             ntwk_p.image_obj.configs = img_configs.copy()
             ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Metaheuristic Search", status="Finished")
-            self.taskFinishedSignal.emit(True, task_data)
+            task_data = TaskResult(task_id="Metaheuristic Search", status="Finished", data=ntwk_p)
+            return True, task_data
         except AbortException as err:
             logging.exception("Task Stopped: %s", err, extra={'user': 'SGT Logs'})
             ntwk_p.remove_listener(self._update_progress)
-            self.taskFinishedSignal.emit(False, ["Metaheuristic Search Stopped", "Search stopped by user or due to error!"])
+            return False, ["Metaheuristic Search Stopped", "Search stopped by user or due to error!"]
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             ntwk_p.remove_listener(self._update_progress)
-            self.taskFinishedSignal.emit(False, ["Metaheuristic Search Failed", "Error occurred while running metaheuristic search!"])
+            return False, ["Metaheuristic Search Failed", "Error occurred while running metaheuristic search!"]
+
+
+
+class BaseWorkerTerm(QObject, BaseWorker):
+
+    inProgressSignal = Signal(int, str)  # progress-value (0-100), progress-message (str)
+    # taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
+
+    def __init__(self):
+        super(BaseWorkerTerm, self).__init__()
+
+    def _update_progress(self, percent, msg):
+        self.inProgressSignal.emit(percent, msg)
+
+
