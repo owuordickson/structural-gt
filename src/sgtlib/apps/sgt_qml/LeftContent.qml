@@ -1,6 +1,8 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15 as MaterialControls
 import QtQuick.Layouts
+//import QtQuick.Controls.Basic as Basic
 import "components"
 
 Rectangle {
@@ -12,7 +14,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
 
-        TabBar {
+        MaterialControls.TabBar {
             id: tabBar
             currentIndex: 2
             Layout.fillWidth: true
