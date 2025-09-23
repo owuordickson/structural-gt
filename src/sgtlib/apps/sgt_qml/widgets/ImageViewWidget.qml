@@ -282,8 +282,8 @@ ColumnLayout {
                                 text: ""
                                 visible: mainController.enable_img_controls()
                                 onClicked: {
-                                    mainController.rate_graph(graphRating.rating);
                                     drpDownRating.close();
+                                    mainController.rate_graph(graphRating.rating);
                                 }
 
                                 Rectangle {

@@ -231,8 +231,8 @@ ApplicationWindow {
                             createProjectControls.lblLocation.color = "red";
 
                         } else {
-                            mainController.create_sgt_project(name, location);
                             createProjectDialog.close();
+                            mainController.create_sgt_project(name, location);
                         }
                     }
 
@@ -430,8 +430,8 @@ ApplicationWindow {
                     text: ""
                     visible: mainController.enable_img_controls()
                     onClicked: {
-                        mainController.run_extract_graph();
                         dialogExtractGraph.close();
+                        mainController.run_extract_graph();
                     }
 
                     Rectangle {
@@ -624,8 +624,8 @@ ApplicationWindow {
                     Layout.preferredHeight: 30
                     text: ""
                     onClicked: {
+                        dialogRunAnalyzer.close();
                         mainController.run_graph_analyzer();
-                        dialogRunAnalyzer.close()
                     }
 
                     Rectangle {
@@ -694,7 +694,7 @@ ApplicationWindow {
                     Layout.preferredHeight: 30
                     text: ""
                     onClicked: {
-                        dialogRunAnalyzer.close();
+                        dialogRunMultiAnalyzer.close();
                         mainController.run_multi_graph_analyzer();
                     }
 

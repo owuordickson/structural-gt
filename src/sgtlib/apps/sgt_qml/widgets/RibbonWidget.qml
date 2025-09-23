@@ -355,8 +355,8 @@ Rectangle {
                                 text: ""
                                 visible: mainController.enable_img_controls()
                                 onClicked: {
-                                    mainController.run_extract_graph();
                                     drpDownGraph.close();
+                                    mainController.run_extract_graph();
                                 }
 
                                 Rectangle {

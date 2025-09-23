@@ -55,10 +55,8 @@ Item {
                                 var val = checked ? 1 : 0;
                                 var index = imgFilterModel.index(model.index, 0);
                                 imgScaleOptionModel.setData(index, val, valueRole);
-                                mainController.apply_img_scaling();
-
-                                //if (dialogRescaleCtrl) { dialogRescaleCtrl.close(); }
                                 drpDownRescale.close();
+                                mainController.apply_img_scaling();
                             }
                         }
                     }
