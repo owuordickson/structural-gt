@@ -817,15 +817,15 @@ class ImageProcessor(ProgressUpdate):
                     self.update_status([-1, f"Filter {bin_img_patch.shape} graph extraction failed!"])
         return graph_groups
 
-    def update_graph_rating(self, score: float) -> bool:
+    def update_graph_rating(self, score: float) -> str|None:
         """Updates the score rating of the extracted graph."""
         if score is None:
             self.update_status([101, "The score cannot be None."])
-            return False
+            return None
 
         if score < 0  or score > 100:
             self.update_status([101, "The score rating is out of range! Please try 0-100."])
-            return False
+            return None
 
         # 1. Update rating
         self.graph_obj.score_rating = score
@@ -837,15 +837,13 @@ class ImageProcessor(ProgressUpdate):
         # 3. Save the graph image as JPG
         if self.graph_obj.img_ntwk is None:
             self.update_status([101, "No graph extracted! Please extract a graph first."])
-            return False
-
+            return None
         img_file_name, out_dir = self.get_filenames()
-        graph_filename = img_file_name + f"_rated_graph-{score}.jpg"
+        graph_filename = img_file_name + f"_rated_graph-{int(score)}percent.jpg"
         graph_file = os.path.join(out_dir, graph_filename)
         cv2.imwrite(graph_file, self.graph_obj.img_ntwk)
         self.update_status([101, f"Graph image downloaded!"])
-        return True
-
+        return graph_file
 
     def get_filenames(self, file_path: str = None):
         """

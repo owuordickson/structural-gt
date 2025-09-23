@@ -27,6 +27,10 @@ from dataclasses import dataclass
 
 
 
+# Token from your Dropbox App (Scoped App Folder)
+DROPBOX_ACCESS_TOKEN = "sl.u.AF_h6SCrM4ltRfBHtT66aXaIGxoTIOZ4ZIj5HEtcb3bPFC7tYGRYEiq4OJjOPvEQVoPuNIeslsi1gd5BhLNnmX9-DIA6zsc8MrhFsBJEwhZNop4tZVJUpEl0v25wHCAdsA2M7z_A_ZWLk7yBsyxPTeWFOnHOcW_D3UCFHq-cw9tc1gCebM9OIGYE4Y95nf84upiMarnpqAY9lRJ-6YJBEaW_ANHgu7MMXoGShCqgaqwYzkWgPeHpjGZ8W_NC4maSWC0f9lu0zc9q0L2h8a0VZmfagjnF9X53FtneeMIXgThYhSV9Z8olTJk39Ryn8OrIY2mIFAw7JdxbBuiuOAOHYMlVyU0X1Td_qT6GulYbo11VfpSUR4fDwK59G6vixqH22J2byR_H0MdPtmvkIMjmnt5bxJq4wJfORxndZ_hRhIak-ZbuR9FtHWmA8eMqroXzGsKF3nySFAaW733FsVESkIMVmFfpfeHIOrqMYwKXZPrddNolALV4hBFEgVyJAzMh-0KtaI3PobJqj4CdC_QHkz6aYWOPeVuptlqZrXr3n7ZNI7bHYrZmHyaQys6QLZBa4qLP6ZPGeFwjLbgp4xBFrsZaiiWv479R29DgRJVqCpobDL4dAX39KHV79audDrF0Lpq3bQnsCsUxBceJaN4q4mAi9Yi1aTsFbtleEy2i3ouYEWpj6PQkYTUmgbrpry-aOJs8JFJIrxRUy85OGgoYnAjiV0L816vdEo_Dvj8OW_eb16x2oRvQBq5u9y9yBehsBmI6plaLguAE4eKKuzPg-9cHPTP9MVkn1bp3C36WoGnez9Q2OaU-c1d2u0DBhvzc5hOvRDKxqd4U1UlS0HQ10rI-Sg90Ebn97KMpTLg7b4JbrgD9Qk497pTPzE3heB2IZarZgfLTklWe4vAMtQr0F6kIFdOy7d3fvklPzRh4yo8cEsyenl2I05ZkufvA-QS5IT0DBXZdI_xI8yYnm1-U8xhXDbPOO-DU3D9cI5PwtCaewRon-6jYw69W_WcrYQVorM852edN65Jwh7xc0ypYrUCwBfyTigzZl1tj12ltDAJD7RoYIC6co3bqtZ-mddewjdToyjg6bsFXB6wSs7cGMQnbK3a62Ba1hKlEU9VeZwqBBU2RQWu-Fp0Nd4c0vJIXjVYFRsdYwsVCDPh7SiWBfnZfHhLgktI7iAi8FTYq3K8m2yTZJ5zDmkbFeb3JmpHmb4SX5hpFdRgdSMiSN8dZVDFWodqHOdvThvWG0PYoqhvYSY02_wODjTxwTbme72DYbik0v4ZyewrSoK6X72_OZ62gaUCKj_uUYnGrtN3VcPd4xJpYLyygO94xFKG94Kuf65k9_1YhAXVaSqYJ8L4SKPoNBAvDWoQ-hR_8O3EONZQ5mambKZn-BsNSy9YkLNhXusoq7BTsgAO6U4juUIlde8rgTrqkj01MV6NfQ3TNEMZUJKPjgvdced8KS6krcJkAOZNVqThM3xK94QgHdRCB1WWR"
+
+
 @dataclass
 class TaskResult:
     task_id: str = ""
@@ -578,3 +582,23 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
     return fig
+
+
+def upload_to_dropbox(graph_file, folder="/raw_train_data"):
+    """
+    Uploads graph_file to Dropbox inside App Folder.
+    """
+    import dropbox
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+    # Ensure the path inside the App Folder
+    dest_path = f"{folder}/{os.path.basename(graph_file)}"
+
+    with open(graph_file, "rb") as f:
+        dbx.files_upload(
+            f.read(),
+            dest_path,
+            mode=dropbox.files.WriteMode("overwrite")
+        )
+
+    return dest_path

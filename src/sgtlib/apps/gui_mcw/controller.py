@@ -231,7 +231,7 @@ class MainController(BaseController):
             self._gt_worker.process_worker = None
 
         if worker_id == 2:
-            self._stop_ai_search()
+            self._stop_ai_task()
             self._ai_worker.process_worker = None
 
         if worker_id == 3:
@@ -285,6 +285,9 @@ class MainController(BaseController):
                     # Saving files to Output Folder
                     self._handle_progress_update(100, "Files Saved!")
                     self.taskTerminatedSignal.emit(success_val, ["Files Saved", result.message])
+                if result.task_id == "Rate Graph":
+                    self._handle_progress_update(101, "Graph image successfully uploaded!")
+                    self.taskTerminatedSignal.emit(success_val, ["Graph Rated", result.message])
                 if result.task_id == "Extract Graph":
                     sgt_obj = self.get_selected_sgt_obj()
                     sgt_obj.ntwk_p = result.data
@@ -382,6 +385,8 @@ class MainController(BaseController):
             target = bg_worker.base_funcs.task_save_images
         elif task_fxn == "Metaheuristic-Search":
             target = bg_worker.base_funcs.task_metaheuristic_search
+        elif task_fxn == "Rate-Graph":
+            target = bg_worker.base_funcs.task_rate_graph
         else:
             return
 
@@ -786,13 +791,18 @@ class MainController(BaseController):
     @Slot(float)
     def rate_graph(self, rating: float):
         """Rate extracted graph on a scale of 1-10"""
-        # 1. Convert the score from 1-10 to range 0-100
-        percent_rating = rating * 10
-        updated = self.get_selected_sgt_obj().ntwk_p.update_graph_rating(percent_rating)
-        if updated:
-            # Send the file and rating to my email address (in the future, to the server)
-            self.showAlertSignal.emit("Graph Rated", "Graph successfully rated!")
-        print(f"{updated} -- Graph scored {percent_rating}%")
+        if self._wait_flag_ai:
+            logging.info("Please wait for AI task to finish.", extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Please Wait", "AI task is still running!")
+            return
+
+        try:
+            self._start_ai_task()
+            sgt_obj = self.get_selected_sgt_obj()
+            self._start_process_worker(2, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
+        except Exception as err:
+            self._stop_ai_task()
+            logging.info("Rate Graph Error: " + str(err), extra={'user': 'SGT Logs'})
 
     @Slot()
     def run_graph_analyzer(self):
@@ -848,11 +858,11 @@ class MainController(BaseController):
             return
 
         try:
-            self._start_ai_search()
+            self._start_ai_task()
             sgt_obj = self.get_selected_sgt_obj()
             self._start_process_worker(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
         except Exception as err:
-            self._stop_ai_search()
+            self._stop_ai_task()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot()

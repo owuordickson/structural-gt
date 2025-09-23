@@ -7,7 +7,7 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 import logging
 from PySide6.QtCore import QObject, Signal
 from ..compute.graph_analyzer import GraphAnalyzer
-from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult
+from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox
 
 
 class BaseWorker:
@@ -165,6 +165,31 @@ class BaseWorker:
             ntwk_p.remove_listener(self._update_progress)
             return False, ["Metaheuristic Search Failed", "Error occurred while running metaheuristic search!"]
 
+    def task_rate_graph(self, score, ntwk_p):
+        """Update score rating in graph properties and filter space results and upload graph image to DropBox App"""
+        try:
+            # 1. Convert the score from 1-10 to range 0-100
+            is_successful = False
+            percent_rating = score * 10
+            ntwk_p.add_listener(self._update_progress)
+            graph_file = ntwk_p.update_graph_rating(percent_rating)
+            if graph_file is not None:
+                # Upload image to DropBox App (in the future, to the server)
+                _ = upload_to_dropbox(graph_file)
+                self._update_progress(101, f"Graph image uploaded to DropBox App!")
+                is_successful = True
+            ntwk_p.remove_listener(self._update_progress)
+
+            if is_successful:
+                task_data = TaskResult(task_id="Rate Graph", status="Finished",
+                                       message=f"Graph successfully rated {percent_rating}%.")
+                return True, task_data
+            else:
+                return False, ["Graph Rating Failed", "Error occurred while rating graph!"]
+        except Exception as err:
+            logging.exception(err, extra={'user': 'SGT Logs'})
+            ntwk_p.remove_listener(self._update_progress)
+            return False, ["Graph Rating Aborted", "Error occurred while rating graph!"]
 
 
 class BaseWorkerTerm(QObject, BaseWorker):

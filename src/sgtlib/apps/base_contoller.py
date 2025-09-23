@@ -79,12 +79,12 @@ class BaseController(QObject):
         self._waitChanged.emit()
         self._waitTextChanged.emit()
 
-    def _start_ai_search(self):
+    def _start_ai_task(self):
         """Activate the AI running (or busy) flag."""
         self._wait_flag_ai = True
         self._aiBusyChanged.emit()
 
-    def _stop_ai_search(self):
+    def _stop_ai_task(self):
         """Deactivate the AI running (or busy) flag."""
         self._wait_flag_ai = False
         self._aiBusyChanged.emit()
