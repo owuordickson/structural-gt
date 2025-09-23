@@ -455,6 +455,9 @@ class ImageProcessor(ProgressUpdate):
         """
         Reset the search results for the metaheuristic algorithm by moving the 'best candidate' to the 'ignore list'
         """
+        if self._filter_space is None:
+            return
+
         opt_model = self._configs
         if opt_model["find_filter_selections"]["value"] == 1:
             if self._filter_space.best_candidate is not None:

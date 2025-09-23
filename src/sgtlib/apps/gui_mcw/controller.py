@@ -5,7 +5,6 @@ import logging
 import requests
 import numpy as np
 from packaging import version
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Signal, Slot
@@ -18,7 +17,6 @@ from .tree_model import TreeModel
 from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
-# from .qthread_worker import QThreadWorker
 from .process_worker import ProcessWorker
 from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
@@ -43,11 +41,6 @@ class MainController(BaseController):
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
-
-    @dataclass
-    class SGTProcessWorker:
-        base_funcs = BaseWorker()
-        process_worker: ProcessWorker | None = None
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
@@ -84,9 +77,9 @@ class MainController(BaseController):
         self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create Worker Functions, Process and Timer
-        self._gt_worker = MainController.SGTProcessWorker()
-        self._ai_worker = MainController.SGTProcessWorker()
-        self._hist_worker = MainController.SGTProcessWorker()
+        self._gt_worker = None
+        self._ai_worker = None
+        self._hist_worker = None
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -228,14 +221,14 @@ class MainController(BaseController):
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
             self._stop_wait()
-            self._gt_worker.process_worker = None
+            self._gt_worker = None
 
         if worker_id == 2:
             self._stop_ai_task()
-            self._ai_worker.process_worker = None
+            self._ai_worker = None
 
         if worker_id == 3:
-            self._hist_worker.process_worker = None
+            self._hist_worker = None
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
@@ -359,54 +352,52 @@ class MainController(BaseController):
         if task_fxn is None or worker_id is None:
             return
 
-        if worker_id == 1:
-            self._gt_worker = MainController.SGTProcessWorker()
-            bg_worker = self._gt_worker
-        elif worker_id == 2:
-            self._ai_worker = MainController.SGTProcessWorker()
-            bg_worker = self._ai_worker
-        elif worker_id == 3:
-            self._hist_worker = MainController.SGTProcessWorker()
-            bg_worker = self._hist_worker
-        else:
-            return
-
+        base_funcs = BaseWorker()
         if task_fxn == "Calculate-Histogram":
-            target = bg_worker.base_funcs.task_calculate_img_histogram
+            target = base_funcs.task_calculate_img_histogram
         elif task_fxn == "Extract-Graph":
-            target = bg_worker.base_funcs.task_extract_graph
+            target = base_funcs.task_extract_graph
         elif task_fxn == "Compute-GT":
-            target = bg_worker.base_funcs.task_compute_gt
+            target = base_funcs.task_compute_gt
         elif task_fxn == "Compute-Multi-GT":
-            target = bg_worker.base_funcs.task_compute_multi_gt
+            target = base_funcs.task_compute_multi_gt
         elif task_fxn == "Export-Graph":
-            target = bg_worker.base_funcs.task_export_graph
+            target = base_funcs.task_export_graph
         elif task_fxn == "Save-Images":
-            target = bg_worker.base_funcs.task_save_images
+            target = base_funcs.task_save_images
         elif task_fxn == "Metaheuristic-Search":
-            target = bg_worker.base_funcs.task_metaheuristic_search
+            target = base_funcs.task_metaheuristic_search
         elif task_fxn == "Rate-Graph":
-            target = bg_worker.base_funcs.task_rate_graph
+            target = base_funcs.task_rate_graph
         else:
             return
 
-        bg_worker.process_worker = ProcessWorker(worker_id, func=target, args=fxn_args)
-        bg_worker.process_worker.taskFinishedSignal.connect(self._handle_finished)
+        bg_worker = ProcessWorker(worker_id, func=target, args=fxn_args)
+        bg_worker.taskFinishedSignal.connect(self._handle_finished)
+
+        if worker_id == 1:
+            self._gt_worker = bg_worker
+        elif worker_id == 2:
+            self._ai_worker = bg_worker
+        elif worker_id == 3:
+            self._hist_worker = bg_worker
+        else:
+            return
 
         if track_updates:
-            bg_worker.base_funcs.progress_queue = bg_worker.process_worker.queue
-            bg_worker.process_worker.inProgressSignal.connect(self._handle_progress_update)
-        bg_worker.process_worker.start()
+            base_funcs.progress_queue = bg_worker.queue
+            bg_worker.inProgressSignal.connect(self._handle_progress_update)
+        bg_worker.start()
 
     @Slot(int)
     def stop_current_task(self, worker_id: int = 1):
         """Stop a background thread and its associated worker."""
         if worker_id == 1:
-            self._gt_worker.process_worker.stop() if self._gt_worker.process_worker else None
+            self._gt_worker.stop() if self._gt_worker else None
             self._handle_finished(worker_id, True, None)
 
         if worker_id == 2:
-            self._ai_worker.process_worker.stop() if self._ai_worker.process_worker else None
+            self._ai_worker.stop() if self._ai_worker else None
             self._handle_finished(worker_id, True, None)
 
     @Slot(result=str)

@@ -31,6 +31,9 @@ class QueueListener(QThread):
         while self._running:
             try:
                 status, payload = self.queue.get()  # blocking wait
+                if status == "STOP":
+                    break
+
                 if type(status) is str:
                     percent, message = payload
                     self.progress.emit(percent, message)
@@ -43,6 +46,11 @@ class QueueListener(QThread):
 
     def stop(self):
         self._running = False
+        try:
+            self.queue.put_nowait(("STOP", None))  # wakes up the blocking get()
+        except Exception as e:
+            print(f"Thread Listener Exception: {e}")
+            pass
 
 
 class ProcessWorker(QObject):
