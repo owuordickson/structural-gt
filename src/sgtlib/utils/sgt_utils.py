@@ -13,8 +13,9 @@ import random
 # import socket
 import logging
 # import platform
-import subprocess
+import dropbox
 import gsd.hoomd
+import subprocess
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -588,7 +589,6 @@ def upload_to_dropbox(graph_file, folder="/raw_train_data"):
     """
     Uploads graph_file to Dropbox inside App Folder.
     """
-    import dropbox
     dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
     # Ensure the path inside the App Folder

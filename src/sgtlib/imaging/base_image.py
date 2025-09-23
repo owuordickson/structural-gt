@@ -128,6 +128,10 @@ class BaseImage:
         """Sets the list of scaling kernels used to the image."""
         self._image_filters = image_filters
 
+    def reset_img_configs(self, cfg_file: str = "") -> None:
+        """Resets the image processing configuration parameters and options."""
+        self._configs = load_img_configs(cfg_file)
+
     def init_image(self) -> None:
         """
         Initialize the class member variables (or attributes).

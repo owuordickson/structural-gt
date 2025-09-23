@@ -313,7 +313,6 @@ class FilterSearchSpace:
         apply_pop = 2**11
         val_range = (2**22, 2**30)  # minimum, maximum value range for search space
         bri_range = (0, 2**16)
-        # print(f"Apply candidates: {apply_pop}, Value candidates: {val_range}, Brightness candidates: {bri_range}")
 
         # Initialize search space
         init_configs = img_obj.configs.copy()

@@ -462,6 +462,7 @@ class ImageProcessor(ProgressUpdate):
         if opt_model["find_filter_selections"]["value"] == 1:
             if self._filter_space.best_candidate is not None:
                 self._filter_space.ignore_candidates.append(self._filter_space.best_candidate.position)
+                self.image_obj.reset_img_configs(self._config_file)
 
         if opt_model["find_filter_values"]["value"] == 1:
             val_space = self._filter_space.best_candidate.value_space
