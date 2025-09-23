@@ -385,7 +385,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             ["Graph Count", str(len(connected_components))],
             ["Sub-graph Count", str(num_graphs)],
             ["Giant graph ratio", f"{round((connect_ratio * 100), 3)}%"],
-            ["Accuracy Score"], f"{self._score_rating}%" if self._score_rating > 0 else "N/A"
+            ["Accuracy Score", f"{self._score_rating}%" if self._score_rating > 0 else "N/A"]
         ]
         return props
 
