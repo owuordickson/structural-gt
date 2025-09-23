@@ -17,9 +17,8 @@ class ImageProvider(QQuickImageProvider):
             sgt_obj = self._img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.selected_batch
+            self._img_controller.showImageHistogramSignal.emit(True)
             if ntwk_p.selected_batch_view == "original":
-                # Calculate image histogram in different thread
-                self._img_controller.compute_img_histogram()
                 images = ntwk_p.image_3d
                 if self._img_controller.is_img_3d():
                     self._img_controller.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
@@ -29,8 +28,6 @@ class ImageProvider(QQuickImageProvider):
             elif ntwk_p.selected_batch_view == "binary":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=2)
-                # Calculate image histogram in different thread
-                self._img_controller.compute_img_histogram()
                 bin_images = ntwk_p.binary_image_3d
                 if self._img_controller.is_img_3d():
                     self._img_controller.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images_idx)
@@ -40,8 +37,6 @@ class ImageProvider(QQuickImageProvider):
             elif ntwk_p.selected_batch_view == "processed":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=1)
-                # Calculate image histogram in different thread
-                self._img_controller.compute_img_histogram()
                 mod_images = ntwk_p.processed_image_3d
                 if self._img_controller.is_img_3d():
                     self._img_controller.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_idx)
@@ -60,6 +55,7 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
                     img_cv = net_images[0]
             else:
+                self._img_controller.showImageHistogramSignal.emit(False)
                 return
 
             if img_cv is not None:

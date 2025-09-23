@@ -684,7 +684,6 @@ class MainController(BaseController):
         if self._wait_flag_hist:
             return
 
-        self.showImageHistogramSignal.emit(True)
         try:
             self._wait_flag_hist = True
             sgt_obj = self.get_selected_sgt_obj()

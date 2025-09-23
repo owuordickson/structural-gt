@@ -17,6 +17,14 @@ Window {
     ColumnLayout {
         anchors.fill: parent
 
+        Button {
+            id: btnReloadHistogram
+            text: "Reload Histogram"
+            Layout.margins: 5
+            Layout.alignment: Qt.AlignHCenter
+            onClicked: mainController.compute_img_histogram()
+        }
+
         ScrollView {
             Layout.fillWidth: true
             Layout.preferredHeight: imgHistogramWindow.height - 10
