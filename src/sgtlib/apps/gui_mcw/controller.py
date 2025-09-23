@@ -329,7 +329,7 @@ class MainController(BaseController):
                         self.synchronize_img_models(sgt_obj)
                         # Update Graph & Compute properties
                         self.synchronize_graph_models(sgt_obj)
-                        self.changeImageSignal.emit()
+                        self.apply_changes(view="binary")
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is list:
