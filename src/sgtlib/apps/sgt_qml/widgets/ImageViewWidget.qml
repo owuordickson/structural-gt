@@ -206,6 +206,8 @@ ColumnLayout {
 
             Button {
                 id: btnLoad3DGraph
+                leftPadding: 10
+                rightPadding: 10
                 text: " view"
                 icon.source: "../assets/icons/3d_icon.png"
                 icon.width: 21
@@ -219,6 +221,8 @@ ColumnLayout {
 
             Button {
                 id: btnGraphRating
+                leftPadding: 10
+                rightPadding: 10
                 text: " rate"
                 icon.source: "../assets/icons/thumbs-up-emoji.png"
                 icon.width: 21

@@ -3,6 +3,7 @@ import QtQuick.Controls
 //import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
 import QtQuick.Window
+import "widgets"
 
 Window {
     id: imgHistogramWindow
@@ -17,12 +18,35 @@ Window {
     ColumnLayout {
         anchors.fill: parent
 
-        Button {
-            id: btnReloadHistogram
-            text: "Reload Histogram"
+        RowLayout {
+            spacing: 2
             Layout.margins: 5
             Layout.alignment: Qt.AlignHCenter
-            onClicked: mainController.compute_img_histogram()
+
+            Button {
+                id: btnReloadHistogram
+                text: " Reload Histogram"
+                leftPadding: 10
+                rightPadding: 10
+                icon.source: "assets/icons/reload_icon.png"
+                icon.width: 21
+                icon.height: 21
+                icon.color: "transparent"   // important for PNGs
+                ToolTip.text: "Reload everytime you change the image."
+                ToolTip.visible: btnReloadHistogram.hovered
+                visible: !mainController.histogram_busy
+                onClicked: mainController.compute_img_histogram()
+            }
+
+            Column {
+                visible: mainController.histogram_busy
+
+                SpinnerProgress {
+                    running: mainController.histogram_busy
+                    width: 24
+                    height: 24
+                }
+            }
         }
 
         ScrollView {

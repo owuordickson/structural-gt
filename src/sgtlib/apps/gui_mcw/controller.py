@@ -32,6 +32,7 @@ class MainController(BaseController):
 
     errorSignal = Signal(str)
     updateProgressSignal = Signal(int, str)
+    updateAIProgressSignal = Signal(int, str)
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal()
@@ -228,11 +229,35 @@ class MainController(BaseController):
             self._ai_worker = None
 
         if worker_id == 3:
+            self._stop_histogram_calculation()
             self._hist_worker = None
+
+    def _handle_ai_search_progress(self, progress_val: int, msg: str) -> None:
+        """
+        Handler function for progress updates for ongoing AI tasks.
+        Args:
+            progress_val: Progress value, range is 0-100%.
+            msg: Progress message to be displayed.
+
+        Returns:
+
+        """
+        if progress_val is None:
+            return
+
+        if 0 <= progress_val <= 100:
+            self.updateAIProgressSignal.emit(progress_val, msg)
+            logging.info(f"{progress_val}%: {msg}", extra={'user': 'SGT Logs'})
+        elif progress_val > 100:
+            self.updateAIProgressSignal.emit(progress_val, msg)
+            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
+        else:
+            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
+            self.errorSignal.emit(msg)
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
         """
-        Handler function for progress updates for ongoing tasks.
+        Handler function for progress updates for ongoing GT tasks.
         Args:
             progress_val: Progress value, range is 0-100%.
             msg: Progress message to be displayed.
@@ -322,7 +347,7 @@ class MainController(BaseController):
                 if result.task_id == "Metaheuristic Search":
                     # AI Mode search results (image configs)
                     if result.status == "Finished":
-                        self._handle_progress_update(100, "Search completed!")
+                        self._handle_ai_search_progress(100, "Search completed!")
                         sgt_obj = self.get_selected_sgt_obj()
                         sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
@@ -334,7 +359,6 @@ class MainController(BaseController):
                     self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is list:
                 # Image histogram calculated
-                self._wait_flag_hist = False
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.selected_batch
@@ -386,7 +410,10 @@ class MainController(BaseController):
 
         if track_updates:
             base_funcs.progress_queue = bg_worker.queue
-            bg_worker.inProgressSignal.connect(self._handle_progress_update)
+            if worker_id == 2:
+                bg_worker.inProgressSignal.connect(self._handle_ai_search_progress)
+            else:
+                bg_worker.inProgressSignal.connect(self._handle_progress_update)
         bg_worker.start()
 
     @Slot(int)
@@ -685,11 +712,11 @@ class MainController(BaseController):
             return
 
         try:
-            self._wait_flag_hist = True
+            self._start_histogram_calculation()
             sgt_obj = self.get_selected_sgt_obj()
             self._start_process_worker(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
         except Exception as err:
-            self._wait_flag_hist = False
+            self._stop_histogram_calculation()
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_finished(3, False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
 

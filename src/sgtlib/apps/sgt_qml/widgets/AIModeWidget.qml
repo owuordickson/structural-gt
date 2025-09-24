@@ -75,6 +75,7 @@ Rectangle {
             }
 
             Column {
+                visible: mainController.ai_busy
                 SpinnerProgress {
                     running: mainController.ai_busy
                     width: 24
@@ -119,7 +120,7 @@ Rectangle {
     Connections {
         target: mainController
 
-        function onUpdateProgressSignal(val, msg) {
+        function onUpdateAIProgressSignal(val, msg) {
             if (val <= 100) {
                 lblAIStatusMsg.text = val + "%: " + msg;
             } else {

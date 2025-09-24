@@ -18,6 +18,7 @@ class BaseController(QObject):
     _waitTextChanged = Signal()
     _aiBusyChanged = Signal()
     _aiModeChanged = Signal()
+    _histogramBusyChanged = Signal()
     showAlertSignal = Signal(str, str)
 
     def __init__(self, config_file: str = ""):
@@ -57,6 +58,10 @@ class BaseController(QObject):
     def ai_mode_active(self):
         return self._ai_mode_active
 
+    @Property(bool, notify=_histogramBusyChanged)
+    def histogram_busy(self):
+        return self._wait_flag_hist
+
     @Slot(bool)
     def toggle_ai_mode(self, activate):
         """Toggle AI mode."""
@@ -88,6 +93,16 @@ class BaseController(QObject):
         """Deactivate the AI running (or busy) flag."""
         self._wait_flag_ai = False
         self._aiBusyChanged.emit()
+
+    def _start_histogram_calculation(self):
+        """Start computing the histogram of the selected image."""
+        self._wait_flag_hist = True
+        self._histogramBusyChanged.emit()
+
+    def _stop_histogram_calculation(self):
+        """Stop computing the histogram of the selected image."""
+        self._wait_flag_hist = False
+        self._histogramBusyChanged.emit()
 
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
