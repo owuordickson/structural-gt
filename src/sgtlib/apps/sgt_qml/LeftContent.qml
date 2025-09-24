@@ -18,9 +18,42 @@ Rectangle {
             id: tabBar
             currentIndex: 2
             Layout.fillWidth: true
-            TabButton { text: "Project" }
-            TabButton { text: "Properties" }
-            TabButton { text: "Filters" }
+
+            TabButton {
+                text: "Project"
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    color: parent.checked ? "#E91E63" : "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+            }
+
+            TabButton {
+                text: "Properties"
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    color: parent.checked ? "#E91E63" : "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+            }
+
+            TabButton {
+                text: "Filters"
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    color: parent.checked ? "#E91E63" : "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+            }
         }
 
         StackLayout {
@@ -30,11 +63,14 @@ Rectangle {
             currentIndex: tabBar.currentIndex
 
 
-            ProjectNav{}
+            ProjectNav {
+            }
 
-            ImageProperties{}
+            ImageProperties {
+            }
 
-            ImageFilters{}
+            ImageFilters {
+            }
 
 
         }
