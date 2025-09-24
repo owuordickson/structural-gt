@@ -247,12 +247,12 @@ class MainController(BaseController):
 
         if 0 <= progress_val <= 100:
             self.updateAIProgressSignal.emit(progress_val, msg)
-            logging.info(f"{progress_val}%: {msg}", extra={'user': 'SGT Logs'})
+            logging.info(f"(AI Mode) {progress_val}%: {msg}", extra={'user': 'SGT Logs'})
         elif progress_val > 100:
             self.updateAIProgressSignal.emit(progress_val, msg)
-            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
+            logging.info(f"(AI Mode): {msg}", extra={'user': 'SGT Logs'})
         else:
-            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
+            logging.exception(f"(AI Mode): {msg}", extra={'user': 'SGT Logs'})
             self.errorSignal.emit(msg)
 
     def _handle_progress_update(self, progress_val: int, msg: str) -> None:
