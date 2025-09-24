@@ -30,11 +30,10 @@ from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
 
-from ..utils.progress_update import ProgressUpdate
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
 from ..utils.config_loader import load_gtc_configs
-from ..utils.sgt_utils import get_num_cores, AbortException
+from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate
 
 logger = logging.getLogger("SGT App")
 

@@ -22,6 +22,7 @@ from .models.filter_env import (
 from .networks.fiber_network import FiberNetworkBuilder
 from .networks.graph_skeleton import GraphSkeleton
 from .utils.sgt_utils import (
+    ProgressData,
     gsd_to_skeleton,
     csv_to_graph,
     write_gsd_file
@@ -43,6 +44,7 @@ __all__ = [
     "GraphSkeleton",
     "FilterSearchSpace",
     "SGTGraphEnv",
+    "ProgressData",
     "load_gtc_configs",
     "load_gte_configs",
     "load_img_configs",

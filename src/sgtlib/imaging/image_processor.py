@@ -19,9 +19,8 @@ from collections import defaultdict
 from ..imaging.base_image import BaseImage
 from ..models.filter_env import FilterSearchSpace
 from ..networks.fiber_network import FiberNetworkBuilder
-from ..utils.progress_update import ProgressUpdate
 from ..utils.config_loader import load_ai_configs
-from ..utils.sgt_utils import plot_to_opencv, AbortException
+from ..utils.sgt_utils import plot_to_opencv, AbortException, ProgressUpdate
 from ..models.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
 
 logger = logging.getLogger("SGT App")

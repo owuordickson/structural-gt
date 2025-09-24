@@ -33,6 +33,25 @@ DROPBOX_ACCESS_TOKEN = "sl.u.AF_h6SCrM4ltRfBHtT66aXaIGxoTIOZ4ZIj5HEtcb3bPFC7tYGR
 
 
 @dataclass
+class ProgressData:
+    """
+    A data class for sending updates to outside functions.
+
+    Attributes
+    ----------
+    percent : int
+        Progress value, the range is 0–100%.
+    message : str
+        Progress message to be displayed.
+    sender : str
+        Sender of the message.
+    """
+    percent: int = -1
+    message: str = ""
+    sender: str = ""
+
+
+@dataclass
 class TaskResult:
     task_id: str = ""
     status: str = ""
@@ -43,6 +62,84 @@ class TaskResult:
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""
     pass
+
+
+class ProgressUpdate:
+    """
+    A class for sending updates to outside functions. It uses listener functions to send updates to outside functions.
+    """
+
+    def __init__(self):
+        """
+        A class for sending updates to outside functions.
+
+        Example 1:
+        -------
+        >>> def print_progress(code, msg):
+        ...     print(f"{code}: {msg}")
+
+        >>> upd = ProgressUpdate()
+        >>> upd.add_listener(print_progress)  # to get updates
+        >>> upd.update_status((1, "Sending update ..."))
+        1: Sending update ...
+        >>> upd.remove_listener(print_progress)  # to opt out of updates
+
+        Example 2:
+        ---------
+        >>> def print_progress(p_data: ProgressData):
+        ...     print(f"{p_data.percent}: {p_data.message}")
+
+        >>> upd = ProgressUpdate()
+        >>> upd.add_listener(print_progress)  # to get updates
+        >>> msg_data = ProgressData(percent=1, message="Sending update ...")
+        >>> upd.update_status(msg_data)
+        1: Sending update ...
+        >>> upd.remove_listener(print_progress)  # to opt out of updates
+        """
+        self.__listeners = []
+        self.abort = False
+
+    def abort_tasks(self) -> None:
+        """
+        Set abort flag.
+        :return:
+        """
+        self.abort = True
+
+    def add_listener(self, func) -> None:
+        """
+        Add functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func in self.__listeners:
+            return
+        self.__listeners.append(func)
+
+    def remove_listener(self, func) -> None:
+        """
+        Remove functions from the list of listeners.
+        :param func:
+        :return:
+        """
+        if func not in self.__listeners:
+            return
+        self.__listeners.remove(func)
+
+    def update_status(self, args=None) -> None:
+        """
+        Run all the functions that are saved as listeners.
+
+        :param args:
+        :return:
+        """
+        # Trigger events.
+        if args is None:
+            args = ()
+        if not isinstance(args, (tuple, list)):
+            args = (args,)
+        for func in self.__listeners:
+            func(*args)
 
 
 def get_num_cores() -> int | bool:

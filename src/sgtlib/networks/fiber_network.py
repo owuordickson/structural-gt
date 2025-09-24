@@ -15,10 +15,9 @@ import matplotlib.pyplot as plt
 from cv2.typing import MatLike
 
 from .sknw_mod import build_sknw#, build_graph
-from ..utils.progress_update import ProgressUpdate
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_gsd_file, gsd_to_skeleton, csv_to_graph
+from ..utils.sgt_utils import write_gsd_file, gsd_to_skeleton, csv_to_graph, ProgressUpdate
 
 
 class FiberNetworkBuilder(ProgressUpdate):
