@@ -43,11 +43,14 @@ class ProgressData:
         Progress value, the range is 0–100%.
     message : str
         Progress message to be displayed.
+    type : str
+        Message type, it can be either: "info", "warning", "error".
     sender : str
         Sender of the message.
     """
     percent: int = -1
     message: str = ""
+    type: str = ""  # "info", "warning", "error"
     sender: str = ""
 
 

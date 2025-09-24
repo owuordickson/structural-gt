@@ -7,7 +7,7 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 import logging
 from PySide6.QtCore import QObject, Signal
 from ..compute.graph_analyzer import GraphAnalyzer
-from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox
+from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox, ProgressData
 
 
 class BaseWorker:
@@ -15,27 +15,26 @@ class BaseWorker:
     def __init__(self):
         self.progress_queue = None
 
-    def _update_progress(self, percent, msg):
+    def _update_progress(self, status_data: ProgressData):
         """
         Send the update_progress signal to all listeners.
         Progress-value (0-100), progress-message (str)
         Args:
-            percent: progress value (0-100), (-1, if it is an error), (101, if it is the nav-control message)
-            msg: progress message (str)
+            status_data: ProgressData object that contains the percentage and status message of the current task.
 
         Returns:
 
         """
         if self.progress_queue is None:
             return
-        self.progress_queue.put(("progress", (percent, msg)))
+        self.progress_queue.put(("progress", status_data))
 
     def task_save_images(self, ntwk_p):
         """"""
         try:
-            self._update_progress(25, "Saving Images...")
+            self._update_progress(ProgressData(percent=25, sender="GT", message=f"Saving Images..."))
             ntwk_p.save_images_to_file()
-            self._update_progress(95, "Saving Images...")
+            self._update_progress(ProgressData(percent=95, sender="GT", message=f"Saving Images..."))
             task_data = TaskResult(task_id="Save Images", status="Finished",
                                    message="Image files successfully saved in 'Output Dir'")
             return True, task_data
@@ -47,13 +46,13 @@ class BaseWorker:
         """"""
         try:
             # 1. Get filename
-            self._update_progress(25, "Exporting Graph...")
+            self._update_progress(ProgressData(percent=25, sender="GT", message=f"Exporting Graph..."))
             filename, out_dir = ntwk_p.get_filenames()
 
             # 2. Save graph data to the file
-            self._update_progress(30, "Exporting Graph...")
+            self._update_progress(ProgressData(percent=30, sender="GT", message=f"Exporting Graph..."))
             ntwk_p.graph_obj.save_graph_to_file(filename, out_dir)
-            self._update_progress(95, "Exporting Graph...")
+            self._update_progress(ProgressData(percent=95, sender="GT", message=f"Exporting Graph..."))
             task_data = TaskResult(task_id="Export Graph", status="Finished",
                                    message="Graph successfully exported to file and saved in 'Output Dir'")
             return True, task_data
@@ -72,7 +71,7 @@ class BaseWorker:
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             # self.abort = True
-            self._update_progress(-1, "Error encountered! Try again")
+            self._update_progress(ProgressData(type="error", sender="GT", message=f"Error encountered! Try again."))
             # Emit failure signal (aborted)
             return False, ["Apply Filters Failed", "Fatal error while applying filters! "
                                                                          "Change filter settings and try again; "
@@ -82,7 +81,7 @@ class BaseWorker:
         """"""
         try:
             hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=ntwk_p.selected_batch_view)) for obj in ntwk_p.image_obj_3d]
-            self._update_progress(101, "Histogram Calculation Finished")
+            self._update_progress(ProgressData(type="warning", sender="GT", message=f"Histogram Calculation Finished"))
             return True, hist_images
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
@@ -110,7 +109,7 @@ class BaseWorker:
                                                                           "the app and try again."]
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
-            self._update_progress(-1, "Error encountered! Try again")
+            self._update_progress(ProgressData(type="error", sender="GT", message=f"Error encountered! Try again."))
             # Clean up listeners before exiting
             ntwk_p.remove_listener(self._update_progress)
             # Emit failure signal (aborted)
@@ -176,7 +175,7 @@ class BaseWorker:
             if graph_file is not None:
                 # Upload image to DropBox App (in the future, to the server)
                 _ = upload_to_dropbox(graph_file)
-                self._update_progress(101, f"Graph image uploaded to DropBox App!")
+                self._update_progress(ProgressData(type="warning", sender="AI", message=f"Graph image uploaded to DropBox App!"))
                 is_successful = True
             ntwk_p.remove_listener(self._update_progress)
 
@@ -194,13 +193,12 @@ class BaseWorker:
 
 class BaseWorkerTerm(QObject, BaseWorker):
 
-    inProgressSignal = Signal(int, str)  # progress-value (0-100), progress-message (str)
-    # taskFinishedSignal = Signal(bool, object)    # success/fail (True/False), result (object)
+    inProgressSignal = Signal(object)
 
     def __init__(self):
         super(BaseWorkerTerm, self).__init__()
 
-    def _update_progress(self, percent, msg):
-        self.inProgressSignal.emit(percent, msg)
+    def _update_progress(self, status_data: ProgressData):
+        self.inProgressSignal.emit(status_data)
 
 

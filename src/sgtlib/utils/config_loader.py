@@ -7,8 +7,7 @@ Loads default configurations from 'configs.ini' file
 import os
 import configparser
 from typing import Union
-
-from .sgt_utils import verify_path
+from .sgt_utils import verify_path, ProgressData
 
 
 def strict_read_config_file(config_path, update_func=None) -> bool:
@@ -28,7 +27,8 @@ def strict_read_config_file(config_path, update_func=None) -> bool:
     success, result = verify_path(config_path)
     if not success:
         if update_func is not None:
-            update_func(-1, f"File Error: unable to find config file {config_path}.")
+            msg_data = ProgressData(type="error", sender="GT", message=f"File Error: unable to find config file {config_path}.")
+            update_func(msg_data)
         return False
 
     config = configparser.ConfigParser()
@@ -38,7 +38,9 @@ def strict_read_config_file(config_path, update_func=None) -> bool:
         return True
     except configparser.Error:
         if update_func is not None:
-            update_func(-1, f"Unable to read the configs from {config_file}.")
+            msg_data = ProgressData(type="error", sender="GT",
+                                    message=f"Unable to read the configs from {config_file}.")
+            update_func(msg_data)
         return False
 
 

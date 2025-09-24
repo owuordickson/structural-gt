@@ -17,7 +17,7 @@ from cv2.typing import MatLike
 from .sknw_mod import build_sknw#, build_graph
 from ..networks.graph_skeleton import GraphSkeleton
 from ..utils.config_loader import load_gte_configs
-from ..utils.sgt_utils import write_gsd_file, gsd_to_skeleton, csv_to_graph, ProgressUpdate
+from ..utils.sgt_utils import write_gsd_file, gsd_to_skeleton, csv_to_graph, ProgressUpdate, ProgressData
 
 
 class FiberNetworkBuilder(ProgressUpdate):
@@ -129,32 +129,45 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
 
         if self.abort:
-            self.update_status([-1, "Task aborted by due to an error. If problem with graph: change/apply different "
-                                    "image/binary filters and graph options. OR change brightness/contrast"])
+            msg_data = ProgressData(
+                type="error",
+                sender="GT",
+                message="Task aborted by due to an error. "
+                        "If problem with graph: change/apply different image/binary filters and graph options. "
+                        "OR change brightness/contrast")
+            self.update_status(msg_data)
             return
 
         if type(input_data) is str:
-            self.update_status([50, "Loading graph network from file..."])
+            self.update_status(ProgressData(percent=50, sender="GT", message=f"Loading graph network from file..."))
             nx_graph = self.create_graph_from_file(input_data)
         elif type(input_data) is np.ndarray:
-            self.update_status([50, "Extracting the graph network..."])
+            self.update_status(ProgressData(percent=50, sender="GT", message=f"Extracting the graph network..."))
             nx_graph = self.extract_graph(image_bin=input_data, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         else:
-            self.update_status([-1, "Invalid input for building a graph network. Either provide a graph file path or a binary image as an OpenCV matrix."])
+            msg_data = ProgressData(
+                type="error",
+                sender="GT",
+                message="Invalid input for building a graph network. Either provide a graph file path or a binary image as an OpenCV matrix.")
+            self.update_status(msg_data)
             self.abort = True
             return
 
-        self.update_status([70, "Verifying graph network..."])
+        self.update_status(ProgressData(percent=70, sender="GT", message=f"Verifying graph network..."))
         success = self.verify_graph(nx_graph)
         if not success:
-            self.update_status([-1, "Problem encountered, change image/binary filters and graph options. OR change brightness/contrast"])
+            msg_data = ProgressData(
+                type="error",
+                sender="GT",
+                message="Problem encountered, change image/binary filters and graph options. OR change brightness/contrast")
+            self.update_status(msg_data)
             self.abort = True
             return
 
-        self.update_status([77, "Retrieving graph properties..."])
+        self.update_status(ProgressData(percent=77, sender="GT", message=f"Retrieving graph properties..."))
         self._props = self.get_graph_props()
 
-        self.update_status([90, "Saving graph network..."])
+        self.update_status(ProgressData(percent=90, sender="GT", message=f"Saving graph network..."))
         # Save graph to GSD/HOOMD - For OVITO rendering
         self._configs["export_as_gsd"]["value"] = 1
         self.save_graph_to_file(file_name, save_dir)
@@ -213,19 +226,19 @@ class FiberNetworkBuilder(ProgressUpdate):
             if opt_gte is None:
                 return None
 
-            self.update_status([51, "Building skeleton from binary image..."])
+            self.update_status(ProgressData(percent=51, sender="GT", message=f"Building skeleton from binary image..."))
             graph_skel = GraphSkeleton(image_bin, opt_gte, is_2d=is_img_2d, progress_func=self.update_status)
             self._skel_obj = graph_skel
             img_skel = graph_skel.skeleton
 
-            self.update_status([60, "Creating graph network..."])
+            self.update_status(ProgressData(percent=60, sender="GT", message=f"Creating graph network..."))
             # nx_graph = sknw.build_sknw(img_skel)
             nx_graph = build_sknw(img_skel)
 
             if opt_gte["remove_self_loops"]["value"]:
-                self.update_status([64, "Removing self loops from graph network..."])
+                self.update_status(ProgressData(percent=64, sender="GT", message=f"Removing self loops from graph network..."))
 
-            self.update_status([66, "Assigning weights to graph network..."])
+            self.update_status(ProgressData(percent=66, sender="GT", message=f"Assigning weights to graph network..."))
             for (s, e) in list(nx_graph.edges()):
                 if opt_gte["remove_self_loops"]["value"]:
                     # Removing all instances of edges where the start and end are the same, or "self-loops"
@@ -255,7 +268,10 @@ class FiberNetworkBuilder(ProgressUpdate):
 
             return nx_graph
         except Exception as e:
-            self.update_status([-1, f"Problem encountered while extracting graph from binary image: {e}"])
+            msg_data = ProgressData(
+                type="error",
+                message=f"Problem encountered while extracting graph from binary image: {e}")
+            self.update_status(msg_data)
             return None
 
     def create_graph_from_file(self, file_path: str) -> nx.Graph | None:
@@ -269,7 +285,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return: True if the graph is read, False otherwise
         """
         try:
-            self.update_status([60, "Reading graph network..."])
+            self.update_status(ProgressData(percent=60, sender="GT", message=f"Reading graph network..."))
             ext = os.path.splitext(file_path)[1].lower()
             if ext == ".gsd":
                 skel = gsd_to_skeleton(file_path)
@@ -287,11 +303,18 @@ class FiberNetworkBuilder(ProgressUpdate):
                 ## self._skel_obj._skeleton_3d = np.asarray([skel])
                 # nx_graph = build_sknw(skel)
             else:
-                self.update_status([-1, f"Unsupported file extension: {ext}. If CSV, comma as delimiter."])
+                msg_data = ProgressData(
+                    type="error",
+                    message=f"Unsupported file extension: {ext}. If CSV, comma as delimiter.")
+                self.update_status(msg_data)
                 nx_graph = None
             return nx_graph
         except Exception as e:
-            self.update_status([-1, f"Problem encountered while loading graph from file: {e}"])
+            msg_data = ProgressData(
+                type="error",
+                sender="GT",
+                message=f"Problem encountered while loading graph from file: {e}")
+            self.update_status(msg_data)
             return None
 
     def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
@@ -366,7 +389,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
 
         # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
-        self.update_status([78, "Identifying graph subcomponents..."])
+        self.update_status(ProgressData(percent=78, sender="GT", message=f"Identifying graph subcomponents..."))
         graph = self.nx_graph.copy()
         connected_components = list(nx.connected_components(graph))
         if not connected_components:  # In case the graph is empty
@@ -376,7 +399,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         connect_ratio = self._nx_giant_graph.number_of_nodes() / graph.number_of_nodes()
 
         # 2. Populate graph properties
-        self.update_status([80, "Storing graph properties..."])
+        self.update_status(ProgressData(percent=80, sender="GT", message=f"Storing graph properties..."))
         props = [
             ["Weight Type", str(FiberNetworkBuilder.get_weight_options().get(self.get_weight_type()))],
             ["Edge Count", str(graph.number_of_edges())],

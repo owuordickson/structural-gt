@@ -20,7 +20,7 @@ from ..imaging.base_image import BaseImage
 from ..models.filter_env import FilterSearchSpace
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.config_loader import load_ai_configs
-from ..utils.sgt_utils import plot_to_opencv, AbortException, ProgressUpdate
+from ..utils.sgt_utils import plot_to_opencv, AbortException, ProgressUpdate, ProgressData
 from ..models.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
 
 logger = logging.getLogger("SGT App")
@@ -325,7 +325,7 @@ class ImageProcessor(ProgressUpdate):
                 raise ValueError(f"Unsupported file format: {ext}")
         except Exception as err:
             logging.exception(f"Error loading {file}:", err, extra={'user': 'SGT Logs'})
-            # self.update_status([-1, f"Failed to load {file}: {err}"])
+            # self.update_status(ProgressData(sender="GT", type="error", message=f"Failed to load {file}: {err}"))
             return None
 
     def _initialize_image_batches(self, img_batches: list[ImageBatch]):
@@ -359,14 +359,14 @@ class ImageProcessor(ProgressUpdate):
             if len(image_list) == 1:
                 if len(image_list[0].img_2d.shape) == 3 and image_list[0].has_alpha_channel:
                     logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
-                    # self.update_status([101, "Image is 2D with Alpha Channel"])
+                    # self.update_status(ProgressData(sender="GT", type="warning", message=f"Image is 2D with Alpha Channel"))
                 else:
                     logging.info("Image is 2D.", extra={'user': 'SGT Logs'})
-                    # self.update_status([101, "Image is 2D"])
+                    # self.update_status(ProgressData(sender="GT", type="warning", message=f"Image is 2D"))
             elif len(image_list) > 1:
                 is_2d = False
                 logging.info("Image is 3D.", extra={'user': 'SGT Logs'})
-                # self.update_status([101, "Image is 3D"])
+                # self.update_status(ProgressData(sender="GT", type="warning", message=f"Image is 3D"))
 
             img_batch.images = image_list
             img_batch.is_2d = is_2d
@@ -399,8 +399,8 @@ class ImageProcessor(ProgressUpdate):
         if type(selected_images) is set:
             self._image_batches[sel_batch_idx].selected_images_idx = selected_images
 
-    def track_progress(self, value, msg):
-        self.update_status([value, msg])
+    def track_progress(self, status_data: ProgressData):
+        self.update_status(status_data)
 
     def apply_img_filters(self, filter_type=2):
         """
@@ -416,7 +416,7 @@ class ImageProcessor(ProgressUpdate):
         if self.selected_batch.is_graph_only:
             return
 
-        self.update_status([10, "Processing image..."])
+        self.update_status(ProgressData(percent=10, sender="GT", message=f"Processing image..."))
         if filter_type == 2:
             self.reset_img_filters()
 
@@ -431,7 +431,7 @@ class ImageProcessor(ProgressUpdate):
 
             if progress < 100:
                 progress += incr
-                self.update_status([progress, "Image processing in progress..."])
+                self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
@@ -441,7 +441,7 @@ class ImageProcessor(ProgressUpdate):
                 img_obj.img_bin = img_obj.binarize_img(img_mod)
                 img_obj.img_mod = img_mod
             img_obj.get_pixel_width()
-        self.update_status([100, "Image processing complete..."])
+        self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
     def reset_img_filters(self):
         """Delete existing filters that have been applied on the image."""
@@ -552,60 +552,60 @@ class ImageProcessor(ProgressUpdate):
             filter_space.best_candidate.std_cost = search_space.best_candidate.std_cost
             filter_space.img_configs = new_img_configs
 
-        self.update_status([0, "Starting filter search..."])
+        self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
         if self.abort:
-            self.update_status([-1, "Task stopped!"])
+            self.update_status(ProgressData(type="error", sender="AI", message=f"Task stopped!"))
             return None
 
         # 1. Create a search space
         if self._filter_space is None:
-            self.update_status([20, "Creating search environment..."])
+            self.update_status(ProgressData(percent=20, sender="AI", message=f"Creating search environment..."))
             self._filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
         filter_space = self._filter_space
 
         if opt_model["find_filter_selections"]["value"] == 1:
             # 2. Run the Hill-climbing algorithm to find the best "image config combination"
-            self.update_status([50, "Searching for filter selections..."])
+            self.update_status(ProgressData(percent=50, sender="AI", message=f"Searching for filter selections..."))
             try:
                 # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
                 sgt_hill_climbing_algorithm(filter_space, self.image_obj, max_iters=max_iters)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error finding best apply selections:", err, extra={'user': 'SGT Logs'})
-                self.update_status([-1, f"AI Mode Error: {err}"])
+                self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
         if opt_model["find_filter_values"]["value"] == 1:
             # 3. Run the Genetic Algorithm to find the best "image filter values"
-            self.update_status([65, "Searching for filter values..."])
+            self.update_status(ProgressData(percent=65, sender="GT", message=f"Searching for filter values..."))
             try:
                 _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best filter values:", err, extra={'user': 'SGT Logs'})
-                self.update_status([-1, f"AI Mode Error: {err}"])
+                self.update_status(ProgressData(type="error", sender="GT", message=f"{err}"))
                 return None
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
             # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
-            self.update_status([80, "Searching for brightness/contrast..."])
+            self.update_status(ProgressData(percent=80, sender="AI", message=f"Searching for brightness/contrast values..."))
             try:
                 _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best brightness/contrast values:", err, extra={'user': 'SGT Logs'})
-                self.update_status([-1, f"AI Mode Error: {err}"])
+                self.update_status(ProgressData(type="error", sender="GT", message=f"{err}"))
                 return None
         return filter_space.best_candidate.img_configs
 
     def build_graph_network(self):
         """Generates or extracts graphs of selected images."""
 
-        self.update_status([0, "Starting graph extraction..."])
+        self.update_status(ProgressData(percent=0, sender="GT", message=f"Starting graph extraction..."))
         try:
             # Get the selected batch
             self.selected_batch_view= 'graph'
@@ -613,7 +613,7 @@ class ImageProcessor(ProgressUpdate):
             sel_images = self.get_batch_images(sel_batch)
 
             if sel_batch.is_graph_only:
-                self.update_status([20, "Fetching graph file..."])
+                self.update_status(ProgressData(percent=20, sender="GT", message=f"Fetching graph file..."))
                 f_name, out_dir = self.get_filenames(file_path=self._graph_file)
 
                 sel_batch.graph_obj.abort = False
@@ -622,13 +622,13 @@ class ImageProcessor(ProgressUpdate):
                 sel_batch.graph_obj.remove_listener(self.track_progress)
             else:
                 # Get binary image
-                self.update_status([20, "Getting binary image..."])
+                self.update_status(ProgressData(percent=20, sender="GT", message=f"Getting binary image..."))
                 img_bin = [img.img_bin for img in sel_images]
                 img_bin = np.asarray(img_bin)
 
                 # Check if filters have been applied
                 if img_bin[0] is None:
-                    self.update_status([101, "No filters applied! Please wait, applying image filters."])
+                    self.update_status(ProgressData(type="warning", sender="GT", message=f"No filters applied! Please wait, applying image filters."))
                     self.apply_img_filters()
                     self.build_graph_network()
                     return
@@ -642,7 +642,7 @@ class ImageProcessor(ProgressUpdate):
                 sel_batch.graph_obj.add_listener(self.track_progress)
                 sel_batch.graph_obj.fit_graph(out_dir, img_bin, sel_batch.is_2d, px_size, rho_val, file_name=f_name)
 
-            self.update_status([95, "Plotting graph network..."])
+            self.update_status(ProgressData(percent=95, sender="GT", message=f"Plotting graph network..."))
             self.draw_graph_image(sel_batch)
 
             sel_batch.graph_obj.remove_listener(self.track_progress)
@@ -653,7 +653,7 @@ class ImageProcessor(ProgressUpdate):
         except Exception as err:
             self.abort = True
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-            self.update_status([-1, f"Graph Extraction Error: {err}"])
+            self.update_status(ProgressData(type="error", sender="GT", message=f"Graph Extraction Error: {err}"))
             return
 
     def build_graph_from_patches(self, num_kernels: int, patch_count_per_kernel: int, img_padding: tuple = (0, 0),
@@ -792,7 +792,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Average patches with sizes 90% of the image (rectangular kernel)
             if compute_avg:
-                self.update_status([66, "Computing GT parameters on 95% of image at 4 locations..."])
+                self.update_status(ProgressData(percent=66, sender="GT", message=f"Computing GT parameters on 95% of image at 4 locations..."))
                 lst_img_filters = extract_cropped_image_patches()
                 c_h, c_w = lst_img_filters[0].shape[:2]
                 crop_filter = BaseImage.ScalingKernel(
@@ -805,7 +805,7 @@ class ImageProcessor(ProgressUpdate):
         filter_count = len(img_obj.image_filters)
         graph_groups = defaultdict(list)
         for i, scale_filter in enumerate(img_obj.image_filters):
-            self.update_status([101, f"Extracting random graphs using image filter {i + 1}/{filter_count}..."])
+            self.update_status(ProgressData(type="warning", sender="GT", message=f"Extracting random graphs using image filter {i + 1}/{filter_count}..."))
             # num_img_patches = len(scale_filter.image_patches)
             for bin_img_patch in scale_filter.image_patches:
                 graph_patch = FiberNetworkBuilder(cfg_file=self._config_file)
@@ -817,17 +817,17 @@ class ImageProcessor(ProgressUpdate):
                     height, width = bin_img_patch.shape
                     graph_groups[(height, width)].append(graph_patch.nx_giant_graph)
                 else:
-                    self.update_status([-1, f"Filter {bin_img_patch.shape} graph extraction failed!"])
+                    self.update_status(ProgressData(type="warning", sender="GT", message=f"Filter {bin_img_patch.shape} graph extraction failed!"))
         return graph_groups
 
     def update_graph_rating(self, score: float) -> str|None:
         """Updates the score rating of the extracted graph."""
         if score is None:
-            self.update_status([101, "The score cannot be None."])
+            self.update_status(ProgressData(type="warning", sender="AI", message=f"The score cannot be None!"))
             return None
 
         if score < 0  or score > 100:
-            self.update_status([101, "The score rating is out of range! Please try 0-100."])
+            self.update_status(ProgressData(type="warning", sender="AI", message=f"The score rating is out of range! Please try 0-100."))
             return None
 
         # 1. Update rating
@@ -839,13 +839,13 @@ class ImageProcessor(ProgressUpdate):
 
         # 3. Save the graph image as JPG
         if self.graph_obj.img_ntwk is None:
-            self.update_status([101, "No graph extracted! Please extract a graph first."])
+            self.update_status(ProgressData(type="warning", sender="AI", message=f"No graph extracted! Please extract a graph first."))
             return None
         img_file_name, out_dir = self.get_filenames()
         graph_filename = img_file_name + f"_rated_graph-{int(score)}percent.jpg"
         graph_file = os.path.join(out_dir, graph_filename)
         cv2.imwrite(graph_file, self.graph_obj.img_ntwk)
-        self.update_status([101, f"Graph image downloaded!"])
+        self.update_status(ProgressData(type="warning", sender="AI", message=f"Graph image downloaded!"))
         return graph_file
 
     def get_filenames(self, file_path: str = None):
@@ -979,7 +979,7 @@ class ImageProcessor(ProgressUpdate):
 
         plt_fig = sel_batch.graph_obj.plot_graph_network(image_arr=img_3d, giant_only=show_giant_only)
         if plt_fig is not None:
-            self.update_status([98, "Graph image created."])
+            self.update_status(ProgressData(percent=98, sender="GT", message=f"Graph image created."))
             sel_batch.graph_obj.img_ntwk = plot_to_opencv(plt_fig)
 
     # MODIFIED TO EXCLUDE 3D IMAGES (TO BE REVISITED LATER)

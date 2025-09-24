@@ -9,7 +9,7 @@ import logging
 from optparse import OptionParser
 
 from .base_worker import BaseWorkerTerm
-from ..utils.sgt_utils import TaskResult
+from ..utils.sgt_utils import TaskResult, ProgressData
 from .base_contoller import BaseController
 from ..utils.config_loader import strict_read_config_file
 
@@ -47,7 +47,7 @@ class TerminalApp(BaseController):
         elif img_dir != "":
             self.add_multiple_images(img_dir, out_dir)
         else:
-            self.update_progress(-1, "No image(s) found in the path/image folder provided!")
+            self.update_progress(ProgressData(type="error", sender="GT", message=f"No image(s) found in the path/image folder provided!"))
             sys.exit('System exit')
 
     @staticmethod
@@ -64,22 +64,22 @@ class TerminalApp(BaseController):
         if not success_val:
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
-                TerminalApp.update_progress(101, f"{result[0]}: {result[1]}")
+                TerminalApp.update_progress(ProgressData(type="info", sender="GT", message=f"{result[0]}: {result[1]}"))
         else:
             if isinstance(result, TaskResult):
                 if result.task_id == "Apply Filters":
-                    TerminalApp.update_progress(100, "Filters applied successfully!")
+                    TerminalApp.update_progress(ProgressData(percent=100, sender="GT", message=f"Filters applied successfully!"))
                 if result.task_id == "Export Graph" or result.task_id == "Save Images":
-                    TerminalApp.update_progress(100, "Files Saved!")
+                    TerminalApp.update_progress(ProgressData(percent=100, sender="GT", message=f"Files Saved!"))
                 if result.task_id == "Extract Graph":
-                    TerminalApp.update_progress(100, "Graph extracted successfully!")
+                    TerminalApp.update_progress(ProgressData(percent=100, sender="GT", message=f"Graph extracted successfully!"))
                 if result.task_id == "Compute GT":
-                    TerminalApp.update_progress(100, "GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
+                    TerminalApp.update_progress(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
                 if result.task_id == "Compute Multi GT":
-                    TerminalApp.update_progress(100, "All GT PDF successfully generated! Check out generated PDF in 'Output Dir'.")
+                    TerminalApp.update_progress(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
                 if result.task_id == "Metaheuristic Search":
                     if result.status == "Finished":
-                        TerminalApp.update_progress(100, "Search completed!")
+                        TerminalApp.update_progress(ProgressData(percent=100, sender="AI", message=f"Search completed!"))
             elif type(result) is list:
                 # Histogram data
                 pass
@@ -87,25 +87,28 @@ class TerminalApp(BaseController):
                 pass
 
     @staticmethod
-    def update_progress(progress_val: int, msg: str) -> None:
+    def update_progress(status_data: ProgressData) -> None:
         """
         Simple method to display progress updates.
 
         Args:
-            progress_val (int): progress value
-            msg (str): progress message
+            status_data: ProgressData object that contains the percentage and status message of the current task.
         Returns:
              None:
         """
-        if 0 <= progress_val <= 100:
-            print(f"{progress_val} %: {msg}")
-            logging.info(f"{progress_val} %: {msg}", extra={'user': 'SGT Logs'})
-        elif progress_val > 100:
-            print(f"{msg}")
-            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
-        else:
-            print(f"Error: {msg}")
-            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
+        if status_data is None:
+            return
+
+        if 0 <= status_data.percent <= 100:
+            print(f"{status_data.percent}%: {status_data.message}")
+            logging.info(f"{status_data.percent}%: {status_data.message}", extra={'user': 'SGT Logs'})
+
+        if status_data.type == "info":
+            print(f"{status_data.message}")
+            logging.info(f"{status_data.message}", extra={'user': 'SGT Logs'})
+        elif status_data.type == "error":
+            print(f"Error: {status_data.message}")
+            logging.exception(f"{status_data.message}", extra={'user': 'SGT Logs'})
 
     @classmethod
     def start(cls) -> None:
@@ -180,5 +183,5 @@ class TerminalApp(BaseController):
                 status, result = term_app._task_worker.task_compute_gt(term_app.get_selected_sgt_obj())
                 TerminalApp.task_finished(status, result)
         else:
-            term_app.update_progress(-1, "Invalid GT task selected! System will exit.")
+            term_app.update_progress(ProgressData(type="error", sender="GT", message=f"Invalid GT task selected! System will exit."))
             sys.exit('System exit')

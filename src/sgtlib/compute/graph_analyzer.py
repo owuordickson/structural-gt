@@ -33,7 +33,7 @@ from networkx.algorithms.wiener import wiener_index
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
 from ..utils.config_loader import load_gtc_configs
-from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate
+from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate, ProgressData
 
 logger = logging.getLogger("SGT App")
 
@@ -97,7 +97,7 @@ class GraphAnalyzer(ProgressUpdate):
         >>> cfg_file = "path/to/sgt_configs.ini"
         >>>
         >>> def print_update(progress_val, progress_msg):
-        >>>     print(f"{progress_val}: {progress_msg}")
+        ...     print(f"{progress_val}: {progress_msg}")
         >>>
         >>> ntwk_obj, _ = ImageProcessor.from_image_file(i_path)
         >>> metrics_obj = GraphAnalyzer(ntwk_obj)
@@ -166,8 +166,8 @@ class GraphAnalyzer(ProgressUpdate):
     def scaling_results(self) -> dict:
         return self._scaling_results
 
-    def track_img_progress(self, value, msg) -> None:
-        self.update_status([value, msg])
+    def track_img_progress(self, status_data: ProgressData) -> None:
+        self.update_status(status_data)
 
     def run_analyzer(self) -> None:
         """
@@ -184,7 +184,7 @@ class GraphAnalyzer(ProgressUpdate):
             self._ntwk_p.build_graph_network()  # Extract graph from binary image
             self._ntwk_p.remove_listener(self.track_img_progress)
             self.abort = self._ntwk_p.abort
-            self.update_status([100, "Graph successfully extracted!"]) if not self.abort else None
+            self.update_status(ProgressData(percent=100, sender="GT", message=f"Graph successfully extracted!")) if not self.abort else None
             graph_obj = self._ntwk_p.graph_obj
 
         if self.abort:
@@ -199,7 +199,7 @@ class GraphAnalyzer(ProgressUpdate):
             scaling_data = self.compute_scaling_data(full_img_df=self._results_df.copy())
 
         if self.abort:
-            self.update_status([-1, "Problem encountered while computing un-weighted GT parameters."])
+            self.update_status(ProgressData(type="error", sender="GT", message=f"Problem encountered while computing un-weighted GT parameters."))
             return
 
         # 4. Compute Weighted GT parameters (skip if MultiGraph)
@@ -229,7 +229,7 @@ class GraphAnalyzer(ProgressUpdate):
         if graph is None:
             return None
 
-        self.update_status([1, "Performing un-weighted GT parameters..."]) if not silent else None
+        self.update_status(ProgressData(percent=1, sender="GT", message=f"Performing un-weighted GT parameters...")) if not silent else None
 
         opt_gtc = self._configs
         data_dict = {"parameter": [], "value": []}
@@ -267,12 +267,12 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict["value"].append(round(np.median(angle_arr), 3))
 
         if graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem with graph (change filter and graph options)."]) if not silent else None
+            self.update_status(ProgressData(type="error", sender="GT", message=f"Problem with graph (change filter and graph options).")) if not silent else None
             return None
 
         # creating degree histogram
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            self.update_status([5, "Computing graph degree..."]) if not silent else None
+            self.update_status(ProgressData(percent=5, sender="GT", message=f"Computing graph degree...")) if not silent else None
             deg_distribution_1 = dict(nx.degree(graph))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -290,7 +290,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating network diameter
         if opt_gtc["compute_network_diameter"]["value"] == 1:
-            self.update_status([10, "Computing network diameter..."]) if not silent else None
+            self.update_status(ProgressData(percent=10, sender="GT", message=f"Computing network diameter...")) if not silent else None
             if is_connected:
                 dia = int(diameter(graph))
             else:
@@ -301,16 +301,16 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating average nodal connectivity
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
             if self.abort:
-                self.update_status([-1, "Task aborted."]) if not silent else None
+                self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted.")) if not silent else None
                 return None
-            self.update_status([15, "Computing node connectivity..."]) if not silent else None
+            self.update_status(ProgressData(percent=15, sender="GT", message=f"Computing node connectivity...")) if not silent else None
             avg_node_con = self.compute_avg_node_connectivity(graph, is_connected)
             data_dict["parameter"].append("Average node connectivity")
             data_dict["value"].append(avg_node_con)
 
         # calculating graph density
         if opt_gtc["compute_graph_density"]["value"] == 1:
-            self.update_status([20, "Computing graph density..."]) if not silent else None
+            self.update_status(ProgressData(percent=20, sender="GT", message=f"Computing graph density...")) if not silent else None
             g_density = nx.density(graph)
             g_density = round(g_density, 5)
             data_dict["parameter"].append("Graph density")
@@ -319,16 +319,16 @@ class GraphAnalyzer(ProgressUpdate):
         # calculating global efficiency
         if opt_gtc["compute_global_efficiency"]["value"] == 1:
             if self.abort:
-                self.update_status([-1, "Task aborted."])
+                self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted.")) if not silent else None
                 return None
-            self.update_status([25, "Computing global efficiency..."]) if not silent else None
+            self.update_status(ProgressData(percent=25, sender="GT", message=f"Computing global efficiency...")) if not silent else None
             g_eff = global_efficiency(graph)
             g_eff = round(g_eff, 5)
             data_dict["parameter"].append("Global efficiency")
             data_dict["value"].append(g_eff)
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
-            self.update_status([30, "Computing wiener index..."]) if not silent else None
+            self.update_status(ProgressData(percent=30, sender="GT", message=f"Computing Wiener index...")) if not silent else None
             # settings.update_label("Calculating w_index...")
             w_index = wiener_index(graph)
             w_index = round(w_index, 1)
@@ -337,7 +337,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating assortativity coefficient
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
-            self.update_status([35, "Computing assortativity coefficient..."]) if not silent else None
+            self.update_status(ProgressData(percent=35, sender="GT", message=f"Computing assortativity coefficient...")) if not silent else None
             a_coef = degree_assortativity_coefficient(graph)
             a_coef = round(a_coef, 5)
             data_dict["parameter"].append("Assortativity coefficient")
@@ -345,7 +345,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating clustering coefficients
         if opt_gtc["compute_avg_clustering_coef"]["value"] == 1:
-            self.update_status([40, "Computing clustering coefficients..."]) if not silent else None
+            self.update_status(ProgressData(percent=40, sender="GT", message=f"Computing average clustering coefficient...")) if not silent else None
             coefficients_1 = clustering(graph)
             cl_coefficients = np.array(list(coefficients_1.values()), dtype=float)
             if save_histogram:
@@ -355,7 +355,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating betweenness centrality histogram
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
-            self.update_status([45, "Computing betweenness centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=45, sender="GT", message=f"Computing betweenness centrality...")) if not silent else None
             b_distribution_1 = betweenness_centrality(graph)
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -365,7 +365,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating eigenvector centrality
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
-            self.update_status([50, "Computing eigenvector centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=50, sender="GT", message=f"Computing eigenvector centrality...")) if not silent else None
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100)
             except nx.exception.PowerIterationFailedConvergence:
@@ -378,7 +378,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating closeness centrality
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            self.update_status([55, "Computing closeness centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=55, sender="GT", message=f"Computing closeness centrality...")) if not silent else None
             close_distribution_1 = closeness_centrality(graph)
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -388,7 +388,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         # calculating Ohms centrality
         if opt_gtc["display_ohms_histogram"]["value"] == 1:
-            self.update_status([60, "Computing Ohms centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=60, sender="GT", message=f"Computing Ohms centrality...")) if not silent else None
             o_distribution_1, res = self.compute_ohms_centrality(graph)
             o_distribution = np.array(list(o_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -424,7 +424,7 @@ class GraphAnalyzer(ProgressUpdate):
         if not graph_obj.configs["has_weights"]["value"]:
             return None
 
-        self.update_status([70, "Performing weighted GT parameters..."]) if not silent else None
+        self.update_status(ProgressData(percent=70, sender="GT", message=f"Performing weighted GT parameters...")) if not silent else None
 
         graph = graph_obj.nx_giant_graph
         opt_gtc = self._configs
@@ -433,11 +433,11 @@ class GraphAnalyzer(ProgressUpdate):
         data_dict = {"parameter": [], "value": []}
 
         if graph.number_of_nodes() <= 0:
-            self.update_status([-1, "Problem with graph (change filter and graph options)."]) if not silent else None
+            self.update_status(ProgressData(type="error", sender="GT", message=f"Problem with graph (change filter and graph options).")) if not silent else None
             return None
 
         if opt_gtc["display_degree_histogram"]["value"] == 1:
-            self.update_status([72, "Compute weighted graph degree..."]) if not silent else None
+            self.update_status(ProgressData(percent=72, sender="GT", message=f"Computing weighted degree histogram...")) if not silent else None
             deg_distribution_1 = dict(nx.degree(graph, weight='weight'))
             deg_distribution = np.array(list(deg_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -446,14 +446,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(round(np.average(deg_distribution), 5))
 
         if opt_gtc["compute_wiener_index"]["value"] == 1:
-            self.update_status([74, "Compute weighted wiener index..."]) if not silent else None
+            self.update_status(ProgressData(percent=74, sender="GT", message=f"Computing weighted Wiener index...")) if not silent else None
             w_index = wiener_index(graph, weight='length')
             w_index = round(w_index, 1)
             data_dict["parameter"].append("Length-weighted Wiener Index")
             data_dict["value"].append(w_index)
 
         if opt_gtc["compute_avg_node_connectivity"]["value"] == 1:
-            self.update_status([76, "Compute weighted node connectivity..."]) if not silent else None
+            self.update_status(ProgressData(percent=76, sender="GT", message=f"Computing weighted average node connectivity...")) if not silent else None
             connected_graph = nx.is_connected(graph)
             if connected_graph:
                 max_flow = float(0)
@@ -471,14 +471,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(max_flow)
 
         if opt_gtc["compute_assortativity_coef"]["value"] == 1:
-            self.update_status([78, "Compute weighted assortativity..."]) if not silent else None
+            self.update_status(ProgressData(percent=78, sender="GT", message=f"Computing weighted assortativity coefficient...")) if not silent else None
             a_coef = degree_assortativity_coefficient(graph, weight='width')
             a_coef = round(a_coef, 5)
             data_dict["parameter"].append("Width-weighted assortativity coefficient")
             data_dict["value"].append(a_coef)
 
         if opt_gtc["display_betweenness_centrality_histogram"]["value"] == 1:
-            self.update_status([80, "Compute weighted betweenness centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=80, sender="GT", message=f"Computing weighted betweenness centrality...")) if not silent else None
             b_distribution_1 = betweenness_centrality(graph, weight='weight')
             b_distribution = np.array(list(b_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -487,7 +487,7 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(round(np.average(b_distribution), 5))
 
         if opt_gtc["display_closeness_centrality_histogram"]["value"] == 1:
-            self.update_status([82, "Compute weighted closeness centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=82, sender="GT", message=f"Computing weighted closeness centrality...")) if not silent else None
             close_distribution_1 = closeness_centrality(graph, distance='length')
             close_distribution = np.array(list(close_distribution_1.values()), dtype=float)
             if save_histogram:
@@ -497,9 +497,9 @@ class GraphAnalyzer(ProgressUpdate):
 
         if opt_gtc["display_eigenvector_centrality_histogram"]["value"] == 1:
             if self.abort:
-                self.update_status([-1, "Task aborted."]) if not silent else None
+                self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted.")) if not silent else None
                 return None
-            self.update_status([84, "Compute weighted eigenvector centrality..."]) if not silent else None
+            self.update_status(ProgressData(percent=84, sender="GT", message=f"Computing weighted eigenvector centrality...")) if not silent else None
             try:
                 e_vecs_1 = eigenvector_centrality(graph, max_iter=100, weight='weight')
             except nx.exception.PowerIterationFailedConvergence:
@@ -513,7 +513,7 @@ class GraphAnalyzer(ProgressUpdate):
         # calculate cross-sectional area of edges
         wt_type = graph_obj.get_weight_type()
         if wt_type == 'AREA':
-            self.update_status([88, "Computing average (edge) cross-sectional area..."]) if not silent else None
+            self.update_status(ProgressData(percent=88, sender="GT", message=f"Computing weighted average (edge) cross-sectional area...")) if not silent else None
             temp_distribution = []
             for (s, e) in graph.edges():
                 temp_distribution.append(graph[s][e]['weight'])
@@ -527,7 +527,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def compute_scaling_data(self, full_img_df: pd.DataFrame = None) -> defaultdict:
         """"""
-        self.update_status([65, "Computing scaling behaviour..."])
+        self.update_status(ProgressData(percent=65, sender="GT", message=f"Computing scaling behaviour..."))
         self._ntwk_p.add_listener(self.track_img_progress)
         num_filters = int(self._configs["scaling_behavior_kernel_count"]["value"])
         num_patches = int(self._configs["scaling_behavior_patches_per_kernel"]["value"])
@@ -540,7 +540,7 @@ class GraphAnalyzer(ProgressUpdate):
         for (h, w), nx_graphs in graph_groups.items():
             num_graphs = len(nx_graphs)
             for i, nx_graph in enumerate(nx_graphs):
-                self.update_status([101, f"Computing GT parameters for filter {h}x{w}: graph-patch {i + 1}/{num_graphs}..."])
+                self.update_status(ProgressData(type="warning", sender="GT", message=f"Computing GT parameters for filter {h}x{w}: graph-patch {i + 1}/{num_graphs}..."))
                 temp_df = self.compute_gt_metrics(nx_graph, save_histogram=False, silent=True)
                 if temp_df is None:
                     # Skip the problematic graph
@@ -707,7 +707,7 @@ class GraphAnalyzer(ProgressUpdate):
                     total += n
                     count += 1
                     if self.abort:
-                        self.update_status([-1, "Task aborted."])
+                        self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted."))
                         pool.terminate()
                         pool.join()
                         return 0
@@ -734,7 +734,7 @@ class GraphAnalyzer(ProgressUpdate):
                 async_result = pool.starmap_async(_worker_vertex_connectivity, items)
                 for n in async_result.get():
                     if self.abort:
-                        self.update_status([-1, "Task aborted."])
+                        self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted."))
                         pool.terminate()
                         pool.join()
                         return 0
@@ -771,14 +771,14 @@ class GraphAnalyzer(ProgressUpdate):
             # use_igraph = opt_gtc["computing_lang == 'C'"]["value"]
             if self._use_igraph:
                 # use iGraph Lib in C
-                self.update_status([15, "Using iGraph library..."])
+                self.update_status(ProgressData(percent=15, sender="GT", message=f"Using iGraph library..."))
                 try:
                     avg_node_con = igraph_clang_average_node_connectivity()
                 except ImportError:
                     avg_node_con = igraph_average_node_connectivity()
             else:
                 # Use NetworkX Lib in Python
-                self.update_status([15, "Using NetworkX library..."])
+                self.update_status(ProgressData(percent=15, sender="GT", message=f"Using NetworkX library..."))
                 if self._allow_mp:  # Multi-processing
                     avg_node_con = nx_average_node_connectivity()
                 else:
@@ -811,7 +811,7 @@ class GraphAnalyzer(ProgressUpdate):
         :param graph_obj: Graph Extractor object.
 
         """
-        self.update_status([101, "Computing graph conductance..."])
+        self.update_status(ProgressData(type="warning", sender="GT", message=f"Computing graph conductance..."))
         # Make a copy of the graph
         graph = graph_obj.nx_giant_graph.copy()
         weighted = graph_obj.configs["has_weights"]["value"]
@@ -909,7 +909,7 @@ class GraphAnalyzer(ProgressUpdate):
         :return: List of results.
         """
 
-        self.update_status([90, "Generating PDF GT Output..."])
+        self.update_status(ProgressData(percent=90, sender="GT", message=f"Writing results to PDF..."))
         opt_gtc = self._configs
         out_figs = []
 
@@ -1121,7 +1121,7 @@ class GraphAnalyzer(ProgressUpdate):
                 return plt_figs
 
             # Plot scaling behavior
-            self.update_status([91, "Plotting scaling behavior..."])
+            self.update_status(ProgressData(percent=91, sender="GT", message=f"Plotting scaling behavior..."))
             i = 0
             x_label, best_scale = None, None
             y_title = ""
@@ -1326,7 +1326,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             :return: A list of Matplotlib figures.
             """
-            self.update_status([92, "Generating histograms..."])
+            self.update_status(ProgressData(percent=92, sender="GT", message=f"Generating histograms..."))
 
             opt_gte = graph_obj.configs
             plt_figs = []
@@ -1440,7 +1440,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             :return: A list of Matplotlib figures.
             """
-            self.update_status([95, "Generating heatmaps..."])
+            self.update_status(ProgressData(percent=95, sender="GT", message=f"Generating heatmaps..."))
 
             sz = 30
             lc = 'black'
@@ -1584,7 +1584,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
         try:
             if update_func:
-                update_func(98, "Writing PDF...")
+                update_func(ProgressData(percent=98, sender="GT", message="Writing PDF..."))
 
             filename, output_location = sgt_obj.ntwk_p.get_filenames()
             pdf_filename = filename + "_SGT_results.pdf"
@@ -1620,7 +1620,7 @@ class GraphAnalyzer(ProgressUpdate):
         except Exception as err:
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
             if update_func:
-                update_func(-1, "Error occurred while trying to write to PDF.")
+                update_func(ProgressData(type="error", sender="GT", message="An error occurred while writing PDF."))
             return False
 
     @staticmethod
@@ -1630,7 +1630,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         Args:
             sgt_obj: StructuralGT object with calculated GT parameters
-            update_func: Callable for progress updates (e.g., update_func(percentage, message))
+            update_func: Callable for progress updates (e.g., update_func(msg_data))
             save_to_pdf: Save results to a PDF file
         """
         try:
@@ -1650,11 +1650,11 @@ class GraphAnalyzer(ProgressUpdate):
             sgt_obj.remove_listener(update_func)
             return True, sgt_obj
         except AbortException:
-            update_func(-1, "Task aborted by user or a fatal error occurred!")
+            update_func(ProgressData(type="error", sender="GT", message="Task aborted by user of a fatal error occurred!"))
             sgt_obj.remove_listener(update_func)
             return False, None
         except Exception as err:
-            update_func(-1, "Error encountered! Try again")
+            update_func(ProgressData(type="error", sender="GT", message="Error encountered! Try again."))
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             # Clean up listeners before exiting
             sgt_obj.remove_listener(update_func)
@@ -1667,7 +1667,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         Args:
             sgt_objs: List of StructuralGT objects with calculated GT parameters
-            update_func: Callable for progress updates (e.g., update_func(percentage, message))
+            update_func: Callable for progress updates (e.g., update_func(msg_data))
         """
         try:
             i = 0
@@ -1676,7 +1676,7 @@ class GraphAnalyzer(ProgressUpdate):
                 sgt_obj = sgt_objs[key]
 
                 status_msg = f"Analyzing Image: {(i + 1)} / {len(sgt_objs)}"
-                update_func(101, status_msg)
+                update_func(ProgressData(type="info", sender="GT", message=status_msg))
 
                 start = time.time()
                 success, new_sgt = GraphAnalyzer.safe_run_analyzer(sgt_obj, update_func)
@@ -1697,9 +1697,9 @@ class GraphAnalyzer(ProgressUpdate):
                 logging.info(output, extra={'user': 'SGT Logs'})
             return sgt_objs
         except AbortException:
-            update_func(-1, "Task aborted by user or a fatal error occurred!")
+            update_func(ProgressData(type="error", sender="GT", message="Task aborted by user of a fatal error occurred!"))
             return None
         except Exception as err:
-            update_func(-1, "Error encountered! Try again")
+            update_func(ProgressData(type="error", sender="GT", message="Error encountered! Try again."))
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             return None

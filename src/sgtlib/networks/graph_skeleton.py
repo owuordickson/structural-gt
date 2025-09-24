@@ -11,6 +11,8 @@ from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
+from src.sgtlib.utils.sgt_utils import ProgressData
+
 
 class GraphSkeleton:
     """A class that is used for estimating the width of edges and compute their weights using binerized 2D/3D images."""
@@ -74,24 +76,26 @@ class GraphSkeleton:
 
         # if self.configs["remove_bubbles"]["value"] == 1:
         #   if self._update_progress is not None:
-        #       self._update_progress([56, f"Removing bubbles from the skeleton..."])
+        #       self._update_progress(ProgressData(percent=56, sender="GT", message=f"Removing bubbles from the skeleton..."))
         #   temp_skeleton = GraphSkeleton.remove_bubbles(temp_skeleton, img_bin_int, mask_elements)
 
         if self._configs["merge_nearby_nodes"]["value"] == 1:
             if self._update_progress is not None:
-                self._update_progress([52, f"Merging nearby nodes in the skeleton..."])
+                self._update_progress(ProgressData(percent=52, sender="GT", message=f"Merging nearby nodes in the skeleton..."))
             node_radius_size = 2 # int(self.configs["merge_nearby_nodes"]["items"][0]["value"])
             temp_skeleton = GraphSkeleton.merge_nodes(temp_skeleton, node_radius_size)
 
         if self._configs["remove_disconnected_segments"]["value"] == 1:
             if self._update_progress is not None:
-                self._update_progress([54, f"Removing small disconnected segments from the skeleton..."])
+                self._update_progress(
+                    ProgressData(percent=54, sender="GT", message=f"Removing small disconnected segments from the skeleton..."))
             min_size = int(self._configs["remove_disconnected_segments"]["items"][0]["value"])
             temp_skeleton = remove_small_objects(temp_skeleton, min_size=min_size, connectivity=2)
 
         if self._configs["prune_dangling_edges"]["value"] == 1:
             if self._update_progress is not None:
-                self._update_progress([56, f"Pruning dangling edges from skeleton..."])
+                self._update_progress(
+                    ProgressData(percent=56, sender="GT", message=f"Pruning dangling edges from skeleton..."))
             max_iter = 500 # int(self.configs["prune_dangling_edges"]["items"][0]["value"])
             b_points = GraphSkeleton.get_branched_points(temp_skeleton)
             temp_skeleton = GraphSkeleton.prune_edges(temp_skeleton, max_iter, b_points)

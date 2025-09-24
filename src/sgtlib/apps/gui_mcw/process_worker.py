@@ -19,7 +19,7 @@ def _run_wrapper(func, args, queue):
 
 class QueueListener(QThread):
     """Thread that listens to the multiprocessing.Queue and emits signals into QML UI."""
-    progress = Signal(int, str)
+    progress = Signal(object)
     finished = Signal(bool, object)
 
     def __init__(self, queue: Queue):
@@ -35,8 +35,7 @@ class QueueListener(QThread):
                     break
 
                 if type(status) is str:
-                    percent, message = payload
-                    self.progress.emit(percent, message)
+                    self.progress.emit(payload)
                 else:
                     self.finished.emit(status, payload)
                     break  # stop after completion
@@ -56,7 +55,7 @@ class QueueListener(QThread):
 class ProcessWorker(QObject):
     """Wrapper around multiprocessing.Process for QML integration."""
 
-    inProgressSignal = Signal(int, str)  # progress-value (0-100), progress-message (str)
+    inProgressSignal = Signal(object)
     taskFinishedSignal = Signal(int, bool, object)  # worker-id, success/fail, result (object)
 
     def __init__(self, worker_id, func, args=(), parent=None):

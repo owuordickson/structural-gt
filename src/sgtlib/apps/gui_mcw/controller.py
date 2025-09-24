@@ -22,7 +22,7 @@ from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
 from ... import __version__, __title__
-from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult
+from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult, ProgressData
 from ...imaging.image_processor import ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
 from ...compute.graph_analyzer import GraphAnalyzer  # , COMPUTING_DEVICE
 
@@ -232,51 +232,35 @@ class MainController(BaseController):
             self._stop_histogram_calculation()
             self._hist_worker = None
 
-    def _handle_ai_search_progress(self, progress_val: int, msg: str) -> None:
-        """
-        Handler function for progress updates for ongoing AI tasks.
-        Args:
-            progress_val: Progress value, range is 0-100%.
-            msg: Progress message to be displayed.
-
-        Returns:
-
-        """
-        if progress_val is None:
-            return
-
-        if 0 <= progress_val <= 100:
-            self.updateAIProgressSignal.emit(progress_val, msg)
-            logging.info(f"(AI Mode) {progress_val}%: {msg}", extra={'user': 'SGT Logs'})
-        elif progress_val > 100:
-            self.updateAIProgressSignal.emit(progress_val, msg)
-            logging.info(f"(AI Mode): {msg}", extra={'user': 'SGT Logs'})
-        else:
-            logging.exception(f"(AI Mode): {msg}", extra={'user': 'SGT Logs'})
-            self.errorSignal.emit(msg)
-
-    def _handle_progress_update(self, progress_val: int, msg: str) -> None:
+    def _handle_progress_update(self, status_data: ProgressData) -> None:
         """
         Handler function for progress updates for ongoing GT tasks.
         Args:
-            progress_val: Progress value, range is 0-100%.
-            msg: Progress message to be displayed.
+            status_data: ProgressData object that contains the percentage and status message of the current task.
 
         Returns:
 
         """
-        if progress_val is None:
+
+        if status_data is None:
             return
 
-        if 0 <= progress_val <= 100:
-            self.updateProgressSignal.emit(progress_val, msg)
-            logging.info(f"{progress_val}%: {msg}", extra={'user': 'SGT Logs'})
-        elif progress_val > 100:
-            self.updateProgressSignal.emit(progress_val, msg)
-            logging.info(f"{msg}", extra={'user': 'SGT Logs'})
-        else:
-            logging.exception(f"{msg}", extra={'user': 'SGT Logs'})
-            self.errorSignal.emit(msg)
+        if 0 <= status_data.percent <= 100:
+            if status_data.sender == "AI":
+                self.updateAIProgressSignal.emit(status_data.percent, status_data.message)
+            else:
+                self.updateProgressSignal.emit(status_data.percent, status_data.message)
+            logging.info(f"({status_data.sender}) {status_data.percent}%: {status_data.message}", extra={'user': 'SGT Logs'})
+
+        if status_data.type == "info":
+            if status_data.sender == "AI":
+                self.updateAIProgressSignal.emit(101, status_data.message)
+            else:
+                self.updateProgressSignal.emit(101, status_data.message)
+            logging.info(f"({status_data.sender}) {status_data.message}", extra={'user': 'SGT Logs'})
+        elif status_data.type == "error":
+            self.errorSignal.emit(status_data.message)
+            logging.exception(f"({status_data.sender}) {status_data.message}", extra={'user': 'SGT Logs'})
 
     def _handle_finished(self, worker_id: int, success_val: bool, result: None | list | TaskResult) -> None:
         """
@@ -301,15 +285,15 @@ class MainController(BaseController):
             if isinstance(result, TaskResult):
                 if result.task_id == "Export Graph" or result.task_id == "Save Images":
                     # Saving files to Output Folder
-                    self._handle_progress_update(100, "Files Saved!")
+                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Files Saved!"))
                     self.taskTerminatedSignal.emit(success_val, ["Files Saved", result.message])
                 if result.task_id == "Rate Graph":
-                    self._handle_progress_update(101, "Graph image successfully uploaded!")
+                    self._handle_progress_update(ProgressData(type="info", sender="AI", message=f"Graph image successfully uploaded!"))
                     self.taskTerminatedSignal.emit(success_val, ["Graph Rated", result.message])
                 if result.task_id == "Extract Graph":
                     sgt_obj = self.get_selected_sgt_obj()
                     sgt_obj.ntwk_p = result.data
-                    self._handle_progress_update(100, "Graph extracted successfully!")
+                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Graph extracted successfully!"))
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)
                     # Update QML to visualize graph
@@ -319,7 +303,7 @@ class MainController(BaseController):
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
-                    self._handle_progress_update(100, "GT PDF successfully generated!")
+                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
@@ -332,7 +316,7 @@ class MainController(BaseController):
                                                                                  "calculated. Check out generated PDF in "
                                                                                  "'Output Dir'."])
                 if result.task_id == "Compute Multi GT":
-                    self._handle_progress_update(100, "All GT PDF successfully generated!")
+                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
@@ -347,7 +331,7 @@ class MainController(BaseController):
                 if result.task_id == "Metaheuristic Search":
                     # AI Mode search results (image configs)
                     if result.status == "Finished":
-                        self._handle_ai_search_progress(100, "Search completed!")
+                        self._handle_progress_update(ProgressData(percent=100, sender="AI", message=f"Search completed!"))
                         sgt_obj = self.get_selected_sgt_obj()
                         sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
@@ -410,10 +394,7 @@ class MainController(BaseController):
 
         if track_updates:
             base_funcs.progress_queue = bg_worker.queue
-            if worker_id == 2:
-                bg_worker.inProgressSignal.connect(self._handle_ai_search_progress)
-            else:
-                bg_worker.inProgressSignal.connect(self._handle_progress_update)
+            bg_worker.inProgressSignal.connect(self._handle_progress_update)
         bg_worker.start()
 
     @Slot(int)
@@ -741,13 +722,12 @@ class MainController(BaseController):
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
-
-        self._handle_progress_update(0, "Exporting Graph Data...")
+        self._handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Exporting Graph Data..."))
         try:
             if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
-            self._handle_progress_update(20, "Exporting Graph Data...")
+            self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Exporting Graph Data..."))
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
             self._start_process_worker(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
@@ -764,18 +744,18 @@ class MainController(BaseController):
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
-        self._handle_progress_update(0, "Saving Images...")
+        self._handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Saving images..."))
         try:
             if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
-            self._handle_progress_update(10, "Saving Images...")
+            self._handle_progress_update(ProgressData(percent=10, sender="GT", message=f"Saving images..."))
             sel_images = self.get_selected_images()
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
 
-            self._handle_progress_update(20, "Saving Images...")
+            self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Saving images..."))
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
             self._start_process_worker(1, "Save-Images", (sgt_obj.ntwk_p,), True)
@@ -800,7 +780,7 @@ class MainController(BaseController):
         except Exception as err:
             self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
             self._handle_finished(1,False, ["Graph Extraction Error",
                                           "Fatal error while trying to extract graph. "
                                           "Close the app and try again."])
@@ -836,7 +816,7 @@ class MainController(BaseController):
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
             self._handle_finished(1, False, ["GT Computation Error",
                                           "Fatal error while trying calculate GT parameters. "
                                           "Close the app and try again."])
@@ -858,7 +838,7 @@ class MainController(BaseController):
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(-1, "Fatal error occurred! Close the app and try again.")
+            self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
             self._handle_finished(1,False, ["GT Computation Error",
                                           "Fatal error while trying calculate GT parameters. "
                                           "Close the app and try again."])
