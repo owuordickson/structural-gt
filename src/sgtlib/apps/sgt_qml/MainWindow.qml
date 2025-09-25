@@ -9,7 +9,7 @@ import "widgets"
 ApplicationWindow {
     id: mainWindow
     width: 1024
-    height: 800
+    height: 824
     visible: true
     title: mainController.get_sgt_title();
     font.family: "Arial"  // or Qt.application.font.family
@@ -31,6 +31,7 @@ ApplicationWindow {
             Layout.row: 0
             Layout.column: 0
             Layout.columnSpan: 2
+            Layout.topMargin: 5
             Layout.leftMargin: 10
             Layout.rightMargin: 10
             Layout.alignment: Qt.AlignTop
