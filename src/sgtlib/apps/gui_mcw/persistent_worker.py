@@ -30,7 +30,7 @@ def _worker_loop(job_queue, result_queue):
                 result_queue.put((success, data))
         except Exception as e:
             # result_queue.put((False, str(e)))
-            pass
+            print(f"Worker Loop Exception: {e}")
 
 
 
@@ -58,8 +58,7 @@ class ProgressListener(QThread):
                 else:
                     self.finished.emit(status, payload)
             except Exception as e:
-                # self.finished.emit(False, str(e))
-                pass
+                print(f"Status Thread Listener Exception: {e}")
 
     def stop(self):
         self._running = False
