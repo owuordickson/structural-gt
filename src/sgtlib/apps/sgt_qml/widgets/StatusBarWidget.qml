@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
+import QtQuick.Controls.Material as Material
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
 // Icons retrieved from https://www.flaticon.com and used under the CC0 1.0 Universal Public Domain Dedication.
@@ -24,7 +25,7 @@ Rectangle {
             Layout.rightMargin: 36 // Progressbar covers 80% of the width
             spacing: 5
 
-            ProgressBar {
+            Material.ProgressBar {
                 id: progressBar
                 Layout.fillWidth: true
                 visible: mainController.is_task_running()
@@ -37,13 +38,14 @@ Rectangle {
                 id: btnCancel
                 text: ""
                 icon.source: "../assets/icons/cancel_icon.png"
-                icon.width: 21
-                icon.height: 21
-                ToolTip.text: "Cancel task!"
-                ToolTip.visible: btnCancel.hovered
+                icon.width: 28
+                icon.height: 28
+                icon.color: "transparent"   // important for PNGs
                 background: Rectangle {
                     color: "transparent"
                 }
+                ToolTip.text: "Cancel task!"
+                ToolTip.visible: btnCancel.hovered
                 visible: mainController.is_task_running()
                 enabled: mainController.is_task_running()
                 onClicked: {
