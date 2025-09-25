@@ -358,9 +358,9 @@ class MainController(BaseController):
         """Start a background thread and its associated worker."""
 
         def _sync_signals(bg_worker: PersistentProcessWorker):
-            bg_worker.taskFinishedSignal.connect(self._handle_finished)
+            bg_worker.taskCompleted.connect(self._handle_finished)
             if track_updates:
-                bg_worker.inProgressSignal.connect(self._handle_progress_update)
+                bg_worker.inProgress.connect(self._handle_progress_update)
 
         if task_fxn is None or worker_id is None:
             return

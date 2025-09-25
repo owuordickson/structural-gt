@@ -73,9 +73,9 @@ class ProgressListener(QThread):
 
 class PersistentProcessWorker(QObject):
 
-    startedSignal = Signal()
-    inProgressSignal = Signal(object)
-    taskFinishedSignal = Signal(int, bool, object)  # worker-id, success/fail, result (object)
+    workerStarted = Signal()
+    inProgress = Signal(object)
+    taskCompleted = Signal(int, bool, object)  # worker-id, success/fail, result (object)
 
     def __init__(self, worker_id, parent=None):
         super().__init__(parent)
@@ -85,17 +85,13 @@ class PersistentProcessWorker(QObject):
         self._process = None
         self._waiting = False
         self._status_listener = None
-        self.start()
+        self._start()
 
     @property
     def status_queue(self):
         return self._status_queue
 
-    @property
-    def status_listener(self):
-        return self._status_listener
-
-    def start(self):
+    def _start(self):
         """Start the worker process and the status listener thread."""
         if self._process is None or not self._process.is_alive():
             # start the persistent process
@@ -106,11 +102,11 @@ class PersistentProcessWorker(QObject):
 
             # start a progress/status listener thread
             self._status_listener = ProgressListener(self._status_queue)
-            self._status_listener.progress.connect(self.inProgressSignal)
+            self._status_listener.progress.connect(self.inProgress)
             self._status_listener.finished.connect(self.on_finished)
             # self._status_listener.finished.connect(lambda success, result: self.taskFinishedSignal.emit(self._worker_id, success, result))
             self._status_listener.start()
-            self.startedSignal.emit()
+            self.workerStarted.emit()
 
     def stop(self):
         """Force terminate the worker process."""
@@ -132,14 +128,13 @@ class PersistentProcessWorker(QObject):
 
     def restart(self):
         """Restart the worker process."""
-        self.startedSignal.connect(lambda : self.on_finished(True, None))
+        self.workerStarted.connect(lambda : self.on_finished(True, None))
         self.stop()
-        self.start()
-        # self.on_finished(True, None)
+        self._start()
 
     def on_finished(self, success, result):
         self._waiting = False
-        self.taskFinishedSignal.emit(self._worker_id, success, result)
+        self.taskCompleted.emit(self._worker_id, success, result)
 
     def submit_task(self, func, args=()):
         if self._waiting:
@@ -147,4 +142,3 @@ class PersistentProcessWorker(QObject):
         self._waiting = True
         self._job_queue.put((func, args))
         return True
-
