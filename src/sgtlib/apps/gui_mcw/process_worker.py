@@ -24,13 +24,13 @@ class QueueListener(QThread):
 
     def __init__(self, queue: Queue):
         super().__init__()
-        self.queue = queue
+        self._updates_queue = queue
         self._running = True
 
     def run(self):
         while self._running:
             try:
-                status, payload = self.queue.get()  # blocking wait
+                status, payload = self._updates_queue.get()  # blocking wait
                 if status == "STOP":
                     break
 
@@ -46,7 +46,7 @@ class QueueListener(QThread):
     def stop(self):
         self._running = False
         try:
-            self.queue.put_nowait(("STOP", None))  # wakes up the blocking get()
+            self._updates_queue.put_nowait(("STOP", None))  # wakes up the blocking get()
         except Exception as e:
             print(f"Thread Listener Exception: {e}")
             pass

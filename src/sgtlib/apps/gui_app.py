@@ -51,6 +51,9 @@ class PySideApp(QObject):
         self._ui_engine.rootContext().setContextProperty("mainController", self._controller)
         self._ui_engine.addImageProvider("imageProvider", self._image_provider)
 
+        # Cleanup when the app is closing
+        self.app.aboutToQuit.connect(self._controller.cleanup_workers)
+
         # Load UI
         # Get the directory of the current script
         qml_dir = os.path.dirname(os.path.abspath(__file__))

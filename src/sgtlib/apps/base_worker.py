@@ -13,7 +13,11 @@ from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload
 class BaseWorker:
 
     def __init__(self):
-        self.progress_queue = None
+        self._progress_queue = None
+
+    @property
+    def progress_queue(self):
+        return self._progress_queue
 
     def _update_progress(self, status_data: ProgressData):
         """
@@ -25,9 +29,13 @@ class BaseWorker:
         Returns:
 
         """
-        if self.progress_queue is None:
+        if self._progress_queue is None:
             return
-        self.progress_queue.put(("progress", status_data))
+        self._progress_queue.put(("progress", status_data))
+
+    def attach_progress_queue(self, queue):
+        """Attach or replace the progress queue (status_queue)."""
+        self._progress_queue = queue
 
     def task_save_images(self, ntwk_p):
         """"""

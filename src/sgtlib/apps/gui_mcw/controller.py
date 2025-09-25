@@ -17,7 +17,7 @@ from .tree_model import TreeModel
 from .table_model import TableModel
 from .checkbox_model import CheckBoxModel
 from .imagegrid_model import ImageGridModel
-from .process_worker import ProcessWorker
+from .persistent_worker import PersistentProcessWorker
 from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 
@@ -78,9 +78,9 @@ class MainController(BaseController):
         self.imgHistogramModel = ImageGridModel([], set([]))
 
         # Create Worker Functions, Process and Timer
-        self._gt_worker = None
-        self._ai_worker = None
-        self._hist_worker = None
+        self._gt_worker = PersistentProcessWorker(worker_id=1)
+        self._ai_worker = PersistentProcessWorker(worker_id=2)
+        self._hist_worker = PersistentProcessWorker(worker_id=3)
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -219,18 +219,22 @@ class MainController(BaseController):
         ntwk_p = sgt_obj.ntwk_p
         return ntwk_p.selected_images
 
+    def cleanup_workers(self):
+        """Stop all persistent workers before app exit."""
+        self.showAlertSignal.emit("Important Alert", "Please wait as we safely close the app...")
+        for worker in [self._gt_worker, self._ai_worker, self._hist_worker]:
+            if worker:
+                worker.stop()
+
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
             self._stop_wait()
-            self._gt_worker = None
 
         if worker_id == 2:
             self._stop_ai_task()
-            self._ai_worker = None
 
         if worker_id == 3:
             self._stop_histogram_calculation()
-            self._hist_worker = None
 
     def _handle_progress_update(self, status_data: ProgressData) -> None:
         """
@@ -353,6 +357,14 @@ class MainController(BaseController):
     def _start_process_worker(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
         """Start a background thread and its associated worker."""
 
+        def _sync_signals(bg_worker: PersistentProcessWorker):
+            bg_worker.taskFinishedSignal.connect(self._handle_finished)
+            if track_updates:
+                # base_funcs.attach_progress_queue(bg_worker.status_queue)
+                # base_funcs.inProgressSignal.connect(lambda status_data: bg_worker.inProgressSignal.emit(status_data))
+                # base_funcs.inProgressSignal.connect(bg_worker.inProgressSignal)
+                bg_worker.inProgressSignal.connect(self._handle_progress_update)
+
         if task_fxn is None or worker_id is None:
             return
 
@@ -376,33 +388,42 @@ class MainController(BaseController):
         else:
             return
 
-        bg_worker = ProcessWorker(worker_id, func=target, args=fxn_args)
-        bg_worker.taskFinishedSignal.connect(self._handle_finished)
-
         if worker_id == 1:
-            self._gt_worker = bg_worker
+            # base_funcs.attach_progress_queue(self._gt_worker.status_queue)
+            started = self._gt_worker.submit_task(func=target, args=fxn_args)
+            if not started:
+                self.showAlertSignal.emit("Please Wait", "Another GT job is running!")
+                return
+            _sync_signals(self._gt_worker)
         elif worker_id == 2:
-            self._ai_worker = bg_worker
+            started = self._ai_worker.submit_task(func=target, args=fxn_args)
+            if not started:
+                self.showAlertSignal.emit("Please Wait", "Another AI search is running!")
+                return
+            _sync_signals(self._ai_worker)
         elif worker_id == 3:
-            self._hist_worker = bg_worker
+            started = self._hist_worker.submit_task(func=target, args=fxn_args)
+            if not started:
+                return
+            _sync_signals(self._hist_worker)
         else:
             return
-
-        if track_updates:
-            base_funcs.progress_queue = bg_worker.queue
-            bg_worker.inProgressSignal.connect(self._handle_progress_update)
-        bg_worker.start()
 
     @Slot(int)
     def stop_current_task(self, worker_id: int = 1):
         """Stop a background thread and its associated worker."""
+        self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
         if worker_id == 1:
-            self._gt_worker.stop() if self._gt_worker else None
-            self._handle_finished(worker_id, True, None)
+            self._handle_progress_update(ProgressData(percent=50, sender="GT", message="Cancelling job, please wait..."))
+            self._gt_worker.restart()
 
         if worker_id == 2:
-            self._ai_worker.stop() if self._ai_worker else None
-            self._handle_finished(worker_id, True, None)
+            self._handle_progress_update(ProgressData(percent=50, sender="AI", message="Cancelling job, please wait..."))
+            self._ai_worker.restart()
+
+        if worker_id == 3:
+            self._handle_progress_update(ProgressData(percent=50, sender="GT", message="Cancelling job, please wait..."))
+            self._hist_worker.restart()
 
     @Slot(result=str)
     def get_sgt_title(self):
