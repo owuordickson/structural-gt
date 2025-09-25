@@ -43,7 +43,6 @@ Item {
                                 id: checkBox
                                 objectName: model.id
                                 text: model.text
-                                //color: "#2222bc"
                                 font.pixelSize: 10
                                 Layout.leftMargin: 10
                                 property bool isChecked: model.value === 1
@@ -66,7 +65,7 @@ Item {
                             Label {
                                 id: label
                                 wrapMode: Text.Wrap
-                                color: "#2222bc"
+                                color: "#2266ff"
                                 font.pixelSize: 10
                                 Layout.preferredWidth: lblWidthSize
                                 Layout.leftMargin: 10
@@ -76,7 +75,7 @@ Item {
                             TextField {
                                 id: txtField
                                 objectName: model.id
-                                color: "#2222bc"
+                                color: "#2266ff"
                                 font.pixelSize: 10
                                 Layout.preferredWidth: txtWidthSize
                                 text: model.value
@@ -123,7 +122,6 @@ Item {
                         ColumnLayout {
                             Label {
                                 wrapMode: Text.Wrap
-                                //color: "#2222bc"
                                 font.pixelSize: 12
                                 font.bold: true
                                 Layout.preferredWidth: 150

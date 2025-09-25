@@ -26,7 +26,7 @@ ColumnLayout {
                 id: lblWelcome
                 //Layout.preferredWidth:
                 text: "Welcome to StructuralGT"
-                color: "blue"
+                color: "#2266ff"
                 //font.bold: true
                 font.pixelSize: 24
             }

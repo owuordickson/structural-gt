@@ -68,7 +68,7 @@ Rectangle {
                 text: mainController.get_sgt_version()
                 visible: !mainController.is_task_running()
                 Layout.fillWidth: true
-                color: "#2222bc"
+                color: "#2266ff"
             }
 
             Label {
@@ -77,7 +77,7 @@ Rectangle {
                 text: "Please wait..."
                 visible: mainController.is_task_running()
                 Layout.fillWidth: true
-                color: "#2222bc"
+                color: "#2266ff"
             }
 
             Basic.Button {
@@ -161,10 +161,9 @@ Rectangle {
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
-            //console.log(success_val);
             if (success_val) {
-                lblStatusMsg.color = "#2222bc";
-                lblStatusMsg.text = "Please wait...";
+                lblStatusMsg.color = "#2266ff";
+                //lblStatusMsg.text = "Please wait...";
             } else {
                 lblStatusMsg.color = "#bc2222";
                 lblStatusMsg.text = "Task terminated due to an error. Try again.";
@@ -173,7 +172,7 @@ Rectangle {
             if (msg_data.length > 0) {
                 dialogAlert.title = msg_data[0];
                 lblAlertMsg.text = msg_data[1];
-                lblAlertMsg.color = success_val ? "#2222bc" : "#bc2222";
+                lblAlertMsg.color = success_val ? "#2266ff" : "#bc2222";
                 dialogAlert.open();
             }
 

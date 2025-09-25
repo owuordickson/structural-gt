@@ -581,13 +581,13 @@ class ImageProcessor(ProgressUpdate):
 
         if opt_model["find_filter_values"]["value"] == 1:
             # 3. Run the Genetic Algorithm to find the best "image filter values"
-            self.update_status(ProgressData(percent=65, sender="GT", message=f"Searching for filter values..."))
+            self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
             try:
                 _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best filter values:", err, extra={'user': 'SGT Logs'})
-                self.update_status(ProgressData(type="error", sender="GT", message=f"{err}"))
+                self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
@@ -598,7 +598,7 @@ class ImageProcessor(ProgressUpdate):
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error best brightness/contrast values:", err, extra={'user': 'SGT Logs'})
-                self.update_status(ProgressData(type="error", sender="GT", message=f"{err}"))
+                self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
         return filter_space.best_candidate.img_configs
 

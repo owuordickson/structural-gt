@@ -6,7 +6,7 @@ import QtQuick.Layouts
 import "components"
 
 Rectangle {
-    width: 300
+    width: parent.width
     height: parent.height
     color: "#f0f0f0"
     border.color: "#c0c0c0"
@@ -24,7 +24,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#E91E63" : "white"
+                    color: parent.checked ? "#2266ff" : "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -36,7 +36,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#E91E63" : "white"
+                    color: parent.checked ? "#2266ff" : "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -48,7 +48,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#E91E63" : "white"
+                    color: parent.checked ? "#2266ff" : "white" // #E91E63
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight

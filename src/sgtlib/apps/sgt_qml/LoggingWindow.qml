@@ -112,7 +112,7 @@ Window {
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                appendLog("Success", "Task completed successfully!", "#2222bc")
+                appendLog("Success", "Task completed successfully!", "#2266ff")
             } else {
                 appendLog("Error", "Task terminated due to an error. Try again.", "#bc2222")
             }

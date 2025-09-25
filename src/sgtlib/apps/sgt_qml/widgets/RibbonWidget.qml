@@ -9,7 +9,7 @@ import "../widgets"
 
 Rectangle {
     id: rectRibbon
-    width: parent.width
+    width: parent.width - 20
     height: 40
     radius: 5
     color: "#f0f0f0"

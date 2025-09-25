@@ -13,6 +13,7 @@ ApplicationWindow {
     visible: true
     title: mainController.get_sgt_title();
     font.family: "Arial"  // or Qt.application.font.family
+    color: "#f0f0f0"
 
     menuBar: MenuBarWidget {
     }
@@ -35,8 +36,7 @@ ApplicationWindow {
             Layout.alignment: Qt.AlignTop
             Layout.preferredHeight: 40
             Layout.preferredWidth: parent.width
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            color: "#f0f0f0"
             RibbonWidget {
             }
         }
@@ -49,10 +49,8 @@ ApplicationWindow {
             Layout.leftMargin: 10
             Layout.rightMargin: 5
             Layout.preferredHeight: parent.height - 40
-            //Layout.preferredWidth: parent.width * 0.3
             Layout.preferredWidth: 300
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            color: "#f0f0f0"
             LeftContent {
             }
         }
@@ -64,19 +62,19 @@ ApplicationWindow {
             Layout.column: 1
             Layout.rightMargin: 10
             Layout.preferredHeight: parent.height - 40
-            //Layout.preferredWidth: parent.width * 0.7
             Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            color: "#f0f0f0"
             CenterMainContent {
             }
         }
 
-        // Logging Panel View on the Right side
+        // Logging Window
         LoggingWindow {
             id: loggingWindowPanel
         }
 
+        // Histogram Window
         ImageHistogramWindow {
             id: imgHistogramWindow
         }

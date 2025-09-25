@@ -277,10 +277,6 @@ class MainController(BaseController):
             if type(result) is list:
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 self.taskTerminatedSignal.emit(success_val, result)
-            # elif type(result) is GraphAnalyzer:
-            #    pdf_saved = GraphAnalyzer.write_to_pdf(result, self._handle_progress_update)
-            #    if pdf_saved:
-            #        self._handle_finished(True, result)
         else:
             if isinstance(result, TaskResult):
                 if result.task_id == "Export Graph" or result.task_id == "Save Images":
