@@ -423,9 +423,10 @@ class MainController(BaseController):
         about_app = (
             "<html>"
             "<p>"
-            "A software tool for performing Graph Theory analysis on microscopy <br>"
-            "images. This is a modified version of StructuralGT initially <br>"
-            "proposed by Drew A. Vecchio, DOI:</b> <a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a>"
+            "A software tool for performing Graph/Network Theory analysis on <br> "
+            "microscopy images. This is a modified version of StructuralGT <br> "
+            "initially proposed by D. Vecchio <br> "
+            "DOI: <a href='https://pubs.acs.org/doi/10.1021/acsnano.1c04711'>10.1021/acsnano.1c04711</a>."
             "<br></p><p>"
             "<b>Main Contributors:</b>"
             "<table border='0.5' cellspacing='0' cellpadding='4'>"
