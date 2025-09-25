@@ -354,15 +354,12 @@ class MainController(BaseController):
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
 
-    def _start_process_worker(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
+    def _submit_job(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
         """Start a background thread and its associated worker."""
 
         def _sync_signals(bg_worker: PersistentProcessWorker):
             bg_worker.taskFinishedSignal.connect(self._handle_finished)
             if track_updates:
-                # base_funcs.attach_progress_queue(bg_worker.status_queue)
-                # base_funcs.inProgressSignal.connect(lambda status_data: bg_worker.inProgressSignal.emit(status_data))
-                # base_funcs.inProgressSignal.connect(bg_worker.inProgressSignal)
                 bg_worker.inProgressSignal.connect(self._handle_progress_update)
 
         if task_fxn is None or worker_id is None:
@@ -713,7 +710,7 @@ class MainController(BaseController):
         try:
             self._start_histogram_calculation()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
+            self._submit_job(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
         except Exception as err:
             self._stop_histogram_calculation()
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -748,7 +745,7 @@ class MainController(BaseController):
             self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Exporting Graph Data..."))
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
+            self._submit_job(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,
@@ -776,7 +773,7 @@ class MainController(BaseController):
             self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Saving images..."))
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(1, "Save-Images", (sgt_obj.ntwk_p,), True)
+            self._submit_job(1, "Save-Images", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,
@@ -794,7 +791,7 @@ class MainController(BaseController):
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
+            self._submit_job(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
@@ -814,7 +811,7 @@ class MainController(BaseController):
         try:
             self._start_ai_task()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(2, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
+            self._submit_job(2, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_ai_task()
             logging.info("Rate Graph Error: " + str(err), extra={'user': 'SGT Logs'})
@@ -830,7 +827,7 @@ class MainController(BaseController):
         try:
             self._start_wait()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(1, "Compute-GT", (sgt_obj,), True)
+            self._submit_job(1, "Compute-GT", (sgt_obj,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -852,7 +849,7 @@ class MainController(BaseController):
             # Update Configs
             self.replicate_sgt_configs()
             # Start Background Process
-            self._start_process_worker(1, "Compute-Multi-GT", (self._sgt_objs,), True)
+            self._submit_job(1, "Compute-Multi-GT", (self._sgt_objs,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -875,7 +872,7 @@ class MainController(BaseController):
         try:
             self._start_ai_task()
             sgt_obj = self.get_selected_sgt_obj()
-            self._start_process_worker(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
+            self._submit_job(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_ai_task()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})

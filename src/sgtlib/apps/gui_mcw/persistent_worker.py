@@ -25,9 +25,12 @@ def _worker_loop(job_queue, result_queue):
                 # attach the subprocess's result_queue to the unpickled instance
                 owner.attach_progress_queue(result_queue)
 
-        # --- Run the job ---
-            success, data = func(*args)
-            result_queue.put((success, data))
+                # --- Run the job ---
+                success, data = func(*args)
+                result_queue.put((success, data))
+
+            # Else, do not run the job
+            result_queue.put((False, None))
         except Exception as e:
             result_queue.put((False, str(e)))
 
