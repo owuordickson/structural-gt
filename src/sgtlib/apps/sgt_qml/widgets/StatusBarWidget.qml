@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
-import QtQuick.Controls.Material as Material
+import QtQuick.Controls.Imagine as Imagine
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
 // Icons retrieved from https://www.flaticon.com and used under the CC0 1.0 Universal Public Domain Dedication.
@@ -25,7 +25,7 @@ Rectangle {
             Layout.rightMargin: 36 // Progressbar covers 80% of the width
             spacing: 5
 
-            Material.ProgressBar {
+            Imagine.ProgressBar {
                 id: progressBar
                 Layout.fillWidth: true
                 visible: mainController.is_task_running()

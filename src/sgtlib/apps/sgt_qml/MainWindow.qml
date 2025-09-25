@@ -91,7 +91,7 @@ ApplicationWindow {
     Dialog {
         id: dialogAbout
         //parent: mainWindow
-        title: "About this software"
+        title: "About This Software"
         modal: true
         standardButtons: Dialog.Ok
         anchors.centerIn: parent
@@ -109,7 +109,7 @@ ApplicationWindow {
 
 
                 Label {
-                    width: parent.width - 20
+                    width: parent.width
                     //Layout.alignment: Qt.AlignHCenter
                     property string aboutText: mainController.get_about_details()
                     text: aboutText

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
+import QtQuick.Controls.Fusion as Fusion
 //import Qt5Compat.GraphicalEffects
 import "../widgets"
 
@@ -247,7 +248,7 @@ Rectangle {
         RowLayout {
             Layout.rightMargin: 5
 
-            ComboBox {
+            Fusion.ComboBox {
                 id: cbImageType
                 Layout.minimumWidth: 150
                 model: imgViewOptionModel
