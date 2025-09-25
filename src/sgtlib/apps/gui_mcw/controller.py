@@ -411,15 +411,15 @@ class MainController(BaseController):
         """Stop a background thread and its associated worker."""
         self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
         if worker_id == 1:
-            self._handle_progress_update(ProgressData(percent=50, sender="GT", message="Cancelling job, please wait..."))
+            self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
             self._gt_worker.restart()
 
         if worker_id == 2:
-            self._handle_progress_update(ProgressData(percent=50, sender="AI", message="Cancelling job, please wait..."))
+            self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
             self._ai_worker.restart()
 
         if worker_id == 3:
-            self._handle_progress_update(ProgressData(percent=50, sender="GT", message="Cancelling job, please wait..."))
+            self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
             self._hist_worker.restart()
 
     @Slot(result=str)
