@@ -13,9 +13,9 @@ from .imaging.image_processor import (
     ALLOWED_IMG_EXTENSIONS,
     ALLOWED_GRAPH_FILE_EXTENSIONS
 )
-from .models.filter_env import FilterSearchSpace
-from .models.mdp_env import SGTGraphEnv
-from .models.filter_env import (
+from .search.filter_env import FilterSearchSpace
+from .search.mdp_env import SGTGraphEnv
+from .search.filter_env import (
     sgt_genetic_algorithm,
     sgt_hill_climbing_algorithm
 )

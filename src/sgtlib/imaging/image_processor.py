@@ -17,11 +17,11 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from ..imaging.base_image import BaseImage
-from ..models.filter_env import FilterSearchSpace
+from ..search.filter_env import FilterSearchSpace
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..utils.config_loader import load_ai_configs
 from ..utils.sgt_utils import plot_to_opencv, AbortException, ProgressUpdate, ProgressData
-from ..models.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
+from ..search.filter_env import sgt_genetic_algorithm, sgt_hill_climbing_algorithm
 
 logger = logging.getLogger("SGT App")
 
