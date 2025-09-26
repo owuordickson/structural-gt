@@ -77,7 +77,7 @@ class MainController(BaseController):
         self.img3dGridModel = ImageGridModel([], set([]))
         self.imgHistogramModel = ImageGridModel([], set([]))
 
-        # Create Worker Functions, Process and Timer
+        # Create Persistent Workers (Processes) - better than threads in handling long tasks (not affected by GIL)
         self._gt_worker = PersistentProcessWorker(worker_id=1)
         self._ai_worker = PersistentProcessWorker(worker_id=2)
         self._hist_worker = PersistentProcessWorker(worker_id=3)

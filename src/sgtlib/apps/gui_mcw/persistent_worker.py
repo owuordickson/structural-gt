@@ -74,11 +74,28 @@ class ProgressListener(QObject):
 
 class PersistentProcessWorker(QObject):
 
-    workerStarted = Signal()
+    # workerStarted = Signal()
     inProgress = Signal(object)
     taskCompleted = Signal(int, bool, object)  # worker-id, success/fail, result (object)
 
     def __init__(self, worker_id, parent=None):
+        """
+        Creates a 'multiprocessing Process' to perform long-running tasks in the background without affecting the UI
+        thread. This has several advantages: (1) each process is assigned its own Python interpreter and memory - this is
+        an advantage for CPU-heavy jobs like image processing; (2) bypasses GIL - meaning that multiple processes can
+        truly run in parallel on multiple CPU cores; (3) Processors can be forced to terminate immediately - this is not
+        possible with Threads once they start; (4) if a Processor crashes, it does not affect the UI thread.
+
+        The drawbacks are: (1) unlike with Threads, memory is not shared - objects must be serialized/pickled, (2)
+        start-up cost is higher than Threads, (3) since memory is not shared, communication is via Queues/Pipes.
+
+        We overcome the start-up cost (which causes sluggish-ness) by using Persistent Processes that are started during
+        application launch. To clear and release memory, we restart the Processes after every 3 jobs are completed.
+
+        Args:
+            worker_id: The unique ID of the Persistent process worker.
+            parent: The parent QObject.
+        """
         super().__init__(parent)
         self._worker_id = worker_id
         self._job_queue = None
@@ -113,7 +130,7 @@ class PersistentProcessWorker(QObject):
             self._status_listener.progress.connect(self.inProgress)
             self._status_listener.finished.connect(self.on_finished)
             # self._status_listener.finished.connect(lambda success, result: self.taskFinishedSignal.emit(self._worker_id, success, result))
-            self.workerStarted.emit()
+            # self.workerStarted.emit()
 
     def stop(self):
         """Force terminate the worker process."""
@@ -133,11 +150,14 @@ class PersistentProcessWorker(QObject):
         self._job_queue.close()
         self._status_queue.close()
 
+    """
+    # Not effective because it does not release memory - memory is only released when constructor is used to create a
+    # new object.
     def restart(self):
-        """Restart the worker process."""
         self.workerStarted.connect(lambda : self.on_finished(True, None))
         self.stop()
         self._start()
+    """
 
     def on_finished(self, success, result):
         self._waiting = False
