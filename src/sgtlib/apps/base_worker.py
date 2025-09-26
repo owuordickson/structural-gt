@@ -35,7 +35,8 @@ class BaseWorker:
 
     def attach_progress_queue(self, queue):
         """Attach or replace the progress queue (status_queue)."""
-        self._progress_queue = queue
+        if self._progress_queue is None:
+            self._progress_queue = queue
 
     def task_save_images(self, ntwk_p):
         """"""

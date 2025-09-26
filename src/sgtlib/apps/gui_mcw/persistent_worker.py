@@ -5,6 +5,8 @@ A persistent process worker for running long GT and AI-search jobs.
 """
 
 
+import gc
+import threading
 from multiprocessing import Process, Queue
 from PySide6.QtCore import QObject, Signal, QThread
 
@@ -31,26 +33,32 @@ def _worker_loop(job_queue, result_queue):
         except Exception as e:
             # result_queue.put((False, str(e)))
             print(f"Worker Loop Exception: {e}")
+        finally:
+            # Collect garbage after every task to free unused memory
+            gc.collect()
 
 
 
-class ProgressListener(QThread):
+class ProgressListener(QObject):
     """
     Thread that listens to the multiprocessing.Queue and emits signals into QML UI.
     """
     progress = Signal(object)
     finished = Signal(bool, object)
 
-    def __init__(self, queue: Queue):
-        super().__init__()
+    def __init__(self, queue: Queue, parent=None):
+        super().__init__(parent)
         self._updates_queue = queue
         self._running = True
+        self._thread = threading.Thread(target=self._listen, daemon=True)
+        self._thread.start()
 
-    def run(self):
+    def _listen(self):
         while self._running:
             try:
                 status, payload = self._updates_queue.get()  # blocking wait
                 if status == "STOP":
+                    self._running = False
                     break  # Poison pill to stop the thread, otherwise keep running
 
                 if type(status) is str:
@@ -61,12 +69,10 @@ class ProgressListener(QThread):
                 print(f"Status Thread Listener Exception: {e}")
 
     def stop(self):
-        self._running = False
         try:
-            self._updates_queue.put_nowait(("STOP", None))  # wakes up the blocking get()
+             self._updates_queue.put_nowait(("STOP", None))  # wakes up the blocking get()
         except Exception as e:
-            print(f"Thread Listener Exception: {e}")
-            pass
+             print(f"Thread Listener Exception: {e}")
 
 
 class PersistentProcessWorker(QObject):
@@ -78,8 +84,8 @@ class PersistentProcessWorker(QObject):
     def __init__(self, worker_id, parent=None):
         super().__init__(parent)
         self._worker_id = worker_id
-        self._job_queue = Queue()
-        self._status_queue = Queue()
+        self._job_queue = None
+        self._status_queue = None
         self._process = None
         self._waiting = False
         self._status_listener = None
@@ -93,36 +99,36 @@ class PersistentProcessWorker(QObject):
         """Start the worker process and the status listener thread."""
         if self._process is None or not self._process.is_alive():
             # start the persistent process
+            self._job_queue = Queue()
+            self._status_queue = Queue()
+            self._status_queue.close()
             self._process = Process(target=_worker_loop, args=(self._job_queue, self._status_queue))
             self._process.start()
 
+            if self._status_listener:
+                self._status_listener.stop()
             # start a progress/status listener thread
             self._status_listener = ProgressListener(self._status_queue)
             self._status_listener.progress.connect(self.inProgress)
             self._status_listener.finished.connect(self.on_finished)
             # self._status_listener.finished.connect(lambda success, result: self.taskFinishedSignal.emit(self._worker_id, success, result))
-            self._status_listener.start()
             self.workerStarted.emit()
 
     def stop(self):
         """Force terminate the worker process."""
+        if self._status_listener:
+            self._status_listener.stop()
+        self._status_listener = None
+
         if self._process and self._process.is_alive():
             # stop process
             try:
                 self._job_queue.put_nowait(None)  # send poison pill
             except Exception as e:
                 print(f"Unable to stop, job queue is full: {e}")
-                pass
             self._process.terminate()
             self._process.join()
         self._process = None
-
-        # stop progress listener thread
-        if self._status_listener and self._status_listener.isRunning():
-            self._status_listener.stop()
-            self._status_listener.quit()
-            self._status_listener.wait()
-        self._status_listener = None
 
     def restart(self):
         """Restart the worker process."""
@@ -133,14 +139,19 @@ class PersistentProcessWorker(QObject):
     def on_finished(self, success, result):
         self._waiting = False
         self.taskCompleted.emit(self._worker_id, success, result)
+        # Trigger GC after the job finishes
+        gc.collect()
+        print("stopped or finished")
 
     def submit_task(self, func, args=()):
         if self._waiting:
             return False  # already busy
         try:
+            # Clear memory in the current process before sending a new job
+            gc.collect()
             self._job_queue.put_nowait((func, args))
             self._waiting = True
         except Exception as e:
             print(f"Job queue is full: {e}")
-            self._waiting = False
+            return False
         return True
