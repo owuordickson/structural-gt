@@ -141,7 +141,6 @@ class PersistentProcessWorker(QObject):
         self.taskCompleted.emit(self._worker_id, success, result)
         # Trigger GC after the job finishes
         gc.collect()
-        print("stopped or finished")
 
     def submit_task(self, func, args=()):
         if self._waiting:
