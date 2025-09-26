@@ -8,7 +8,7 @@ A persistent process worker for running long GT and AI-search jobs.
 import gc
 import threading
 from multiprocessing import Process, Queue
-from PySide6.QtCore import QObject, Signal, QThread
+from PySide6.QtCore import QObject, Signal
 
 
 def _worker_loop(job_queue, result_queue):
