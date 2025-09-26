@@ -33,9 +33,6 @@ def _worker_loop(job_queue, result_queue):
         except Exception as e:
             # result_queue.put((False, str(e)))
             print(f"Worker Loop Exception: {e}")
-        finally:
-            # Collect garbage after every task to free unused memory
-            gc.collect()
 
 
 
@@ -101,7 +98,6 @@ class PersistentProcessWorker(QObject):
             # start the persistent process
             self._job_queue = Queue()
             self._status_queue = Queue()
-            self._status_queue.close()
             self._process = Process(target=_worker_loop, args=(self._job_queue, self._status_queue))
             self._process.start()
 
@@ -146,8 +142,6 @@ class PersistentProcessWorker(QObject):
         if self._waiting:
             return False  # already busy
         try:
-            # Clear memory in the current process before sending a new job
-            gc.collect()
             self._job_queue.put_nowait((func, args))
             self._waiting = True
         except Exception as e:
