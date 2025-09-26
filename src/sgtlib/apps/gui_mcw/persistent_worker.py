@@ -86,11 +86,16 @@ class PersistentProcessWorker(QObject):
         self._process = None
         self._waiting = False
         self._status_listener = None
+        self._task_count = 1
         self._start()
 
     @property
     def status_queue(self):
         return self._status_queue
+
+    @property
+    def task_count(self):
+        return self._task_count
 
     def _start(self):
         """Start the worker process and the status listener thread."""
@@ -139,6 +144,7 @@ class PersistentProcessWorker(QObject):
         self.taskCompleted.emit(self._worker_id, success, result)
         # Trigger GC after the job finishes
         gc.collect()
+        self._task_count += 1
 
     def submit_task(self, func, args=()):
         if self._waiting:

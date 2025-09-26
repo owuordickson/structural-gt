@@ -415,6 +415,10 @@ class MainController(BaseController):
         if worker_id == 1:
             if cancel_job:
                 self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+            else:
+                # Restart Process after 3 tasks
+                if self._gt_worker.task_count < 3:
+                    return
             # self._gt_worker.restart()
             self._gt_worker.stop()
             self._gt_worker = PersistentProcessWorker(worker_id)
@@ -423,6 +427,9 @@ class MainController(BaseController):
         if worker_id == 2:
             if cancel_job:
                 self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
+            else:
+                if self._ai_worker.task_count < 3:
+                    return
             # self._ai_worker.restart()
             self._ai_worker.stop()
             self._ai_worker = PersistentProcessWorker(worker_id)
@@ -431,6 +438,9 @@ class MainController(BaseController):
         if worker_id == 3:
             if cancel_job:
                 self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+            else:
+                if self._hist_worker.task_count < 3:
+                    return
             # self._hist_worker.restart()
             self._hist_worker.stop()
             self._hist_worker = PersistentProcessWorker(worker_id)
