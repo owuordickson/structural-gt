@@ -283,6 +283,7 @@ class MainController(BaseController):
                 self.taskTerminatedSignal.emit(success_val, result)
         else:
             if isinstance(result, TaskResult):
+                self.stop_current_task(worker_id, cancel_job=False)
                 if result.task_id == "Export Graph" or result.task_id == "Save Images":
                     # Saving files to Output Folder
                     self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Files Saved!"))
@@ -343,6 +344,7 @@ class MainController(BaseController):
                     self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is list:
                 # Image histogram calculated
+                self.stop_current_task(worker_id, cancel_job=False)
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.selected_batch
@@ -407,23 +409,31 @@ class MainController(BaseController):
             return
 
     @Slot(int)
-    def stop_current_task(self, worker_id: int = 1):
+    def stop_current_task(self, worker_id: int = 1, cancel_job: bool = True):
         """Stop a background thread and its associated worker."""
-        self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
+        # self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
         if worker_id == 1:
-            self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+            if cancel_job:
+                self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
             # self._gt_worker.restart()
             self._gt_worker.stop()
-            self._handle_finished(worker_id, True, None)
             self._gt_worker = PersistentProcessWorker(worker_id)
+            self._handle_finished(worker_id, True, None)
 
         if worker_id == 2:
-            self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
-            self._ai_worker.restart()
+            if cancel_job:
+                self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
+            # self._ai_worker.restart()
+            self._ai_worker.stop()
+            self._ai_worker = PersistentProcessWorker(worker_id)
+            self._handle_finished(worker_id, True, None)
 
         if worker_id == 3:
-            self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
-            self._hist_worker.restart()
+            if cancel_job:
+                self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+            # self._hist_worker.restart()
+            self._hist_worker.stop()
+            self._hist_worker = PersistentProcessWorker(worker_id)
 
     @Slot(result=str)
     def get_sgt_title(self):

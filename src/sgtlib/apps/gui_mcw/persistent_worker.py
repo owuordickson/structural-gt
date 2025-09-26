@@ -125,6 +125,8 @@ class PersistentProcessWorker(QObject):
             self._process.terminate()
             self._process.join()
         self._process = None
+        self._job_queue.close()
+        self._status_queue.close()
 
     def restart(self):
         """Restart the worker process."""
