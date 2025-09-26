@@ -412,7 +412,10 @@ class MainController(BaseController):
         self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
         if worker_id == 1:
             self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
-            self._gt_worker.restart()
+            # self._gt_worker.restart()
+            self._gt_worker.stop()
+            self._handle_finished(worker_id, True, None)
+            self._gt_worker = PersistentProcessWorker(worker_id)
 
         if worker_id == 2:
             self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
