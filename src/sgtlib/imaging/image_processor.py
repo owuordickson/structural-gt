@@ -263,30 +263,33 @@ class ImageProcessor(ProgressUpdate):
             if ext in ['.png', '.jpg', '.jpeg', '.bmp']:
                 image_groups = defaultdict(list)
                 if type(file) is list:
-                    for img in file:
+                    for img_file in file:
                         # Create clusters/groups of similar size images
-                        frame = cv2.imread(img, cv2.IMREAD_UNCHANGED)
-                        h, w = frame.shape[:2]
-                        image_groups[(h, w)].append(frame)
+                        frame = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        h, w = frame_rgb.shape[:2]
+                        image_groups[(h, w)].append(frame_rgb)
                 else:
                     # Load standard 2D images with OpenCV
                     image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
                     if image is None:
                         raise ValueError(f"Failed to load {file}")
+                    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     # Cluster the images into batches based on (h, w) size
-                    h, w = image.shape[:2]
-                    image_groups[(h, w)].append(image)
+                    h, w = image_rgb.shape[:2]
+                    image_groups[(h, w)].append(image_rgb)
                 img_batch_groups = ImageProcessor.create_img_batch_groups(image_groups, self._config_file,
                                                                           self._auto_scale)
                 return img_batch_groups
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 image_groups = defaultdict(list)
                 if type(file) is list:
-                    for img in file:
+                    for img_file in file:
                         # Create clusters/groups of similar size images
-                        frame = cv2.imread(img, cv2.IMREAD_UNCHANGED)
-                        h, w = frame.shape[:2]
-                        image_groups[(h, w)].append(frame)
+                        frame = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        h, w = frame_rgb.shape[:2]
+                        image_groups[(h, w)].append(frame_rgb)
                 else:
                     # Try load multi-page TIFF using PIL
                     img = Image.open(file)

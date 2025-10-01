@@ -344,8 +344,8 @@ class BaseImage:
         opt_img = self._configs
         otsu_res = 0  # only needed for the OTSU threshold
 
-        if opt_img["ignore_black"]["value"] == 1:
-            pass
+        # if opt_img["ignore_black"]["value"] == 1:
+        #    pass
 
         # Applying the universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
@@ -562,3 +562,18 @@ class BaseImage:
         std_size = (std_width, std_height)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
+
+    @staticmethod
+    def get_unique_colors(image: MatLike):
+        """
+        Identify unique colors in an image and them as hex codes and pixel positions. If the image has too many colors,
+        it samples the top k colors.
+
+        Args:
+            image:
+
+        Returns:
+
+        """
+        if image is None:
+            return
