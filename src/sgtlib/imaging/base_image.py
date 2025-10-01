@@ -344,31 +344,25 @@ class BaseImage:
         opt_img = self._configs
         otsu_res = 0  # only needed for the OTSU threshold
 
+        if opt_img["ignore_black"]["value"] == 1:
+            pass
+
         # Applying the universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
+            gbl_val = int(opt_img["global_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = \
-                cv2.threshold(image, int(opt_img["global_threshold_value"]["value"]), 255, cv2.THRESH_BINARY_INV)[1]
+                img_bin = cv2.threshold(image, gbl_val, 255, cv2.THRESH_BINARY_INV)[1]
             else:
-                img_bin = cv2.threshold(image, int(opt_img["global_threshold_value"]["value"]), 255, cv2.THRESH_BINARY)[
-                    1]
-
-        # adaptive threshold generation
+                img_bin = cv2.threshold(image, gbl_val, 255, cv2.THRESH_BINARY)[ 1]
         elif opt_img["threshold_type"]["value"] == 1:
             if self._configs["adaptive_local_threshold_value"]["value"] <= 1:
                 # Bug fix (crushes app)
                 self._configs["adaptive_local_threshold_value"]["value"] = 3
-
+            adp_val = int(opt_img["adaptive_local_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                cv2.THRESH_BINARY_INV,
-                                                int(opt_img["adaptive_local_threshold_value"]["value"]), 2)
+                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, adp_val, 2)
             else:
-                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                cv2.THRESH_BINARY,
-                                                int(opt_img["adaptive_local_threshold_value"]["value"]), 2)
-
-        # OTSU threshold generation
+                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adp_val, 2)
         elif opt_img["threshold_type"]["value"] == 2:
             if opt_img["apply_dark_foreground"]["value"] == 1:
                 temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
