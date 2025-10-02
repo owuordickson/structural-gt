@@ -18,6 +18,7 @@ Window {
     ColumnLayout {
         anchors.fill: parent
 
+        // Reload button and spinner -- Layout
         RowLayout {
             spacing: 2
             Layout.margins: 5
@@ -49,6 +50,7 @@ Window {
             }
         }
 
+        // Histogram grid view -- Layout
         ScrollView {
             Layout.fillWidth: true
             Layout.preferredHeight: imgHistogramWindow.height - 10
