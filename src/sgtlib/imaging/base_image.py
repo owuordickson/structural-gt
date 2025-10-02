@@ -6,6 +6,7 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
+from collections import Counter
 from matplotlib import pyplot as plt
 from cv2.typing import MatLike
 from dataclasses import dataclass
@@ -344,9 +345,6 @@ class BaseImage:
         opt_img = self._configs
         otsu_res = 0  # only needed for the OTSU threshold
 
-        # if opt_img["ignore_black"]["value"] == 1:
-        #    pass
-
         # Applying the universal threshold, checking if it should be inverted (dark foreground)
         if opt_img["threshold_type"]["value"] == 0:
             gbl_val = int(opt_img["global_threshold_value"]["value"])
@@ -374,6 +372,106 @@ class BaseImage:
                 otsu_res = temp[0]
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
+
+    def get_unique_colors(self, top_k: int = 10) -> None | list[dict]:
+        """
+        Identify the top-k unique colors (or grayscale intensities) in an image
+        and return them as hex codes with their pixel counts and positions.
+
+        Handles RGB, RGBA, Grayscale, and Grayscale+Alpha images.
+
+        Args:
+            img_rgb: Input image as a NumPy array
+            top_k: Number of most frequent colors/intensities to return
+
+        Returns:
+            List of dictionaries describing the top-k colors
+        """
+        img_rgb = self._img_raw.copy()
+        if img_rgb is None:
+            return None
+
+        results = []
+
+        # --- Case 1: RGB ---
+        if img_rgb.ndim == 3 and img_rgb.shape[2] == 3:
+            pixels = img_rgb.reshape(-1, 3)
+            counts = Counter(map(tuple, pixels))
+            top_colors = counts.most_common(top_k)
+
+            for (r, g, b), count in top_colors:
+                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
+                mask = np.all(img_rgb == (r, g, b), axis=-1)
+                positions = np.argwhere(mask)
+                results.append({
+                    "rgb": (r, g, b),
+                    "hex": hex_val,
+                    "count": count,
+                    "positions": positions
+                })
+
+        # --- Case 2: RGBA ---
+        elif img_rgb.ndim == 3 and img_rgb.shape[2] == 4:
+            pixels = img_rgb.reshape(-1, 4)
+            counts = Counter(map(tuple, pixels))
+            top_colors = counts.most_common(top_k)
+
+            for (r, g, b, a), count in top_colors:
+                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)  # ignore alpha in HEX
+                mask = np.all(img_rgb == (r, g, b, a), axis=-1)
+                positions = np.argwhere(mask)
+                results.append({
+                    "rgba": (r, g, b, a),
+                    "hex": hex_val,
+                    "alpha": a,
+                    "count": count,
+                    "positions": positions
+                })
+
+        # --- Case 3: Grayscale ---
+        elif img_rgb.ndim == 2:
+            pixels = img_rgb.flatten()
+            counts = Counter(pixels)
+            top_colors = counts.most_common(top_k)
+
+            for intensity, count in top_colors:
+                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
+                positions = np.argwhere(img_rgb == intensity)
+                results.append({
+                    "intensity": int(intensity),
+                    "hex": hex_val,
+                    "count": count,
+                    "positions": positions
+                })
+
+        # --- Case 4: Grayscale + Alpha (LA) ---
+        elif img_rgb.ndim == 3 and img_rgb.shape[2] == 2:
+            pixels = img_rgb.reshape(-1, 2)
+            counts = Counter(map(tuple, pixels))
+            top_colors = counts.most_common(top_k)
+
+            for (intensity, a), count in top_colors:
+                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
+                mask = np.all(img_rgb == (intensity, a), axis=-1)
+                positions = np.argwhere(mask)
+                results.append({
+                    "intensity": int(intensity),
+                    "hex": hex_val,
+                    "alpha": int(a),
+                    "count": count,
+                    "positions": positions
+                })
+
+        else:
+            raise ValueError(f"Unsupported image shape: {img_rgb.shape}")
+
+        return results
+
+    def eliminate_img_colors(self):
+        """"""
+        # if opt_img["ignore_black"]["value"] == 1:
+        #    pass
+        pass
 
     def evaluate_img_binary(self) -> tuple[float, np.ndarray] | tuple[None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
@@ -562,18 +660,3 @@ class BaseImage:
         std_size = (std_width, std_height)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
-
-    @staticmethod
-    def get_unique_colors(image: MatLike):
-        """
-        Identify unique colors in an image and them as hex codes and pixel positions. If the image has too many colors,
-        it samples the top k colors.
-
-        Args:
-            image:
-
-        Returns:
-
-        """
-        if image is None:
-            return

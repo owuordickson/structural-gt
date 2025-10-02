@@ -436,6 +436,9 @@ class ImageProcessor(ProgressUpdate):
                 progress += incr
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
+            pixel_colors = img_obj.get_unique_colors(top_k=10)
+            print(f"\nNumber of unique colors:\n{pixel_colors}\n\n")
+
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
 
