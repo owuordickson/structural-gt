@@ -9,6 +9,7 @@
         "widgets/MenuBarWidget.qml",
         "widgets/StatusBarWidget.qml",
         "widgets/RibbonWidget.qml",
+        "widgets/FiltersWidget.qml",
         "widgets/BinaryFilterWidget.qml",
         "widgets/ImageFilterWidget.qml",
         "widgets/MicroscopyPropertyWidget.qml",

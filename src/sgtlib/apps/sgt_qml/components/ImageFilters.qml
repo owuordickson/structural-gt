@@ -72,20 +72,7 @@ Rectangle {
             ImageFilterWidget {
             }
 
-            Button {
-                id: btnShowImgHistogram
-                text: "Image Histogram"
-                topPadding: 5
-                bottomPadding: 5
-                leftPadding: 10
-                rightPadding: 10
-                Layout.topMargin: 10
-                Layout.bottomMargin: 5
-                Layout.alignment: Qt.AlignHCenter
-                visible: false
-                enabled: mainController.enable_img_controls()
-                onClicked: imgHistogramWindow.visible = true
-            }
+            FiltersWidget{}
 
         }
     }
@@ -98,11 +85,6 @@ Rectangle {
             lblNoImgFilters.visible = !mainController.display_image();
             rectHLine1.visible = mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();
-        }
-
-        function onShowImageHistogramSignal(allow) {
-            btnShowImgHistogram.visible = allow;
-            btnShowImgHistogram.enabled = mainController.enable_img_controls();
         }
     }
 }
