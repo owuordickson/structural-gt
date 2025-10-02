@@ -76,8 +76,15 @@ ApplicationWindow {
         }
 
         // Histogram Window
-        ImageHistogramWindow {
+        ImageHistogramWindow
+        {
             id: imgHistogramWindow
+        }
+
+        // Image Colors Window
+        ImageColorsWindow
+        {
+            id: imgColorsWindow
         }
     }
 

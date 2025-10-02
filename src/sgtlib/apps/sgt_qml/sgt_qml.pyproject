@@ -5,6 +5,7 @@
         "MainWindow.qml",
         "LoggingWindow.qml",
         "ImageHistogramWindow.qml",
+        "ImageColorsWindow.qml",
         "widgets/MenuBarWidget.qml",
         "widgets/StatusBarWidget.qml",
         "widgets/RibbonWidget.qml",

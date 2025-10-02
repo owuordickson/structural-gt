@@ -57,10 +57,9 @@ MenuBar {
         id: mnuImgFilters
         title: "Filters"
         MenuItem {id:mnuBinImgFilter; text: "Binary Filters"; enabled: false; onTriggered: dialogBinFilters.open() }
-
-        MenuSeparator{}
-
         MenuItem {id:mnuImgFilter; text: "Image Filters"; enabled: false; onTriggered: dialogImgFilters.open() }
+        MenuItem {id: mnuImgColors; text: "Image Colors"; enabled: false; onTriggered: imgColorsWindow.visible = true}
+        MenuItem {id: mnuImgHistogram; text: "Calculate Histogram"; enabled: false; onTriggered: imgHistogramWindow.visible = true}
     }
     Menu {
         id: mnuAnalyze
@@ -133,6 +132,16 @@ MenuBar {
             mnuImgFilter.enabled = mainController.display_image();
             mnuSoloAnalze.enabled = mainController.display_image();
             mnuMultiAnalyze.enabled = mainController.display_image();
+        }
+
+        function onShowImageHistogramSignal(allow) {
+            if (allow) {
+                mnuImgHistogram.enabled = mainController.enable_img_controls();
+                mnuImgColors.enabled = mainController.enable_img_controls();
+            } else {
+                mnuImgHistogram.enabled = allow;
+                mnuImgColors.enabled = allow;
+            }
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {

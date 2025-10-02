@@ -74,7 +74,7 @@ Rectangle {
 
             Button {
                 id: btnShowImgHistogram
-                text: "Calculate Histogram"
+                text: "Image Histogram"
                 topPadding: 5
                 bottomPadding: 5
                 leftPadding: 10
@@ -98,9 +98,6 @@ Rectangle {
             lblNoImgFilters.visible = !mainController.display_image();
             rectHLine1.visible = mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();
-            if (!mainController.display_image()) {
-                btnShowImgHistogram.visible = false;
-            }
         }
 
         function onShowImageHistogramSignal(allow) {
