@@ -35,6 +35,15 @@ class BaseImage:
         kernel_shape: tuple
         # stride: tuple
 
+    @dataclass
+    class DominantColor:
+        """A data class for storing dominant color parameters."""
+        is_selected: bool = False
+        img_type: str = ""
+        hex_code: str = ""
+        count: int = 0
+        pixel_positions: np.ndarray = None
+
     def __init__(self, raw_img: MatLike|None, cfg_file="", scale_factor=1.0):
         """
         A class that is used to binarize an image by applying filters to it and converting it to a binary version.
@@ -52,7 +61,8 @@ class BaseImage:
         self._img_hist: MatLike | None = None
         self._has_alpha_channel: bool = False
         self._scale_factor: float = scale_factor
-        self._image_filters: list[BaseImage.ScalingKernel] = []
+        self._window_segments: list[BaseImage.ScalingKernel] = []
+        self._dominant_img_colors: list[BaseImage.DominantColor] = []
         self.init_image()
 
     @property
@@ -121,14 +131,24 @@ class BaseImage:
         self._scale_factor = scale_factor
 
     @property
-    def image_filters(self) -> list["BaseImage.ScalingKernel"]:
+    def square_segments(self) -> list["BaseImage.ScalingKernel"]:
         """Returns the list of scaling kernels used to the image."""
-        return self._image_filters
+        return self._window_segments
 
-    @image_filters.setter
-    def image_filters(self, image_filters: list["BaseImage.ScalingKernel"]) -> None:
+    @square_segments.setter
+    def square_segments(self, image_filters: list["BaseImage.ScalingKernel"]) -> None:
         """Sets the list of scaling kernels used to the image."""
-        self._image_filters = image_filters
+        self._window_segments = image_filters
+
+    @property
+    def dominant_colors(self) -> list["BaseImage.DominantColor"]:
+        """Returns the list of dominant colors occurring in the image."""
+        return self._dominant_img_colors
+
+    @dominant_colors.setter
+    def dominant_colors(self, dominant_img_colors: list["BaseImage.DominantColor"]) -> None:
+        """Sets the list of dominant colors occurring in the image."""
+        self._dominant_img_colors = dominant_img_colors
 
     def reset_img_configs(self, cfg_file: str = "") -> None:
         """Resets the image processing configuration parameters and options."""
@@ -479,7 +499,7 @@ class BaseImage:
 
         return results
 
-    def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list[dict]:
+    def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list["BaseImage.DominantColor"]:
         """
         Cluster image colors into top-k groups using KMeans or MiniBatchKMeans. Use MiniBatchKMeans if the image is
         huge (over 10MB in size).
@@ -512,43 +532,36 @@ class BaseImage:
         for i, center in enumerate(centers):
             count = np.sum(labels == i)
             color = tuple(center)
-            cluster_info = {"count": int(count), "img_type": "", "hex": "", "positions": np.array([])}
+            dominant_color = BaseImage.DominantColor()
+            dominant_color.count = int(count)
 
             # Hex conversion
             if len(color) == 1:  # grayscale
                 intensity = int(color[0])
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                cluster_info.update({
-                    "img_type": "grayscale",
-                    "hex": hex_val,
-                })
+                dominant_color.img_type = "grayscale"
+                dominant_color.hex = hex_val
             elif len(color) == 2:  # grayscale + alpha
                 intensity, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                cluster_info.update({
-                    "img_type": "grayscale+alpha",
-                    "hex": hex_val,
-                })
+                dominant_color.img_type = "grayscale+alpha"
+                dominant_color.hex = hex_val
             elif len(color) == 3:  # RGB
                 r, g, b = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
-                cluster_info.update({
-                    "img_type": "rgb",
-                    "hex": hex_val,
-                })
+                dominant_color.img_type = "rgb"
+                dominant_color.hex = hex_val
             elif len(color) == 4:  # RGBA
                 r, g, b, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
-                cluster_info.update({
-                    "img_type": "rgba",
-                    "hex": hex_val,
-                })
+                dominant_color.img_type = "rgba"
+                dominant_color.hex = hex_val
 
             # Pixel positions
             mask = (labels.reshape(h, w) == i)
             positions = np.argwhere(mask)  # array of (row, col)
-            cluster_info["positions"] = positions
-            color_results.append(cluster_info)
+            dominant_color.pixel_positions = positions
+            color_results.append(dominant_color)
 
         # Sort by pixel count (descending)
         color_results.sort(key=lambda x: x["count"], reverse=True)

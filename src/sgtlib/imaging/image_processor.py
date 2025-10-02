@@ -416,14 +416,14 @@ class ImageProcessor(ProgressUpdate):
         :return: None
         """
 
-        if self.selected_batch.is_graph_only:
+        sel_batch = self.selected_batch
+        if sel_batch.is_graph_only:
             return
 
         self.update_status(ProgressData(percent=10, sender="GT", message=f"Processing image..."))
         if filter_type == 2:
             self.reset_img_filters()
 
-        sel_batch = self.selected_batch
         progress = 10
         incr = 90 / len(sel_batch.images) - 1
         for i in range(len(sel_batch.images)):
@@ -435,9 +435,6 @@ class ImageProcessor(ProgressUpdate):
             if progress < 100:
                 progress += incr
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
-
-            pixel_colors = img_obj.get_dominant_img_colors(top_k=10)
-            print(f"\nNumber of unique colors:\n{pixel_colors}\n\n")
 
             img_data = img_obj.img_2d.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
@@ -542,6 +539,25 @@ class ImageProcessor(ProgressUpdate):
         if len(sel_batch.selected_images_idx) > 0:
             [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
+
+    def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> bool:
+        """"""
+        sel_batch = self.selected_batch
+        if sel_batch.is_graph_only:
+            return False
+
+        self.update_status(ProgressData(percent=10, sender="GT", message=f"Retrieving dominant colors..."))
+        # Get BaseImage object
+        img_obj = sel_batch.images[img_pos]
+        top_colors = img_obj.get_dominant_img_colors(top_k=top_k)
+
+        if top_colors is None:
+            self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
+            return False
+
+        img_obj.dominant_colors = top_colors
+        self.update_status(ProgressData(percent=100, sender="GT", message="Dominant colors retrieved!"))
+        return True
 
     def metaheuristic_image_configs(self) -> dict | None:
         """
@@ -792,7 +808,7 @@ class ImageProcessor(ProgressUpdate):
                     break
             return lst_img_filter
 
-        if len(img_obj.image_filters) <= 0:
+        if len(img_obj.square_segments) <= 0:
             # Scaling patches (square kernel)
             lst_filters = retrieve_kernel_patches(img_obj.img_bin, num_kernels, patch_count_per_kernel, img_padding)
 
@@ -806,11 +822,11 @@ class ImageProcessor(ProgressUpdate):
                     kernel_shape=(c_h, c_w),
                 )
                 lst_filters.append(crop_filter)
-            img_obj.image_filters = lst_filters
+            img_obj.square_segments = lst_filters
 
-        filter_count = len(img_obj.image_filters)
+        filter_count = len(img_obj.square_segments)
         graph_groups = defaultdict(list)
-        for i, scale_filter in enumerate(img_obj.image_filters):
+        for i, scale_filter in enumerate(img_obj.square_segments):
             self.update_status(ProgressData(type="warning", sender="GT", message=f"Extracting random graphs using image filter {i + 1}/{filter_count}..."))
             # num_img_patches = len(scale_filter.image_patches)
             for bin_img_patch in scale_filter.image_patches:
