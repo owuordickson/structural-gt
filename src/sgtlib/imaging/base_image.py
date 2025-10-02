@@ -500,6 +500,7 @@ class BaseImage:
             pixels = img_rgb.reshape(-1, 1)
         else:
             pixels = img_rgb.reshape(-1, img_rgb.shape[2])  # RGB, RGBA, LA
+        h, w = img_rgb.shape[:2]
 
         # Pick algorithm
         cluster_algorithm = MiniBatchKMeans if use_minibatch else KMeans
@@ -507,57 +508,51 @@ class BaseImage:
         labels = kmeans.fit_predict(pixels)
         centers = kmeans.cluster_centers_.astype(int)
 
-        results = []
+        color_results = []
         for i, center in enumerate(centers):
             count = np.sum(labels == i)
             color = tuple(center)
+            cluster_info = {"count": int(count), "img_type": "", "hex": "", "positions": np.array([])}
 
+            # Hex conversion
             if len(color) == 1:  # grayscale
                 intensity = int(color[0])
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                results.append({
+                cluster_info.update({
                     "img_type": "grayscale",
                     "hex": hex_val,
-                    "count": int(count),
                 })
-
             elif len(color) == 2:  # grayscale + alpha
                 intensity, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                results.append({
+                cluster_info.update({
                     "img_type": "grayscale+alpha",
                     "hex": hex_val,
-                    "count": int(count),
                 })
-
             elif len(color) == 3:  # RGB
                 r, g, b = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
-                results.append({
+                cluster_info.update({
                     "img_type": "rgb",
                     "hex": hex_val,
-                    "count": int(count),
                 })
-
             elif len(color) == 4:  # RGBA
                 r, g, b, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
-                results.append({
+                cluster_info.update({
                     "img_type": "rgba",
                     "hex": hex_val,
-                    "count": int(count),
                 })
 
+            # Pixel positions
+            mask = (labels.reshape(h, w) == i)
+            positions = np.argwhere(mask)  # array of (row, col)
+            cluster_info["positions"] = positions
+            color_results.append(cluster_info)
+
         # Sort by pixel count (descending)
-        results.sort(key=lambda x: x["count"], reverse=True)
-
-        return results
-
-    def eliminate_img_colors(self):
-        """"""
-        # if opt_img["ignore_black"]["value"] == 1:
-        #    pass
-        pass
+        color_results.sort(key=lambda x: x["count"], reverse=True)
+        return color_results
 
     def evaluate_img_binary(self) -> tuple[float, np.ndarray] | tuple[None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
@@ -746,3 +741,48 @@ class BaseImage:
         std_size = (std_width, std_height)
         std_img = cv2.resize(image, std_size)
         return std_img, scale_factor
+
+    @staticmethod
+    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray) -> None | np.ndarray:
+        """
+        Replace specific pixels in a grayscale image based on a target hex color.
+
+        - Convert the hex color to grayscale intensity (0–255).
+        - If intensity < 128 → replace with 0 (black).
+        - If intensity >= 128 → replace with 255 (white).
+        - Apply the swapped_pixel_val at the given pixel positions.
+
+        Args:
+            image: Input grayscale image (H, W) as a NumPy array of dtype uint8.
+            hex_color: Target color in hex format (e.g. "#808080").
+            pixel_pos: Pixel positions to update (N, 2) array of (row, col).
+
+        Returns:
+            Modified grayscale image as NumPy array.
+        """
+        if image.ndim != 2:
+            # Input image must be a 2D grayscale array.
+            return None
+
+        # Convert hex color → grayscale intensity
+        hex_color = hex_color.lstrip("#")
+        if len(hex_color) != 6:
+            # Invalid hex color format
+            return None
+
+        r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+        intensity = int(round(0.299 * r + 0.587 * g + 0.114 * b))  # luminance formula
+
+        # Decide swapped_pixel_val value
+        swapped_pixel_val = 0 if intensity < 128 else 255
+
+        # Make a copy to avoid modifying the original
+        new_img = image.copy()
+
+        # Apply swapped_pixel_val at positions
+        # for row, col in pixel_pos:
+        #    new_img[row, col] = swapped_pixel_val
+        # Apply swapped_pixel_val in one NumPy call
+        rows, cols = pixel_pos[:, 0], pixel_pos[:, 1]
+        new_img[rows, cols] = swapped_pixel_val
+        return new_img
