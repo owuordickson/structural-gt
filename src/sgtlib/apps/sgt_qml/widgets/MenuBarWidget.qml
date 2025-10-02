@@ -134,7 +134,7 @@ MenuBar {
             mnuMultiAnalyze.enabled = mainController.display_image();
         }
 
-        function onShowImageHistogramSignal(allow) {
+        function onShowImageFilterControls(allow) {
             if (allow) {
                 mnuImgHistogram.enabled = mainController.enable_img_controls();
                 mnuImgColors.enabled = mainController.enable_img_controls();

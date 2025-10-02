@@ -57,7 +57,7 @@ ColumnLayout {
             imgFilterButtons.enabled = mainController.enable_img_controls();
         }
 
-        function onShowImageHistogramSignal(allow) {
+        function onShowImageFilterControls(allow) {
 
             if (allow) {
                 btnShowImgHistogram.enabled = mainController.enable_img_controls();

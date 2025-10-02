@@ -159,7 +159,7 @@ Window {
             }
         }
 
-        function onShowImageHistogramSignal(allow) {
+        function onShowImageFilterControls(allow) {
             // Force refresh
             if (imgColorsWindow.visible) {
                 imgColorsWindow.visible = allow;

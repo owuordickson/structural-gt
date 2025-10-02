@@ -37,7 +37,7 @@ class MainController(BaseController):
     projectOpenedSignal = Signal(str)
     changeImageSignal = Signal()
     imageChangedSignal = Signal()
-    showImageHistogramSignal = Signal(bool)
+    showImageFilterControls = Signal(bool)
     enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)

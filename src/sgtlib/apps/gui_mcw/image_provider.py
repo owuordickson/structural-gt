@@ -17,7 +17,7 @@ class ImageProvider(QQuickImageProvider):
             sgt_obj = self._img_controller.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.selected_batch
-            self._img_controller.showImageHistogramSignal.emit(True)
+            self._img_controller.showImageFilterControls.emit(True)
             if ntwk_p.selected_batch_view == "original":
                 images = ntwk_p.image_3d
                 if self._img_controller.is_img_3d():
@@ -45,7 +45,7 @@ class ImageProvider(QQuickImageProvider):
                     img_cv = mod_images[0] if len(mod_images) > 0 else None
             elif ntwk_p.selected_batch_view == "graph":
                 # If any is None, start the task
-                self._img_controller.showImageHistogramSignal.emit(False)
+                self._img_controller.showImageFilterControls.emit(False)
                 if ntwk_p.graph_obj.img_ntwk is None:
                     self._img_controller.run_extract_graph()
                     # Wait for the task to finish
@@ -55,7 +55,7 @@ class ImageProvider(QQuickImageProvider):
                     self._img_controller.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
                     img_cv = net_images[0]
             else:
-                self._img_controller.showImageHistogramSignal.emit(False)
+                self._img_controller.showImageFilterControls.emit(False)
                 return
 
             if img_cv is not None:

@@ -107,7 +107,7 @@ Window {
     Connections {
         target: mainController
 
-        function onShowImageHistogramSignal(allow) {
+        function onShowImageFilterControls(allow) {
             // Force refresh
             if (imgHistogramWindow.visible) {
                 imgHistogramWindow.visible = allow;
