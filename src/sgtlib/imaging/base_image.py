@@ -7,11 +7,12 @@ Processes of an image by applying filters to it and converting it to a binary ve
 import cv2
 import numpy as np
 from collections import Counter
-from matplotlib import pyplot as plt
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
+from matplotlib import pyplot as plt
 from skimage.filters.rank import autolevel, median
+from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from ..utils.config_loader import load_img_configs
 from ..utils.sgt_utils import safe_uint8_image
@@ -373,20 +374,25 @@ class BaseImage:
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def get_unique_colors(self, top_k: int = 10) -> None | list[dict]:
+    def get_unique_colors(self, top_k: int = 10, step: int = 32) -> None | list[dict]:
         """
-        Identify the top-k unique colors (or grayscale intensities) in an image
-        and return them as hex codes with their pixel counts and positions.
+        Identify the top-k unique colors (or grayscale intensities) in an image and return them as hex codes with their
+        pixel counts and positions. Supports RGB, RGBA, Grayscale, and Grayscale+Alpha.
 
         Handles RGB, RGBA, Grayscale, and Grayscale+Alpha images.
 
         Args:
-            img_rgb: Input image as a NumPy array
             top_k: Number of most frequent colors/intensities to return
+            step: Quantization step (higher → more grouping, less precision).
 
         Returns:
             List of dictionaries describing the top-k colors
         """
+
+        def quantize_color(color: tuple[int, ...]) -> tuple[int, ...]:
+            """Reduce color precision to group close shades together."""
+            return tuple(((c // step) * step) for c in color)
+
         img_rgb = self._img_raw.copy()
         if img_rgb is None:
             return None
@@ -396,7 +402,8 @@ class BaseImage:
         # --- Case 1: RGB ---
         if img_rgb.ndim == 3 and img_rgb.shape[2] == 3:
             pixels = img_rgb.reshape(-1, 3)
-            counts = Counter(map(tuple, pixels))
+            quantized = [quantize_color(tuple(p)) for p in pixels]
+            counts = Counter(quantized)
             top_colors = counts.most_common(top_k)
 
             for (r, g, b), count in top_colors:
@@ -413,7 +420,8 @@ class BaseImage:
         # --- Case 2: RGBA ---
         elif img_rgb.ndim == 3 and img_rgb.shape[2] == 4:
             pixels = img_rgb.reshape(-1, 4)
-            counts = Counter(map(tuple, pixels))
+            quantized = [quantize_color(tuple(p)) for p in pixels]
+            counts = Counter(quantized)
             top_colors = counts.most_common(top_k)
 
             for (r, g, b, a), count in top_colors:
@@ -431,6 +439,8 @@ class BaseImage:
         # --- Case 3: Grayscale ---
         elif img_rgb.ndim == 2:
             pixels = img_rgb.flatten()
+            #quantized = [quantize_color(tuple(p)) for p in pixels]
+            #counts = Counter(quantized)
             counts = Counter(pixels)
             top_colors = counts.most_common(top_k)
 
@@ -447,7 +457,9 @@ class BaseImage:
         # --- Case 4: Grayscale + Alpha (LA) ---
         elif img_rgb.ndim == 3 and img_rgb.shape[2] == 2:
             pixels = img_rgb.reshape(-1, 2)
-            counts = Counter(map(tuple, pixels))
+            quantized = [quantize_color(tuple(p)) for p in pixels]
+            counts = Counter(quantized)
+            #counts = Counter(map(tuple, pixels))
             top_colors = counts.most_common(top_k)
 
             for (intensity, a), count in top_colors:
@@ -464,6 +476,80 @@ class BaseImage:
 
         else:
             raise ValueError(f"Unsupported image shape: {img_rgb.shape}")
+
+        return results
+
+    def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list[dict]:
+        """
+        Cluster image colors into top-k groups using KMeans or MiniBatchKMeans. Use MiniBatchKMeans if the image is
+        huge (over 10MB in size).
+
+        Args:
+            top_k: Number of dominant colors to find
+            use_minibatch: If True, use MiniBatchKMeans (faster for large images)
+
+        Returns:
+            List of dicts with dominant colors
+        """
+        img_rgb = self._img_raw.copy()
+        if img_rgb is None:
+            return None
+
+        # --- Prepare pixels ---
+        if img_rgb.ndim == 2:  # Grayscale
+            pixels = img_rgb.reshape(-1, 1)
+        else:
+            pixels = img_rgb.reshape(-1, img_rgb.shape[2])  # RGB, RGBA, LA
+
+        # Pick algorithm
+        cluster_algorithm = MiniBatchKMeans if use_minibatch else KMeans
+        kmeans = cluster_algorithm(n_clusters=top_k, random_state=42)
+        labels = kmeans.fit_predict(pixels)
+        centers = kmeans.cluster_centers_.astype(int)
+
+        results = []
+        for i, center in enumerate(centers):
+            count = np.sum(labels == i)
+            color = tuple(center)
+
+            if len(color) == 1:  # grayscale
+                intensity = int(color[0])
+                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
+                results.append({
+                    "img_type": "grayscale",
+                    "hex": hex_val,
+                    "count": int(count),
+                })
+
+            elif len(color) == 2:  # grayscale + alpha
+                intensity, a = map(int, color)
+                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
+                results.append({
+                    "img_type": "grayscale+alpha",
+                    "hex": hex_val,
+                    "count": int(count),
+                })
+
+            elif len(color) == 3:  # RGB
+                r, g, b = map(int, color)
+                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
+                results.append({
+                    "img_type": "rgb",
+                    "hex": hex_val,
+                    "count": int(count),
+                })
+
+            elif len(color) == 4:  # RGBA
+                r, g, b, a = map(int, color)
+                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
+                results.append({
+                    "img_type": "rgba",
+                    "hex": hex_val,
+                    "count": int(count),
+                })
+
+        # Sort by pixel count (descending)
+        results.sort(key=lambda x: x["count"], reverse=True)
 
         return results
 
