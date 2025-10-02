@@ -18,57 +18,73 @@ Window {
         anchors.fill: parent
 
         // Image Selection Layout
-        RowLayout {
-            spacing: 2
-            Layout.margins: 5
+        Rectangle {
+            height: 32
+            Layout.fillHeight: false
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            //Layout.preferredHeight: 28
+            color: "transparent"
+
+            RowLayout {
+                spacing: 2
+                Layout.margins: 5
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+            }
         }
 
         // Retrieve button and spinner -- Layout (hidden if ImageColors is visible)
-        RowLayout {
-            spacing: 2
-            Layout.margins: 5
+        Rectangle {
+            id: retrieveControls
+            Layout.fillHeight: true
             Layout.fillWidth: true
-            //Layout.fillHeight: true
-            Layout.alignment: Qt.AlignHCenter
+            color: "transparent"
             visible: true
 
-            Button {
-                id: btnGetColors
-                text: " Retrieve Colors"
-                leftPadding: 10
-                rightPadding: 10
-                icon.source: "assets/icons/reload_icon.png"
-                icon.width: 21
-                icon.height: 21
-                icon.color: "transparent"   // important for PNGs
-                ToolTip.text: "Get the dominant colors of the image."
-                ToolTip.visible: btnGetColors.hovered
-                //visible: !mainController.processing_colors
-                //onClicked: mainController.()
-            }
+            RowLayout {
+                spacing: 2
+                Layout.margins: 10
+                anchors.horizontalCenter: parent.horizontalCenter
 
-            Column {
-                //visible: mainController.processing_colors
+                Button {
+                    id: btnGetColors
+                    text: " Retrieve Colors"
+                    leftPadding: 10
+                    rightPadding: 10
+                    icon.source: "assets/icons/reload_icon.png"
+                    icon.width: 21
+                    icon.height: 21
+                    icon.color: "transparent"   // important for PNGs
+                    ToolTip.text: "Get the dominant colors of the image."
+                    ToolTip.visible: btnGetColors.hovered
+                    //visible: !mainController.processing_colors
+                    //onClicked: mainController.()
+                }
 
-                SpinnerProgress {
-                    //running: mainController.processing_colors
-                    width: 24
-                    height: 24
+                Column {
+                    //visible: mainController.processing_colors
+
+                    SpinnerProgress {
+                        //running: mainController.processing_colors
+                        width: 24
+                        height: 24
+                    }
                 }
             }
         }
 
         // Image Colors Layout (hidden if RetrieveButton is visible)
-        RowLayout {
-            spacing: 2
-            Layout.margins: 5
+        Rectangle {
+            id: colorsLayout
+            Layout.fillHeight: true
             Layout.fillWidth: true
-            //Layout.fillHeight: true
-            Layout.alignment: Qt.AlignHCenter
+            color: "transparent"
             visible: false
+
+            RowLayout {
+                spacing: 2
+                Layout.margins: 5
+                anchors.fill: parent
+            }
         }
 
     }
