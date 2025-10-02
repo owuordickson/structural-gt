@@ -102,7 +102,7 @@ class MainController(BaseController):
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
             ai_search_params = [v for v in options_ai.values() if v["type"] == "search-params"]
 
-            batch_list = [{"id": f"batch_{i}", "text": f"Image Batch {i + 1}", "value": i}
+            batch_list = [{"id": f"batch_{i}", "text": f" Batch {i + 1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
             self.imgBatchModel.reset_data(batch_list)
             self.imgScaleOptionModel.reset_data(sel_img_batch.scaling_options)

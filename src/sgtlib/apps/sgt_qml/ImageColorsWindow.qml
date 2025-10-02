@@ -19,16 +19,49 @@ Window {
 
         // Image Selection Layout
         Rectangle {
-            height: 32
+            id: imgSelectionControls
+            height: 48
+            Layout.topMargin: 5
             Layout.fillHeight: false
             Layout.fillWidth: true
             color: "transparent"
+            visible: false
 
             RowLayout {
-                spacing: 2
-                Layout.margins: 5
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
+                spacing: 4
+                anchors.centerIn: parent
+                anchors.verticalCenter: parent.verticalCenter
+
+                ComboBox {
+                    id: cbColorsBatchSelector
+                    Layout.minimumWidth: 75
+                    model: imgBatchModel
+                    implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+                    textRole: "text"
+                    valueRole: "value"
+                    ToolTip.text: "Change image batch"
+                    ToolTip.visible: cbColorsBatchSelector.hovered
+                    onCurrentIndexChanged: mainController.select_img_batch(valueAt(currentIndex))
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 18
+                    color: "#d0d0d0"
+                }
+
+                ComboBox {
+                    id: cbColorsImageSelector
+                    Layout.minimumWidth: 75
+                    model: img3dGridModel
+                    implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+                    textRole: "text"
+                    valueRole: "id"
+                    ToolTip.text: "Select image"
+                    ToolTip.visible: cbColorsImageSelector.hovered
+                    currentIndex: 0
+                }
+
             }
         }
 
@@ -83,7 +116,26 @@ Window {
             RowLayout {
                 spacing: 2
                 Layout.margins: 5
-                anchors.fill: parent
+                Layout.fillWidth: true
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                Image {
+                    id: imgCurrent
+                    width: 650
+                    height: 650
+                    anchors.centerIn: parent
+                    transformOrigin: Item.Center
+                    fillMode: Image.PreserveAspectFit
+                    source: ""
+                }
+
+                Rectangle {
+                    width: 118
+                    height: 650
+                    Layout.leftMargin: 5
+                    color: "gray"
+
+                }
             }
         }
 
@@ -92,6 +144,20 @@ Window {
 
     Connections {
         target: mainController
+
+        function onImageChangedSignal() {
+            imgSelectionControls.visible = true; // mainController.image_batches_exist() && mainController.is_img_3d();
+            retrieveControls.visible = false;
+            colorsLayout.visible = true;
+
+            if (mainController.image_batches_exist() && mainController.is_img_3d()) {
+                cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
+                //cbColorsImageSelector.currentIndex = mainController.;
+                //imgCurrent.source =
+            } else {
+                //imgCurrent.source =
+            }
+        }
 
         function onShowImageHistogramSignal(allow) {
             // Force refresh

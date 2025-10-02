@@ -176,7 +176,7 @@ ColumnLayout {
                 id: cbBatchSelector
                 visible: mainController.image_batches_exist()
                 //enabled: image_batches_exist.display_image()
-                Layout.minimumWidth: 125
+                Layout.minimumWidth: 75
                 model: imgBatchModel
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 textRole: "text"
@@ -642,8 +642,7 @@ ColumnLayout {
             lblNavInfo.text = mainController.get_img_nav_location();
             //console.log(src);
 
-            const curr_batch = mainController.get_selected_img_batch();
-            cbBatchSelector.currentIndex = curr_batch;
+            cbBatchSelector.currentIndex = mainController.get_selected_img_batch();
         }
 
         function onProjectOpenedSignal(name) {

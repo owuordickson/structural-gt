@@ -4,6 +4,7 @@ from ...utils.sgt_utils import img_to_base64
 
 class ImageGridModel(QAbstractListModel):
     IdRole = Qt.ItemDataRole.UserRole + 1
+    TextRole = Qt.ItemDataRole.UserRole + 3
     SelectedRole = Qt.ItemDataRole.UserRole + 20
     ImageRole = Qt.ItemDataRole.UserRole + 21
 
@@ -14,6 +15,7 @@ class ImageGridModel(QAbstractListModel):
             return
         self._image_data = [{
             "id": i,
+            "text": f" Image {i + 1}",
             "image": img_to_base64(img_lst[i]) if img_lst[i] is not None else "",
             "selected": 1 if i in selected_images else 0
         } for i in range(len(img_lst))]
@@ -31,6 +33,8 @@ class ImageGridModel(QAbstractListModel):
 
         if role == self.IdRole:
             return item["id"]
+        elif role == self.TextRole:
+            return item["text"]
         elif role == self.ImageRole:
             return item["image"]
         elif role == self.SelectedRole:
@@ -59,6 +63,7 @@ class ImageGridModel(QAbstractListModel):
 
         self._image_data = [{
             "id": i,
+            "text": f" Image {i + 1}",
             "image": img_to_base64(new_data[i]) if new_data[i] is not None else "",
             "selected": 1 if i in selected_images else 0
         } for i in range(len(new_data))]
@@ -70,6 +75,7 @@ class ImageGridModel(QAbstractListModel):
     def roleNames(self):
         return {
             self.IdRole: b"id",
+            self.TextRole: b"text",
             self.ImageRole: b"image",
             self.SelectedRole: b"selected",
         }
