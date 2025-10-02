@@ -446,6 +446,38 @@ class ImageProcessor(ProgressUpdate):
             img_obj.get_pixel_width()
         self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
+    def eliminate_selected_img_colors(self, img_pos: int):
+        """
+        Removes user-selected dominant colors from an image by replacing their pixels with
+        white or black. This preprocessing step helps refine the binary image and improve
+        graph structure extraction.
+
+        Args:
+            img_pos (int): Index of the image in the selected batch.
+
+        Returns:
+            None
+        """
+        sel_batch = self.selected_batch
+        if sel_batch.is_graph_only:
+            return
+
+        self.update_status(ProgressData(percent=10, sender="GT", message=f"Eliminating colors..."))
+        img_obj = sel_batch.images[img_pos]
+        if len(img_obj.dominant_colors) == 0:
+            self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
+            return
+
+        img = img_obj.img_2d.copy()
+        for sel_color in img_obj.dominant_colors:
+            if sel_color.is_selected:
+                hex_code = sel_color.hex_code
+                pixels = sel_color.pixel_positions
+                img = BaseImage.eliminate_img_colors(image=img, hex_color=hex_code, pixel_pos=pixels)
+
+        img_obj.img_2d = img.copy()
+        self.update_status(ProgressData(percent=100, sender="GT", message="Color elimination complete..."))
+
     def reset_img_filters(self):
         """Delete existing filters that have been applied on the image."""
         sel_batch = self.selected_batch
@@ -541,7 +573,15 @@ class ImageProcessor(ProgressUpdate):
         self.update_image_props(sel_batch)
 
     def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> bool:
-        """"""
+        """
+        Search and get the top k dominant colors of the image.
+        Args:
+            img_pos: position index of the image-object in the selected batch.
+            top_k: maximum number of top colors to search.
+
+        Returns:
+            True if dominant colors are found, False otherwise.
+        """
         sel_batch = self.selected_batch
         if sel_batch.is_graph_only:
             return False
@@ -549,8 +589,11 @@ class ImageProcessor(ProgressUpdate):
         self.update_status(ProgressData(percent=10, sender="GT", message=f"Retrieving dominant colors..."))
         # Get BaseImage object
         img_obj = sel_batch.images[img_pos]
-        top_colors = img_obj.get_dominant_img_colors(top_k=top_k)
+        if len(img_obj.dominant_colors) == top_k:
+            self.update_status(ProgressData(percent=100, sender="GT", message="Dominant already colors retrieved!"))
+            return True
 
+        top_colors = img_obj.get_dominant_img_colors(top_k=top_k)
         if top_colors is None:
             self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
             return False
