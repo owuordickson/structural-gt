@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls.Material as Material
+import QtQuick.Controls.Fusion as Fusion
 import "widgets"
 
 Window {
@@ -200,19 +201,30 @@ Window {
                             delegate: RowLayout {
                                 width: ListView.view.width   // full width
                                 height: 32                   // fixed height for consistency
-                                spacing: 4
+                                spacing: 8
 
                                 CheckBox {
                                     id: checkBox
                                     objectName: model.id
-                                    text: model.text
                                     property bool isChecked: model.value
                                     checked: isChecked
                                 }
+
+                                // Color swatch instead of hex string
+                                Rectangle {
+                                    width: 75
+                                    height: 24
+                                    radius: 4
+                                    color: model.text   // assuming model.text holds "#RRGGBB"
+                                }
+
+                                // Optional: show the hex code as tooltip, not as text
+                                ToolTip.visible: checkBox.hovered
+                                ToolTip.text: model.text
                             }
                         }
 
-                        Material.Button {
+                        Fusion.Button {
                             id: btnEliminateColors
                             Layout.alignment: Qt.AlignHCenter
                             leftPadding: 10
@@ -221,7 +233,6 @@ Window {
                             enabled: true
                         }
                     }
-
 
                 }
             }
