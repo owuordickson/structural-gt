@@ -96,6 +96,7 @@ class MainController(BaseController):
             options_ai = ntwk_p.configs
             options_img = ntwk_p.image_obj.configs
 
+            # Get data from object configs
             img_controls = [v for v in options_img.values() if v["type"] == "image-control"]
             bin_filters = [v for v in options_img.values() if v["type"] == "binary-filter"]
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
@@ -105,6 +106,8 @@ class MainController(BaseController):
 
             batch_list = [{"id": f"batch_{i}", "text": f" Batch {i + 1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
+
+            # Update QML adapter-models with fetched data
             self.imgBatchModel.reset_data(batch_list)
             self.imgScaleOptionModel.reset_data(sel_img_batch.scaling_options)
             self.imgViewOptionModel.reset_data(sel_img_batch.view_options)
@@ -152,6 +155,19 @@ class MainController(BaseController):
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
+
+    def reset_qml_models(self):
+        """
+        Reset some of the CheckBox models when different image is loaded.
+
+        Returns:
+            None
+        """
+        print("Resetting QML models...")
+        # Erase existing data in QML adapter-models
+        self.img3dGridModel.reset_data([], set([]))
+        self.imgHistogramModel.reset_data([], set([]))
+        self.imgColorsModel.reset_data([])
 
     def delete_sgt_object(self, index=None):
         """
@@ -690,6 +706,7 @@ class MainController(BaseController):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
+            self.reset_qml_models()
             self.synchronize_img_models(self.get_selected_sgt_obj())
             self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)

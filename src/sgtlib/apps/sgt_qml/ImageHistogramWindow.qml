@@ -107,6 +107,13 @@ Window {
     Connections {
         target: mainController
 
+        function onImageChangedSignal() {
+
+            if (imgHistogramWindow.visible) {
+                imgHistGridView.visible = imgHistogramModel.rowCount() > 0;
+            }
+        }
+
         function onShowImageFilterControls(allow) {
             // Force refresh
             if (imgHistogramWindow.visible) {

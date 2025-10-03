@@ -79,8 +79,8 @@ class BaseController(QObject):
     @Slot(int, str, result=str)
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
         """
-        Finds image at specific frame position and specified view (original or binary or processed or graph);
-        then, returns  it as a 'base64' string.
+        Finds image at a specific frame position and specified view (original or binary or processed or graph);
+        then, returns it as a 'base64' string.
 
         Args:
             img_pos: Position index of the image-object in the selected batch.

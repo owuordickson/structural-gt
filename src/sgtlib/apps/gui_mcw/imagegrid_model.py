@@ -61,12 +61,14 @@ class ImageGridModel(QAbstractListModel):
             return
         self.beginResetModel()
 
-        self._image_data = [{
-            "id": i,
-            "text": f" Image {i + 1}",
-            "image": img_to_base64(new_data[i]) if new_data[i] is not None else "",
-            "selected": 1 if i in selected_images else 0
-        } for i in range(len(new_data))]
+        self._image_data = []
+        if len(new_data) > 0:
+            self._image_data = [{
+                "id": i,
+                "text": f" Image {i + 1}",
+                "image": img_to_base64(new_data[i]) if new_data[i] is not None else "",
+                "selected": 1 if i in selected_images else 0
+            } for i in range(len(new_data))]
 
         self.endResetModel()
         self.dataChanged.emit(self.index(0, 0), self.index(len(new_data), 0),

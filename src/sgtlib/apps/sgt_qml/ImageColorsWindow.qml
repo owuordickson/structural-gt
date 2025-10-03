@@ -60,10 +60,7 @@ Window {
                     ToolTip.text: "Select image"
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
-                    onCurrentIndexChanged: {
-                        let base64_img = mainController.get_selected_image(currentIndex, "original");
-                        imgCurrent.source = "data:image/png;base64," + base64_img;
-                    }
+                    onCurrentIndexChanged: mainController.imageChangedSignal.emit()
                 }
 
             }
