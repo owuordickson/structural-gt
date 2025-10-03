@@ -101,6 +101,7 @@ class BaseWorker:
     def task_retrieve_img_colors(self, ntwk_p, img_idx, max_colors=6):
         """"""
         try:
+            print(f"Unique Colors: {max_colors}")
             # ntwk_p.add_listener(self._update_progress)
             ntwk_p.retrieve_dominant_img_colors(img_pos=img_idx, top_k=max_colors)
             # ntwk_p.remove_listener(self._update_progress)

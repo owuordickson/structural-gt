@@ -74,45 +74,75 @@ Window {
             color: "transparent"
             visible: true
 
-            RowLayout {
-                spacing: 2
+            ColumnLayout {
+                spacing: 8
                 anchors.centerIn: parent
-                //anchors.horizontalCenter: parent.horizontalCenter
 
-                Material.Button {
-                    id: btnGetColors
-                    text: " Retrieve Colors"
-                    leftPadding: 10
-                    rightPadding: 10
-                    icon.source: "assets/icons/reload_icon.png"
-                    icon.width: 21
-                    icon.height: 21
-                    icon.color: "transparent"   // important for PNGs
-                    ToolTip.text: "Get the dominant colors of the image."
-                    ToolTip.visible: btnGetColors.hovered
+                RowLayout {
+                    spacing: 4
+                    anchors.horizontalCenter: parent.horizontalCenter
                     visible: !mainController.wait && !mainController.img_filters_busy
-                    onClicked: {
-                        let sel_img = 0;
-                        let max_colors = 10;
-                        mainController.run_retrieve_img_colors(sel_img, max_colors);
+
+                    Material.Label {
+                        text: "Maximum Unique Colors: "
+                        font.pixelSize: 14
+                    }
+
+                    Material.SpinBox {
+                        id: spbMaxColors
+                        from: 2
+                        to: 256
+                        stepSize: 1
+                        value: 10
+                        editable: true
+
+                        font.pixelSize: 10
+                        implicitWidth: 75
+                        implicitHeight: 28
+                        //Layout.preferredWidth: 75 // if inside RowLayout
+                        //Layout.preferredHeight: 28
                     }
                 }
 
-                Column {
-                    visible: mainController.img_filters_busy
+                RowLayout {
+                    spacing: 2
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                    SpinnerProgress {
-                        running: mainController.img_filters_busy
-                        width: 24
-                        height: 24
+                    Material.Button {
+                        id: btnGetColors
+                        text: " Retrieve Colors"
+                        leftPadding: 10
+                        rightPadding: 10
+                        icon.source: "assets/icons/reload_icon.png"
+                        icon.width: 21
+                        icon.height: 21
+                        icon.color: "transparent"   // important for PNGs
+                        ToolTip.text: "Get the dominant colors of the image."
+                        ToolTip.visible: btnGetColors.hovered
+                        visible: !mainController.wait && !mainController.img_filters_busy
+                        onClicked: {
+                            let sel_img = cbColorsImageSelector.currentIndex;
+                            let max_colors = spbMaxColors.value;
+                            mainController.run_retrieve_img_colors(sel_img, max_colors);
+                        }
                     }
 
-                    Label {
-                        text: "please wait..."
-                        font.pointSize: 12
-                        color: "#2299ff"
-                        horizontalAlignment: Text.AlignHCenter
-                        anchors.horizontalCenter: parent.horizontalCenter
+                    Column {
+                        visible: mainController.img_filters_busy
+
+                        SpinnerProgress {
+                            running: mainController.img_filters_busy
+                            width: 24
+                            height: 24
+                        }
+
+                        Label {
+                            text: "please wait..."
+                            font.pointSize: 12
+                            color: "#2299ff"
+                            horizontalAlignment: Text.AlignHCenter
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
                     }
                 }
             }
