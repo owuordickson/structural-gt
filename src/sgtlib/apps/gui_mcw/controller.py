@@ -639,6 +639,7 @@ class MainController(BaseController):
             self.synchronize_img_models(sgt_obj)
             self.synchronize_graph_models(self.get_selected_sgt_obj())
             # Load the selected image into the view
+            # self.reset_qml_models()
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
@@ -706,7 +707,7 @@ class MainController(BaseController):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
-            self.reset_qml_models()
+            # self.reset_qml_models()
             self.synchronize_img_models(self.get_selected_sgt_obj())
             self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
