@@ -187,15 +187,20 @@ Window {
                     color: "transparent"
 
                     ColumnLayout {
-                        spacing: 1
                         anchors.fill: parent
+                        spacing: 5
 
-                        Repeater {
+                        ListView {
+                            id: colorList
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true   // take remaining space
+                            clip: true
                             model: imgColorsModel
+
                             delegate: RowLayout {
-                                Layout.fillWidth: true
-                                Layout.leftMargin: 2
-                                Layout.alignment: Qt.AlignLeft
+                                width: ListView.view.width   // full width
+                                height: 32                   // fixed height for consistency
+                                spacing: 4
 
                                 CheckBox {
                                     id: checkBox
@@ -205,19 +210,18 @@ Window {
                                     checked: isChecked
                                 }
                             }
-
                         }
 
-
-                        Button {
+                        Material.Button {
                             id: btnEliminateColors
-                            Layout.topMargin: 5
                             Layout.alignment: Qt.AlignHCenter
+                            leftPadding: 10
+                            rightPadding: 10
                             text: "Apply Changes"
                             enabled: true
                         }
-
                     }
+
 
                 }
             }
