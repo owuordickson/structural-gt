@@ -60,6 +60,10 @@ Window {
                     ToolTip.text: "Select image"
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
+                    onCurrentIndexChanged: {
+                        let base64_img = mainController.get_selected_image(currentIndex, "original");
+                        imgCurrent.source = "data:image/png;base64," + base64_img;
+                    }
                 }
 
             }
@@ -75,7 +79,7 @@ Window {
             visible: true
 
             ColumnLayout {
-                spacing: 8
+                spacing: 10
                 anchors.centerIn: parent
 
                 RowLayout {
@@ -158,25 +162,28 @@ Window {
             visible: false
 
             RowLayout {
-                spacing: 2
-                Layout.margins: 5
-                Layout.fillWidth: true
-                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10
+                anchors.centerIn: parent
 
-                Image {
-                    id: imgCurrent
-                    width: 650
-                    height: 650
-                    anchors.centerIn: parent
-                    transformOrigin: Item.Center
-                    fillMode: Image.PreserveAspectFit
-                    source: ""
+                Rectangle {
+                    width: 600
+                    height: 600
+                    color: "transparent"
+
+                    Image {
+                        id: imgCurrent
+                        width: parent.width
+                        height: parent.height
+                        anchors.centerIn: parent
+                        transformOrigin: Item.Center
+                        fillMode: Image.PreserveAspectCrop
+                        source: ""
+                    }
                 }
 
                 Rectangle {
-                    width: 118
-                    height: 650
-                    Layout.leftMargin: 5
+                    width: 120
+                    height: 560
                     color: "gray"
 
                 }
@@ -190,16 +197,18 @@ Window {
         target: mainController
 
         function onImageChangedSignal() {
-            imgSelectionControls.visible = mainController.image_batches_exist() && mainController.is_img_3d();
-            retrieveControls.visible = imgColorsModel.rowCount() <= 0;
-            colorsLayout.visible = imgColorsModel.rowCount() > 0
+            if (imgColorsWindow.visible) {
+                imgSelectionControls.visible = mainController.image_batches_exist() && mainController.is_img_3d();
+                retrieveControls.visible = imgColorsModel.rowCount() <= 0;
+                colorsLayout.visible = imgColorsModel.rowCount() > 0
 
-            if (mainController.image_batches_exist() && mainController.is_img_3d()) {
-                cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
-                //cbColorsImageSelector.currentIndex = mainController.;
-                //imgCurrent.source =
-            } else {
-                //imgCurrent.source =
+                if (mainController.image_batches_exist() && mainController.is_img_3d()) {
+                    cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
+                }
+
+                let img_idx = cbColorsImageSelector.currentIndex;
+                let base64_img = mainController.get_selected_image(img_idx, "original");
+                imgCurrent.source = "data:image/png;base64," + base64_img;
             }
         }
 
