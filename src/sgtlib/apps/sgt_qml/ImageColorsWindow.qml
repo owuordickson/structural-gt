@@ -201,7 +201,7 @@ Window {
                             delegate: RowLayout {
                                 width: ListView.view.width   // full width
                                 height: 32                   // fixed height for consistency
-                                spacing: 8
+                                spacing: 2
 
                                 CheckBox {
                                     id: checkBox
@@ -214,7 +214,7 @@ Window {
                                 Rectangle {
                                     width: 75
                                     height: 24
-                                    radius: 4
+                                    radius: 2
                                     color: model.text   // assuming model.text holds "#RRGGBB"
                                 }
 
