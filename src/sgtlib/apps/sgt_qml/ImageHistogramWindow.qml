@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-//import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
 import QtQuick.Window
+import QtQuick.Controls.Material as Material
 import "widgets"
 
 Window {
@@ -24,7 +24,7 @@ Window {
             Layout.margins: 5
             Layout.alignment: Qt.AlignHCenter
 
-            Button {
+            Material.Button {
                 id: btnReloadHistogram
                 text: " Reload Histogram"
                 leftPadding: 10

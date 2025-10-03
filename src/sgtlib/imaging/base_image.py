@@ -564,7 +564,7 @@ class BaseImage:
             color_results.append(dominant_color)
 
         # Sort by pixel count (descending)
-        color_results.sort(key=lambda x: x["count"], reverse=True)
+        color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
     def evaluate_img_binary(self) -> tuple[float, np.ndarray] | tuple[None, None]:

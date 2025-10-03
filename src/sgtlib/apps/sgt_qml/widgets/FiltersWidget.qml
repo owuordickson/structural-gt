@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Imagine as Imagine
 
 ColumnLayout {
     id: imgFilterButtons
@@ -17,7 +18,7 @@ ColumnLayout {
         anchors.centerIn: parent
         anchors.verticalCenter: parent.verticalCenter
 
-        Button {
+        Imagine.Button {
             id: btnShowImgHistogram
             text: "Image Histogram"
             topPadding: 5
@@ -34,7 +35,7 @@ ColumnLayout {
             color: "#d0d0d0"
         }
 
-        Button {
+        Imagine.Button {
             id: btnShowImgColors
             text: "Image Colors"
             topPadding: 5

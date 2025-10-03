@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-//import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
 import QtQuick.Window
+import QtQuick.Controls.Material as Material
 import "widgets"
 
 Window {
@@ -70,15 +70,16 @@ Window {
             id: retrieveControls
             Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.topMargin: 5
             color: "transparent"
             visible: true
 
             RowLayout {
                 spacing: 2
-                Layout.margins: 10
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.centerIn: parent
+                //anchors.horizontalCenter: parent.horizontalCenter
 
-                Button {
+                Material.Button {
                     id: btnGetColors
                     text: " Retrieve Colors"
                     leftPadding: 10
@@ -89,17 +90,29 @@ Window {
                     icon.color: "transparent"   // important for PNGs
                     ToolTip.text: "Get the dominant colors of the image."
                     ToolTip.visible: btnGetColors.hovered
-                    //visible: !mainController.processing_colors
-                    //onClicked: mainController.()
+                    visible: !mainController.wait && !mainController.img_filters_busy
+                    onClicked: {
+                        let sel_img = 0;
+                        let max_colors = 10;
+                        mainController.run_retrieve_img_colors(sel_img, max_colors);
+                    }
                 }
 
                 Column {
-                    //visible: mainController.processing_colors
+                    visible: mainController.img_filters_busy
 
                     SpinnerProgress {
-                        //running: mainController.processing_colors
+                        running: mainController.img_filters_busy
                         width: 24
                         height: 24
+                    }
+
+                    Label {
+                        text: "please wait..."
+                        font.pointSize: 12
+                        color: "#2299ff"
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
             }
@@ -110,6 +123,7 @@ Window {
             id: colorsLayout
             Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.topMargin: 5
             color: "transparent"
             visible: false
 
@@ -146,9 +160,9 @@ Window {
         target: mainController
 
         function onImageChangedSignal() {
-            imgSelectionControls.visible = true; // mainController.image_batches_exist() && mainController.is_img_3d();
-            retrieveControls.visible = false;
-            colorsLayout.visible = true;
+            imgSelectionControls.visible = mainController.image_batches_exist() && mainController.is_img_3d();
+            retrieveControls.visible = true;
+            colorsLayout.visible = false;
 
             if (mainController.image_batches_exist() && mainController.is_img_3d()) {
                 cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();

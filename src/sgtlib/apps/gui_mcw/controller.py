@@ -291,10 +291,10 @@ class MainController(BaseController):
                 if result.task_id == "Rate Graph":
                     self._handle_progress_update(ProgressData(type="info", sender="AI", message=f"Graph image successfully uploaded!"))
                     self.taskTerminatedSignal.emit(success_val, ["Graph Rated", result.message])
-                if result.task_id == "Extract Graph":
+                if result.task_id == "Extract Graph" or result.task_id == "Image Colors":
                     sgt_obj = self.get_selected_sgt_obj()
                     sgt_obj.ntwk_p = result.data
-                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Graph extracted successfully!"))
+                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)
                     # Update QML to visualize graph
@@ -370,6 +370,8 @@ class MainController(BaseController):
         base_funcs = BaseWorker()
         if task_fxn == "Calculate-Histogram":
             target = base_funcs.task_calculate_img_histogram
+        elif task_fxn == "Retrieve-Colors":
+            target = base_funcs.task_retrieve_img_colors
         elif task_fxn == "Extract-Graph":
             target = base_funcs.task_extract_graph
         elif task_fxn == "Compute-GT":
@@ -801,6 +803,23 @@ class MainController(BaseController):
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
             self.taskTerminatedSignal.emit(False,
                                            ["Unable to Save Image Files", "Error saving images to file. Try again."])
+
+    @Slot(int, int)
+    def run_retrieve_img_colors(self, img_pos: int, max_colors: int):
+        """Retrieve the dominant colors of the image."""
+        if self._wait_flag:
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        try:
+            self._start_wait(msg="image_filters")
+            ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            self._submit_job(1, "Retrieve-Colors", (ntwk_p, img_pos, max_colors), True)
+        except Exception as err:
+            self._stop_wait()
+            logging.exception(f"Retrieve Colors Error: {err}", extra={'user': 'SGT Logs'})
+            self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Unable to retrieve colors! Try again."))
+            self._handle_finished(1, False, ["Get Colors Failed", "Unable to retrieve dominant colors!"])
 
     @Slot()
     def run_extract_graph(self):

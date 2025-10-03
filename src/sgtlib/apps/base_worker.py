@@ -101,29 +101,32 @@ class BaseWorker:
     def task_retrieve_img_colors(self, ntwk_p, img_idx, max_colors=6):
         """"""
         try:
-            ntwk_p.add_listener(self._update_progress)
+            # ntwk_p.add_listener(self._update_progress)
             ntwk_p.retrieve_dominant_img_colors(img_pos=img_idx, top_k=max_colors)
-            ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Image Colors", status="Finished", data=ntwk_p)
+            # ntwk_p.remove_listener(self._update_progress)
+            print(ntwk_p.image_obj.dominant_colors)
+            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully retrieved!", data=ntwk_p)
             return True, task_data
         except Exception as err:
             logging.exception(f"Color Error: {err}", extra={'user': 'SGT Logs'})
+            self._update_progress(ProgressData(type="error", sender="GT", message=f"Error encountered! Try again."))
             # Clean up listeners before exiting
-            ntwk_p.remove_listener(self._update_progress)
+            # ntwk_p.remove_listener(self._update_progress)
             return False, ["Retrieve Colors Failed", "Error while retrieving image colors!"]
 
     def task_eliminate_img_colors(self, ntwk_p, img_idx):
         """"""
         try:
-            ntwk_p.add_listener(self._update_progress)
+            # ntwk_p.add_listener(self._update_progress)
             ntwk_p.eliminate_selected_img_colors(img_pos=img_idx)
-            ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Image Colors", status="Finished", data=ntwk_p)
+            # ntwk_p.remove_listener(self._update_progress)
+            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully eliminated!", data=ntwk_p)
             return True, task_data
         except Exception as err:
             logging.exception(f"Color Error: {err}", extra={'user': 'SGT Logs'})
+            self._update_progress(ProgressData(type="error", sender="GT", message=f"Error encountered! Try again."))
             # Clean up listeners before exiting
-            ntwk_p.remove_listener(self._update_progress)
+            # ntwk_p.remove_listener(self._update_progress)
             return False, ["Eliminate Colors Failed", "Error while eliminating image colors!"]
 
     def task_extract_graph(self, ntwk_p):
@@ -136,7 +139,7 @@ class BaseWorker:
             if ntwk_p.abort:
                 raise AbortException("Process aborted")
             ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Extract Graph", status="Finished", message="", data=ntwk_p)
+            task_data = TaskResult(task_id="Extract Graph", status="Finished", message="Graph extracted successfully!", data=ntwk_p)
             return True, task_data
         except AbortException as err:
             logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})

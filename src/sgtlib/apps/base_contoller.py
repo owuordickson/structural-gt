@@ -18,6 +18,7 @@ class BaseController(QObject):
     _waitTextChanged = Signal()
     _aiBusyChanged = Signal()
     _aiModeChanged = Signal()
+    _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
     showAlertSignal = Signal(str, str)
 
@@ -28,6 +29,7 @@ class BaseController(QObject):
         self._wait_msg = ""
         self._wait_flag_ai = False
         self._wait_flag_hist = False
+        self._wait_flag_filters = False
 
         # Create graph objects
         self._config_file = config_file
@@ -58,6 +60,10 @@ class BaseController(QObject):
     def ai_mode_active(self):
         return self._ai_mode_active
 
+    @Property(bool, notify=_imgFiltersBusyChanged)
+    def img_filters_busy(self):
+        return self._wait_flag_filters
+
     @Property(bool, notify=_histogramBusyChanged)
     def histogram_busy(self):
         return self._wait_flag_hist
@@ -73,16 +79,22 @@ class BaseController(QObject):
     def _start_wait(self, msg: str = "please wait..."):
         """Activate the wait flag and send a wait signal."""
         self._wait_flag = True
-        self._wait_msg = msg
-        self._waitChanged.emit()
-        self._waitTextChanged.emit()
+        if msg == "image_filters":
+            self._wait_flag_filters = True
+            self._imgFiltersBusyChanged.emit()
+        else:
+            self._wait_msg = msg
+            self._waitChanged.emit()
+            self._waitTextChanged.emit()
 
     def _stop_wait(self):
         """Deactivate the wait flag and send a wait signal."""
         self._wait_flag = False
+        self._wait_flag_filters = False
         self._wait_msg = ""
         self._waitChanged.emit()
         self._waitTextChanged.emit()
+        self._imgFiltersBusyChanged.emit()
 
     def _start_ai_task(self):
         """Activate the AI running (or busy) flag."""
