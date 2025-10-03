@@ -184,7 +184,40 @@ Window {
                 Rectangle {
                     width: 120
                     height: 560
-                    color: "gray"
+                    color: "transparent"
+
+                    ColumnLayout {
+                        spacing: 1
+                        anchors.fill: parent
+
+                        Repeater {
+                            model: imgColorsModel
+                            delegate: RowLayout {
+                                Layout.fillWidth: true
+                                Layout.leftMargin: 2
+                                Layout.alignment: Qt.AlignLeft
+
+                                CheckBox {
+                                    id: checkBox
+                                    objectName: model.id
+                                    text: model.text
+                                    property bool isChecked: model.value
+                                    checked: isChecked
+                                }
+                            }
+
+                        }
+
+
+                        Button {
+                            id: btnEliminateColors
+                            Layout.topMargin: 5
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Apply Changes"
+                            enabled: true
+                        }
+
+                    }
 
                 }
             }
