@@ -69,6 +69,7 @@ class MainController(BaseController):
         self.imgControlModel = CheckBoxModel([])
         self.imgBinFilterModel = CheckBoxModel([])
         self.imgFilterModel = CheckBoxModel([])
+        self.imgColorsModel = CheckBoxModel([])
         self.aiSearchModel = CheckBoxModel([])
 
         self.imgScaleOptionModel = CheckBoxModel([])
@@ -293,7 +294,11 @@ class MainController(BaseController):
                     self.taskTerminatedSignal.emit(success_val, ["Graph Rated", result.message])
                 if result.task_id == "Extract Graph" or result.task_id == "Image Colors":
                     sgt_obj = self.get_selected_sgt_obj()
-                    sgt_obj.ntwk_p = result.data
+                    if result.task_id == "Image Colors":
+                        sgt_obj.ntwk_p = result.data[0]
+                        self.imgColorsModel.reset_data(result.data[1])
+                    else:
+                        sgt_obj.ntwk_p = result.data
                     self._handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)

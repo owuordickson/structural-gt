@@ -100,13 +100,21 @@ class BaseWorker:
 
     def task_retrieve_img_colors(self, ntwk_p, img_idx, max_colors=6):
         """"""
+        def _generate_colors_data():
+            """"""
+            colors = ntwk_p.image_obj.dominant_colors
+            if colors is None:
+                return []
+            color_data = [{"id": i, "text": c.hex_code, "value": 1 if c.is_selected else 0} for i, c in enumerate(colors)]
+            return color_data
+
         try:
-            print(f"Unique Colors: {max_colors}")
             # ntwk_p.add_listener(self._update_progress)
             ntwk_p.retrieve_dominant_img_colors(img_pos=img_idx, top_k=max_colors)
             # ntwk_p.remove_listener(self._update_progress)
-            print(ntwk_p.image_obj.dominant_colors)
-            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully retrieved!", data=ntwk_p)
+
+            lst_colors = _generate_colors_data()
+            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully retrieved!", data=[ntwk_p, lst_colors])
             return True, task_data
         except Exception as err:
             logging.exception(f"Color Error: {err}", extra={'user': 'SGT Logs'})

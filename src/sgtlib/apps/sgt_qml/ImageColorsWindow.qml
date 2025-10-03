@@ -191,8 +191,8 @@ Window {
 
         function onImageChangedSignal() {
             imgSelectionControls.visible = mainController.image_batches_exist() && mainController.is_img_3d();
-            retrieveControls.visible = true;
-            colorsLayout.visible = false;
+            retrieveControls.visible = imgColorsModel.rowCount() <= 0;
+            colorsLayout.visible = imgColorsModel.rowCount() > 0
 
             if (mainController.image_batches_exist() && mainController.is_img_3d()) {
                 cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();

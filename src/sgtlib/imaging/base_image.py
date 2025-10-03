@@ -540,22 +540,22 @@ class BaseImage:
                 intensity = int(color[0])
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
                 dominant_color.img_type = "grayscale"
-                dominant_color.hex = hex_val
+                dominant_color.hex_code = hex_val
             elif len(color) == 2:  # grayscale + alpha
                 intensity, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
                 dominant_color.img_type = "grayscale+alpha"
-                dominant_color.hex = hex_val
+                dominant_color.hex_code = hex_val
             elif len(color) == 3:  # RGB
                 r, g, b = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
                 dominant_color.img_type = "rgb"
-                dominant_color.hex = hex_val
+                dominant_color.hex_code = hex_val
             elif len(color) == 4:  # RGBA
                 r, g, b, a = map(int, color)
                 hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
                 dominant_color.img_type = "rgba"
-                dominant_color.hex = hex_val
+                dominant_color.hex_code = hex_val
 
             # Pixel positions
             mask = (labels.reshape(h, w) == i)
