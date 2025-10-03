@@ -45,9 +45,11 @@ Window {
                 }
 
                 Rectangle {
+                    id: vertColorsLine
                     width: 1
                     height: 18
                     color: "#d0d0d0"
+                    visible: mainController.is_img_3d()
                 }
 
                 ComboBox {
@@ -60,6 +62,7 @@ Window {
                     ToolTip.text: "Select image"
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
+                    visible: mainController.is_img_3d()
                     onCurrentIndexChanged: mainController.imageChangedSignal.emit()
                 }
 
@@ -195,23 +198,30 @@ Window {
 
         function onImageChangedSignal() {
             if (imgColorsWindow.visible) {
-                imgSelectionControls.visible = mainController.image_batches_exist() && mainController.is_img_3d();
+                imgSelectionControls.visible = mainController.image_batches_exist();
+                vertColorsLine.visible = mainController.is_img_3d();
+                cbColorsImageSelector.visible = mainController.is_img_3d();
+
                 retrieveControls.visible = imgColorsModel.rowCount() <= 0;
                 colorsLayout.visible = imgColorsModel.rowCount() > 0
 
-                if (mainController.image_batches_exist() && mainController.is_img_3d()) {
+                if (mainController.image_batches_exist()) {
                     cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
+                    cbColorsImageSelector.currentIndex = 0;
                 }
 
                 let img_idx = cbColorsImageSelector.currentIndex;
                 let base64_img = mainController.get_selected_image(img_idx, "original");
-                imgCurrent.source = "data:image/png;base64," + base64_img;
+                if (base64_img !== "") {
+                    imgCurrent.source = "data:image/png;base64," + base64_img;
+                }
             }
         }
 
         function onShowImageFilterControls(allow) {
             // Force refresh
             if (imgColorsWindow.visible) {
+                //mainController.imageChangedSignal.emit();
                 imgColorsWindow.visible = allow;
             }
         }
