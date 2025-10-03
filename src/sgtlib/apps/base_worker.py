@@ -129,7 +129,7 @@ class BaseWorker:
             # ntwk_p.add_listener(self._update_progress)
             ntwk_p.eliminate_selected_img_colors(img_pos=img_idx)
             # ntwk_p.remove_listener(self._update_progress)
-            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully eliminated!", data=ntwk_p)
+            task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully eliminated!", data=[ntwk_p, None])
             return True, task_data
         except Exception as err:
             logging.exception(f"Color Error: {err}", extra={'user': 'SGT Logs'})

@@ -312,7 +312,8 @@ class MainController(BaseController):
                     sgt_obj = self.get_selected_sgt_obj()
                     if result.task_id == "Image Colors":
                         sgt_obj.ntwk_p = result.data[0]
-                        self.imgColorsModel.reset_data(result.data[1])
+                        if result.data[1] is not None:
+                            self.imgColorsModel.reset_data(result.data[1])
                     else:
                         sgt_obj.ntwk_p = result.data
                     self._handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
@@ -393,6 +394,8 @@ class MainController(BaseController):
             target = base_funcs.task_calculate_img_histogram
         elif task_fxn == "Retrieve-Colors":
             target = base_funcs.task_retrieve_img_colors
+        elif task_fxn == "Eliminate-Colors":
+            target = base_funcs.task_eliminate_img_colors
         elif task_fxn == "Extract-Graph":
             target = base_funcs.task_extract_graph
         elif task_fxn == "Compute-GT":
@@ -843,6 +846,34 @@ class MainController(BaseController):
             logging.exception(f"Retrieve Colors Error: {err}", extra={'user': 'SGT Logs'})
             self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Unable to retrieve colors! Try again."))
             self._handle_finished(1, False, ["Get Colors Failed", "Unable to retrieve dominant colors!"])
+
+    @Slot(int)
+    def run_eliminate_img_colors(self, img_pos: int):
+        """Eliminate selected image colors by swapping the values of pixels where they appear."""
+        if self._wait_flag:
+            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        try:
+            self._start_wait(msg="image_filters")
+            ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            colors = ntwk_p.image_obj.dominant_colors
+
+            # Update ImageProcessor object
+            for val in self.imgColorsModel.list_data:
+                print(f"{val}")
+                for color in colors:
+                    if color.hex_code == val["text"]:
+                        color.is_selected = True if val["value"] == 1 else False
+
+            print("\n\n")
+            self._submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos), True)
+        except Exception as err:
+            self._stop_wait()
+            logging.exception(f"Eliminate Colors Error: {err}", extra={'user': 'SGT Logs'})
+            self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Unable to eliminate colors! Try again."))
+            self._handle_finished(1, False, ["Eliminate Colors Failed", "Unable to eliminate colors!"])
+
 
     @Slot()
     def run_extract_graph(self):

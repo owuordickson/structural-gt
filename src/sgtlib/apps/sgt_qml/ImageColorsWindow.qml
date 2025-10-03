@@ -191,6 +191,8 @@ Window {
                         anchors.fill: parent
                         spacing: 5
 
+                        property int valueRole: Qt.UserRole + 4
+
                         ListView {
                             id: colorList
                             Layout.fillWidth: true
@@ -208,6 +210,14 @@ Window {
                                     objectName: model.id
                                     property bool isChecked: model.value
                                     checked: isChecked
+                                    onCheckedChanged: {
+                                        if (isChecked !== checked) {  // Only update if there is a change
+                                            isChecked = checked
+                                            let val = checked ? 1 : 0;
+                                            let index = imgColorsModel.index(model.index, 0);
+                                            imgColorsModel.setData(index, val, valueRole);
+                                        }
+                                    }
                                 }
 
                                 // Color swatch instead of hex string
@@ -231,6 +241,10 @@ Window {
                             rightPadding: 10
                             text: "Apply Changes"
                             enabled: true
+                            onClicked: {
+                                let sel_img = cbColorsImageSelector.currentIndex;
+                                mainController.run_eliminate_img_colors(sel_img)
+                            }
                         }
                     }
 
