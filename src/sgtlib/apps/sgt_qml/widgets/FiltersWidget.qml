@@ -14,15 +14,15 @@ ColumnLayout {
 
 
     RowLayout {
-        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        Layout.alignment: Qt.AlignHCenter
 
         Imagine.Button {
             id: btnShowImgHistogram
             text: "Image Histogram"
             topPadding: 5
             bottomPadding: 5
-            leftPadding: 10
-            rightPadding: 10
+            leftPadding: 5
+            rightPadding: 5
             enabled: mainController.enable_img_controls()
             onClicked: imgHistogramWindow.visible = true
         }
@@ -38,8 +38,8 @@ ColumnLayout {
             text: "Image Colors"
             topPadding: 5
             bottomPadding: 5
-            leftPadding: 10
-            rightPadding: 10
+            leftPadding: 5
+            rightPadding: 5
             enabled: mainController.enable_img_controls()
             onClicked: imgColorsWindow.visible = true
         }

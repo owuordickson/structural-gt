@@ -23,8 +23,8 @@ Window {
         // Image Selection Layout
         Rectangle {
             id: imgSelectionControls
-            height: 48
-            Layout.topMargin: 5
+            height: 32
+            Layout.topMargin: 10
             Layout.fillHeight: false
             Layout.fillWidth: true
             color: "transparent"
@@ -33,7 +33,6 @@ Window {
             RowLayout {
                 spacing: 4
                 anchors.centerIn: parent
-                anchors.verticalCenter: parent.verticalCenter
 
                 ComboBox {
                     id: cbColorsBatchSelector
@@ -75,14 +74,15 @@ Window {
         // Retrieve button and spinner -- Layout (hidden if ImageColors is visible)
         Rectangle {
             id: retrieveControls
-            Layout.fillHeight: true
+            height: 90
+            Layout.fillHeight: false
             Layout.fillWidth: true
             Layout.topMargin: 5
             color: "transparent"
             visible: true
 
             ColumnLayout {
-                spacing: 10
+                spacing: 5
                 anchors.centerIn: parent
 
                 RowLayout {
@@ -167,10 +167,11 @@ Window {
             RowLayout {
                 spacing: 10
                 anchors.centerIn: parent
+                visible: !mainController.img_filters_busy
 
                 Rectangle {
-                    width: 600
-                    height: 600
+                    width: 512
+                    height: 512
                     color: "transparent"
 
                     Image {
@@ -186,7 +187,7 @@ Window {
 
                 Rectangle {
                     width: 120
-                    height: 560
+                    height: 480
                     color: "transparent"
 
                     ColumnLayout {
@@ -289,8 +290,8 @@ Window {
                 vertColorsLine.visible = mainController.is_img_3d();
                 cbColorsImageSelector.visible = mainController.is_img_3d();
 
-                retrieveControls.visible = imgColorsModel.rowCount() <= 0;
-                colorsLayout.visible = imgColorsModel.rowCount() > 0
+                //retrieveControls.visible = imgColorsModel.rowCount() <= 0;
+                colorsLayout.visible = imgColorsModel.rowCount() > 0;
 
                 if (mainController.image_batches_exist()) {
                     cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
