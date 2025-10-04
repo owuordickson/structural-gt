@@ -463,7 +463,8 @@ def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
         return None
 
     if type(img) == np.ndarray:
-        return opencv_to_base64(img)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return opencv_to_base64(img_rgb)
 
     if type(img) == Image.Image:
         # Convert to numpy, apply safe conversion

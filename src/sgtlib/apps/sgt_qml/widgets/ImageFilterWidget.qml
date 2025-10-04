@@ -4,7 +4,6 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: imgFiltersControl
-    spacing: 10
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
     visible: mainController.display_image()
@@ -67,7 +66,6 @@ ColumnLayout {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.bottomMargin: 10
                 }
             }
 

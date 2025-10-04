@@ -465,7 +465,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Adjust Binary Filters"
         modal: true
-        width: 300
+        width: 320
         height: 210
 
         ColumnLayout {
@@ -526,8 +526,8 @@ ApplicationWindow {
         anchors.centerIn: parent
         title: "Adjust Binary Filters"
         modal: true
-        width: 300
-        height: 400
+        width: 320
+        height: 350
 
         ColumnLayout {
             anchors.fill: parent

@@ -19,10 +19,7 @@ ColumnLayout {
         Imagine.Button {
             id: btnShowImgHistogram
             text: "Image Histogram"
-            topPadding: 5
-            bottomPadding: 5
-            leftPadding: 5
-            rightPadding: 5
+            padding: 5
             enabled: mainController.enable_img_controls()
             onClicked: imgHistogramWindow.visible = true
         }
@@ -36,10 +33,7 @@ ColumnLayout {
         Imagine.Button {
             id: btnShowImgColors
             text: "Image Colors"
-            topPadding: 5
-            bottomPadding: 5
-            leftPadding: 5
-            rightPadding: 5
+            padding: 5
             enabled: mainController.enable_img_controls()
             onClicked: imgColorsWindow.visible = true
         }
