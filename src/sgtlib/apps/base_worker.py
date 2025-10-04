@@ -123,11 +123,11 @@ class BaseWorker:
             # ntwk_p.remove_listener(self._update_progress)
             return False, ["Retrieve Colors Failed", "Error while retrieving image colors!"]
 
-    def task_eliminate_img_colors(self, ntwk_p, img_idx):
+    def task_eliminate_img_colors(self, ntwk_p, img_idx, swap_color):
         """"""
         try:
             # ntwk_p.add_listener(self._update_progress)
-            ntwk_p.eliminate_selected_img_colors(img_pos=img_idx)
+            ntwk_p.eliminate_selected_img_colors(img_pos=img_idx, swap_color=swap_color)
             # ntwk_p.remove_listener(self._update_progress)
             task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully eliminated!", data=[ntwk_p, None])
             return True, task_data

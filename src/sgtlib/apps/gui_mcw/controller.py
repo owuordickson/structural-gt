@@ -858,8 +858,8 @@ class MainController(BaseController):
             self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Unable to retrieve colors! Try again."))
             self._handle_finished(1, False, ["Get Colors Failed", "Unable to retrieve dominant colors!"])
 
-    @Slot(int)
-    def run_eliminate_img_colors(self, img_pos: int):
+    @Slot(int, int)
+    def run_eliminate_img_colors(self, img_pos: int, swap_white: int):
         """Eliminate selected image colors by swapping the values of pixels where they appear."""
         if self._wait_flag:
             self.showAlertSignal.emit("Please Wait", "Another Task Running!")
@@ -876,7 +876,7 @@ class MainController(BaseController):
                     if color.hex_code == val["text"]:
                         color.is_selected = True if val["value"] == 1 else False
 
-            self._submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos), True)
+            self._submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos, swap_white), True)
         except Exception as err:
             self._stop_wait()
             logging.exception(f"Eliminate Colors Error: {err}", extra={'user': 'SGT Logs'})

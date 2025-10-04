@@ -464,14 +464,15 @@ class ImageProcessor(ProgressUpdate):
             logging.exception(f"Undo Error: {err}", extra={'user': 'GT'})
             return
 
-    def eliminate_selected_img_colors(self, img_pos: int):
+    def eliminate_selected_img_colors(self, img_pos: int, swap_color: int):
         """
         Removes user-selected dominant colors from an image by replacing their pixels with
         white or black. This preprocessing step helps refine the binary image and improve
         graph structure extraction.
 
         Args:
-            img_pos (int): Index of the image in the selected batch.
+            img_pos (int): Index of the image in the selected batch,
+            swap_color (int): Choose 1 for white, 0 for black.
 
         Returns:
             None
@@ -487,11 +488,12 @@ class ImageProcessor(ProgressUpdate):
             return
 
         img = img_obj.img_2d.copy()
+        swap_to_white = True if swap_color == 1 else False
         for sel_color in img_obj.dominant_colors:
             if sel_color.is_selected:
                 hex_code = sel_color.hex_code
                 pixels = sel_color.pixel_positions
-                img = BaseImage.eliminate_img_colors(image=img, hex_color=hex_code, pixel_pos=pixels)
+                img = BaseImage.eliminate_img_colors(image=img, hex_color=hex_code, pixel_pos=pixels, is_white=swap_to_white)
 
         img_obj.img_2d = img.copy()
         self.update_status(ProgressData(percent=100, sender="GT", message="Color elimination complete..."))

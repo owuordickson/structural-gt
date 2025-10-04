@@ -193,6 +193,13 @@ Window {
                         anchors.fill: parent
                         spacing: 5
 
+                        Label {
+                            text: "Dominant colors in the image:"
+                            color: "#606060"
+                            wrapMode: Text.Wrap
+                            font.pixelSize: 10
+                        }
+
                         ListView {
                             id: colorList
                             Layout.fillWidth: true
@@ -234,6 +241,70 @@ Window {
                             }
                         }
 
+                        Label {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Swap to:"
+                            color: "#606060"
+                            wrapMode: Text.Wrap
+                            font.pixelSize: 10
+                        }
+
+                        Row {
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.bottomMargin: 15
+                            spacing: 4
+
+                            ButtonGroup {
+                                id: btnGrpSwap
+                                checkedButton: rdoBlack
+                                exclusive: true
+                            }
+
+                            RowLayout {
+                                height: 28
+                                spacing: 2
+
+                                RadioButton {
+                                    id: rdoBlack
+                                    Layout.alignment: Qt.AlignVCenter
+                                    ButtonGroup.group: btnGrpSwap
+                                    onClicked: btnGrpSwap.checkedButton = this
+                                }
+
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    width: 25
+                                    height: 25
+                                    radius: 2
+                                    color: "#000000"
+                                    border.width: 1
+                                    border.color: "#d0d0d0"
+                                }
+                            }
+
+                            RowLayout {
+                                height: 28
+                                spacing: 2
+
+                                RadioButton {
+                                    id: rdoWhite
+                                    Layout.alignment: Qt.AlignVCenter
+                                    ButtonGroup.group: btnGrpSwap
+                                    onClicked: btnGrpSwap.checkedButton = this
+                                }
+
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    width: 25
+                                    height: 25
+                                    radius: 2
+                                    color: "#ffffff"
+                                    border.width: 1
+                                    border.color: "#d0d0d0"
+                                }
+                            }
+                        }
+
                         Fusion.Button {
                             id: btnEliminateColors
                             text: " Apply "
@@ -249,7 +320,8 @@ Window {
                             enabled: !mainController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
-                                mainController.run_eliminate_img_colors(sel_img);
+                                let swap_color = btnGrpSwap.checkedButton ===  rdoWhite ? 1 : 0;
+                                mainController.run_eliminate_img_colors(sel_img, swap_color);
                             }
                         }
 

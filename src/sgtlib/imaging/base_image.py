@@ -651,7 +651,7 @@ class BaseImage:
         return std_img, scale_factor
 
     @staticmethod
-    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray) -> None | np.ndarray:
+    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray, is_white: bool) -> None | np.ndarray:
         """
         Replace specific pixels in a grayscale/LA/RGB/RGBA image based on a target hex color.
 
@@ -665,6 +665,7 @@ class BaseImage:
             image: Input image as NumPy array (H, W), (H, W, 2), (H, W, 3), or (H, W, 4).
             hex_color: Target color in hex format (e.g. "#808080").
             pixel_pos: Pixel positions to update (N, 2) array of (row, col).
+            is_white: If 1, replace with white (255), otherwise replace it with black (0).
 
         Returns:
             Modified image as NumPy array, or None if the input is invalid.
@@ -678,9 +679,8 @@ class BaseImage:
             # Invalid hex color format
             return None
 
-        r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
-        # intensity = int(round(0.299 * r + 0.587 * g + 0.114 * b))  # luminance
-        swapped_pixel_val = 0 # if intensity < 128 else 255
+        # Either black or white
+        swapped_pixel_val = 255 if is_white else 0
 
         # Make a copy to avoid modifying the original
         new_img = image.copy()
