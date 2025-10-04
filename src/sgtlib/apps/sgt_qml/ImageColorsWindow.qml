@@ -15,6 +15,8 @@ Window {
     visible: false  // Only show when needed
     title: "Image Colors"
 
+    property int valueRole: Qt.UserRole + 4
+
     ColumnLayout {
         anchors.fill: parent
 
@@ -85,7 +87,7 @@ Window {
 
                 RowLayout {
                     spacing: 4
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    Layout.alignment: Qt.AlignHCenter
                     visible: !mainController.wait && !mainController.img_filters_busy
 
                     Material.Label {
@@ -111,7 +113,7 @@ Window {
 
                 RowLayout {
                     spacing: 2
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    Layout.alignment: Qt.AlignHCenter
 
                     Material.Button {
                         id: btnGetColors
@@ -191,8 +193,6 @@ Window {
                         anchors.fill: parent
                         spacing: 5
 
-                        property int valueRole: Qt.UserRole + 4
-
                         ListView {
                             id: colorList
                             Layout.fillWidth: true
@@ -228,7 +228,7 @@ Window {
                                     color: model.text   // assuming model.text holds "#RRGGBB"
                                 }
 
-                                // Optional: show the hex code as tooltip, not as text
+                                // Optional: show the hex code as the tooltip, not as text
                                 ToolTip.visible: checkBox.hovered
                                 ToolTip.text: model.text
                             }
@@ -243,7 +243,7 @@ Window {
                             enabled: true
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
-                                mainController.run_eliminate_img_colors(sel_img)
+                                mainController.run_eliminate_img_colors(sel_img);
                             }
                         }
                     }

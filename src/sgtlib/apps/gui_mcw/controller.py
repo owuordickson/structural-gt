@@ -861,19 +861,16 @@ class MainController(BaseController):
 
             # Update ImageProcessor object
             for val in self.imgColorsModel.list_data:
-                print(f"{val}")
                 for color in colors:
                     if color.hex_code == val["text"]:
                         color.is_selected = True if val["value"] == 1 else False
 
-            print("\n\n")
             self._submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos), True)
         except Exception as err:
             self._stop_wait()
             logging.exception(f"Eliminate Colors Error: {err}", extra={'user': 'SGT Logs'})
             self._handle_progress_update(ProgressData(type="error", sender="GT", message=f"Unable to eliminate colors! Try again."))
             self._handle_finished(1, False, ["Eliminate Colors Failed", "Unable to eliminate colors!"])
-
 
     @Slot()
     def run_extract_graph(self):

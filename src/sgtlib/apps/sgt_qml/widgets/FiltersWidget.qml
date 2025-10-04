@@ -5,18 +5,16 @@ import QtQuick.Controls.Imagine as Imagine
 
 ColumnLayout {
     id: imgFilterButtons
-    Layout.leftMargin: 10
-    //Layout.preferredHeight: 120
+    //Layout.preferredHeight: 32
     Layout.preferredWidth: parent.width
-    Layout.topMargin: 15
+    Layout.topMargin: 30
     Layout.bottomMargin: 5
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
 
 
     RowLayout {
-        anchors.centerIn: parent
-        anchors.verticalCenter: parent.verticalCenter
+        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
         Imagine.Button {
             id: btnShowImgHistogram

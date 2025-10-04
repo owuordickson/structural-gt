@@ -394,111 +394,6 @@ class BaseImage:
         self._configs["otsu"]["value"] = otsu_res
         return img_bin
 
-    def get_unique_colors(self, top_k: int = 10, step: int = 32) -> None | list[dict]:
-        """
-        Identify the top-k unique colors (or grayscale intensities) in an image and return them as hex codes with their
-        pixel counts and positions. Supports RGB, RGBA, Grayscale, and Grayscale+Alpha.
-
-        Handles RGB, RGBA, Grayscale, and Grayscale+Alpha images.
-
-        Args:
-            top_k: Number of most frequent colors/intensities to return
-            step: Quantization step (higher → more grouping, less precision).
-
-        Returns:
-            List of dictionaries describing the top-k colors
-        """
-
-        def quantize_color(color: tuple[int, ...]) -> tuple[int, ...]:
-            """Reduce color precision to group close shades together."""
-            return tuple(((c // step) * step) for c in color)
-
-        img_rgb = self._img_raw.copy()
-        if img_rgb is None:
-            return None
-
-        results = []
-
-        # --- Case 1: RGB ---
-        if img_rgb.ndim == 3 and img_rgb.shape[2] == 3:
-            pixels = img_rgb.reshape(-1, 3)
-            quantized = [quantize_color(tuple(p)) for p in pixels]
-            counts = Counter(quantized)
-            top_colors = counts.most_common(top_k)
-
-            for (r, g, b), count in top_colors:
-                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)
-                mask = np.all(img_rgb == (r, g, b), axis=-1)
-                positions = np.argwhere(mask)
-                results.append({
-                    "rgb": (r, g, b),
-                    "hex": hex_val,
-                    "count": count,
-                    "positions": positions
-                })
-
-        # --- Case 2: RGBA ---
-        elif img_rgb.ndim == 3 and img_rgb.shape[2] == 4:
-            pixels = img_rgb.reshape(-1, 4)
-            quantized = [quantize_color(tuple(p)) for p in pixels]
-            counts = Counter(quantized)
-            top_colors = counts.most_common(top_k)
-
-            for (r, g, b, a), count in top_colors:
-                hex_val = "#{:02X}{:02X}{:02X}".format(r, g, b)  # ignore alpha in HEX
-                mask = np.all(img_rgb == (r, g, b, a), axis=-1)
-                positions = np.argwhere(mask)
-                results.append({
-                    "rgba": (r, g, b, a),
-                    "hex": hex_val,
-                    "alpha": a,
-                    "count": count,
-                    "positions": positions
-                })
-
-        # --- Case 3: Grayscale ---
-        elif img_rgb.ndim == 2:
-            pixels = img_rgb.flatten()
-            #quantized = [quantize_color(tuple(p)) for p in pixels]
-            #counts = Counter(quantized)
-            counts = Counter(pixels)
-            top_colors = counts.most_common(top_k)
-
-            for intensity, count in top_colors:
-                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                positions = np.argwhere(img_rgb == intensity)
-                results.append({
-                    "intensity": int(intensity),
-                    "hex": hex_val,
-                    "count": count,
-                    "positions": positions
-                })
-
-        # --- Case 4: Grayscale + Alpha (LA) ---
-        elif img_rgb.ndim == 3 and img_rgb.shape[2] == 2:
-            pixels = img_rgb.reshape(-1, 2)
-            quantized = [quantize_color(tuple(p)) for p in pixels]
-            counts = Counter(quantized)
-            #counts = Counter(map(tuple, pixels))
-            top_colors = counts.most_common(top_k)
-
-            for (intensity, a), count in top_colors:
-                hex_val = "#{:02X}{:02X}{:02X}".format(intensity, intensity, intensity)
-                mask = np.all(img_rgb == (intensity, a), axis=-1)
-                positions = np.argwhere(mask)
-                results.append({
-                    "intensity": int(intensity),
-                    "hex": hex_val,
-                    "alpha": int(a),
-                    "count": count,
-                    "positions": positions
-                })
-
-        else:
-            raise ValueError(f"Unsupported image shape: {img_rgb.shape}")
-
-        return results
-
     def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list["BaseImage.DominantColor"]:
         """
         Cluster image colors into top-k groups using KMeans or MiniBatchKMeans. Use MiniBatchKMeans if the image is
@@ -579,10 +474,10 @@ class BaseImage:
         
         :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
         """
-        
+
         if self._img_2d is None:
             return None, None
-        
+
         if self._img_bin is None:
             return None, None
 
@@ -758,23 +653,23 @@ class BaseImage:
     @staticmethod
     def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray) -> None | np.ndarray:
         """
-        Replace specific pixels in a grayscale image based on a target hex color.
+        Replace specific pixels in a grayscale/LA/RGB/RGBA image based on a target hex color.
 
         - Convert the hex color to grayscale intensity (0–255).
         - If intensity < 128 → replace with 0 (black).
         - If intensity >= 128 → replace with 255 (white).
         - Apply the swapped_pixel_val at the given pixel positions.
+          For multichannel images, only the intensity channels are updated (alpha is preserved).
 
         Args:
-            image: Input grayscale image (H, W) as a NumPy array of dtype uint8.
+            image: Input image as NumPy array (H, W), (H, W, 2), (H, W, 3), or (H, W, 4).
             hex_color: Target color in hex format (e.g. "#808080").
             pixel_pos: Pixel positions to update (N, 2) array of (row, col).
 
         Returns:
-            Modified grayscale image as NumPy array.
+            Modified image as NumPy array, or None if the input is invalid.
         """
-        if image.ndim != 2:
-            # Input image must be a 2D grayscale array.
+        if image is None:
             return None
 
         # Convert hex color → grayscale intensity
@@ -784,18 +679,36 @@ class BaseImage:
             return None
 
         r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
-        intensity = int(round(0.299 * r + 0.587 * g + 0.114 * b))  # luminance formula
-
-        # Decide swapped_pixel_val value
-        swapped_pixel_val = 0 if intensity < 128 else 255
+        # intensity = int(round(0.299 * r + 0.587 * g + 0.114 * b))  # luminance
+        swapped_pixel_val = 0 # if intensity < 128 else 255
 
         # Make a copy to avoid modifying the original
         new_img = image.copy()
+        rows, cols = pixel_pos[:, 0], pixel_pos[:, 1]
+
+        # Handle based on the number of channels
+        if len(new_img.shape) == 2:
+            # Grayscale (H, W)
+            new_img[rows, cols] = swapped_pixel_val
+        elif len(new_img.shape) == 3:
+            h, w, c = new_img.shape
+            if c == 2:
+                # Grayscale + Alpha → update only channel 0
+                new_img[rows, cols, 0] = swapped_pixel_val
+            elif c == 3:
+                # RGB → set all 3 channels
+                new_img[rows, cols] = (swapped_pixel_val, swapped_pixel_val, swapped_pixel_val)
+            elif c == 4:
+                # RGBA → update only RGB, preserve Alpha
+                new_img[rows, cols, :3] = (swapped_pixel_val, swapped_pixel_val, swapped_pixel_val)
+            else:
+                raise ValueError(f"Unsupported number of channels: {c}")
+        else:
+            raise ValueError("Unsupported image format")
 
         # Apply swapped_pixel_val at positions
         # for row, col in pixel_pos:
         #    new_img[row, col] = swapped_pixel_val
         # Apply swapped_pixel_val in one NumPy call
-        rows, cols = pixel_pos[:, 0], pixel_pos[:, 1]
-        new_img[rows, cols] = swapped_pixel_val
+        # new_img[rows, cols] = swapped_pixel_val
         return new_img
