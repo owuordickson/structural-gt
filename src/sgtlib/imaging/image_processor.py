@@ -1141,7 +1141,7 @@ class ImageProcessor(ProgressUpdate):
 
             # Convert back to numpy arrays
             images = images_small if len(images_small) > 0 else images
-            #images = np.array([images[0]])  # REMOVE TO ALLOW 3D
+            images = np.array([images[0]])  # REMOVE TO ALLOW 3D
             views  = [
                 {"text": "Original Image", "dataValue": "original", "value": 1, "visible": 1 },
                 {"text": "Binary Image", "dataValue": "binary", "value": 0, "visible": 1 },
@@ -1162,7 +1162,7 @@ class ImageProcessor(ProgressUpdate):
                 view_options=views,
             )
             img_info_list.append(img_batch)
-            #break  # REMOVE TO ALLOW 3D
+            break  # REMOVE TO ALLOW 3D
         return img_info_list
 
     @classmethod
