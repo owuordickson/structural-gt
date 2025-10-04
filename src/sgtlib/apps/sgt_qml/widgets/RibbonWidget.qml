@@ -234,7 +234,7 @@ Rectangle {
                 }
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
-                onClicked: mainController.undo_cropping(true)
+                onClicked: mainController.undo_applied_changes(true, "cropping", -1)
                 visible: false
             }
         }

@@ -446,6 +446,24 @@ class ImageProcessor(ProgressUpdate):
             img_obj.get_pixel_width()
         self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
+    def undo_img_changes(self, img_pos: int = -1):
+        """
+        A function that restores the image to its original size and colors.
+        """
+        try:
+            sel_batch = self.selected_batch
+            if img_pos >= 0:
+                sel_batch.images[img_pos].init_image()
+                self.update_image_props(sel_batch)
+                return
+
+            if len(sel_batch.selected_images_idx) > 0:
+                [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
+            self.update_image_props(sel_batch)
+        except Exception as err:
+            logging.exception(f"Undo Error: {err}", extra={'user': 'GT'})
+            return
+
     def eliminate_selected_img_colors(self, img_pos: int):
         """
         Removes user-selected dominant colors from an image by replacing their pixels with
@@ -562,15 +580,6 @@ class ImageProcessor(ProgressUpdate):
              sel_batch.selected_images_idx]
         self.update_image_props(sel_batch)
         self.selected_batch_view = 'processed'
-
-    def undo_cropping(self):
-        """
-        A function that restores the image to its original size.
-        """
-        sel_batch = self.selected_batch
-        if len(sel_batch.selected_images_idx) > 0:
-            [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
-        self.update_image_props(sel_batch)
 
     def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> bool:
         """

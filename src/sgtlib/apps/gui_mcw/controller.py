@@ -752,6 +752,17 @@ class MainController(BaseController):
                 sgt_obj.ntwk_p.selected_batch_view = view
             self.changeImageSignal.emit()
 
+    @Slot(bool, str, int)
+    def undo_applied_changes(self, undo: bool = True, change_type: str = "cropping", img_idx: int = -1):
+        if undo:
+            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj.ntwk_p.undo_img_changes(img_pos=img_idx)
+
+            # Emit signal to update UI with new image
+            self.changeImageSignal.emit()
+            if change_type == "cropping":
+                self.showUnCroppingToolSignal.emit(False)
+
     @Slot()
     def compute_img_histogram(self):
         """Calculate the histogram of the image."""
@@ -1062,16 +1073,6 @@ class MainController(BaseController):
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
-
-    @Slot(bool)
-    def undo_cropping(self, undo: bool = True):
-        if undo:
-            sgt_obj = self.get_selected_sgt_obj()
-            sgt_obj.ntwk_p.undo_cropping()
-
-            # Emit signal to update UI with new image
-            self.changeImageSignal.emit()
-            self.showUnCroppingToolSignal.emit(False)
 
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
