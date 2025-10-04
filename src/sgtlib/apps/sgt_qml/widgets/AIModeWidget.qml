@@ -13,7 +13,6 @@ Rectangle {
     Layout.margins: 5   // shorthand for top/left/right/bottom
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
-
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true

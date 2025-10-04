@@ -167,7 +167,6 @@ Window {
             RowLayout {
                 spacing: 10
                 anchors.centerIn: parent
-                visible: !mainController.img_filters_busy
 
                 Rectangle {
                     width: 512
@@ -237,17 +236,17 @@ Window {
 
                         Fusion.Button {
                             id: btnEliminateColors
-                            text: " Apply"
+                            text: " Apply "
                             Layout.alignment: Qt.AlignHCenter
-                            leftPadding: 10
-                            rightPadding: 10
+                            leftPadding: 15
+                            rightPadding: 15
                             icon.source: "assets/icons/approve_icon.png"
                             icon.width: 21
                             icon.height: 21
                             icon.color: "transparent"   // important for PNGs
                             //ToolTip.text: "Eliminate the selected colors."
                             //ToolTip.visible: btnUndoEliminate.hovered
-                            enabled: true
+                            enabled: !mainController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
                                 mainController.run_eliminate_img_colors(sel_img);
@@ -256,17 +255,17 @@ Window {
 
                         Fusion.Button {
                             id: btnUndoEliminate
-                            text: " Undo"
+                            text: " Undo "
                             Layout.alignment: Qt.AlignHCenter
-                            leftPadding: 10
-                            rightPadding: 10
+                            leftPadding: 15
+                            rightPadding: 15
                             icon.source: "assets/icons/undo_icon.png"
                             icon.width: 21
                             icon.height: 21
                             icon.color: "transparent"   // important for PNGs
                             //ToolTip.text: "Undo the last color elimination."
                             //ToolTip.visible: btnUndoEliminate.hovered
-                            enabled: true
+                            enabled: !mainController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
                                 mainController.undo_applied_changes(true, "colors", sel_img)
