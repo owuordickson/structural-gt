@@ -156,18 +156,23 @@ class MainController(BaseController):
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
-    def reset_qml_models(self):
+    def reset_qml_models(self, only_colors: bool = False):
         """
         Reset some of the CheckBox models when different image is loaded.
+
+        Args:
+            only_colors: If True, reset only the imgColorsModel model. If False, reset all models.
 
         Returns:
             None
         """
         print("Resetting QML models...")
         # Erase existing data in QML adapter-models
-        self.img3dGridModel.reset_data([], set([]))
-        self.imgHistogramModel.reset_data([], set([]))
         self.imgColorsModel.reset_data([])
+        if only_colors:
+            return
+        self.imgHistogramModel.reset_data([], set([]))
+        self.img3dGridModel.reset_data([], set([]))
 
     def delete_sgt_object(self, index=None):
         """
@@ -371,6 +376,7 @@ class MainController(BaseController):
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.selected_batch
                     self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
+                    self.imageChangedSignal.emit()  # trigger QML UI update
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
 
@@ -637,17 +643,29 @@ class MainController(BaseController):
 
         try:
             sgt_obj = self.get_selected_sgt_obj()
+            if sgt_obj is None:
+                return
             sgt_obj.ntwk_p.select_image_batch(batch_index)
+
             # Load the SGT Object data of the selected image
             self.synchronize_img_models(sgt_obj)
             self.synchronize_graph_models(self.get_selected_sgt_obj())
-            # Load the selected image into the view
-            # self.reset_qml_models()
+            #self.reset_qml_models()
+
+            # Trigger QML image update
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
                                                            f"{batch_index}. Restart app and try again.")
+
+    @Slot(int, str, result=str)
+    def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
+        b64_img = super().get_selected_image(img_pos, view)
+        # Trigger QML image update
+        #self.reset_qml_models(only_colors=True)
+        #self.imageChangedSignal.emit()
+        return b64_img
 
     @Slot(int, bool)
     def toggle_selected_batch_image(self, img_index, selected):
@@ -710,7 +728,7 @@ class MainController(BaseController):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
-            # self.reset_qml_models()
+            self.reset_qml_models()
             self.synchronize_img_models(self.get_selected_sgt_obj())
             self.synchronize_graph_models(self.get_selected_sgt_obj())
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)

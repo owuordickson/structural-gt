@@ -76,46 +76,6 @@ class BaseController(QObject):
         #    self._stop_ai_search()
         self._aiModeChanged.emit()
 
-    @Slot(int, str, result=str)
-    def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
-        """
-        Finds image at a specific frame position and specified view (original or binary or processed or graph);
-        then, returns it as a 'base64' string.
-
-        Args:
-            img_pos: Position index of the image-object in the selected batch.
-            view: The current visualization type of the image (Original, Processed, Binary).
-
-        Returns:
-            base64 string of the image-object.
-        """
-        try:
-            ntwk_p = self.get_selected_sgt_obj().ntwk_p
-            if view == "original":
-                images = ntwk_p.image_3d
-            elif view == "binary":
-                images = ntwk_p.binary_image_3d
-            elif view == "processed":
-                images = ntwk_p.processed_image_3d
-            elif view == "graph":
-                images = [ntwk_p.graph_obj.img_ntwk]
-            else:
-                raise ValueError("View must be 'original', 'binary', 'processed', 'graph' or 'original'")
-
-            if view == "graph":
-                img_cv = images[0]
-            else:
-                img_cv = images[img_pos]
-
-            if img_cv is None:
-                raise ValueError(f"No image/graph found at position {img_pos}")
-
-            b64_img = img_to_base64(img_cv)
-            return b64_img
-        except Exception as e:
-            logging.error(f"Exception while getting selected image: {e}")
-            return ""
-
     def _start_wait(self, msg: str = "please wait..."):
         """Activate the wait flag and send a wait signal."""
         self._wait_flag = True
@@ -175,6 +135,45 @@ class BaseController(QObject):
                 s_obj.ntwk_p.graph_obj.configs = shared_gte_configs
                 for img_obj in s_obj.ntwk_p.selected_images:
                     img_obj.configs = shared_img_configs
+
+    def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
+        """
+        Finds image at a specific frame position and specified view (original or binary or processed or graph);
+        then, returns it as a 'base64' string.
+
+        Args:
+            img_pos: Position index of the image-object in the selected batch.
+            view: The current visualization type of the image (Original, Processed, Binary).
+
+        Returns:
+            base64 string of the image-object.
+        """
+        try:
+            ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            if view == "original":
+                images = ntwk_p.image_3d
+            elif view == "binary":
+                images = ntwk_p.binary_image_3d
+            elif view == "processed":
+                images = ntwk_p.processed_image_3d
+            elif view == "graph":
+                images = [ntwk_p.graph_obj.img_ntwk]
+            else:
+                raise ValueError("View must be 'original', 'binary', 'processed', 'graph' or 'original'")
+
+            if view == "graph":
+                img_cv = images[0]
+            else:
+                img_cv = images[img_pos]
+
+            if img_cv is None:
+                raise ValueError(f"No image/graph found at position {img_pos}")
+
+            b64_img = img_to_base64(img_cv)
+            return b64_img
+        except Exception as e:
+            logging.error(f"Exception while getting selected image: {e}")
+            return ""
 
     def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
         """Retrieve the SGT object at a specified index."""
