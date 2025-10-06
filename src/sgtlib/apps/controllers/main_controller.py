@@ -3,30 +3,14 @@
 Pyside6 (GUI components) main controller class.
 """
 
-# SPDX-License-Identifier: GNU GPL v3
-import os
-import pickle
 import logging
-import requests
-import numpy as np
-from packaging import version
-from typing import TYPE_CHECKING, Optional
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Slot
 
-if TYPE_CHECKING:
-    # False at run time, only for a type-checker
-    from _typeshed import SupportsWrite
-
-
+from .base_controller_v2 import BaseController
 from ..workers.persistent_worker import PersistentProcessWorker
 from ..workers.base_workers import BaseWorker
-from .base_contoller import BaseController
-
-from ... import __version__, __title__
-from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult, ProgressData
-from ...imaging.image_processor import ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
-from ...compute.graph_analyzer import GraphAnalyzer  # , COMPUTING_DEVICE
+from ...utils.sgt_utils import TaskResult, ProgressData
 
 
 class MainController(BaseController):
@@ -240,6 +224,22 @@ class MainController(BaseController):
         else:
             return
 
+    def delete_sgt_object(self, index=None):
+        """
+        Delete SGT Obj stored at the specified index (if not specified, get the current index).
+        """
+        deleted = super().delete_sgt_object(index=index)
+        if deleted:
+            # Update Data
+            img_list, img_cache = self.get_thumbnail_list()
+            self.imgThumbnailModel.update_data(img_list, img_cache)
+            self.imagePropsModel.reset_data([])
+            self.graphPropsModel.reset_data([])
+            self.graphComputeModel.reset_data([])
+            self._selected_sgt_obj_index = 0
+            self.load_image(reload_thumbnails=True)
+            self.imageChangedSignal.emit()
+
     @Slot(int)
     def stop_current_task(self, worker_id: int = 1, cancel_job: bool = True):
         """Stop a background thread and its associated worker."""
@@ -280,5 +280,3 @@ class MainController(BaseController):
     @Slot(result=bool)
     def is_task_running(self):
         return self._wait_flag
-
-

@@ -457,7 +457,7 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
         return None
 
 
-def img_to_base64(img: MatLike | Image.Image) -> MatLike | None:
+def img_to_base64(img: MatLike | Image.Image) -> str | None:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
     if img is None:
         return None

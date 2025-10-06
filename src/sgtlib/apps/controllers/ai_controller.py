@@ -3,9 +3,12 @@
 Pyside6 controller class for AI search GUI components.
 """
 
-from PySide6.QtCore import Signal, Slot, QObject
+
+import logging
+from PySide6.QtCore import Signal, Slot, QObject, Property
 
 from ..models.checkbox_model import CheckBoxModel
+from ...compute.graph_analyzer import GraphAnalyzer
 
 
 class AIController(QObject):
@@ -16,9 +19,29 @@ class AIController(QObject):
 
     def __init__(self, parent: QObject = None):
         super().__init__(parent)
+        self._ai_mode_active = False
+        self._wait_flag_ai = False
 
         # Create Models
         self.aiSearchModel = CheckBoxModel([])
+
+    @Property(bool, notify=_aiBusyChanged)
+    def ai_busy(self):
+        return self._wait_flag_ai
+
+    @Property(bool, notify=_aiModeChanged)
+    def ai_mode_active(self):
+        return self._ai_mode_active
+
+    def _start_ai_task(self):
+        """Activate the AI running (or busy) flag."""
+        self._wait_flag_ai = True
+        self._aiBusyChanged.emit()
+
+    def _stop_ai_task(self):
+        """Deactivate the AI running (or busy) flag."""
+        self._wait_flag_ai = False
+        self._aiBusyChanged.emit()
 
     def synchronize_ai_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -39,6 +62,14 @@ class AIController(QObject):
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading AI configurations! Close app and try again.")
+
+    @Slot(bool)
+    def toggle_ai_mode(self, activate):
+        """Toggle AI mode."""
+        self._ai_mode_active = activate
+        # if not activate:
+        #    self._stop_ai_search()
+        self._aiModeChanged.emit()
 
     @Slot()
     def run_ai_filter_search(self):

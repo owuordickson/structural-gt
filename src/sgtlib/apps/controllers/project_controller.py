@@ -1,10 +1,25 @@
 # SPDX-License-Identifier: GNU GPL v3
 """
-Pyside6 (GUI components) controller class for managing project.
+Pyside6 (GUI components) controller class for managing the project.
 """
-from PySide6.QtCore import QObject, Signal
+
+import os
+import pickle
+import logging
+import requests
+import numpy as np
+from packaging import version
+from typing import TYPE_CHECKING, Optional
+from PySide6.QtCore import Signal, Slot, QObject
+
+if TYPE_CHECKING:
+    # False at run time, only for a type-checker
+    from _typeshed import SupportsWrite
 
 from ..models.table_model import TableModel
+from ... import __version__, __title__
+from ...utils.sgt_utils import img_to_base64, verify_path
+from ...imaging.image_processor import ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FILE_EXTENSIONS
 
 
 class ProjectController(QObject):
@@ -183,10 +198,6 @@ class ProjectController(QObject):
             return ""
         return f"{sgt_obj.ntwk_p.output_dir}"
 
-    @Slot(result=bool)
-    def get_auto_scale(self):
-        return self._allow_auto_scale
-
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
         """Delete the selected image from the list."""
@@ -196,11 +207,6 @@ class ProjectController(QObject):
     def set_output_dir(self, folder_path):
         self.update_output_dir(folder_path)
         self.imageChangedSignal.emit()
-
-    @Slot(bool)
-    def set_auto_scale(self, auto_scale):
-        """Set the auto-scale parameter for each image."""
-        self._allow_auto_scale = auto_scale
 
     @Slot(int)
     def load_image(self, index=None, reload_thumbnails=False):

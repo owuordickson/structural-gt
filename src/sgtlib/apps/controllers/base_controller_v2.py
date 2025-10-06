@@ -6,7 +6,7 @@ Base controller class for StructuralGT.
 
 import os
 import logging
-from PySide6.QtCore import Property, Signal, Slot, QObject
+from PySide6.QtCore import Signal, QObject
 
 from ...utils.sgt_utils import verify_path, img_to_base64
 from ...imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
@@ -14,12 +14,6 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 class BaseController(QObject):
 
-    _waitChanged = Signal()
-    _waitTextChanged = Signal()
-    _aiBusyChanged = Signal()  # OK
-    _aiModeChanged = Signal()  # OK
-    _imgFiltersBusyChanged = Signal()  # OK
-    _histogramBusyChanged = Signal()   # OK
     showAlertSignal = Signal(str, str)
 
     def __init__(self, config_file: str = "", parent: QObject = None):
@@ -27,16 +21,15 @@ class BaseController(QObject):
         # Initialize flags
         self._wait_flag = False
         self._wait_msg = ""
-        self._wait_flag_ai = False
-        self._wait_flag_hist = False
-        self._wait_flag_filters = False
 
         # Create graph objects
         self._config_file = config_file
         self._sgt_objs = {}
         self._selected_sgt_obj_index = 0
-        self._allow_auto_scale = True
-        self._ai_mode_active = False
+
+    @property
+    def sgt_objs(self):
+        return self._sgt_objs
 
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
@@ -157,8 +150,7 @@ class BaseController(QObject):
             img_extensions = tuple(ext[1:] if ext.startswith('*.') else ext for ext in ALLOWED_IMG_EXTENSIONS)
             if file_ext.endswith(img_extensions):
                 ntwk_p, file_name = ImageProcessor.from_image_file(file_path, out_folder=out_dir,
-                                                              config_file=self._config_file,
-                                                              allow_auto_scale=self._allow_auto_scale)
+                                                              config_file=self._config_file, allow_auto_scale=True)
             else:
                 ntwk_p, file_name = ImageProcessor.from_graph_file(file_path, out_folder=out_dir,)
             sgt_obj = GraphAnalyzer(ntwk_p)
@@ -171,7 +163,7 @@ class BaseController(QObject):
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
 
-    def delete_sgt_object(self, index=None):
+    def delete_sgt_object(self, index=None) -> bool:
         """
         Delete SGT Obj stored at the specified index (if not specified, get the current index).
         """
@@ -181,15 +173,8 @@ class BaseController(QObject):
             key_at_del_index = keys_list[self._selected_sgt_obj_index]
             # Delete the object at index
             del self._sgt_objs[key_at_del_index]
-            # Update Data
-            img_list, img_cache = self.get_thumbnail_list()
-            self.imgThumbnailModel.update_data(img_list, img_cache)
-            self.imagePropsModel.reset_data([])
-            self.graphPropsModel.reset_data([])
-            self.graphComputeModel.reset_data([])
-            self._selected_sgt_obj_index = 0
-            self.load_image(reload_thumbnails=True)
-            self.imageChangedSignal.emit()
+            return True
+        return False
 
     def update_output_dir(self, folder_path: str) -> None:
         """Update the output directory for storing StructuralGT results."""

@@ -2,12 +2,16 @@
 """
 Pyside6 (GUI components) controller class for applying image filters.
 """
-from PySide6.QtCore import QObject, Signal
+
+import logging
+import numpy as np
+from PySide6.QtCore import Signal, Slot, QObject, Property
 
 from ..models.table_model import TableModel
 from ..models.checkbox_model import CheckBoxModel
 from ..models.imagegrid_model import ImageGridModel
-
+from ...utils.sgt_utils import ProgressData
+from ...compute.graph_analyzer import GraphAnalyzer
 
 
 class ImageController(QObject):
@@ -27,6 +31,9 @@ class ImageController(QObject):
         super().__init__(parent)
         self._img_loaded = False
         self._applying_changes = False
+        self._allow_auto_scale = True
+        self._wait_flag_hist = False
+        self._wait_flag_filters = False
 
         # Create Models
         self.imagePropsModel = TableModel([])
@@ -42,6 +49,24 @@ class ImageController(QObject):
         self.saveImgModel = CheckBoxModel([])
         self.img3dGridModel = ImageGridModel([], set([]))
         self.imgHistogramModel = ImageGridModel([], set([]))
+
+    @Property(bool, notify=_imgFiltersBusyChanged)
+    def img_filters_busy(self):
+        return self._wait_flag_filters
+
+    @Property(bool, notify=_histogramBusyChanged)
+    def histogram_busy(self):
+        return self._wait_flag_hist
+
+    def _start_histogram_calculation(self):
+        """Start computing the histogram of the selected image."""
+        self._wait_flag_hist = True
+        self._histogramBusyChanged.emit()
+
+    def _stop_histogram_calculation(self):
+        """Stop computing the histogram of the selected image."""
+        self._wait_flag_hist = False
+        self._histogramBusyChanged.emit()
 
     def synchronize_img_models(self, sgt_obj: GraphAnalyzer):
         """

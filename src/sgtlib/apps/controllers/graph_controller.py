@@ -2,14 +2,20 @@
 """
 Pyside6 (GUI components) controller class for graph extraction and computation.
 """
-from PySide6.QtCore import QObject
+
+import logging
+from PySide6.QtCore import Slot, QObject, Signal
 
 from ..models.tree_model import TreeModel
 from ..models.table_model import TableModel
 from ..models.checkbox_model import CheckBoxModel
+from ...utils.sgt_utils import ProgressData
+from ...compute.graph_analyzer import GraphAnalyzer
 
 
 class GraphController(QObject):
+    _waitChanged = Signal()
+    _waitTextChanged = Signal()
 
     def __init__(self, parent: QObject = None):
         super().__init__(parent)
@@ -21,6 +27,26 @@ class GraphController(QObject):
         self.gteTreeModel = TreeModel([])
         self.gtcListModel = CheckBoxModel([])
         self.exportGraphModel = CheckBoxModel([])
+
+    def _start_wait(self, msg: str = "please wait..."):
+        """Activate the wait flag and send a wait signal."""
+        self._wait_flag = True
+        if msg == "image_filters":
+            self._wait_flag_filters = True
+            self._imgFiltersBusyChanged.emit()
+        else:
+            self._wait_msg = msg
+            self._waitChanged.emit()
+            self._waitTextChanged.emit()
+
+    def _stop_wait(self):
+        """Deactivate the wait flag and send a wait signal."""
+        self._wait_flag = False
+        self._wait_flag_filters = False
+        self._wait_msg = ""
+        self._waitChanged.emit()
+        self._waitTextChanged.emit()
+        self._imgFiltersBusyChanged.emit()
 
     def synchronize_graph_models(self, sgt_obj: GraphAnalyzer):
         """
