@@ -662,7 +662,6 @@ class ImageProcessor(ProgressUpdate):
                 _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
-                logging.exception(f"Error best filter values:", err, extra={'user': 'SGT Logs'})
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
@@ -673,7 +672,6 @@ class ImageProcessor(ProgressUpdate):
                 _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
                 self.abort = True
-                logging.exception(f"Error best brightness/contrast values:", err, extra={'user': 'SGT Logs'})
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
         return filter_space.best_candidate.img_configs
