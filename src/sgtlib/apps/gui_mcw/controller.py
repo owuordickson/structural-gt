@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     # False at run time, only for a type-checker
     from _typeshed import SupportsWrite
 
-from .tree_model import TreeModel
-from .table_model import TableModel
-from .checkbox_model import CheckBoxModel
-from .imagegrid_model import ImageGridModel
-from .persistent_worker import PersistentProcessWorker
+from ..models.tree_model import TreeModel
+from ..models.table_model import TableModel
+from ..models.checkbox_model import CheckBoxModel
+from ..models.imagegrid_model import ImageGridModel
+from ..workers.persistent_worker import PersistentProcessWorker
 from ..base_worker import BaseWorker
 from ..base_contoller import BaseController
 

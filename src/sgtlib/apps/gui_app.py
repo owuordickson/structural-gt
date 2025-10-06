@@ -12,7 +12,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 # from PySide6.QtQuickControls2 import QQuickStyle
 
 from .gui_mcw.controller import MainController
-from .gui_mcw.image_provider import ImageProvider
+from .models.image_provider import ImageProvider
 
 class PySideApp(QObject):
 
