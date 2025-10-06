@@ -18,10 +18,6 @@ class BaseController(QObject):
 
     def __init__(self, config_file: str = "", parent: QObject = None):
         super().__init__(parent)
-        # Initialize flags
-        self._wait_flag = False
-        self._wait_msg = ""
-
         # Create graph objects
         self._config_file = config_file
         self._sgt_objs = {}

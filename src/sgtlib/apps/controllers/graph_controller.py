@@ -14,11 +14,15 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 
 class GraphController(QObject):
+
     _waitChanged = Signal()
     _waitTextChanged = Signal()
 
     def __init__(self, parent: QObject = None):
         super().__init__(parent)
+        # Initialize flags
+        self._wait_flag = False
+        self._wait_msg = ""
 
         # Create Models
         self.graphPropsModel = TableModel([])

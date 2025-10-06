@@ -7,7 +7,7 @@ import logging
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Slot
 
-from .base_controller_v2 import BaseController
+from .base_controller import BaseController
 from ..workers.persistent_worker import PersistentProcessWorker
 from ..workers.base_workers import BaseWorker
 from ...utils.sgt_utils import TaskResult, ProgressData

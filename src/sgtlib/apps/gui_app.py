@@ -16,18 +16,25 @@ from .models.image_provider import ImageProvider
 
 class PySideApp(QObject):
 
-    def __init__(self):
-        super().__init__()
-        # force_backend()
-        self.app = QApplication(sys.argv)
-        self._ui_engine = QQmlApplicationEngine()
-        # Register Controller for Dynamic Updates
-        self._controller = MainController(qml_app=self.app)
-        # Register Image Provider
-        self._image_provider = ImageProvider(self._controller)
-        self._qml_file = 'qml/MainWindow.qml'
+    @staticmethod
+    def _force_backend():
+        # High DPI fixes
+        # QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+        # QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
-        # Set Models in QML Context
+        # Force OpenGL backend for QML rendering (instead of D3D11)
+        os.environ["QSG_RHI_BACKEND"] = "opengl"
+
+        # Ensure Qt finds the right plugins (like when bundled)
+        # Adjust the path if PySide6 is installed elsewhere
+        import PySide6
+        qt_plugins = os.path.join(os.path.dirname(PySide6.__file__), "plugins")
+        os.environ["QT_PLUGIN_PATH"] = qt_plugins
+
+    def _initialize_models(self):
+        """Initialize the models and providers used by the QML engine."""
+        self._ui_engine.addImageProvider("imageProvider", self._image_provider)
+
         self._ui_engine.rootContext().setContextProperty("imgThumbnailModel", self._controller.imgThumbnailModel)
         self._ui_engine.rootContext().setContextProperty("imagePropsModel", self._controller.imagePropsModel)
         self._ui_engine.rootContext().setContextProperty("graphPropsModel", self._controller.graphPropsModel)
@@ -49,8 +56,25 @@ class PySideApp(QObject):
         self._ui_engine.rootContext().setContextProperty("saveImgModel", self._controller.saveImgModel)
         self._ui_engine.rootContext().setContextProperty("img3dGridModel", self._controller.img3dGridModel)
         self._ui_engine.rootContext().setContextProperty("imgHistogramModel", self._controller.imgHistogramModel)
+
+    def _initialize_controllers(self):
+        """Initialize the controllers used by the QML engine."""
         self._ui_engine.rootContext().setContextProperty("mainController", self._controller)
-        self._ui_engine.addImageProvider("imageProvider", self._image_provider)
+
+    def __init__(self):
+        super().__init__()
+        # PySideApp._force_backend()
+        self.app = QApplication(sys.argv)
+        self._ui_engine = QQmlApplicationEngine()
+        # Register Controller for Dynamic Updates
+        self._controller = MainController(qml_app=self.app)
+        # Register Image Provider
+        self._image_provider = ImageProvider(self._controller)
+        self._qml_file = 'qml/MainWindow.qml'
+
+        # Set Models in QML Context
+        self._initialize_models()
+        self._initialize_controllers()
 
         # Cleanup when the app is closing
         self.app.aboutToQuit.connect(self._controller.cleanup_workers)
@@ -75,19 +99,3 @@ class PySideApp(QObject):
         """
         gui_app = cls()
         sys.exit(gui_app.app.exec())
-
-
-
-def force_backend():
-    # High DPI fixes
-    # QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-    # QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
-
-    # Force OpenGL backend for QML rendering (instead of D3D11)
-    os.environ["QSG_RHI_BACKEND"] = "opengl"
-
-    # Ensure Qt finds the right plugins (like when bundled)
-    # Adjust the path if PySide6 is installed elsewhere
-    import PySide6
-    qt_plugins = os.path.join(os.path.dirname(PySide6.__file__), "plugins")
-    os.environ["QT_PLUGIN_PATH"] = qt_plugins
