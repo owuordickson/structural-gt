@@ -18,7 +18,7 @@ from ..models.table_model import TableModel
 from ..models.checkbox_model import CheckBoxModel
 from ..models.imagegrid_model import ImageGridModel
 from ..workers.persistent_worker import PersistentProcessWorker
-from ..workers.base_worker import BaseWorker
+from ..workers.base_workers import BaseWorker
 from .base_contoller import BaseController
 
 from ... import __version__, __title__

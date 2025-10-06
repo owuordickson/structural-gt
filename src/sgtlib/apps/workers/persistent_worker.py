@@ -35,7 +35,6 @@ def _worker_loop(job_queue, result_queue):
             print(f"Worker Loop Exception: {e}")
 
 
-
 class ProgressListener(QObject):
     """
     Thread that listens to the multiprocessing.Queue and emits signals into QML UI.

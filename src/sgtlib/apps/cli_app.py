@@ -8,7 +8,7 @@ import sys
 import logging
 from optparse import OptionParser
 
-from .workers.base_worker import BaseWorkerTerm
+from .workers.base_workers import BaseWorkerTerm
 from ..utils.sgt_utils import TaskResult, ProgressData
 from .controllers.base_contoller import BaseController
 from ..utils.config_loader import strict_read_config_file
