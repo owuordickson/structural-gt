@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 # from PySide6.QtQuickControls2 import QQuickStyle
 
-from .gui_mcw.controller import MainController
+from .controllers.controller import MainController
 from .models.image_provider import ImageProvider
 
 class PySideApp(QObject):
