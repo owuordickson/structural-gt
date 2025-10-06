@@ -65,7 +65,10 @@ Window {
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
                     visible: mainController.is_img_3d()
-                    onCurrentIndexChanged: mainController.imageChangedSignal.emit()
+                    onCurrentIndexChanged: {
+                        mainController.reset_colors_model();
+                        mainController.imageChangedSignal.emit();
+                    }
                 }
 
             }
@@ -320,7 +323,7 @@ Window {
                             enabled: !mainController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
-                                let swap_color = btnGrpSwap.checkedButton ===  rdoWhite ? 1 : 0;
+                                let swap_color = btnGrpSwap.checkedButton === rdoWhite ? 1 : 0;
                                 mainController.run_eliminate_img_colors(sel_img, swap_color);
                             }
                         }

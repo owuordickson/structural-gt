@@ -636,6 +636,11 @@ class MainController(BaseController):
         """Set the auto-scale parameter for each image."""
         self._allow_auto_scale = auto_scale
 
+    @Slot()
+    def reset_colors_model(self):
+        """Erase existing data in the colors model."""
+        self.reset_qml_models(only_colors=True)
+
     @Slot(int)
     def select_img_batch(self, batch_index=-1):
         if batch_index < 0:
@@ -650,7 +655,7 @@ class MainController(BaseController):
             # Load the SGT Object data of the selected image
             self.synchronize_img_models(sgt_obj)
             self.synchronize_graph_models(self.get_selected_sgt_obj())
-            #self.reset_qml_models()
+            self.reset_qml_models()
 
             # Trigger QML image update
             self.changeImageSignal.emit()
@@ -662,9 +667,6 @@ class MainController(BaseController):
     @Slot(int, str, result=str)
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
         b64_img = super().get_selected_image(img_pos, view)
-        # Trigger QML image update
-        #self.reset_qml_models(only_colors=True)
-        #self.imageChangedSignal.emit()
         return b64_img
 
     @Slot(int, bool)
