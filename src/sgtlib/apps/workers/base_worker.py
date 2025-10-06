@@ -6,8 +6,8 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 
 import logging
 from PySide6.QtCore import QObject, Signal
-from ..compute.graph_analyzer import GraphAnalyzer
-from ..utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox, ProgressData
+from ...compute.graph_analyzer import GraphAnalyzer
+from ...utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox, ProgressData
 
 
 class BaseWorker:

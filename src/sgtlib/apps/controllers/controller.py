@@ -18,8 +18,8 @@ from ..models.table_model import TableModel
 from ..models.checkbox_model import CheckBoxModel
 from ..models.imagegrid_model import ImageGridModel
 from ..workers.persistent_worker import PersistentProcessWorker
-from ..base_worker import BaseWorker
-from ..base_contoller import BaseController
+from ..workers.base_worker import BaseWorker
+from .base_contoller import BaseController
 
 from ... import __version__, __title__
 from ...utils.sgt_utils import img_to_base64, verify_path, TaskResult, ProgressData

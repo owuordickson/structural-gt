@@ -8,9 +8,9 @@ import sys
 import logging
 from optparse import OptionParser
 
-from .base_worker import BaseWorkerTerm
+from .workers.base_worker import BaseWorkerTerm
 from ..utils.sgt_utils import TaskResult, ProgressData
-from .base_contoller import BaseController
+from .controllers.base_contoller import BaseController
 from ..utils.config_loader import strict_read_config_file
 
 logger = logging.getLogger("SGT App")

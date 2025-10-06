@@ -8,9 +8,9 @@ import os
 import logging
 from PySide6.QtCore import Property, Signal, Slot, QObject
 
-from ..utils.sgt_utils import verify_path, img_to_base64
-from ..imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
-from ..compute.graph_analyzer import GraphAnalyzer
+from ...utils.sgt_utils import verify_path, img_to_base64
+from ...imaging.image_processor import ImageProcessor, ALLOWED_IMG_EXTENSIONS
+from ...compute.graph_analyzer import GraphAnalyzer
 
 class BaseController(QObject):
 
