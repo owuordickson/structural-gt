@@ -38,84 +38,6 @@ class BaseController(QObject):
         self._allow_auto_scale = True
         self._ai_mode_active = False
 
-    # --- Properties ---
-    @property
-    def sgt_objs(self):
-        return self._sgt_objs
-
-    # --- Properties exposed to QML because of "notify" ---
-    @Property(bool, notify=_waitChanged)
-    def wait(self):
-        return self._wait_flag
-
-    @Property(str, notify=_waitTextChanged)
-    def wait_text(self):
-        return self._wait_msg
-
-    @Property(bool, notify=_aiBusyChanged)
-    def ai_busy(self):
-        return self._wait_flag_ai
-
-    @Property(bool, notify=_aiModeChanged)
-    def ai_mode_active(self):
-        return self._ai_mode_active
-
-    @Property(bool, notify=_imgFiltersBusyChanged)
-    def img_filters_busy(self):
-        return self._wait_flag_filters
-
-    @Property(bool, notify=_histogramBusyChanged)
-    def histogram_busy(self):
-        return self._wait_flag_hist
-
-    @Slot(bool)
-    def toggle_ai_mode(self, activate):
-        """Toggle AI mode."""
-        self._ai_mode_active = activate
-        # if not activate:
-        #    self._stop_ai_search()
-        self._aiModeChanged.emit()
-
-    def _start_wait(self, msg: str = "please wait..."):
-        """Activate the wait flag and send a wait signal."""
-        self._wait_flag = True
-        if msg == "image_filters":
-            self._wait_flag_filters = True
-            self._imgFiltersBusyChanged.emit()
-        else:
-            self._wait_msg = msg
-            self._waitChanged.emit()
-            self._waitTextChanged.emit()
-
-    def _stop_wait(self):
-        """Deactivate the wait flag and send a wait signal."""
-        self._wait_flag = False
-        self._wait_flag_filters = False
-        self._wait_msg = ""
-        self._waitChanged.emit()
-        self._waitTextChanged.emit()
-        self._imgFiltersBusyChanged.emit()
-
-    def _start_ai_task(self):
-        """Activate the AI running (or busy) flag."""
-        self._wait_flag_ai = True
-        self._aiBusyChanged.emit()
-
-    def _stop_ai_task(self):
-        """Deactivate the AI running (or busy) flag."""
-        self._wait_flag_ai = False
-        self._aiBusyChanged.emit()
-
-    def _start_histogram_calculation(self):
-        """Start computing the histogram of the selected image."""
-        self._wait_flag_hist = True
-        self._histogramBusyChanged.emit()
-
-    def _stop_histogram_calculation(self):
-        """Stop computing the histogram of the selected image."""
-        self._wait_flag_hist = False
-        self._histogramBusyChanged.emit()
-
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
         # Update Configs
@@ -135,6 +57,18 @@ class BaseController(QObject):
                 s_obj.ntwk_p.graph_obj.configs = shared_gte_configs
                 for img_obj in s_obj.ntwk_p.selected_images:
                     img_obj.configs = shared_img_configs
+
+    def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
+        """Retrieve the SGT object at a specified index."""
+        try:
+            keys_list = list(self._sgt_objs.keys())
+            key_at_index = keys_list[self._selected_sgt_obj_index]
+            sgt_obj = self._sgt_objs[key_at_index]
+            return sgt_obj
+        except IndexError:
+            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
+            # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
+            return None
 
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
         """
@@ -175,17 +109,13 @@ class BaseController(QObject):
             logging.error(f"Exception while getting selected image: {e}")
             return ""
 
-    def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
-        """Retrieve the SGT object at a specified index."""
-        try:
-            keys_list = list(self._sgt_objs.keys())
-            key_at_index = keys_list[self._selected_sgt_obj_index]
-            sgt_obj = self._sgt_objs[key_at_index]
-            return sgt_obj
-        except IndexError:
-            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
-            # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
-            return None
+    def get_selected_images(self):
+        """
+        Get selected images from a specific image batch.
+        """
+        sgt_obj = self.get_selected_sgt_obj()
+        ntwk_p = sgt_obj.ntwk_p
+        return ntwk_p.selected_images
 
     def update_sgt_obj(self, sgt_data: GraphAnalyzer|dict|None = None):
         """Update the SGT object at a specified index."""
@@ -240,6 +170,26 @@ class BaseController(QObject):
             logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("File Error", "Error processing image. Try again.")
             return False
+
+    def delete_sgt_object(self, index=None):
+        """
+        Delete SGT Obj stored at the specified index (if not specified, get the current index).
+        """
+        del_index = index if index is not None else self._selected_sgt_obj_index
+        if 0 <= del_index < len(self._sgt_objs):  # Check if the index exists
+            keys_list = list(self._sgt_objs.keys())
+            key_at_del_index = keys_list[self._selected_sgt_obj_index]
+            # Delete the object at index
+            del self._sgt_objs[key_at_del_index]
+            # Update Data
+            img_list, img_cache = self.get_thumbnail_list()
+            self.imgThumbnailModel.update_data(img_list, img_cache)
+            self.imagePropsModel.reset_data([])
+            self.graphPropsModel.reset_data([])
+            self.graphComputeModel.reset_data([])
+            self._selected_sgt_obj_index = 0
+            self.load_image(reload_thumbnails=True)
+            self.imageChangedSignal.emit()
 
     def update_output_dir(self, folder_path: str) -> None:
         """Update the output directory for storing StructuralGT results."""

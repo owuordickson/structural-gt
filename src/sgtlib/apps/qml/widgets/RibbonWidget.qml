@@ -220,7 +220,7 @@ Rectangle {
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
-                onClicked: mainController.perform_cropping(true)
+                onClicked: mainController.performCroppingSignal.emit(true)
             }
 
             Basic.Button {
@@ -383,11 +383,11 @@ Rectangle {
 
     function enableRectangularSelect() {
         if (btnSelectBorder.enabled) {
-            mainController.enable_rectangular_selection(false)
+            mainController.enableRectangularSelectionSignal.emit(false)
             btnSelectBorder.border.color = "black"
             btnSelectBorder.enabled = false
         } else {
-            mainController.enable_rectangular_selection(true)
+            mainController.enableRectangularSelectionSignal.emit(true)
             btnSelectBorder.border.color = "red"
             btnSelectBorder.enabled = true
         }

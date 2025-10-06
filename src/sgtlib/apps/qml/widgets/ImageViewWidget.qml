@@ -454,9 +454,9 @@ ColumnLayout {
             onReleased: {
                 if (cropArea.width < 5 || cropArea.height < 5) {
                     cropArea.visible = false;  // Hide small selections
-                    mainController.show_cropping_tool(false);
+                    mainController.showCroppingToolSignal.emit(false);
                 } else {
-                    mainController.show_cropping_tool(true);
+                    mainController.showCroppingToolSignal.emit(true);
                 }
             }
         }
