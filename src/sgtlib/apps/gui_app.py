@@ -25,7 +25,7 @@ class PySideApp(QObject):
         self._controller = MainController(qml_app=self.app)
         # Register Image Provider
         self._image_provider = ImageProvider(self._controller)
-        self._qml_file = 'sgt_qml/MainWindow.qml'
+        self._qml_file = 'qml/MainWindow.qml'
 
         # Set Models in QML Context
         self._ui_engine.rootContext().setContextProperty("imgThumbnailModel", self._controller.imgThumbnailModel)

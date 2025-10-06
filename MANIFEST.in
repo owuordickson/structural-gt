@@ -1,6 +1,6 @@
 include src/sgtlib/utils/*.ini
 include src/sgtlib/compute/c_lang/include/*.h
-include src/sgtlib/apps/sgt_qml/*.qml
-include src/sgtlib/apps/sgt_qml/widgets/*.qml
-include src/sgtlib/apps/sgt_qml/components/*.qml
-include src/sgtlib/apps/sgt_qml/assets/icons/*
+include src/sgtlib/apps/qml/*.qml
+include src/sgtlib/apps/qml/widgets/*.qml
+include src/sgtlib/apps/qml/components/*.qml
+include src/sgtlib/apps/qml/assets/icons/*
