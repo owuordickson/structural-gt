@@ -593,6 +593,10 @@ class BaseImage:
         run_info += "\n\n"
 
         run_info += "***Microscopy Parameters***\n"
+        run_info += f"Eliminated Colors: {(c.hex_code+", " if c.is_selected else "" for c in self.dominant_colors)}"
+        run_info += "\n\n"
+
+        run_info += "***Microscopy Parameters***\n"
         run_info += f"Scalebar Value = {opt_img["scale_value_nanometers"]["value"]} nm"
         run_info += f" || Scalebar Pixel Count = {opt_img["scalebar_pixel_count"]["value"]}\n"
         run_info += f"Resistivity = {opt_img["resistivity"]["value"]}" + r"$\Omega$m"
