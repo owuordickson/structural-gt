@@ -195,11 +195,6 @@ class ImageProcessor(ProgressUpdate):
         return self.selected_batch.graph_obj
 
     @property
-    def image_histogram(self) -> MatLike:
-        """Returns the image histogram extracted from the image."""
-        return self.image_obj.img_hist
-
-    @property
     def image_2d(self) -> MatLike:
         """Returns OpenCV 2D version of the image (first slice/frame/image in the batch)."""
         return self.image_obj.img_2d
@@ -223,20 +218,16 @@ class ImageProcessor(ProgressUpdate):
         return bin_images
 
     @property
-    def processed_image_2d(self) -> MatLike:
-        """Returns the modified OpenCV version of the image (first slice/frame/image in the batch)."""
-        return self.image_obj.img_mod
-
-    @property
     def processed_image_3d(self) -> list[MatLike]:
         """Returns the 3D version of the modified image as a list of OpenCV arrays."""
         mod_images = [obj.img_mod for obj in self.image_obj_3d]
         return mod_images
 
     @property
-    def graph_image(self) -> MatLike:
-        """Returns OpenCV version of the extracted graph image (first slice/frame/image in the batch)."""
-        return self.graph_obj.img_ntwk
+    def mutated_image_3d(self) -> list[MatLike]:
+        """Returns the 3D version of the mutated image as a list of OpenCV arrays."""
+        mut_images = [obj.img_mut for obj in self.image_obj_3d]
+        return mut_images
 
     def _load_img_from_file(self, file: list | str):
         """
@@ -495,7 +486,7 @@ class ImageProcessor(ProgressUpdate):
                 pixels = sel_color.pixel_positions
                 img = BaseImage.eliminate_img_colors(image=img, hex_color=hex_code, pixel_pos=pixels, is_white=swap_to_white)
 
-        img_obj.img_2d = img.copy()
+        img_obj.img_mut = img.copy()
         self.update_status(ProgressData(percent=100, sender="GT", message="Color elimination complete..."))
 
     def reset_img_filters(self):

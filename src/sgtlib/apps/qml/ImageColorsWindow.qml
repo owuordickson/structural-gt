@@ -364,7 +364,6 @@ Window {
                 vertColorsLine.visible = mainController.is_img_3d();
                 cbColorsImageSelector.visible = mainController.is_img_3d();
 
-                //retrieveControls.visible = imgColorsModel.rowCount() <= 0;
                 colorsLayout.visible = imgColorsModel.rowCount() > 0;
 
                 if (mainController.image_batches_exist()) {
@@ -373,10 +372,8 @@ Window {
                 }
 
                 let img_idx = cbColorsImageSelector.currentIndex;
-                let base64_img = mainController.get_selected_image(img_idx, "original");
-                if (base64_img !== "") {
-                    imgCurrent.source = "data:image/png;base64," + base64_img;
-                }
+                let base64_img = mainController.get_selected_image(img_idx, "mutated");
+                imgCurrent.source = "data:image/png;base64," + base64_img;
             }
         }
 

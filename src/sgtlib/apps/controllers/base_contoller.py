@@ -156,6 +156,8 @@ class BaseController(QObject):
                 images = ntwk_p.binary_image_3d
             elif view == "processed":
                 images = ntwk_p.processed_image_3d
+            elif view == "mutated":
+                images = ntwk_p.mutated_image_3d
             elif view == "graph":
                 images = [ntwk_p.graph_obj.img_ntwk]
             else:

@@ -58,7 +58,8 @@ class BaseImage:
         self._img_2d: MatLike | None = None
         self._img_bin: MatLike | None = None
         self._img_mod: MatLike | None = None
-        self._img_hist: MatLike | None = None
+        self._img_mut: MatLike | None = None
+        # self._img_hist: MatLike | None = None
         self._has_alpha_channel: bool = False
         self._scale_factor: float = scale_factor
         self._window_segments: list[BaseImage.ScalingKernel] = []
@@ -88,7 +89,8 @@ class BaseImage:
     @img_2d.setter
     def img_2d(self, img_2d: MatLike | None) -> None:
         """Sets the processed image in OpenCV format."""
-        self._img_2d = img_2d
+        self._img_2d = img_2d.copy()
+        self._img_mut = img_2d.copy()
 
     @property
     def img_bin(self) -> MatLike | None:
@@ -111,9 +113,14 @@ class BaseImage:
         self._img_mod = img_mod
 
     @property
-    def img_hist(self) -> MatLike | None:
-        """Returns the histogram of the processed image."""
-        return self._img_hist
+    def img_mut(self) -> MatLike | None:
+        """Returns the mutated image in OpenCV format."""
+        return self._img_mut
+
+    @img_mut.setter
+    def img_mut(self, img_mut: MatLike | None) -> None:
+        """Sets the mutated image in OpenCV format."""
+        self._img_mut = img_mut
 
     @property
     def has_alpha_channel(self) -> bool:
@@ -165,7 +172,7 @@ class BaseImage:
         img_data = self._img_raw.copy()
 
         self._has_alpha_channel, _ = BaseImage.check_alpha_channel(self._img_raw)
-        self._img_2d = img_data
+        self.img_2d = img_data
 
     def get_pixel_width(self) -> None:
         """Compute pixel dimension in nanometers to estimate and update the width of graph edges."""
@@ -206,7 +213,7 @@ class BaseImage:
         scaled_img = cv2.resize(self._img_2d.copy(), (actual_w, actual_h))
 
         # Crop image
-        self._img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
+        self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
 
     def process_img(self, image: MatLike) -> MatLike | None:
         """
@@ -533,16 +540,16 @@ class BaseImage:
         if img is None:
             return fig
 
-        self._img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
-        ax.plot(self._img_hist, label='Image Histogram')
+        img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+        ax.plot(img_hist, label='Image Histogram')
         ax.legend(loc='upper right')
         if self._configs["threshold_type"]["value"] == 0:
             global_val = int(self._configs["global_threshold_value"]["value"])
-            thresh_arr = np.array([[global_val, global_val], [0, max(self._img_hist)]], dtype='object')
+            thresh_arr = np.array([[global_val, global_val], [0, max(img_hist)]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         elif self._configs["threshold_type"]["value"] == 2:
             otsu_val = self._configs["otsu"]["value"]
-            thresh_arr = np.array([[otsu_val, otsu_val], [0, max(self._img_hist)]], dtype='object')
+            thresh_arr = np.array([[otsu_val, otsu_val], [0, max(img_hist)]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         fig.tight_layout()
         return fig

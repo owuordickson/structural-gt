@@ -37,7 +37,7 @@ ntwk_obj.build_graph_network()
 ntwk_obj.remove_listener(print_updates)
 
 # View graph
-net_image = ntwk_obj.graph_image
+net_image = ntwk_obj.graph_obj.img_ntwk
 plt.imshow(net_image)
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Graph Image')

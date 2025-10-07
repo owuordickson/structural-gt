@@ -457,10 +457,22 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
         return None
 
 
-def img_to_base64(img: MatLike | Image.Image) -> str | None:
+def img_to_base64(img: MatLike | Image.Image) -> str:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
+
+    def opencv_to_base64(img_arr: MatLike) -> str:
+        """Convert an OpenCV/Numpy image to a base64 string."""
+        success, encoded_img = cv2.imencode('.png', img_arr)
+        if success:
+            buffer = io.BytesIO(encoded_img.tobytes())
+            buffer.seek(0)
+            base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+            return base64_data
+        else:
+            return ""
+
     if img is None:
-        return None
+        return ""
 
     if type(img) == np.ndarray:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -471,19 +483,7 @@ def img_to_base64(img: MatLike | Image.Image) -> str | None:
         np_img = np.array(img)
         img_norm = safe_uint8_image(np_img)
         return opencv_to_base64(img_norm)
-    return None
-
-
-def opencv_to_base64(img_arr: MatLike) -> str | None:
-    """Convert an OpenCV/Numpy image to a base64 string."""
-    success, encoded_img = cv2.imencode('.png', img_arr)
-    if success:
-        buffer = io.BytesIO(encoded_img.tobytes())
-        buffer.seek(0)
-        base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
-        return base64_data
-    else:
-        return None
+    return ""
 
 
 def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
