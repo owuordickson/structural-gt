@@ -18,8 +18,9 @@ class GraphController(QObject):
     _waitChanged = Signal()
     _waitTextChanged = Signal()
 
-    def __init__(self, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
+        self._ctrl = controller_obj
         # Initialize flags
         self._wait_flag = False
         self._wait_msg = ""
@@ -82,14 +83,14 @@ class GraphController(QObject):
             self.graphComputeModel.reset_data(sgt_obj.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
+            self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
     @Slot(result=bool)
     def display_graph(self):
-        if len(self._sgt_objs) <= 0:
+        if len(self._ctrl.sgt_objs) <= 0:
             return False
 
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
 
@@ -102,7 +103,7 @@ class GraphController(QObject):
 
     @Slot(bool)
     def reload_graph_image(self, only_giant_graph=False):
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         sel_img_batch = sgt_obj.ntwk_p.selected_batch
         sgt_obj.ntwk_p.draw_graph_image(sel_img_batch, show_giant_only=only_giant_graph)
         self.changeImageSignal.emit()
@@ -122,7 +123,7 @@ class GraphController(QObject):
                 p_line.remove_from_scene()
 
             # Create OVITO data pipeline
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             h, w = sgt_obj.ntwk_p.graph_obj.img_ntwk.shape[:2]
             pipeline = import_file(sgt_obj.ntwk_p.graph_obj.gsd_file)
             pipeline.add_to_scene()
@@ -130,31 +131,31 @@ class GraphController(QObject):
             vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(2, 1, -1))
             vp.zoom_all((w, h))  # width, height
 
-            ovito_widget = create_qwidget(vp, parent=self._qml_app.activeWindow())
+            ovito_widget = create_qwidget(vp, parent=self._ctrl.qml_app.activeWindow())
             ovito_widget.setFixedSize(w, h)
             ovito_widget.show()
         except Exception as e:
-            print("Graph Simulation Error:", e)
+            logging.exception(f"Graph Simulation Error: {e}", extra={'user': 'SGT Logs'})
 
     @Slot()
     def export_graph_to_file(self):
         """Export graph data and save as a file."""
         if self._wait_flag:
-            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
         self._handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Exporting Graph Data..."))
         try:
-            if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
+            if self._ctrl.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
             self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Exporting Graph Data..."))
             self._start_wait()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False,
+            self._handle_finished(1, False,
                                            ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
     @Slot()
@@ -162,14 +163,14 @@ class GraphController(QObject):
         """Retrieve settings from the model and send to Python."""
 
         if self._wait_flag:
-            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
             self._start_wait()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
@@ -182,31 +183,31 @@ class GraphController(QObject):
     @Slot(float)
     def rate_graph(self, rating: float):
         """Rate extracted graph on a scale of 1-10"""
-        if self._wait_flag_ai:
-            logging.info("Please wait for AI task to finish.", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "AI task is still running!")
+        if self._wait_flag:
+            logging.info("Please Wait: Another GT task running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
-            self._start_ai_task()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(2, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
+            self._start_wait()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
         except Exception as err:
-            self._stop_ai_task()
+            self._stop_wait()
             logging.info("Rate Graph Error: " + str(err), extra={'user': 'SGT Logs'})
 
     @Slot()
     def run_graph_analyzer(self):
         """Retrieve settings from the model and send to Python."""
         if self._wait_flag:
-            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
             self._start_wait()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(1, "Compute-GT", (sgt_obj,), True)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Compute-GT", (sgt_obj,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
@@ -220,16 +221,16 @@ class GraphController(QObject):
     def run_multi_graph_analyzer(self):
         """"""
         if self._wait_flag:
-            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
             self._start_wait()
             # Update Configs
-            self.replicate_sgt_configs()
+            self._ctrl.replicate_sgt_configs()
             # Start Background Process
-            self._submit_job(1, "Compute-Multi-GT", (self._sgt_objs,), True)
+            self._ctrl.submit_job(1, "Compute-Multi-GT", (self._ctrl.sgt_objs,), True)
         except Exception as err:
             self._stop_wait()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})

@@ -29,8 +29,9 @@ class ProjectController(QObject):
     taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
 
-    def __init__(self, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
+        self._ctrl = controller_obj
         self._project_open = False
 
         # Project data
@@ -51,25 +52,25 @@ class ProjectController(QObject):
         try:
             file_path = self._project_data["file_path"]
             with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrite[bytes]]
-                pickle.dump(self._sgt_objs, project_file)
+                pickle.dump(self._ctrl.sgt_objs, project_file)
             return True
         except Exception as err:
             logging.exception("Project Saving Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Save Error", "Unable to save project data. Close app and try again.")
+            self._ctrl.showAlertSignal.emit("Save Error", "Unable to save project data. Close app and try again.")
             return False
 
     def get_thumbnail_list(self):
         """
         Get names and base64 data of images to be used in Project List thumbnails.
         """
-        keys_list = list(self._sgt_objs.keys())
+        keys_list = list(self._ctrl.sgt_objs.keys())
         if len(keys_list) <= 0:
             return None, None
         item_data = []
         image_cache = {}
         for key in keys_list:
             item_data.append([key])  # Store the key
-            sgt_obj = self._sgt_objs[key]
+            sgt_obj = self._ctrl.sgt_objs[key]
             if sgt_obj.ntwk_p.selected_batch.is_graph_only:
                 empty_cv = np.ones((256, 256), dtype=np.uint8) * 255
                 img_cv = empty_cv if sgt_obj.ntwk_p.graph_obj.img_ntwk is None else sgt_obj.ntwk_p.graph_obj.img_ntwk
@@ -189,11 +190,11 @@ class ProjectController(QObject):
 
     @Slot(result=str)
     def get_img_nav_location(self):
-        return f"{(self._selected_sgt_obj_index + 1)} / {len(self._sgt_objs)}"
+        return f"{(self._ctrl.selected_sgt_obj_index + 1)} / {len(self._ctrl.sgt_objs)}"
 
     @Slot(result=str)
     def get_output_dir(self):
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         if sgt_obj is None:
             return ""
         return f"{sgt_obj.ntwk_p.output_dir}"
@@ -201,21 +202,21 @@ class ProjectController(QObject):
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
         """Delete the selected image from the list."""
-        self.delete_sgt_object(img_index)
+        self._ctrl.delete_sgt_object(img_index)
 
     @Slot(str)
     def set_output_dir(self, folder_path):
-        self.update_output_dir(folder_path)
+        self._ctrl.update_output_dir(folder_path)
         self.imageChangedSignal.emit()
 
     @Slot(int)
     def load_image(self, index=None, reload_thumbnails=False):
         try:
             if index is not None:
-                if index == self._selected_sgt_obj_index:
+                if index == self._ctrl.selected_sgt_obj_index:
                     return
                 else:
-                    self._selected_sgt_obj_index = index
+                    self._ctrl.selected_sgt_obj_index = index
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
@@ -223,25 +224,27 @@ class ProjectController(QObject):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             self.reset_qml_models()
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
-            self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_ai_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
+            self.imgThumbnailModel.set_selected(self._ctrl.selected_sgt_obj_index)
             # Load the selected image into the view
             self.changeImageSignal.emit()
             # Run AI search (if enabled)
             self.run_ai_filter_search()
         except Exception as err:
-            self.delete_sgt_object()
-            self._selected_sgt_obj_index = 0
+            self._ctrl.delete_sgt_object()
+            self._ctrl.selected_sgt_obj_index = 0
             logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
+            self._ctrl.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
 
     @Slot(result=bool)
     def load_prev_image(self):
         """Load the previous image in the list into view."""
-        if self._selected_sgt_obj_index > 0:
-            prev_img_idx = self._selected_sgt_obj_index - 1
+        if self._ctrl.selected_sgt_obj_index > 0:
+            prev_img_idx = self._ctrl.selected_sgt_obj_index - 1
             self.load_image(index=prev_img_idx)
             return True
         return False
@@ -249,8 +252,8 @@ class ProjectController(QObject):
     @Slot(result=bool)
     def load_next_image(self):
         """Load the next image in the list into view."""
-        if self._selected_sgt_obj_index < (len(self._sgt_objs) - 1):
-            next_img_idx = self._selected_sgt_obj_index + 1
+        if self._ctrl.selected_sgt_obj_index < (len(self._ctrl.sgt_objs) - 1):
+            next_img_idx = self._ctrl.selected_sgt_obj_index + 1
             self.load_image(index=next_img_idx)
             return True
         return False
@@ -260,7 +263,7 @@ class ProjectController(QObject):
         """"""
         if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
         self._start_wait()
@@ -270,14 +273,14 @@ class ProjectController(QObject):
 
     @Slot(result=bool)
     def enable_prev_nav_btn(self):
-        if (self._selected_sgt_obj_index == 0) or self.is_task_running():
+        if (self._ctrl.selected_sgt_obj_index == 0) or self._ctrl.is_task_running():
             return False
         else:
             return True
 
     @Slot(result=bool)
     def enable_next_nav_btn(self):
-        if (self._selected_sgt_obj_index == (len(self._sgt_objs) - 1)) or self.is_task_running():
+        if (self._ctrl.selected_sgt_obj_index == (len(self._ctrl.sgt_objs) - 1)) or self._ctrl.is_task_running():
             return False
         else:
             return True
@@ -285,20 +288,24 @@ class ProjectController(QObject):
     @Slot(str, result=bool)
     def upload_graph_file(self, file_path):
         """Verify and validate the file path, use it to create a new SGT Object and load it into the view."""
-        is_successful = self.add_graph(file_path)
+        is_successful = self._ctrl.add_graph(file_path)
         if is_successful:
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_ai_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.load_image(reload_thumbnails=True)
         return is_successful
 
     @Slot(str, result=bool)
     def upload_single_image(self, img_path):
         """Verify and validate the image path, use it to create an SGT object and load it in view."""
-        is_successful = self.add_single_image(img_path)
+        is_successful = self._ctrl.add_single_image(img_path)
         if is_successful:
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_ai_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.load_image(reload_thumbnails=True)
         return is_successful
 
@@ -307,15 +314,17 @@ class ProjectController(QObject):
         """
         Verify and validate multiple image paths, use each to create an SGT object, then load the last one in view.
         """
-        is_successful = self.add_multiple_images(img_dir_path)
+        is_successful = self._ctrl.add_multiple_images(img_dir_path)
         if is_successful:
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_ai_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.load_image(reload_thumbnails=True)
         return is_successful
 
     @Slot(str, str, result=bool)
-    def create_sgt_project(self, proj_name, dir_path):
+    def create_sgt_project(self, proj_name, dir_path) -> bool:
         """Creates a '.sgtproj' inside the selected directory"""
 
         self._project_open = False
@@ -324,7 +333,7 @@ class ProjectController(QObject):
             dir_path = result
         else:
             logging.info(result, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("File/Directory Error", result)
+            self._ctrl.showAlertSignal.emit("File/Directory Error", result)
             return False
 
         proj_name += '.sgtproj'
@@ -333,7 +342,7 @@ class ProjectController(QObject):
         try:
             if os.path.exists(proj_path):
                 logging.info(f"Project '{proj_name}' already exists.", extra={'user': 'SGT Logs'})
-                self.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
+                self._ctrl.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
                 return False
 
             # Open the file in the 'write' mode ('w').
@@ -351,7 +360,7 @@ class ProjectController(QObject):
         except Exception as err:
             # self._project_open = False
             logging.exception("Create Project Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Create Project Error",
+            self._ctrl.showAlertSignal.emit("Create Project Error",
                                       "Failed to create SGT project. Close the app and try again.")
             return False
 
@@ -360,7 +369,7 @@ class ProjectController(QObject):
         """Opens and loads the SGT project from the '.sgtproj' file"""
         if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
         try:
@@ -372,19 +381,19 @@ class ProjectController(QObject):
                 sgt_path = result
             else:
                 logging.info(result, extra={'user': 'SGT Logs'})
-                self.showAlertSignal.emit("File/Directory Error", result)
+                self._ctrl.showAlertSignal.emit("File/Directory Error", result)
                 self._stop_wait()
                 return False
             img_dir, proj_name = os.path.split(str(sgt_path))
 
             # Read and load project data and SGT objects
             with open(str(sgt_path), 'rb') as sgt_file:
-                self._sgt_objs = pickle.load(sgt_file)
+                self._ctrl.sgt_objs = pickle.load(sgt_file)
 
-            if self._sgt_objs:
-                key_list = list(self._sgt_objs.keys())
+            if self._ctrl.sgt_objs:
+                key_list = list(self._ctrl.sgt_objs.keys())
                 for key in key_list:
-                    self._sgt_objs[key].ntwk_p.output_dir = img_dir
+                    self._ctrl.sgt_objs[key].ntwk_p.output_dir = img_dir
 
             # Update and notify QML
             self._project_data["name"] = proj_name
@@ -400,7 +409,7 @@ class ProjectController(QObject):
         except Exception as err:
             self._stop_wait()
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
+            self._ctrl.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
                                                             "issue persists, the file may be corrupted or incompatible. "
                                                             "Consider restoring from a backup or contacting support for "
                                                             "assistance.")

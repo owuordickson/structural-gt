@@ -25,12 +25,9 @@ class MainController(BaseController):
         self._ai_worker = PersistentProcessWorker(worker_id=2)
         self._hist_worker = PersistentProcessWorker(worker_id=3)
 
-    def cleanup_workers(self):
-        """Stop all persistent workers before app exit."""
-        self.showAlertSignal.emit("Important Alert", "Please wait as we safely close the app...")
-        for worker in [self._gt_worker, self._ai_worker, self._hist_worker]:
-            if worker:
-                worker.stop()
+    @property
+    def qml_app(self):
+        return self._qml_app
 
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
@@ -168,7 +165,7 @@ class MainController(BaseController):
             if len(self._sgt_objs.items()) <= 10:
                 self.save_project_data()
 
-    def _submit_job(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
+    def submit_job(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
         """Start a background thread and its associated worker."""
 
         def _sync_signals(bg_worker: PersistentProcessWorker):
@@ -239,6 +236,13 @@ class MainController(BaseController):
             self._selected_sgt_obj_index = 0
             self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()
+
+    def cleanup_workers(self):
+        """Stop all persistent workers before app exit."""
+        self.showAlertSignal.emit("Important Alert", "Please wait as we safely close the app...")
+        for worker in [self._gt_worker, self._ai_worker, self._hist_worker]:
+            if worker:
+                worker.stop()
 
     @Slot(int)
     def stop_current_task(self, worker_id: int = 1, cancel_job: bool = True):

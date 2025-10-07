@@ -27,8 +27,9 @@ class ImageController(QObject):
     _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
 
-    def __init__(self, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
+        self._ctrl = controller_obj
         self._img_loaded = False
         self._applying_changes = False
         self._allow_auto_scale = True
@@ -87,7 +88,6 @@ class ImageController(QObject):
             img_filters = [v for v in options_img.values() if v["type"] == "image-filter"]
             img_properties = [v for v in options_img.values() if v["type"] == "image-property"]
             file_options = [v for v in options_img.values() if v["type"] == "file-options"]
-            ai_search_params = [v for v in options_ai.values() if v["type"] == "search-params"]
 
             batch_list = [{"id": f"batch_{i}", "text": f" Batch {i + 1}", "value": i}
                           for i in range(len(sgt_obj.ntwk_p.image_batches))]
@@ -106,7 +106,7 @@ class ImageController(QObject):
             self.saveImgModel.reset_data(file_options)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
+            self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
     def reset_img_models(self, only_colors: bool = False):
         """
@@ -132,7 +132,7 @@ class ImageController(QObject):
 
     @Slot(result=bool)
     def is_img_3d(self):
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
         sel_img_batch = sgt_obj.ntwk_p.selected_batch
@@ -142,10 +142,10 @@ class ImageController(QObject):
     @Slot(result=bool)
     def enable_img_controls(self):
         """Enable image controls."""
-        if len(self._sgt_objs) <= 0:
+        if len(self._ctrl.sgt_objs) <= 0:
             return False
 
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         if sgt_obj is None:
             return False
         return not sgt_obj.ntwk_p.selected_batch.is_graph_only
@@ -154,7 +154,7 @@ class ImageController(QObject):
     def get_pixmap(self):
         """Returns the URL that QML should use to load the image"""
         curr_img_view = np.random.randint(0, 4)
-        unique_num = self._selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
+        unique_num = self._ctrl.selected_sgt_obj_index + curr_img_view + np.random.randint(low=21, high=1000)
         return "image://imageProvider/" + str(unique_num)
 
     @Slot(result=bool)
@@ -162,7 +162,7 @@ class ImageController(QObject):
         if not self._img_loaded:
             return False
 
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         batch_count = len(sgt_obj.ntwk_p.image_batches)
         batches_exist = True if batch_count > 1 else False
         return batches_exist
@@ -170,7 +170,7 @@ class ImageController(QObject):
     @Slot(result=int)
     def get_selected_img_batch(self):
         try:
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             return sgt_obj.ntwk_p.selected_batch_index
         except AttributeError:
             logging.exception("No image added! Please add at least one image.", extra={'user': 'SGT Logs'})
@@ -179,7 +179,7 @@ class ImageController(QObject):
     @Slot()
     def reset_colors_model(self):
         """Erase existing data in the colors model."""
-        self.reset_qml_models(only_colors=True)
+        self.reset_img_models(only_colors=True)
 
     @Slot(int)
     def select_img_batch(self, batch_index=-1):
@@ -187,31 +187,32 @@ class ImageController(QObject):
             return
 
         try:
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             if sgt_obj is None:
                 return
             sgt_obj.ntwk_p.select_image_batch(batch_index)
 
             # Load the SGT Object data of the selected image
             self.synchronize_img_models(sgt_obj)
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
-            self.reset_qml_models()
+            self.synchronize_ai_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
+            self.reset_img_models()
 
             # Trigger QML image update
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
+            self._ctrl.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
                                                            f"{batch_index}. Restart app and try again.")
 
     @Slot(int, str, result=str)
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
-        b64_img = super().get_selected_image(img_pos, view)
+        b64_img = self._ctrl.get_selected_image(img_pos, view)
         return b64_img
 
     @Slot(int, bool)
     def toggle_selected_batch_image(self, img_index, selected):
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         sel_img_batch = sgt_obj.ntwk_p.selected_batch
         if selected:
             sel_img_batch.selected_images_idx.add(img_index)
@@ -225,14 +226,14 @@ class ImageController(QObject):
         if not self._applying_changes:  # Disallow concurrent changes
             self._applying_changes = True
             if view != "":
-                sgt_obj = self.get_selected_sgt_obj()
+                sgt_obj = self._ctrl.get_selected_sgt_obj()
                 sgt_obj.ntwk_p.selected_batch_view = view
             self.changeImageSignal.emit()
 
     @Slot(bool, str, int)
     def undo_applied_changes(self, undo: bool = True, change_type: str = "cropping", img_idx: int = -1):
         if undo:
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.undo_img_changes(img_pos=img_idx)
 
             # Emit signal to update UI with new image
@@ -248,32 +249,37 @@ class ImageController(QObject):
 
         try:
             self._start_histogram_calculation()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
         except Exception as err:
             self._stop_histogram_calculation()
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})
             self._handle_finished(3, False, ["Histogram Calculation Failed", "Unable to calculate image histogram!"])
+
+    @Slot(bool)
+    def set_auto_scale(self, auto_scale):
+        """Set the auto-scale parameter for each image."""
+        self._allow_auto_scale = auto_scale
 
     @Slot()
     def apply_img_scaling(self):
         """Retrieve settings from the model and send to Python."""
         try:
             self.set_auto_scale(True)
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.auto_scale = self._allow_auto_scale
             sgt_obj.ntwk_p.apply_img_scaling()
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
+            self._handle_finished(-1, False, ["Unable to Rescale Image", "Error while tying to re-scale "
                                                                               "image. Try again."])
 
     @Slot(int, int, int, int, int, int)
     def crop_image(self, x, y, crop_width, crop_height, qimg_width, qimg_height):
         """Crop image using PIL and save it."""
         try:
-            sgt_obj = self.get_selected_sgt_obj()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.crop_image(x, y, crop_width, crop_height, qimg_width, qimg_height)
 
             # Emit signal to update UI with new image
@@ -282,7 +288,7 @@ class ImageController(QObject):
             self.showUnCroppingToolSignal.emit(True)
         except Exception as err:
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Cropping Error",
+            self._ctrl.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
 
     @Slot()
@@ -290,40 +296,40 @@ class ImageController(QObject):
         """Retrieve and save images to the file."""
         if self._wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         self._handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Saving images..."))
         try:
-            if self.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
+            if self._ctrl.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
             self._handle_progress_update(ProgressData(percent=10, sender="GT", message=f"Saving images..."))
-            sel_images = self.get_selected_images()
+            sel_images = self._ctrl.get_selected_images()
             for val in self.saveImgModel.list_data:
                 for img in sel_images:
                     img.configs[val["id"]]["value"] = val["value"]
 
             self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Saving images..."))
             self._start_wait()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(1, "Save-Images", (sgt_obj.ntwk_p,), True)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Save-Images", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
-            self.taskTerminatedSignal.emit(False,
+            self._handle_finished(-1, False,
                                            ["Unable to Save Image Files", "Error saving images to file. Try again."])
 
     @Slot(int, int)
     def run_retrieve_img_colors(self, img_pos: int, max_colors: int):
         """Retrieve the dominant colors of the image."""
         if self._wait_flag:
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         try:
             self._start_wait(msg="image_filters")
-            ntwk_p = self.get_selected_sgt_obj().ntwk_p
-            self._submit_job(1, "Retrieve-Colors", (ntwk_p, img_pos, max_colors), True)
+            ntwk_p = self._ctrl.get_selected_sgt_obj().ntwk_p
+            self._ctrl.submit_job(1, "Retrieve-Colors", (ntwk_p, img_pos, max_colors), True)
         except Exception as err:
             self._stop_wait()
             logging.exception(f"Retrieve Colors Error: {err}", extra={'user': 'SGT Logs'})
@@ -335,12 +341,12 @@ class ImageController(QObject):
     def run_eliminate_img_colors(self, img_pos: int, swap_white: int):
         """Eliminate selected image colors by swapping the values of pixels where they appear."""
         if self._wait_flag:
-            self.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return
 
         try:
             self._start_wait(msg="image_filters")
-            ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            ntwk_p = self._ctrl.get_selected_sgt_obj().ntwk_p
             colors = ntwk_p.image_obj.dominant_colors
 
             # Update ImageProcessor object
@@ -349,7 +355,7 @@ class ImageController(QObject):
                     if color.hex_code == val["text"]:
                         color.is_selected = True if val["value"] == 1 else False
 
-            self._submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos, swap_white), True)
+            self._ctrl.submit_job(1, "Eliminate-Colors", (ntwk_p, img_pos, swap_white), True)
         except Exception as err:
             self._stop_wait()
             logging.exception(f"Eliminate Colors Error: {err}", extra={'user': 'SGT Logs'})

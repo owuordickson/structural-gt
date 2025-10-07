@@ -13,12 +13,13 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 class AIController(QObject):
 
-    updateAIProgressSignal = Signal(int, str)
     _aiBusyChanged = Signal()
     _aiModeChanged = Signal()
+    updateAIProgressSignal = Signal(int, str)
 
-    def __init__(self, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
+        self._ctrl = controller_obj
         self._ai_mode_active = False
         self._wait_flag_ai = False
 
@@ -61,7 +62,7 @@ class AIController(QObject):
             self.aiSearchModel.reset_data(ai_search_params)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Fatal Error", "Error re-loading AI configurations! Close app and try again.")
+            self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading AI configurations! Close app and try again.")
 
     @Slot(bool)
     def toggle_ai_mode(self, activate):
@@ -79,13 +80,13 @@ class AIController(QObject):
 
         if self._wait_flag_ai:
             logging.info("Another AI task is running!", extra={'user': 'SGT Logs'})
-            self.showAlertSignal.emit("Please Wait", "Another AI task is running!")
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another AI task is running!")
             return
 
         try:
             self._start_ai_task()
-            sgt_obj = self.get_selected_sgt_obj()
-            self._submit_job(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             self._stop_ai_task()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
@@ -93,7 +94,7 @@ class AIController(QObject):
     @Slot()
     def reset_ai_filter_results(self):
         """Reset the results by moving the best candidate to the ignore list"""
-        sgt_obj = self.get_selected_sgt_obj()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
         sgt_obj.ntwk_p.reset_metaheuristic_search()
         self.run_ai_filter_search()
 

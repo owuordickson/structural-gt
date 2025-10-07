@@ -27,6 +27,14 @@ class BaseController(QObject):
     def sgt_objs(self):
         return self._sgt_objs
 
+    @property
+    def selected_sgt_obj_index(self):
+        return self._selected_sgt_obj_index
+
+    @selected_sgt_obj_index.setter
+    def selected_sgt_obj_index(self, value):
+        self._selected_sgt_obj_index = value
+
     def replicate_sgt_configs(self) -> None:
         """Replicate the configurations of the selected SGT object to all other SGT objects."""
         # Update Configs
