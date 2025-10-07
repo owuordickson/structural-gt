@@ -79,7 +79,6 @@ class ImageController(QObject):
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.selected_batch
-            options_ai = ntwk_p.configs
             options_img = ntwk_p.image_obj.configs
 
             # Get data from object configs
@@ -100,10 +99,10 @@ class ImageController(QObject):
             self.imgControlModel.reset_data(img_controls)
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
+            self.saveImgModel.reset_data(file_options)
 
             self.microscopyPropsModel.reset_data(img_properties)
             self.imagePropsModel.reset_data(sel_img_batch.props)
-            self.saveImgModel.reset_data(file_options)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
@@ -265,14 +264,18 @@ class ImageController(QObject):
     def apply_img_scaling(self):
         """Retrieve settings from the model and send to Python."""
         try:
+            # Apply scaling
             self.set_auto_scale(True)
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.auto_scale = self._allow_auto_scale
             sgt_obj.ntwk_p.apply_img_scaling()
+
+            # Update properties and load the scaled image into view
+            self.imagePropsModel.reset_data(sgt_obj.ntwk_p.selected_batch.props)
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
-            self._handle_finished(-1, False, ["Unable to Rescale Image", "Error while tying to re-scale "
+            self.taskTerminatedSignal.emit(False, ["Unable to Rescale Image", "Error while tying to re-scale "
                                                                               "image. Try again."])
 
     @Slot(int, int, int, int, int, int)

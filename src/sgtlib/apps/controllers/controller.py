@@ -116,8 +116,10 @@ class MainController(BaseController):
             self.imgBinFilterModel.reset_data(bin_filters)
             self.imgFilterModel.reset_data(img_filters)
             self.aiSearchModel.reset_data(ai_search_params)
-            self.microscopyPropsModel.reset_data(img_properties)
             self.saveImgModel.reset_data(file_options)
+
+            self.microscopyPropsModel.reset_data(img_properties)
+            self.imagePropsModel.reset_data(sel_img_batch.props)
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
@@ -134,7 +136,6 @@ class MainController(BaseController):
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
-            sel_img_batch = ntwk_p.selected_batch
             graph_obj = ntwk_p.graph_obj
             option_gte = graph_obj.configs
             options_gtc = sgt_obj.configs
@@ -149,7 +150,6 @@ class MainController(BaseController):
             self.gtcListModel.reset_data(compute_options)
             self.gtcScalingModel.reset_data(scaling_options)
 
-            self.imagePropsModel.reset_data(sel_img_batch.props)
             self.graphPropsModel.reset_data(graph_obj.props)
             self.graphComputeModel.reset_data(sgt_obj.props)
         except Exception as err:
@@ -730,9 +730,10 @@ class MainController(BaseController):
                 self.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
+            sgt_obj = self.get_selected_sgt_obj()
             self.reset_qml_models()
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             # Load the selected image into the view
             self.changeImageSignal.emit()
@@ -802,10 +803,14 @@ class MainController(BaseController):
     def apply_img_scaling(self):
         """Retrieve settings from the model and send to Python."""
         try:
+            # Apply scaling
             self.set_auto_scale(True)
             sgt_obj = self.get_selected_sgt_obj()
             sgt_obj.ntwk_p.auto_scale = self._allow_auto_scale
             sgt_obj.ntwk_p.apply_img_scaling()
+
+            # Update properties and load the scaled image into view
+            self.imagePropsModel.reset_data(sgt_obj.ntwk_p.selected_batch.props)
             self.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Apply Image Scaling: " + str(err), extra={'user': 'SGT Logs'})
@@ -1127,8 +1132,9 @@ class MainController(BaseController):
         """Verify and validate the image path, use it to create an SGT object and load it in view."""
         is_successful = self.add_single_image(img_path)
         if is_successful:
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            sgt_obj = self.get_selected_sgt_obj()
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.load_image(reload_thumbnails=True)
         return is_successful
 
@@ -1139,8 +1145,9 @@ class MainController(BaseController):
         """
         is_successful = self.add_multiple_images(img_dir_path)
         if is_successful:
-            self.synchronize_img_models(self.get_selected_sgt_obj())
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            sgt_obj = self.get_selected_sgt_obj()
+            self.synchronize_img_models(sgt_obj)
+            self.synchronize_graph_models(sgt_obj)
             self.load_image(reload_thumbnails=True)
         return is_successful
 
