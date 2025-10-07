@@ -427,7 +427,7 @@ class ImageProcessor(ProgressUpdate):
                 progress += incr
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
-            img_data = img_obj.img_2d.copy()
+            img_data = img_obj.img_mut.copy()
             img_obj.img_mod = img_obj.process_img(image=img_data)
 
             if filter_type == 2:
@@ -478,7 +478,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
             return
 
-        img = img_obj.img_2d.copy()
+        img = img_obj.img_mut.copy()
         swap_to_white = True if swap_color == 1 else False
         for sel_color in img_obj.dominant_colors:
             if sel_color.is_selected:

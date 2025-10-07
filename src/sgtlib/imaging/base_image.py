@@ -6,7 +6,6 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
-from collections import Counter
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
@@ -59,7 +58,6 @@ class BaseImage:
         self._img_bin: MatLike | None = None
         self._img_mod: MatLike | None = None
         self._img_mut: MatLike | None = None
-        # self._img_hist: MatLike | None = None
         self._has_alpha_channel: bool = False
         self._scale_factor: float = scale_factor
         self._window_segments: list[BaseImage.ScalingKernel] = []
@@ -167,11 +165,11 @@ class BaseImage:
         Returns:
 
         """
-        if self._img_raw is None:
+        if self.img_raw is None:
             return
-        img_data = self._img_raw.copy()
+        img_data = self.img_raw.copy()
 
-        self._has_alpha_channel, _ = BaseImage.check_alpha_channel(self._img_raw)
+        self._has_alpha_channel, _ = BaseImage.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
 
     def get_pixel_width(self) -> None:
@@ -210,7 +208,7 @@ class BaseImage:
         """
 
         # Resize image
-        scaled_img = cv2.resize(self._img_2d.copy(), (actual_w, actual_h))
+        scaled_img = cv2.resize(self.img_2d.copy(), (actual_w, actual_h))
 
         # Crop image
         self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
@@ -413,7 +411,7 @@ class BaseImage:
         Returns:
             List of dicts with dominant colors
         """
-        img_rgb = self._img_raw.copy()
+        img_rgb = self.img_raw.copy()
         if img_rgb is None:
             return None
 
@@ -482,19 +480,19 @@ class BaseImage:
         :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
         """
 
-        if self._img_2d is None:
+        if self.img_2d is None:
             return None, None
 
-        if self._img_bin is None:
+        if self.img_bin is None:
             return None, None
 
         # Find pixel positions where the binary image is white (255)
-        white_pixel_pos = np.argwhere(self._img_bin == 255)  # (row, col)
+        white_pixel_pos = np.argwhere(self.img_bin == 255)  # (row, col)
 
         # Retrieve corresponding pixel values from img_2d
-        img_rgb = self._img_2d
+        img_rgb = self.img_2d
         if self._has_alpha_channel:
-            img_rgb = self._img_2d[..., :3]
+            img_rgb = self.img_2d[..., :3]
         pixel_values = [img_rgb[tuple(p)] for p in white_pixel_pos]
         pixel_values = np.array(pixel_values)
 
@@ -525,7 +523,7 @@ class BaseImage:
         ax.set_title(plt_title)
 
         if curr_view == "original":
-            img = self._img_2d
+            img = self.img_2d
             # Evaluate the binary image
             eval_std, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
@@ -533,9 +531,9 @@ class BaseImage:
                 ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
                 ax.legend(loc='upper right')
         elif curr_view == "binary":
-            img = self._img_bin
+            img = self.img_bin
         else:
-            img = self._img_mod
+            img = self.img_mod
 
         if img is None:
             return fig
@@ -600,9 +598,9 @@ class BaseImage:
         run_info += f"Resistivity = {opt_img["resistivity"]["value"]}" + r"$\Omega$m"
         run_info += "\n\n"
 
-        if self._img_raw is not None:
+        if self.img_raw is not None:
             run_info += "***Image Scale***\n"
-            run_info += f"Size = {self._img_2d.shape[0]} x {self._img_2d.shape[1]} px"
+            run_info += f"Size = {self.img_2d.shape[0]} x {self.img_2d.shape[1]} px"
             run_info += f" || Scale Factor = {self._scale_factor}"
 
         return run_info
