@@ -11,70 +11,33 @@ Rectangle {
 
     property int lblWidthSize: 280
 
-    ScrollView {
-        id: scrollViewImgFilters
+    ColumnLayout {
+        id: colImgFiltersLayout
         anchors.fill: parent
-        clip: true
 
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff // Disable horizontal scrolling
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded // Enable vertical scrolling only when needed
-
-        contentHeight: colImgFiltersLayout.implicitHeight
-
-        ColumnLayout {
-            id: colImgFiltersLayout
-            width: scrollViewImgFilters.width // Ensures it never exceeds parent width
-            Layout.preferredWidth: parent.width // Fills the available width
-
-            AIModeWidget{}
-
-            Text {
-                text: "Binary Filters"
-                font.pixelSize: 12
-                font.bold: true
-                Layout.topMargin: 10
-                Layout.bottomMargin: 5
-                Layout.alignment: Qt.AlignHCenter
-            }
-            Label {
-                id: lblNoImgFilters
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 20
-                text: "No image filters to show!\nCreate project/add image."
-                color: "#808080"
-                visible: !mainController.display_image()
-            }
-            BinaryFilterWidget {
-            }
-
-            Rectangle {
-                id: rectHLine1
-                height: 1
-                color: "#d0d0d0"
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 20
-                Layout.leftMargin: 20
-                Layout.rightMargin: 20
-                visible: mainController.display_image()
-            }
-
-            Text {
-                id: txtTitleImgFilters
-                text: "Image Filters"
-                font.pixelSize: 12
-                font.bold: true
-                Layout.topMargin: 10
-                Layout.bottomMargin: 5
-                Layout.alignment: Qt.AlignHCenter
-                visible: mainController.display_image()
-            }
-            ImageFilterWidget {
-            }
-
-            FiltersWidget{}
-
+        AIModeWidget {
         }
+
+
+        BinaryFilterWidget {
+        }
+
+        Rectangle {
+            id: rectHLine1
+            height: 1
+            color: "#d0d0d0"
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+            Layout.leftMargin: 20
+            Layout.rightMargin: 20
+            visible: mainController.display_image()
+        }
+        ImageFilterWidget {
+        }
+
+        FiltersWidget {
+        }
+
     }
 
     Connections {
@@ -82,9 +45,7 @@ Rectangle {
 
         function onImageChangedSignal() {
             // Force refresh
-            lblNoImgFilters.visible = !mainController.display_image();
             rectHLine1.visible = mainController.display_image();
-            txtTitleImgFilters.visible = mainController.display_image();
         }
     }
 }

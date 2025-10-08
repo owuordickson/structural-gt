@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ColumnLayout {
-    id:imgBinControls
+    id: imgBinControls
     Layout.leftMargin: 10
     Layout.preferredHeight: 120
     Layout.preferredWidth: parent.width
@@ -47,10 +47,17 @@ ColumnLayout {
     }
 
 
+    Text {
+        text: "Binary Filters"
+        font.pixelSize: 12
+        font.bold: true
+        Layout.alignment: Qt.AlignHCenter
+    }
+
     RowLayout {
 
         RadioButton {
-            id:rdoAdaptive
+            id: rdoAdaptive
             text: "Adaptive"
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
@@ -77,7 +84,9 @@ ColumnLayout {
                 imgBinFilterModel.setData(index, value, valueRole);
                 mainController.apply_changes("");
             }
-            validator: IntValidator { bottom: spbAdaptive.from; top: spbAdaptive.to }
+            validator: IntValidator {
+                bottom: spbAdaptive.from; top: spbAdaptive.to
+            }
         }
     }
 
@@ -155,7 +164,7 @@ ColumnLayout {
     }
 
     function initializeSelections() {
-        for (let row = 0; row < imgBinFilterModel.rowCount(); row ++) {
+        for (let row = 0; row < imgBinFilterModel.rowCount(); row++) {
             var index = imgBinFilterModel.index(row, 0);
             let item_id = imgBinFilterModel.data(index, idRole);  // IdRole
             let item_val = imgBinFilterModel.data(index, valueRole); // ValueRole

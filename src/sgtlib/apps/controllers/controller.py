@@ -654,7 +654,7 @@ class MainController(BaseController):
 
             # Load the SGT Object data of the selected image
             self.synchronize_img_models(sgt_obj)
-            self.synchronize_graph_models(self.get_selected_sgt_obj())
+            self.synchronize_graph_models(sgt_obj)
             self.reset_qml_models()
 
             # Trigger QML image update
