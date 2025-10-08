@@ -13,7 +13,6 @@ ColumnLayout {
     Layout.bottomMargin: 10
     spacing: 5
 
-    property int numRows: 10
     property int tblRowHeight: 50
 
 
@@ -36,16 +35,20 @@ ColumnLayout {
 
     TableView {
         id: tblImgThumbs
-        height: imgThumbsLayout.height - tblRowHeight
-        width: parent.width
+        width: 290
+        height: 420
+        clip: true
         rowSpacing: 2
+        columnSpacing: 4
+        visible: imgThumbnailModel.rowCount() > 0
         model: imgThumbnailModel
-        visible: false
+        selectionBehavior: TableView.SelectRows
+        boundsBehavior: Flickable.StopAtBounds
 
         delegate: Rectangle {
             implicitWidth: tblImgThumbs.width
-            implicitHeight: tblRowHeight
-            //color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
+            implicitHeight: tblRowHeight + 10
+            //color: model.selected ? "#d0d0d0" : (row % 2 === 0 ? "#fafafa" : "white")
             color: model.selected ? "#d0d0d0" : "transparent"
 
             MouseArea {
@@ -55,6 +58,7 @@ ColumnLayout {
 
             RowLayout {
                 anchors.fill: parent
+                anchors.margins: 4
                 spacing: 6
 
                 Rectangle {
@@ -63,53 +67,46 @@ ColumnLayout {
                     radius: 4
                     color: "transparent"
                     border.width: 1
-                    border.color: "black"
+                    border.color: "#404040"
 
                     Image {
-                        id: imgThumbnail
                         anchors.fill: parent
-                        source: "data:image/png;base64," + model.thumbnail  // Base64 encoded image
+                        source: "data:image/png;base64," + model.thumbnail
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true  // ✅ prevents UI freeze when loading images
+                        cache: false        // ✅ prevents stale images
                     }
-
                 }
 
-
                 Text {
-                    id: txtImgItem
-                    Layout.fillWidth: true                 // ✅ take remaining space, not more
-                    Layout.maximumWidth: parent.width - 100 // ✅ leave space for delete button
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: tblImgThumbs.width - tblRowHeight - 40
                     text: model.text
                     wrapMode: Text.NoWrap
                     elide: Text.ElideRight
-                    maximumLineCount: 1        // ensures single-line behavior
-                    font.pixelSize: 14
+                    font.pixelSize: model.selected ? 12 : 10
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
+                    color: model.selected ? "#202020" : "#909090"
                     clip: true
                 }
 
                 Basic.Button {
-                    id: btnDelete
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    text: ""
+                    Layout.alignment: Qt.AlignVCenter
                     icon.source: "../assets/icons/delete_icon.png"
                     icon.width: 21
                     icon.height: 21
-                    icon.color: "transparent"   // important for PNGs
                     background: Rectangle {
                         color: "transparent"
                     }
-                    ToolTip.text: "Delete image."
-                    ToolTip.visible: btnDelete.hovered
+                    ToolTip.text: "Delete image"
+                    ToolTip.visible: hovered
                     visible: model.selected
                     onClicked: mainController.delete_selected_thumbnail(row)
                 }
-
             }
 
         }
-
     }
 
 
@@ -118,15 +115,14 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            lblNoImages.visible = imgThumbnailModel.rowCount() <= 0
-            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0
+            lblNoImages.visible = imgThumbnailModel.rowCount() <= 0;
+            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0;
             tblImgThumbs.enabled = !mainController.is_task_running();
-
         }
 
         function onProjectOpenedSignal(name) {
             lblNoImages.text = "No images to show!\nPlease import image(s).";
-            tblImgThumbs.visible = false;
+            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0;
         }
 
         function onUpdateProgressSignal(val, msg) {

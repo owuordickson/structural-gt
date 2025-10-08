@@ -23,14 +23,6 @@ ColumnLayout {
             font.bold: true
         }
 
-        /*Label {
-            id: lblProjectName
-            Layout.minimumWidth: 175
-            Layout.fillWidth: true
-            text: ""
-            //elide: Text.ElideRight
-        }*/
-
         Text {
             id: txtProjectName
             Layout.minimumWidth: 175
@@ -54,26 +46,28 @@ ColumnLayout {
             font.bold: true
         }
 
-        /*TextField {
-            id: txtOutputDir
-            Layout.minimumWidth: 175
-            Layout.fillWidth: true
-            text: ""
-            //elide: Text.ElideRight
-        }*/
-
-        TextField {
-            id: txtOutputDir
+        Rectangle {
             Layout.minimumWidth: 175
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
-            text: ""
-            readOnly: true
-            wrapMode: Text.NoWrap
-            //elide: Text.ElideRight
-            font.pixelSize: 10
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignLeft
+            implicitHeight: 24
+            border.width: 1
+            border.color: "#909090"
+            radius: 5
+            color: "transparent"
+
+            Text {
+                id: txtOutputDir
+                anchors.fill: parent
+                anchors.margins: 4
+                text: ""
+                wrapMode: Text.NoWrap
+                elide: Text.ElideRight
+                font.pixelSize: 10
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignLeft
+                clip: true
+            }
         }
 
         Basic.Button {
