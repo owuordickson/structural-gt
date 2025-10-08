@@ -23,13 +23,29 @@ ColumnLayout {
             font.bold: true
         }
 
-        Label {
+        /*Label {
             id: lblProjectName
             Layout.minimumWidth: 175
             Layout.fillWidth: true
             text: ""
             //elide: Text.ElideRight
+        }*/
+
+        Text {
+            id: txtProjectName
+            Layout.minimumWidth: 175
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignLeft
+            text: ""
+            wrapMode: Text.NoWrap
+            elide: Text.ElideRight
+            maximumLineCount: 1        // ensures single-line behavior
+            font.pixelSize: 10
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignLeft
+            clip: true
         }
+
     }
 
     RowLayout {
@@ -38,12 +54,26 @@ ColumnLayout {
             font.bold: true
         }
 
-        TextField {
+        /*TextField {
             id: txtOutputDir
             Layout.minimumWidth: 175
             Layout.fillWidth: true
             text: ""
             //elide: Text.ElideRight
+        }*/
+
+        TextField {
+            id: txtOutputDir
+            Layout.minimumWidth: 175
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignLeft
+            text: ""
+            readOnly: true
+            wrapMode: Text.NoWrap
+            //elide: Text.ElideRight
+            font.pixelSize: 10
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignLeft
         }
 
         Basic.Button {
@@ -82,7 +112,7 @@ ColumnLayout {
         }
 
         function onProjectOpenedSignal(name) {
-            lblProjectName.text = name;
+            txtProjectName.text = name;
             rowLayoutProject.visible = true;//mainController.is_project_open();
             btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
         }

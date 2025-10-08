@@ -15,10 +15,6 @@ ColumnLayout {
     property int numRows: 10
     property int tblRowHeight: 50
 
-    Rectangle {
-        color: "red"
-        anchors.fill: parent
-    }
 
     Text {
         text: "Loaded Images"
@@ -38,7 +34,7 @@ ColumnLayout {
 
 
     TableView {
-        id: tableView
+        id: tblImgThumbs
         height: parent.height - tblRowHeight
         width: parent.width
         rowSpacing: 2
@@ -47,7 +43,7 @@ ColumnLayout {
         enabled: !mainController.is_task_running();
 
         delegate: Rectangle {
-            implicitWidth: tableView.width
+            implicitWidth: tblImgThumbs.width
             implicitHeight: tblRowHeight
             //color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
             color: model.selected ? "#d0d0d0" : "transparent"
@@ -81,18 +77,24 @@ ColumnLayout {
 
                 }
 
-                Label {
-                    id: lblImgItem
-                    Layout.fillWidth: true
+
+                Text {
+                    id: txtImgItem
+                    width: 75 // must be constrained for elision
+                    Layout.alignment: Qt.AlignLeft
                     text: model.text
-                    //elide: Text.ElideRight
-                    color: model.selected ? "#303030" : "#808080"
+                    wrapMode: Text.NoWrap
+                    elide: Text.ElideRight
+                    maximumLineCount: 1        // ensures single-line behavior
+                    font.pixelSize: 10
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                    clip: true
                 }
 
                 Basic.Button {
                     id: btnDelete
                     Layout.alignment: Qt.AlignRight //| Qt.AlignVCenter
-                    //anchors.right: parent.right
                     text: ""
                     icon.source: "../assets/icons/delete_icon.png"
                     icon.width: 21
@@ -121,23 +123,23 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            lblNoImages.visible = imgThumbnailModel.rowCount() > 0 ? false : true
-            tableView.visible = imgThumbnailModel.rowCount() > 0 ? true : false
-            tableView.enabled = !mainController.is_task_running();
+            lblNoImages.visible = imgThumbnailModel.rowCount() <= 0
+            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0
+            tblImgThumbs.enabled = !mainController.is_task_running();
 
         }
 
         function onProjectOpenedSignal(name) {
             lblNoImages.text = "No images to show!\nPlease import image(s).";
-            tableView.visible = imgThumbnailModel.rowCount() > 0 ? true : false
+            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0
         }
 
         function onUpdateProgressSignal(val, msg) {
-            tableView.enabled = !mainController.is_task_running();
+            tblImgThumbs.enabled = !mainController.is_task_running();
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
-            tableView.enabled = !mainController.is_task_running();
+            tblImgThumbs.enabled = !mainController.is_task_running();
         }
 
     }
