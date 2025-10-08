@@ -22,6 +22,7 @@ ColumnLayout {
         font.pixelSize: 12
         font.bold: true
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+        Layout.bottomMargin: 5
         visible: true
     }
 
@@ -37,7 +38,9 @@ ColumnLayout {
     TableView {
         id: tblImgThumbs
         width: 290
-        height: 450
+        //height: 450
+        Layout.fillHeight: true
+        Layout.preferredHeight: 450
         clip: true
         rowSpacing: 2
         columnSpacing: 4
