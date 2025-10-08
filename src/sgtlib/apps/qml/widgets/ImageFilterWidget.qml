@@ -6,6 +6,7 @@ ColumnLayout {
     id: imgFiltersControl
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
+    Layout.alignment: Qt.AlignTop
 
     property int cbxWidthSize: 100
     property int spbWidthSize: 170

@@ -8,6 +8,7 @@ ColumnLayout {
     id: imgThumbsLayout
     Layout.preferredHeight: 512
     Layout.preferredWidth: parent.width
+    Layout.alignment: Qt.AlignTop
     Layout.leftMargin: 5
     Layout.rightMargin: 5
     Layout.bottomMargin: 10
@@ -36,7 +37,7 @@ ColumnLayout {
     TableView {
         id: tblImgThumbs
         width: 290
-        height: 420
+        height: 450
         clip: true
         rowSpacing: 2
         columnSpacing: 4

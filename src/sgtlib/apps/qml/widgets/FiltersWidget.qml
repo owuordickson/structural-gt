@@ -7,6 +7,7 @@ ColumnLayout {
     id: imgFilterButtons
     Layout.preferredHeight: 28
     Layout.preferredWidth: parent.width
+    Layout.alignment: Qt.AlignTop
     Layout.bottomMargin: 10
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()

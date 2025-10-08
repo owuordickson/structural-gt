@@ -8,6 +8,7 @@ ColumnLayout {
     id: projectFoldersControls
     Layout.preferredHeight: 90
     Layout.preferredWidth: parent.width
+    Layout.alignment: Qt.AlignTop
     Layout.topMargin: 10
     Layout.leftMargin: 10
     Layout.rightMargin: 5
@@ -16,7 +17,7 @@ ColumnLayout {
 
     RowLayout {
         id: rowLayoutProject
-        visible: true//mainController.is_project_open()
+        visible: mainController.is_project_open()
 
         Label {
             text: "Project Name:"
@@ -107,7 +108,7 @@ ColumnLayout {
 
         function onProjectOpenedSignal(name) {
             txtProjectName.text = name;
-            rowLayoutProject.visible = true;//mainController.is_project_open();
+            rowLayoutProject.visible = mainController.is_project_open();
             btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
         }
     }

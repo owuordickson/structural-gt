@@ -7,6 +7,7 @@ import QtQuick.Controls.Basic as Basic
 Rectangle {
     id: aiModeControls
     width: parent.width - 10
+    Layout.alignment: Qt.AlignTop
     height: 72
     radius: 5
     color: "#f0fff0"
