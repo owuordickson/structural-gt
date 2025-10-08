@@ -5,6 +5,7 @@ import QtQuick.Controls.Basic as Basic
 
 
 ColumnLayout {
+    id: imgThumbsLayout
     Layout.preferredHeight: 512
     Layout.preferredWidth: parent.width
     Layout.leftMargin: 5
@@ -35,12 +36,11 @@ ColumnLayout {
 
     TableView {
         id: tblImgThumbs
-        height: parent.height - tblRowHeight
+        height: imgThumbsLayout.height - tblRowHeight
         width: parent.width
         rowSpacing: 2
         model: imgThumbnailModel
-        visible: imgThumbnailModel.rowCount() > 0 ? true : false
-        enabled: !mainController.is_task_running();
+        visible: false
 
         delegate: Rectangle {
             implicitWidth: tblImgThumbs.width
@@ -49,17 +49,13 @@ ColumnLayout {
             color: model.selected ? "#d0d0d0" : "transparent"
 
             MouseArea {
-                anchors.fill: parent // Make the MouseArea cover the entire Rectangle
-
-                // Left-click to select the item
-                onClicked: {
-                    mainController.load_image(row);
-                }
-
+                anchors.fill: parent
+                onClicked: mainController.load_image(row)
             }
 
             RowLayout {
                 anchors.fill: parent
+                spacing: 6
 
                 Rectangle {
                     width: tblRowHeight
@@ -80,13 +76,14 @@ ColumnLayout {
 
                 Text {
                     id: txtImgItem
-                    width: 75 // must be constrained for elision
-                    Layout.alignment: Qt.AlignLeft
+                    Layout.fillWidth: true                 // ✅ take remaining space, not more
+                    Layout.maximumWidth: parent.width - 100 // ✅ leave space for delete button
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                     text: model.text
                     wrapMode: Text.NoWrap
                     elide: Text.ElideRight
                     maximumLineCount: 1        // ensures single-line behavior
-                    font.pixelSize: 10
+                    font.pixelSize: 14
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
                     clip: true
@@ -94,7 +91,7 @@ ColumnLayout {
 
                 Basic.Button {
                     id: btnDelete
-                    Layout.alignment: Qt.AlignRight //| Qt.AlignVCenter
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     text: ""
                     icon.source: "../assets/icons/delete_icon.png"
                     icon.width: 21
@@ -106,9 +103,7 @@ ColumnLayout {
                     ToolTip.text: "Delete image."
                     ToolTip.visible: btnDelete.hovered
                     visible: model.selected
-                    onClicked: {
-                        mainController.delete_selected_thumbnail(row);
-                    }
+                    onClicked: mainController.delete_selected_thumbnail(row)
                 }
 
             }
@@ -131,7 +126,7 @@ ColumnLayout {
 
         function onProjectOpenedSignal(name) {
             lblNoImages.text = "No images to show!\nPlease import image(s).";
-            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0
+            tblImgThumbs.visible = false;
         }
 
         function onUpdateProgressSignal(val, msg) {
