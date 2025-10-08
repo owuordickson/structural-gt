@@ -6,8 +6,6 @@ ColumnLayout {
     id: imgFiltersControl
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
-    visible: mainController.display_image()
-    enabled: mainController.enable_img_controls()
 
     property int cbxWidthSize: 100
     property int spbWidthSize: 170
@@ -16,7 +14,25 @@ ColumnLayout {
     property int valueRole: Qt.UserRole + 4
     property int dataValueRole: Qt.UserRole + 6
 
+    Label {
+        id: lblNoImgFilters
+        Layout.alignment: Qt.AlignHCenter
+        text: "No image filters to show!\nCreate project/add image."
+        color: "#808080"
+        visible: !mainController.display_image()
+    }
+
+    Text {
+        id: txtTitleImgFilters
+        text: "Image Filters"
+        font.pixelSize: 12
+        font.bold: true
+        Layout.alignment: Qt.AlignHCenter
+        visible: mainController.display_image()
+    }
+
     Repeater {
+        id: rptFilters
         model: imgFilterModel
         delegate: RowLayout {
             Layout.fillWidth: true
@@ -137,8 +153,10 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgFiltersControl.visible = mainController.display_image();
-            imgFiltersControl.enabled = mainController.enable_img_controls();
+            lblNoImgFilters.visible = !mainController.display_image();
+            txtTitleImgFilters.visible = mainController.display_image();
+            rptFilters.visible = mainController.display_image();
+            rptFilters.enabled = mainController.enable_img_controls();
         }
 
     }

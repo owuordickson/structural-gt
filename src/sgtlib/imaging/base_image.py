@@ -569,7 +569,7 @@ class BaseImage:
             run_info += "OTSU Threshold"
 
         if opt_img["apply_gamma"]["value"] == 1:
-            run_info += f" || Gamma = {opt_img["apply_gamma"]["dataValue"]}"
+            run_info += f" || Gamma = {round(opt_img["apply_gamma"]["dataValue"], 2)}"
         run_info += "\n"
         if opt_img["apply_median_filter"]["value"]:
             run_info += "Median Filter ||"
@@ -590,6 +590,18 @@ class BaseImage:
         if opt_img["apply_lowpass_filter"]["value"]:
             run_info += "Low-pass filter, " + str(opt_img["apply_lowpass_filter"]["dataValue"]) + " window size || "
         run_info = run_info[:-3] + '' if run_info.endswith('|| ') else run_info
+        run_info += "\n\n"
+
+        run_info += "***Color Analysis***\n"
+        run_info += f"Eliminated Colors: "
+        new_line_counter = 2
+        for c in self.dominant_colors:
+            if c.is_selected:
+                run_info += f"{c.hex_code}, "
+                new_line_counter += 1
+                if new_line_counter == 5:
+                    run_info += "\n"
+                    new_line_counter = 0
         run_info += "\n\n"
 
         run_info += "***Microscopy Parameters***\n"

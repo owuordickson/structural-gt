@@ -5,10 +5,9 @@ import QtQuick.Controls.Imagine as Imagine
 
 ColumnLayout {
     id: imgFilterButtons
-    Layout.preferredHeight: 32
+    Layout.preferredHeight: 28
     Layout.preferredWidth: parent.width
-    Layout.topMargin: 10
-    Layout.bottomMargin: 5
+    Layout.bottomMargin: 10
     visible: mainController.display_image()
     enabled: mainController.enable_img_controls()
 
