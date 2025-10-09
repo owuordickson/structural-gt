@@ -8,8 +8,8 @@ ColumnLayout {
     Layout.preferredHeight: 120
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignTop
-    visible: mainController.display_image()
-    enabled: mainController.enable_img_controls()
+    visible: imageController.display_image()
+    enabled: imageController.enable_img_controls()
 
     property int idRole: Qt.UserRole + 1
     property int valueRole: Qt.UserRole + 4
@@ -34,7 +34,7 @@ ColumnLayout {
                 var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
                 var index = imgBinFilterModel.index(0, 0);
                 imgBinFilterModel.setData(index, val, valueRole);
-                mainController.apply_changes("");
+                imageController.apply_changes("");
             }
         }
         onClicked: {
@@ -43,7 +43,7 @@ ColumnLayout {
             var val = checkedButton === rdoGlobal ? 0 : checkedButton === rdoAdaptive ? 1 : 2;
             var index = imgBinFilterModel.index(0, 0);
             imgBinFilterModel.setData(index, val, valueRole);
-            mainController.apply_changes("binary");
+            imageController.apply_changes("binary");
         }
     }
 
@@ -83,7 +83,7 @@ ColumnLayout {
 
                 var index = imgBinFilterModel.index(2, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes("");
+                imageController.apply_changes("");
             }
             validator: IntValidator {
                 bottom: spbAdaptive.from; top: spbAdaptive.to
@@ -113,7 +113,7 @@ ColumnLayout {
             onValueChanged: {
                 var index = imgBinFilterModel.index(1, 0);
                 imgBinFilterModel.setData(index, value, valueRole);
-                mainController.apply_changes("");
+                imageController.apply_changes("");
             }
         }
 
@@ -151,7 +151,7 @@ ColumnLayout {
                 var val = checked === true ? 1 : 0;
                 var index = imgBinFilterModel.index(4, 0);
                 imgBinFilterModel.setData(index, val, valueRole);
-                mainController.apply_changes("");
+                imageController.apply_changes("");
             }
         }
         onClicked: {
@@ -160,7 +160,7 @@ ColumnLayout {
             var val = checked === true ? 1 : 0;
             var index = imgBinFilterModel.index(4, 0);
             imgBinFilterModel.setData(index, val, valueRole);
-            mainController.apply_changes("binary");
+            imageController.apply_changes("binary");
         }
     }
 
@@ -177,7 +177,7 @@ ColumnLayout {
             } else if (item_id === "adaptive_local_threshold_value") {
                 spbAdaptive.value = item_val;
             } else if (item_id === "apply_dark_foreground") {
-                cbxDarkFg.checked = item_val === 1 ? true : false;
+                cbxDarkFg.checked = item_val === 1;
             }
         }
     }
@@ -187,8 +187,8 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgBinControls.visible = mainController.display_image();
-            imgBinControls.enabled = mainController.enable_img_controls();
+            imgBinControls.visible = imageController.display_image();
+            imgBinControls.enabled = imageController.enable_img_controls();
             initializeSelections();
         }
 

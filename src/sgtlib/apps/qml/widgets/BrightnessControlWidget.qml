@@ -7,7 +7,7 @@ Item {
     id: brightnessControl  // used for external access
     Layout.preferredHeight: 75
     Layout.preferredWidth: parent.width
-    enabled: mainController.enable_img_controls()
+    enabled: imageController.enable_img_controls()
 
     property int spbWidthSize: 75
     property int lblWidthSize: 75
@@ -69,7 +69,7 @@ Item {
 
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        mainController.apply_changes("processed");
+                        imageController.apply_changes("processed");
                     }
 
                     Rectangle {
@@ -92,7 +92,7 @@ Item {
                         curr_val = val;
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        mainController.apply_changes("processed");
+                        imageController.apply_changes("processed");
                     }
                 }
 
@@ -106,7 +106,7 @@ Item {
         target: mainController
 
         function onImageChangedSignal() {
-            brightnessControl.enabled = mainController.enable_img_controls();
+            brightnessControl.enabled = imageController.enable_img_controls();
         }
     }
 }

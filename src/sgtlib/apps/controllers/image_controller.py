@@ -227,11 +227,6 @@ class ImageController(QObject):
             sel_pos = 0
         return sel_pos
 
-    @Slot()
-    def reset_colors_model(self):
-        """Erase existing data in the colors model."""
-        self.reset_img_models(only_colors=True)
-
     @Slot(bool)
     def set_auto_scale(self, auto_scale):
         """Set the auto-scale parameter for each image."""

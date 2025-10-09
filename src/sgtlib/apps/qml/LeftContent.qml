@@ -77,7 +77,7 @@ Rectangle {
     }
 
     Connections {
-        target: mainController
+        target: projectController
 
         function onProjectOpenedSignal(name) {
             tabBar.currentIndex = 0;

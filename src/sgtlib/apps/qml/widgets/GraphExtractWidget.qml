@@ -7,7 +7,7 @@ import QtQuick.Layouts
 Item {
     id: gteTreeControl
     width: parent.width
-    enabled: mainController.display_image() && mainController.enable_img_controls()
+    enabled: imageController.display_image() && imageController.enable_img_controls()
 
     property int treeViewHeight: 320
     property int treeViewWidth: 240
@@ -168,7 +168,7 @@ Item {
 
         function onImageChangedSignal() {
             // Force refresh
-            gteTreeControl.enabled = mainController.display_image() && mainController.enable_img_controls();
+            gteTreeControl.enabled = imageController.display_image() && imageController.enable_img_controls();
         }
 
     }

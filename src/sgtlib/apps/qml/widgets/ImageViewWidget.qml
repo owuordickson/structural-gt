@@ -17,7 +17,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         color: "transparent"
-        visible: !mainController.display_image()
+        visible: !imageController.display_image()
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -166,7 +166,7 @@ ColumnLayout {
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
-        visible: mainController.display_image()
+        visible: imageController.display_image()
 
         RowLayout {
             anchors.verticalCenter: parent.verticalCenter
@@ -174,8 +174,7 @@ ColumnLayout {
 
             ComboBox {
                 id: cbBatchSelector
-                visible: mainController.image_batches_exist()
-                //enabled: image_batches_exist.display_image()
+                visible: imageController.image_batches_exist()
                 Layout.minimumWidth: 75
                 model: imgBatchModel
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
@@ -183,12 +182,12 @@ ColumnLayout {
                 valueRole: "value"
                 ToolTip.text: "Change image batch"
                 ToolTip.visible: cbBatchSelector.hovered
-                onCurrentIndexChanged: mainController.select_img_batch(valueAt(currentIndex))
+                onCurrentIndexChanged: imageController.select_img_batch(valueAt(currentIndex))
             }
 
             Switch {
                 id: toggleShowGiantGraph
-                visible: mainController.display_graph()
+                visible: graphController.display_graph()
                 text: "only giant"
                 ToolTip.text: "Display only the giant graph network."
                 ToolTip.visible: toggleShowGiantGraph.hovered
@@ -196,10 +195,10 @@ ColumnLayout {
                 onCheckedChanged: {
                     if (checked) {
                         // Actions when switched on
-                        mainController.reload_graph_image(true);
+                        graphController.reload_graph_image(true);
                     } else {
                         // Actions when switched off
-                        mainController.reload_graph_image(false);
+                        graphController.reload_graph_image(false);
                     }
                 }
             }
@@ -215,8 +214,8 @@ ColumnLayout {
                 icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "Load OVITO 3D graph visualization."
                 ToolTip.visible: btnLoad3DGraph.hovered
-                visible: mainController.display_graph()
-                onClicked: mainController.load_graph_simulation()
+                visible: graphController.display_graph()
+                onClicked: graphController.load_graph_simulation()
             }
 
             Button {
@@ -230,7 +229,7 @@ ColumnLayout {
                 icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "How good is the graph? Give a score..."
                 ToolTip.visible: btnGraphRating.hovered
-                visible: mainController.display_graph()
+                visible: graphController.display_graph()
                 onClicked: drpDownRating.open()
 
                 Popup {
@@ -284,10 +283,10 @@ ColumnLayout {
                                 Layout.preferredWidth: 40
                                 Layout.preferredHeight: 30
                                 text: ""
-                                visible: mainController.enable_img_controls()
+                                visible: imageController.enable_img_controls()
                                 onClicked: {
                                     drpDownRating.close();
-                                    mainController.rate_graph(graphRating.rating);
+                                    graphController.rate_graph(graphRating.rating);
                                 }
 
                                 Rectangle {
@@ -317,7 +316,7 @@ ColumnLayout {
         Layout.fillHeight: true
         color: "transparent"
         clip: true  // Ensures only the selected area is visible
-        visible: mainController.display_image()
+        visible: imageController.display_image()
 
         Flickable {
             id: flickableArea
@@ -345,7 +344,7 @@ ColumnLayout {
                 transformOrigin: Item.Center
                 fillMode: Image.PreserveAspectFit
                 source: ""
-                visible: !mainController.is_img_3d()
+                visible: !imageController.is_img_3d()
             }
 
 
@@ -357,7 +356,7 @@ ColumnLayout {
                 cellWidth: flickableArea.width * zoomFactor / 3
                 cellHeight: flickableArea.height * zoomFactor / 3
                 model: img3dGridModel
-                visible: mainController.is_img_3d()
+                visible: imageController.is_img_3d()
 
                 delegate: Item {
                     width: imgGridView.cellWidth
@@ -403,7 +402,7 @@ ColumnLayout {
                                     let val = checked ? 1 : 0;
                                     var index = img3dGridModel.index(model.index, 0);
                                     img3dGridModel.setData(index, val, selectedRole);
-                                    mainController.toggle_selected_batch_image(model.id, isSelected);
+                                    imageController.toggle_selected_batch_image(model.id, isSelected);
                                 }
                             }
                         }
@@ -513,7 +512,7 @@ ColumnLayout {
         Layout.fillHeight: false
         Layout.fillWidth: true
         color: "transparent"
-        visible: mainController.display_image()
+        visible: imageController.display_image()
 
         RowLayout {
             anchors.fill: parent
@@ -528,7 +527,7 @@ ColumnLayout {
                     color: "transparent"
                 }
                 Layout.alignment: Qt.AlignLeft
-                onClicked: mainController.load_prev_image()
+                onClicked: projectController.load_prev_image()
             }
 
             Label {
@@ -548,7 +547,7 @@ ColumnLayout {
                     color: "transparent"
                 }
                 Layout.alignment: Qt.AlignRight
-                onClicked: mainController.load_next_image()
+                onClicked: projectController.load_next_image()
             }
 
         }
@@ -606,7 +605,7 @@ ColumnLayout {
 
         // Crop image through mainController
         const cropRect = getCropAreaInImageCoords();
-        mainController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height, cropRect.actualWidth, cropRect.actualHeight);
+        imageController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height, cropRect.actualWidth, cropRect.actualHeight);
 
         // Hide the selection box
         cropArea.visible = false;
@@ -617,37 +616,63 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgView.visible = !mainController.is_img_3d();
-            imgGridView.visible = mainController.is_img_3d();
-            welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
-            imgContainer.visible = mainController.display_image();
-            imgNavControls.visible = mainController.display_image();
-            imgViewControls.visible = mainController.display_image();
-            cbBatchSelector.visible = mainController.image_batches_exist();
-            toggleShowGiantGraph.visible = mainController.display_graph();
-            btnLoad3DGraph.visible = mainController.display_graph();
-            btnGraphRating.visible = mainController.display_graph();
-            btnSendRating.visible = mainController.enable_img_controls();
+            imgView.visible = !imageController.is_img_3d();
+            imgGridView.visible = imageController.is_img_3d();
+            welcomeContainer.visible = imageController.display_image() ? false : !projectController.is_project_open();
+            imgContainer.visible = imageController.display_image();
+            imgNavControls.visible = imageController.display_image();
+            imgViewControls.visible = imageController.display_image();
+            cbBatchSelector.visible = imageController.image_batches_exist();
+            toggleShowGiantGraph.visible = graphController.display_graph();
+            btnLoad3DGraph.visible = graphController.display_graph();
+            btnGraphRating.visible = graphController.display_graph();
+            btnSendRating.visible = imageController.enable_img_controls();
 
-            if (!mainController.is_img_3d()) {
-                imgView.source = mainController.get_pixmap();
+            if (!imageController.is_img_3d()) {
+                imgView.source = imageController.get_pixmap();
             } else {
                 imgView.source = "";
             }
 
             zoomFactor = 1.0;
 
-            btnPrevious.enabled = mainController.enable_prev_nav_btn();
-            btnNext.enabled = mainController.enable_next_nav_btn();
-            lblNavInfo.text = mainController.get_img_nav_location();
+            btnPrevious.enabled = projectController.enable_prev_nav_btn();
+            btnNext.enabled = projectController.enable_next_nav_btn();
+            lblNavInfo.text = projectController.get_img_nav_location();
             //console.log(src);
 
-            cbBatchSelector.currentIndex = mainController.get_selected_img_batch();
+            cbBatchSelector.currentIndex = imageController.get_selected_img_batch();
         }
 
-        function onProjectOpenedSignal(name) {
-            welcomeContainer.visible = mainController.display_image() ? false : !mainController.is_project_open();
+        function onUpdateProgressSignal(val, msg) {
+            if (val === 101) {
+                lblNavInfo.text = msg;
+            }
+            btnNext.enabled = projectController.enable_next_nav_btn();
+            lblNavInfo.text = projectController.get_img_nav_location();
         }
+
+        function onTaskTerminatedSignal(success_val, msg_data) {
+            lblNavInfo.text = projectController.get_img_nav_location();
+            btnNext.enabled = projectController.enable_next_nav_btn();
+            lblNavInfo.text = projectController.get_img_nav_location();
+        }
+
+    }
+
+
+    Connections {
+        target: projectController
+
+        function onProjectOpenedSignal(name) {
+            welcomeContainer.visible = imageController.display_image() ? false : !projectController.is_project_open();
+        }
+
+    }
+
+
+    Connections {
+        target: imageController
 
         function onEnableRectangularSelectionSignal(allow) {
             if (allow) {
@@ -663,20 +688,6 @@ ColumnLayout {
             if (allow) {
                 cropImage();
             }
-        }
-
-        function onUpdateProgressSignal(val, msg) {
-            if (val === 101) {
-                lblNavInfo.text = msg;
-            }
-            btnNext.enabled = mainController.enable_next_nav_btn();
-            lblNavInfo.text = mainController.get_img_nav_location();
-        }
-
-        function onTaskTerminatedSignal(success_val, msg_data) {
-            lblNavInfo.text = mainController.get_img_nav_location();
-            btnNext.enabled = mainController.enable_next_nav_btn();
-            lblNavInfo.text = mainController.get_img_nav_location();
         }
 
     }

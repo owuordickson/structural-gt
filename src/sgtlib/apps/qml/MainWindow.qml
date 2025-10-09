@@ -11,7 +11,7 @@ ApplicationWindow {
     width: 1024
     height: 824
     visible: true
-    title: mainController.get_sgt_title();
+    title: projectController.get_sgt_title();
     font.family: "Arial"  // or Qt.application.font.family
     color: "#f0f0f0"
 
@@ -118,7 +118,7 @@ ApplicationWindow {
                 Label {
                     width: parent.width
                     //Layout.alignment: Qt.AlignHCenter
-                    property string aboutText: mainController.get_about_details()
+                    property string aboutText: projectController.get_about_details()
                     text: aboutText
                     wrapMode: Text.WordWrap
                     textFormat: Text.RichText  // Enable HTML formatting
@@ -238,7 +238,7 @@ ApplicationWindow {
 
                         } else {
                             createProjectDialog.close();
-                            mainController.create_sgt_project(name, location);
+                            projectController.create_sgt_project(name, location);
                         }
                     }
 
@@ -434,7 +434,7 @@ ApplicationWindow {
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 30
                     text: ""
-                    visible: mainController.enable_img_controls()
+                    visible: imageController.enable_img_controls()
                     onClicked: {
                         dialogExtractGraph.close();
                         mainController.run_extract_graph();
@@ -631,7 +631,7 @@ ApplicationWindow {
                     text: ""
                     onClicked: {
                         dialogRunAnalyzer.close();
-                        mainController.run_graph_analyzer();
+                        graphController.run_graph_analyzer();
                     }
 
                     Rectangle {
@@ -701,7 +701,7 @@ ApplicationWindow {
                     text: ""
                     onClicked: {
                         dialogRunMultiAnalyzer.close();
-                        mainController.run_multi_graph_analyzer();
+                        graphController.run_multi_graph_analyzer();
                     }
 
                     Rectangle {
@@ -725,7 +725,7 @@ ApplicationWindow {
         title: "Select a Folder"
         onAccepted: {
             //console.log("Selected folder:", folder)
-            mainController.set_output_dir(folder)
+            projectController.set_output_dir(folder)
         }
         //onRejected: {console.log("Canceled")}
     }
@@ -735,7 +735,7 @@ ApplicationWindow {
         title: "Select a Folder"
         onAccepted: {
             //console.log("Selected folder:", folder)
-            mainController.upload_multiple_images(imageFolderDialog.folder);
+            projectController.upload_multiple_images(imageFolderDialog.folder);
         }
         //onRejected: {console.log("Canceled")}
     }
@@ -743,9 +743,9 @@ ApplicationWindow {
     QuickDialogs.FileDialog {
         id: imageFileDialog
         title: "Open image file"
-        nameFilters: [mainController.get_file_extensions("img")]
+        nameFilters: [projectController.get_file_extensions("img")]
         onAccepted: {
-            mainController.upload_single_image(imageFileDialog.selectedFile);
+            projectController.upload_single_image(imageFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }
@@ -753,9 +753,9 @@ ApplicationWindow {
     QuickDialogs.FileDialog {
         id: graphFileDialog
         title: "Open file"
-        nameFilters: [mainController.get_file_extensions("graph")]
+        nameFilters: [projectController.get_file_extensions("graph")]
         onAccepted: {
-            mainController.upload_graph_file(graphFileDialog.selectedFile);
+            projectController.upload_graph_file(graphFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }
@@ -763,9 +763,9 @@ ApplicationWindow {
     QuickDialogs.FileDialog {
         id: projectFileDialog
         title: "Open .sgtproj file"
-        nameFilters: [mainController.get_file_extensions("proj")]
+        nameFilters: [projectController.get_file_extensions("proj")]
         onAccepted: {
-            mainController.open_sgt_project(projectFileDialog.selectedFile);
+            projectController.open_sgt_project(projectFileDialog.selectedFile);
         }
         //onRejected: console.log("File selection canceled")
     }
@@ -782,7 +782,7 @@ ApplicationWindow {
         }
 
         function onImageChangedSignal() {
-            btnRunExtractGraph.visible = mainController.enable_img_controls();
+            btnRunExtractGraph.visible = imageController.enable_img_controls();
         }
 
     }

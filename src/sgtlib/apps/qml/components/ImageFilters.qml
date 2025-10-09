@@ -30,7 +30,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.leftMargin: 20
             Layout.rightMargin: 20
-            visible: mainController.display_image()
+            visible: imageController.display_image()
         }
         ImageFilterWidget {
         }
@@ -45,7 +45,7 @@ Rectangle {
 
         function onImageChangedSignal() {
             // Force refresh
-            rectHLine1.visible = mainController.display_image();
+            rectHLine1.visible = imageController.display_image();
         }
     }
 }

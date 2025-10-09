@@ -106,7 +106,7 @@ ColumnLayout {
                     ToolTip.text: "Delete image"
                     ToolTip.visible: hovered
                     visible: model.selected
-                    onClicked: mainController.delete_selected_thumbnail(row)
+                    onClicked: projectController.delete_selected_thumbnail(row)
                 }
             }
 
@@ -124,17 +124,22 @@ ColumnLayout {
             tblImgThumbs.enabled = !mainController.is_task_running();
         }
 
-        function onProjectOpenedSignal(name) {
-            lblNoImages.text = "No images to show!\nPlease import image(s).";
-            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0;
-        }
-
         function onUpdateProgressSignal(val, msg) {
             tblImgThumbs.enabled = !mainController.is_task_running();
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             tblImgThumbs.enabled = !mainController.is_task_running();
+        }
+
+    }
+
+    Connections {
+        target: projectController
+
+        function onProjectOpenedSignal(name) {
+            lblNoImages.text = "No images to show!\nPlease import image(s).";
+            tblImgThumbs.visible = imgThumbnailModel.rowCount() > 0;
         }
 
     }

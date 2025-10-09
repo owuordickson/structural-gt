@@ -6,7 +6,7 @@ import QtQuick.Controls.Basic as Basic
 Item {
     id: waitOverlay
     anchors.fill: parent
-    visible: mainController.wait && !mainController.img_filters_busy
+    visible: mainController.wait && !imageController.img_filters_busy
     z: 9999
 
     Rectangle {

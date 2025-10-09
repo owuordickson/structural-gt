@@ -111,7 +111,7 @@ Rectangle {
                             id: allowScalingContainer
                             spacing: 2
                             //Layout.alignment: Qt.AlignHCenter
-                            visible: !mainController.display_image()
+                            visible: !imageController.display_image()
 
                             Label {
                                 text: "Auto Scale Image"
@@ -124,10 +124,10 @@ Rectangle {
                                 onCheckedChanged: {
                                     if (checked) {
                                         // Actions when switched on
-                                        mainController.set_auto_scale(true)
+                                        imageController.set_auto_scale(true)
                                     } else {
                                         // Actions when switched off
-                                        mainController.set_auto_scale(false)
+                                        imageController.set_auto_scale(false)
                                     }
                                 }
                             }
@@ -153,7 +153,7 @@ Rectangle {
                 ToolTip.text: "Adjust brightness/contrast"
                 ToolTip.visible: btnBrightness.hovered
                 onClicked: drpDownBrightness.open()
-                enabled: mainController.display_image()
+                enabled: imageController.display_image()
 
                 Popup {
                     id: drpDownBrightness
@@ -190,8 +190,8 @@ Rectangle {
                 }
                 ToolTip.text: "Select area to crop"
                 ToolTip.visible: btnSelect.hovered
-                visible: mainController.display_image()
-                enabled: mainController.enable_img_controls()
+                visible: imageController.display_image()
+                enabled: imageController.enable_img_controls()
                 onClicked: enableRectangularSelect()
 
                 Rectangle {
@@ -234,7 +234,7 @@ Rectangle {
                 }
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
-                onClicked: mainController.undo_applied_changes(true, "cropping", -1)
+                onClicked: imageController.undo_applied_changes(true, "cropping", -1)
                 visible: false
             }
         }
@@ -259,7 +259,7 @@ Rectangle {
                 implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
                 ToolTip.text: "Change image type"
                 ToolTip.visible: hovered
-                enabled: mainController.display_image()
+                enabled: imageController.display_image()
 
                 delegate: ItemDelegate {
                     id: control
@@ -286,7 +286,7 @@ Rectangle {
                         imgViewOptionModel.setData(idx, val, modelValueRole);
                     }
                     // Call Python controller
-                    mainController.apply_changes("");
+                    imageController.apply_changes("");
                 }
             }
 
@@ -303,7 +303,7 @@ Rectangle {
                 ToolTip.text: "Extract graph"
                 ToolTip.visible: btnShowGraph.hovered
                 onClicked: drpDownGraph.open()
-                enabled: mainController.display_image()
+                enabled: imageController.display_image()
 
                 Popup {
                     id: drpDownGraph
@@ -354,10 +354,10 @@ Rectangle {
                                 Layout.preferredWidth: 40
                                 Layout.preferredHeight: 30
                                 text: ""
-                                visible: mainController.enable_img_controls()
+                                visible: imageController.enable_img_controls()
                                 onClicked: {
                                     drpDownGraph.close();
-                                    mainController.run_extract_graph();
+                                    graphController.run_extract_graph();
                                 }
 
                                 Rectangle {
@@ -383,18 +383,18 @@ Rectangle {
 
     function enableRectangularSelect() {
         if (btnSelectBorder.enabled) {
-            mainController.enable_rectangular_selection(false)
+            imageController.enable_rectangular_selection(false)
             btnSelectBorder.border.color = "black"
             btnSelectBorder.enabled = false
         } else {
-            mainController.enable_rectangular_selection(true)
+            imageController.enable_rectangular_selection(true)
             btnSelectBorder.border.color = "red"
             btnSelectBorder.enabled = true
         }
     }
 
     Connections {
-        target: mainController
+        target: imageController
 
         function onShowCroppingToolSignal(allow) {
             btnCrop.visible = allow;
@@ -403,20 +403,24 @@ Rectangle {
         function onShowUnCroppingToolSignal(allow) {
             btnUndo.visible = allow;
         }
+    }
+
+    Connections {
+        target: mainController
 
         function onImageChangedSignal() {
             // Force refresh
-            btnRunGraph.visible = mainController.enable_img_controls();
-            btnSelect.visible = mainController.display_image();
-            allowScalingContainer.visible = !mainController.display_image();
-            btnSelect.enabled = mainController.enable_img_controls();
-            btnBrightness.enabled = mainController.display_image();
-            cbImageType.enabled = mainController.display_image();
-            btnShowGraph.enabled = mainController.display_image();
+            btnRunGraph.visible = imageController.enable_img_controls();
+            btnSelect.visible = imageController.display_image();
+            allowScalingContainer.visible = !imageController.display_image();
+            btnSelect.enabled = imageController.enable_img_controls();
+            btnBrightness.enabled = imageController.display_image();
+            cbImageType.enabled = imageController.display_image();
+            btnShowGraph.enabled = imageController.display_image();
 
-            drpDownRescale.height = mainController.display_image() ? 180 : 50;
+            drpDownRescale.height = imageController.display_image() ? 180 : 50;
             if (drpDownRescale.height === 180) {
-                drpDownRescale.height = mainController.enable_img_controls() ? 180 : 0;
+                drpDownRescale.height = imageController.enable_img_controls() ? 180 : 0;
             }
 
             // Update the combobox view

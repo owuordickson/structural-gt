@@ -87,7 +87,7 @@ Item {
                     if (txtProjectName.text === "" || txtProjectLocation.text === "") {
                         // Alert user - empty fields
                     } else {
-                        mainController.create_sgt_project(txtProjectName.text, txtProjectLocation.text)
+                        projectController.create_sgt_project(txtProjectName.text, txtProjectLocation.text)
                     }
                 }
             }

@@ -43,7 +43,7 @@ Window {
                     valueRole: "value"
                     ToolTip.text: "Change image batch"
                     ToolTip.visible: cbColorsBatchSelector.hovered
-                    onCurrentIndexChanged: mainController.select_img_batch(valueAt(currentIndex))
+                    onCurrentIndexChanged: imageController.select_img_batch(valueAt(currentIndex))
                 }
 
                 Rectangle {
@@ -51,7 +51,7 @@ Window {
                     width: 1
                     height: 18
                     color: "#d0d0d0"
-                    visible: mainController.is_img_3d()
+                    visible: imageController.is_img_3d()
                 }
 
                 ComboBox {
@@ -64,8 +64,8 @@ Window {
                     ToolTip.text: "Select image"
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
-                    visible: mainController.is_img_3d()
-                    onCurrentIndexChanged: mainController.select_batch_image_index(currentIndex)
+                    visible: imageController.is_img_3d()
+                    onCurrentIndexChanged: imageController.select_batch_image_index(currentIndex)
                 }
 
             }
@@ -88,7 +88,7 @@ Window {
                 RowLayout {
                     spacing: 4
                     Layout.alignment: Qt.AlignHCenter
-                    visible: !mainController.wait && !mainController.img_filters_busy
+                    visible: !mainController.wait && !imageController.img_filters_busy
 
                     Material.Label {
                         text: "Maximum Unique Colors: "
@@ -126,19 +126,19 @@ Window {
                         icon.color: "transparent"   // important for PNGs
                         ToolTip.text: "Get the dominant colors of the image."
                         ToolTip.visible: btnGetColors.hovered
-                        visible: !mainController.wait && !mainController.img_filters_busy
+                        visible: !mainController.wait && !imageController.img_filters_busy
                         onClicked: {
                             let sel_img = cbColorsImageSelector.currentIndex;
                             let max_colors = spbMaxColors.value;
-                            mainController.run_retrieve_img_colors(sel_img, max_colors);
+                            imageController.run_retrieve_img_colors(sel_img, max_colors);
                         }
                     }
 
                     Column {
-                        visible: mainController.img_filters_busy
+                        visible: imageController.img_filters_busy
 
                         SpinnerProgress {
-                            running: mainController.img_filters_busy
+                            running: imageController.img_filters_busy
                             width: 24
                             height: 24
                         }
@@ -317,11 +317,11 @@ Window {
                             icon.color: "transparent"   // important for PNGs
                             //ToolTip.text: "Eliminate the selected colors."
                             //ToolTip.visible: btnUndoEliminate.hovered
-                            enabled: !mainController.img_filters_busy
+                            enabled: !imageController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
                                 let swap_color = btnGrpSwap.checkedButton === rdoWhite ? 1 : 0;
-                                mainController.run_eliminate_img_colors(sel_img, swap_color);
+                                imageController.run_eliminate_img_colors(sel_img, swap_color);
                             }
                         }
 
@@ -337,10 +337,10 @@ Window {
                             icon.color: "transparent"   // important for PNGs
                             //ToolTip.text: "Undo the last color elimination."
                             //ToolTip.visible: btnUndoEliminate.hovered
-                            enabled: !mainController.img_filters_busy
+                            enabled: !imageController.img_filters_busy
                             onClicked: {
                                 let sel_img = cbColorsImageSelector.currentIndex;
-                                mainController.undo_applied_changes(true, "colors", sel_img)
+                                imageController.undo_applied_changes(true, "colors", sel_img)
                             }
                         }
                     }
@@ -357,22 +357,26 @@ Window {
 
         function onImageChangedSignal() {
             if (imgColorsWindow.visible) {
-                imgSelectionControls.visible = mainController.image_batches_exist();
-                vertColorsLine.visible = mainController.is_img_3d();
-                cbColorsImageSelector.visible = mainController.is_img_3d();
+                imgSelectionControls.visible = imageController.image_batches_exist();
+                vertColorsLine.visible = imageController.is_img_3d();
+                cbColorsImageSelector.visible = imageController.is_img_3d();
 
                 colorsLayout.visible = imgColorsModel.rowCount() > 0;
 
-                if (mainController.image_batches_exist()) {
-                    cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
-                    cbColorsImageSelector.currentIndex = mainController.get_selected_batch_image_index();
+                if (imageController.image_batches_exist()) {
+                    cbColorsBatchSelector.currentIndex = imageController.get_selected_img_batch();
+                    cbColorsImageSelector.currentIndex = imageController.get_selected_batch_image_index();
                 }
 
                 let img_idx = cbColorsImageSelector.currentIndex;
-                let base64_img = mainController.get_selected_image(img_idx, "mutated");
+                let base64_img = imageController.get_selected_image(img_idx, "mutated");
                 imgCurrent.source = "data:image/png;base64," + base64_img;
             }
         }
+    }
+
+    Connections {
+        target: imageController
 
         function onShowImageFilterControls(allow) {
             // Force refresh

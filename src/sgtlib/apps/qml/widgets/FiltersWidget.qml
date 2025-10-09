@@ -9,8 +9,8 @@ ColumnLayout {
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignTop
     Layout.bottomMargin: 10
-    visible: mainController.display_image()
-    enabled: mainController.enable_img_controls()
+    visible: imageController.display_image()
+    enabled: imageController.enable_img_controls()
 
 
     RowLayout {
@@ -20,7 +20,7 @@ ColumnLayout {
             id: btnShowImgHistogram
             text: "Image Histogram"
             padding: 5
-            enabled: mainController.enable_img_controls()
+            enabled: imageController.enable_img_controls()
             onClicked: imgHistogramWindow.visible = true
         }
 
@@ -34,7 +34,7 @@ ColumnLayout {
             id: btnShowImgColors
             text: "Image Colors"
             padding: 5
-            enabled: mainController.enable_img_controls()
+            enabled: imageController.enable_img_controls()
             onClicked: imgColorsWindow.visible = true
         }
 
@@ -46,15 +46,19 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            imgFilterButtons.visible = mainController.display_image();
-            imgFilterButtons.enabled = mainController.enable_img_controls();
+            imgFilterButtons.visible = imageController.display_image();
+            imgFilterButtons.enabled = imageController.enable_img_controls();
         }
+    }
+
+    Connections {
+        target: imageController
 
         function onShowImageFilterControls(allow) {
 
             if (allow) {
-                btnShowImgHistogram.enabled = mainController.enable_img_controls();
-                btnShowImgColors.enabled = mainController.enable_img_controls();
+                btnShowImgHistogram.enabled = imageController.enable_img_controls();
+                btnShowImgColors.enabled = imageController.enable_img_controls();
             } else {
                 btnShowImgHistogram.enabled = allow;
                 btnShowImgColors.enabled = allow;

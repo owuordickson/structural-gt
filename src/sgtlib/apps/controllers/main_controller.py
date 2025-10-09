@@ -5,7 +5,7 @@ Pyside6 (GUI components) main controller class.
 
 import logging
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Slot, Signal
+from PySide6.QtCore import Slot, Signal, Property
 
 from .ai_controller import AIController
 from .base_controller import BaseController
@@ -21,6 +21,8 @@ from ...utils.sgt_utils import TaskResult, ProgressData
 class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
+    _waitChanged = Signal()
+    _waitTextChanged = Signal()
     errorSignal = Signal(str)
     changeImageSignal = Signal()
     imageChangedSignal = Signal()
@@ -46,6 +48,26 @@ class MainController(BaseController):
     @property
     def qml_app(self):
         return self._qml_app
+
+    @BaseController.wait_flag.setter
+    def wait_flag(self, value: bool):
+        """Sets the wait flag indicating if the application is currently running a task in the background."""
+        self._wait_flag = value
+        self._waitChanged.emit()
+
+    @BaseController.wait_msg.setter
+    def wait_msg(self, value: str):
+        """Sets the wait message indicating the current task."""
+        self._wait_msg = value
+        self._waitTextChanged.emit()
+
+    @Property(bool, notify=_waitChanged)
+    def wait(self):
+        return self._wait_flag
+
+    @Property(str, notify=_waitTextChanged)
+    def wait_text(self):
+        return self._wait_msg
 
     @Slot(int)
     def load_image(self, index=None, reload_thumbnails=False):

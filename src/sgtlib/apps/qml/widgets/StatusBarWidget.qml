@@ -67,7 +67,7 @@ Rectangle {
             Label {
                 id: lblVersion
                 Layout.alignment: Qt.AlignLeft
-                text: mainController.get_sgt_version()
+                text: projectController.get_sgt_version()
                 visible: !mainController.is_task_running()
                 Layout.fillWidth: true
                 color: "#2266ff"
@@ -119,7 +119,7 @@ Rectangle {
                             wrapMode: Text.Wrap
                             textFormat: Text.RichText  // Enable HTML formatting
                             onLinkActivated: (link) => Qt.openUrlExternally(link)  // Opens links in default browser
-                            text: mainController.get_software_download_details()
+                            text: projectController.get_software_download_details()
                         }
                     }
 
@@ -178,8 +178,8 @@ Rectangle {
                 dialogAlert.open();
             }
 
-            const updates_available = mainController.check_for_updates();
-            lblNotifyMsg.text = mainController.get_software_download_details();
+            const updates_available = projectController.check_for_updates();
+            lblNotifyMsg.text = projectController.get_software_download_details();
             if (updates_available) {
                 btnNotify.icon.source = "../assets/icons/notify_active_icon.png";
                 btnNotify.icon.width = 28;

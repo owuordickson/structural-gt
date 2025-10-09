@@ -6,7 +6,6 @@ Item {
     id: graphComputationCtrl
     width: parent.width
     implicitHeight: gtComputationLayout.implicitHeight
-    //enabled: mainController.enable_img_controls()
 
     property int valueRole: Qt.UserRole + 4
 
@@ -100,14 +99,6 @@ Item {
                 Layout.preferredWidth: 200
                 text: "**Warning**: this calculation takes long (esp. when node-count > 2000)"
             }
-        }
-    }
-
-    Connections {
-        target: mainController
-
-        function onImageChangedSignal() {
-            //graphComputationCtrl.enabled = mainController.enable_img_controls();
         }
     }
 }

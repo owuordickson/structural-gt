@@ -6,7 +6,7 @@ RowLayout {
     Layout.preferredWidth: parent.width
     Layout.leftMargin: 10
     Layout.bottomMargin: 5
-    visible: !mainController.ai_busy && mainController.ai_mode_active
+    visible: !aiController.ai_busy && aiController.ai_mode_active
 
     property int valueRole: Qt.UserRole + 4
 

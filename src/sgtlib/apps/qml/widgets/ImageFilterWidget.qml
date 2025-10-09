@@ -20,7 +20,7 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         text: "No image filters to show!\nCreate project/add image."
         color: "#808080"
-        visible: !mainController.display_image()
+        visible: !imageController.display_image()
     }
 
     Text {
@@ -29,7 +29,7 @@ ColumnLayout {
         font.pixelSize: 12
         font.bold: true
         Layout.alignment: Qt.AlignHCenter
-        visible: mainController.display_image()
+        visible: imageController.display_image()
     }
 
     Column {
@@ -62,7 +62,7 @@ ColumnLayout {
                             let val = checked ? 1 : 0;
                             var index = imgFilterModel.index(model.index, 0);
                             imgFilterModel.setData(index, val, valueRole);
-                            mainController.apply_changes(""); // Only runs if not from click
+                            imageController.apply_changes(""); // Only runs if not from click
                         }
                     }
                     onClicked: {
@@ -71,7 +71,7 @@ ColumnLayout {
                         let val = checked ? 1 : 0;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, valueRole);
-                        mainController.apply_changes("binary");
+                        imageController.apply_changes("binary");
                     }
                 }
 
@@ -143,7 +143,7 @@ ColumnLayout {
                         curr_val = val;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, dataValueRole);
-                        mainController.apply_changes("");
+                        imageController.apply_changes("");
                     }
                 }
             }
@@ -157,10 +157,10 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            lblNoImgFilters.visible = !mainController.display_image();
-            txtTitleImgFilters.visible = mainController.display_image();
-            colFilters.visible = mainController.display_image();
-            colFilters.enabled = mainController.enable_img_controls();
+            lblNoImgFilters.visible = !imageController.display_image();
+            txtTitleImgFilters.visible = imageController.display_image();
+            colFilters.visible = imageController.display_image();
+            colFilters.enabled = imageController.enable_img_controls();
         }
 
     }

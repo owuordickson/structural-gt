@@ -17,7 +17,7 @@ ColumnLayout {
 
     RowLayout {
         id: rowLayoutProject
-        visible: mainController.is_project_open()
+        visible: projectController.is_project_open()
 
         Label {
             text: "Project Name:"
@@ -80,7 +80,7 @@ ColumnLayout {
             background: Rectangle {
                 color: "transparent"
             }
-            enabled: mainController.display_image()
+            enabled: imageController.display_image()
             onClicked: outFolderDialog.open()
         }
     }
@@ -91,7 +91,7 @@ ColumnLayout {
         leftPadding: 10
         rightPadding: 10
         Layout.alignment: Qt.AlignHCenter
-        enabled: mainController.display_image()
+        enabled: imageController.display_image()
         onClicked: imageFileDialog.open()
     }
 
@@ -101,15 +101,19 @@ ColumnLayout {
 
         function onImageChangedSignal() {
             // Force refresh
-            txtOutputDir.text = mainController.get_output_dir();
-            btnChangeOutDir.enabled = mainController.display_image();
-            btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
+            txtOutputDir.text = projectController.get_output_dir();
+            btnChangeOutDir.enabled = imageController.display_image();
+            btnImportImages.enabled = imageController.display_image() || projectController.is_project_open();
         }
+    }
+
+    Connections {
+        target: projectController
 
         function onProjectOpenedSignal(name) {
             txtProjectName.text = name;
-            rowLayoutProject.visible = mainController.is_project_open();
-            btnImportImages.enabled = mainController.display_image() || mainController.is_project_open();
+            rowLayoutProject.visible = projectController.is_project_open();
+            btnImportImages.enabled = imageController.display_image() || projectController.is_project_open();
         }
     }
 }

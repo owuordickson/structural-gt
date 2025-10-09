@@ -7,7 +7,7 @@ MenuBar {
     property int valueRole: Qt.UserRole + 4
 
     Menu {
-        title: mainController.get_sgt_title()
+        title: projectController.get_sgt_title()
         MenuItem { text: "&About"; onTriggered: dialogAbout.open(); }
         MenuSeparator{}
         MenuItem { text: "&Quit"; onTriggered: Qt.quit(); }
@@ -82,7 +82,7 @@ MenuBar {
             var index = exportGraphModel.index(i, 0);
             exportGraphModel.setData(index, val, valueRole);
         }
-        mainController.export_graph_to_file();
+        graphController.export_graph_to_file();
     }
     
     
@@ -93,20 +93,20 @@ MenuBar {
             var index = saveImgModel.index(i, 0);
             saveImgModel.setData(index, val, valueRole);
         }
-        mainController.save_img_files();
+        imageController.save_img_files();
     }
     
 
     function save_project () {
 
-        let is_open = mainController.is_project_open();
+        let is_open = projectController.is_project_open();
         if (is_open === false) {
             dialogAlert.title = "Save Error";
             lblAlertMsg.text = "Please create/open the SGT project first, then try again.";
             lblAlertMsg.color = "#2255bc";
             dialogAlert.open();
         } else {
-            let success_val = mainController.run_save_project();
+            projectController.run_save_project();
         }
 
     }
@@ -117,7 +117,7 @@ MenuBar {
 
         function onImageChangedSignal() {
             // Force refresh
-            mnuSaveProjAs.enabled = mainController.display_image();
+            mnuSaveProjAs.enabled = imageController.display_image();
             mnuExportEdges.enabled = graphPropsModel.rowCount() > 0;
             mnuExportNodes.enabled = graphPropsModel.rowCount() > 0;
             mnuExportAdj.enabled = graphPropsModel.rowCount() > 0;
@@ -125,23 +125,13 @@ MenuBar {
             mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
             mnuExportAll.enabled = graphPropsModel.rowCount() > 0;
 
-            //mnuRescaleImgCtrl.enabled = mainController.display_image();  HAS ERRORS
-            mnuBrightnessImgCtrl.enabled = mainController.display_image();
-            mnuContrastImgCtrl.enabled = mainController.display_image();
-            mnuBinImgFilter.enabled = mainController.display_image();
-            mnuImgFilter.enabled = mainController.display_image();
-            mnuSoloAnalze.enabled = mainController.display_image();
-            mnuMultiAnalyze.enabled = mainController.display_image();
-        }
-
-        function onShowImageFilterControls(allow) {
-            if (allow) {
-                mnuImgHistogram.enabled = mainController.enable_img_controls();
-                mnuImgColors.enabled = mainController.enable_img_controls();
-            } else {
-                mnuImgHistogram.enabled = allow;
-                mnuImgColors.enabled = allow;
-            }
+            //mnuRescaleImgCtrl.enabled = imageController.display_image();  HAS ERRORS
+            mnuBrightnessImgCtrl.enabled = imageController.display_image();
+            mnuContrastImgCtrl.enabled = imageController.display_image();
+            mnuBinImgFilter.enabled = imageController.display_image();
+            mnuImgFilter.enabled = imageController.display_image();
+            mnuSoloAnalze.enabled = imageController.display_image();
+            mnuMultiAnalyze.enabled = imageController.display_image();
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
@@ -151,6 +141,21 @@ MenuBar {
             mnuExportGexf.enabled = graphPropsModel.rowCount() > 0;
             mnuExportGSD.enabled = graphPropsModel.rowCount() > 0;
             mnuExportAll.enabled = graphPropsModel.rowCount() > 0;
+        }
+    }
+
+
+    Connections {
+        target: imageController
+
+        function onShowImageFilterControls(allow) {
+            if (allow) {
+                mnuImgHistogram.enabled = imageController.enable_img_controls();
+                mnuImgColors.enabled = imageController.enable_img_controls();
+            } else {
+                mnuImgHistogram.enabled = allow;
+                mnuImgColors.enabled = allow;
+            }
         }
     }
 }

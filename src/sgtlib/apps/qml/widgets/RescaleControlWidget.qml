@@ -17,7 +17,7 @@ Item {
         id: scalingContainer
         spacing: 5
         //Layout.alignment: Qt.AlignHCenter
-        visible: mainController.enable_img_controls()
+        visible: imageController.enable_img_controls()
 
         Label {
             id: lblScaling
@@ -56,7 +56,7 @@ Item {
                                 var index = imgFilterModel.index(model.index, 0);
                                 imgScaleOptionModel.setData(index, val, valueRole);
                                 drpDownRescale.close();
-                                mainController.apply_img_scaling();
+                                imageController.apply_img_scaling();
                             }
                         }
                     }
@@ -74,7 +74,7 @@ Item {
 
         function onImageChangedSignal() {
             // Force refresh
-            scalingContainer.visible = mainController.enable_img_controls();
+            scalingContainer.visible = imageController.enable_img_controls();
         }
     }
 

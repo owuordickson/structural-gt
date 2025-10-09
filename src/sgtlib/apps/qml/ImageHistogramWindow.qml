@@ -35,15 +35,15 @@ Window {
                 icon.color: "transparent"   // important for PNGs
                 ToolTip.text: "Reload everytime you change the image."
                 ToolTip.visible: btnReloadHistogram.hovered
-                visible: !mainController.histogram_busy
-                onClicked: mainController.compute_img_histogram()
+                visible: !imageController.histogram_busy
+                onClicked: imageController.compute_img_histogram()
             }
 
             Column {
-                visible: mainController.histogram_busy
+                visible: imageController.histogram_busy
 
                 SpinnerProgress {
-                    running: mainController.histogram_busy
+                    running: imageController.histogram_busy
                     width: 24
                     height: 24
                 }
@@ -113,6 +113,10 @@ Window {
                 imgHistGridView.visible = imgHistogramModel.rowCount() > 0;
             }
         }
+    }
+
+    Connections {
+        target: imageController
 
         function onShowImageFilterControls(allow) {
             // Force refresh

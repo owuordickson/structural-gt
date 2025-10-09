@@ -12,8 +12,8 @@ Rectangle {
     radius: 5
     color: "#f0fff0"
     Layout.margins: 5   // shorthand for top/left/right/bottom
-    visible: mainController.display_image()
-    enabled: mainController.enable_img_controls()
+    visible: imageController.display_image()
+    enabled: imageController.enable_img_controls()
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
@@ -43,17 +43,17 @@ Rectangle {
                 id: toggleAIMode
                 ToolTip.text: "Activate"
                 ToolTip.visible: toggleAIMode.hovered
-                checked: mainController.ai_mode_active
+                checked: aiController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
                         lblAIMode.color = "#2266ff";
                         toggleAIMode.ToolTip.text = "Deactivate";
-                        mainController.toggle_ai_mode(true);
-                        mainController.run_ai_filter_search();
+                        aiController.toggle_ai_mode(true);
+                        aiController.run_ai_filter_search();
                     } else {
                         lblAIMode.color = "#d0d0d0";
                         toggleAIMode.ToolTip.text = "Activate";
-                        mainController.toggle_ai_mode(false);
+                        aiController.toggle_ai_mode(false);
                     }
                 }
             }
@@ -70,14 +70,14 @@ Rectangle {
                 }
                 ToolTip.text: "Re-run"
                 ToolTip.visible: btnRunAI.hovered
-                visible: !mainController.ai_busy && mainController.ai_mode_active
-                onClicked: mainController.reset_ai_filter_results()
+                visible: !aiController.ai_busy && aiController.ai_mode_active
+                onClicked: aiController.reset_ai_filter_results()
             }
 
             Column {
-                visible: mainController.ai_busy
+                visible: aiController.ai_busy
                 SpinnerProgress {
-                    running: mainController.ai_busy
+                    running: aiController.ai_busy
                     width: 24
                     height: 24
                 }
@@ -95,7 +95,7 @@ Rectangle {
                 }
                 ToolTip.text: "Stop!"
                 ToolTip.visible: btnStopAI.hovered
-                visible: mainController.ai_busy
+                visible: aiController.ai_busy
                 onClicked: mainController.stop_current_task(2)
             }
         }
@@ -107,7 +107,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 5
-            visible: mainController.ai_busy
+            visible: aiController.ai_busy
 
             Label {
                 id: lblAIStatusMsg
@@ -118,7 +118,7 @@ Rectangle {
     }
 
     Connections {
-        target: mainController
+        target: aiController
 
         function onUpdateAIProgressSignal(val, msg) {
             if (val <= 100) {
@@ -127,10 +127,14 @@ Rectangle {
                 lblAIStatusMsg.text = msg;
             }
         }
+    }
+
+    Connections {
+        target: mainController
 
         function onImageChangedSignal() {
-            aiModeControls.visible = mainController.display_image();
-            aiModeControls.enabled = mainController.enable_img_controls();
+            aiModeControls.visible = imageController.display_image();
+            aiModeControls.enabled = imageController.enable_img_controls();
         }
     }
 }
