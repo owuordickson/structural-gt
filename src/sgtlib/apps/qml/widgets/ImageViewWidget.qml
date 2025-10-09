@@ -347,7 +347,6 @@ ColumnLayout {
                 visible: !imageController.is_img_3d()
             }
 
-
             GridView {
                 id: imgGridView
                 width: flickableArea.width
@@ -412,6 +411,9 @@ ColumnLayout {
             }
 
         }
+
+        // Cropping Tool
+        //ImageCroppingWidget{}
 
         // Selection Rectangle for Cropping
         Rectangle {
@@ -675,13 +677,8 @@ ColumnLayout {
         target: imageController
 
         function onEnableRectangularSelectionSignal(allow) {
-            if (allow) {
-                selectionArea.enabled = true;
-                cropArea.visible = true
-            } else {
-                selectionArea.enabled = false
-                cropArea.visible = false
-            }
+            selectionArea.enabled = allow;
+            cropArea.visible = allow;
         }
 
         function onPerformCroppingSignal(allow) {
