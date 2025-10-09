@@ -365,7 +365,7 @@ Window {
 
                 if (mainController.image_batches_exist()) {
                     cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
-                    cbColorsImageSelector.currentIndex = mainController.get_selected_batch_image_index( );
+                    cbColorsImageSelector.currentIndex = mainController.get_selected_batch_image_index();
                 }
 
                 let img_idx = cbColorsImageSelector.currentIndex;
