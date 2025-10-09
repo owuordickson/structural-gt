@@ -1,111 +1,243 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Shapes
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Item {
     id: overlay
     anchors.fill: parent
-    property alias rectX: cropRect.x
-    property alias rectY: cropRect.y
-    property alias rectWidth: cropRect.width
-    property alias rectHeight: cropRect.height
 
+    // rectangle coordinates (px, relative to overlay)
+    property real leftPt: 0
+    property real topPt: 0
+    property real rightPt: width
+    property real bottomPt: height
+
+    // helpers / config
+    property int handleSize: 24
+    property int minWidth: 40
+    property int minHeight: 40
     property color borderColor: "#00AEEF"
-    property real handleSize: 24
-    property real borderWidth: 2
+    property bool _initialized: false
 
-    // ✅ The transparent rectangle overlay
-    Rectangle {
-        id: cropRect
-        anchors.centerIn: parent
-        width: parent.width
-        height: parent.height
-        color: "transparent"
-        border.color: overlay.borderColor
-        border.width: overlay.borderWidth
-        z: 1
+    // snapshots used while dragging
+    property real _startLeft: 0
+    property real _startTop: 0
+    property real _startRight: 0
+    property real _startBottom: 0
+    property real _startMouseX: 0
+    property real _startMouseY: 0
+
+    // init to full size once size is known
+    onWidthChanged: {
+        if (!_initialized && width > 0 && height > 0) {
+            leftPt = 0;
+            topPt = 0;
+            rightPt = width;
+            bottomPt = height;
+            _initialized = true;
+        }
     }
 
-    // ✅ Semi-transparent mask outside the crop area
-    /*Rectangle {
+    // visible crop rectangle (computed from coords)
+    Rectangle {
+        id: cropRect
+        x: overlay.leftPt
+        y: overlay.topPt
+        width: Math.max(overlay.minWidth, overlay.rightPt - overlay.leftPt)
+        height: Math.max(overlay.minHeight, overlay.bottomPt - overlay.topPt)
+        color: "transparent"
+        border.width: 2
+        border.color: overlay.borderColor
+        z: 2
+
+        // move the whole rectangle by dragging inside
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeAllCursor
+            onPressed: (mouse) => {
+                // snapshot coords and mouse position (parent is cropRect here)
+                overlay._startLeft = overlay.leftPt;
+                overlay._startRight = overlay.rightPt;
+                overlay._startTop = overlay.topPt;
+                overlay._startBottom = overlay.bottomPt;
+                overlay._startMouseX = parent.x + mouse.x; // mouse pos relative to overlay
+                overlay._startMouseY = parent.y + mouse.y;
+            }
+            onPositionChanged: (mouse) => {
+                var curX = parent.x + mouse.x;
+                var curY = parent.y + mouse.y;
+                var dx = curX - overlay._startMouseX;
+                var dy = curY - overlay._startMouseY;
+
+                // shift all coordinates while clamping to parent bounds
+                var newLeft = overlay._startLeft + dx;
+                var newRight = overlay._startRight + dx;
+                var newTop = overlay._startTop + dy;
+                var newBottom = overlay._startBottom + dy;
+
+                // clamp horizontally
+                var w = newRight - newLeft;
+                if (newLeft < 0) { newLeft = 0; newRight = newLeft + w; }
+                if (newRight > overlay.width) { newRight = overlay.width; newLeft = newRight - w; }
+                // clamp vertically
+                var h = newBottom - newTop;
+                if (newTop < 0) { newTop = 0; newBottom = newTop + h; }
+                if (newBottom > overlay.height) { newBottom = overlay.height; newTop = newBottom - h; }
+
+                // apply
+                overlay.leftPt = newLeft;
+                overlay.rightPt = newRight;
+                overlay.topPt = newTop;
+                overlay.bottomPt = newBottom;
+            }
+        }
+    }
+
+    // helper function for clamp (optional; using Math.min/Math.max inline below)
+
+    // --- Handles: top, bottom, left, right ---
+    // Top handle (modifies `top` only; bottom is fixed)
+    Rectangle {
+        id: topHandle
+        width: overlay.handleSize; height: overlay.handleSize
+        x: (overlay.leftPt + overlay.rightPt) / 2 - width/2
+        y: overlay.topPt - height/2
+        radius: 6
+        color: "transparent"
+        border.width: 1
+        border.color: "white"
+        z: 3
+
+        Text { anchors.centerIn: parent; text: "▲"; color: "white"; font.pixelSize: 12 }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeVerCursor
+            onPressed: (mouse) => {
+                overlay._startTop = overlay.topPt;
+                overlay._startBottom = overlay.bottomPt;
+                overlay._startMouseY = parent.y + mouse.y; // global relative to overlay
+            }
+            onPositionChanged: (mouse) => {
+                var curY = parent.y + mouse.y;
+                var dy = curY - overlay._startMouseY;
+                var newTop = overlay._startTop + dy;
+
+                // clamp: 0 <= newTop <= bottom - minHeight
+                newTop = Math.max(0, Math.min(newTop, overlay.bottomPt - overlay.minHeight));
+                overlay.topPt = newTop;
+            }
+        }
+    }
+
+    // Bottom handle (modifies `bottom` only; top is fixed)
+    Rectangle {
+        id: bottomHandle
+        width: overlay.handleSize; height: overlay.handleSize
+        x: (overlay.leftPt + overlay.rightPt) / 2 - width/2
+        y: overlay.bottomPt - height/2
+        radius: 6
+        color: "transparent"
+        border.width: 1
+        border.color: "white"
+        z: 3
+
+        Text { anchors.centerIn: parent; text: "▼"; color: "white"; font.pixelSize: 12 }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeVerCursor
+            onPressed: (mouse) => {
+                overlay._startTop = overlay.topPt;
+                overlay._startBottom = overlay.bottomPt;
+                overlay._startMouseY = parent.y + mouse.y;
+            }
+            onPositionChanged: (mouse) => {
+                var curY = parent.y + mouse.y;
+                var dy = curY - overlay._startMouseY;
+                var newBottom = overlay._startBottom + dy;
+
+                // clamp: top + minHeight <= newBottom <= overlay.height
+                newBottom = Math.max(overlay.topPt + overlay.minHeight, Math.min(newBottom, overlay.height));
+                overlay.bottomPt = newBottom;
+            }
+        }
+    }
+
+    // Left handle (modifies `left` only; right is fixed)
+    Rectangle {
+        id: leftHandle
+        width: overlay.handleSize; height: overlay.handleSize
+        x: overlay.leftPt - width/2
+        y: (overlay.topPt + overlay.bottomPt) / 2 - height/2
+        radius: 6
+        color: "transparent"
+        border.width: 1
+        border.color: "white"
+        z: 3
+
+        Text { anchors.centerIn: parent; text: "◄"; color: "white"; font.pixelSize: 12 }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeHorCursor
+            onPressed: (mouse) => {
+                overlay._startLeft = overlay.leftPt;
+                overlay._startRight = overlay.rightPt;
+                overlay._startMouseX = parent.x + mouse.x;
+            }
+            onPositionChanged: (mouse) => {
+                var curX = parent.x + mouse.x;
+                var dx = curX - overlay._startMouseX;
+                var newLeft = overlay._startLeft + dx;
+
+                // clamp: 0 <= newLeft <= right - minWidth
+                newLeft = Math.max(0, Math.min(newLeft, overlay.rightPt - overlay.minWidth));
+                overlay.leftPt = newLeft;
+            }
+        }
+    }
+
+    // Right handle (modifies `right` only; left is fixed)
+    Rectangle {
+        id: rightHandle
+        width: overlay.handleSize; height: overlay.handleSize
+        x: overlay.rightPt - width/2
+        y: (overlay.topPt + overlay.bottomPt) / 2 - height/2
+        radius: 6
+        color: "transparent"
+        border.width: 1
+        border.color: "white"
+        z: 3
+
+        Text { anchors.centerIn: parent; text: "►"; color: "white"; font.pixelSize: 12 }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeHorCursor
+            onPressed: (mouse) => {
+                overlay._startLeft = overlay.leftPt;
+                overlay._startRight = overlay.rightPt;
+                overlay._startMouseX = parent.x + mouse.x;
+            }
+            onPositionChanged: (mouse) => {
+                var curX = parent.x + mouse.x;
+                var dx = curX - overlay._startMouseX;
+                var newRight = overlay._startRight + dx;
+
+                // clamp: left + minWidth <= newRight <= overlay.width
+                newRight = Math.max(overlay.leftPt + overlay.minWidth, Math.min(newRight, overlay.width));
+                overlay.rightPt = newRight;
+            }
+        }
+    }
+
+    // optional: show a translucent mask outside cropRect (simple version)
+    Rectangle {
         anchors.fill: parent
-        color: "#80000000"
-        z: 0
-        layer.enabled: true
-        layer.samplerName: "background"
-
-        ShaderEffectSource {
-            sourceItem: cropRect
-            hideSource: true
-        }
-
-        // Clip transparent hole
-        /*layer.effect: ShaderEffect {
-            fragmentShader: "
-                uniform lowp sampler2D background;
-                uniform lowp sampler2D source;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    lowp vec4 bg = texture2D(background, qt_TexCoord0);
-                    lowp vec4 fg = texture2D(source, qt_TexCoord0);
-                    gl_FragColor = mix(bg, vec4(0.0), fg.a);
-                }"
-        }
-    }*/
-
-    // ✅ Handles (arrows)
-    Repeater {
-        model: [
-            { pos: "top", cursor: Qt.SizeVerCursor, x: 0.5, y: 0.0, icon: "▲" },
-            { pos: "bottom", cursor: Qt.SizeVerCursor, x: 0.5, y: 1.0, icon: "▼" },
-            { pos: "left", cursor: Qt.SizeHorCursor, x: 0.0, y: 0.5, icon: "◄" },
-            { pos: "right", cursor: Qt.SizeHorCursor, x: 1.0, y: 0.5, icon: "►" }
-        ]
-
-        delegate: Rectangle {
-            id: handle
-            width: overlay.handleSize
-            height: overlay.handleSize
-            color: "transparent"
-            //border.color: "white"
-            //border.width: 1
-            //radius: 6
-            z: 2
-            x: cropRect.x + (modelData.x * cropRect.width) - width / 2
-            y: cropRect.y + (modelData.y * cropRect.height) - height / 2
-
-            Text {
-                anchors.centerIn: parent
-                text: modelData.icon
-                color: "white"
-                font.pixelSize: 14
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: modelData.cursor
-                drag.target: cropRect
-                drag.axis: modelData.pos === "top" || modelData.pos === "bottom" ? Drag.YAxis : Drag.XAxis
-                onPositionChanged: (mouse) => {
-                    if (modelData.pos === "top") {
-                        let dy = mouse.y
-                        cropRect.y += dy
-                        cropRect.height -= dy
-                    } else if (modelData.pos === "bottom") {
-                        let dy = mouse.y
-                        cropRect.y += dy
-                        cropRect.height += dy
-                    } else if (modelData.pos === "left") {
-                        let dx = mouse.x
-                        cropRect.x += dx
-                        cropRect.width -= dx
-                    } else if (modelData.pos === "right") {
-                        let dx = mouse.x
-                        cropRect.x += dx
-                        cropRect.width += dx
-                    }
-                }
-            }
-        }
+        color: "black"
+        opacity: 0.35
+        z: 1
+        visible: true
+        // use clipping to create a hole: draw on top and then the cropRect is above
     }
 }
