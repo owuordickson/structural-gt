@@ -32,120 +32,123 @@ ColumnLayout {
         visible: mainController.display_image()
     }
 
-    Repeater {
-        id: rptFilters
-        model: imgFilterModel
-        delegate: RowLayout {
-            Layout.fillWidth: true
-            Layout.leftMargin: 10
-            Layout.alignment: Qt.AlignLeft
+    Column {
+        id: colFilters
 
-            CheckBox {
-                id: checkBox
-                objectName: model.id
-                Layout.preferredWidth: cbxWidthSize
-                text: model.text
-                property bool isChecked: model.value
-                property bool clickedChange: false  // Flag
-                checked: isChecked
-                onCheckedChanged: {
-                    if (clickedChange) {
-                        // Reset flag so the next programmatic change will run normally
-                        clickedChange = false
-                        return
+        Repeater {
+            model: imgFilterModel
+            delegate: RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 10
+                Layout.alignment: Qt.AlignLeft
+
+                CheckBox {
+                    id: checkBox
+                    objectName: model.id
+                    Layout.preferredWidth: cbxWidthSize
+                    text: model.text
+                    property bool isChecked: model.value
+                    property bool clickedChange: false  // Flag
+                    checked: isChecked
+                    onCheckedChanged: {
+                        if (clickedChange) {
+                            // Reset flag so the next programmatic change will run normally
+                            clickedChange = false
+                            return
+                        }
+
+                        if (isChecked !== checked) {  // Only update if there is a change
+                            isChecked = checked
+                            let val = checked ? 1 : 0;
+                            var index = imgFilterModel.index(model.index, 0);
+                            imgFilterModel.setData(index, val, valueRole);
+                            mainController.apply_changes(""); // Only runs if not from click
+                        }
                     }
-
-                    if (isChecked !== checked) {  // Only update if there is a change
+                    onClicked: {
+                        clickedChange = true;
                         isChecked = checked
                         let val = checked ? 1 : 0;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, valueRole);
-                        mainController.apply_changes(""); // Only runs if not from click
+                        mainController.apply_changes("binary");
                     }
                 }
-                onClicked: {
-                    clickedChange = true;
-                    isChecked = checked
-                    let val = checked ? 1 : 0;
-                    var index = imgFilterModel.index(model.index, 0);
-                    imgFilterModel.setData(index, val, valueRole);
-                    mainController.apply_changes("binary");
+
+                Loader {
+                    id: controlLoader
+                    sourceComponent: (model.id === "apply_median_filter" || model.id === "apply_scharr_gradient") ? blankComponent : model.id === "apply_lowpass_filter" ? spinComponent : sliderComponent
                 }
-            }
 
-            Loader {
-                id: controlLoader
-                sourceComponent: (model.id === "apply_median_filter" || model.id === "apply_scharr_gradient") ? blankComponent : model.id === "apply_lowpass_filter" ? spinComponent : sliderComponent
-            }
+                Component {
+                    id: blankComponent
 
-            Component {
-                id: blankComponent
-
-                RowLayout {
-                    Layout.fillWidth: true
-                }
-            }
-
-            Component {
-                id: spinComponent
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    SpinBox {
-                        id: spinbox
-                        objectName: model.dataId
-                        Layout.minimumWidth: spbWidthSize
+                    RowLayout {
                         Layout.fillWidth: true
-                        enabled: checkBox.checked
-                        from: model.minValue
-                        to: model.maxValue
-                        stepSize: model.stepSize
-                        property var currSBVal: model.dataValue
-                        value: currSBVal
-                        onValueChanged: updateValue(currSBVal, value)
                     }
                 }
-            }
 
-            Component {
-                id: sliderComponent
+                Component {
+                    id: spinComponent
 
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Slider {
-                        id: slider
-                        objectName: model.dataId
-                        Layout.minimumWidth: sldWidthSize
+                    RowLayout {
                         Layout.fillWidth: true
-                        enabled: checkBox.checked
-                        from: model.minValue
-                        to: model.maxValue
-                        stepSize: model.stepSize
-                        property var currVal: model.dataValue
-                        value: currVal
-                        onValueChanged: updateValue(currVal, value)
+                        SpinBox {
+                            id: spinbox
+                            objectName: model.dataId
+                            Layout.minimumWidth: spbWidthSize
+                            Layout.fillWidth: true
+                            enabled: checkBox.checked
+                            from: model.minValue
+                            to: model.maxValue
+                            stepSize: model.stepSize
+                            property var currSBVal: model.dataValue
+                            value: currSBVal
+                            onValueChanged: updateValue(currSBVal, value)
+                        }
                     }
+                }
 
-                    Label {
-                        id: label
-                        Layout.preferredWidth: lblWidthSize
-                        text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
-                        enabled: checkBox.checked
+                Component {
+                    id: sliderComponent
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Slider {
+                            id: slider
+                            objectName: model.dataId
+                            Layout.minimumWidth: sldWidthSize
+                            Layout.fillWidth: true
+                            enabled: checkBox.checked
+                            from: model.minValue
+                            to: model.maxValue
+                            stepSize: model.stepSize
+                            property var currVal: model.dataValue
+                            value: currVal
+                            onValueChanged: updateValue(currVal, value)
+                        }
+
+                        Label {
+                            id: label
+                            Layout.preferredWidth: lblWidthSize
+                            text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
+                            enabled: checkBox.checked
+                        }
+                    }
+                }
+
+                function updateValue(curr_val, val) {
+                    if (curr_val !== val) {
+                        curr_val = val;
+                        var index = imgFilterModel.index(model.index, 0);
+                        imgFilterModel.setData(index, val, dataValueRole);
+                        mainController.apply_changes("");
                     }
                 }
             }
 
-            function updateValue(curr_val, val) {
-                if (curr_val !== val) {
-                    curr_val = val;
-                    var index = imgFilterModel.index(model.index, 0);
-                    imgFilterModel.setData(index, val, dataValueRole);
-                    mainController.apply_changes("");
-                }
-            }
         }
-
     }
 
 
@@ -156,8 +159,8 @@ ColumnLayout {
             // Force refresh
             lblNoImgFilters.visible = !mainController.display_image();
             txtTitleImgFilters.visible = mainController.display_image();
-            rptFilters.visible = mainController.display_image();
-            rptFilters.enabled = mainController.enable_img_controls();
+            colFilters.visible = mainController.display_image();
+            colFilters.enabled = mainController.enable_img_controls();
         }
 
     }
