@@ -679,6 +679,46 @@ class MainController(BaseController):
             sel_img_batch.selected_images_idx.discard(img_index)
         self.changeImageSignal.emit()
 
+    @Slot(int)
+    def select_batch_image_index(self, img_pos=-1):
+        if img_pos < 0:
+            return
+
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            if sgt_obj is None:
+                return
+
+            sel_img_batch = sgt_obj.ntwk_p.selected_batch
+            for img_idx in sel_img_batch.selected_images_idx:
+                sel_img_batch.selected_images_idx.discard(img_idx)
+            sel_img_batch.selected_images_idx.add(img_pos)
+
+            # Trigger QML image update
+            self.reset_qml_models()
+            self.imageChangedSignal.emit()
+        except Exception as err:
+            logging.exception(f"Image Index Error: {err}", extra={'user': 'SGT Logs'})
+
+    @Slot(result=int)
+    def get_selected_batch_image_index(self):
+        sel_pos = 0
+        try:
+            sgt_obj = self.get_selected_sgt_obj()
+            if sgt_obj is None:
+                return sel_pos
+
+            sel_img_batch = sgt_obj.ntwk_p.selected_batch
+            for i, img_idx in enumerate(sel_img_batch.selected_images_idx):
+                if i == 0:
+                    sel_pos = img_idx
+                else:
+                    sel_img_batch.selected_images_idx.discard(img_idx)
+        except Exception as err:
+            logging.exception("Image Index Error: %s", err, extra={'user': 'SGT Logs'})
+            sel_pos = 0
+        return sel_pos
+
     @Slot(bool)
     def reload_graph_image(self, only_giant_graph=False):
         sgt_obj = self.get_selected_sgt_obj()

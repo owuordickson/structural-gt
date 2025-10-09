@@ -65,10 +65,7 @@ Window {
                     ToolTip.visible: cbColorsImageSelector.hovered
                     currentIndex: 0
                     visible: mainController.is_img_3d()
-                    onCurrentIndexChanged: {
-                        mainController.reset_colors_model();
-                        mainController.imageChangedSignal.emit();
-                    }
+                    onCurrentIndexChanged: mainController.select_batch_image_index(currentIndex)
                 }
 
             }
@@ -368,7 +365,7 @@ Window {
 
                 if (mainController.image_batches_exist()) {
                     cbColorsBatchSelector.currentIndex = mainController.get_selected_img_batch();
-                    cbColorsImageSelector.currentIndex = 0;  // to fetch from mainController
+                    cbColorsImageSelector.currentIndex = mainController.get_selected_batch_image_index( );
                 }
 
                 let img_idx = cbColorsImageSelector.currentIndex;
