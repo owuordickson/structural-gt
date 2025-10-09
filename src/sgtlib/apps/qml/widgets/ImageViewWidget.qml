@@ -413,7 +413,7 @@ ColumnLayout {
         }
 
         // Cropping Tool
-        //ImageCroppingWidget{}
+        ImageCroppingWidget{}
 
         // Selection Rectangle for Cropping
         Rectangle {

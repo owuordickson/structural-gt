@@ -18,8 +18,8 @@ Item {
     Rectangle {
         id: cropRect
         anchors.centerIn: parent
-        width: parent.width - 100
-        height: parent.height - 100
+        width: parent.width
+        height: parent.height
         color: "transparent"
         border.color: overlay.borderColor
         border.width: overlay.borderWidth
@@ -67,10 +67,9 @@ Item {
             width: overlay.handleSize
             height: overlay.handleSize
             color: "transparent"
-            border.color: "white"
-            border.width: 1
-            radius: 6
-            anchors.centerIn: parent
+            //border.color: "white"
+            //border.width: 1
+            //radius: 6
             z: 2
             x: cropRect.x + (modelData.x * cropRect.width) - width / 2
             y: cropRect.y + (modelData.y * cropRect.height) - height / 2
@@ -87,27 +86,23 @@ Item {
                 cursorShape: modelData.cursor
                 drag.target: cropRect
                 drag.axis: modelData.pos === "top" || modelData.pos === "bottom" ? Drag.YAxis : Drag.XAxis
-
-                property real startX
-                property real startY
-                onPressed: {
-                    startX = cropRect.x
-                    startY = cropRect.y
-                }
-
                 onPositionChanged: (mouse) => {
                     if (modelData.pos === "top") {
                         let dy = mouse.y
                         cropRect.y += dy
                         cropRect.height -= dy
                     } else if (modelData.pos === "bottom") {
-                        cropRect.height = mouse.y
+                        let dy = mouse.y
+                        cropRect.y += dy
+                        cropRect.height += dy
                     } else if (modelData.pos === "left") {
                         let dx = mouse.x
                         cropRect.x += dx
                         cropRect.width -= dx
                     } else if (modelData.pos === "right") {
-                        cropRect.width = mouse.x
+                        let dx = mouse.x
+                        cropRect.x += dx
+                        cropRect.width += dx
                     }
                 }
             }
