@@ -220,7 +220,7 @@ Rectangle {
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
-                onClicked: mainController.perform_cropping(true)
+                onClicked: imageController.perform_cropping(true)
             }
 
             Basic.Button {

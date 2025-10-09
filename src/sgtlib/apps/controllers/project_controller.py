@@ -374,6 +374,3 @@ class ProjectController(QObject):
                                                             "Consider restoring from a backup or contacting support for "
                                                             "assistance.")
             return False
-
-
-

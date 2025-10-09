@@ -16,7 +16,7 @@ Item {
     TableView {
         id: tblImgProps
         height: numRows * tblRowHeight
-        width: parent.width - 10
+        width: 290
         model: imagePropsModel
 
         property int tblRowHeight: 30

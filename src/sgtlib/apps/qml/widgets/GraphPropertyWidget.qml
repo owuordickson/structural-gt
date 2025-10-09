@@ -16,7 +16,7 @@ Item {
     TableView {
         id: tblViewGraphProps
         height: numRows * tblRowHeight
-        width: parent.width - 10
+        width: 290
         model: graphPropsModel
 
         delegate: Rectangle {

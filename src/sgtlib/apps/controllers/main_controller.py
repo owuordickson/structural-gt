@@ -84,8 +84,10 @@ class MainController(BaseController):
                 self.proj_ctrl.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
-            self.proj_ctrl.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             self.syncModelSignal.emit(self.get_selected_sgt_obj())
+            self.proj_ctrl.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
+            self.img_ctrl.reset_img_models()
+
             # Run AI search (if enabled)
             self.ai_ctrl.run_ai_filter_search()
         except Exception as err:

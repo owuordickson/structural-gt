@@ -453,9 +453,9 @@ ColumnLayout {
             onReleased: {
                 if (cropArea.width < 5 || cropArea.height < 5) {
                     cropArea.visible = false;  // Hide small selections
-                    mainController.show_cropping_tool(false);
+                    imageController.show_cropping_tool(false);
                 } else {
-                    mainController.show_cropping_tool(true);
+                    imageController.show_cropping_tool(true);
                 }
             }
         }
@@ -603,7 +603,7 @@ ColumnLayout {
 
     function cropImage() {
 
-        // Crop image through mainController
+        // Crop image through Controller
         const cropRect = getCropAreaInImageCoords();
         imageController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height, cropRect.actualWidth, cropRect.actualHeight);
 

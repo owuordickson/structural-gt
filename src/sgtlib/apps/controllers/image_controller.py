@@ -119,7 +119,6 @@ class ImageController(QObject):
 
             self.microscopyPropsModel.reset_data(img_properties)
             self.imagePropsModel.reset_data(sel_img_batch.props)
-            self.reset_img_models()
 
             # Trigger GUI image refresh
             self._ctrl.changeImageSignal.emit()
@@ -137,7 +136,6 @@ class ImageController(QObject):
         Returns:
             None
         """
-        print("Resetting QML models...")
         # Erase existing data in QML adapter-models
         self.imgColorsModel.reset_data([])
         if only_colors:
@@ -172,6 +170,10 @@ class ImageController(QObject):
     @Slot(bool)
     def enable_rectangular_selection(self, enabled):
         self.enableRectangularSelectionSignal.emit(enabled)
+
+    @Slot(bool)
+    def show_cropping_tool(self, allow_cropping):
+        self.showCroppingToolSignal.emit(allow_cropping)
 
     @Slot(result=bool)
     def image_batches_exist(self):
@@ -245,6 +247,7 @@ class ImageController(QObject):
 
             # Trigger sync models and image refresh
             self._ctrl.syncModelSignal.emit(sgt_obj)
+            self.reset_img_models()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
@@ -351,6 +354,10 @@ class ImageController(QObject):
             self._ctrl.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
 
+    @Slot(bool)
+    def perform_cropping(self, allowed):
+        self.performCroppingSignal.emit(allowed)
+
     @Slot()
     def save_img_files(self):
         """Retrieve and save images to the file."""
@@ -423,4 +430,3 @@ class ImageController(QObject):
             self._ctrl.handle_progress_update(
                 ProgressData(type="error", sender="GT", message=f"Unable to eliminate colors! Try again."))
             self._ctrl.handle_finished(1, False, ["Eliminate Colors Failed", "Unable to eliminate colors!"])
-

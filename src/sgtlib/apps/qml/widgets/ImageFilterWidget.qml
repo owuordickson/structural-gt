@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: imgFiltersControl
+    Layout.leftMargin: 10
     Layout.preferredHeight: 250
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignTop
