@@ -7,7 +7,12 @@ import logging
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Slot, Signal
 
+from .ai_controller import AIController
 from .base_controller import BaseController
+from .graph_controller import GraphController
+from .image_controller import ImageController
+from .project_controller import ProjectController
+
 from ..workers.persistent_worker import PersistentProcessWorker
 from ..workers.base_workers import BaseWorker
 from ...utils.sgt_utils import TaskResult, ProgressData
@@ -16,15 +21,24 @@ from ...utils.sgt_utils import TaskResult, ProgressData
 class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
 
+    errorSignal = Signal(str)
     changeImageSignal = Signal()
     imageChangedSignal = Signal()
     syncModelSignal = Signal(object)
+    updateProgressSignal = Signal(int, str)
+    taskTerminatedSignal = Signal(bool, list)
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
         self._qml_app = qml_app
 
-        # Create Persistent Workers (Processes) - better than threads in handling long tasks (not affected by GIL)
+        # Add Controllers
+        self.proj_ctrl = ProjectController(self)
+        self.img_ctrl = ImageController(self)
+        self.graph_ctrl = GraphController(self)
+        self.ai_ctrl = AIController(self)
+
+        # Create Persistent Workers (Processes)
         self._gt_worker = PersistentProcessWorker(worker_id=1)
         self._ai_worker = PersistentProcessWorker(worker_id=2)
         self._hist_worker = PersistentProcessWorker(worker_id=3)
@@ -44,17 +58,14 @@ class MainController(BaseController):
 
             if reload_thumbnails:
                 # Update the thumbnail list data (delete/add image)
-                img_list, img_cache = self.get_thumbnail_list()
-                self.imgThumbnailModel.update_data(img_list, img_cache)
+                img_list, img_cache = self.proj_ctrl.get_thumbnail_list()
+                self.proj_ctrl.imgThumbnailModel.update_data(img_list, img_cache)
 
             # Load the SGT Object data of the selected image
-            sgt_obj = self.get_selected_sgt_obj()
-            self.syncModelSignal.emit(sgt_obj)
-            self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
-            # Load the selected image into the view
-            self.changeImageSignal.emit()
+            self.proj_ctrl.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
+            self.syncModelSignal.emit(self.get_selected_sgt_obj())
             # Run AI search (if enabled)
-            self.run_ai_filter_search()
+            self.ai_ctrl.run_ai_filter_search()
         except Exception as err:
             self.delete_sgt_object()
             self._selected_sgt_obj_index = 0
@@ -63,13 +74,15 @@ class MainController(BaseController):
 
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
-            self._stop_wait()
+            self.graph_ctrl.stop_task()
+            self.img_ctrl.stop_task()
+            self.graph_ctrl.stop_task()
 
         if worker_id == 2:
-            self._stop_ai_task()
+            self.ai_ctrl.stop_task()
 
         if worker_id == 3:
-            self._stop_histogram_calculation()
+            self.img_ctrl.stop_histogram_calculation()
 
     def handle_progress_update(self, status_data: ProgressData) -> None:
         """
@@ -86,14 +99,14 @@ class MainController(BaseController):
 
         if 0 <= status_data.percent <= 100:
             if status_data.sender == "AI":
-                self.updateAIProgressSignal.emit(status_data.percent, status_data.message)
+                self.ai_ctrl.updateAIProgressSignal.emit(status_data.percent, status_data.message)
             else:
                 self.updateProgressSignal.emit(status_data.percent, status_data.message)
             logging.info(f"({status_data.sender}) {status_data.percent}%: {status_data.message}", extra={'user': 'SGT Logs'})
 
         if status_data.type == "info":
             if status_data.sender == "AI":
-                self.updateAIProgressSignal.emit(101, status_data.message)
+                self.ai_ctrl.updateAIProgressSignal.emit(101, status_data.message)
             else:
                 self.updateProgressSignal.emit(101, status_data.message)
             logging.info(f"({status_data.sender}) {status_data.message}", extra={'user': 'SGT Logs'})
@@ -131,26 +144,20 @@ class MainController(BaseController):
                     if result.task_id == "Image Colors":
                         sgt_obj.ntwk_p = result.data[0]
                         if result.data[1] is not None:
-                            self.imgColorsModel.reset_data(result.data[1])
+                            self.img_ctrl.imgColorsModel.reset_data(result.data[1])
                     else:
                         sgt_obj.ntwk_p = result.data
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
-                    # Update image configs
-                    self.synchronize_img_models(sgt_obj)
-                    # Update QML to visualize graph
-                    self.changeImageSignal.emit()
-                    # Update Graph & Compute properties
-                    self.synchronize_graph_models(sgt_obj)
+                    # Sync models and refresh image
+                    self.syncModelSignal.emit(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
-                    # Update image configs
-                    self.synchronize_img_models(sgt_obj)
-                    # Update Graph & Compute properties
-                    self.synchronize_graph_models(sgt_obj)
+                    # Sync models and refresh image
+                    self.syncModelSignal.emit(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True,
                                                    ["GT calculations completed", "The image's GT parameters have been "
@@ -160,10 +167,8 @@ class MainController(BaseController):
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
-                    # Update image configs
-                    self.synchronize_img_models(sgt_obj)
-                    # Update Graph & Compute properties
-                    self.synchronize_graph_models(sgt_obj)
+                    # Sync models and refresh image
+                    self.syncModelSignal.emit(sgt_obj)
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(True, ["All GT calculations completed", "GT parameters of all "
                                                                                            "images have been calculated. Check "
@@ -175,11 +180,9 @@ class MainController(BaseController):
                         self.handle_progress_update(ProgressData(percent=100, sender="AI", message=f"Search completed!"))
                         sgt_obj = self.get_selected_sgt_obj()
                         sgt_obj.ntwk_p = result.data
-                        # Update image configs and load Binary Image
-                        self.synchronize_img_models(sgt_obj)
-                        # Update Graph & Compute properties
-                        self.synchronize_graph_models(sgt_obj)
-                        self.apply_changes(view="binary")
+                        # Sync models and refresh image
+                        self.syncModelSignal.emit(sgt_obj)
+                        self.img_ctrl.apply_changes(view="binary")
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
             elif type(result) is list:
@@ -188,14 +191,14 @@ class MainController(BaseController):
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.selected_batch
-                    self.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
+                    self.img_ctrl.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
                     self.imageChangedSignal.emit()  # trigger QML UI update
             else:
                 self.taskTerminatedSignal.emit(success_val, [])
 
             # Auto-save changes to the project data file
             if len(self._sgt_objs.items()) <= 10:
-                self.save_project_data()
+                self.proj_ctrl.save_project_data()
 
     def submit_job(self, worker_id, task_fxn, fxn_args=(), track_updates: bool = True) -> None:
         """Start a background thread and its associated worker."""
@@ -260,11 +263,11 @@ class MainController(BaseController):
         deleted = super().delete_sgt_object(index=index)
         if deleted:
             # Update Data
-            img_list, img_cache = self.get_thumbnail_list()
-            self.imgThumbnailModel.update_data(img_list, img_cache)
-            self.imagePropsModel.reset_data([])
-            self.graphPropsModel.reset_data([])
-            self.graphComputeModel.reset_data([])
+            img_list, img_cache = self.proj_ctrl.get_thumbnail_list()
+            self.proj_ctrl.imgThumbnailModel.update_data(img_list, img_cache)
+            self.img_ctrl.imagePropsModel.reset_data([])
+            self.graph_ctrl.graphPropsModel.reset_data([])
+            self.graph_ctrl.graphComputeModel.reset_data([])
             self._selected_sgt_obj_index = 0
             self.load_image(reload_thumbnails=True)
             self.imageChangedSignal.emit()

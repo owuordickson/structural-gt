@@ -120,6 +120,9 @@ class ImageController(QObject):
             self.microscopyPropsModel.reset_data(img_properties)
             self.imagePropsModel.reset_data(sel_img_batch.props)
             self.reset_img_models()
+
+            # Trigger GUI image refresh
+            self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
@@ -245,11 +248,8 @@ class ImageController(QObject):
                 return
             sgt_obj.ntwk_p.select_image_batch(batch_index)
 
-            # Load the SGT Object data of the selected image
+            # Trigger sync models and image refresh
             self._ctrl.syncModelSignal.emit(sgt_obj)
-
-            # Trigger QML image update
-            self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "

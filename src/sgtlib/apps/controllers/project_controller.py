@@ -25,9 +25,6 @@ from ...imaging.image_processor import ALLOWED_IMG_EXTENSIONS, ALLOWED_GRAPH_FIL
 
 class ProjectController(QObject):
 
-    errorSignal = Signal(str)
-    updateProgressSignal = Signal(int, str)
-    taskTerminatedSignal = Signal(bool, list)
     projectOpenedSignal = Signal(str)
 
     def __init__(self, controller_obj, parent: QObject = None):
@@ -93,6 +90,45 @@ class ProjectController(QObject):
     def is_project_open(self):
         return self._project_open
 
+    @Slot(result=bool)
+    def check_for_updates(self):
+        """Check for updates and return True if an update is available, False otherwise."""
+        github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/sgtlib/__init__.py"
+
+        try:
+            response = requests.get(github_url, timeout=5)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            self._software_update = f"Error checking for updates: {e}"
+            return False
+
+        remote_version = None
+        for line in response.text.splitlines():
+            if line.strip().startswith("__install_version__"):
+                try:
+                    remote_version = line.split("=")[1].strip().strip("\"'")
+                    break
+                except IndexError:
+                    self._software_update = "Could not connect to server!"
+                    return False
+
+        if not remote_version:
+            self._software_update = "Could not find the new version!"
+            return False
+
+        new_version = version.parse(remote_version)
+        current_version = version.parse(__version__)
+        if new_version > current_version:
+            # https://github.com/owuordickson/structural-gt/releases/tag/v3.3.5
+            self._software_update = (
+                "New version available!<br>"
+                f"Download via this <a href='https://github.com/owuordickson/structural-gt/releases/tag/v{remote_version}'>link</a>"
+            )
+            return True
+        else:
+            self._software_update = "No updates available."
+            return False
+
     @Slot(result=str)
     def get_sgt_title(self):
         return f"{__title__}"
@@ -145,45 +181,6 @@ class ProjectController(QObject):
             "</html>")
         return about_app
 
-    @Slot(result=bool)
-    def check_for_updates(self):
-        """Check for updates and return True if an update is available, False otherwise."""
-        github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/sgtlib/__init__.py"
-
-        try:
-            response = requests.get(github_url, timeout=5)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            self._software_update = f"Error checking for updates: {e}"
-            return False
-
-        remote_version = None
-        for line in response.text.splitlines():
-            if line.strip().startswith("__install_version__"):
-                try:
-                    remote_version = line.split("=")[1].strip().strip("\"'")
-                    break
-                except IndexError:
-                    self._software_update = "Could not connect to server!"
-                    return False
-
-        if not remote_version:
-            self._software_update = "Could not find the new version!"
-            return False
-
-        new_version = version.parse(remote_version)
-        current_version = version.parse(__version__)
-        if new_version > current_version:
-            # https://github.com/owuordickson/structural-gt/releases/tag/v3.3.5
-            self._software_update = (
-                "New version available!<br>"
-                f"Download via this <a href='https://github.com/owuordickson/structural-gt/releases/tag/v{remote_version}'>link</a>"
-            )
-            return True
-        else:
-            self._software_update = "No updates available."
-            return False
-
     @Slot(str, result=str)
     def get_file_extensions(self, option):
         if option == "img":
@@ -208,15 +205,29 @@ class ProjectController(QObject):
             return ""
         return f"{sgt_obj.ntwk_p.output_dir}"
 
+    @Slot(str)
+    def set_output_dir(self, folder_path):
+        self._ctrl.update_output_dir(folder_path)
+        self._ctrl.imageChangedSignal.emit()
+
     @Slot(int)
     def delete_selected_thumbnail(self, img_index):
         """Delete the selected image from the list."""
         self._ctrl.delete_sgt_object(img_index)
 
-    @Slot(str)
-    def set_output_dir(self, folder_path):
-        self._ctrl.update_output_dir(folder_path)
-        self._ctrl.imageChangedSignal.emit()
+    @Slot(result=bool)
+    def enable_prev_nav_btn(self):
+        if (self._ctrl.selected_sgt_obj_index == 0) or self._ctrl.is_task_running():
+            return False
+        else:
+            return True
+
+    @Slot(result=bool)
+    def enable_next_nav_btn(self):
+        if (self._ctrl.selected_sgt_obj_index == (len(self._ctrl.sgt_objs) - 1)) or self._ctrl.is_task_running():
+            return False
+        else:
+            return True
 
     @Slot(result=bool)
     def load_prev_image(self):
@@ -249,27 +260,11 @@ class ProjectController(QObject):
         self.stop_task()
         return success_val
 
-    @Slot(result=bool)
-    def enable_prev_nav_btn(self):
-        if (self._ctrl.selected_sgt_obj_index == 0) or self._ctrl.is_task_running():
-            return False
-        else:
-            return True
-
-    @Slot(result=bool)
-    def enable_next_nav_btn(self):
-        if (self._ctrl.selected_sgt_obj_index == (len(self._ctrl.sgt_objs) - 1)) or self._ctrl.is_task_running():
-            return False
-        else:
-            return True
-
     @Slot(str, result=bool)
     def upload_graph_file(self, file_path):
         """Verify and validate the file path, use it to create a new SGT Object and load it into the view."""
         is_successful = self._ctrl.add_graph(file_path)
         if is_successful:
-            sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self._ctrl.syncModelSignal.emit(sgt_obj)
             self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
@@ -278,8 +273,6 @@ class ProjectController(QObject):
         """Verify and validate the image path, use it to create an SGT object and load it in view."""
         is_successful = self._ctrl.add_single_image(img_path)
         if is_successful:
-            sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self._ctrl.syncModelSignal.emit(sgt_obj)
             self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
@@ -290,8 +283,6 @@ class ProjectController(QObject):
         """
         is_successful = self._ctrl.add_multiple_images(img_dir_path)
         if is_successful:
-            sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self._ctrl.syncModelSignal.emit(sgt_obj)
             self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
