@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 
 Item {
     id: overlay
@@ -15,7 +15,7 @@ Item {
     property int handleSize: 24
     property int minWidth: 40
     property int minHeight: 40
-    property color borderColor: "#00AEEF"
+    property color borderColor: "#2266ff"
     property bool _initialized: false
 
     // snapshots used while dragging
@@ -76,12 +76,24 @@ Item {
 
                 // clamp horizontally
                 var w = newRight - newLeft;
-                if (newLeft < 0) { newLeft = 0; newRight = newLeft + w; }
-                if (newRight > overlay.width) { newRight = overlay.width; newLeft = newRight - w; }
+                if (newLeft < 0) {
+                    newLeft = 0;
+                    newRight = newLeft + w;
+                }
+                if (newRight > overlay.width) {
+                    newRight = overlay.width;
+                    newLeft = newRight - w;
+                }
                 // clamp vertically
                 var h = newBottom - newTop;
-                if (newTop < 0) { newTop = 0; newBottom = newTop + h; }
-                if (newBottom > overlay.height) { newBottom = overlay.height; newTop = newBottom - h; }
+                if (newTop < 0) {
+                    newTop = 0;
+                    newBottom = newTop + h;
+                }
+                if (newBottom > overlay.height) {
+                    newBottom = overlay.height;
+                    newTop = newBottom - h;
+                }
 
                 // apply
                 overlay.leftPt = newLeft;
@@ -98,16 +110,24 @@ Item {
     // Top handle (modifies `top` only; bottom is fixed)
     Rectangle {
         id: topHandle
-        width: overlay.handleSize; height: overlay.handleSize
-        x: (overlay.leftPt + overlay.rightPt) / 2 - width/2
-        y: overlay.topPt - height/2
-        radius: 6
+        width: overlay.handleSize * 3
+        height: overlay.handleSize
+        x: (overlay.leftPt + overlay.rightPt) / 2 - width / 2
+        y: overlay.topPt - height / 2
         color: "transparent"
-        border.width: 1
-        border.color: "white"
         z: 3
 
-        Text { anchors.centerIn: parent; text: "▲"; color: "white"; font.pixelSize: 12 }
+        /*Text {
+            anchors.centerIn: parent; text: "↕"; color: "white"; font.pixelSize: 18
+        }*/
+
+        Image {
+            anchors.centerIn: parent
+            source: "../assets/icons/top_down_arrow.png"
+            width: 21
+            height: 21
+            opacity: 1.0
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -132,16 +152,24 @@ Item {
     // Bottom handle (modifies `bottom` only; top is fixed)
     Rectangle {
         id: bottomHandle
-        width: overlay.handleSize; height: overlay.handleSize
-        x: (overlay.leftPt + overlay.rightPt) / 2 - width/2
-        y: overlay.bottomPt - height/2
-        radius: 6
+        width: overlay.handleSize * 3
+        height: overlay.handleSize
+        x: (overlay.leftPt + overlay.rightPt) / 2 - width / 2
+        y: overlay.bottomPt - height / 2
         color: "transparent"
-        border.width: 1
-        border.color: "white"
         z: 3
 
-        Text { anchors.centerIn: parent; text: "▼"; color: "white"; font.pixelSize: 12 }
+        /*Text {
+            anchors.centerIn: parent; text: "↕"; color: "white"; font.pixelSize: 18
+        }*/
+
+        Image {
+            anchors.centerIn: parent
+            source: "../assets/icons/top_down_arrow.png"
+            width: 21
+            height: 21
+            opacity: 1.0
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -166,16 +194,19 @@ Item {
     // Left handle (modifies `left` only; right is fixed)
     Rectangle {
         id: leftHandle
-        width: overlay.handleSize; height: overlay.handleSize
-        x: overlay.leftPt - width/2
-        y: (overlay.topPt + overlay.bottomPt) / 2 - height/2
-        radius: 6
+        width: overlay.handleSize
+        height: overlay.handleSize * 3
+        x: overlay.leftPt - width / 2
+        y: (overlay.topPt + overlay.bottomPt) / 2 - height / 2
         color: "transparent"
-        border.width: 1
-        border.color: "white"
         z: 3
 
-        Text { anchors.centerIn: parent; text: "◄"; color: "white"; font.pixelSize: 12 }
+        Image {
+            anchors.centerIn: parent
+            source: "../assets/icons/left_right_arrow.png"
+            width: 21
+            height: 21
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -200,16 +231,23 @@ Item {
     // Right handle (modifies `right` only; left is fixed)
     Rectangle {
         id: rightHandle
-        width: overlay.handleSize; height: overlay.handleSize
-        x: overlay.rightPt - width/2
-        y: (overlay.topPt + overlay.bottomPt) / 2 - height/2
-        radius: 6
+        width: overlay.handleSize;
+        height: overlay.handleSize * 3
+        x: overlay.rightPt - width / 2
+        y: (overlay.topPt + overlay.bottomPt) / 2 - height / 2
         color: "transparent"
-        border.width: 1
-        border.color: "white"
         z: 3
 
-        Text { anchors.centerIn: parent; text: "►"; color: "white"; font.pixelSize: 12 }
+        /*Text {
+            anchors.centerIn: parent; text: "↔"; color: "white"; font.pixelSize: 18
+        }*/
+
+        Image {
+            anchors.centerIn: parent
+            source: "../assets/icons/left_right_arrow.png"
+            width: 21
+            height: 21
+        }
 
         MouseArea {
             anchors.fill: parent

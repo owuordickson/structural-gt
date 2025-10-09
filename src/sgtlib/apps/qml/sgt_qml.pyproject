@@ -48,6 +48,8 @@
         "assets/icons/rate_icon.png",
         "assets/icons/reload_icon.png",
         "assets/icons/thumbs-up-emoji.png",
+        "assets/icons/top_down_arrow.png",
+        "assets/icons/left_right_arrow.png",
         "widgets/BrightnessControlWidget.qml",
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",
