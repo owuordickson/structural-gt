@@ -14,14 +14,42 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 class BaseController(QObject):
 
+    _waitChanged = Signal()
+    _waitTextChanged = Signal()
     showAlertSignal = Signal(str, str)
 
     def __init__(self, config_file: str = "", parent: QObject = None):
         super().__init__(parent)
+        # Initialize flags
+        self._wait_flag = False
+        self._wait_msg = ""
+
         # Create graph objects
         self._config_file = config_file
         self._sgt_objs = {}
         self._selected_sgt_obj_index = 0
+
+    @property
+    def wait_flag(self) -> bool:
+        """Returns the wait flag indicating if the application is currently running a task in the background."""
+        return self._wait_flag
+
+    @wait_flag.setter
+    def wait_flag(self, value: bool):
+        """Sets the wait flag indicating if the application is currently running a task in the background."""
+        self._wait_flag = value
+        self._waitChanged.emit()
+
+    @property
+    def wait_msg(self) -> str:
+        """Returns the wait message indicating the current task."""
+        return self._wait_msg
+
+    @wait_msg.setter
+    def wait_msg(self, value: str):
+        """Sets the wait message indicating the current task."""
+        self._wait_msg = value
+        self._waitTextChanged.emit()
 
     @property
     def sgt_objs(self):

@@ -8,6 +8,7 @@ import pickle
 import logging
 import requests
 import numpy as np
+from pathlib import Path
 from packaging import version
 from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import Signal, Slot, QObject
@@ -35,11 +36,19 @@ class ProjectController(QObject):
         self._project_open = False
 
         # Project data
-        self._project_data = {"name": "", "file_path": ""}
+        self._project_data = {"name": "", "file_path": Path("")}
         self._software_update = "No updates available!"
 
         # Create Models
         self.imgThumbnailModel = TableModel([])
+        
+    def start_task(self):
+        """Activate the wait flag and send a wait signal."""
+        self._ctrl.wait_flag = True
+
+    def stop_task(self):
+        """Deactivate the wait flag and send a wait signal."""
+        self._ctrl.wait_flag = False
 
     def save_project_data(self):
         """
@@ -138,7 +147,7 @@ class ProjectController(QObject):
 
     @Slot(result=bool)
     def check_for_updates(self):
-        """"""
+        """Check for updates and return True if an update is available, False otherwise."""
         github_url = "https://raw.githubusercontent.com/owuordickson/structural-gt/refs/heads/main/src/sgtlib/__init__.py"
 
         try:
@@ -207,45 +216,14 @@ class ProjectController(QObject):
     @Slot(str)
     def set_output_dir(self, folder_path):
         self._ctrl.update_output_dir(folder_path)
-        self.imageChangedSignal.emit()
-
-    @Slot(int)
-    def load_image(self, index=None, reload_thumbnails=False):
-        try:
-            if index is not None:
-                if index == self._ctrl.selected_sgt_obj_index:
-                    return
-                else:
-                    self._ctrl.selected_sgt_obj_index = index
-
-            if reload_thumbnails:
-                # Update the thumbnail list data (delete/add image)
-                img_list, img_cache = self.get_thumbnail_list()
-                self.imgThumbnailModel.update_data(img_list, img_cache)
-
-            # Load the SGT Object data of the selected image
-            sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self.reset_qml_models()
-            self.synchronize_img_models(sgt_obj)
-            self.synchronize_ai_models(sgt_obj)
-            self.synchronize_graph_models(sgt_obj)
-            self.imgThumbnailModel.set_selected(self._ctrl.selected_sgt_obj_index)
-            # Load the selected image into the view
-            self.changeImageSignal.emit()
-            # Run AI search (if enabled)
-            self.run_ai_filter_search()
-        except Exception as err:
-            self._ctrl.delete_sgt_object()
-            self._ctrl.selected_sgt_obj_index = 0
-            logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
-            self._ctrl.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
+        self._ctrl.imageChangedSignal.emit()
 
     @Slot(result=bool)
     def load_prev_image(self):
         """Load the previous image in the list into view."""
         if self._ctrl.selected_sgt_obj_index > 0:
             prev_img_idx = self._ctrl.selected_sgt_obj_index - 1
-            self.load_image(index=prev_img_idx)
+            self._ctrl.load_image(index=prev_img_idx)
             return True
         return False
 
@@ -254,21 +232,21 @@ class ProjectController(QObject):
         """Load the next image in the list into view."""
         if self._ctrl.selected_sgt_obj_index < (len(self._ctrl.sgt_objs) - 1):
             next_img_idx = self._ctrl.selected_sgt_obj_index + 1
-            self.load_image(index=next_img_idx)
+            self._ctrl.load_image(index=next_img_idx)
             return True
         return False
 
     @Slot(result=bool)
     def run_save_project(self):
         """"""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
-        self._start_wait()
+        self.start_task()
         success_val = self.save_project_data()
-        self._stop_wait()
+        self.stop_task()
         return success_val
 
     @Slot(result=bool)
@@ -291,10 +269,8 @@ class ProjectController(QObject):
         is_successful = self._ctrl.add_graph(file_path)
         if is_successful:
             sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self.synchronize_img_models(sgt_obj)
-            self.synchronize_ai_models(sgt_obj)
-            self.synchronize_graph_models(sgt_obj)
-            self.load_image(reload_thumbnails=True)
+            self._ctrl.syncModelSignal.emit(sgt_obj)
+            self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
     @Slot(str, result=bool)
@@ -303,10 +279,8 @@ class ProjectController(QObject):
         is_successful = self._ctrl.add_single_image(img_path)
         if is_successful:
             sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self.synchronize_img_models(sgt_obj)
-            self.synchronize_ai_models(sgt_obj)
-            self.synchronize_graph_models(sgt_obj)
-            self.load_image(reload_thumbnails=True)
+            self._ctrl.syncModelSignal.emit(sgt_obj)
+            self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
     @Slot(str, result=bool)
@@ -317,10 +291,8 @@ class ProjectController(QObject):
         is_successful = self._ctrl.add_multiple_images(img_dir_path)
         if is_successful:
             sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self.synchronize_img_models(sgt_obj)
-            self.synchronize_ai_models(sgt_obj)
-            self.synchronize_graph_models(sgt_obj)
-            self.load_image(reload_thumbnails=True)
+            self._ctrl.syncModelSignal.emit(sgt_obj)
+            self._ctrl.load_image(reload_thumbnails=True)
         return is_successful
 
     @Slot(str, str, result=bool)
@@ -329,15 +301,14 @@ class ProjectController(QObject):
 
         self._project_open = False
         success, result = verify_path(dir_path)
-        if success:
-            dir_path = result
-        else:
+        if not success:
             logging.info(result, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("File/Directory Error", result)
             return False
 
-        proj_name += '.sgtproj'
-        proj_path = os.path.join(str(dir_path), proj_name)
+        dir_path = Path(result)
+        proj_name = f"{proj_name}.sgtproj"
+        proj_path = dir_path / proj_name
 
         try:
             if os.path.exists(proj_path):
@@ -345,10 +316,8 @@ class ProjectController(QObject):
                 self._ctrl.showAlertSignal.emit("Project Error", f"Error: Project '{proj_name}' already exists.")
                 return False
 
-            # Open the file in the 'write' mode ('w').
-            # This will create the file if it doesn't exist
-            with open(proj_path, 'w'):
-                pass  # Do nothing, just create the file (updates will be done automatically/dynamically)
+            # Create an empty project file (touch creates it if it doesn’t exist)
+            proj_path.touch(exist_ok=False)
 
             # Update and notify QML
             self._project_data["name"] = proj_name
@@ -367,13 +336,13 @@ class ProjectController(QObject):
     @Slot(str, result=bool)
     def open_sgt_project(self, sgt_path):
         """Opens and loads the SGT project from the '.sgtproj' file"""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
             return False
 
         try:
-            self._start_wait()
+            self.start_task()
             self._project_open = False
             # Verify the path
             success, result = verify_path(sgt_path)
@@ -382,7 +351,7 @@ class ProjectController(QObject):
             else:
                 logging.info(result, extra={'user': 'SGT Logs'})
                 self._ctrl.showAlertSignal.emit("File/Directory Error", result)
-                self._stop_wait()
+                self.stop_task()
                 return False
             img_dir, proj_name = os.path.split(str(sgt_path))
 
@@ -398,16 +367,16 @@ class ProjectController(QObject):
             # Update and notify QML
             self._project_data["name"] = proj_name
             self._project_data["file_path"] = str(sgt_path)
-            self._stop_wait()
+            self.stop_task()
             self._project_open = True
             self.projectOpenedSignal.emit(proj_name)
 
             # Load Image to GUI - activates QML
-            self.load_image(reload_thumbnails=True)
+            self._ctrl.load_image(reload_thumbnails=True)
             logging.info(f"File '{proj_name}' opened successfully in '{sgt_path}'.", extra={'user': 'SGT Logs'})
             return True
         except Exception as err:
-            self._stop_wait()
+            self.stop_task()
             logging.exception("Project Opening Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Open Project Error", "Unable to open .sgtproj file! Try again. If the "
                                                             "issue persists, the file may be corrupted or incompatible. "

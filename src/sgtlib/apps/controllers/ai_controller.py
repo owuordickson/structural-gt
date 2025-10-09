@@ -25,6 +25,8 @@ class AIController(QObject):
 
         # Create Models
         self.aiSearchModel = CheckBoxModel([])
+        # Attach listener for syncing models
+        self._ctrl.syncModelSignal.connect(self.synchronize_ai_models)
 
     @Property(bool, notify=_aiBusyChanged)
     def ai_busy(self):
@@ -34,12 +36,12 @@ class AIController(QObject):
     def ai_mode_active(self):
         return self._ai_mode_active
 
-    def _start_ai_task(self):
+    def start_task(self):
         """Activate the AI running (or busy) flag."""
         self._wait_flag_ai = True
         self._aiBusyChanged.emit()
 
-    def _stop_ai_task(self):
+    def stop_task(self):
         """Deactivate the AI running (or busy) flag."""
         self._wait_flag_ai = False
         self._aiBusyChanged.emit()
@@ -50,6 +52,9 @@ class AIController(QObject):
 
             :param sgt_obj: A GraphAnalyzer object with all saved user-selected configurations.
         """
+        if sgt_obj is None:
+            return
+
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
@@ -84,11 +89,11 @@ class AIController(QObject):
             return
 
         try:
-            self._start_ai_task()
+            self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             self._ctrl.submit_job(2, "Metaheuristic-Search", (sgt_obj.ntwk_p,), True)
         except Exception as err:
-            self._stop_ai_task()
+            self.stop_task()
             logging.info("AI Mode Error: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot()

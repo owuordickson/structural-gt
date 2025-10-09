@@ -5,7 +5,7 @@ Pyside6 (GUI components) main controller class.
 
 import logging
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 
 from .base_controller import BaseController
 from ..workers.persistent_worker import PersistentProcessWorker
@@ -15,6 +15,10 @@ from ...utils.sgt_utils import TaskResult, ProgressData
 
 class MainController(BaseController):
     """Exposes a method to refresh the image in QML"""
+
+    changeImageSignal = Signal()
+    imageChangedSignal = Signal()
+    syncModelSignal = Signal(object)
 
     def __init__(self, qml_app: QApplication):
         super().__init__()
@@ -29,6 +33,34 @@ class MainController(BaseController):
     def qml_app(self):
         return self._qml_app
 
+    @Slot(int)
+    def load_image(self, index=None, reload_thumbnails=False):
+        try:
+            if index is not None:
+                if index == self._selected_sgt_obj_index:
+                    return
+                else:
+                    self._selected_sgt_obj_index = index
+
+            if reload_thumbnails:
+                # Update the thumbnail list data (delete/add image)
+                img_list, img_cache = self.get_thumbnail_list()
+                self.imgThumbnailModel.update_data(img_list, img_cache)
+
+            # Load the SGT Object data of the selected image
+            sgt_obj = self.get_selected_sgt_obj()
+            self.syncModelSignal.emit(sgt_obj)
+            self.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
+            # Load the selected image into the view
+            self.changeImageSignal.emit()
+            # Run AI search (if enabled)
+            self.run_ai_filter_search()
+        except Exception as err:
+            self.delete_sgt_object()
+            self._selected_sgt_obj_index = 0
+            logging.exception("Image Loading Error: %s", err, extra={'user': 'SGT Logs'})
+            self.showAlertSignal.emit("Image Error", "Error loading image. Try again.")
+
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
             self._stop_wait()
@@ -39,7 +71,7 @@ class MainController(BaseController):
         if worker_id == 3:
             self._stop_histogram_calculation()
 
-    def _handle_progress_update(self, status_data: ProgressData) -> None:
+    def handle_progress_update(self, status_data: ProgressData) -> None:
         """
         Handler function for progress updates for ongoing GT tasks.
         Args:
@@ -69,7 +101,7 @@ class MainController(BaseController):
             self.errorSignal.emit(status_data.message)
             logging.exception(f"({status_data.sender}) {status_data.message}", extra={'user': 'SGT Logs'})
 
-    def _handle_finished(self, worker_id: int, success_val: bool, result: None | list | TaskResult) -> None:
+    def handle_finished(self, worker_id: int, success_val: bool, result: None | list | TaskResult) -> None:
         """
         Handler function for sending updates/signals on termination of tasks.
         Args:
@@ -89,10 +121,10 @@ class MainController(BaseController):
                 self.stop_current_task(worker_id, cancel_job=False)
                 if result.task_id == "Export Graph" or result.task_id == "Save Images":
                     # Saving files to Output Folder
-                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Files Saved!"))
+                    self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"Files Saved!"))
                     self.taskTerminatedSignal.emit(success_val, ["Files Saved", result.message])
                 if result.task_id == "Rate Graph":
-                    self._handle_progress_update(ProgressData(type="info", sender="AI", message=f"Graph image successfully uploaded!"))
+                    self.handle_progress_update(ProgressData(type="info", sender="AI", message=f"Graph image successfully uploaded!"))
                     self.taskTerminatedSignal.emit(success_val, ["Graph Rated", result.message])
                 if result.task_id == "Extract Graph" or result.task_id == "Image Colors":
                     sgt_obj = self.get_selected_sgt_obj()
@@ -102,7 +134,7 @@ class MainController(BaseController):
                             self.imgColorsModel.reset_data(result.data[1])
                     else:
                         sgt_obj.ntwk_p = result.data
-                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
+                    self.handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
                     # Update image configs
                     self.synchronize_img_models(sgt_obj)
                     # Update QML to visualize graph
@@ -112,7 +144,7 @@ class MainController(BaseController):
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
-                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
+                    self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
@@ -125,7 +157,7 @@ class MainController(BaseController):
                                                                                  "calculated. Check out generated PDF in "
                                                                                  "'Output Dir'."])
                 if result.task_id == "Compute Multi GT":
-                    self._handle_progress_update(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
+                    self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
                     self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Update image configs
@@ -140,7 +172,7 @@ class MainController(BaseController):
                 if result.task_id == "Metaheuristic Search":
                     # AI Mode search results (image configs)
                     if result.status == "Finished":
-                        self._handle_progress_update(ProgressData(percent=100, sender="AI", message=f"Search completed!"))
+                        self.handle_progress_update(ProgressData(percent=100, sender="AI", message=f"Search completed!"))
                         sgt_obj = self.get_selected_sgt_obj()
                         sgt_obj.ntwk_p = result.data
                         # Update image configs and load Binary Image
@@ -169,9 +201,9 @@ class MainController(BaseController):
         """Start a background thread and its associated worker."""
 
         def _sync_signals(bg_worker: PersistentProcessWorker):
-            bg_worker.taskCompleted.connect(self._handle_finished)
+            bg_worker.taskCompleted.connect(self.handle_finished)
             if track_updates:
-                bg_worker.inProgress.connect(self._handle_progress_update)
+                bg_worker.inProgress.connect(self.handle_progress_update)
 
         if task_fxn is None or worker_id is None:
             return
@@ -250,7 +282,7 @@ class MainController(BaseController):
         # self.showAlertSignal.emit("Important Alert", "Cancelling job, please wait...")
         if worker_id == 1:
             if cancel_job:
-                self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+                self.handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
             else:
                 # Restart Process after 3 tasks
                 if self._gt_worker.task_count < 3:
@@ -258,22 +290,22 @@ class MainController(BaseController):
             # self._gt_worker.restart()
             self._gt_worker.stop()
             self._gt_worker = PersistentProcessWorker(worker_id)
-            self._handle_finished(worker_id, True, None)
+            self.handle_finished(worker_id, True, None)
 
         if worker_id == 2:
             if cancel_job:
-                self._handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
+                self.handle_progress_update(ProgressData(percent=99, sender="AI", message="Cancelling job, please wait..."))
             else:
                 if self._ai_worker.task_count < 3:
                     return
             # self._ai_worker.restart()
             self._ai_worker.stop()
             self._ai_worker = PersistentProcessWorker(worker_id)
-            self._handle_finished(worker_id, True, None)
+            self.handle_finished(worker_id, True, None)
 
         if worker_id == 3:
             if cancel_job:
-                self._handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
+                self.handle_progress_update(ProgressData(percent=99, sender="GT", message="Cancelling job, please wait..."))
             else:
                 if self._hist_worker.task_count < 3:
                     return

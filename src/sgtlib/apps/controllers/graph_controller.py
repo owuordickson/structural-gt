@@ -4,7 +4,7 @@ Pyside6 (GUI components) controller class for graph extraction and computation.
 """
 
 import logging
-from PySide6.QtCore import Slot, QObject, Signal
+from PySide6.QtCore import Slot, QObject
 
 from ..models.tree_model import TreeModel
 from ..models.table_model import TableModel
@@ -15,15 +15,9 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 class GraphController(QObject):
 
-    _waitChanged = Signal()
-    _waitTextChanged = Signal()
-
     def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
         self._ctrl = controller_obj
-        # Initialize flags
-        self._wait_flag = False
-        self._wait_msg = ""
 
         # Create Models
         self.graphPropsModel = TableModel([])
@@ -33,25 +27,18 @@ class GraphController(QObject):
         self.gtcListModel = CheckBoxModel([])
         self.exportGraphModel = CheckBoxModel([])
 
-    def _start_wait(self, msg: str = "please wait..."):
-        """Activate the wait flag and send a wait signal."""
-        self._wait_flag = True
-        if msg == "image_filters":
-            self._wait_flag_filters = True
-            self._imgFiltersBusyChanged.emit()
-        else:
-            self._wait_msg = msg
-            self._waitChanged.emit()
-            self._waitTextChanged.emit()
+        # Attach listener for syncing models
+        self._ctrl.syncModelSignal.connect(self.synchronize_graph_models)
 
-    def _stop_wait(self):
+    def start_task(self, msg: str = "please wait..."):
+        """Activate the wait flag and send a wait signal."""
+        self._ctrl.wait_msg = msg
+        self._ctrl.wait_flag = True
+
+    def stop_task(self):
         """Deactivate the wait flag and send a wait signal."""
-        self._wait_flag = False
-        self._wait_flag_filters = False
-        self._wait_msg = ""
-        self._waitChanged.emit()
-        self._waitTextChanged.emit()
-        self._imgFiltersBusyChanged.emit()
+        self._ctrl.wait_msg = ""
+        self._ctrl.wait_flag = False
 
     def synchronize_graph_models(self, sgt_obj: GraphAnalyzer):
         """
@@ -62,6 +49,9 @@ class GraphController(QObject):
         Returns:
 
         """
+        if sgt_obj is None:
+            return
+
         try:
             # Models Auto-update with saved sgt_obj configs. No need to re-assign!
             ntwk_p = sgt_obj.ntwk_p
@@ -103,10 +93,21 @@ class GraphController(QObject):
 
     @Slot(bool)
     def reload_graph_image(self, only_giant_graph=False):
-        sgt_obj = self._ctrl.get_selected_sgt_obj()
-        sel_img_batch = sgt_obj.ntwk_p.selected_batch
-        sgt_obj.ntwk_p.draw_graph_image(sel_img_batch, show_giant_only=only_giant_graph)
-        self.changeImageSignal.emit()
+        if self._ctrl.wait_flag:
+            logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
+            return
+
+        try:
+            self.start_task()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            sel_img_batch = sgt_obj.ntwk_p.selected_batch
+            sgt_obj.ntwk_p.draw_graph_image(sel_img_batch, show_giant_only=only_giant_graph)
+            self._ctrl.changeImageSignal.emit()
+            self.stop_task()
+        except Exception as err:
+            self.stop_task()
+            logging.exception("Error reloading graph image: %s", err, extra={'user': 'SGT Logs'})
 
     @Slot()
     def load_graph_simulation(self):
@@ -140,103 +141,103 @@ class GraphController(QObject):
     @Slot()
     def export_graph_to_file(self):
         """Export graph data and save as a file."""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
-        self._handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Exporting Graph Data..."))
+        self._ctrl.handle_progress_update(ProgressData(percent=0, sender="GT", message=f"Exporting Graph Data..."))
         try:
             if self._ctrl.get_selected_sgt_obj().ntwk_p.selected_batch.is_graph_only:
                 return
 
-            self._handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Exporting Graph Data..."))
-            self._start_wait()
+            self._ctrl.handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Exporting Graph Data..."))
+            self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             self._ctrl.submit_job(1, "Export-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
             logging.exception("Unable to Export Graph: " + str(err), extra={'user': 'SGT Logs'})
-            self._handle_finished(1, False,
+            self._ctrl.handle_finished(1, False,
                                            ["Unable to Export Graph", "Error exporting graph to file. Try again."])
 
     @Slot()
     def run_extract_graph(self):
         """Retrieve settings from the model and send to Python."""
 
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
-            self._start_wait()
+            self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             self._ctrl.submit_job(1, "Extract-Graph", (sgt_obj.ntwk_p,), True)
         except Exception as err:
-            self._stop_wait()
+            self.stop_task()
             logging.exception("Graph Extraction Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(
+            self._ctrl.handle_progress_update(
                 ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
-            self._handle_finished(1, False, ["Graph Extraction Error",
+            self._ctrl.handle_finished(1, False, ["Graph Extraction Error",
                                              "Fatal error while trying to extract graph. "
                                              "Close the app and try again."])
 
     @Slot(float)
     def rate_graph(self, rating: float):
         """Rate extracted graph on a scale of 1-10"""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another GT task running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
-            self._start_wait()
+            self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             self._ctrl.submit_job(1, "Rate-Graph", (rating, sgt_obj.ntwk_p,), True)
         except Exception as err:
-            self._stop_wait()
+            self.stop_task()
             logging.info("Rate Graph Error: " + str(err), extra={'user': 'SGT Logs'})
 
     @Slot()
     def run_graph_analyzer(self):
         """Retrieve settings from the model and send to Python."""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
-            self._start_wait()
+            self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             self._ctrl.submit_job(1, "Compute-GT", (sgt_obj,), True)
         except Exception as err:
-            self._stop_wait()
+            self.stop_task()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(
+            self._ctrl.handle_progress_update(
                 ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
-            self._handle_finished(1, False, ["GT Computation Error",
+            self._ctrl.handle_finished(1, False, ["GT Computation Error",
                                              "Fatal error while trying calculate GT parameters. "
                                              "Close the app and try again."])
 
     @Slot()
     def run_multi_graph_analyzer(self):
         """"""
-        if self._wait_flag:
+        if self._ctrl.wait_flag:
             logging.info("Please Wait: Another GT task is running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another GT task is running!")
             return
 
         try:
-            self._start_wait()
+            self.start_task()
             # Update Configs
             self._ctrl.replicate_sgt_configs()
             # Start Background Process
             self._ctrl.submit_job(1, "Compute-Multi-GT", (self._ctrl.sgt_objs,), True)
         except Exception as err:
-            self._stop_wait()
+            self.stop_task()
             logging.exception("GT Computation Error: %s", err, extra={'user': 'SGT Logs'})
-            self._handle_progress_update(
+            self._ctrl.handle_progress_update(
                 ProgressData(type="error", sender="GT", message=f"Fatal error occurred! Close the app and try again."))
-            self._handle_finished(1, False, ["GT Computation Error",
+            self._ctrl.handle_finished(1, False, ["GT Computation Error",
                                              "Fatal error while trying calculate GT parameters. "
                                              "Close the app and try again."])
 
