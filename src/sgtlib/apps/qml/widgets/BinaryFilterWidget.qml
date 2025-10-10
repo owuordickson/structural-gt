@@ -8,6 +8,7 @@ ColumnLayout {
     Layout.preferredHeight: 120
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignTop
+    spacing: 10
     visible: imageController.display_image()
     enabled: imageController.enable_img_controls()
 
