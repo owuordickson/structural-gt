@@ -192,7 +192,7 @@ Rectangle {
                 ToolTip.visible: btnSelect.hovered
                 visible: imageController.display_image()
                 enabled: imageController.enable_img_controls()
-                onClicked: enableRectangularSelect()
+                onClicked: toggleRectangularSelect()
 
                 Rectangle {
                     id: btnSelectBorder
@@ -220,7 +220,10 @@ Rectangle {
                 ToolTip.text: "Crop to selection"
                 ToolTip.visible: btnCrop.hovered
                 visible: false
-                onClicked: imageController.perform_cropping(true)
+                onClicked: {
+                    imageController.perform_cropping(true);
+                    toggleRectangularSelect();
+                }
             }
 
             Basic.Button {
@@ -234,7 +237,10 @@ Rectangle {
                 }
                 ToolTip.text: "Undo crop"
                 ToolTip.visible: btnUndo.hovered
-                onClicked: imageController.undo_applied_changes(true, "cropping", -1)
+                onClicked: {
+                    imageController.undo_applied_changes(true, "cropping", -1);
+                    toggleRectangularSelect();
+                }
                 visible: false
             }
         }
@@ -381,7 +387,7 @@ Rectangle {
         }
     }
 
-    function enableRectangularSelect() {
+    function toggleRectangularSelect() {
         if (btnSelectBorder.enabled) {
             imageController.enable_rectangular_selection(false)
             btnSelectBorder.border.color = "black"

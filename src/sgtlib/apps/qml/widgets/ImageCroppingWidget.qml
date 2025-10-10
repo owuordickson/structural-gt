@@ -6,6 +6,9 @@ Item {
     anchors.fill: parent
     visible: false
 
+    // Expose to outside QMLs
+    property alias cropArea: cropRect
+
     // rectangle coordinates (px, relative to overlay)
     property real leftPt: 0
     property real topPt: 0
@@ -291,13 +294,6 @@ Item {
         function onEnableRectangularSelectionSignal(allow) {
             cropOverlay.visible = allow;
         }
-
-        /*function onPerformCroppingSignal(allow) {
-            if (allow) {
-                cropImage();
-            }
-        }*/
-
     }
 
 }

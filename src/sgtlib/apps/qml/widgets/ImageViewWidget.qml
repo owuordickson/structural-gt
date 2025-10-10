@@ -415,54 +415,6 @@ ColumnLayout {
         // Cropping Tool
         ImageCroppingWidget{id: cropTool}
 
-        // Selection Rectangle for Cropping
-        /*Rectangle {
-            id: cropArea
-            color: "transparent"
-            border.color: "red"
-            border.width: 2
-            visible: false
-
-            // Draggable functionality
-            MouseArea {
-                id: dragArea
-                anchors.fill: parent
-                drag.target: cropArea
-                drag.minimumX: 0
-                drag.minimumY: 0
-                drag.maximumX: imgContainer.width - cropArea.width
-                drag.maximumY: imgContainer.height - cropArea.height
-            }
-        }
-
-        MouseArea {
-            id: selectionArea
-            anchors.fill: parent
-            enabled: false
-            onPressed: (mouse) => {
-                cropArea.x = mouse.x;
-                cropArea.y = mouse.y;
-                cropArea.width = 0;
-                cropArea.height = 0;
-                cropArea.visible = true;
-            }
-            onPositionChanged: (mouse) => {
-                if (cropArea.visible) {
-                    cropArea.width = Math.abs(mouse.x - cropArea.x);
-                    cropArea.height = Math.abs(mouse.y - cropArea.y);
-                }
-            }
-            onReleased: {
-                if (cropArea.width < 5 || cropArea.height < 5) {
-                    cropArea.visible = false;  // Hide small selections
-                    imageController.show_cropping_tool(false);
-                } else {
-                    imageController.show_cropping_tool(true);
-                }
-            }
-        }
-        */
-
         // Zoom controls
         Rectangle {
             id: zoomControls
@@ -590,10 +542,10 @@ ColumnLayout {
         const offsetY = flickableArea.contentY;
         const actualSize = getActualImageSize();
 
-        const cropX = (cropArea.x + offsetX) / scale;
-        const cropY = (cropArea.y + offsetY) / scale;
-        const cropW = cropArea.width / scale;
-        const cropH = cropArea.height / scale;
+        const cropX = (cropTool.cropArea.x + offsetX) / scale;
+        const cropY = (cropTool.cropArea.y + offsetY) / scale;
+        const cropW = cropTool.cropArea.width / scale;
+        const cropH = cropTool.cropArea.height / scale;
 
         return {
             x: Math.round(cropX),
@@ -612,7 +564,7 @@ ColumnLayout {
         imageController.crop_image(cropRect.x, cropRect.y, cropRect.width, cropRect.height, cropRect.actualWidth, cropRect.actualHeight);
 
         // Hide the selection box
-        cropArea.visible = false;
+        cropTool.visible = false;
     }
 
     Connections {
@@ -678,15 +630,9 @@ ColumnLayout {
     Connections {
         target: imageController
 
-        /*function onEnableRectangularSelectionSignal(allow) {
-            selectionArea.enabled = allow;
-            cropArea.visible = allow;
-        }*/
-
         function onPerformCroppingSignal(allow) {
-            console.log(cropTool.cropRect.width);
             if (allow) {
-                //cropImage();
+                cropImage();
             }
         }
 
