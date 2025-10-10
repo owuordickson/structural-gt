@@ -141,7 +141,6 @@ class ImageController(QObject):
         if only_colors:
             return
         self.imgHistogramModel.reset_data([], set([]))
-        self.img3dGridModel.reset_data([], set([]))
 
     @Slot(result=bool)
     def display_image(self):
@@ -218,12 +217,14 @@ class ImageController(QObject):
             if sgt_obj is None:
                 return sel_pos
 
+            sel_img_idx = set()
             sel_img_batch = sgt_obj.ntwk_p.selected_batch
             for i, img_idx in enumerate(sel_img_batch.selected_images_idx):
+                print(f"Getting {i}: {img_idx}")
                 if i == 0:
                     sel_pos = img_idx
-                else:
-                    sel_img_batch.selected_images_idx.discard(img_idx)
+                    sel_img_idx.add(img_idx)
+            sel_img_batch.selected_images_idx = sel_img_idx
         except Exception as err:
             logging.exception("Image Index Error: %s", err, extra={'user': 'SGT Logs'})
             sel_pos = 0
@@ -255,6 +256,7 @@ class ImageController(QObject):
 
     @Slot(int)
     def select_batch_image_index(self, img_pos=-1):
+        print((f"Setting to {img_pos}"))
         if img_pos < 0:
             return
 
@@ -263,10 +265,9 @@ class ImageController(QObject):
             if sgt_obj is None:
                 return
 
-            sel_img_batch = sgt_obj.ntwk_p.selected_batch
-            for img_idx in sel_img_batch.selected_images_idx:
-                sel_img_batch.selected_images_idx.discard(img_idx)
-            sel_img_batch.selected_images_idx.add(img_pos)
+            sel_img_idx = set()
+            sel_img_idx.add(img_pos)
+            sgt_obj.ntwk_p.selected_batch.select_image_idx = sel_img_idx
 
             # Trigger QML image update
             self.reset_img_models()

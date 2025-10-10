@@ -63,9 +63,14 @@ Window {
                     valueRole: "id"
                     ToolTip.text: "Select image"
                     ToolTip.visible: cbColorsImageSelector.hovered
-                    currentIndex: 0
                     visible: imageController.is_img_3d()
-                    onCurrentIndexChanged: imageController.select_batch_image_index(currentIndex)
+                    currentIndex: imageController.get_selected_batch_image_index()
+                    onCurrentIndexChanged: {
+                        let index = img3dGridModel.index(model.index, 0);
+                        let selectedVal = 1;
+                        img3dGridModel.setData(index, selectedVal, selectedRole);
+                        imageController.select_batch_image_index(model.id);
+                    }
                 }
 
             }
@@ -351,7 +356,6 @@ Window {
 
     }
 
-
     Connections {
         target: mainController
 
@@ -365,11 +369,15 @@ Window {
 
                 if (imageController.image_batches_exist()) {
                     cbColorsBatchSelector.currentIndex = imageController.get_selected_img_batch();
-                    cbColorsImageSelector.currentIndex = imageController.get_selected_batch_image_index();
                 }
 
-                let img_idx = cbColorsImageSelector.currentIndex;
-                let base64_img = imageController.get_selected_image(img_idx, "mutated");
+                let img_pos = 0;
+                if (imageController.is_img_3d()) {
+                    cbColorsImageSelector.currentIndex = imageController.get_selected_batch_image_index();
+                    img_pos = cbColorsImageSelector.currentIndex;
+                }
+
+                let base64_img = imageController.get_selected_image(img_pos, "mutated");
                 imgCurrent.source = "data:image/png;base64," + base64_img;
             }
         }

@@ -399,7 +399,7 @@ ColumnLayout {
                                 if (isSelected !== checked) {  // Only update if there is a change
                                     isSelected = checked
                                     let val = checked ? 1 : 0;
-                                    var index = img3dGridModel.index(model.index, 0);
+                                    let index = img3dGridModel.index(model.index, 0);
                                     img3dGridModel.setData(index, val, selectedRole);
                                     imageController.toggle_selected_batch_image(model.id, isSelected);
                                 }
