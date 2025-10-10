@@ -5,6 +5,7 @@ import QtQuick.Controls.Basic as Basic
 import QtQuick.Dialogs as QuickDialogs
 import Qt.labs.platform as Platform
 import "widgets"
+import "layouts"
 
 ApplicationWindow {
     id: mainWindow
@@ -52,7 +53,7 @@ ApplicationWindow {
             Layout.preferredHeight: parent.height - 40
             Layout.preferredWidth: 300
             color: "#f0f0f0"
-            LeftContent {
+            LeftLayout {
             }
         }
 
@@ -66,7 +67,7 @@ ApplicationWindow {
             Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
             color: "#f0f0f0"
-            CenterMainContent {
+            MainLayout {
             }
         }
 

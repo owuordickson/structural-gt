@@ -1,7 +1,7 @@
 {
     "files": [
-        "LeftContent.qml",
-        "CenterMainContent.qml",
+        "LeftLayout.qml",
+        "MainLayout.qml",
         "MainWindow.qml",
         "LoggingWindow.qml",
         "ImageHistogramWindow.qml",
@@ -20,9 +20,9 @@
         "widgets/ImageViewWidget.qml",
         "widgets/ImagePropertyWidget.qml",
         "widgets/ProjectFoldersWidget.qml",
-        "components/ImageFilters.qml",
-        "components/ImageProperties.qml",
-        "components/ProjectNav.qml",
+        "tabs/ImageFilters.qml",
+        "tabs/ImageProperties.qml",
+        "tabs/ProjectNav.qml",
         "assets/icons/brightness_icon.png",
         "assets/icons/cancel_icon.png",
         "assets/icons/delete_icon.png",

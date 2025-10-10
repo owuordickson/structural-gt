@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls.Material as Material
-import "widgets"
+import "../widgets"
 
 Window {
     id: imgHistogramWindow

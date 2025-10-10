@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../widgets"
+import "../../widgets"
 
 Rectangle {
     color: "#f0f0f0"

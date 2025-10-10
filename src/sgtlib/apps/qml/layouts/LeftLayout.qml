@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15 as MaterialControls
 import QtQuick.Layouts
 //import QtQuick.Controls.Basic as Basic
-import "components"
+import "tabs"
 
 Rectangle {
     width: parent.width

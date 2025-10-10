@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls.Material as Material
 import QtQuick.Controls.Fusion as Fusion
-import "widgets"
+import "../widgets"
 
 Window {
     id: imgColorsWindow
