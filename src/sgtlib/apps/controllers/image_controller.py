@@ -256,7 +256,7 @@ class ImageController(QObject):
 
     @Slot(int)
     def select_batch_image_index(self, img_pos=-1):
-        print((f"Setting to {img_pos}"))
+        print(f"Setting to {img_pos}")
         if img_pos < 0:
             return
 
