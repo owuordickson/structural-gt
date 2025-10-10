@@ -6,9 +6,9 @@
         "LoggingWindow.qml",
         "ImageHistogramWindow.qml",
         "ImageColorsWindow.qml",
-        "widgets/MenuBarWidget.qml",
-        "widgets/StatusBarWidget.qml",
-        "widgets/RibbonWidget.qml",
+        "widgets/MenuBar.qml",
+        "widgets/StatusBarLayout.qml",
+        "widgets/RibbonLayout.qml",
         "widgets/FiltersWidget.qml",
         "widgets/BinaryFilterWidget.qml",
         "widgets/ImageFilterWidget.qml",
@@ -55,11 +55,12 @@
         "widgets/GraphPropertyWidget.qml",
         "widgets/GraphComputeWidget.qml",
         "widgets/CreateProjectWidget.qml",
-        "widgets/LoadingSpinnerWidget.qml",
+        "widgets/LoadingSpinnerOverlay.qml",
         "widgets/AIModeWidget.qml"
         "widgets/AIModeWidget.qml",
         "widgets/GraphRatingWidget.qml",
         "widgets/SpinnerProgress.qml",
         "widgets/ImageCroppingWidget.qml",
+        "widgets/ImageNavControls.qml"
     ]
 }

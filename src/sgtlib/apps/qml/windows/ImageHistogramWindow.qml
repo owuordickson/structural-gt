@@ -29,7 +29,7 @@ Window {
                 text: " Reload Histogram"
                 leftPadding: 10
                 rightPadding: 10
-                icon.source: "assets/icons/reload_icon.png"
+                icon.source: "../assets/icons/reload_icon.png"
                 icon.width: 21
                 icon.height: 21
                 icon.color: "transparent"   // important for PNGs

@@ -16,6 +16,8 @@ Window {
     title: "Image Colors"
 
     property int valueRole: Qt.UserRole + 4
+    property int selectedRole: Qt.UserRole + 20
+
 
     ColumnLayout {
         anchors.fill: parent
@@ -125,7 +127,7 @@ Window {
                         text: " Retrieve Colors"
                         leftPadding: 10
                         rightPadding: 10
-                        icon.source: "assets/icons/reload_icon.png"
+                        icon.source: "../assets/icons/reload_icon.png"
                         icon.width: 21
                         icon.height: 21
                         icon.color: "transparent"   // important for PNGs
@@ -316,7 +318,7 @@ Window {
                             Layout.alignment: Qt.AlignHCenter
                             leftPadding: 15
                             rightPadding: 15
-                            icon.source: "assets/icons/approve_icon.png"
+                            icon.source: "../assets/icons/approve_icon.png"
                             icon.width: 21
                             icon.height: 21
                             icon.color: "transparent"   // important for PNGs
@@ -336,7 +338,7 @@ Window {
                             Layout.alignment: Qt.AlignHCenter
                             leftPadding: 15
                             rightPadding: 15
-                            icon.source: "assets/icons/undo_icon.png"
+                            icon.source: "../assets/icons/undo_icon.png"
                             icon.width: 21
                             icon.height: 21
                             icon.color: "transparent"   // important for PNGs

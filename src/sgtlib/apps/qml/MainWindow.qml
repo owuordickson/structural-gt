@@ -6,6 +6,7 @@ import QtQuick.Dialogs as QuickDialogs
 import Qt.labs.platform as Platform
 import "widgets"
 import "layouts"
+import "windows"
 
 ApplicationWindow {
     id: mainWindow
@@ -16,10 +17,10 @@ ApplicationWindow {
     font.family: "Arial"  // or Qt.application.font.family
     color: "#f0f0f0"
 
-    menuBar: MenuBarWidget {
+    menuBar: MenuBar {
     }
 
-    footer: StatusBarWidget {
+    footer: StatusBarLayout {
     }
 
     GridLayout {
@@ -39,7 +40,7 @@ ApplicationWindow {
             Layout.preferredHeight: 40
             Layout.preferredWidth: parent.width
             color: "#f0f0f0"
-            RibbonWidget {
+            RibbonLayout {
             }
         }
 
@@ -87,9 +88,14 @@ ApplicationWindow {
         {
             id: imgColorsWindow
         }
+
+        // Image Cropping Window
+        ImageCroppingWindow {
+            id: imgCroppingWindow
+        }
     }
 
-    LoadingSpinnerWidget{}
+    LoadingSpinnerOverlay{}
 
     function toggleLeftPane(showVal) {
         recLeftPane.visible = showVal;

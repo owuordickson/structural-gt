@@ -172,19 +172,6 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
 
-            ComboBox {
-                id: cbBatchSelector
-                visible: imageController.image_batches_exist()
-                Layout.minimumWidth: 75
-                model: imgBatchModel
-                implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
-                textRole: "text"
-                valueRole: "value"
-                ToolTip.text: "Change image batch"
-                ToolTip.visible: cbBatchSelector.hovered
-                onCurrentIndexChanged: imageController.select_img_batch(valueAt(currentIndex))
-            }
-
             Switch {
                 id: toggleShowGiantGraph
                 visible: graphController.display_graph()
@@ -461,54 +448,9 @@ ColumnLayout {
         }
     }
 
+    ImageNavControls{}
 
-    Rectangle {
-        id: imgNavControls
-        height: 32
-        Layout.fillHeight: false
-        Layout.fillWidth: true
-        color: "transparent"
-        visible: imageController.display_image()
-
-        RowLayout {
-            anchors.fill: parent
-
-            Basic.Button {
-                id: btnPrevious
-                text: ""
-                icon.source: "../assets/icons/back_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
-                icon.height: 24
-                background: Rectangle {
-                    color: "transparent"
-                }
-                Layout.alignment: Qt.AlignLeft
-                onClicked: projectController.load_prev_image()
-            }
-
-            Label {
-                id: lblNavInfo
-                text: ""
-                color: "#808080"
-                Layout.alignment: Qt.AlignCenter
-            }
-
-            Basic.Button {
-                id: btnNext
-                text: ""
-                icon.source: "../assets/icons/next_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
-                icon.height: 24
-                background: Rectangle {
-                    color: "transparent"
-                }
-                Layout.alignment: Qt.AlignRight
-                onClicked: projectController.load_next_image()
-            }
-
-        }
-    }
-
+    /*
     function getActualImageSize() {
         const containerWidth = flickableArea.width;
         const containerHeight = flickableArea.height;
@@ -566,6 +508,7 @@ ColumnLayout {
         // Hide the selection box
         cropTool.visible = false;
     }
+    */
 
     Connections {
         target: mainController
@@ -576,9 +519,7 @@ ColumnLayout {
             imgGridView.visible = imageController.is_img_3d();
             welcomeContainer.visible = imageController.display_image() ? false : !projectController.is_project_open();
             imgContainer.visible = imageController.display_image();
-            imgNavControls.visible = imageController.display_image();
             imgViewControls.visible = imageController.display_image();
-            cbBatchSelector.visible = imageController.image_batches_exist();
             toggleShowGiantGraph.visible = graphController.display_graph();
             btnLoad3DGraph.visible = graphController.display_graph();
             btnGraphRating.visible = graphController.display_graph();
@@ -589,29 +530,7 @@ ColumnLayout {
             } else {
                 imgView.source = "";
             }
-
             zoomFactor = 1.0;
-
-            btnPrevious.enabled = projectController.enable_prev_nav_btn();
-            btnNext.enabled = projectController.enable_next_nav_btn();
-            lblNavInfo.text = projectController.get_img_nav_location();
-            //console.log(src);
-
-            cbBatchSelector.currentIndex = imageController.get_selected_img_batch();
-        }
-
-        function onUpdateProgressSignal(val, msg) {
-            if (val === 101) {
-                lblNavInfo.text = msg;
-            }
-            btnNext.enabled = projectController.enable_next_nav_btn();
-            lblNavInfo.text = projectController.get_img_nav_location();
-        }
-
-        function onTaskTerminatedSignal(success_val, msg_data) {
-            lblNavInfo.text = projectController.get_img_nav_location();
-            btnNext.enabled = projectController.enable_next_nav_btn();
-            lblNavInfo.text = projectController.get_img_nav_location();
         }
 
     }
@@ -627,7 +546,7 @@ ColumnLayout {
     }
 
 
-    Connections {
+    /*Connections {
         target: imageController
 
         function onPerformCroppingSignal(allow) {
@@ -636,7 +555,7 @@ ColumnLayout {
             }
         }
 
-    }
+    }*/
 }
 
 
