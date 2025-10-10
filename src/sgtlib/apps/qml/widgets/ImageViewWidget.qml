@@ -413,7 +413,7 @@ ColumnLayout {
         }
 
         // Cropping Tool
-        ImageCroppingWidget{}
+        ImageCroppingWidget{id: cropTool}
 
         // Selection Rectangle for Cropping
         /*Rectangle {
@@ -675,21 +675,22 @@ ColumnLayout {
     }
 
 
-    /*Connections {
+    Connections {
         target: imageController
 
-        function onEnableRectangularSelectionSignal(allow) {
+        /*function onEnableRectangularSelectionSignal(allow) {
             selectionArea.enabled = allow;
             cropArea.visible = allow;
-        }
+        }*/
 
         function onPerformCroppingSignal(allow) {
+            console.log(cropTool.cropRect.width);
             if (allow) {
-                cropImage();
+                //cropImage();
             }
         }
 
-    }*/
+    }
 }
 
 
