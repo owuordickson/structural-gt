@@ -15,7 +15,7 @@ Item {
     property int handleSize: 24
     property int minWidth: 40
     property int minHeight: 40
-    property color borderColor: "#2266ff"
+    property color borderColor: "#00AEEF"
     property bool _initialized: false
 
     // snapshots used while dragging
@@ -44,7 +44,8 @@ Item {
         y: overlay.topPt
         width: Math.max(overlay.minWidth, overlay.rightPt - overlay.leftPt)
         height: Math.max(overlay.minHeight, overlay.bottomPt - overlay.topPt)
-        color: "transparent"
+        color: "white"
+        opacity: 0.2
         border.width: 2
         border.color: overlay.borderColor
         z: 2
@@ -269,13 +270,21 @@ Item {
         }
     }
 
-    // optional: show a translucent mask outside cropRect (simple version)
-    Rectangle {
-        anchors.fill: parent
-        color: "black"
-        opacity: 0.35
-        z: 1
-        visible: true
-        // use clipping to create a hole: draw on top and then the cropRect is above
+
+    Connections {
+        target: imageController
+
+        function onEnableRectangularSelectionSignal(allow) {
+            selectionArea.enabled = allow;
+            cropArea.visible = allow;
+        }
+
+        function onPerformCroppingSignal(allow) {
+            if (allow) {
+                cropImage();
+            }
+        }
+
     }
+
 }

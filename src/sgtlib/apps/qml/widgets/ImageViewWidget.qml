@@ -462,6 +462,7 @@ ColumnLayout {
             }
         }
 
+        // Zoom controls
         Rectangle {
             id: zoomControls
             width: parent.width
