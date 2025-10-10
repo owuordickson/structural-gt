@@ -416,7 +416,7 @@ ColumnLayout {
         ImageCroppingWidget{}
 
         // Selection Rectangle for Cropping
-        Rectangle {
+        /*Rectangle {
             id: cropArea
             color: "transparent"
             border.color: "red"
@@ -461,6 +461,7 @@ ColumnLayout {
                 }
             }
         }
+        */
 
         // Zoom controls
         Rectangle {
@@ -674,7 +675,7 @@ ColumnLayout {
     }
 
 
-    Connections {
+    /*Connections {
         target: imageController
 
         function onEnableRectangularSelectionSignal(allow) {
@@ -688,7 +689,7 @@ ColumnLayout {
             }
         }
 
-    }
+    }*/
 }
 
 

@@ -2,8 +2,9 @@ import QtQuick
 import QtQuick.Controls
 
 Item {
-    id: overlay
+    id: cropOverlay
     anchors.fill: parent
+    visible: false
 
     // rectangle coordinates (px, relative to overlay)
     property real leftPt: 0
@@ -15,7 +16,7 @@ Item {
     property int handleSize: 24
     property int minWidth: 40
     property int minHeight: 40
-    property color borderColor: "#00AEEF"
+    property color borderColor: "red"
     property bool _initialized: false
 
     // snapshots used while dragging
@@ -31,8 +32,8 @@ Item {
         if (!_initialized && width > 0 && height > 0) {
             leftPt = 0;
             topPt = 0;
-            rightPt = width;
-            bottomPt = height;
+            rightPt = 256;
+            bottomPt = 256;
             _initialized = true;
         }
     }
@@ -40,14 +41,14 @@ Item {
     // visible crop rectangle (computed from coords)
     Rectangle {
         id: cropRect
-        x: overlay.leftPt
-        y: overlay.topPt
-        width: Math.max(overlay.minWidth, overlay.rightPt - overlay.leftPt)
-        height: Math.max(overlay.minHeight, overlay.bottomPt - overlay.topPt)
-        color: "white"
+        x: cropOverlay.leftPt
+        y: cropOverlay.topPt
+        width: Math.max(cropOverlay.minWidth, cropOverlay.rightPt - cropOverlay.leftPt)
+        height: Math.max(cropOverlay.minHeight, cropOverlay.bottomPt - cropOverlay.topPt)
+        color: "#00AEEF"
         opacity: 0.2
         border.width: 2
-        border.color: overlay.borderColor
+        border.color: cropOverlay.borderColor
         z: 2
 
         // move the whole rectangle by dragging inside
@@ -56,24 +57,24 @@ Item {
             cursorShape: Qt.SizeAllCursor
             onPressed: (mouse) => {
                 // snapshot coords and mouse position (parent is cropRect here)
-                overlay._startLeft = overlay.leftPt;
-                overlay._startRight = overlay.rightPt;
-                overlay._startTop = overlay.topPt;
-                overlay._startBottom = overlay.bottomPt;
-                overlay._startMouseX = parent.x + mouse.x; // mouse pos relative to overlay
-                overlay._startMouseY = parent.y + mouse.y;
+                cropOverlay._startLeft = cropOverlay.leftPt;
+                cropOverlay._startRight = cropOverlay.rightPt;
+                cropOverlay._startTop = cropOverlay.topPt;
+                cropOverlay._startBottom = cropOverlay.bottomPt;
+                cropOverlay._startMouseX = parent.x + mouse.x; // mouse pos relative to overlay
+                cropOverlay._startMouseY = parent.y + mouse.y;
             }
             onPositionChanged: (mouse) => {
                 var curX = parent.x + mouse.x;
                 var curY = parent.y + mouse.y;
-                var dx = curX - overlay._startMouseX;
-                var dy = curY - overlay._startMouseY;
+                var dx = curX - cropOverlay._startMouseX;
+                var dy = curY - cropOverlay._startMouseY;
 
                 // shift all coordinates while clamping to parent bounds
-                var newLeft = overlay._startLeft + dx;
-                var newRight = overlay._startRight + dx;
-                var newTop = overlay._startTop + dy;
-                var newBottom = overlay._startBottom + dy;
+                var newLeft = cropOverlay._startLeft + dx;
+                var newRight = cropOverlay._startRight + dx;
+                var newTop = cropOverlay._startTop + dy;
+                var newBottom = cropOverlay._startBottom + dy;
 
                 // clamp horizontally
                 var w = newRight - newLeft;
@@ -81,8 +82,8 @@ Item {
                     newLeft = 0;
                     newRight = newLeft + w;
                 }
-                if (newRight > overlay.width) {
-                    newRight = overlay.width;
+                if (newRight > cropOverlay.width) {
+                    newRight = cropOverlay.width;
                     newLeft = newRight - w;
                 }
                 // clamp vertically
@@ -91,16 +92,16 @@ Item {
                     newTop = 0;
                     newBottom = newTop + h;
                 }
-                if (newBottom > overlay.height) {
-                    newBottom = overlay.height;
+                if (newBottom > cropOverlay.height) {
+                    newBottom = cropOverlay.height;
                     newTop = newBottom - h;
                 }
 
                 // apply
-                overlay.leftPt = newLeft;
-                overlay.rightPt = newRight;
-                overlay.topPt = newTop;
-                overlay.bottomPt = newBottom;
+                cropOverlay.leftPt = newLeft;
+                cropOverlay.rightPt = newRight;
+                cropOverlay.topPt = newTop;
+                cropOverlay.bottomPt = newBottom;
             }
         }
     }
@@ -111,10 +112,10 @@ Item {
     // Top handle (modifies `top` only; bottom is fixed)
     Rectangle {
         id: topHandle
-        width: overlay.handleSize * 3
-        height: overlay.handleSize
-        x: (overlay.leftPt + overlay.rightPt) / 2 - width / 2
-        y: overlay.topPt - height / 2
+        width: cropOverlay.handleSize * 3
+        height: cropOverlay.handleSize
+        x: (cropOverlay.leftPt + cropOverlay.rightPt) / 2 - width / 2
+        y: cropOverlay.topPt - height / 2
         color: "transparent"
         z: 3
 
@@ -134,18 +135,18 @@ Item {
             anchors.fill: parent
             cursorShape: Qt.SizeVerCursor
             onPressed: (mouse) => {
-                overlay._startTop = overlay.topPt;
-                overlay._startBottom = overlay.bottomPt;
-                overlay._startMouseY = parent.y + mouse.y; // global relative to overlay
+                cropOverlay._startTop = cropOverlay.topPt;
+                cropOverlay._startBottom = cropOverlay.bottomPt;
+                cropOverlay._startMouseY = parent.y + mouse.y; // global relative to overlay
             }
             onPositionChanged: (mouse) => {
                 var curY = parent.y + mouse.y;
-                var dy = curY - overlay._startMouseY;
-                var newTop = overlay._startTop + dy;
+                var dy = curY - cropOverlay._startMouseY;
+                var newTop = cropOverlay._startTop + dy;
 
                 // clamp: 0 <= newTop <= bottom - minHeight
-                newTop = Math.max(0, Math.min(newTop, overlay.bottomPt - overlay.minHeight));
-                overlay.topPt = newTop;
+                newTop = Math.max(0, Math.min(newTop, cropOverlay.bottomPt - cropOverlay.minHeight));
+                cropOverlay.topPt = newTop;
             }
         }
     }
@@ -153,10 +154,10 @@ Item {
     // Bottom handle (modifies `bottom` only; top is fixed)
     Rectangle {
         id: bottomHandle
-        width: overlay.handleSize * 3
-        height: overlay.handleSize
-        x: (overlay.leftPt + overlay.rightPt) / 2 - width / 2
-        y: overlay.bottomPt - height / 2
+        width: cropOverlay.handleSize * 3
+        height: cropOverlay.handleSize
+        x: (cropOverlay.leftPt + cropOverlay.rightPt) / 2 - width / 2
+        y: cropOverlay.bottomPt - height / 2
         color: "transparent"
         z: 3
 
@@ -176,18 +177,18 @@ Item {
             anchors.fill: parent
             cursorShape: Qt.SizeVerCursor
             onPressed: (mouse) => {
-                overlay._startTop = overlay.topPt;
-                overlay._startBottom = overlay.bottomPt;
-                overlay._startMouseY = parent.y + mouse.y;
+                cropOverlay._startTop = cropOverlay.topPt;
+                cropOverlay._startBottom = cropOverlay.bottomPt;
+                cropOverlay._startMouseY = parent.y + mouse.y;
             }
             onPositionChanged: (mouse) => {
                 var curY = parent.y + mouse.y;
-                var dy = curY - overlay._startMouseY;
-                var newBottom = overlay._startBottom + dy;
+                var dy = curY - cropOverlay._startMouseY;
+                var newBottom = cropOverlay._startBottom + dy;
 
-                // clamp: top + minHeight <= newBottom <= overlay.height
-                newBottom = Math.max(overlay.topPt + overlay.minHeight, Math.min(newBottom, overlay.height));
-                overlay.bottomPt = newBottom;
+                // clamp: top + minHeight <= newBottom <= cropOverlay.height
+                newBottom = Math.max(cropOverlay.topPt + cropOverlay.minHeight, Math.min(newBottom, cropOverlay.height));
+                cropOverlay.bottomPt = newBottom;
             }
         }
     }
@@ -195,10 +196,10 @@ Item {
     // Left handle (modifies `left` only; right is fixed)
     Rectangle {
         id: leftHandle
-        width: overlay.handleSize
-        height: overlay.handleSize * 3
-        x: overlay.leftPt - width / 2
-        y: (overlay.topPt + overlay.bottomPt) / 2 - height / 2
+        width: cropOverlay.handleSize
+        height: cropOverlay.handleSize * 3
+        x: cropOverlay.leftPt - width / 2
+        y: (cropOverlay.topPt + cropOverlay.bottomPt) / 2 - height / 2
         color: "transparent"
         z: 3
 
@@ -213,18 +214,18 @@ Item {
             anchors.fill: parent
             cursorShape: Qt.SizeHorCursor
             onPressed: (mouse) => {
-                overlay._startLeft = overlay.leftPt;
-                overlay._startRight = overlay.rightPt;
-                overlay._startMouseX = parent.x + mouse.x;
+                cropOverlay._startLeft = cropOverlay.leftPt;
+                cropOverlay._startRight = cropOverlay.rightPt;
+                cropOverlay._startMouseX = parent.x + mouse.x;
             }
             onPositionChanged: (mouse) => {
                 var curX = parent.x + mouse.x;
-                var dx = curX - overlay._startMouseX;
-                var newLeft = overlay._startLeft + dx;
+                var dx = curX - cropOverlay._startMouseX;
+                var newLeft = cropOverlay._startLeft + dx;
 
                 // clamp: 0 <= newLeft <= right - minWidth
-                newLeft = Math.max(0, Math.min(newLeft, overlay.rightPt - overlay.minWidth));
-                overlay.leftPt = newLeft;
+                newLeft = Math.max(0, Math.min(newLeft, cropOverlay.rightPt - cropOverlay.minWidth));
+                cropOverlay.leftPt = newLeft;
             }
         }
     }
@@ -232,10 +233,10 @@ Item {
     // Right handle (modifies `right` only; left is fixed)
     Rectangle {
         id: rightHandle
-        width: overlay.handleSize;
-        height: overlay.handleSize * 3
-        x: overlay.rightPt - width / 2
-        y: (overlay.topPt + overlay.bottomPt) / 2 - height / 2
+        width: cropOverlay.handleSize;
+        height: cropOverlay.handleSize * 3
+        x: cropOverlay.rightPt - width / 2
+        y: (cropOverlay.topPt + cropOverlay.bottomPt) / 2 - height / 2
         color: "transparent"
         z: 3
 
@@ -254,18 +255,18 @@ Item {
             anchors.fill: parent
             cursorShape: Qt.SizeHorCursor
             onPressed: (mouse) => {
-                overlay._startLeft = overlay.leftPt;
-                overlay._startRight = overlay.rightPt;
-                overlay._startMouseX = parent.x + mouse.x;
+                cropOverlay._startLeft = cropOverlay.leftPt;
+                cropOverlay._startRight = cropOverlay.rightPt;
+                cropOverlay._startMouseX = parent.x + mouse.x;
             }
             onPositionChanged: (mouse) => {
                 var curX = parent.x + mouse.x;
-                var dx = curX - overlay._startMouseX;
-                var newRight = overlay._startRight + dx;
+                var dx = curX - cropOverlay._startMouseX;
+                var newRight = cropOverlay._startRight + dx;
 
-                // clamp: left + minWidth <= newRight <= overlay.width
-                newRight = Math.max(overlay.leftPt + overlay.minWidth, Math.min(newRight, overlay.width));
-                overlay.rightPt = newRight;
+                // clamp: left + minWidth <= newRight <= cropOverlay.width
+                newRight = Math.max(cropOverlay.leftPt + cropOverlay.minWidth, Math.min(newRight, cropOverlay.width));
+                cropOverlay.rightPt = newRight;
             }
         }
     }
@@ -275,8 +276,7 @@ Item {
         target: imageController
 
         function onEnableRectangularSelectionSignal(allow) {
-            selectionArea.enabled = allow;
-            cropArea.visible = allow;
+            cropOverlay.visible = allow;
         }
 
         function onPerformCroppingSignal(allow) {
