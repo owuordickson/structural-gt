@@ -159,11 +159,11 @@ Window {
         target: imageController
 
         function onShowCroppingToolSignal(allow) {
-            //btnCrop.visible = allow;
+            btnCrop.visible = allow;
         }
 
         function onShowUnCroppingToolSignal(allow) {
-            //btnUndo.visible = allow;
+            btnUndo.visible = allow;
         }
     }
 
