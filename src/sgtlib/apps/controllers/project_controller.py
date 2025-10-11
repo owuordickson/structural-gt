@@ -195,10 +195,6 @@ class ProjectController(QObject):
             return ""
 
     @Slot(result=str)
-    def get_img_nav_location(self):
-        return f"{(self._ctrl.selected_sgt_obj_index + 1)} / {len(self._ctrl.sgt_objs)}"
-
-    @Slot(result=str)
     def get_output_dir(self):
         sgt_obj = self._ctrl.get_selected_sgt_obj()
         if sgt_obj is None:

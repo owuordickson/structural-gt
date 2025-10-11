@@ -101,6 +101,9 @@ Window {
             }
 
         }
+
+        // Image Navigation Controls
+        ImageNavControls{id: imgNavControls}
     }
 
 

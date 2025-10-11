@@ -22,69 +22,13 @@ Window {
     ColumnLayout {
         anchors.fill: parent
 
-        // Image Selection Layout
-        Rectangle {
-            id: imgSelectionControls
-            height: 32
-            Layout.topMargin: 10
-            Layout.fillHeight: false
-            Layout.fillWidth: true
-            color: "transparent"
-            visible: false
-
-            RowLayout {
-                spacing: 4
-                anchors.centerIn: parent
-
-                ComboBox {
-                    id: cbColorsBatchSelector
-                    Layout.minimumWidth: 75
-                    model: imgBatchModel
-                    implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
-                    textRole: "text"
-                    valueRole: "value"
-                    ToolTip.text: "Change image batch"
-                    ToolTip.visible: cbColorsBatchSelector.hovered
-                    onCurrentIndexChanged: imageController.select_img_batch(valueAt(currentIndex))
-                }
-
-                Rectangle {
-                    id: vertColorsLine
-                    width: 1
-                    height: 18
-                    color: "#d0d0d0"
-                    visible: imageController.is_img_3d()
-                }
-
-                ComboBox {
-                    id: cbColorsImageSelector
-                    Layout.minimumWidth: 75
-                    model: img3dGridModel
-                    implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
-                    textRole: "text"
-                    valueRole: "id"
-                    ToolTip.text: "Select image"
-                    ToolTip.visible: cbColorsImageSelector.hovered
-                    visible: imageController.is_img_3d()
-                    currentIndex: imageController.get_selected_batch_image_index()
-                    onCurrentIndexChanged: {
-                        let index = img3dGridModel.index(model.index, 0);
-                        let selectedVal = 1;
-                        img3dGridModel.setData(index, selectedVal, selectedRole);
-                        imageController.select_batch_image_index(model.id);
-                    }
-                }
-
-            }
-        }
-
         // Retrieve button and spinner -- Layout (hidden if ImageColors is visible)
         Rectangle {
             id: retrieveControls
             height: 90
             Layout.fillHeight: false
             Layout.fillWidth: true
-            Layout.topMargin: 5
+            Layout.topMargin: 10
             color: "transparent"
             visible: true
 
@@ -135,7 +79,7 @@ Window {
                         ToolTip.visible: btnGetColors.hovered
                         visible: !mainController.wait && !imageController.img_filters_busy
                         onClicked: {
-                            let sel_img = cbColorsImageSelector.currentIndex;
+                            let sel_img = imgNavControls.cbImageSelector.currentIndex;
                             let max_colors = spbMaxColors.value;
                             imageController.run_retrieve_img_colors(sel_img, max_colors);
                         }
@@ -356,6 +300,9 @@ Window {
             }
         }
 
+        // Image Navigation Controls
+        ImageNavControls{id: imgNavControls}
+
     }
 
     Connections {
@@ -363,22 +310,9 @@ Window {
 
         function onImageChangedSignal() {
             if (imgColorsWindow.visible) {
-                imgSelectionControls.visible = imageController.image_batches_exist();
-                vertColorsLine.visible = imageController.is_img_3d();
-                cbColorsImageSelector.visible = imageController.is_img_3d();
-
                 colorsLayout.visible = imgColorsModel.rowCount() > 0;
 
-                if (imageController.image_batches_exist()) {
-                    cbColorsBatchSelector.currentIndex = imageController.get_selected_img_batch();
-                }
-
-                let img_pos = 0;
-                if (imageController.is_img_3d()) {
-                    cbColorsImageSelector.currentIndex = imageController.get_selected_batch_image_index();
-                    img_pos = cbColorsImageSelector.currentIndex;
-                }
-
+                let img_pos = imgNavControls.cbImageSelector.currentIndex;
                 let base64_img = imageController.get_selected_image(img_pos, "mutated");
                 imgCurrent.source = "data:image/png;base64," + base64_img;
             }
