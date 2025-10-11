@@ -17,7 +17,7 @@ from ...compute.graph_analyzer import GraphAnalyzer
 class ImageController(QObject):
 
     showImageFilterControls = Signal(bool)
-    enableRectangularSelectionSignal = Signal(bool)
+    # enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
     performCroppingSignal = Signal(bool)
@@ -166,9 +166,9 @@ class ImageController(QObject):
             return False
         return not sgt_obj.ntwk_p.selected_batch.is_graph_only
 
-    @Slot(bool)
-    def enable_rectangular_selection(self, enabled):
-        self.enableRectangularSelectionSignal.emit(enabled)
+    # @Slot(bool)
+    # def enable_rectangular_selection(self, enabled):
+    #    self.enableRectangularSelectionSignal.emit(enabled)
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):

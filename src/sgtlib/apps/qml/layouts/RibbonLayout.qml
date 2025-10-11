@@ -181,68 +181,21 @@ Rectangle {
             }
 
             Basic.Button {
-                id: btnSelect
+                id: btnCropImg
                 text: ""
-                Layout.preferredWidth: 32
-                Layout.preferredHeight: 32
-                background: Rectangle {
-                    color: "transparent"
-                }
-                ToolTip.text: "Select area to crop"
-                ToolTip.visible: btnSelect.hovered
-                visible: imageController.display_image()
-                enabled: imageController.enable_img_controls()
-                onClicked: toggleRectangularSelect()
-
-                Rectangle {
-                    id: btnSelectBorder
-                    width: 18
-                    height: 18
-                    //width: parent.width
-                    //height: parent.height
-                    anchors.centerIn: parent
-                    radius: 2
-                    color: "transparent"
-                    border.width: 1
-                    border.color: "black"
-                }
-            }
-
-            Basic.Button {
-                id: btnCrop
-                text: ""
-                icon.source: "../assets/icons/crop_icon.png" // Path to your icon
-                icon.width: 21 // Adjust as needed
-                icon.height: 21
-                background: Rectangle {
-                    color: "transparent"
-                }
-                ToolTip.text: "Crop to selection"
-                ToolTip.visible: btnCrop.hovered
-                visible: false
-                onClicked: {
-                    imageController.perform_cropping(true);
-                    toggleRectangularSelect();
-                }
-            }
-
-            Basic.Button {
-                id: btnUndo
-                text: ""
-                icon.source: "../assets/icons/undo_icon.png" // Path to your icon
-                icon.width: 24 // Adjust as needed
+                icon.source: "../assets/icons/crop_image_icon.png"
+                icon.width: 24
                 icon.height: 24
                 background: Rectangle {
                     color: "transparent"
                 }
-                ToolTip.text: "Undo crop"
-                ToolTip.visible: btnUndo.hovered
-                onClicked: {
-                    imageController.undo_applied_changes(true, "cropping", -1);
-                    toggleRectangularSelect();
-                }
-                visible: false
+                ToolTip.text: "Crop image"
+                ToolTip.visible: btnCropImg.hovered
+                visible: imageController.display_image()
+                enabled: imageController.enable_img_controls()
+                onClicked: imgCroppingWindow.visible = true
             }
+
         }
 
         Rectangle {
@@ -387,39 +340,15 @@ Rectangle {
         }
     }
 
-    function toggleRectangularSelect() {
-        if (btnSelectBorder.enabled) {
-            imageController.enable_rectangular_selection(false)
-            btnSelectBorder.border.color = "black"
-            btnSelectBorder.enabled = false
-        } else {
-            imageController.enable_rectangular_selection(true)
-            btnSelectBorder.border.color = "red"
-            btnSelectBorder.enabled = true
-        }
-    }
-
-    Connections {
-        target: imageController
-
-        function onShowCroppingToolSignal(allow) {
-            btnCrop.visible = allow;
-        }
-
-        function onShowUnCroppingToolSignal(allow) {
-            btnUndo.visible = allow;
-        }
-    }
-
     Connections {
         target: mainController
 
         function onImageChangedSignal() {
             // Force refresh
             btnRunGraph.visible = imageController.enable_img_controls();
-            btnSelect.visible = imageController.display_image();
+            btnCropImg.visible = imageController.display_image();
             allowScalingContainer.visible = !imageController.display_image();
-            btnSelect.enabled = imageController.enable_img_controls();
+            btnCropImg.enabled = imageController.enable_img_controls();
             btnBrightness.enabled = imageController.display_image();
             cbImageType.enabled = imageController.display_image();
             btnShowGraph.enabled = imageController.display_image();

@@ -4,7 +4,7 @@ import QtQuick.Controls
 Item {
     id: cropOverlay
     anchors.fill: parent
-    visible: false
+    //visible: false
 
     // Expose to outside QMLs
     property alias cropArea: cropRect
@@ -284,15 +284,6 @@ Item {
             imageController.show_cropping_tool(false);
         } else {
             imageController.show_cropping_tool(true);
-        }
-
-    }
-
-    Connections {
-        target: imageController
-
-        function onEnableRectangularSelectionSignal(allow) {
-            cropOverlay.visible = allow;
         }
     }
 
