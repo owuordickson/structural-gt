@@ -53,7 +53,7 @@ Window {
         // Histogram grid view -- Layout
         ScrollView {
             Layout.fillWidth: true
-            Layout.preferredHeight: imgHistogramWindow.height - 10
+            Layout.preferredHeight: imgHistogramWindow.height - 120
             clip: true  // Ensures contents are clipped to the scroll view bounds
 
             GridView {
