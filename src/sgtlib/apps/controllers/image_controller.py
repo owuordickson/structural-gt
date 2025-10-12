@@ -20,7 +20,7 @@ class ImageController(QObject):
     # enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
-    performCroppingSignal = Signal(bool)
+    # performCroppingSignal = Signal(bool)
 
     _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
@@ -355,9 +355,9 @@ class ImageController(QObject):
             self._ctrl.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
 
-    @Slot(bool)
-    def perform_cropping(self, allowed):
-        self.performCroppingSignal.emit(allowed)
+    # @Slot(bool)
+    # def perform_cropping(self, allowed):
+    #    self.performCroppingSignal.emit(allowed)
 
     @Slot()
     def save_img_files(self):

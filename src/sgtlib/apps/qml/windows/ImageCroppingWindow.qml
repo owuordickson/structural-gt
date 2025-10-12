@@ -16,9 +16,9 @@ Window {
     visible: false  // Only show when needed
     title: "Cropping Image"
 
-    Component.onCompleted: {
+    /*Component.onCompleted: {
         loadImage();
-    }
+    }*/
 
     ColumnLayout {
         anchors.fill: parent
@@ -55,11 +55,8 @@ Window {
                     }
                     ToolTip.text: "Crop to selection"
                     ToolTip.visible: btnCrop.hovered
-                    //visible: false
-                    onClicked: {
-                        imageController.perform_cropping(true);
-                        toggleRectangularSelect();
-                    }
+                    visible: false
+                    onClicked: cropImage()
                 }
 
                 Basic.Button {
@@ -75,9 +72,8 @@ Window {
                     ToolTip.visible: btnUndo.hovered
                     onClicked: {
                         imageController.undo_applied_changes(true, "cropping", -1);
-                        toggleRectangularSelect();
                     }
-                    //visible: false
+                    visible: false
                 }
 
                 Button {
@@ -94,6 +90,8 @@ Window {
                 }
             }
         }
+
+        // x, y, width, height coordinates (editable)
 
         // Image View
         Rectangle {
@@ -121,16 +119,16 @@ Window {
         }
 
         // Image Navigation Controls
-        // ImageNavControls { id: imgNavControls }
+        ImageNavControls { id: imgNavControls }
 
     }
 
     function getActualImageSize() {
-        const containerWidth = flickableArea.width;
-        const containerHeight = flickableArea.height;
+        const containerWidth = rectImageContainer.width;
+        const containerHeight = rectImageContainer.height;
 
-        const imageSourceWidth = imgView.sourceSize.width;
-        const imageSourceHeight = imgView.sourceSize.height;
+        const imageSourceWidth = imgCrop.sourceSize.width;
+        const imageSourceHeight = imgCrop.sourceSize.height;
 
         if (imageSourceWidth <= 0 || imageSourceHeight <= 0)
             return {width: 0, height: 0};
@@ -153,9 +151,9 @@ Window {
     }
 
     function getCropAreaInImageCoords() {
-        const scale = zoomFactor;
-        const offsetX = flickableArea.contentX;
-        const offsetY = flickableArea.contentY;
+        const scale = 1.0;
+        const offsetX = 0;
+        const offsetY = 0;
         const actualSize = getActualImageSize();
 
         const cropX = (cropWidget.cropArea.x + offsetX) / scale;
@@ -194,9 +192,9 @@ Window {
         target: mainController
 
         function onImageChangedSignal() {
-            if (imgCroppingWindow.visible) {
+            //if (imgCroppingWindow.visible) {
                 loadImage();
-            }
+            //}
         }
     }
 
@@ -212,11 +210,11 @@ Window {
             btnUndo.visible = allow;
         }
 
-        function onPerformCroppingSignal(allow) {
+        /*function onPerformCroppingSignal(allow) {
             if (allow) {
                 cropImage();
             }
-        }
+        }*/
 
     }
 }
