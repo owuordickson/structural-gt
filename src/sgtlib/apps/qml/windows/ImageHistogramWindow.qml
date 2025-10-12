@@ -103,7 +103,13 @@ Window {
         }
 
         // Image Navigation Controls
-        //ImageNavControls{id: imgNavControls}
+        ImageNavControls {
+            id: imgNavControls
+            showPrev: false
+            showNext: false
+            showImgBatch: false
+            showImgPos: true
+        }
     }
 
 

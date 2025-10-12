@@ -16,8 +16,14 @@ Rectangle {
     radius: 5
     visible: imageController.display_image()
 
-    // Expose to outside QMLs
-    property alias cbImageSelector: cbImageSelector
+    // --- Exposed properties ---
+    property int img_pos: 0
+    property bool showPrev: true
+    property bool showNext: true
+    property bool showImgBatch: true
+    property bool showImgPos: false
+
+    property int selectedRole: Qt.UserRole + 20
 
 
     RowLayout {
@@ -34,6 +40,7 @@ Rectangle {
                 color: "transparent"
             }
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            visible: imgNavControls.showPrev
             onClicked: projectController.load_prev_image()
         }
 
@@ -52,16 +59,8 @@ Rectangle {
                 valueRole: "value"
                 ToolTip.text: "Change image batch"
                 ToolTip.visible: cbBatchSelector.hovered
+                visible: imgNavControls.showImgBatch
                 onCurrentIndexChanged: imageController.select_img_batch(valueAt(currentIndex))
-            }
-
-            Rectangle {
-                id: vertNavLine
-                width: 1
-                height: 14
-                color: "#808080"
-                anchors.verticalCenter: parent.verticalCenter
-                visible: imageController.is_img_3d()
             }
 
             ComboBox {
@@ -73,13 +72,13 @@ Rectangle {
                 valueRole: "id"
                 ToolTip.text: "Select image"
                 ToolTip.visible: cbImageSelector.hovered
-                visible: imageController.is_img_3d()
-                currentIndex: imageController.get_selected_batch_image_index()
+                visible: imageController.is_img_3d() && imgNavControls.showImgPos
+                currentIndex: imgNavControls.img_pos
                 onCurrentIndexChanged: {
                     let index = img3dGridModel.index(model.index, 0);
                     let selectedVal = 1;
-                    //img3dGridModel.setData(index, selectedVal, selectedRole);
-                    //imageController.select_batch_image_index(model.id);
+                    img3dGridModel.setData(index, selectedVal, selectedRole);
+                    imageController.select_batch_image_index(model.id);
                 }
             }
         }
@@ -95,6 +94,7 @@ Rectangle {
                 color: "transparent"
             }
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            visible: imgNavControls.showNext
             onClicked: projectController.load_next_image()
         }
 
@@ -107,25 +107,19 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             imgNavControls.visible = imageController.display_image();
-            cbBatchSelector.visible = imageController.image_batches_exist();
             imgSelectionControls.visible = imageController.image_batches_exist();
-            vertNavLine.visible = imageController.is_img_3d();
-            cbImageSelector.visible = imageController.is_img_3d();
+            cbImageSelector.visible = imageController.is_img_3d() && imgNavControls.showImgPos;
 
             btnPrevious.enabled = projectController.enable_prev_nav_btn();
             btnNext.enabled = projectController.enable_next_nav_btn();
 
-            if (imageController.image_batches_exist()) {
+            if (imageController.image_batches_exist() && imgNavControls.showImgBatch) {
                 cbBatchSelector.currentIndex = imageController.get_selected_img_batch();
             }
 
-            /*let img_pos = 0;
-            if (imageController.is_img_3d()) {
-                cbImageSelector.currentIndex = imageController.get_selected_batch_image_index();
-                img_pos = cbImageSelector.currentIndex;
-            }*/
-
-
+            if (imageController.is_img_3d() && imgNavControls.showImgPos) {
+                imgNavControls.img_pos = imageController.get_selected_batch_image_index();
+            }
 
         }
 

@@ -301,7 +301,13 @@ Window {
         }
 
         // Image Navigation Controls
-        //ImageNavControls{id: imgNavControls}
+        ImageNavControls {
+            id: imgNavControls
+            showPrev: false
+            showNext: false
+            showImgBatch: false
+            showImgPos: true
+        }
 
     }
 
@@ -312,7 +318,7 @@ Window {
             if (imgColorsWindow.visible) {
                 colorsLayout.visible = imgColorsModel.rowCount() > 0;
 
-                let img_pos = imgNavControls.cbImageSelector.currentIndex;
+                let img_pos = imgNavControls.img_pos;
                 let base64_img = imageController.get_selected_image(img_pos, "mutated");
                 imgCurrent.source = "data:image/png;base64," + base64_img;
             }
