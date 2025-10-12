@@ -17,10 +17,8 @@ from ...compute.graph_analyzer import GraphAnalyzer
 class ImageController(QObject):
 
     showImageFilterControls = Signal(bool)
-    # enableRectangularSelectionSignal = Signal(bool)
     showCroppingToolSignal = Signal(bool)
     showUnCroppingToolSignal = Signal(bool)
-    # performCroppingSignal = Signal(bool)
 
     _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
@@ -165,10 +163,6 @@ class ImageController(QObject):
         if sgt_obj is None:
             return False
         return not sgt_obj.ntwk_p.selected_batch.is_graph_only
-
-    # @Slot(bool)
-    # def enable_rectangular_selection(self, enabled):
-    #    self.enableRectangularSelectionSignal.emit(enabled)
 
     @Slot(bool)
     def show_cropping_tool(self, allow_cropping):
@@ -354,10 +348,6 @@ class ImageController(QObject):
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
-
-    # @Slot(bool)
-    # def perform_cropping(self, allowed):
-    #    self.performCroppingSignal.emit(allowed)
 
     @Slot()
     def save_img_files(self):

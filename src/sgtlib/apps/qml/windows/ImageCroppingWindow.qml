@@ -16,10 +16,6 @@ Window {
     visible: false  // Only show when needed
     title: "Cropping Image"
 
-    /*Component.onCompleted: {
-        loadImage();
-    }*/
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 10
@@ -209,12 +205,6 @@ Window {
         function onShowUnCroppingToolSignal(allow) {
             btnUndo.visible = allow;
         }
-
-        /*function onPerformCroppingSignal(allow) {
-            if (allow) {
-                cropImage();
-            }
-        }*/
 
     }
 }
