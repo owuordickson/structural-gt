@@ -14,20 +14,39 @@ Window {
     y: 40
     //flags: Qt.Window | Qt.FramelessWindowHint
     visible: false  // Only show when needed
-    title: "Crop Image"
+    title: "Cropping Image"
+
+    Component.onCompleted: {
+        loadImage();
+    }
 
     ColumnLayout {
         anchors.fill: parent
+        spacing: 10
 
         //  Cropping Controls
         Rectangle {
-            id: rectcropWidgets
+            id: rectCropControls
+            height: 36
+            Layout.fillHeight: false
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+            Layout.topMargin: 10
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
+            radius: 5
+            color: "transparent"
+            visible: true
 
             RowLayout {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 5
 
                 Basic.Button {
                     id: btnCrop
                     text: ""
+                    //Layout.alignment: Qt.AlignHCenter
                     icon.source: "../assets/icons/crop_icon.png" // Path to your icon
                     icon.width: 21 // Adjust as needed
                     icon.height: 21
@@ -79,8 +98,20 @@ Window {
         // Image View
         Rectangle {
             id: rectImageContainer
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            Layout.margins: 20
+            color: "transparent"
 
             Image {
+                id: imgCrop
+                width: parent.width
+                height: parent.height
+                anchors.centerIn: parent
+                transformOrigin: Item.Center
+                fillMode: Image.PreserveAspectCrop
+                source: ""
             }
 
             // Cropping
@@ -90,9 +121,7 @@ Window {
         }
 
         // Image Navigation Controls
-        ImageNavControls {
-            id: imgNavControls
-        }
+        // ImageNavControls { id: imgNavControls }
 
     }
 
@@ -154,6 +183,23 @@ Window {
         cropWidget.visible = false;
     }
 
+    function loadImage() {
+        let img_pos = imgNavControls.cbImageSelector.currentIndex;
+        let base64_img = imageController.get_selected_image(img_pos, "original");
+        imgCrop.source = "data:image/png;base64," + base64_img;
+    }
+
+
+    Connections {
+        target: mainController
+
+        function onImageChangedSignal() {
+            if (imgCroppingWindow.visible) {
+                loadImage();
+            }
+        }
+    }
+
 
     Connections {
         target: imageController
@@ -165,10 +211,6 @@ Window {
         function onShowUnCroppingToolSignal(allow) {
             btnUndo.visible = allow;
         }
-    }
-
-    Connections {
-        target: imageController
 
         function onPerformCroppingSignal(allow) {
             if (allow) {

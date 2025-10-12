@@ -103,7 +103,7 @@ Window {
         }
 
         // Image Navigation Controls
-        ImageNavControls{id: imgNavControls}
+        //ImageNavControls{id: imgNavControls}
     }
 
 

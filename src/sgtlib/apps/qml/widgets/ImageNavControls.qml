@@ -9,7 +9,7 @@ Rectangle {
     height: 36
     Layout.fillHeight: false
     Layout.fillWidth: true
-    Layout.alignment: Qt.AlignBottom
+    Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
     Layout.margins: 5
     color: "#e5e5e5"
     //opacity: 0.5
