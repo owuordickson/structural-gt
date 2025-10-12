@@ -120,6 +120,11 @@ Rectangle {
                 imgNavControls.img_pos = imageController.get_selected_batch_image_index();
             }
 
+            if (imgNavControls.showImgPos) {
+                // Completely hide NavControls if it is not a 3D image
+                imgNavControls.visible = imageController.is_img_3d();
+            }
+
         }
 
         function onUpdateProgressSignal(val, msg) {

@@ -79,7 +79,7 @@ Window {
                         ToolTip.visible: btnGetColors.hovered
                         visible: !mainController.wait && !imageController.img_filters_busy
                         onClicked: {
-                            let sel_img = imgNavControls.cbImageSelector.currentIndex;
+                            let sel_img = imgNavControls.img_pos;
                             let max_colors = spbMaxColors.value;
                             imageController.run_retrieve_img_colors(sel_img, max_colors);
                         }
