@@ -12,7 +12,6 @@ Rectangle {
     Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
     Layout.margins: 5
     color: "#e5e5e5"
-    //opacity: 0.5
     radius: 5
     visible: imageController.display_image()
 
