@@ -113,6 +113,8 @@ Rectangle {
 
             if (imageController.is_img_3d() && imgNavControls.showImgPos) {
                 imgNavControls.img_pos = imageController.get_selected_batch_image_index();
+            } else {
+                imgNavControls.img_pos = 0;
             }
 
             if (imgNavControls.showImgPos) {
