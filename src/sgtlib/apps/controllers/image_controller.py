@@ -214,7 +214,6 @@ class ImageController(QObject):
             sel_img_idx = set()
             sel_img_batch = sgt_obj.ntwk_p.selected_batch
             for i, img_idx in enumerate(sel_img_batch.selected_images_idx):
-                print(f"Getting {i}: {img_idx}")
                 if i == 0:
                     sel_pos = img_idx
                     sel_img_idx.add(img_idx)
@@ -250,7 +249,6 @@ class ImageController(QObject):
 
     @Slot(int)
     def select_batch_image_index(self, img_pos=-1):
-        print(f"Setting to {img_pos}")
         if img_pos < 0:
             return
 
@@ -261,7 +259,7 @@ class ImageController(QObject):
 
             sel_img_idx = set()
             sel_img_idx.add(img_pos)
-            sgt_obj.ntwk_p.selected_batch.select_image_idx = sel_img_idx
+            sgt_obj.ntwk_p.selected_batch.selected_images_idx = sel_img_idx
 
             # Trigger QML image update
             self.reset_img_models()

@@ -77,7 +77,7 @@ Rectangle {
                     let index = img3dGridModel.index(model.index, 0);
                     let selectedVal = 1;
                     img3dGridModel.setData(index, selectedVal, selectedRole);
-                    imageController.select_batch_image_index(model.id);
+                    imageController.select_batch_image_index(valueAt(currentIndex));
                 }
             }
         }

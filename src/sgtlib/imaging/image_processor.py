@@ -53,6 +53,7 @@ class ImageProcessor(ProgressUpdate):
         scale_factor: float
         scaling_options: list[dict]
         selected_images_idx: set
+        selected_image_pos: int
         view_options: list[dict]
 
     def __init__(self, img_path, out_dir, cfg_file="", graph_file="", auto_scale=True):
