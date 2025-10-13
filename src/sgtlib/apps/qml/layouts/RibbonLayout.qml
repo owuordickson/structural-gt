@@ -184,14 +184,13 @@ Rectangle {
                 id: btnCropImg
                 text: ""
                 icon.source: "../assets/icons/crop_image_icon.png"
-                icon.width: 24
-                icon.height: 24
+                icon.width: 28
+                icon.height: 28
                 background: Rectangle {
                     color: "transparent"
                 }
                 ToolTip.text: "Crop image"
                 ToolTip.visible: btnCropImg.hovered
-                visible: imageController.display_image()
                 enabled: imageController.enable_img_controls()
                 onClicked: imgCroppingWindow.visible = true
             }
@@ -346,7 +345,6 @@ Rectangle {
         function onImageChangedSignal() {
             // Force refresh
             btnRunGraph.visible = imageController.enable_img_controls();
-            btnCropImg.visible = imageController.display_image();
             allowScalingContainer.visible = !imageController.display_image();
             btnCropImg.enabled = imageController.enable_img_controls();
             btnBrightness.enabled = imageController.display_image();
