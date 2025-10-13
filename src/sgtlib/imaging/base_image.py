@@ -532,6 +532,8 @@ class BaseImage:
                 ax.legend(loc='upper right')
         elif curr_view == "binary":
             img = self.img_bin
+        elif curr_view == "mutated":
+            img = self.img_mut
         else:
             img = self.img_mod
 

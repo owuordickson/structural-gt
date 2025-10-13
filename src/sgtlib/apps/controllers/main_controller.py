@@ -216,9 +216,8 @@ class MainController(BaseController):
                 # Image histogram calculated
                 self.stop_current_task(worker_id, cancel_job=False)
                 if len(self._sgt_objs) > 0:
-                    sgt_obj = self.get_selected_sgt_obj()
-                    sel_img_batch = sgt_obj.ntwk_p.selected_batch
-                    self.img_ctrl.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_positions)
+                    if result is not None:
+                        self.img_ctrl.imgHistogramModel.reset_data(result, set([]))
                     self.imageChangedSignal.emit()  # trigger QML UI update
             else:
                 self.taskTerminatedSignal.emit(success_val, [])

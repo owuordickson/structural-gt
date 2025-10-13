@@ -36,7 +36,7 @@ Window {
                 ToolTip.text: "Reload everytime you change the image."
                 ToolTip.visible: btnReloadHistogram.hovered
                 visible: !imageController.histogram_busy
-                onClicked: imageController.compute_img_histogram()
+                onClicked: imageController.compute_img_histogram(imgNavControls.img_pos)
             }
 
             Column {
@@ -72,7 +72,6 @@ Window {
                         width: parent.width - 2  // Adds horizontal spacing
                         height: parent.height - 2  // Adds vertical spacing
                         color: "#ffffff"  // Background color for spacing effect
-                        visible: model.selected === 1
 
                         Image {
                             source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image
@@ -81,17 +80,6 @@ Window {
                             anchors.centerIn: parent
                             transformOrigin: Item.Center
                             fillMode: Image.PreserveAspectFit
-                        }
-
-                        Label {
-                            text: "Frame " + (model.id + 1)
-                            color: "#bc0022"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: parent.top
-                            //anchors.margins: 2
-                            background: Rectangle {
-                                color: "transparent"
-                            }
                         }
 
                     }

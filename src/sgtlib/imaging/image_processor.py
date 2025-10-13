@@ -575,6 +575,40 @@ class ImageProcessor(ProgressUpdate):
         self.update_image_props(sel_batch)
         self.selected_batch_view = 'processed'
 
+    def compute_img_histograms(self, img_pos: int) -> None | list:
+        """
+        Compute the histograms (original, binary, processes, mutated) of an image at position img_pos.
+        :param img_pos: position index of image to compute histograms for.
+        :return: list of Matplotlib histogram objects.
+        """
+        sel_batch = self.selected_batch
+        if sel_batch.is_graph_only:
+            return None
+
+        self.update_status(ProgressData(percent=10, sender="GT", message="Starting histogram computation..."))
+        lst_histograms = []
+        # Get BaseImage object
+        img_obj = sel_batch.images[img_pos]
+
+        # Computations
+        self.update_status(ProgressData(percent=20, sender="GT", message="Computing histogram of original image..."))
+        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="original"))
+        lst_histograms.append(img_hist.copy())
+
+        self.update_status(ProgressData(percent=40, sender="GT", message="Computing histogram of binary image..."))
+        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="binary"))
+        lst_histograms.append(img_hist.copy())
+
+        self.update_status(ProgressData(percent=50, sender="GT", message="Computing histogram of processed image..."))
+        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="processed"))
+        lst_histograms.append(img_hist.copy())
+
+        self.update_status(ProgressData(percent=80, sender="GT", message="Computing histogram of mutated image..."))
+        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="mutated"))
+        lst_histograms.append(img_hist.copy())
+        return lst_histograms
+
+
     def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> None | list:
         """
         Search and get the top k dominant colors of the image.

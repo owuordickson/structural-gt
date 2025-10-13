@@ -233,6 +233,7 @@ class ImageController(QObject):
             # Trigger sync models and image refresh
             self._ctrl.syncModelSignal.emit(sgt_obj)
             self.reset_img_models()
+            self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Image Batch Error", f"Error encountered while trying to access batch "
@@ -286,8 +287,8 @@ class ImageController(QObject):
             if change_type == "cropping":
                 self.showUnCroppingToolSignal.emit(False)
 
-    @Slot()
-    def compute_img_histogram(self):
+    @Slot(int)
+    def compute_img_histogram(self, img_pos: int):
         """Calculate the histogram of the image."""
         if self._wait_flag_hist:
             return
@@ -295,7 +296,7 @@ class ImageController(QObject):
         try:
             self.start_histogram_calculation()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self._ctrl.submit_job(3, "Calculate-Histogram", (sgt_obj.ntwk_p,), False)
+            self._ctrl.submit_job(3, "Calculate-Histogram", (sgt_obj.ntwk_p, img_pos), False)
         except Exception as err:
             self.stop_histogram_calculation()
             logging.exception("Histogram Calculation Error: %s", err, extra={'user': 'SGT Logs'})

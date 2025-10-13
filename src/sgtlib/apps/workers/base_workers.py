@@ -88,11 +88,15 @@ class BaseWorker:
                                                                          "Change filter settings and try again; "
                                                                          "Or, Close the app and try again."]
 
-    def task_calculate_img_histogram(self, ntwk_p):
+    def task_calculate_img_histogram(self, ntwk_p, img_idx):
         """"""
         try:
-            hist_images = [plot_to_opencv(obj.plot_img_histogram(curr_view=ntwk_p.selected_batch_view)) for obj in ntwk_p.image_obj_3d]
-            self._update_progress(ProgressData(type="warning", sender="GT", message=f"Histogram Calculation Finished"))
+            hist_images = ntwk_p.compute_img_histograms(img_pos=img_idx)
+            if hist_images is None:
+                self._update_progress(ProgressData(type="warning", sender="GT", message=f"Histogram calculation finished with failure"))
+                return True, []
+
+            self._update_progress(ProgressData(type="warning", sender="GT", message=f"Histogram calculation finished successfully"))
             return True, hist_images
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
