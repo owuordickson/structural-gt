@@ -52,8 +52,8 @@ class ImageProcessor(ProgressUpdate):
         is_graph_only: bool
         scale_factor: float
         scaling_options: list[dict]
-        selected_images_idx: set
-        selected_image_pos: int
+        selected_images_positions: set
+        selected_frame_pos: int
         view_options: list[dict]
 
     def __init__(self, img_path, out_dir, cfg_file="", graph_file="", auto_scale=True):
@@ -174,14 +174,14 @@ class ImageProcessor(ProgressUpdate):
         sel_img_batch = self.selected_batch
         if sel_img_batch.is_graph_only:
             return []
-        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_idx]
+        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_positions]
         return sel_images
 
     @property
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
         sel_img_batch = self.selected_batch
-        first_index = next(iter(sel_img_batch.selected_images_idx), None)  # 1st selected image
+        first_index = next(iter(sel_img_batch.selected_images_positions), None)  # 1st selected image
         first_index = first_index if first_index is not None else 0  # first image if None
         return sel_img_batch.images[first_index]
 
@@ -392,7 +392,7 @@ class ImageProcessor(ProgressUpdate):
             return
 
         if type(selected_images) is set:
-            self._image_batches[sel_batch_idx].selected_images_idx = selected_images
+            self._image_batches[sel_batch_idx].selected_images_positions = selected_images
 
     def track_progress(self, status_data: ProgressData):
         self.update_status(status_data)
@@ -420,7 +420,7 @@ class ImageProcessor(ProgressUpdate):
         incr = 90 / len(sel_batch.images) - 1
         for i in range(len(sel_batch.images)):
             img_obj = sel_batch.images[i]
-            if i not in sel_batch.selected_images_idx:
+            if i not in sel_batch.selected_images_positions:
                 img_obj.img_mod, img_obj.img_bin = None, None
                 continue
 
@@ -449,8 +449,8 @@ class ImageProcessor(ProgressUpdate):
                 self.update_image_props(sel_batch)
                 return
 
-            if len(sel_batch.selected_images_idx) > 0:
-                [sel_batch.images[i].init_image() for i in sel_batch.selected_images_idx]
+            if len(sel_batch.selected_images_positions) > 0:
+                [sel_batch.images[i].init_image() for i in sel_batch.selected_images_positions]
             self.update_image_props(sel_batch)
         except Exception as err:
             logging.exception(f"Undo Error: {err}", extra={'user': 'GT'})
@@ -569,13 +569,13 @@ class ImageProcessor(ProgressUpdate):
         :param actual_h: Height of actual image.
         """
         sel_batch = self.selected_batch
-        if len(sel_batch.selected_images_idx) > 0:
+        if len(sel_batch.selected_images_positions) > 0:
             [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
-             sel_batch.selected_images_idx]
+             sel_batch.selected_images_positions]
         self.update_image_props(sel_batch)
         self.selected_batch_view = 'processed'
 
-    def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> bool:
+    def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> None | list:
         """
         Search and get the top k dominant colors of the image.
         Args:
@@ -587,23 +587,22 @@ class ImageProcessor(ProgressUpdate):
         """
         sel_batch = self.selected_batch
         if sel_batch.is_graph_only:
-            return False
+            return None
 
         self.update_status(ProgressData(percent=10, sender="GT", message=f"Retrieving dominant colors..."))
         # Get BaseImage object
         img_obj = sel_batch.images[img_pos]
         if len(img_obj.dominant_colors) == top_k:
             self.update_status(ProgressData(percent=100, sender="GT", message="Dominant already colors retrieved!"))
-            return True
+            return img_obj.dominant_colors
 
         top_colors = img_obj.get_dominant_img_colors(top_k=top_k)
         if top_colors is None:
             self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
-            return False
+            return None
 
-        img_obj.dominant_colors = top_colors
         self.update_status(ProgressData(percent=100, sender="GT", message="Dominant colors retrieved!"))
-        return True
+        return top_colors
 
     def metaheuristic_image_configs(self) -> dict | None:
         """
@@ -951,7 +950,7 @@ class ImageProcessor(ProgressUpdate):
         if selected_batch is None:
             selected_batch = self.selected_batch
 
-        sel_images = [selected_batch.images[i] for i in selected_batch.selected_images_idx]
+        sel_images = [selected_batch.images[i] for i in selected_batch.selected_images_positions]
         return sel_images
 
     def update_image_props(self, selected_batch: ImageBatch = None):
@@ -1150,7 +1149,8 @@ class ImageProcessor(ProgressUpdate):
                 is_graph_only=False,
                 scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
-                selected_images_idx=set(range(len(images))),
+                selected_images_positions=set(range(len(images))),
+                selected_frame_pos= 0,
                 view_options=views,
             )
             img_info_list.append(img_batch)
@@ -1263,7 +1263,8 @@ class ImageProcessor(ProgressUpdate):
             is_graph_only=True,
             scale_factor=0.0,
             scaling_options=[],
-            selected_images_idx=set(),
+            selected_images_positions=set(),
+            selected_frame_pos= 0,
             view_options=views,
         )
         imp_obj._image_batches = [img_batch]

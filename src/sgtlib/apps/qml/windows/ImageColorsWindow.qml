@@ -311,16 +311,26 @@ Window {
 
     }
 
+    function loadColorsData() {
+        colorsLayout.visible = imgColorsModel.rowCount() > 0;
+
+        let img_pos = imgNavControls.img_pos;
+        let base64_img = imageController.get_selected_image(img_pos, "mutated");
+        imgCurrent.source = "data:image/png;base64," + base64_img;
+    }
+
     Connections {
         target: mainController
 
         function onImageChangedSignal() {
             if (imgColorsWindow.visible) {
-                colorsLayout.visible = imgColorsModel.rowCount() > 0;
+                loadColorsData();
+            }
+        }
 
-                let img_pos = imgNavControls.img_pos;
-                let base64_img = imageController.get_selected_image(img_pos, "mutated");
-                imgCurrent.source = "data:image/png;base64," + base64_img;
+        function onTaskTerminatedSignal(success_val, msg_data) {
+            if (imgColorsWindow.visible) {
+                loadColorsData();
             }
         }
     }

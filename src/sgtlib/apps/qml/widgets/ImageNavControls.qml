@@ -73,12 +73,7 @@ Rectangle {
                 ToolTip.visible: cbImageSelector.hovered
                 visible: imageController.is_img_3d() && imgNavControls.showImgPos
                 currentIndex: imgNavControls.img_pos
-                onCurrentIndexChanged: {
-                    let index = img3dGridModel.index(model.index, 0);
-                    let selectedVal = 1;
-                    img3dGridModel.setData(index, selectedVal, selectedRole);
-                    imageController.select_batch_image_index(valueAt(currentIndex));
-                }
+                onCurrentIndexChanged: imageController.select_batch_image_index(valueAt(currentIndex))
             }
         }
 

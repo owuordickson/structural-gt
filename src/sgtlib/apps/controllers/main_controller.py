@@ -88,6 +88,9 @@ class MainController(BaseController):
             self.proj_ctrl.imgThumbnailModel.set_selected(self._selected_sgt_obj_index)
             self.img_ctrl.reset_img_models()
 
+            # Load the selected image into the view
+            self.changeImageSignal.emit()
+
             # Run AI search (if enabled)
             self.ai_ctrl.run_ai_filter_search()
         except Exception as err:
@@ -215,7 +218,7 @@ class MainController(BaseController):
                 if len(self._sgt_objs) > 0:
                     sgt_obj = self.get_selected_sgt_obj()
                     sel_img_batch = sgt_obj.ntwk_p.selected_batch
-                    self.img_ctrl.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_idx)
+                    self.img_ctrl.imgHistogramModel.reset_data(result, sel_img_batch.selected_images_positions)
                     self.imageChangedSignal.emit()  # trigger QML UI update
             else:
                 self.taskTerminatedSignal.emit(success_val, [])

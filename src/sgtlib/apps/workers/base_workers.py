@@ -102,17 +102,18 @@ class BaseWorker:
         """"""
         def _generate_colors_data():
             """"""
-            colors = ntwk_p.image_obj.dominant_colors
-            if colors is None:
-                return []
-            color_data = [{"id": i, "text": c.hex_code, "value": 1 if c.is_selected else 0} for i, c in enumerate(colors)]
+            color_data = [{"id": i, "text": c.hex_code, "value": 1 if c.is_selected else 0} for i, c in enumerate(colors_found)]
             return color_data
 
         try:
             # ntwk_p.add_listener(self._update_progress)
-            ntwk_p.retrieve_dominant_img_colors(img_pos=img_idx, top_k=max_colors)
+            colors_found = ntwk_p.retrieve_dominant_img_colors(img_pos=img_idx, top_k=max_colors)
             # ntwk_p.remove_listener(self._update_progress)
+            if colors_found is None:
+                task_data = TaskResult(task_id="Image Colors", status="Finished", message="No dominant colors found!", data=[ntwk_p, None])
+                return True, task_data
 
+            ntwk_p.image_obj.dominant_colors = colors_found
             lst_colors = _generate_colors_data()
             task_data = TaskResult(task_id="Image Colors", status="Finished", message="Colors successfully retrieved!", data=[ntwk_p, lst_colors])
             return True, task_data

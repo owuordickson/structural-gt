@@ -117,9 +117,6 @@ class ImageController(QObject):
 
             self.microscopyPropsModel.reset_data(img_properties)
             self.imagePropsModel.reset_data(sel_img_batch.props)
-
-            # Trigger GUI image refresh
-            self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
@@ -211,13 +208,7 @@ class ImageController(QObject):
             if sgt_obj is None:
                 return sel_pos
 
-            sel_img_idx = set()
-            sel_img_batch = sgt_obj.ntwk_p.selected_batch
-            for i, img_idx in enumerate(sel_img_batch.selected_images_idx):
-                if i == 0:
-                    sel_pos = img_idx
-                    sel_img_idx.add(img_idx)
-            sel_img_batch.selected_images_idx = sel_img_idx
+            sel_pos = sgt_obj.ntwk_p.selected_batch.selected_frame_pos
         except Exception as err:
             logging.exception("Image Index Error: %s", err, extra={'user': 'SGT Logs'})
             sel_pos = 0
@@ -256,10 +247,7 @@ class ImageController(QObject):
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             if sgt_obj is None:
                 return
-
-            sel_img_idx = set()
-            sel_img_idx.add(img_pos)
-            sgt_obj.ntwk_p.selected_batch.selected_images_idx = sel_img_idx
+            sgt_obj.ntwk_p.selected_batch.selected_frame_pos = img_pos
 
             # Trigger QML image update
             self.reset_img_models()
@@ -272,9 +260,9 @@ class ImageController(QObject):
         sgt_obj = self._ctrl.get_selected_sgt_obj()
         sel_img_batch = sgt_obj.ntwk_p.selected_batch
         if selected:
-            sel_img_batch.selected_images_idx.add(img_index)
+            sel_img_batch.selected_images_positions.add(img_index)
         else:
-            sel_img_batch.selected_images_idx.discard(img_index)
+            sel_img_batch.selected_images_positions.discard(img_index)
         self._ctrl.changeImageSignal.emit()
 
     @Slot(str)

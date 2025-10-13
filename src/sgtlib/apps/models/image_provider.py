@@ -21,7 +21,7 @@ class ImageProvider(QQuickImageProvider):
             if ntwk_p.selected_batch_view == "original":
                 images = ntwk_p.image_3d
                 if self._main_ctrl.img_ctrl.is_img_3d():
-                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(images, sel_img_batch.selected_images_idx)
+                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(images, sel_img_batch.selected_images_positions)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = images[0] if len(images) > 0 else None
@@ -30,7 +30,7 @@ class ImageProvider(QQuickImageProvider):
                 ntwk_p.apply_img_filters(filter_type=2)
                 bin_images = ntwk_p.binary_image_3d
                 if self._main_ctrl.img_ctrl.is_img_3d():
-                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images_idx)
+                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(bin_images, sel_img_batch.selected_images_positions)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0] if len(bin_images) > 0 else None
@@ -39,7 +39,7 @@ class ImageProvider(QQuickImageProvider):
                 ntwk_p.apply_img_filters(filter_type=1)
                 mod_images = ntwk_p.processed_image_3d
                 if self._main_ctrl.img_ctrl.is_img_3d():
-                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_idx)
+                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_positions)
                 else:
                     # 2D, Do not use if 3D
                     img_cv = mod_images[0] if len(mod_images) > 0 else None
@@ -52,7 +52,7 @@ class ImageProvider(QQuickImageProvider):
                     return
                 else:
                     net_images = [ntwk_p.graph_obj.img_ntwk]
-                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_idx)
+                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(net_images, sel_img_batch.selected_images_positions)
                     img_cv = net_images[0]
             else:
                 self._main_ctrl.img_ctrl.showImageFilterControls.emit(False)
