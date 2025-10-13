@@ -238,7 +238,6 @@ class ImageController(QObject):
             while self._ctrl.is_syncing:
                 print("waiting for sync to finish...")
                 logging.info("Waiting for sync to finish...", extra={'user': 'SGT Logs'})
-                pass
             self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
