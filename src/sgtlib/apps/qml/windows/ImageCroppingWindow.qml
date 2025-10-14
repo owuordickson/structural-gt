@@ -35,54 +35,92 @@ Window {
             visible: true
 
             RowLayout {
+                id: rowSaveControls
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 5
-
-                Basic.Button {
-                    id: btnCrop
-                    text: ""
-                    //Layout.alignment: Qt.AlignHCenter
-                    icon.source: "../assets/icons/crop_icon.png" // Path to your icon
-                    icon.width: 21 // Adjust as needed
-                    icon.height: 21
-                    background: Rectangle {
-                        color: "transparent"
-                    }
-                    ToolTip.text: "Crop to selection"
-                    ToolTip.visible: btnCrop.hovered
-                    visible: false
-                    onClicked: cropImage()
-                }
+                visible: false
 
                 Basic.Button {
                     id: btnUndo
                     text: ""
-                    icon.source: "../assets/icons/undo_icon.png" // Path to your icon
-                    icon.width: 24 // Adjust as needed
+                    icon.source: "../assets/icons/undo_icon.png"
+                    icon.width: 24
                     icon.height: 24
                     background: Rectangle {
                         color: "transparent"
                     }
                     ToolTip.text: "Undo crop"
                     ToolTip.visible: btnUndo.hovered
-                    onClicked: {
-                        imageController.undo_applied_changes(true, "cropping", -1);
+                    onClicked: imageController.undo_applied_changes(true, "cropping", -1)
+                }
+
+                Basic.Button {
+                    id: btnSave
+                    text: ""
+                    icon.source: "../assets/icons/save_icon.png"
+                    icon.width: 24
+                    icon.height: 24
+                    background: Rectangle {
+                        color: "transparent"
                     }
-                    visible: false
+                    ToolTip.text: "Save image"
+                    ToolTip.visible: btnSave.hovered
+                    onClicked: {
+                        imageController.save_cropped_image(imgNavControls.img_pos);
+                        cropWidget.visible = false;
+                    }
+                }
+            }
+
+            RowLayout {
+                id: rowCropControls
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 5
+                visible: true
+
+                Repeater {
+                    model: [
+                        {text: "x", value: cropWidget.cropArea.x},
+                        {text: "y", value: cropWidget.cropArea.y},
+                        {text: "width", value: cropWidget.cropArea.width},
+                        {text: "height", value: cropWidget.cropArea.height}
+                    ]
+
+                    delegate: RowLayout {
+                        spacing: 6
+
+                        Label {
+                            text: modelData.text + ":"
+                            font.pixelSize: 14
+                            color: "#606060"
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        TextField {
+                            text: Number(modelData.value).toFixed(3)
+                            implicitWidth: 84
+                            height: 26
+                            font.pixelSize: 12
+                            color: "#2266ff"
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                    }
                 }
 
                 Button {
-                    id: btnSave
-                    text: "Save Image"
-                    //icon.source: "../assets/icons/save_icon.png"
-                    icon.width: 24
-                    icon.height: 24
-                    //background: Rectangle { color: "transparent" }
-                    ToolTip.text: "Save Image"
-                    ToolTip.visible: btnSave.hovered
-                    //onClicked:
-                    //visible: false
+                    id: btnCrop
+                    leftPadding: 10
+                    rightPadding: 10
+                    text: " crop"
+                    icon.source: "../assets/icons/crop_icon.png"
+                    icon.width: 18
+                    icon.height: 18
+                    icon.color: "transparent"
+                    ToolTip.text: "Crop to selection"
+                    ToolTip.visible: btnCrop.hovered
+                    onClicked: cropImage()
                 }
             }
         }
@@ -95,7 +133,10 @@ Window {
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            Layout.margins: 20
+            Layout.topMargin: 10
+            Layout.leftMargin: 20
+            Layout.rightMargin: 20
+            Layout.bottomMargin: 20
             color: "transparent"
 
             Image {
@@ -195,7 +236,7 @@ Window {
 
         function onImageChangedSignal() {
             //if (imgCroppingWindow.visible) {
-                loadImage();
+            loadImage();
             //}
         }
     }
@@ -204,12 +245,10 @@ Window {
     Connections {
         target: imageController
 
-        function onShowCroppingToolSignal(allow) {
-            btnCrop.visible = allow;
-        }
-
-        function onShowUnCroppingToolSignal(allow) {
-            btnUndo.visible = allow;
+        function onShowCroppingControls(allow) {
+            rowCropControls.visible = allow;
+            cropWidget.visible = allow;
+            rowSaveControls.visible = !allow;
         }
 
     }

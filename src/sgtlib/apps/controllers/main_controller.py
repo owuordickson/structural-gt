@@ -253,7 +253,7 @@ class MainController(BaseController):
             target = base_funcs.task_compute_multi_gt
         elif task_fxn == "Export-Graph":
             target = base_funcs.task_export_graph
-        elif task_fxn == "Save-Images":
+        elif task_fxn == "Save-Images" or task_fxn == "Save-Cropped-Image":
             target = base_funcs.task_save_images
         elif task_fxn == "Metaheuristic-Search":
             target = base_funcs.task_metaheuristic_search

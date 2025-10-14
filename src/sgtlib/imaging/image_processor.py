@@ -577,9 +577,10 @@ class ImageProcessor(ProgressUpdate):
 
     def compute_img_histograms(self, img_pos: int) -> None | list:
         """
-        Compute the histograms (original, binary, processes, mutated) of an image at position img_pos.
-        :param img_pos: position index of image to compute histograms for.
-        :return: list of Matplotlib histogram objects.
+        Compute the histograms (original, binary, processes, mutated) of an image at the position img_pos
+
+        :param img_pos: position index of the image to compute histograms for
+        :return: list of the Matplotlib histogram objects
         """
         sel_batch = self.selected_batch
         if sel_batch.is_graph_only:
@@ -607,7 +608,6 @@ class ImageProcessor(ProgressUpdate):
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="mutated"))
         lst_histograms.append(img_hist.copy())
         return lst_histograms
-
 
     def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> None | list:
         """
@@ -1032,15 +1032,24 @@ class ImageProcessor(ProgressUpdate):
         ]
         selected_batch.props = props
 
-    def save_images_to_file(self):
+    def save_images_to_file(self, img_pos):
         """
         Write images to a file.
         """
-
+        img_file_name, out_dir = self.get_filenames()
         sel_batch = self.selected_batch
+
+        if img_pos is not None:
+            if type(img_pos) is int:
+                img_obj = sel_batch.images[img_pos]
+                crop_filename = f"{img_file_name}_cropped.jpg"
+                crop_file = os.path.join(out_dir, crop_filename)
+                cv2.imwrite(crop_file, img_obj.img_2d)
+                self.update_status(ProgressData(type="warning", sender="GT", message=f"Cropped image saved!"))
+            return
+
         sel_images = self.get_batch_images(sel_batch)
         is_3d = True if len(sel_images) > 1 else False
-        img_file_name, out_dir = self.get_filenames()
 
         for i, img in enumerate(sel_images):
             if img.configs["save_images"]["value"] == 0:

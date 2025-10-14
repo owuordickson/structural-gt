@@ -51,6 +51,7 @@
         "assets/icons/thumbs-up-emoji.png",
         "assets/icons/top_down_arrow.png",
         "assets/icons/left_right_arrow.png",
+        "assets/icons/save_icon.png",
         "widgets/BrightnessControlWidget.qml",
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",

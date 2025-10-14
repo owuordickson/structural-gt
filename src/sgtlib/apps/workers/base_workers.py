@@ -38,11 +38,11 @@ class BaseWorker:
         if self._progress_queue is None:
             self._progress_queue = queue
 
-    def task_save_images(self, ntwk_p):
+    def task_save_images(self, ntwk_p, img_idx):
         """"""
         try:
             self._update_progress(ProgressData(percent=25, sender="GT", message=f"Saving Images..."))
-            ntwk_p.save_images_to_file()
+            ntwk_p.save_images_to_file(img_pos=img_idx)
             self._update_progress(ProgressData(percent=95, sender="GT", message=f"Saving Images..."))
             task_data = TaskResult(task_id="Save Images", status="Finished",
                                    message="Image files successfully saved in 'Output Dir'")

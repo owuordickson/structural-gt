@@ -4,7 +4,7 @@ import QtQuick.Controls
 Item {
     id: cropOverlay
     anchors.fill: parent
-    //visible: false
+    visible: true
 
     // Expose to outside QMLs
     property alias cropArea: cropRect
@@ -106,7 +106,6 @@ Item {
                 cropOverlay.topPt = newTop;
                 cropOverlay.bottomPt = newBottom;
             }
-            onReleased: enableCropButton()
         }
     }
 
@@ -152,7 +151,6 @@ Item {
                 newTop = Math.max(0, Math.min(newTop, cropOverlay.bottomPt - cropOverlay.minHeight));
                 cropOverlay.topPt = newTop;
             }
-            onReleased: enableCropButton()
         }
     }
 
@@ -195,7 +193,6 @@ Item {
                 newBottom = Math.max(cropOverlay.topPt + cropOverlay.minHeight, Math.min(newBottom, cropOverlay.height));
                 cropOverlay.bottomPt = newBottom;
             }
-            onReleased: enableCropButton()
         }
     }
 
@@ -233,7 +230,6 @@ Item {
                 newLeft = Math.max(0, Math.min(newLeft, cropOverlay.rightPt - cropOverlay.minWidth));
                 cropOverlay.leftPt = newLeft;
             }
-            onReleased: enableCropButton()
         }
     }
 
@@ -275,15 +271,6 @@ Item {
                 newRight = Math.max(cropOverlay.leftPt + cropOverlay.minWidth, Math.min(newRight, cropOverlay.width));
                 cropOverlay.rightPt = newRight;
             }
-            onReleased: enableCropButton()
-        }
-    }
-
-    function enableCropButton() {
-        if (cropRect.width < 5 || cropRect.height < 5) {
-            imageController.show_cropping_tool(false);
-        } else {
-            imageController.show_cropping_tool(true);
         }
     }
 

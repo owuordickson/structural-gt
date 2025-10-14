@@ -17,8 +17,7 @@ from ...compute.graph_analyzer import GraphAnalyzer
 class ImageController(QObject):
 
     showImageFilterControls = Signal(bool)
-    showCroppingToolSignal = Signal(bool)
-    showUnCroppingToolSignal = Signal(bool)
+    showCroppingControls = Signal(bool)
 
     _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
@@ -164,10 +163,6 @@ class ImageController(QObject):
             return False
         return not sgt_obj.ntwk_p.selected_batch.is_graph_only
 
-    @Slot(bool)
-    def show_cropping_tool(self, allow_cropping):
-        self.showCroppingToolSignal.emit(allow_cropping)
-
     @Slot(result=bool)
     def image_batches_exist(self):
         if not self._img_loaded:
@@ -292,7 +287,7 @@ class ImageController(QObject):
             # Emit signal to update UI with new image
             self._ctrl.changeImageSignal.emit()
             if change_type == "cropping":
-                self.showUnCroppingToolSignal.emit(False)
+                self.showCroppingControls.emit(True)
 
     @Slot(int)
     def compute_img_histogram(self, img_pos: int):
@@ -336,12 +331,28 @@ class ImageController(QObject):
 
             # Emit signal to update UI with new image
             self._ctrl.changeImageSignal.emit()
-            self.showCroppingToolSignal.emit(False)
-            self.showUnCroppingToolSignal.emit(True)
+            self.showCroppingControls.emit(False)
         except Exception as err:
             logging.exception("Cropping Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Cropping Error",
                                       "Error occurred while cropping image. Close the app and try again.")
+
+    @Slot(int)
+    def save_cropped_image(self, img_pos: int):
+        """Save cropped image to file."""
+        if self._ctrl.wait_flag:
+            logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
+            self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")
+            return
+
+        try:
+            self.start_task()
+            sgt_obj = self._ctrl.get_selected_sgt_obj()
+            self._ctrl.submit_job(1, "Save-Cropped-Image", (sgt_obj.ntwk_p, img_pos), False)
+        except Exception as err:
+            self.stop_task()
+            logging.exception("Unable to Save Cropped Image: " + str(err), extra={'user': 'SGT Logs'})
+            self._ctrl.handle_finished(-1, False, ["Unable to Save Cropped Image", "Error saving cropped image to file. Try again."])
 
     @Slot()
     def save_img_files(self):
@@ -365,7 +376,7 @@ class ImageController(QObject):
             self._ctrl.handle_progress_update(ProgressData(percent=20, sender="GT", message=f"Saving images..."))
             self.start_task()
             sgt_obj = self._ctrl.get_selected_sgt_obj()
-            self._ctrl.submit_job(1, "Save-Images", (sgt_obj.ntwk_p,), True)
+            self._ctrl.submit_job(1, "Save-Images", (sgt_obj.ntwk_p, None), True)
         except Exception as err:
             self.stop_task()
             logging.exception("Unable to Save Image Files: " + str(err), extra={'user': 'SGT Logs'})
