@@ -85,6 +85,12 @@ Window {
                         }
                     }
 
+                    Label {
+                        text: "Another task is running, please wait..."
+                        color: "#ff2233"
+                        visible: mainController.wait && !imageController.img_filters_busy
+                    }
+
                     Column {
                         visible: imageController.img_filters_busy
 
@@ -331,18 +337,6 @@ Window {
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (imgColorsWindow.visible) {
                 loadColorsData();
-            }
-        }
-    }
-
-    Connections {
-        target: imageController
-
-        function onShowImageFilterControls(allow) {
-            // Force refresh
-            if (imgColorsWindow.visible) {
-                //mainController.imageChangedSignal.emit();
-                imgColorsWindow.visible = allow;
             }
         }
     }

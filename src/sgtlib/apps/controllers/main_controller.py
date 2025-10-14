@@ -178,6 +178,8 @@ class MainController(BaseController):
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
                     # Sync models and refresh image
                     self.syncModelSignal.emit(sgt_obj)
+                    # Update QML to visualize graph
+                    self.changeImageSignal.emit()
                     # Send task termination signal to QML
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":

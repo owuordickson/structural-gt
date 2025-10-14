@@ -111,16 +111,4 @@ Window {
             }
         }
     }
-
-    Connections {
-        target: imageController
-
-        function onShowImageFilterControls(allow) {
-            // Force refresh
-            if (imgHistogramWindow.visible) {
-                //mainController.imageChangedSignal.emit();
-                imgHistogramWindow.visible = allow;
-            }
-        }
-    }
 }
