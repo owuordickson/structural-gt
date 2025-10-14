@@ -82,10 +82,10 @@ Window {
 
                 Repeater {
                     model: [
-                        {text: "x", value: cropWidget.cropArea.x},
-                        {text: "y", value: cropWidget.cropArea.y},
-                        {text: "width", value: cropWidget.cropArea.width},
-                        {text: "height", value: cropWidget.cropArea.height}
+                        {key: "x", text: "x"},
+                        {key: "y", text: "y"},
+                        {key: "width", text: "width"},
+                        {key: "height", text: "height"}
                     ]
 
                     delegate: RowLayout {
@@ -99,12 +99,19 @@ Window {
                         }
 
                         TextField {
-                            text: Number(modelData.value).toFixed(3)
+                            id: field
+                            text: Number(cropWidget.cropArea[modelData.key]).toFixed(3)
                             implicitWidth: 84
                             height: 26
                             font.pixelSize: 12
                             color: "#2266ff"
                             Layout.alignment: Qt.AlignVCenter
+                            onEditingFinished: {
+                                let newVal = parseFloat(text)
+                                if (!isNaN(newVal)) {
+                                    cropWidget.cropArea[modelData.key] = newVal
+                                }
+                            }
                         }
                     }
                 }

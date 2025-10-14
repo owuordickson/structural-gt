@@ -274,4 +274,35 @@ Item {
         }
     }
 
+
+    Connections {
+    target: cropRect
+
+    function updateHandles() {
+        // Hide handles temporarily if dimensions are invalid
+        const valid = cropRect.width > 0 && cropRect.height > 0
+        topHandle.visible = bottomHandle.visible = leftHandle.visible = rightHandle.visible = valid
+        if (!valid)
+            return
+
+        // Position handles relative to current cropRect geometry
+        topHandle.x = cropRect.x + cropRect.width / 2 - topHandle.width / 2
+        topHandle.y = cropRect.y - topHandle.height / 2
+
+        bottomHandle.x = cropRect.x + cropRect.width / 2 - bottomHandle.width / 2
+        bottomHandle.y = cropRect.y + cropRect.height - bottomHandle.height / 2
+
+        leftHandle.x = cropRect.x - leftHandle.width / 2
+        leftHandle.y = cropRect.y + cropRect.height / 2 - leftHandle.height / 2
+
+        rightHandle.x = cropRect.x + cropRect.width - rightHandle.width / 2
+        rightHandle.y = cropRect.y + cropRect.height / 2 - rightHandle.height / 2
+    }
+
+    function onXChanged() { updateHandles() }
+    function onYChanged() { updateHandles() }
+    function onWidthChanged() { updateHandles() }
+    function onHeightChanged() { updateHandles() }
+}
+
 }
