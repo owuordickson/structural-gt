@@ -25,7 +25,7 @@ of the GNU General Public License along with this program.  If not, see <https:/
 
 # Project Details
 __version__ = "3.6.6"
-__install_version__ = "3.5.8"
+__install_version__ = "3.6.6"
 __title__ = "StructuralGT"
 __author__ = "Dickson Owuor"
 __credits__ = "The Regents of the University of Michigan"
