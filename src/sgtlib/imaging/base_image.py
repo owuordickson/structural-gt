@@ -467,7 +467,7 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self) -> tuple[float, np.ndarray] | tuple[None, None]:
+    def evaluate_img_binary(self, max_pixel_count: int = None) -> tuple[float, np.ndarray] | tuple[None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
         original image and masking sections of the image that do not intersect with "white" (255) pixels in the
         binary image. The unmasked sections are typically where generated graph edges and nodes are located. So, the 
@@ -476,6 +476,8 @@ class BaseImage:
         small variations. The Standard Deviation (SD) can help identify how different the pixel values are in the 
         unmasked sections of the original image. Also, a histogram of the pixel values in the unmasked sections of the 
         original image can help identify the distribution of pixel values.
+
+        :param max_pixel_count: The maximum number of white pixels allowed. If None, all pixels are evaluated.
         
         :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
         """
@@ -495,6 +497,11 @@ class BaseImage:
             img_rgb = self.img_2d[..., :3]
         pixel_values = [img_rgb[tuple(p)] for p in white_pixel_pos]
         pixel_values = np.array(pixel_values)
+
+        # Check the limit of allowed pixel count
+        if max_pixel_count is not None:
+            if len(pixel_values) > max_pixel_count:
+                return None, None
 
         # Calculate standard deviation of original values
         std_dev = np.std(pixel_values)

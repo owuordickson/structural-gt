@@ -41,6 +41,7 @@ class FilterSearchSpace:
         filters."""
         min_pos: int = 0
         max_pos: int = 0
+        pixel_limit: int = None
         candidates: list = None
         ignore_candidates: list= None
         best_candidate = None
@@ -316,7 +317,7 @@ class FilterSearchSpace:
 
         # Initialize search space
         init_configs = img_obj.configs.copy()
-        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[], min_pos=0, max_pos=apply_pop-1)
+        search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=[], min_pos=0, max_pos=apply_pop-1, pixel_limit=None)
         for pos in range(apply_pop):
             img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
             if img_configs is not None:
@@ -342,13 +343,16 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def cost_function(new_img_configs: dict, img_obj: BaseImage) -> float:
+    def cost_function(new_img_configs: dict, img_obj: BaseImage, pixel_limit: int) -> float:
         """Calculate and apply the cost of a candidate. Given the image filter configurations, apply them to get a
         binary image and find the number of white pixels in the image. Retrieve the corresponding pixel values from the
         original image and calculate the Standard Deviation (SD) of the pixel values.
 
         :param new_img_configs: The dictionary of image filter configurations.
         :param img_obj: The image object.
+        :param pixel_limit: The maximum number of pixels to consider for calculating the SD.
+
+        :return: The cost of the candidate as a float. If the candidate is invalid, return np.inf.
         """
 
         if img_obj is None:
@@ -369,7 +373,7 @@ class FilterSearchSpace:
         img_obj.img_mod = img_mod
         # Compute SD as cost
         try:
-            eval_std, eval_hist = img_obj.evaluate_img_binary()
+            eval_std, eval_hist = img_obj.evaluate_img_binary(pixel_limit)
         except Exception as e:
             print(f"Error in cost function: {e}")
             eval_std = np.inf
@@ -470,7 +474,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
                     new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), value_candidate=individual)
                 else:
                     new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=individual)
-                individual.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj)
+                individual.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj, s_space.pixel_limit)
                 if best_individual is None or best_individual.std_cost is None or individual.std_cost < best_individual.std_cost:
                     best_individual = individual
                     temp_configs = new_configs.copy()
@@ -569,7 +573,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
                 val_sol = neighbor.value_space.best_candidate
                 bri_sol = neighbor.brightness_space.best_candidate
                 FilterSearchSpace.decode_filter_values(neighbor.img_configs, val_sol, bri_sol)
-                neighbor.std_cost = FilterSearchSpace.cost_function(neighbor.img_configs, img_obj)
+                neighbor.std_cost = FilterSearchSpace.cost_function(neighbor.img_configs, img_obj, s_space.pixel_limit)
 
                 if best_neighbor is None:
                     best_neighbor = neighbor
@@ -579,7 +583,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
                     best_neighbor = neighbor
             elif isinstance(neighbor, FilterSearchSpace.Candidate):
                  new_configs = FilterSearchSpace.decode_filter_values(img_obj.configs.copy(), bright_candidate=neighbor)
-                 neighbor.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj)
+                 neighbor.std_cost = FilterSearchSpace.cost_function(new_configs, img_obj, s_space.pixel_limit)
 
                  if best_neighbor is None or neighbor.std_cost < best_neighbor.std_cost:
                      best_neighbor = neighbor
