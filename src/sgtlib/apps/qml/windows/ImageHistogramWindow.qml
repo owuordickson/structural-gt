@@ -8,7 +8,7 @@ import "../widgets"
 Window {
     id: imgHistogramWindow
     width: 768
-    height: 720
+    height: 640
     x: 1024  // Exactly starts where your app ends
     y: 40
     //flags: Qt.Window | Qt.FramelessWindowHint

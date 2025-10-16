@@ -79,9 +79,9 @@ Window {
                         ToolTip.visible: btnGetColors.hovered
                         visible: !mainController.wait && !imageController.img_filters_busy
                         onClicked: {
-                            let sel_img = imgNavControls.img_pos;
+                            let img_pos = imgNavControls.img_pos;
                             let max_colors = spbMaxColors.value;
-                            imageController.run_retrieve_img_colors(sel_img, max_colors);
+                            imageController.run_retrieve_img_colors(img_pos, max_colors);
                         }
                     }
 
@@ -276,9 +276,9 @@ Window {
                             //ToolTip.visible: btnUndoEliminate.hovered
                             enabled: !imageController.img_filters_busy
                             onClicked: {
-                                let sel_img = cbColorsImageSelector.currentIndex;
+                                let img_pos = imgNavControls.img_pos;
                                 let swap_color = btnGrpSwap.checkedButton === rdoWhite ? 1 : 0;
-                                imageController.run_eliminate_img_colors(sel_img, swap_color);
+                                imageController.run_eliminate_img_colors(img_pos, swap_color);
                             }
                         }
 
@@ -296,8 +296,8 @@ Window {
                             //ToolTip.visible: btnUndoEliminate.hovered
                             enabled: !imageController.img_filters_busy
                             onClicked: {
-                                let sel_img = cbColorsImageSelector.currentIndex;
-                                imageController.undo_applied_changes(true, "colors", sel_img)
+                                let img_pos = imgNavControls.img_pos;
+                                imageController.undo_applied_changes(true, "colors", img_pos)
                             }
                         }
                     }
