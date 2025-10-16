@@ -15,12 +15,10 @@ Rectangle {
         id: colImgFiltersLayout
         anchors.fill: parent
 
-        AIModeWidget {
-        }
+        AIModeWidget {}
 
 
-        BinaryFilterWidget {
-        }
+        BinaryFilterWidget {}
 
         Rectangle {
             id: rectHLine1
@@ -32,11 +30,9 @@ Rectangle {
             Layout.rightMargin: 20
             visible: imageController.display_image()
         }
-        ImageFilterWidget {
-        }
+        ImageFilterWidget {}
 
-        FiltersWidget {
-        }
+        FiltersWidget {}
 
     }
 
