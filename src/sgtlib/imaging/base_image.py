@@ -499,8 +499,11 @@ class BaseImage:
         pixel_values = np.array(pixel_values)
 
         # Check the limit of allowed pixel count
+        white_pixel_count = white_pixel_pos.shape[0]
+        print(f"Max pixel count: {max_pixel_count}; Current count: {white_pixel_count}")
         if max_pixel_count is not None:
-            if len(pixel_values) > max_pixel_count:
+            if white_pixel_count > max_pixel_count:
+                print("Cost: Null")
                 return None, None
 
         # Calculate standard deviation of original values

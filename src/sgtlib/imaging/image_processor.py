@@ -507,18 +507,18 @@ class ImageProcessor(ProgressUpdate):
         opt_model = self._configs
         if opt_model["find_filter_selections"]["value"] == 1:
             if self._filter_space.best_candidate is not None:
-                self._filter_space.ignore_candidates.append(self._filter_space.best_candidate.position)
+                self._filter_space.ignore_candidates.add(self._filter_space.best_candidate.position)
                 self.image_obj.reset_img_configs(self._config_file)
 
         if opt_model["find_filter_values"]["value"] == 1:
             val_space = self._filter_space.best_candidate.value_space
             if val_space.best_candidate is not None:
-                val_space.ignore_candidates.append(val_space.best_candidate.position)
+                val_space.ignore_candidates.add(val_space.best_candidate.position)
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
             bright_space = self._filter_space.best_candidate.brightness_space
             if bright_space.best_candidate is not None:
-                bright_space.ignore_candidates.append(bright_space.best_candidate.position)
+                bright_space.ignore_candidates.add(bright_space.best_candidate.position)
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -580,7 +580,7 @@ class ImageProcessor(ProgressUpdate):
         Compute the histograms (original, binary, processes, mutated) of an image at the position img_pos
 
         :param img_pos: position index of the image to compute histograms for
-        :return: list of the Matplotlib histogram objects
+        :return: the list of the Matplotlib histogram objects
         """
         sel_batch = self.selected_batch
         if sel_batch.is_graph_only:
@@ -668,11 +668,13 @@ class ImageProcessor(ProgressUpdate):
             self._filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
         filter_space = self._filter_space
 
+        total_pixels = self.image_obj.img_2d.shape[0] * self.image_obj.img_2d.shape[1]
         if opt_model["find_filter_selections"]["value"] == 1:
             # 2. Run the Hill-climbing algorithm to find the best "image config combination"
             self.update_status(ProgressData(percent=50, sender="AI", message=f"Searching for filter selections..."))
             try:
-                # filter_space.ignore_candidates.append(filter_space.best_candidate.position)
+                filter_space.pixel_limit = total_pixels // 2
+                filter_space.loser_candidates = set()
                 sgt_hill_climbing_algorithm(filter_space, self.image_obj, max_iters=max_iters)
             except AbortException as err:
                 self.abort = True
@@ -684,6 +686,8 @@ class ImageProcessor(ProgressUpdate):
             # 3. Run the Genetic Algorithm to find the best "image filter values"
             self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
             try:
+                filter_space.best_candidate.value_space.pixel_limit = total_pixels // 2
+                filter_space.best_candidate.value_space.loser_candidates = set()
                 _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
@@ -694,6 +698,8 @@ class ImageProcessor(ProgressUpdate):
             # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
             self.update_status(ProgressData(percent=80, sender="AI", message=f"Searching for brightness/contrast values..."))
             try:
+                filter_space.best_candidate.brightness_space.pixel_limit = total_pixels // 2
+                filter_space.best_candidate.brightness_space.loser_candidates = set()
                 _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
                 self.abort = True
