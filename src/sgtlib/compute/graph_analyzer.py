@@ -196,7 +196,8 @@ class GraphAnalyzer(ProgressUpdate):
         # 3b. Compute Scaling Scatter Plots
         scaling_data = None
         if self._configs["compute_scaling_behavior"]["value"] == 1:
-            scaling_data = self.compute_scaling_data(full_img_df=self._results_df.copy())
+            # scaling_data = self.compute_scaling_data(full_img_df=self._results_df.copy())  # Include full image data?
+            scaling_data = self.compute_scaling_data(full_img_df=None)
 
         if self.abort:
             self.update_status(ProgressData(type="error", sender="GT", message=f"Problem encountered while computing un-weighted GT parameters."))
