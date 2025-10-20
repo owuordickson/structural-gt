@@ -196,8 +196,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 3b. Compute Scaling Scatter Plots
         scaling_data = None
         if self._configs["compute_scaling_behavior"]["value"] == 1:
-            # scaling_data = self.compute_scaling_data(full_img_df=self._results_df.copy())  # Include full image data?
-            scaling_data = self.compute_scaling_data(full_img_df=None)
+            scaling_data = self.compute_scaling_data()
 
         if self.abort:
             self.update_status(ProgressData(type="error", sender="GT", message=f"Problem encountered while computing un-weighted GT parameters."))
@@ -526,8 +525,15 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_scaling_data(self, full_img_df: pd.DataFrame = None) -> defaultdict:
-        """"""
+    def compute_scaling_data(self) -> defaultdict:
+        """
+        Iteratively divides the input image into smaller windows (filters), extracts graphs from each window,
+        and computes their corresponding ground truth (GT) parameters.
+
+        The method aggregates these parameters across multiple filter sizes to analyze scaling behavior,
+        storing the results in a dictionary for further processing or visualization.
+        """
+
         self.update_status(ProgressData(percent=65, sender="GT", message=f"Computing scaling behaviour..."))
         self._ntwk_p.add_listener(self.track_img_progress)
         num_filters = int(self._configs["scaling_behavior_kernel_count"]["value"])
@@ -562,17 +568,6 @@ class GraphAnalyzer(ProgressUpdate):
                         avg_df = temp_df
                     else:
                         avg_df = avg_df.merge(temp_df, on='parameter')
-        
-        # Include the computed GT descriptors of the entire image
-        if full_img_df is not None:
-            # Get full image dimensions
-            h, w = self._ntwk_p.binary_image_2d.shape
-            for _ in range(num_patches):
-                for _, row in full_img_df.iterrows():
-                    x_param = row["parameter"]
-                    y_value = row["value"]
-                    # print(f"{x_param}-{h}: {y_value}")
-                    sorted_plt_data[x_param][h].append(y_value)
 
         # Add average to scaling results (for the Excel file)
         if avg_df is not None:
@@ -1228,12 +1223,11 @@ class GraphAnalyzer(ProgressUpdate):
                             optimal_params: np.ndarray = \
                             sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
                             a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
-                            # print(f"Fitted parameters: a = {a_fit:.4f}, k = {k_fit:.4f}")
 
                             # Generate points for the best-fit curve
                             y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
 
-                            # Compute Kolmogorov-Smirnov Test & GoodnessOfFit P-Values
+                            # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
                             res_good_fit = sp.stats.goodness_of_fit(sp.stats.powerlaw, y_avg)
                             ks_stat, ks_p_val = res_good_fit.statistic, res_good_fit.pvalue
 
@@ -1256,12 +1250,15 @@ class GraphAnalyzer(ProgressUpdate):
                             init_params_cutoff = [1.0, 1.0, 0.1]
                             opt_params_cutoff: np.ndarray = \
                                 sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
-                            a_fit_cut, k_fit_cut, c_fit_cut = float(opt_params_cutoff[0]), float(
-                                opt_params_cutoff[1]), float(
-                                opt_params_cutoff[2])
+                            a_fit_cut, k_fit_cut, c_fit_cut = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]),
+                                                               float(opt_params_cutoff[2]))
+
                             # Generate points for the best-fit curve
                             y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
-                            # print(f"Fitted parameters: a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}")
+
+                            # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
+                            # res_good_fit = sp.stats.goodness_of_fit(sp.stats.truncpareto, y_avg)
+                            # ks_stat, ks_p_val = res_good_fit.statistic, res_good_fit.pvalue
 
                             # 3c. Plot data (truncated power-law best fit)
                             ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
@@ -1286,13 +1283,18 @@ class GraphAnalyzer(ProgressUpdate):
                                                       bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
                             mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(
                                 opt_params_log[2])
+
                             # Generate predicted points for the best-fit curve
                             y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
+
+                            # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
+                            res_good_fit = sp.stats.goodness_of_fit(sp.stats.lognorm, y_avg)
+                            ks_stat, ks_p_val = res_good_fit.statistic, res_good_fit.pvalue
 
                             # 3c. Plot data (Log-normal distribution best fit)
                             ax, i = plot_axis(i, "Log-Normal Fit and Plot of")
                             ax.plot(x_fit, y_fit_ln,
-                                    label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$',
+                                    label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_p_val:.2f}',
                                     color='red')
                             ax.legend()
 
