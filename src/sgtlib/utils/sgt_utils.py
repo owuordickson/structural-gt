@@ -658,7 +658,8 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     angles_closed = angles + [angles[0]]  # close the loop without mutating the input list
 
     # Create the figure and axes
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    fig = plt.figure(figsize=(8.5, 8.5), dpi=300)
+    ax = fig.add_subplot(1, 1, 1, polar=True)
 
     # Plot each material
     for mat in materials:
@@ -680,7 +681,85 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     ax.set_thetagrids(np.degrees(angles), parameters)
     ax.set_title("Spider Plot with Std. Dev. Error Bands", fontsize=14)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
-    plt.tight_layout()
+    fig.tight_layout()
+    return fig
+
+
+def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict) -> None | plt.Figure:
+    """
+    Generates a scaling plot showing error bars for each material and displays
+    corresponding Kolmogorov–Smirnov test results for different statistical fits.
+    The right subplot contains only formatted text (no axes, no borders).
+
+    Args:
+        y_title (str): Y-axis title.
+        df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'.
+        materials (dict): Mapping of material keys to readable names.
+
+    Returns:
+        matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
+    """
+    from scipy import stats
+
+    if y_title is None or df_data is None or materials is None:
+        return None
+
+    # Use pyplot figure so plt.show() works properly
+    fig = plt.figure(figsize=(11, 8.5), dpi=300)
+    ax_1 = fig.add_subplot(2, 2, 1)
+
+    # --- Plot data and compute KS test statistics ---
+    fit_text = "Kolmogorov–Smirnov & P-Values\n\n"
+    for key, material_name in materials.items():
+        df_sample = df_data[df_data['Material'] == key].copy()
+        if df_sample.empty:
+            continue
+
+        # KS tests for different fits
+        res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
+        res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
+        res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
+
+        fit_text += (
+            f"{material_name}:\n"
+            f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
+            f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
+            f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
+        )
+
+        # Error-bar plot
+        ax_1.errorbar(
+            df_sample['x-avg'],
+            df_sample['y-avg'],
+            yerr=df_sample['y-std'],
+            xerr=df_sample['x-std'],
+            label=material_name,
+            marker='o',
+            capsize=3,
+            linestyle='-'
+        )
+
+    # --- Format main plot ---
+    ax_1.set_xlabel('No. of Nodes', fontsize=12)
+    ax_1.set_ylabel(y_title, fontsize=12)
+    ax_1.set_title(f'Nodes vs {y_title} (Actual Data)', fontsize=13)
+    ax_1.legend(frameon=False)
+    ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
+    fig.tight_layout()
+
+    # --- Create text-only subplot (no axes, no borders) ---
+    ax_2 = fig.add_subplot(2, 2, 2)
+    ax_2.axis('off')  # hides axes, ticks, and frame
+    ax_2.text(
+        0.0, 1.0, fit_text,
+        fontsize=11,
+        verticalalignment='top',
+        horizontalalignment='left',
+        family='monospace',
+        transform=ax_2.transAxes,
+        color='black'
+    )
+
     return fig
 
 
