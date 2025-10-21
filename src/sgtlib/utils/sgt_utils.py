@@ -749,6 +749,9 @@ def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict, skip_
     ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
     fig.tight_layout()
 
+    if skip_test:
+        fit_text += "Goodness-of-fit tests skipped."
+
     # --- Create a text-only subplot (no axes, no borders) ---
     ax_2 = fig.add_subplot(2, 2, 2)
     ax_2.axis('off')  # hides axes, ticks, and frame
