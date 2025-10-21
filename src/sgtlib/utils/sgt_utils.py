@@ -596,9 +596,9 @@ def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> d
             # Append Excel data to one place
             for sheet_name, df in file_sheets.items():
                 # Rename it if sheet_name exists in mapping
-                new_name = rename_map.get(sheet_name, sheet_name)
+                new_name = rename_map.get(sheet_name, sheet_name)  # returns the old name if not found in mapping
 
-                # Add Material column with file name (without extension)
+                # Add the Material column with the file name (without extension)
                 df = df.copy()
                 df["Material"] = os.path.splitext(a_file)[0]
 
@@ -629,7 +629,26 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
             DataFrame, or None if no valid CSV files are found.
     """
 
-    pass
+    if csv_dir_path is None:
+        return None
+
+    # Get all files in the directory
+    files = os.listdir(csv_dir_path)
+    files = sorted(files)
+
+    all_sheets = {}
+    for a_file in files:
+        if a_file.endswith(".csv"):
+            # Get the Excel file and load its contents
+            csv_path = os.path.join(csv_dir_path, a_file)
+            df = pd.read_csv(csv_path, delimiter=delimiter)
+
+            # Add the Material column with the file name (without extension)
+            # df["Material"] = os.path.splitext(a_file)[0]
+            # all_sheets[a_file] = df
+    return all_sheets
+
+
 
 
 def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str]) -> None | plt.Figure:
@@ -641,7 +660,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[st
     characteristics among materials based on their GT parameter values.
 
     Args:
-        df_sgt (pd.DataFrame): DataFrame containing GT parameter values for different materials 
+        df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
         labels (list[str]): List of material names to include in the comparison
         parameters (list[str]): List of GT parameters to plot along the spider axes.
 
