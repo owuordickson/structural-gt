@@ -1,0 +1,14 @@
+parameter,value
+Number of nodes,789.0
+Number of edges,959.0
+Average edge angle (degrees),149.658
+Median edge angle (degrees),76.504
+Average degree,2.43093
+Network diameter,60.0
+Graph density,0.00308
+Global efficiency,0.06491
+Assortativity coefficient,-0.12433
+Average clustering coefficient,0.02493
+Average betweenness centrality,0.02726
+Average eigenvector centrality,0.01065
+Average closeness centrality,0.04611
