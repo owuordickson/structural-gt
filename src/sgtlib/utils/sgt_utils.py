@@ -600,7 +600,8 @@ def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> d
 
                 # Add the Material column with the file name (without extension)
                 df = df.copy()
-                df["Material"] = os.path.splitext(a_file)[0]
+                mat_label = os.path.splitext(a_file)[0]
+                df.insert(0, "Material", mat_label)
 
                 if new_name not in all_sheets:
                     all_sheets[new_name] = []  # initialize list
@@ -649,7 +650,7 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
     return all_sheets
 
 
-def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str], value_cols=None|list) -> None | plt.Figure:
+def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str], value_cols=None) -> None | plt.Figure:
     """
     Generates a spider (radar) plot to compare Graph-Theoretic (GT) parameters 
     across multiple material samples, typically derived from SEM images.
