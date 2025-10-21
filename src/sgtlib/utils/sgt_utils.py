@@ -641,14 +641,12 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
         if a_file.endswith(".csv"):
             # Get the Excel file and load its contents
             csv_path = os.path.join(csv_dir_path, a_file)
+            label = os.path.splitext(a_file)[0]   # The file name (without extension)
             df = pd.read_csv(csv_path, delimiter=delimiter)
 
-            # Add the Material column with the file name (without extension)
-            # df["Material"] = os.path.splitext(a_file)[0]
-            # all_sheets[a_file] = df
+            if label not in all_sheets:
+                all_sheets[label] = df
     return all_sheets
-
-
 
 
 def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str]) -> None | plt.Figure:

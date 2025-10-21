@@ -25,7 +25,11 @@ from .utils.sgt_utils import (
     ProgressData,
     gsd_to_skeleton,
     csv_to_graph,
-    write_gsd_file
+    write_gsd_file,
+    sgt_csv_to_dataframe,
+    sgt_excel_to_dataframe,
+    sgt_spider_plot,
+    sgt_scaling_plot
 )
 from .utils.config_loader import (
     load_gtc_configs,
@@ -51,6 +55,10 @@ __all__ = [
     "gsd_to_skeleton",
     "csv_to_graph",
     "write_gsd_file",
+    "sgt_csv_to_dataframe",
+    "sgt_excel_to_dataframe",
+    "sgt_spider_plot",
+    "sgt_scaling_plot",
     "sgt_genetic_algorithm",
     "sgt_hill_climbing_algorithm"
 ]
