@@ -685,16 +685,17 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     return fig
 
 
-def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict) -> None | plt.Figure:
+def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict, skip_test: bool = False) -> None | plt.Figure:
     """
     Generates a scaling plot showing error bars for each material and displays
     corresponding Kolmogorov–Smirnov test results for different statistical fits.
     The right subplot contains only formatted text (no axes, no borders).
 
     Args:
-        y_title (str): Y-axis title.
-        df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'.
-        materials (dict): Mapping of material keys to readable names.
+        y_title (str): Y-axis title
+        df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'
+        materials (dict): Mapping of material keys to readable names
+        skip_test (bool, optional): Whether to skip the KS test. Defaults to False.
 
     Returns:
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
@@ -715,17 +716,18 @@ def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict) -> No
         if df_sample.empty:
             continue
 
-        # KS tests for different fits
-        res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
-        res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
-        res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
+        if not skip_test:
+            # KS tests for different fits
+            res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
+            res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
+            res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
 
-        fit_text += (
-            f"{material_name}:\n"
-            f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
-            f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
-            f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
-        )
+            fit_text += (
+                f"{material_name}:\n"
+                f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
+                f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
+                f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
+            )
 
         # Error-bar plot
         ax_1.errorbar(
@@ -747,7 +749,7 @@ def gen_scaling_plot(y_title: str, df_data: pd.DataFrame, materials: dict) -> No
     ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
     fig.tight_layout()
 
-    # --- Create text-only subplot (no axes, no borders) ---
+    # --- Create a text-only subplot (no axes, no borders) ---
     ax_2 = fig.add_subplot(2, 2, 2)
     ax_2.axis('off')  # hides axes, ticks, and frame
     ax_2.text(
