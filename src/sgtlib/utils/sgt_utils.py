@@ -658,7 +658,7 @@ def gen_spider_plot(df_sgt: pd.DataFrame, materials: list[str], parameters: list
     angles_closed = angles + [angles[0]]  # close the loop without mutating the input list
 
     # Create the figure and axes
-    fig = plt.figure(figsize=(8.5, 8.5), dpi=300)
+    fig = plt.figure(figsize=(11, 8.5), dpi=300)
     ax = fig.add_subplot(1, 1, 1, polar=True)
 
     # Plot each material
