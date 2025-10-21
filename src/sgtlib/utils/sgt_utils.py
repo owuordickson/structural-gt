@@ -649,7 +649,7 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
     return all_sheets
 
 
-def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str]) -> None | plt.Figure:
+def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str], value_cols=None|list) -> None | plt.Figure:
     """
     Generates a spider (radar) plot to compare Graph-Theoretic (GT) parameters 
     across multiple material samples, typically derived from SEM images.
@@ -660,12 +660,16 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[st
     Args:
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
         labels (list[str]): List of material names to include in the comparison
-        parameters (list[str]): List of GT parameters to plot along the spider axes.
+        parameters (list[str]): List of GT parameters to plot along the spider axes
+        value_cols (list, optional): List of columns containing GT parameter values. Defaults to [].
 
     Returns:
         None | matplotlib.figure.Figure:
             The generated Matplotlib Figure if successful, or None if inputs are invalid.
     """
+
+    if value_cols is None:
+        value_cols = []
 
     if df_sgt is None or labels is None or parameters is None:
         return None
@@ -686,7 +690,8 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[st
         "Average eigenvector centrality": "EC",
         "Average closeness centrality": "CC",
     }
-    value_cols = ["value-1", "value-2", "value-3", "value-4"]
+    if len(value_cols) <= 0:
+        value_cols = ["value-1", "value-2", "value-3", "value-4"]
 
     # Rename Columns: apply replacements in the "Parameter" column
     if "parameter" in df_sgt.columns:
