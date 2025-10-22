@@ -341,7 +341,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         add_width_thickness = (self._configs["add_width_thickness"]["value"] == 1)
 
         # Create the plot figure(s)
-        fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id, add_width_thickness=add_width_thickness)
+        fig_grp = FiberNetworkBuilder.plot_graph_edges(image_arr, nx_graph, plot_nodes=plot_nodes, show_node_id=show_node_id, add_width_thickness=add_width_thickness, edge_color='red')
         fig = fig_grp[0]
         if a4_size:
             plt_title = "Graph Node Plot" if plot_nodes else "Graph Edge Plot"
@@ -636,7 +636,9 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # Create a color cycle for each graph component
         if edge_color == 'black':
-            color_list = ['k', 'r', 'g', 'b', 'c', 'm', 'y']
+            color_list = ['k', 'k', 'k', 'k', 'k', 'k', 'k']
+        elif edge_color == 'red':
+            color_list = ['r', 'r', 'r', 'r', 'r', 'r', 'r']
         else:
             color_list = ['r', 'y', 'g', 'b', 'c', 'm', 'k']
         color_cycle = itertools.cycle(color_list)
