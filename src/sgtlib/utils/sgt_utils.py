@@ -650,7 +650,7 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
     return all_sheets
 
 
-def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[str], value_cols=None) -> None | plt.Figure:
+def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], value_cols=None) -> None | plt.Figure:
     """
     Generates a spider (radar) plot to compare Graph-Theoretic (GT) parameters 
     across multiple material samples, typically derived from SEM images.
@@ -660,7 +660,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[st
 
     Args:
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
-        labels (list[str]): List of material names to include in the comparison
+        labels (dict): Mapping of material keys to readable names
         parameters (list[str]): List of GT parameters to plot along the spider axes
         value_cols (list, optional): List of columns containing GT parameter values. Defaults to [].
 
@@ -721,14 +721,14 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: list[str], parameters: list[st
     ax = fig.add_subplot(1, 1, 1, polar=True)
 
     # Plot each material
-    for mat in labels:
-        values = df_avg.loc[mat].tolist()
+    for key, material_name in labels.items():
+        values = df_avg.loc[key].tolist()
         values += [values[0]]  # close the loop
 
-        errors = df_std.loc[mat].tolist()
+        errors = df_std.loc[key].tolist()
         errors += [errors[0]]
 
-        ax.plot(angles_closed, values, label=mat)
+        ax.plot(angles_closed, values, label=material_name)
         ax.fill_between(angles_closed,
                         np.array(values) - np.array(errors),
                         np.array(values) + np.array(errors),
