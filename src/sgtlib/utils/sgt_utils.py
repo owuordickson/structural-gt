@@ -59,6 +59,44 @@ class TaskResult:
     message: str = ""
     data: object|list|None = None
 
+@dataclass
+class CurveFitModels:
+    """
+    A collection of common analytic functions used for curve fitting and data modeling.
+    Includes Power-law, Log-normal, Exponential, and Gaussian models.
+    """
+
+    @staticmethod
+    def power_law(x: np.ndarray, a: float, k: float) -> np.ndarray:
+        """
+        Power-law model: y = a * x^(-k)
+        """
+        return a * (x ** (-k))
+
+    @staticmethod
+    def lognormal(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+        """
+        Log-normal model:
+        y = a * [1 / (x * sigma * sqrt(2π))] * exp(-((ln(x) - μ)^2) / (2σ²))
+        """
+        return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
+
+    @staticmethod
+    def exponential(x: np.ndarray, a: float, b: float, c: float = 0.0) -> np.ndarray:
+        """
+        Exponential model: y = a * exp(b * x) + c
+        """
+        return a * np.exp(b * x) + c
+
+    @staticmethod
+    def gaussian(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+        """
+        Gaussian (Normal) model:
+        y = a * exp(-((x - μ)^2) / (2σ²))
+        """
+        return a * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+
+
 
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""
@@ -744,7 +782,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     return fig
 
 
-def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False) -> None | plt.Figure:
+def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False, fit_func: str = None) -> None | plt.Figure:
     """
     Generates a scaling plot showing error bars for a sample material and displays
     corresponding Kolmogorov–Smirnov test results for different statistical fits (Powerlaw, Exponential, Lognormal).
@@ -755,10 +793,38 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'
         labels (dict): Mapping of material keys to readable names
         skip_test (bool, optional): Whether to skip the KS test. Defaults to False.
+        fit_func (str, optional): Function to fit the data (log-normal, power-law, exponential). Defaults to None.
 
     Returns:
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
     """
+
+    def power_law_model(x, a, k):
+        """
+            A best-fit model that follows the power law distribution: y = a * x^(-k),
+            where a and k are fitting parameters.
+
+            Args:
+                x (np.array): Array of x values
+                a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
+                k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
+        """
+        return a * (x ** (-k))
+
+    def lognormal_model(x, mu, sigma, a):
+        """
+        Log-normal model (Y depends on X, X is log-normal).
+
+        Args:
+            x (np.array): Array of x values
+            mu (float): fitting parameter
+            sigma (float): fitting parameter
+            a (float): fitting parameter
+
+        Returns:
+
+        """
+        return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
     if y_title is None or df_data is None or labels is None:
         return None
@@ -827,6 +893,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         transform=ax_2.transAxes,
         color='black'
     )
+
+    # --- Draw curve fits using selected distributions (power-law or log-normal or exponential)
+    if type(fit_func) == str:
+        pass
 
     return fig
 
