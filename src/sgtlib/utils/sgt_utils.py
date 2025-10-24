@@ -17,6 +17,7 @@ import dropbox
 import requests
 import gsd.hoomd
 import subprocess
+import scipy as sp
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -67,34 +68,204 @@ class CurveFitModels:
     """
 
     @staticmethod
-    def power_law(x: np.ndarray, a: float, k: float) -> np.ndarray:
+    def power_law(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
         """
-        Power-law model: y = a * x^(-k)
+        Fits a power-law model to the given data and returns the fitted curve along with the model parameters.
+
+        The power-law model follows the equation:
+            y = a * x^(-k)
+        where:
+            a → scale (intercept) parameter
+            k → decay (exponent) parameter
+
+        Args:
+            x_avg (np.ndarray): Array of x-values (independent variable) used for fitting.
+            y_avg (np.ndarray): Array of y-values (dependent variable) corresponding to x_avg.
+            x_fit (np.ndarray): Array of x-values over which to generate the fitted curve.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - **y_fit** (np.ndarray): The fitted y-values computed from the best-fit parameters over `x_fit`.
+                - **params** (dict): A dictionary containing the fitted parameters:
+                    {
+                        "a": float,  # scale parameter
+                        "k": float   # exponent parameter
+                    }
+
+        Notes:
+            - Uses `scipy.optimize.curve_fit` to estimate model parameters.
+            - Initial parameter guesses are set to [1.0, 1.0].
         """
-        return a * (x ** (-k))
+        def fit_function(x: np.ndarray, a: float, k: float) -> np.ndarray:
+            """
+            Power-law model: y = a * x^(-k)
+            """
+            return a * (x ** (-k))
+
+        init_params = [1.0, 1.0]  # initial guess for [a, k]
+        optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params)[0]
+        a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
+
+        # Generate points for the best-fit curve
+        y_fit = fit_function(x_fit, a_fit, k_fit)
+        return y_fit, {"a": a_fit, "k": k_fit}
 
     @staticmethod
-    def lognormal(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+    def truncated_power_law(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
         """
-        Log-normal model:
-        y = a * [1 / (x * sigma * sqrt(2π))] * exp(-((ln(x) - μ)^2) / (2σ²))
+        Fits a truncated power-law model to the data and returns the fitted curve and parameters.
+
+        The truncated power-law model follows:
+            y = a * x^(-k) * exp(-c * x)
+
+        where:
+            - a → scale factor
+            - k → exponent of decay
+            - c → exponential cutoff parameter
+
+        Args:
+            x_avg (np.ndarray): Independent variable values for fitting.
+            y_avg (np.ndarray): Dependent variable values for fitting.
+            x_fit (np.ndarray): Points over which to generate the fitted curve.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
+                - **params** (dict): {"a": float, "k": float, "c": float}
         """
-        return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
+        def fit_function(x, a, k, c):
+            """
+            A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
+            where a, c, and k are fitting parameters.
+
+            https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
+
+            Args:
+                x (np.array): Array of x values
+                a (float): fitting parameter
+                k (float): fitting parameter
+                c (float): cut-off fitting parameter
+            """
+            return a * (x ** (-k)) * np.exp(-c * x)
+
+        init_params_cutoff = [1.0, 1.0, 0.1]
+        opt_params_cutoff: np.ndarray = \
+            sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_cutoff)[0]
+        a_fit, k_fit, c_fit = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2]))
+
+        # Generate points for the best-fit curve
+        y_fit = fit_function(x_fit, a_fit, k_fit, c_fit)
+        return y_fit, {"a": a_fit, "k": k_fit, "c": c_fit}
 
     @staticmethod
-    def exponential(x: np.ndarray, a: float, b: float, c: float = 0.0) -> np.ndarray:
+    def lognormal(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
         """
-        Exponential model: y = a * exp(b * x) + c
+        Fits a log-normal model to the data and returns the fitted curve and parameters.
+
+        The log-normal model follows:
+            y = a * [1 / (x * σ * sqrt(2π))] * exp(-((ln(x) - μ)²) / (2σ²))
+
+        where:
+            - μ → log-mean
+            - σ → log-standard deviation
+            - a → amplitude scaling factor
+
+        Args:
+            x_avg (np.ndarray): Independent variable values for fitting.
+            y_avg (np.ndarray): Dependent variable values for fitting.
+            x_fit (np.ndarray): Points over which to generate the fitted curve.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
+                - **params** (dict): {"mu": float, "sigma": float, "a": float}
         """
-        return a * np.exp(b * x) + c
+        def fit_function(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+            """
+            Log-normal model:
+            y = a * [1 / (x * sigma * sqrt(2π))] * exp(-((ln(x) - μ)^2) / (2σ²))
+            """
+            return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
+
+        init_params_log = [1.0, 1.0, 10]
+        opt_params_log: np.ndarray = \
+            sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_log,
+                                  bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+        mu_fit, sigma_fit, a_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+
+        # Generate predicted points for the best-fit curve
+        y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
+        return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
 
     @staticmethod
-    def gaussian(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+    def exponential(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
         """
-        Gaussian (Normal) model:
-        y = a * exp(-((x - μ)^2) / (2σ²))
+        Fits an exponential model to the data and returns the fitted curve and parameters.
+
+        The exponential model follows:
+            y = a * exp(b * x) + c
+
+        where:
+            - a → amplitude (scale factor)
+            - b → growth/decay rate
+            - c → vertical offset
+
+        Args:
+            x_avg (np.ndarray): Independent variable values for fitting.
+            y_avg (np.ndarray): Dependent variable values for fitting.
+            x_fit (np.ndarray): Points over which to generate the fitted curve.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
+                - **params** (dict): {"a": float, "b": float, "c": float}
         """
-        return a * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+        def fit_function(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
+            return a * np.exp(b * x) + c
+
+        init_params = [1.0, -0.1, 0.0]
+        opt_params: np.ndarray = sp.optimize.curve_fit(
+            fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
+        )[0]
+
+        a_fit, b_fit, c_fit = map(float, opt_params)
+        y_fit = fit_function(x_fit, a_fit, b_fit, c_fit)
+        return y_fit, {"a": a_fit, "b": b_fit, "c": c_fit}
+
+    @staticmethod
+    def gaussian(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+        """
+        Fits a Gaussian (normal) distribution model to the data and returns the fitted curve and parameters.
+
+        The Gaussian model follows:
+            y = a * exp(-((x - μ)²) / (2σ²))
+
+        where:
+            - μ → mean (center of the peak)
+            - σ → standard deviation (controls spread)
+            - a → amplitude (peak height)
+
+        Args:
+            x_avg (np.ndarray): Independent variable values for fitting.
+            y_avg (np.ndarray): Dependent variable values for fitting.
+            x_fit (np.ndarray): Points over which to generate the fitted curve.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
+                - **params** (dict): {"mu": float, "sigma": float, "a": float}
+        """
+        def fit_function(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
+            return a * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+
+        init_params = [np.mean(x_avg), np.std(x_avg), max(y_avg)]
+        opt_params: np.ndarray = sp.optimize.curve_fit(
+            fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
+        )[0]
+
+        mu_fit, sigma_fit, a_fit = map(float, opt_params)
+        y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
+        return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
 
 
 
@@ -896,7 +1067,12 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
     # --- Draw curve fits using selected distributions (power-law or log-normal or exponential)
     if type(fit_func) == str:
-        pass
+        if fit_func == "lognormal":
+            txt_func = "Log-Normal Fit"
+        elif fit_func == "powerlaw":
+            txt_func = "Power Law Fit"
+        else:
+            return fig
 
     return fig
 

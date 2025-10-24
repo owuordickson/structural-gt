@@ -33,7 +33,7 @@ from networkx.algorithms.wiener import wiener_index
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
 from ..utils.config_loader import load_gtc_configs
-from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate, ProgressData
+from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate, ProgressData, CurveFitModels
 
 logger = logging.getLogger("SGT App")
 
@@ -1018,49 +1018,6 @@ class GraphAnalyzer(ProgressUpdate):
         def plot_scaling_behavior():
             """"""
 
-            # Define our 'best-fit' model
-            def power_law_model(x, a, k):
-                """
-                    A best-fit model that follows the power law distribution: y = a * x^(-k),
-                    where a and k are fitting parameters.
-
-                    Args:
-                        x (np.array): Array of x values
-                        a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
-                        k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
-                """
-                return a * (x ** (-k))
-
-            def truncated_power_law_model(x, a, k, c):
-                """
-                A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
-                where a, c, and k are fitting parameters.
-
-                https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
-
-                Args:
-                    x (np.array): Array of x values
-                    a (float): fitting parameter
-                    k (float): fitting parameter
-                    c (float): cut-off fitting parameter
-                """
-                return a * (x ** (-k)) * np.exp(-c * x)
-
-            def lognormal_model(x, mu, sigma, a):
-                """
-                Log-normal model (Y depends on X, X is log-normal).
-
-                Args:
-                    x (np.array): Array of x values
-                    mu (float): fitting parameter
-                    sigma (float): fitting parameter
-                    a (float): fitting parameter
-
-                Returns:
-
-                """
-                return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
-
             def find_elbow(x, y):
                 """"""
 
@@ -1219,13 +1176,9 @@ class GraphAnalyzer(ProgressUpdate):
                     if opt_gtc["scaling_behavior_power_law_fit"]["value"] == 1:
                         # 2b. Compute the line of best-fit on our data according to our power-law model
                         try:
-                            init_params = [1.0, 1.0]  # initial guess for [a, k]
-                            optimal_params: np.ndarray = \
-                            sp.optimize.curve_fit(power_law_model, x_avg, y_avg, p0=init_params)[0]
-                            a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
-
                             # Generate points for the best-fit curve
-                            y_fit_pwr = power_law_model(x_fit, a_fit, k_fit)
+                            y_fit_pwr, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
+                            a_fit, k_fit = params["a"], params["k"]
 
                             # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
                             res_good_fit = sp.stats.goodness_of_fit(sp.stats.powerlaw, y_avg)
@@ -1247,14 +1200,9 @@ class GraphAnalyzer(ProgressUpdate):
                     if opt_gtc["scaling_behavior_truncated_power_law_fit"]["value"] == 1:
                         # 2c. Compute the line of best-fit according to our truncated power-law model
                         try:
-                            init_params_cutoff = [1.0, 1.0, 0.1]
-                            opt_params_cutoff: np.ndarray = \
-                                sp.optimize.curve_fit(truncated_power_law_model, x_avg, y_avg, p0=init_params_cutoff)[0]
-                            a_fit_cut, k_fit_cut, c_fit_cut = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]),
-                                                               float(opt_params_cutoff[2]))
-
                             # Generate points for the best-fit curve
-                            y_fit_cut = truncated_power_law_model(x_fit, a_fit_cut, k_fit_cut, c_fit_cut)
+                            y_fit_cut, params = CurveFitModels.truncated_power_law(x_avg, y_avg, x_fit)
+                            a_fit_cut, k_fit_cut, c_fit_cut = params["a"], params["k"], params["c"]
 
                             # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
                             # res_good_fit = sp.stats.goodness_of_fit(sp.stats.truncpareto, y_avg)
@@ -1277,15 +1225,9 @@ class GraphAnalyzer(ProgressUpdate):
                     if opt_gtc["scaling_behavior_log_normal_fit"]["value"] == 1:
                         # 2d. Compute best-fit, assuming Log-Normal dependence on X
                         try:
-                            init_params_log = [1.0, 1.0, 10]
-                            opt_params_log: np.ndarray = \
-                                sp.optimize.curve_fit(lognormal_model, x_avg, y_avg, p0=init_params_log,
-                                                      bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
-                            mu_fit, sigma_fit, a_log_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(
-                                opt_params_log[2])
-
                             # Generate predicted points for the best-fit curve
-                            y_fit_ln = lognormal_model(x_fit, mu_fit, sigma_fit, a_log_fit)
+                            y_fit_ln, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
+                            mu_fit, sigma_fit, a_log_fit = params["a"], params["k"], params["c"]
 
                             # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
                             res_good_fit = sp.stats.goodness_of_fit(sp.stats.lognorm, y_avg)
