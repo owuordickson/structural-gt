@@ -68,7 +68,7 @@ class CurveFitModels:
     """
 
     @staticmethod
-    def power_law(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a power-law model to the given data and returns the fitted curve along with the model parameters.
 
@@ -102,16 +102,20 @@ class CurveFitModels:
             """
             return a * (x ** (-k))
 
-        init_params = [1.0, 1.0]  # initial guess for [a, k]
-        optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params)[0]
-        a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
+        try:
+            init_params = [1.0, 1.0]  # initial guess for [a, k]
+            optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params)[0]
+            a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
 
-        # Generate points for the best-fit curve
-        y_fit = fit_function(x_fit, a_fit, k_fit)
-        return y_fit, {"a": a_fit, "k": k_fit}
+            # Generate points for the best-fit curve
+            y_fit = fit_function(x_fit, a_fit, k_fit)
+            return y_fit, {"a": a_fit, "k": k_fit}
+        except Exception as err:
+            print(err)
+            return None, {"a": 0.0, "k": 0.0}
 
     @staticmethod
-    def truncated_power_law(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def truncated_power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a truncated power-law model to the data and returns the fitted curve and parameters.
 
@@ -148,17 +152,21 @@ class CurveFitModels:
             """
             return a * (x ** (-k)) * np.exp(-c * x)
 
-        init_params_cutoff = [1.0, 1.0, 0.1]
-        opt_params_cutoff: np.ndarray = \
-            sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_cutoff)[0]
-        a_fit, k_fit, c_fit = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2]))
+        try:
+            init_params_cutoff = [1.0, 1.0, 0.1]
+            opt_params_cutoff: np.ndarray = \
+                sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_cutoff)[0]
+            a_fit, k_fit, c_fit = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2]))
 
-        # Generate points for the best-fit curve
-        y_fit = fit_function(x_fit, a_fit, k_fit, c_fit)
-        return y_fit, {"a": a_fit, "k": k_fit, "c": c_fit}
+            # Generate points for the best-fit curve
+            y_fit = fit_function(x_fit, a_fit, k_fit, c_fit)
+            return y_fit, {"a": a_fit, "k": k_fit, "c": c_fit}
+        except Exception as err:
+            print(err)
+            return None, {"a": 0.0, "k": 0.0, "c": 0.0}
 
     @staticmethod
-    def lognormal(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def lognormal(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a log-normal model to the data and returns the fitted curve and parameters.
 
@@ -187,18 +195,22 @@ class CurveFitModels:
             """
             return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
-        init_params_log = [1.0, 1.0, 10]
-        opt_params_log: np.ndarray = \
-            sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_log,
-                                  bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
-        mu_fit, sigma_fit, a_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
+        try:
+            init_params_log = [1.0, 1.0, 10]
+            opt_params_log: np.ndarray = \
+                sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_log,
+                                      bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+            mu_fit, sigma_fit, a_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
 
-        # Generate predicted points for the best-fit curve
-        y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
-        return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
+            # Generate predicted points for the best-fit curve
+            y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
+            return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
+        except Exception as err:
+            print(err)
+            return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
 
     @staticmethod
-    def exponential(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def exponential(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits an exponential model to the data and returns the fitted curve and parameters.
 
@@ -223,17 +235,21 @@ class CurveFitModels:
         def fit_function(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
             return a * np.exp(b * x) + c
 
-        init_params = [1.0, -0.1, 0.0]
-        opt_params: np.ndarray = sp.optimize.curve_fit(
-            fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
-        )[0]
+        try:
+            init_params = [1.0, -0.1, 0.0]
+            opt_params: np.ndarray = sp.optimize.curve_fit(
+                fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
+            )[0]
 
-        a_fit, b_fit, c_fit = map(float, opt_params)
-        y_fit = fit_function(x_fit, a_fit, b_fit, c_fit)
-        return y_fit, {"a": a_fit, "b": b_fit, "c": c_fit}
+            a_fit, b_fit, c_fit = map(float, opt_params)
+            y_fit = fit_function(x_fit, a_fit, b_fit, c_fit)
+            return y_fit, {"a": a_fit, "b": b_fit, "c": c_fit}
+        except Exception as err:
+            print(err)
+            return None, {"a": 0.0, "b": 0.0, "c": 0.0}
 
     @staticmethod
-    def gaussian(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def gaussian(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a Gaussian (normal) distribution model to the data and returns the fitted curve and parameters.
 
@@ -258,15 +274,18 @@ class CurveFitModels:
         def fit_function(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
             return a * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
 
-        init_params = [np.mean(x_avg), np.std(x_avg), max(y_avg)]
-        opt_params: np.ndarray = sp.optimize.curve_fit(
-            fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
-        )[0]
+        try:
+            init_params = [np.mean(x_avg), np.std(x_avg), max(y_avg)]
+            opt_params: np.ndarray = sp.optimize.curve_fit(
+                fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
+            )[0]
 
-        mu_fit, sigma_fit, a_fit = map(float, opt_params)
-        y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
-        return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
-
+            mu_fit, sigma_fit, a_fit = map(float, opt_params)
+            y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
+            return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
+        except Exception as err:
+            print(err)
+            return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
 
 
 class AbortException(Exception):
@@ -1007,7 +1026,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
     # Use pyplot figure so plt.show() works properly
     fig = plt.figure(figsize=(11, 8.5), dpi=300)
-    ax_1 = fig.add_subplot(2, 2, 1)
+    ax_1 = fig.add_subplot(2, 2, 1)         # Actual data with error bars
+    ax_2 = fig.add_subplot(2, 2, 2)         # goodness-of-fit test results
+    ax_3 = None
+    if type(fit_func) == str:
+        ax_3 = fig.add_subplot(2, 2, 3)     # Curve fits with selected distributions
 
     # --- Plot data and compute KS test statistics ---
     fit_text = "Kolmogorov–Smirnov & P-Values\n\n"
@@ -1029,6 +1052,21 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
             )
 
+        if ax_3 is not None:
+            x_avg = df_sample['x-avg'].to_numpy()
+            y_avg = df_sample['y-avg'].to_numpy()
+            x_fit = np.linspace(min(x_avg), max(max(x_avg), 10000), 100)
+            y_fit, axis_label = None, ""
+            if fit_func == "lognorm":
+                y_fit, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
+                mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
+                axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$'
+            elif fit_func == "powerlaw":
+                y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
+                a_fit, k_fit = params["a"], params["k"]
+                axis_label = f'{material_name}: $a={a_fit:.2f}, k={k_fit:.2f}$'
+            ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
+
         # Error-bar plot
         ax_1.errorbar(
             df_sample['x-avg'],
@@ -1047,13 +1085,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     ax_1.set_title(f'Nodes vs {y_title} (Actual Data)', fontsize=13)
     ax_1.legend(frameon=False)
     ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
-    fig.tight_layout()
 
     if skip_test:
         fit_text += "Goodness-of-fit tests skipped."
 
     # --- Create a text-only subplot (no axes, no borders) ---
-    ax_2 = fig.add_subplot(2, 2, 2)
     ax_2.axis('off')  # hides axes, ticks, and frame
     ax_2.text(
         0.0, 1.0, fit_text,
@@ -1066,14 +1102,28 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     )
 
     # --- Draw curve fits using selected distributions (power-law or log-normal or exponential)
-    if type(fit_func) == str:
-        if fit_func == "lognormal":
-            txt_func = "Log-Normal Fit"
+    if ax_3 is not None:
+        if fit_func == "lognorm":
+            ax_3.set_title(
+                r"LogNormal Fit: $y = a \cdot \frac{1}{x\sigma\sqrt{2\pi}} e^{-\frac{(\ln{x}-\mu)^2}{2\sigma^2}}$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
         elif fit_func == "powerlaw":
-            txt_func = "Power Law Fit"
+            ax_3.set_title(
+                r"PowerLaw Fit: $y = a x^{-k}$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
         else:
+            fig.tight_layout()
             return fig
+        ax_3.set_xlabel('No. of Nodes', fontsize=12)
+        ax_3.set_ylabel(y_title, fontsize=12)
+        ax_3.legend(frameon=False)
+        ax_3.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
 
+    fig.tight_layout()
     return fig
 
 
