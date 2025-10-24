@@ -763,6 +763,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     if y_title is None or df_data is None or labels is None:
         return None
 
+    if y_title == "Kernel Size" and 'kernel-dim' in df_data.columns:
+        df_data = df_data.copy()
+        df_data['y-avg'] = df_data['kernel-dim']
+        df_data['y-std'] = 0.0
+
     # Use pyplot figure so plt.show() works properly
     fig = plt.figure(figsize=(11, 8.5), dpi=300)
     ax_1 = fig.add_subplot(2, 2, 1)
