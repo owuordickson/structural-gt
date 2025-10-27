@@ -196,10 +196,10 @@ class CurveFitModels:
             return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
 
         try:
-            init_params_log = [1.0, 1.0, 10]
+            init_params_log = [0.5, 0.5, 5]  # mu, sigma, a
             opt_params_log: np.ndarray = \
                 sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_log,
-                                      bounds=([0, 0, 0], [np.inf, np.inf, np.inf]), maxfev=1000)[0]
+                                      bounds=([-np.inf, 0, 0], [np.inf, np.inf, np.inf]), maxfev=10000)[0]
             mu_fit, sigma_fit, a_fit = float(opt_params_log[0]), float(opt_params_log[1]), float(opt_params_log[2])
 
             # Generate predicted points for the best-fit curve
@@ -989,33 +989,6 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
     """
 
-    def power_law_model(x, a, k):
-        """
-            A best-fit model that follows the power law distribution: y = a * x^(-k),
-            where a and k are fitting parameters.
-
-            Args:
-                x (np.array): Array of x values
-                a (float): intercept or scale factor/constant (shifts curve up/down). It does not affect the shape/decay rate of the curve (only how high the curve starts)
-                k (float): exponent of the power law distribution. It defines how fast y decays as x increases.
-        """
-        return a * (x ** (-k))
-
-    def lognormal_model(x, mu, sigma, a):
-        """
-        Log-normal model (Y depends on X, X is log-normal).
-
-        Args:
-            x (np.array): Array of x values
-            mu (float): fitting parameter
-            sigma (float): fitting parameter
-            a (float): fitting parameter
-
-        Returns:
-
-        """
-        return a * (1 / (x * sigma * np.sqrt(2 * np.pi))) * np.exp(-((np.log(x) - mu) ** 2) / (2 * sigma ** 2))
-
     if y_title is None or df_data is None or labels is None:
         return None
 
@@ -1062,11 +1035,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             if fit_func == "lognorm":
                 y_fit, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
-                axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$'
+                axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
-                axis_label = f'{material_name}: $a={a_fit:.2f}, k={k_fit:.2f}$'
+                axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
         # Plot best scale with 'x' symbol
