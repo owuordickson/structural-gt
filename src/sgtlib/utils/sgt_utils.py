@@ -249,6 +249,41 @@ class CurveFitModels:
             return None, {"a": 0.0, "b": 0.0, "c": 0.0}
 
     @staticmethod
+    def linear(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+        """
+        Fits a linear (first-degree polynomial) model to the data.
+
+        Model:
+            y = m * x + b
+
+        where:
+            m → slope of the line
+            b → intercept
+
+        This model corresponds to a standard linear regression
+        and is useful for approximating monotonic relationships between variables.
+
+        Args:
+            x_avg (np.ndarray): Independent variable values for fitting.
+            y_avg (np.ndarray): Dependent variable values for fitting.
+            x_fit (np.ndarray): Points over which to generate the fitted line.
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                - y_fit (np.ndarray): Predicted y-values using best-fit line.
+                - params (dict): {"m": float, "b": float}
+        """
+
+        def fit_function(x, m, b):
+            return m * x + b
+
+        init_params = [1.0, 0.0]
+        opt_params = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params, maxfev=1000)[0]
+        m_fit, b_fit = map(float, opt_params)
+        y_fit = fit_function(x_fit, m_fit, b_fit)
+        return y_fit, {"m": m_fit, "b": b_fit}
+
+    @staticmethod
     def gaussian(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a Gaussian (normal) distribution model to the data and returns the fitted curve and parameters.
@@ -1040,6 +1075,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
+            elif fit_func == "linear":
+                y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
+                slope_fit, intercept_fit = params["m"], params["b"]
+                axis_label = f'{material_name}: $slope={slope_fit:.3f}, b={intercept_fit:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
         # Plot best scale with 'x' symbol
@@ -1104,6 +1143,12 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
+        elif fit_func == "linear":
+            ax_3.set_title(
+                r"Linear Fit: $y = m(x) + b$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
