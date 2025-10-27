@@ -1039,6 +1039,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         if df_sample.empty:
             continue
 
+        # Perform Goodness-of-fit test?
         if not skip_test:
             # KS tests for different fits
             res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
@@ -1052,6 +1053,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
             )
 
+        # Plot Curves fitted to specific distributions
         if ax_3 is not None:
             x_avg = df_sample['x-avg'].to_numpy()
             y_avg = df_sample['y-avg'].to_numpy()
@@ -1067,13 +1069,30 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 axis_label = f'{material_name}: $a={a_fit:.2f}, k={k_fit:.2f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
+        # Plot best scale with 'x' symbol
+        legend_label = None
+        if y_title == "Kernel Size":
+            # --- Copy last row as dict ---
+            last_row_dict = df_sample.iloc[-1].to_dict()
+            # --- Delete last row ---
+            df_sample = df_sample.iloc[:-1].copy()
+            ax_1.scatter(last_row_dict['x-avg'], last_row_dict['y-avg'], marker='x')
+            # Add Horizontal Line
+            ax_1.axhline(
+                y=last_row_dict['y-avg'],
+                linestyle='--',
+                linewidth=0.2,
+                # label=f"y = {last_row_dict['y-avg']:.2f}"
+            )
+            legend_label = f"{material_name} (y={last_row_dict['y-avg']:.2f}px)"
+
         # Error-bar plot
         ax_1.errorbar(
             df_sample['x-avg'],
             df_sample['y-avg'],
             yerr=df_sample['y-std'],
             xerr=df_sample['x-std'],
-            label=material_name,
+            label=material_name if legend_label is None else legend_label,
             marker='o',
             capsize=3,
             linestyle='-'
