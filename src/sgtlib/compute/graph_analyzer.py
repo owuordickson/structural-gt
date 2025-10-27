@@ -1144,6 +1144,11 @@ class GraphAnalyzer(ProgressUpdate):
                     # Write to DataFrame
                     data_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
                     fit_data_df = pd.DataFrame({'x-fit': x_fit})
+
+                    # Add Kernel DataFrame (with BestScale at the last row)
+                    kernel_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
+                    kernel_df.loc[len(kernel_df)] = {'kernel-dim': best_scale, 'x-avg': 0.0, 'x-std': 0.0} # Add last row
+                    self._scaling_results["Nodes-Kernel Size"] = kernel_df.copy()
                 else:
                     # 2a. Plot on the Log-Log scale
                     try:
