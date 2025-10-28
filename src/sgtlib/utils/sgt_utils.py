@@ -69,13 +69,19 @@ class CurveFitModels:
 
     @staticmethod
     def run_goodness_of_fit(args):
-        """Helper for parallel execution."""
+        """Worker-safe function for parallel execution (returns the serializable result)."""
         name, dist, data = args
         try:
             res = stats.goodness_of_fit(dist, data)
-            return name, res
+            # Return only serializable data
+            return {
+                "name": name,
+                "ks": float(res.statistic),
+                "p": float(res.pvalue),
+                "error": None,
+            }
         except Exception as e:
-            return name, e  # capture errors gracefully
+            return {"name": name, "ks": np.nan, "p": np.nan, "error": str(e)}
 
     @staticmethod
     def power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
@@ -1120,17 +1126,16 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         with mp.Pool(processes=min(len(distributions), mp.cpu_count())) as pool:
             results = pool.map(CurveFitModels.run_goodness_of_fit, args_list)
 
-        # Collect results into a dictionary
-        results_dict = {name: res for name, res in results}
+        # Convert results to DataFrame
+        df_results = pd.DataFrame(results)
 
-        # Build formatted text output
+        # Format readable summary text
         fmt_text = f"{sample_name}:\n"
-        for name in distributions.keys():
-            res = results_dict[name]
-            if isinstance(res, Exception):
-                fmt_text += f"  {name} → ERROR\n"
+        for _, row in df_results.iterrows():
+            if row["error"]:
+                fmt_text += f"  {row['name']} → ERROR\n"
             else:
-                fmt_text += f"  {name} → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
+                fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
     if y_title is None or df_data is None or labels is None:
