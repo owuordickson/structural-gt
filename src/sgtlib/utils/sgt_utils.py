@@ -68,6 +68,16 @@ class CurveFitModels:
     """
 
     @staticmethod
+    def run_goodness_of_fit(args):
+        """Helper for parallel execution."""
+        name, dist, data = args
+        try:
+            res = stats.goodness_of_fit(dist, data)
+            return name, res
+        except Exception as e:
+            return name, e  # capture errors gracefully
+
+    @staticmethod
     def power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a power-law model to the given data and returns the fitted curve along with the model parameters.
@@ -1078,15 +1088,6 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
     """
 
-    def run_goodness_of_fit(args):
-        """Helper for parallel execution."""
-        name, dist, data = args
-        try:
-            res = stats.goodness_of_fit(dist, data)
-            return name, res
-        except Exception as e:
-            return name, e  # capture errors gracefully
-
     def parallel_goodness_of_fit(df_distribution, sample_name):
         """
         Run multiple goodness-of-fit tests (KS test) in parallel
@@ -1103,10 +1104,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         # Define distributions to test
         distributions = {
-            "Power Law": stats.powerlaw,
-            "Exponential": stats.expon,
-            "Log Normal": stats.lognorm,
-            "Gamma": stats.gamma,
+            #"Power Law": stats.powerlaw,
+            #"Exponential": stats.expon,
+            #"Log Normal": stats.lognorm,
+            #"Gamma": stats.gamma,
             "Weibull": stats.weibull_min,
             "Inverse Gaussian": stats.wald,
             "Generalized Pareto": stats.genpareto
@@ -1117,7 +1118,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         # Use multiprocessing pool
         with mp.Pool(processes=min(len(distributions), mp.cpu_count())) as pool:
-            results = pool.map(run_goodness_of_fit, args_list)
+            results = pool.map(CurveFitModels.run_goodness_of_fit, args_list)
 
         # Collect results into a dictionary
         results_dict = {name: res for name, res in results}
@@ -1149,7 +1150,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         ax_3 = fig.add_subplot(2, 2, 3)     # Curve fits with selected distributions
 
     # --- Plot data and compute KS test statistics ---
-    fit_text = "Kolmogorov–Smirnov & P-Values\n\n"
+    txt_test = "Kolmogorov–Smirnov & P-Values\n\n"
     for key, material_name in labels.items():
         df_sample = df_data[df_data['Material'] == key].copy()
         if df_sample.empty:
@@ -1158,25 +1159,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # Perform the Goodness-of-fit test?
         if not skip_test:
             # KS tests for different fits
-            fit_text += parallel_goodness_of_fit(df_sample, material_name)
-            res_1 = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
-            res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
-            res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
-            res_4 = stats.goodness_of_fit(stats.gamma, df_sample['y-avg'].to_numpy())
-            res_5 = stats.goodness_of_fit(stats.weibull_min, df_sample['y-avg'].to_numpy())
-            res_6 = stats.goodness_of_fit(stats.wald, df_sample['y-avg'].to_numpy())
-            res_7 = stats.goodness_of_fit(stats.genpareto, df_sample['y-avg'].to_numpy())
-
-            fit_text += (
-                f"{material_name}:\n"
-                f"  Power-law → KS={res_1.statistic:.3f}, p={res_1.pvalue:.3f}\n"
-                f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
-                f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n"
-                f"  Gamma → KS={res_4.statistic:.3f}, p={res_4.pvalue:.3f}\n"
-                f"  Weibull → KS={res_5.statistic:.3f}, p={res_5.pvalue:.3f}\n"
-                f"  Inverse Gaussian → KS={res_6.statistic:.3f}, p={res_6.pvalue:.3f}\n"
-                f"  Generalized Pareto → KS={res_7.statistic:.3f}, p={res_7.pvalue:.3f}\n"
-            )
+            txt_test += parallel_goodness_of_fit(df_sample, material_name)
 
         # Plot Curves fitted to specific distributions
         if ax_3 is not None:
@@ -1239,12 +1222,12 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
 
     if skip_test:
-        fit_text += "Goodness-of-fit tests skipped."
+        txt_test += "Goodness-of-fit tests skipped."
 
     # --- Create a text-only subplot (no axes, no borders) ---
     ax_2.axis('off')  # hides axes, ticks, and frame
     ax_2.text(
-        0.0, 1.0, fit_text,
+        0.0, 1.0, txt_test,
         fontsize=8,
         verticalalignment='top',
         horizontalalignment='left',
