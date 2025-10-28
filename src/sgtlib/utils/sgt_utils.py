@@ -339,7 +339,7 @@ class CurveFitModels:
             return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
 
     @staticmethod
-    def gamma(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def gamma(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a Gamma distribution model to the given (x_avg, y_avg) data.
 
@@ -373,24 +373,28 @@ class CurveFitModels:
             """
             return a * ((x ** (k - 1)) * np.exp(-x / theta)) / (theta ** k * gamma_func(k))
 
-        # Initial guesses for [a, k, theta]
-        init_params_gamma = [1.0, 2.0, 1.0]
+        try:
+            # Initial guesses for [a, k, theta]
+            init_params_gamma = [1.0, 2.0, 1.0]
 
-        # Fit the curve to data
-        opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
-            fit_function,
-            x_avg,
-            y_avg,
-            p0=init_params_gamma,
-            bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
-            maxfev=2000
-        )[0]
+            # Fit the curve to data
+            opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
+                fit_function,
+                x_avg,
+                y_avg,
+                p0=init_params_gamma,
+                bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
+                maxfev=10000
+            )[0]
 
-        a_fit, k_fit, theta_fit = map(float, opt_params_gamma)
+            a_fit, k_fit, theta_fit = float(opt_params_gamma[0]), float(opt_params_gamma[1]), float(opt_params_gamma[2])
 
-        # Generate predicted points for the best-fit curve
-        y_fit = fit_function(x_fit, a_fit, k_fit, theta_fit)
-        return y_fit, {"a": a_fit, "k": k_fit, "theta": theta_fit}
+            # Generate predicted points for the best-fit curve
+            y_fit = fit_function(x_fit, a_fit, k_fit, theta_fit)
+            return y_fit, {"a": a_fit, "k": k_fit, "theta": theta_fit}
+        except Exception as err:
+            print(err)
+            return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
 
 
 class AbortException(Exception):
