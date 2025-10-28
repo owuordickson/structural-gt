@@ -64,7 +64,7 @@ class TaskResult:
 class CurveFitModels:
     """
     A collection of common analytic functions used for curve fitting and data modeling.
-    Includes Power-law, Log-normal, Exponential, and Gaussian models.
+    Includes the Power-law, Log-normal, Exponential, and Gaussian models.
     """
 
     @staticmethod
@@ -79,17 +79,17 @@ class CurveFitModels:
             k → decay (exponent) parameter
 
         Args:
-            x_avg (np.ndarray): Array of x-values (independent variable) used for fitting.
-            y_avg (np.ndarray): Array of y-values (dependent variable) corresponding to x_avg.
-            x_fit (np.ndarray): Array of x-values over which to generate the fitted curve.
+            x_avg (np.ndarray): Array of x-values (independent variable) used for fitting
+            y_avg (np.ndarray): Array of y-values (dependent variable) corresponding to x_avg
+            x_fit (np.ndarray): Array of x-values over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
                 - **y_fit** (np.ndarray): The fitted y-values computed from the best-fit parameters over `x_fit`.
                 - **params** (dict): A dictionary containing the fitted parameters:
                     {
-                        "a": float,  # scale parameter
-                        "k": float   # exponent parameter
+                        "a": float, # scale parameter
+                        "k": float # exponent parameter
                     }
 
         Notes:
@@ -122,15 +122,15 @@ class CurveFitModels:
         The truncated power-law model follows:
             y = a * x^(-k) * exp(-c * x)
 
-        where:
+        Where:
             - a → scale factor
             - k → exponent of decay
             - c → exponential cutoff parameter
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting.
-            y_avg (np.ndarray): Dependent variable values for fitting.
-            x_fit (np.ndarray): Points over which to generate the fitted curve.
+            x_avg (np.ndarray): Independent variable values for fitting
+            y_avg (np.ndarray): Dependent variable values for fitting
+            x_fit (np.ndarray): Points over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
@@ -173,15 +173,15 @@ class CurveFitModels:
         The log-normal model follows:
             y = a * [1 / (x * σ * sqrt(2π))] * exp(-((ln(x) - μ)²) / (2σ²))
 
-        where:
+        Where:
             - μ → log-mean
             - σ → log-standard deviation
             - a → amplitude scaling factor
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting.
-            y_avg (np.ndarray): Dependent variable values for fitting.
-            x_fit (np.ndarray): Points over which to generate the fitted curve.
+            x_avg (np.ndarray): Independent variable values for fitting
+            y_avg (np.ndarray): Dependent variable values for fitting
+            x_fit (np.ndarray): Points over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
@@ -217,15 +217,15 @@ class CurveFitModels:
         The exponential model follows:
             y = a * exp(b * x) + c
 
-        where:
+        Where:
             - a → amplitude (scale factor)
             - b → growth/decay rate
             - c → vertical offset
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting.
-            y_avg (np.ndarray): Dependent variable values for fitting.
-            x_fit (np.ndarray): Points over which to generate the fitted curve.
+            x_avg (np.ndarray): Independent variable values for fitting
+            y_avg (np.ndarray): Dependent variable values for fitting
+            x_fit (np.ndarray): Points over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
@@ -264,13 +264,13 @@ class CurveFitModels:
         and is useful for approximating monotonic relationships between variables.
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting.
-            y_avg (np.ndarray): Dependent variable values for fitting.
-            x_fit (np.ndarray): Points over which to generate the fitted line.
+            x_avg (np.ndarray): Independent variable values for fitting
+            y_avg (np.ndarray): Dependent variable values for fitting
+            x_fit (np.ndarray): Points over which to generate the fitted line
 
         Returns:
             tuple[np.ndarray, dict]:
-                - y_fit (np.ndarray): Predicted y-values using best-fit line.
+                - y_fit (np.ndarray): Predicted y-values using the best-fit line
                 - params (dict): {"m": float, "b": float}
         """
 
@@ -291,15 +291,15 @@ class CurveFitModels:
         The Gaussian model follows:
             y = a * exp(-((x - μ)²) / (2σ²))
 
-        where:
+        Where:
             - μ → mean (center of the peak)
             - σ → standard deviation (controls spread)
             - a → amplitude (peak height)
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting.
-            y_avg (np.ndarray): Dependent variable values for fitting.
-            x_fit (np.ndarray): Points over which to generate the fitted curve.
+            x_avg (np.ndarray): Independent variable values for fitting
+            y_avg (np.ndarray): Dependent variable values for fitting
+            x_fit (np.ndarray): Points over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
@@ -321,6 +321,60 @@ class CurveFitModels:
         except Exception as err:
             print(err)
             return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
+
+    @staticmethod
+    def gamma(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+        """
+        Fits a Gamma distribution model to the given (x_avg, y_avg) data.
+
+        The Gamma probability density function (PDF) is defined as:
+            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
+
+        Where:
+            - a is a scaling factor,
+            - k (shape) and θ (scale) are the distribution parameters,
+            - Γ(k) is the Gamma function.
+
+        This model is useful for positively skewed data, commonly appearing in
+        lifetime or waiting-time distributions.
+
+        Args:
+            x_avg (np.ndarray): Independent variable values
+            y_avg (np.ndarray): Dependent variable values (to fit)
+            x_fit (np.ndarray): Points at which to generate the fitted curve
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                y_fit (np.ndarray): Best-fit curve values
+                params (dict): Dictionary containing fitted parameters {a, k, theta}
+        """
+        from scipy.special import gamma as gamma_func
+
+        def fit_function(x: np.ndarray, a: float, k: float, theta: float) -> np.ndarray:
+            """
+            Gamma model:
+            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
+            """
+            return a * ((x ** (k - 1)) * np.exp(-x / theta)) / (theta ** k * gamma_func(k))
+
+        # Initial guesses for [a, k, theta]
+        init_params_gamma = [1.0, 2.0, 1.0]
+
+        # Fit the curve to data
+        opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
+            fit_function,
+            x_avg,
+            y_avg,
+            p0=init_params_gamma,
+            bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
+            maxfev=2000
+        )[0]
+
+        a_fit, k_fit, theta_fit = map(float, opt_params_gamma)
+
+        # Generate predicted points for the best-fit curve
+        y_fit = fit_function(x_fit, a_fit, k_fit, theta_fit)
+        return y_fit, {"a": a_fit, "k": k_fit, "theta": theta_fit}
 
 
 class AbortException(Exception):
@@ -1017,12 +1071,66 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         y_title (str): Y-axis title
         df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'
         labels (dict): Mapping of material keys to readable names
-        skip_test (bool, optional): Whether to skip the KS test. Defaults to False.
-        fit_func (str, optional): Function to fit the data (log-normal, power-law, exponential). Defaults to None.
+        skip_test (bool, optional): Whether to skip the KS test. Defaults to False
+        fit_func (str, optional): Function to fit the data (log-normal, power-law, exponential). Defaults to None
 
     Returns:
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
     """
+
+    def run_goodness_of_fit(args):
+        """Helper for parallel execution."""
+        name, dist, data = args
+        try:
+            res = stats.goodness_of_fit(dist, data)
+            return name, res
+        except Exception as e:
+            return name, e  # capture errors gracefully
+
+    def parallel_goodness_of_fit(df_distribution, sample_name):
+        """
+        Run multiple goodness-of-fit tests (KS test) in parallel
+        for several candidate distributions.
+
+        Args:
+            df_distribution: pandas DataFrame containing the sample data (column 'y-avg')
+            sample_name: str, name of the material for output labeling
+
+        Returns:
+            str: formatted text summary of KS and p-values for each distribution
+        """
+        data = df_distribution['y-avg'].to_numpy()
+
+        # Define distributions to test
+        distributions = {
+            "Power Law": stats.powerlaw,
+            "Exponential": stats.expon,
+            "Log Normal": stats.lognorm,
+            "Gamma": stats.gamma,
+            "Weibull": stats.weibull_min,
+            "Inverse Gaussian": stats.wald,
+            "Generalized Pareto": stats.genpareto
+        }
+
+        # Prepare arguments for each parallel process
+        args_list = [(name, dist, data) for name, dist in distributions.items()]
+
+        # Use multiprocessing pool
+        with mp.Pool(processes=min(len(distributions), mp.cpu_count())) as pool:
+            results = pool.map(run_goodness_of_fit, args_list)
+
+        # Collect results into a dictionary
+        results_dict = {name: res for name, res in results}
+
+        # Build formatted text output
+        fmt_text = f"{sample_name}:\n"
+        for name in distributions.keys():
+            res = results_dict[name]
+            if isinstance(res, Exception):
+                fmt_text += f"  {name} → ERROR\n"
+            else:
+                fmt_text += f"  {name} → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
+        return fmt_text
 
     if y_title is None or df_data is None or labels is None:
         return None
@@ -1047,20 +1155,27 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         if df_sample.empty:
             continue
 
-        # Perform Goodness-of-fit test?
+        # Perform the Goodness-of-fit test?
         if not skip_test:
             # KS tests for different fits
-            #res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
-            #res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
-            #res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
+            fit_text += parallel_goodness_of_fit(df_sample, material_name)
+            res_1 = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
+            res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
+            res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
             res_4 = stats.goodness_of_fit(stats.gamma, df_sample['y-avg'].to_numpy())
+            res_5 = stats.goodness_of_fit(stats.weibull_min, df_sample['y-avg'].to_numpy())
+            res_6 = stats.goodness_of_fit(stats.wald, df_sample['y-avg'].to_numpy())
+            res_7 = stats.goodness_of_fit(stats.genpareto, df_sample['y-avg'].to_numpy())
 
             fit_text += (
                 f"{material_name}:\n"
-                #f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
-                #f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
-                #f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n"
+                f"  Power-law → KS={res_1.statistic:.3f}, p={res_1.pvalue:.3f}\n"
+                f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
+                f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n"
                 f"  Gamma → KS={res_4.statistic:.3f}, p={res_4.pvalue:.3f}\n"
+                f"  Weibull → KS={res_5.statistic:.3f}, p={res_5.pvalue:.3f}\n"
+                f"  Inverse Gaussian → KS={res_6.statistic:.3f}, p={res_6.pvalue:.3f}\n"
+                f"  Generalized Pareto → KS={res_7.statistic:.3f}, p={res_7.pvalue:.3f}\n"
             )
 
         # Plot Curves fitted to specific distributions
@@ -1081,9 +1196,13 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
                 slope_fit, intercept_fit = params["m"], params["b"]
                 axis_label = f'{material_name}: $slope={slope_fit:.3f}, b={intercept_fit:.3f}$'
+            elif fit_func == "gamma":
+                y_fit, params = CurveFitModels.gamma(x_avg, y_avg, x_fit)
+                a_fit, k_fit, theta = params["a"], params["k"], params["theta"]
+                axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$, $\\theta={theta:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
-        # Plot best scale with 'x' symbol
+        # Plot the best scale with an 'x' symbol
         legend_label = None
         if y_title == "Kernel Size":
             # --- Copy last row as dict ---
@@ -1126,7 +1245,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     ax_2.axis('off')  # hides axes, ticks, and frame
     ax_2.text(
         0.0, 1.0, fit_text,
-        fontsize=11,
+        fontsize=8,
         verticalalignment='top',
         horizontalalignment='left',
         family='monospace',
@@ -1154,6 +1273,12 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
+        elif fit_func == "gamma":
+            ax_3.set_title(
+                r"Gamma Fit: $y = a \cdot x^{-k} \cdot \exp\left(-\frac{x}{a}\right)$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
         else:
             fig.tight_layout()
             return fig
@@ -1168,7 +1293,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
 def upload_to_dropbox(graph_file, folder="/raw_train_data"):
     """
-    Uploads graph_file to Dropbox inside App Folder.
+    Uploads graph_file to Dropbox inside the App Folder.
     """
 
     def _load_secrets():
