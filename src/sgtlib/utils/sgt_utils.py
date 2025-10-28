@@ -364,18 +364,18 @@ class CurveFitModels:
                 y_fit (np.ndarray): Best-fit curve values
                 params (dict): Dictionary containing fitted parameters {a, k, theta}
         """
-        from scipy.special import gamma as gamma_func
 
-        def fit_function(x: np.ndarray, a: float, k: float, theta: float) -> np.ndarray:
+        def fit_function(x: np.ndarray, a: float, alpha: float, theta: float) -> np.ndarray:
             """
             Gamma model:
             y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
             """
-            return a * ((x ** (k - 1)) * np.exp(-x / theta)) / (theta ** k * gamma_func(k))
+            gamma_k = sp.special.gamma(alpha)
+            return a * ((x ** (alpha - 1)) * np.exp(-x / theta)) / ((theta ** alpha) * gamma_k)
 
         try:
-            # Initial guesses for [a, k, theta]
-            init_params_gamma = [1.0, 2.0, 1.0]
+            # Initial guesses for [a, alpha, theta]
+            init_params_gamma = [0, 1.0, 2.0]
 
             # Fit the curve to data
             opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
@@ -384,14 +384,14 @@ class CurveFitModels:
                 y_avg,
                 p0=init_params_gamma,
                 bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
-                maxfev=10000
+                maxfev=1000
             )[0]
 
-            a_fit, k_fit, theta_fit = float(opt_params_gamma[0]), float(opt_params_gamma[1]), float(opt_params_gamma[2])
+            a_fit, alpha_fit, theta_fit = float(opt_params_gamma[0]), float(opt_params_gamma[1]), float(opt_params_gamma[2])
 
             # Generate predicted points for the best-fit curve
-            y_fit = fit_function(x_fit, a_fit, k_fit, theta_fit)
-            return y_fit, {"a": a_fit, "k": k_fit, "theta": theta_fit}
+            y_fit = fit_function(x_fit, a_fit, alpha_fit, theta_fit)
+            return y_fit, {"a": a_fit, "alpha": alpha_fit, "theta": theta_fit}
         except Exception as err:
             print(err)
             return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
@@ -1190,8 +1190,8 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 axis_label = f'{material_name}: $slope={slope_fit:.3f}, b={intercept_fit:.3f}$'
             elif fit_func == "gamma":
                 y_fit, params = CurveFitModels.gamma(x_avg, y_avg, x_fit)
-                a_fit, k_fit, theta = params["a"], params["k"], params["theta"]
-                axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$, $\\theta={theta:.3f}$'
+                a_fit, alpha, theta = params["a"], params["alpha"], params["theta"]
+                axis_label = f'{material_name}: a={a_fit:.3f}, $\\alpha={alpha:.3f}$, $\\theta={theta:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
         # Plot the best scale with an 'x' symbol
