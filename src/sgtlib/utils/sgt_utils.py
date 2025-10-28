@@ -1050,15 +1050,17 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # Perform Goodness-of-fit test?
         if not skip_test:
             # KS tests for different fits
-            res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
-            res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
-            res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
+            #res = stats.goodness_of_fit(stats.powerlaw, df_sample['y-avg'].to_numpy())
+            #res_2 = stats.goodness_of_fit(stats.expon, df_sample['y-avg'].to_numpy())
+            #res_3 = stats.goodness_of_fit(stats.lognorm, df_sample['y-avg'].to_numpy())
+            res_4 = stats.goodness_of_fit(stats.gamma, df_sample['y-avg'].to_numpy())
 
             fit_text += (
                 f"{material_name}:\n"
-                f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
-                f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
-                f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n\n"
+                #f"  Power-law → KS={res.statistic:.3f}, p={res.pvalue:.3f}\n"
+                #f"  Exponential → KS={res_2.statistic:.3f}, p={res_2.pvalue:.3f}\n"
+                #f"  Log-normal → KS={res_3.statistic:.3f}, p={res_3.pvalue:.3f}\n"
+                f"  Gamma → KS={res_4.statistic:.3f}, p={res_4.pvalue:.3f}\n"
             )
 
         # Plot Curves fitted to specific distributions
