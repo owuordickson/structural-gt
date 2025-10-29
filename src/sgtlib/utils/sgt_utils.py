@@ -1201,7 +1201,14 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         theoretical_q = stats.norm.ppf(quantiles)
         empirical_q = np.quantile(residuals, quantiles)
 
-        # 5. Plot Q–Q for log-transformed data
+        # 5. Compute 95% confidence band (approximation using KS bound)
+        # For n > 30, the 95% confidence envelope around the line y=x can be approximated as: ± 1.36 / sqrt(n)
+        band = 1.36 / np.sqrt(len(residuals))
+        upper_band = theoretical_q + band
+        lower_band = theoretical_q - band
+
+        # 6. Plot Q–Q for log-transformed data with confidence bands
+        ax_4_grids[idx].fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
         ax_4_grids[idx].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
         ax_4_grids[idx].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
 
@@ -1380,7 +1387,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-            ax_4.set_title(f"Q–Q Plot: Lognormal Fit for {y_title}")
+            ax_4.set_title(f"Residual Q–Q Plot: Lognormal Fit for {y_title}")
         elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
