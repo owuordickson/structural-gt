@@ -418,6 +418,110 @@ class MaximumLikelihoodEstimation:
         return {"alpha0": a0, "alpha1": a1, "beta0": b0, "beta1": b1}
 
 
+@dataclass
+class QQPlots:
+    """"""
+
+    @staticmethod
+    def log_residual_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        We avoid the direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
+        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
+        distribution?"; this approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
+        underlying transformed data are nearly normal (or match specified distribution).
+
+        Most statisticians use the residual Q-Q approach for scale-sensitive plots. Which is what we do here.
+
+        Expected Results:
+            - If your data are lognormally distributed → points fall close to y=x
+            - If tails deviate → curvature in the plot (heavy tail → S-shape; light tail → inverted S). Heavy tail: may
+            be a power-law tail. Light tail: distribution narrower than expected.
+            - If tilted but straight line → same shape but different μ/σ — parameter mismatch, not model misspecification.
+
+        Args:
+            distribution_data:
+            ax:
+            legend_txt:
+            show_y_label:
+
+        Returns:
+
+        """
+        # 1. Log transform
+        x_log = np.log(distribution_data)
+
+        # 2. Fit a normal distribution to the log(distribution_data)
+        mu, sigma = stats.norm.fit(x_log)
+
+        # 3. Compute residuals (standardized)
+        residuals = (x_log - mu) / sigma
+
+        # 4. Generate Q–Q data
+        quantiles = np.linspace(0.01, 0.99, len(residuals))
+        theoretical_q = stats.norm.ppf(quantiles)
+        empirical_q = np.quantile(residuals, quantiles)
+
+        # 5. Compute 95% confidence band (approximation using KS bound)
+        # For n > 30, the 95% confidence envelope around the line y=x can be approximated as: ± 1.36 / sqrt(n)
+        band = 1.36 / np.sqrt(len(residuals))
+        upper_band = theoretical_q + band
+        lower_band = theoretical_q - band
+
+        # 6. Plot Q–Q for log-transformed data with confidence bands
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2,
+                                     label="95% Confidence Band")
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (log(data) residuals)", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Standard Normal)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        return "Residual Q–Q Plot (Lognormal Test)"
+
+    @staticmethod
+    def log_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        Direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
+        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
+        distribution?"
+
+        This approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
+        underlying transformed data are nearly normal (or match specified distribution). To help with this, we generate
+         a Log-transformed QQ-Plot.
+
+        Returns:
+
+        """
+        # 1. Take Logs
+        x_log = np.log(distribution_data)
+
+        # 2. Fit a normal distribution to the log(distribution_data)
+        mu, sigma = stats.norm.fit(x_log)
+
+        # 3. Compute theoretical vs empirical quantiles for normal Q–Q
+        quantiles = np.linspace(0.01, 0.99, len(x_log))
+        theoretical_q = stats.norm.ppf(quantiles, loc=mu, scale=sigma)
+        empirical_q = np.quantile(x_log, quantiles)
+
+        # 4. Plot Q–Q for log-transformed data
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Normal)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        return "Log Q–Q Plot (Lognormal Test)"
+
+
+
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""
     pass
@@ -1165,99 +1269,6 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
-    def residual_qq_plot(distribution_data: np.ndarray, idx: int):
-        """
-        We avoid the direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
-        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
-        distribution?"; this approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
-        underlying transformed data are nearly normal (or match specified distribution).
-
-        Most statisticians use the residual Q-Q approach for scale-sensitive plots. Which is what we do here.
-
-        Expected Results:
-            - If your data are lognormally distributed → points fall close to y=x
-	        - If tails deviate → curvature in the plot (heavy tail → S-shape; light tail → inverted S). Heavy tail: may
-	        be a power-law tail. Light tail: distribution narrower than expected.
-	        - If tilted but straight line → same shape but different μ/σ — parameter mismatch, not model misspecification.
-
-        Args:
-            distribution_data:
-            idx:
-
-        Returns:
-
-        """
-        # 1. Log transform
-        x_log = np.log(distribution_data)
-
-        # 2. Fit a normal distribution to the log(distribution_data)
-        mu, sigma = stats.norm.fit(x_log)
-
-        # 3. Compute residuals (standardized)
-        residuals = (x_log - mu) / sigma
-
-        # 4. Generate Q–Q data
-        quantiles = np.linspace(0.01, 0.99, len(residuals))
-        theoretical_q = stats.norm.ppf(quantiles)
-        empirical_q = np.quantile(residuals, quantiles)
-
-        # 5. Compute 95% confidence band (approximation using KS bound)
-        # For n > 30, the 95% confidence envelope around the line y=x can be approximated as: ± 1.36 / sqrt(n)
-        band = 1.36 / np.sqrt(len(residuals))
-        upper_band = theoretical_q + band
-        lower_band = theoretical_q - band
-
-        # 6. Plot Q–Q for log-transformed data with confidence bands
-        ax_4_grids[idx].fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
-        ax_4_grids[idx].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax_4_grids[idx].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
-
-        if idx in (0, 2):
-            ax_4_grids[idx].set_ylabel("Empirical Quantiles (log(data) residuals)", fontsize=6)
-        ax_4_grids[idx].set_xlabel("Theoretical Quantiles (Standard Normal)", fontsize=6)
-        ax_4_grids[idx].tick_params(labelsize=5)
-        ax_4_grids[idx].legend(fontsize=6)
-        ax_4_grids[idx].set_frame_on(True)  # keep only small subplot borders visible
-        ax_4_grids[idx].grid(linestyle="--", linewidth=0.5, alpha=0.25)
-        # plt.title("Residual Q–Q Plot (Lognormal Test)")
-
-    def log_qq_plot(distribution_data: np.ndarray, idx: int):
-        """
-        Direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
-        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
-        distribution?"
-
-        This approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
-        underlying transformed data are nearly normal (or match specified distribution). To help with this, we generate
-         a Log-transformed QQ-Plot.
-
-        Returns:
-
-        """
-        # 1. Take Logs
-        x_log = np.log(distribution_data)
-
-        # 2. Fit a normal distribution to the log(distribution_data)
-        mu, sigma = stats.norm.fit(x_log)
-
-        # 3. Compute theoretical vs empirical quantiles for normal Q–Q
-        quantiles = np.linspace(0.01, 0.99, len(x_log))
-        theoretical_q = stats.norm.ppf(quantiles, loc=mu, scale=sigma)
-        empirical_q = np.quantile(x_log, quantiles)
-
-        # 4. Plot Q–Q for log-transformed data
-        ax_4_grids[idx].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax_4_grids[idx].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6,
-                              label=f"{material_name}")
-
-        if idx in (0, 2):
-            ax_4_grids[idx].set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
-        ax_4_grids[idx].set_xlabel("Theoretical Quantiles (Normal)", fontsize=6)
-        ax_4_grids[idx].tick_params(labelsize=5)
-        ax_4_grids[idx].legend(fontsize=6)
-        ax_4_grids[idx].set_frame_on(True)  # keep only small subplot borders visible
-        ax_4_grids[idx].grid(linestyle="--", linewidth=0.5, alpha=0.25)
-
     if y_title is None or df_data is None or labels is None:
         return None
 
@@ -1274,7 +1285,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     ax_2 = fig.add_subplot(gs[0, 1])         # goodness-of-fit test results
     ax_3 = None
     ax_4 = None
-    ax_4_grids, i = [], 0
+    ax_4_grids, i, ax_4_title = [], 0, ""
     if type(fit_func) == str:
         ax_3 = fig.add_subplot(gs[1, 0])     # Curve fits with selected distributions
         ax_4 = fig.add_subplot(gs[1, 1])
@@ -1312,7 +1323,8 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
                 # Plot QQ-plot
                 if i < len(ax_4_grids):
-                    residual_qq_plot(y_avg, i)
+                    is_left = True if i in (0, 2) else False
+                    ax_4_title = QQPlots.log_residual_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
@@ -1387,13 +1399,14 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-            ax_4.set_title(f"Residual Q–Q Plot: Lognormal Fit for {y_title}")
+            ax_4.set_title(f"{ax_4_title}: {y_title}")
         elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
+            ax_4.set_title(f"{ax_4_title}: {y_title}")
         elif fit_func == "linear":
             ax_3.set_title(
                 r"Linear Fit: $y = m(x) + b$"
