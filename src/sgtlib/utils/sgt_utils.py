@@ -86,7 +86,7 @@ class CurveFitModels:
         The power-law model follows the equation:
             y = a * x^(-k)
         where:
-            a → scale (intercept) parameter
+            a → amplitude -- scale (intercept) parameter
             k → decay (exponent) parameter
 
         Args:
@@ -98,10 +98,7 @@ class CurveFitModels:
             tuple[np.ndarray, dict]:
                 - **y_fit** (np.ndarray): The fitted y-values computed from the best-fit parameters over `x_fit`.
                 - **params** (dict): A dictionary containing the fitted parameters:
-                    {
-                        "a": float, # scale parameter
-                        "k": float # exponent parameter
-                    }
+                    {"a": float, "k": float # exponent parameter}
 
         Notes:
             - Uses `scipy.optimize.curve_fit` to estimate model parameters.
@@ -226,11 +223,11 @@ class CurveFitModels:
         Fits an exponential model to the data and returns the fitted curve and parameters.
 
         The exponential model follows:
-            y = a * exp(b * x) + c
+            y = a * exp(λ * x) + c
 
         Where:
             - a → amplitude (scale factor)
-            - b → growth/decay rate
+            - λ → growth/decay rate
             - c → vertical offset
 
         Args:
@@ -241,10 +238,10 @@ class CurveFitModels:
         Returns:
             tuple[np.ndarray, dict]:
                 - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
-                - **params** (dict): {"a": float, "b": float, "c": float}
+                - **params** (dict): {"a": float, "lambda": float, "c": float}
         """
-        def fit_function(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
-            return a * np.exp(b * x) + c
+        def fit_function(x: np.ndarray, a: float, lamda: float, c: float) -> np.ndarray:
+            return a * np.exp(lamda * x) + c
 
         try:
             init_params = [1.0, -0.1, 0.0]
@@ -254,10 +251,10 @@ class CurveFitModels:
 
             a_fit, b_fit, c_fit = map(float, opt_params)
             y_fit = fit_function(x_fit, a_fit, b_fit, c_fit)
-            return y_fit, {"a": a_fit, "b": b_fit, "c": c_fit}
+            return y_fit, {"a": a_fit, "lambda": b_fit, "c": c_fit}
         except Exception as err:
             print(err)
-            return None, {"a": 0.0, "b": 0.0, "c": 0.0}
+            return None, {"a": 0.0, "lambda": 0.0, "c": 0.0}
 
     @staticmethod
     def linear(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
@@ -293,129 +290,6 @@ class CurveFitModels:
         m_fit, b_fit = map(float, opt_params)
         y_fit = fit_function(x_fit, m_fit, b_fit)
         return y_fit, {"m": m_fit, "b": b_fit}
-
-    @staticmethod
-    def gaussian(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
-        """
-        Fits a Gaussian (normal) distribution model to the data and returns the fitted curve and parameters.
-
-        The Gaussian model follows:
-            y = a * exp(-((x - μ)²) / (2σ²))
-
-        Where:
-            - μ → mean (center of the peak)
-            - σ → standard deviation (controls spread)
-            - a → amplitude (peak height)
-
-        Args:
-            x_avg (np.ndarray): Independent variable values for fitting
-            y_avg (np.ndarray): Dependent variable values for fitting
-            x_fit (np.ndarray): Points over which to generate the fitted curve
-
-        Returns:
-            tuple[np.ndarray, dict]:
-                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
-                - **params** (dict): {"mu": float, "sigma": float, "a": float}
-        """
-        def fit_function(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
-            return a * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
-
-        try:
-            init_params = [np.mean(x_avg), np.std(x_avg), max(y_avg)]
-            opt_params: np.ndarray = sp.optimize.curve_fit(
-                fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
-            )[0]
-
-            mu_fit, sigma_fit, a_fit = map(float, opt_params)
-            y_fit = fit_function(x_fit, mu_fit, sigma_fit, a_fit)
-            return y_fit, {"mu": mu_fit, "sigma": sigma_fit, "a": a_fit}
-        except Exception as err:
-            print(err)
-            return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
-
-    @staticmethod
-    def gamma(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict] | tuple[None, dict]:
-        """
-        Fits a Gamma distribution model to the given (x_avg, y_avg) data.
-
-        The Gamma probability density function (PDF) is defined as:
-            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
-
-        Where:
-            - a is a scaling factor,
-            - k (shape) and θ (scale) are the distribution parameters,
-            - Γ(k) is the Gamma function.
-
-        This model is useful for positively skewed data, commonly appearing in
-        lifetime or waiting-time distributions.
-
-        Args:
-            x_avg (np.ndarray): Independent variable values
-            y_avg (np.ndarray): Dependent variable values (to fit)
-            x_fit (np.ndarray): Points at which to generate the fitted curve
-
-        Returns:
-            tuple[np.ndarray, dict]:
-                y_fit (np.ndarray): Best-fit curve values
-                params (dict): Dictionary containing fitted parameters {a, k, theta}
-        """
-
-        def fit_function(x: np.ndarray, a: float, alpha: float, theta: float) -> np.ndarray:
-            """
-            Gamma model:
-            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
-            """
-            gamma_k = sp.special.gamma(alpha)
-            return a * ((x ** (alpha - 1)) * np.exp(-x / theta)) / ((theta ** alpha) * gamma_k)
-
-        try:
-            # Initial guesses for [a, alpha, theta]
-            init_params_gamma = [0, 1.0, 2.0]
-
-            # Fit the curve to data
-            opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
-                fit_function,
-                x_avg,
-                y_avg,
-                p0=init_params_gamma,
-                bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
-                maxfev=1000
-            )[0]
-
-            a_fit, alpha_fit, theta_fit = float(opt_params_gamma[0]), float(opt_params_gamma[1]), float(opt_params_gamma[2])
-
-            # Generate predicted points for the best-fit curve
-            y_fit = fit_function(x_fit, a_fit, alpha_fit, theta_fit)
-            return y_fit, {"a": a_fit, "alpha": alpha_fit, "theta": theta_fit}
-        except Exception as err:
-            print(err)
-            return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
-
-
-@dataclass
-class MaximumLikelihoodEstimation:
-    """"""
-
-    @staticmethod
-    def lognormal(x_avg: np.ndarray, y_avg: np.ndarray):
-        """"""
-
-        # Define log-likelihood
-        def neg_loglike(params, norm_data: np.ndarray, x_data: np.ndarray):
-            """Negative log-likelihood function for the log-normal distribution."""
-            alpha_0, alpha_1, beta_0, beta_1 = params
-            mu = alpha_0 + alpha_1 * np.log(norm_data)
-            sigma = np.clip(beta_0 + beta_1 * np.log(norm_data), 1e-6, None)
-            ll = np.sum(sp.stats.norm.logpdf(np.log(x_data), loc=mu, scale=sigma) - np.log(x_data))
-            return -ll  # negative for minimization
-
-        # Fit via MLE
-        init = np.array([-1, 0.5, 0.3, 0.05])
-        res = sp.optimize.minimize(neg_loglike, init, args=(x_avg, y_avg))
-        a0, a1, b0, b1 = res.x
-        print("Fitted parameters:")
-        print(f"alpha0={a0:.3f}, alpha1={a1:.3f}, beta0={b0:.3f}, beta1={b1:.3f}")
-        return {"alpha0": a0, "alpha1": a1, "beta0": b0, "beta1": b1}
 
 
 @dataclass
@@ -559,155 +433,6 @@ class QQPlots:
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
         ax.set_frame_on(True)  # keep only small subplot borders visible
         return "Q–Q Plot vs Power-law (log-log scale)"
-
-    @staticmethod
-    def gamma_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
-        """
-        Direct Q–Q plot comparing our sample data to a Gamma distribution.
-
-        This test visually assesses whether the empirical distribution of `distribution_data`
-        follows a Gamma distribution, without any log or scale transformation.
-
-        Theoretical quantiles are generated from the best-fit Gamma parameters (shape, loc, scale)
-        obtained via Maximum Likelihood Estimation (MLE). A good fit is indicated when the points
-        lie approximately on the red dashed identity line.
-
-        Args:
-            distribution_data (np.ndarray): Sample data to test
-            ax (plt.Axes): Matplotlib Axes object to plot on
-            legend_txt (str): Label for the dataset
-            show_y_label (bool): Whether to display the Y-axis label (for multi-panel plots)
-
-        Returns:
-            str: Description of the plot.
-        """
-        # 1. Fit the Gamma distribution to data (MLE)
-        shape, loc, scale = stats.gamma.fit(distribution_data, floc=0)
-
-        # 2. Compute theoretical and empirical quantiles
-        quantiles = np.linspace(0.01, 0.99, len(distribution_data))
-        theoretical_q = stats.gamma.ppf(quantiles, a=shape, loc=loc, scale=scale)
-        empirical_q = np.quantile(distribution_data, quantiles)
-
-        # 3. Plot Q–Q
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
-
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles", fontsize=6)
-        ax.set_xlabel("Theoretical Quantiles (Gamma)", fontsize=6)
-        ax.tick_params(labelsize=5)
-        ax.legend(fontsize=6)
-        ax.set_frame_on(True)
-        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
-
-        return "Q–Q Plot (Gamma Distribution Test)"
-
-    @staticmethod
-    def pareto_lognormal_qq_plot(data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
-        """
-        Q–Q Plot comparing sample data to a fitted Pareto–Lognormal distribution.
-        """
-
-        def pareto_lognormal_pdf(x, mu, sigma, alpha):
-            """Pareto–Lognormal PDF."""
-            x = np.asarray(x)
-            phi = sp.special.ndtr((np.log(x) - mu) / sigma - alpha * sigma)  # Φ()
-            coef = alpha * np.exp(alpha * mu + 0.5 * alpha ** 2 * sigma ** 2)
-            return coef * x ** (-(alpha + 1)) * phi
-
-        def fit_pareto_lognormal(x_data):
-            """Estimate (mu, sigma, alpha) via MLE."""
-            x_data = np.asarray(x_data)
-            x_data = x_data[x_data > 0]  # PLN is defined for x > 0
-
-            def neg_log_likelihood(params):
-                mu, sigma, alpha = params
-                pdf_values = pareto_lognormal_pdf(x_data, mu, sigma, alpha)
-                return -np.sum(np.log(pdf_values + 1e-12))
-
-            result = sp.optimize.minimize(
-                neg_log_likelihood, x0=[np.mean(np.log(x_data)), np.std(np.log(x_data)), 1.0],
-                bounds=[(None, None), (1e-6, None), (1e-6, None)]
-            )
-            return result.x  # (mu, sigma, alpha)
-
-        mu_fit, sigma_fit, alpha_fit = fit_pareto_lognormal(data)
-
-        # Empirical quantiles
-        quantiles = np.linspace(0.01, 0.99, len(data))
-        empirical_q = np.quantile(data, quantiles)
-
-        # Theoretical quantiles (via inverse CDF approximation)
-        # We approximate by numerically inverting the CDF
-        x_vals = np.linspace(np.min(data), np.max(data), 2000)
-        pdf_vals = pareto_lognormal_pdf(x_vals, mu_fit, sigma_fit, alpha_fit)
-        cdf_vals = np.cumsum(pdf_vals)
-        cdf_vals /= cdf_vals[-1]
-        theoretical_q = np.interp(quantiles, cdf_vals, x_vals)
-
-        # Plot
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles", fontsize=6)
-        ax.set_xlabel("Theoretical Quantiles (Pareto–Lognormal)", fontsize=6)
-        ax.tick_params(labelsize=5)
-        ax.legend(fontsize=6)
-        ax.set_frame_on(True)
-        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
-
-        return "Q–Q Plot (Pareto–Lognormal Test)"
-
-    @staticmethod
-    def weibull_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
-        """
-        Q–Q plot comparing empirical data to a fitted Weibull distribution.
-
-        The Weibull distribution is defined by:
-            f(x; c, loc, scale) = (c/scale) * ((x - loc)/scale)^(c-1) * exp(-((x - loc)/scale)^c)
-
-        This function:
-            1. Fits Weibull parameters to the sample.
-            2. Computes theoretical and empirical quantiles.
-            3. Plots the Q–Q comparison.
-
-        Args:
-            distribution_data (np.ndarray): Observed sample data (positive values)
-            ax (plt.Axes): Matplotlib axis to plot on
-            legend_txt (str): Label for the dataset
-            show_y_label (bool): Whether to show the y-axis label
-
-        Returns:
-            str: Description of the plot type.
-        """
-
-        # Ensure strictly positive data
-        data = np.asarray(distribution_data)
-        data = data[data > 0]
-        data = np.sort(data)
-
-        # 1. Fit Weibull distribution (shape c, location loc, scale)
-        c, loc, scale = stats.weibull_min.fit(data, floc=0)
-
-        # 2. Compute theoretical quantiles
-        quantiles = np.linspace(0.01, 0.99, len(data))
-        theoretical_q = stats.weibull_min.ppf(quantiles, c, loc=loc, scale=scale)
-        empirical_q = np.quantile(data, quantiles)
-
-        # 3. Plot Q–Q
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=legend_txt)
-
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles", fontsize=6)
-        ax.set_xlabel("Theoretical Quantiles (Weibull)", fontsize=6)
-        ax.tick_params(labelsize=5)
-        ax.legend(fontsize=6)
-        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
-        ax.set_frame_on(True)
-
-        return "Q–Q Plot (Weibull Test)"
 
     @staticmethod
     def pl_stretched_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
@@ -1514,13 +1239,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         # Define distributions to test
         distributions = {
-            #"Power Law": stats.powerlaw,
-            #"Exponential": stats.expon,
-            #"Log Normal": stats.lognorm,
-            #"Gamma": stats.gamma,
-            "Weibull": stats.weibull_min,
-            "Inverse Gaussian": stats.wald,
-            "Generalized Pareto": stats.genpareto
+            "Power Law": stats.powerlaw,
+            "Exponential": stats.expon,
+            "Log Normal": stats.lognorm,
+            #"Stretched Power Law": stats.wald,
         }
 
         # Prepare arguments for each parallel process
@@ -1599,7 +1321,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                     is_left = True if i in (0, 2) else False
                     ax_4_title = QQPlots.log_residual_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
-            elif fit_func == "powerlaw" or fit_func == "PLN" or fit_func == "weibull" or fit_func == "PL-str":
+            elif fit_func == "powerlaw" or fit_func == "PL-str":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
@@ -1608,10 +1330,6 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                     is_left = True if i in (0, 2) else False
                     if fit_func == "powerlaw":
                         ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    elif fit_func == "PLN":
-                        ax_4_title = QQPlots.pareto_lognormal_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    elif fit_func == "weibull":
-                        ax_4_title = QQPlots.weibull_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     elif fit_func == "PL-str":
                         ax_4_title = QQPlots.pl_stretched_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
@@ -1619,15 +1337,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
                 slope_fit, intercept_fit = params["m"], params["b"]
                 axis_label = f'{material_name}: $slope={slope_fit:.3f}, b={intercept_fit:.3f}$'
-            elif fit_func == "gamma":
-                y_fit, params = CurveFitModels.gamma(x_avg, y_avg, x_fit)
-                a_fit, alpha, theta = params["a"], params["alpha"], params["theta"]
-                axis_label = f'{material_name}: a={a_fit:.3f}, $\\alpha={alpha:.3f}$, $\\theta={theta:.3f}$'
-
-                if i < len(ax_4_grids):
-                    is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.gamma_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    i += 1
+            elif fit_func == "exponential":
+                y_fit, params = CurveFitModels.exponential(x_avg, y_avg, x_fit)
+                a_fit, b_fit, c_fit = params["a"], params["lambda"], params["c"]
+                axis_label = f'{material_name}: $a={a_fit:.3f}, b={b_fit:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
         # Plot the best scale with an 'x' symbol
@@ -1689,9 +1402,9 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-        elif fit_func == "powerlaw" or fit_func == "PLN" or fit_func == "weibull" or fit_func == "PL-str":
+        elif fit_func == "powerlaw" or fit_func == "PL-str":
             ax_3.set_title(
-                r"PowerLaw Fit: $y = a x^{-k}$"
+                r"PowerLaw Fit: $y = a \cdot x^{-k}$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
@@ -1701,9 +1414,9 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-        elif fit_func == "gamma":
+        elif fit_func == "exponential":
             ax_3.set_title(
-                r"Gamma Fit: $y = a \cdot x^{-k} \cdot \exp\left(-\frac{x}{a}\right)$"
+                r"Exponential Fit: $y = a \cdot e^{-\frac{x}{\lambda}} + c$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
