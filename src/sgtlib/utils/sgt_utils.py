@@ -1217,6 +1217,13 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
                 axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
 
+                #mu_normal = 2.0  # Mean of the underlying normal distribution
+                #sigma_normal = 0.5  # Standard deviation of the underlying normal distribution
+                # Generate 1000 log-normal samples
+                #lognormal_samples = np.random.lognormal(mean=mu_normal, sigma=sigma_normal, size=1000)
+                # Print the first few samples
+                #X = lognormal_samples[:len(y_avg)]
+
                 # Fit log-normal distribution to y_avg
                 shape, loc, scale = stats.lognorm.fit(y_avg, floc=0)  # floc=0 fixes location at 0 (common for lognorm)
                 # Generate theoretical quantiles for the QQ plot, we compare sorted empirical y vs. theoretical quantiles
