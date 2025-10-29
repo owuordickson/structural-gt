@@ -520,6 +520,83 @@ class QQPlots:
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
         return "Log Q–Q Plot (Lognormal Test)"
 
+    @staticmethod
+    def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """"""
+        # 1. Fit power-law parameters using MLE
+        # alpha_hat = 1 + n / sum(log(y/x_min))
+        x_min = distribution_data.min()
+        alpha = 1 + len(distribution_data) / np.sum(np.log(distribution_data / x_min))
+
+        # 2. Compute theoretical quantiles from fitted power-law
+        n = len(distribution_data)
+        quantiles = np.linspace(0.01, 0.99, n)
+        theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha - 1))
+
+        # 3. Compute empirical quantiles
+        empirical_q = np.quantile(distribution_data, quantiles)
+
+        # 4. 95% confidence band (approximate)
+        band = 1.36 / np.sqrt(n)
+        upper_band = theoretical_q + band * theoretical_q
+        lower_band = theoretical_q - band * theoretical_q
+
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Theoretical Quantiles (Power-Law)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        return "Q–Q Plot vs Power-law (log-log scale)"
+
+    @staticmethod
+    def gamma_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        Direct Q–Q plot comparing our sample data to a Gamma distribution.
+
+        This test visually assesses whether the empirical distribution of `distribution_data`
+        follows a Gamma distribution, without any log or scale transformation.
+
+        Theoretical quantiles are generated from the best-fit Gamma parameters (shape, loc, scale)
+        obtained via Maximum Likelihood Estimation (MLE). A good fit is indicated when the points
+        lie approximately on the red dashed identity line.
+
+        Args:
+            distribution_data (np.ndarray): Sample data to test.
+            ax (plt.Axes): Matplotlib Axes object to plot on.
+            legend_txt (str): Label for the dataset.
+            show_y_label (bool): Whether to display the Y-axis label (for multi-panel plots).
+
+        Returns:
+            str: Description of the plot.
+        """
+        # 1. Fit the Gamma distribution to data (MLE)
+        shape, loc, scale = stats.gamma.fit(distribution_data, floc=0)
+
+        # 2. Compute theoretical and empirical quantiles
+        quantiles = np.linspace(0.01, 0.99, len(distribution_data))
+        theoretical_q = stats.gamma.ppf(quantiles, a=shape, loc=loc, scale=scale)
+        empirical_q = np.quantile(distribution_data, quantiles)
+
+        # 3. Plot Q–Q
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Gamma)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.set_frame_on(True)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+
+        return "Q–Q Plot (Gamma Distribution Test)"
 
 
 class AbortException(Exception):
@@ -1330,6 +1407,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
+
+                if i < len(ax_4_grids):
+                    is_left = True if i in (0, 2) else False
+                    ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    i += 1
             elif fit_func == "linear":
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
                 slope_fit, intercept_fit = params["m"], params["b"]
@@ -1338,6 +1420,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.gamma(x_avg, y_avg, x_fit)
                 a_fit, alpha, theta = params["a"], params["alpha"], params["theta"]
                 axis_label = f'{material_name}: a={a_fit:.3f}, $\\alpha={alpha:.3f}$, $\\theta={theta:.3f}$'
+
+                if i < len(ax_4_grids):
+                    is_left = True if i in (0, 2) else False
+                    ax_4_title = QQPlots.gamma_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    i += 1
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
 
         # Plot the best scale with an 'x' symbol
@@ -1399,14 +1486,12 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-            ax_4.set_title(f"{ax_4_title}: {y_title}")
         elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-            ax_4.set_title(f"{ax_4_title}: {y_title}")
         elif fit_func == "linear":
             ax_3.set_title(
                 r"Linear Fit: $y = m(x) + b$"
@@ -1429,6 +1514,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         ax_4.axis("off")  # hide all ticks and labels
         ax_4.set_frame_on(False)  # remove the border/frame
+        ax_4.set_title(f"{ax_4_title}: {y_title}")
 
     fig.tight_layout()
     return fig
