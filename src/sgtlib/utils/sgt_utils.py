@@ -8,12 +8,8 @@ import os
 import io
 import sys
 import cv2
-import json
 import base64
-# import socket
 import logging
-# import platform
-import dropbox
 import requests
 import gsd.hoomd
 import subprocess
@@ -28,7 +24,6 @@ from scipy import stats
 from cv2.typing import MatLike
 from typing import LiteralString
 from dataclasses import dataclass
-# from cryptography.fernet import Fernet
 
 
 @dataclass
@@ -562,6 +557,8 @@ def detect_cuda_version() -> str | None:
 
 """
 def detect_cuda_and_install_cupy():
+    import socket
+    import platform
     try:
         import cupy
         logging.info(f"CuPy is already installed: {cupy.__version__}", extra={'user': 'SGT Logs'})
@@ -1287,6 +1284,9 @@ def upload_to_dropbox(graph_file, folder="/raw_train_data"):
     """
     Uploads graph_file to Dropbox inside the App Folder.
     """
+    import json
+    import dropbox
+    from cryptography.fernet import Fernet
 
     def _load_secrets():
         current_dir = os.path.dirname(os.path.abspath(__file__))
