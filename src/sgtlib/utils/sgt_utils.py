@@ -1165,6 +1165,42 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
+    def log_qq_plot(distribution_data: np.ndarray, idx: int):
+        """
+        We avoid the direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
+        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
+        distribution?"; this approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
+        underlying transformed data are nearly normal (or match specified distribution).
+
+        Most statisticians use the residual Q-Q approach for scale-sensitive plots. Which is what we plan to do later.
+
+        Returns:
+
+        """
+        # 1. Take Logs
+        x_log = np.log(distribution_data)
+
+        # 2. Fit a normal distribution to the log data
+        mu, sigma = stats.norm.fit(x_log)
+
+        # 3. Compute theoretical vs empirical quantiles for normal Q–Q
+        quantiles = np.linspace(0.01, 0.99, len(x_log))
+        theoretical_q = stats.norm.ppf(quantiles, loc=mu, scale=sigma)
+        empirical_q = np.quantile(x_log, quantiles)
+
+        # 4. Plot Q–Q for log-transformed data
+        ax_4_grids[idx].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax_4_grids[idx].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6,
+                              label=f"{material_name}")
+
+        if idx in (0, 2):
+            ax_4_grids[idx].set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
+        ax_4_grids[idx].set_xlabel("Theoretical Quantiles (Normal)", fontsize=6)
+        ax_4_grids[idx].tick_params(labelsize=5)
+        ax_4_grids[idx].legend(fontsize=6)
+        ax_4_grids[idx].set_frame_on(True)  # keep only small subplot borders visible
+        ax_4_grids[idx].grid(linestyle="--", linewidth=0.5, alpha=0.25)
+
     if y_title is None or df_data is None or labels is None:
         return None
 
@@ -1219,24 +1255,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
                 # Plot QQ-plot
                 if i < len(ax_4_grids):
-                    # Fit log-normal distribution to y_avg
-                    shape_fit, loc_fit, scale_fit = stats.lognorm.fit(y_avg, floc=0)
-                    #stats.probplot(y_avg, dist=stats.lognorm, sparams=(shape_fit, loc_fit, scale_fit), plot=ax_4_grids[i])
-
-                    # Generate theoretical quantiles for the QQ plot, we compare sorted empirical y vs. theoretical quantiles
-                    quantiles = np.linspace(0.01, 0.99, len(y_avg))
-                    theoretical_q = stats.lognorm.ppf(quantiles, shape_fit, loc=loc_fit, scale=scale_fit)
-                    empirical_q = np.quantile(y_avg, quantiles)
-                    ax_4_grids[i].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-                    ax_4_grids[i].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
-
-                    if i in (0, 2):
-                        ax_4_grids[i].set_ylabel("Empirical Quantiles", fontsize=6)
-                    ax_4_grids[i].set_xlabel("Theoretical Quantiles (Lognormal)", fontsize=6)
-                    ax_4_grids[i].tick_params(labelsize=5)
-                    ax_4_grids[i].legend(fontsize=6)
-                    ax_4_grids[i].set_frame_on(True)  # keep only small subplot borders visible
-                    ax_4_grids[i].grid(linestyle="--", linewidth=0.5, alpha=0.25)
+                    log_qq_plot(y_avg, i)
                     i += 1
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
