@@ -1217,23 +1217,19 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
                 axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
 
-                #mu_normal = 2.0  # Mean of the underlying normal distribution
-                #sigma_normal = 0.5  # Standard deviation of the underlying normal distribution
-                # Generate 1000 log-normal samples
-                #lognormal_samples = np.random.lognormal(mean=mu_normal, sigma=sigma_normal, size=1000)
-                # Print the first few samples
-                #X = lognormal_samples[:len(y_avg)]
-
-                # Fit log-normal distribution to y_avg
-                shape, loc, scale = stats.lognorm.fit(y_avg, floc=0)  # floc=0 fixes location at 0 (common for lognorm)
-                # Generate theoretical quantiles for the QQ plot, we compare sorted empirical y vs. theoretical quantiles
-                quantiles = np.linspace(0.01, 0.99, len(y_avg))
-                theoretical_q = stats.lognorm.ppf(quantiles, shape, loc=loc, scale=scale)
-                empirical_q = np.quantile(y_avg, quantiles)
                 # Plot QQ-plot
                 if i < len(ax_4_grids):
+                    # Fit log-normal distribution to y_avg
+                    shape_fit, loc_fit, scale_fit = stats.lognorm.fit(y_avg, floc=0)
+                    #stats.probplot(y_avg, dist=stats.lognorm, sparams=(shape_fit, loc_fit, scale_fit), plot=ax_4_grids[i])
+
+                    # Generate theoretical quantiles for the QQ plot, we compare sorted empirical y vs. theoretical quantiles
+                    quantiles = np.linspace(0.01, 0.99, len(y_avg))
+                    theoretical_q = stats.lognorm.ppf(quantiles, shape_fit, loc=loc_fit, scale=scale_fit)
+                    empirical_q = np.quantile(y_avg, quantiles)
                     ax_4_grids[i].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
                     ax_4_grids[i].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
+
                     if i in (0, 2):
                         ax_4_grids[i].set_ylabel("Empirical Quantiles", fontsize=6)
                     ax_4_grids[i].set_xlabel("Theoretical Quantiles (Lognormal)", fontsize=6)
