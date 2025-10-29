@@ -523,18 +523,23 @@ class QQPlots:
     @staticmethod
     def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """"""
+        # Ensure strictly positive data
+        data = np.asarray(distribution_data)
+        data = data[data > 0]
+        data = np.sort(data)
+
         # 1. Fit power-law parameters using MLE
         # alpha_hat = 1 + n / sum(log(y/x_min))
-        x_min = distribution_data.min()
-        alpha = 1 + len(distribution_data) / np.sum(np.log(distribution_data / x_min))
+        x_min = data.min()
+        alpha = 1 + len(data) / np.sum(np.log(data / x_min))
 
         # 2. Compute theoretical quantiles from fitted power-law
-        n = len(distribution_data)
+        n = len(data)
         quantiles = np.linspace(0.01, 0.99, n)
         theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha - 1))
 
         # 3. Compute empirical quantiles
-        empirical_q = np.quantile(distribution_data, quantiles)
+        empirical_q = np.quantile(data, quantiles)
 
         # 4. 95% confidence band (approximate)
         band = 1.36 / np.sqrt(n)
@@ -568,10 +573,10 @@ class QQPlots:
         lie approximately on the red dashed identity line.
 
         Args:
-            distribution_data (np.ndarray): Sample data to test.
-            ax (plt.Axes): Matplotlib Axes object to plot on.
-            legend_txt (str): Label for the dataset.
-            show_y_label (bool): Whether to display the Y-axis label (for multi-panel plots).
+            distribution_data (np.ndarray): Sample data to test
+            ax (plt.Axes): Matplotlib Axes object to plot on
+            legend_txt (str): Label for the dataset
+            show_y_label (bool): Whether to display the Y-axis label (for multi-panel plots)
 
         Returns:
             str: Description of the plot.
@@ -597,6 +602,197 @@ class QQPlots:
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
 
         return "Q–Q Plot (Gamma Distribution Test)"
+
+    @staticmethod
+    def pareto_lognormal_qq_plot(data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        Q–Q Plot comparing sample data to a fitted Pareto–Lognormal distribution.
+        """
+
+        def pareto_lognormal_pdf(x, mu, sigma, alpha):
+            """Pareto–Lognormal PDF."""
+            x = np.asarray(x)
+            phi = sp.special.ndtr((np.log(x) - mu) / sigma - alpha * sigma)  # Φ()
+            coef = alpha * np.exp(alpha * mu + 0.5 * alpha ** 2 * sigma ** 2)
+            return coef * x ** (-(alpha + 1)) * phi
+
+        def fit_pareto_lognormal(x_data):
+            """Estimate (mu, sigma, alpha) via MLE."""
+            x_data = np.asarray(x_data)
+            x_data = x_data[x_data > 0]  # PLN is defined for x > 0
+
+            def neg_log_likelihood(params):
+                mu, sigma, alpha = params
+                pdf_values = pareto_lognormal_pdf(x_data, mu, sigma, alpha)
+                return -np.sum(np.log(pdf_values + 1e-12))
+
+            result = sp.optimize.minimize(
+                neg_log_likelihood, x0=[np.mean(np.log(x_data)), np.std(np.log(x_data)), 1.0],
+                bounds=[(None, None), (1e-6, None), (1e-6, None)]
+            )
+            return result.x  # (mu, sigma, alpha)
+
+        mu_fit, sigma_fit, alpha_fit = fit_pareto_lognormal(data)
+
+        # Empirical quantiles
+        quantiles = np.linspace(0.01, 0.99, len(data))
+        empirical_q = np.quantile(data, quantiles)
+
+        # Theoretical quantiles (via inverse CDF approximation)
+        # We approximate by numerically inverting the CDF
+        x_vals = np.linspace(np.min(data), np.max(data), 2000)
+        pdf_vals = pareto_lognormal_pdf(x_vals, mu_fit, sigma_fit, alpha_fit)
+        cdf_vals = np.cumsum(pdf_vals)
+        cdf_vals /= cdf_vals[-1]
+        theoretical_q = np.interp(quantiles, cdf_vals, x_vals)
+
+        # Plot
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Pareto–Lognormal)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.set_frame_on(True)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+
+        return "Q–Q Plot (Pareto–Lognormal Test)"
+
+    @staticmethod
+    def weibull_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        Q–Q plot comparing empirical data to a fitted Weibull distribution.
+
+        The Weibull distribution is defined by:
+            f(x; c, loc, scale) = (c/scale) * ((x - loc)/scale)^(c-1) * exp(-((x - loc)/scale)^c)
+
+        This function:
+            1. Fits Weibull parameters to the sample.
+            2. Computes theoretical and empirical quantiles.
+            3. Plots the Q–Q comparison.
+
+        Args:
+            distribution_data (np.ndarray): Observed sample data (positive values)
+            ax (plt.Axes): Matplotlib axis to plot on
+            legend_txt (str): Label for the dataset
+            show_y_label (bool): Whether to show the y-axis label
+
+        Returns:
+            str: Description of the plot type.
+        """
+
+        # Ensure strictly positive data
+        data = np.asarray(distribution_data)
+        data = data[data > 0]
+        data = np.sort(data)
+
+        # 1. Fit Weibull distribution (shape c, location loc, scale)
+        c, loc, scale = stats.weibull_min.fit(data, floc=0)
+
+        # 2. Compute theoretical quantiles
+        quantiles = np.linspace(0.01, 0.99, len(data))
+        theoretical_q = stats.weibull_min.ppf(quantiles, c, loc=loc, scale=scale)
+        empirical_q = np.quantile(data, quantiles)
+
+        # 3. Plot Q–Q
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=legend_txt)
+
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Weibull)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)
+
+        return "Q–Q Plot (Weibull Test)"
+
+    @staticmethod
+    def pl_stretched_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """
+        Q–Q Plot for Power-Law with Stretched-Exponential Cutoff distribution.
+
+        Model:
+            p(x) ∝ x^(-α) * exp(-(x/x_c)^β)
+
+        This plot visually compares the empirical quantiles of the sample to
+        the theoretical quantiles from the fitted model. If points lie roughly
+        along the identity line (y = x), the sample follows this distribution.
+
+        Args:
+            distribution_data (np.ndarray): Sample data (must be positive)
+            ax (plt.Axes): Axis on which to draw the QQ plot
+            legend_txt (str): Legend label (e.g., material or dataset name)
+            show_y_label (bool): Whether to show the Y-axis label
+
+        Returns:
+            str: Description of the plot.
+        """
+        data = np.asarray(distribution_data)
+        data = data[data > 0]
+        n = len(data)
+        data_sorted = np.sort(data)
+
+        # -----------------------------
+        # Define unnormalized PDF
+        # -----------------------------
+        def unnorm_pdf(x, alpha, x_c, beta):
+            return x ** (-alpha) * np.exp(- (x / x_c) ** beta)
+
+        # -----------------------------
+        # Fit parameters via numeric MLE
+        # -----------------------------
+        def neg_log_likelihood(params):
+            alpha, x_c, beta = params
+            if alpha <= 0 or x_c <= 0 or beta <= 0:
+                return np.inf
+            xgrid = np.linspace(data_sorted.min(), data_sorted.max(), 2000)
+            u_nnorm = unnorm_pdf(xgrid, alpha, x_c, beta)
+            pdfgrid = u_nnorm / np.trapezoid(u_nnorm, xgrid)
+            pdf_data = np.interp(data_sorted, xgrid, pdfgrid)
+            return -np.sum(np.log(np.clip(pdf_data, 1e-300, None)))
+
+        init_guess = (2.0, np.mean(data_sorted), 1.0)
+        res = sp.optimize.minimize(neg_log_likelihood, init_guess,
+                                bounds=[(1e-6, 10.0), (1e-6, np.max(data_sorted) * 10), (1e-6, 5.0)],
+                                method="L-BFGS-B")
+
+        if not res.success:
+            raise RuntimeError(f"Fit failed: {res.message}")
+
+        alpha_fit, x_c_fit, beta_fit = res.x
+
+        # -----------------------------
+        # Compute theoretical quantiles
+        # -----------------------------
+        x_grid = np.linspace(data_sorted.min(), data_sorted.max(), 3000)
+        unnorm = unnorm_pdf(x_grid, alpha_fit, x_c_fit, beta_fit)
+        pdf_grid = unnorm / np.trapezoid(unnorm, x_grid)
+        cdf_grid = np.cumsum(pdf_grid)
+        cdf_grid /= cdf_grid[-1]
+
+        quantiles = np.linspace(0.01, 0.99, n)
+        theoretical_q = np.interp(quantiles, cdf_grid, x_grid)
+        empirical_q = np.quantile(data_sorted, quantiles)
+
+        # -----------------------------
+        # Plot
+        # -----------------------------
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, s=6, edgecolor='k', linewidths=0.5,
+                   label=f"{legend_txt} (α={alpha_fit:.2f}, β={beta_fit:.2f})")
+
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (PL-Stretched)", fontsize=6)
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.3)
+        ax.set_frame_on(True)
+
+        return "Q–Q Plot (Power-Law with Stretched-Exponential Cutoff)"
 
 
 class AbortException(Exception):
@@ -1403,14 +1599,21 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                     is_left = True if i in (0, 2) else False
                     ax_4_title = QQPlots.log_residual_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
-            elif fit_func == "powerlaw":
+            elif fit_func == "powerlaw" or fit_func == "PLN" or fit_func == "weibull" or fit_func == "PL-str":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
 
                 if i < len(ax_4_grids):
                     is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    if fit_func == "powerlaw":
+                        ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    elif fit_func == "PLN":
+                        ax_4_title = QQPlots.pareto_lognormal_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    elif fit_func == "weibull":
+                        ax_4_title = QQPlots.weibull_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    elif fit_func == "PL-str":
+                        ax_4_title = QQPlots.pl_stretched_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
             elif fit_func == "linear":
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
@@ -1486,7 +1689,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-        elif fit_func == "powerlaw":
+        elif fit_func == "powerlaw" or fit_func == "PLN" or fit_func == "weibull" or fit_func == "PL-str":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
                 f"\nNodes vs {y_title}",
