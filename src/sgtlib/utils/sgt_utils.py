@@ -392,6 +392,32 @@ class CurveFitModels:
             return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
 
 
+@dataclass
+class MaximumLikelihoodEstimation:
+    """"""
+
+    @staticmethod
+    def lognormal(x_avg: np.ndarray, y_avg: np.ndarray):
+        """"""
+
+        # Define log-likelihood
+        def neg_loglike(params, n_nodes: np.ndarray, x_avg: np.ndarray):
+            """Negative log-likelihood function for the log-normal distribution."""
+            alpha_0, alpha_1, beta_0, beta_1 = params
+            mu = alpha_0 + alpha_1 * np.log(n_nodes)
+            sigma = np.clip(beta_0 + beta_1 * np.log(n_nodes), 1e-6, None)
+            ll = np.sum(sp.stats.norm.logpdf(np.log(x_avg), loc=mu, scale=sigma) - np.log(x_avg))
+            return -ll  # negative for minimization
+
+        # Fit via MLE
+        init = np.array([-1, 0.5, 0.3, 0.05])
+        res = sp.optimize.minimize(neg_loglike, init, args=(x_avg, y_avg))
+        a0, a1, b0, b1 = res.x
+        print("Fitted parameters:")
+        print(f"alpha0={a0:.3f}, alpha1={a1:.3f}, beta0={b0:.3f}, beta1={b1:.3f}")
+        return {"alpha0": a0, "alpha1": a1, "beta0": b0, "beta1": b1}
+
+
 class AbortException(Exception):
     """Custom exception to handle task cancellation initiated by the user or an error."""
     pass
@@ -1034,8 +1060,8 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
     # Ensure the value columns exist
     if all(col in df_sgt.columns for col in value_cols):
-        df_sgt["Avg."] = df_sgt[value_cols].astype(float).mean(axis=1)
-        df_sgt["Std. Dev."] = df_sgt[value_cols].astype(float).std(axis=1)
+        df_sgt["Avg."] = df_sgt[value_cols].to_numpy().mean(axis=1)
+        df_sgt["Std. Dev."] = df_sgt[value_cols].to_numpy().std(axis=1)
 
     # Filter and pivot
     df_avg = df_sgt.pivot(index='Material', columns='parameter', values='Avg.')
@@ -1052,7 +1078,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
     # Create the figure and axes
     fig = plt.figure(figsize=(11, 8.5), dpi=300)
-    ax = fig.add_subplot(1, 1, 1, polar=True)
+    ax = fig.add_subplot(1, 1, 1, projection='polar')
 
     # Plot each material
     for key, material_name in labels.items():
@@ -1293,6 +1319,7 @@ def upload_to_dropbox(graph_file, folder="/raw_train_data"):
         secrets_path = 'secrets.enc'
         secrets_file = os.path.join(current_dir, secrets_path)
         with open(secrets_file, "rb") as pass_f:
+            fernet = Fernet()
             decrypted = fernet.decrypt(pass_f.read())
             return json.loads(decrypted.decode())
 
@@ -1326,7 +1353,7 @@ def upload_to_dropbox(graph_file, folder="/raw_train_data"):
         dbx.files_upload(
             f.read(),
             dest_path,
-            mode=dropbox.files.WriteMode("overwrite")
+            mode=dropbox.files.WriteMode.overwrite
         )
 
     return dest_path
