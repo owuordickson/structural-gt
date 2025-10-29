@@ -401,12 +401,12 @@ class MaximumLikelihoodEstimation:
         """"""
 
         # Define log-likelihood
-        def neg_loglike(params, n_nodes: np.ndarray, x_avg: np.ndarray):
+        def neg_loglike(params, norm_data: np.ndarray, x_data: np.ndarray):
             """Negative log-likelihood function for the log-normal distribution."""
             alpha_0, alpha_1, beta_0, beta_1 = params
-            mu = alpha_0 + alpha_1 * np.log(n_nodes)
-            sigma = np.clip(beta_0 + beta_1 * np.log(n_nodes), 1e-6, None)
-            ll = np.sum(sp.stats.norm.logpdf(np.log(x_avg), loc=mu, scale=sigma) - np.log(x_avg))
+            mu = alpha_0 + alpha_1 * np.log(norm_data)
+            sigma = np.clip(beta_0 + beta_1 * np.log(norm_data), 1e-6, None)
+            ll = np.sum(sp.stats.norm.logpdf(np.log(x_data), loc=mu, scale=sigma) - np.log(x_data))
             return -ll  # negative for minimization
 
         # Fit via MLE
@@ -1175,11 +1175,24 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
     # Use pyplot figure so plt.show() works properly
     fig = plt.figure(figsize=(11, 8.5), dpi=300)
-    ax_1 = fig.add_subplot(2, 2, 1)         # Actual data with error bars
-    ax_2 = fig.add_subplot(2, 2, 2)         # goodness-of-fit test results
+    # Main 2x2 grid
+    gs = fig.add_gridspec(2, 2)
+    ax_1 = fig.add_subplot(gs[0, 0])         # Actual data with error bars
+    ax_2 = fig.add_subplot(gs[0, 1])         # goodness-of-fit test results
     ax_3 = None
+    ax_4 = None
+    ax_4_grids, i = [], 0
     if type(fit_func) == str:
-        ax_3 = fig.add_subplot(2, 2, 3)     # Curve fits with selected distributions
+        ax_3 = fig.add_subplot(gs[1, 0])     # Curve fits with selected distributions
+        ax_4 = fig.add_subplot(gs[1, 1])
+
+        # Subdivide the (1,1) slot (ax_4 area) into a 2x2 grid
+        gs_sub = gs[1, 1].subgridspec(2, 2)
+        ax_4_1 = fig.add_subplot(gs_sub[0, 0])
+        ax_4_2 = fig.add_subplot(gs_sub[0, 1])
+        ax_4_3 = fig.add_subplot(gs_sub[1, 0])
+        ax_4_4 = fig.add_subplot(gs_sub[1, 1])
+        ax_4_grids = [ax_4_1, ax_4_2, ax_4_3, ax_4_4]
 
     # --- Plot data and compute KS test statistics ---
     txt_test = "Kolmogorov–Smirnov & P-Values\n\n"
@@ -1203,6 +1216,25 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
                 axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
+
+                # Fit log-normal distribution to y_avg
+                shape, loc, scale = stats.lognorm.fit(y_avg, floc=0)  # floc=0 fixes location at 0 (common for lognorm)
+                # Generate theoretical quantiles for the QQ plot, we compare sorted empirical y vs. theoretical quantiles
+                quantiles = np.linspace(0.01, 0.99, len(y_avg))
+                theoretical_q = stats.lognorm.ppf(quantiles, shape, loc=loc, scale=scale)
+                empirical_q = np.quantile(y_avg, quantiles)
+                # Plot QQ-plot
+                if i < len(ax_4_grids):
+                    ax_4_grids[i].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+                    ax_4_grids[i].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
+                    if i in (0, 2):
+                        ax_4_grids[i].set_ylabel("Empirical Quantiles", fontsize=6)
+                    ax_4_grids[i].set_xlabel("Theoretical Quantiles (Lognormal)", fontsize=6)
+                    ax_4_grids[i].tick_params(labelsize=5)
+                    ax_4_grids[i].legend(fontsize=6)
+                    ax_4_grids[i].set_frame_on(True)  # keep only small subplot borders visible
+                    ax_4_grids[i].grid(linestyle="--", linewidth=0.5, alpha=0.25)
+                    i += 1
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
@@ -1276,6 +1308,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
+            ax_4.set_title(f"Q–Q Plot: Lognormal Fit for {y_title}")
         elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a x^{-k}$"
@@ -1301,6 +1334,9 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         ax_3.set_ylabel(y_title, fontsize=12)
         ax_3.legend(frameon=False)
         ax_3.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
+
+        ax_4.axis("off")  # hide all ticks and labels
+        ax_4.set_frame_on(False)  # remove the border/frame
 
     fig.tight_layout()
     return fig
