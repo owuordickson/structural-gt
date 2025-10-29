@@ -1165,14 +1165,64 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
-    def log_qq_plot(distribution_data: np.ndarray, idx: int):
+    def residual_qq_plot(distribution_data: np.ndarray, idx: int):
         """
         We avoid the direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
         Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
         distribution?"; this approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
         underlying transformed data are nearly normal (or match specified distribution).
 
-        Most statisticians use the residual Q-Q approach for scale-sensitive plots. Which is what we plan to do later.
+        Most statisticians use the residual Q-Q approach for scale-sensitive plots. Which is what we do here.
+
+        Expected Results:
+            - If your data are lognormally distributed → points fall close to y=x
+	        - If tails deviate → curvature in the plot (heavy tail → S-shape; light tail → inverted S). Heavy tail: may
+	        be a power-law tail. Light tail: distribution narrower than expected.
+	        - If tilted but straight line → same shape but different μ/σ — parameter mismatch, not model misspecification.
+
+        Args:
+            distribution_data:
+            idx:
+
+        Returns:
+
+        """
+        # 1. Log transform
+        x_log = np.log(distribution_data)
+
+        # 2. Fit a normal distribution to the log(distribution_data)
+        mu, sigma = stats.norm.fit(x_log)
+
+        # 3. Compute residuals (standardized)
+        residuals = (x_log - mu) / sigma
+
+        # 4. Generate Q–Q data
+        quantiles = np.linspace(0.01, 0.99, len(residuals))
+        theoretical_q = stats.norm.ppf(quantiles)
+        empirical_q = np.quantile(residuals, quantiles)
+
+        # 5. Plot Q–Q for log-transformed data
+        ax_4_grids[idx].plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax_4_grids[idx].scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{material_name}")
+
+        if idx in (0, 2):
+            ax_4_grids[idx].set_ylabel("Empirical Quantiles (log(data) residuals)", fontsize=6)
+        ax_4_grids[idx].set_xlabel("Theoretical Quantiles (Standard Normal)", fontsize=6)
+        ax_4_grids[idx].tick_params(labelsize=5)
+        ax_4_grids[idx].legend(fontsize=6)
+        ax_4_grids[idx].set_frame_on(True)  # keep only small subplot borders visible
+        ax_4_grids[idx].grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        # plt.title("Residual Q–Q Plot (Lognormal Test)")
+
+    def log_qq_plot(distribution_data: np.ndarray, idx: int):
+        """
+        Direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
+        Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
+        distribution?"
+
+        This approach is scale-sensitive -- a small mismatch in shape or scale can make the plot look bad even if
+        underlying transformed data are nearly normal (or match specified distribution). To help with this, we generate
+         a Log-transformed QQ-Plot.
 
         Returns:
 
@@ -1180,7 +1230,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # 1. Take Logs
         x_log = np.log(distribution_data)
 
-        # 2. Fit a normal distribution to the log data
+        # 2. Fit a normal distribution to the log(distribution_data)
         mu, sigma = stats.norm.fit(x_log)
 
         # 3. Compute theoretical vs empirical quantiles for normal Q–Q
@@ -1255,7 +1305,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
                 # Plot QQ-plot
                 if i < len(ax_4_grids):
-                    log_qq_plot(y_avg, i)
+                    residual_qq_plot(y_avg, i)
                     i += 1
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
