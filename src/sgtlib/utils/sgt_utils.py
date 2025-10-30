@@ -517,7 +517,7 @@ class QQPlots:
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.3)
         ax.set_frame_on(True)
 
-        return "Q–Q Plot (Power-Law with Exponential Cutoff)"
+        return "Q–Q Plot (Power-Law w. Exponential Cutoff)"
 
 
 class AbortException(Exception):
@@ -1235,6 +1235,20 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         Returns:
             str: formatted text summary of KS and p-values for each distribution
         """
+
+        class stretched_powerlaw(sp.stats.rv_continuous):
+            """
+            Stretched Power-law distribution:
+            f(x; a, x_c, beta) = C * x^(-a) * exp(-(x / x_c)^beta)
+            """
+
+            def _pdf(self, x, a, x_c, beta):
+                # Unnormalized PDF
+                return x ** (-a) * np.exp(- (x / x_c) ** beta)
+
+            def _argcheck(self, a, x_c, beta):
+                return (a > 0) & (x_c > 0) & (beta > 0)
+
         data = df_distribution['y-avg'].to_numpy()
 
         # Define distributions to test
@@ -1242,7 +1256,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             "Power Law": stats.powerlaw,
             "Exponential": stats.expon,
             "Log Normal": stats.lognorm,
-            #"Stretched Power Law": stats.wald,
+            #"Stretched Power Law": stretched_powerlaw,  ## HAS ERROR
         }
 
         # Prepare arguments for each parallel process
