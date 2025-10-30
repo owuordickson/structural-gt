@@ -369,23 +369,33 @@ class QQPlots:
 
     @staticmethod
     def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
-        """"""
+        """
+        Q–Q plot for a 1D sample against a power-law distribution. We are not fitting a model y = a * x^{-k},
+        but instead testing if the empirical data x follow a power-law probability distribution:
+
+        p(x) ∝ x^{−α}, x >= x_min
+
+        Fits parameters (alpha, x_min) to x, computes theoretical quantiles
+        from the fitted power-law, and compares them to empirical quantiles.
+
+        Args:
+            distribution_data (np.ndarray): Sample data (x > 0)
+            ax (plt.Axes): Matplotlib Axes for plotting
+            legend_txt (str): Label for the dataset
+            show_y_label (bool): Whether to display Y-axis label
+        """
         # 1. Ensure strictly positive data
         data = np.asarray(distribution_data)
         data = data[data > 0]
         data = np.sort(data)
 
-        # 2a. Fit the powerlaw distribution to the data
-        a_fit, loc_fit, scale_fit = stats.powerlaw.fit(data)
-
-        # 2. Fit power-law parameters using MLE: alpha_hat = 1 + n / sum(log(y/x_min))
-        x_min = data.min()
+        # 2b. Fit power-law parameters using MLE: alpha_hat = 1 + n / sum(log(y/x_min))
+        x_min = data.min()  # assuming x_min is the smallest value in the sample
         alpha_hat = 1 + len(data) / np.sum(np.log(data / x_min))
 
-        # 3. Compute theoretical quantiles from fitted power-law
+        # 3. Compute theoretical quantiles from power-law CDF --- Inverse CDF (quantile function):  Q(p) = xmin * (1 - p)^(-1/(alpha - 1))
         quantiles = np.linspace(0.01, 0.99, len(data))
-        theoretical_q = stats.powerlaw.ppf(quantiles, a_fit, loc=loc_fit, scale=scale_fit)
-        # theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha_hat - 1))
+        theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha_hat - 1))
 
         # 4. QQ Plot on Log-Log scale
         QQPlots.qq_plot(data, theoretical_q, ax, legend_txt, use_log_scale=True)
