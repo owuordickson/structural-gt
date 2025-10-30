@@ -273,7 +273,7 @@ class QQPlots:
 
         # 3. QQ Plot
         ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confi. Band")
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
         ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
         if use_log_scale:
             ax.set_xscale("log")
@@ -371,7 +371,7 @@ class QQPlots:
     def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """
         Q–Q plot for a 1D sample against a power-law distribution. We are not fitting a model y = a * x^{-k},
-        but instead testing if the empirical data x follow a power-law probability distribution:
+        but instead testing if the empirical data (x) follow a power-law probability distribution:
 
         p(x) ∝ x^{−α}, x >= x_min
 
@@ -393,7 +393,7 @@ class QQPlots:
         x_min = data.min()  # assuming x_min is the smallest value in the sample
         alpha_hat = 1 + len(data) / np.sum(np.log(data / x_min))
 
-        # 3. Compute theoretical quantiles from power-law CDF --- Inverse CDF (quantile function):  Q(p) = xmin * (1 - p)^(-1/(alpha - 1))
+        # 3. Compute theoretical quantiles from power-law CDF --- Inverse CDF (quantile function):  Q(p) = x_min * (1 - p)^(-1/(alpha - 1))
         quantiles = np.linspace(0.01, 0.99, len(data))
         theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha_hat - 1))
 
@@ -408,10 +408,11 @@ class QQPlots:
     @staticmethod
     def pl_stretched_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """
-        Q–Q Plot for Power-Law with Stretched-Exponential Cutoff distribution.
+        Q–Q Plot for Power-Law with Stretched-Exponential Cutoff distribution. We are testing if the empirical data (x)
+        follow a stretched power-law probability distribution
 
-        Model:
-            p(x) ∝ x^(-α) * exp(-(x/x_c)^β)
+        PDF:
+        p(x) ∝ x^(-alpha) * exp(-lambda * x), for x >= x_min
 
         This plot visually compares the empirical quantiles of the sample to
         the theoretical quantiles from the fitted model. If points lie roughly
@@ -427,45 +428,51 @@ class QQPlots:
             str: Description of the plot.
         """
 
+        def stretched_powerlaw_pdf(x, alpha, lamb_da, x_min):
+            """PDF: p(x) ∝ x^(-alpha) * exp(-lambda * x), for x >= x_min"""
+            norm_const, _ = sp.integrate.quad(lambda t: t ** (-alpha) * np.exp(-lamb_da * t), x_min, np.inf)
+            return (x ** (-alpha)) * np.exp(-lamb_da * x) / norm_const
+
+        def stretched_powerlaw_cdf(x, alpha, lamb_da, x_min):
+            """Numerically integrate PDF to get CDF"""
+            norm_const, _ = sp.integrate.quad(lambda t: t ** (-alpha) * np.exp(-lamb_da * t), x_min, np.inf)
+            num, _ = sp.integrate.quad(lambda t: t ** (-alpha) * np.exp(-lamb_da * t), x_min, x)
+            return num / norm_const
+
+        def fit_stretched_powerlaw(x, x_min=None):
+            """Fit stretched power-law via MLE (approximate for continuous data)"""
+            x = x[x > 0]
+            if x_min is None:
+                x_min = x.min()
+
+            def neg_log_likelihood(params):
+                alpha, lamb_da = params
+                if alpha <= 1 or lamb_da <= 0:
+                    return np.inf
+                pdf_vals = stretched_powerlaw_pdf(x, alpha, lamb_da, x_min)
+                pdf_vals = np.clip(pdf_vals, 1e-12, None)
+                return -np.sum(np.log(pdf_vals))
+
+            result = sp.optimize.minimize(neg_log_likelihood, x0=[2.0, 0.1], bounds=[(1.01, 10), (1e-6, 10)])
+            alpha_fit, lambda_fit = result.x
+            return alpha_fit, lambda_fit, x_min
+
         # 1. Ensure strictly positive data
         data = np.asarray(distribution_data)
         data = data[data > 0]
         data = np.sort(data)
 
-        # 2. Define unnormalized PDF
-        def unnorm_pdf(x, alpha, x_c, beta):
-            return x ** (-alpha) * np.exp(- (x / x_c) ** beta)
+        # 2. Fit parameters
+        alpha_hat, lambda_hat, xmin = fit_stretched_powerlaw(data)
 
-        # 3. Fit parameters via numeric MLE
-        def neg_log_likelihood(params):
-            alpha, x_c, beta = params
-            if alpha <= 0 or x_c <= 0 or beta <= 0:
-                return np.inf
-            xgrid = np.linspace(data.min(), data.max(), 2000)
-            u_nnorm = unnorm_pdf(xgrid, alpha, x_c, beta)
-            pdfgrid = u_nnorm / np.trapezoid(u_nnorm, xgrid)
-            pdf_data = np.interp(data, xgrid, pdfgrid)
-            return -np.sum(np.log(np.clip(pdf_data, 1e-300, None)))
+        # 3. Compute CDF for stretched power-law
+        x_grid = np.linspace(xmin, data.max(), 2000)
+        cdf_vals = np.array([stretched_powerlaw_cdf(xi, alpha_hat, lambda_hat, xmin) for xi in x_grid])
+        inv_cdf = sp.interpolate.interp1d(cdf_vals, x_grid, fill_value="extrapolate")
 
-        init_guess = (2.0, np.mean(data), 1.0)
-        res = sp.optimize.minimize(neg_log_likelihood, init_guess,
-                                bounds=[(1e-6, 10.0), (1e-6, np.max(data) * 10), (1e-6, 5.0)],
-                                method="L-BFGS-B")
-
-        if not res.success:
-            raise RuntimeError(f"Fit failed: {res.message}")
-
-        alpha_fit, x_c_fit, beta_fit = res.x
-
-        # 4. Compute theoretical quantiles
-        x_grid = np.linspace(data.min(), data.max(), 3000)
-        unnorm = unnorm_pdf(x_grid, alpha_fit, x_c_fit, beta_fit)
-        pdf_grid = unnorm / np.trapezoid(unnorm, x_grid)
-        cdf_grid = np.cumsum(pdf_grid)
-        cdf_grid /= cdf_grid[-1]
-
+        # 4. Empirical quantiles from inverse CDF
         quantiles = np.linspace(0.01, 0.99, len(data))
-        theoretical_q = np.interp(quantiles, cdf_grid, x_grid)
+        theoretical_q = inv_cdf(quantiles)
 
         # 5. QQ Plot on Log-Log scale
         QQPlots.qq_plot(data, theoretical_q, ax, legend_txt, use_log_scale=True)
@@ -732,7 +739,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             "Power Law": stats.powerlaw,
             "Exponential": stats.expon,
             "Log Normal": stats.lognorm,
-            #"Stretched Power Law": stretched_powerlaw,  ## HAS ERROR
+            #"Stretched Power Law": stretched_powerlaw, ## HAS ERROR
         }
 
         # Prepare arguments for each parallel process
