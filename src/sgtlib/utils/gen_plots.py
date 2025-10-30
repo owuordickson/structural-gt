@@ -273,7 +273,7 @@ class QQPlots:
 
         # 3. QQ Plot
         ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confi. Band")
         ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
         if use_log_scale:
             ax.set_xscale("log")
@@ -375,14 +375,17 @@ class QQPlots:
         data = data[data > 0]
         data = np.sort(data)
 
-        # 2. Fit power-law parameters using MLE
-        # alpha_hat = 1 + n / sum(log(y/x_min))
+        # 2a. Fit the powerlaw distribution to the data
+        a_fit, loc_fit, scale_fit = stats.powerlaw.fit(data)
+
+        # 2. Fit power-law parameters using MLE: alpha_hat = 1 + n / sum(log(y/x_min))
         x_min = data.min()
-        alpha = 1 + len(data) / np.sum(np.log(data / x_min))
+        alpha_hat = 1 + len(data) / np.sum(np.log(data / x_min))
 
         # 3. Compute theoretical quantiles from fitted power-law
         quantiles = np.linspace(0.01, 0.99, len(data))
-        theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha - 1))
+        theoretical_q = stats.powerlaw.ppf(quantiles, a_fit, loc=loc_fit, scale=scale_fit)
+        # theoretical_q = x_min * (1 - quantiles) ** (-1 / (alpha_hat - 1))
 
         # 4. QQ Plot on Log-Log scale
         QQPlots.qq_plot(data, theoretical_q, ax, legend_txt, use_log_scale=True)
@@ -417,8 +420,7 @@ class QQPlots:
         # 1. Ensure strictly positive data
         data = np.asarray(distribution_data)
         data = data[data > 0]
-        n = len(data)
-        data_sorted = np.sort(data)
+        data = np.sort(data)
 
         # 2. Define unnormalized PDF
         def unnorm_pdf(x, alpha, x_c, beta):
@@ -429,15 +431,15 @@ class QQPlots:
             alpha, x_c, beta = params
             if alpha <= 0 or x_c <= 0 or beta <= 0:
                 return np.inf
-            xgrid = np.linspace(data_sorted.min(), data_sorted.max(), 2000)
+            xgrid = np.linspace(data.min(), data.max(), 2000)
             u_nnorm = unnorm_pdf(xgrid, alpha, x_c, beta)
             pdfgrid = u_nnorm / np.trapezoid(u_nnorm, xgrid)
-            pdf_data = np.interp(data_sorted, xgrid, pdfgrid)
+            pdf_data = np.interp(data, xgrid, pdfgrid)
             return -np.sum(np.log(np.clip(pdf_data, 1e-300, None)))
 
-        init_guess = (2.0, np.mean(data_sorted), 1.0)
+        init_guess = (2.0, np.mean(data), 1.0)
         res = sp.optimize.minimize(neg_log_likelihood, init_guess,
-                                bounds=[(1e-6, 10.0), (1e-6, np.max(data_sorted) * 10), (1e-6, 5.0)],
+                                bounds=[(1e-6, 10.0), (1e-6, np.max(data) * 10), (1e-6, 5.0)],
                                 method="L-BFGS-B")
 
         if not res.success:
@@ -446,17 +448,17 @@ class QQPlots:
         alpha_fit, x_c_fit, beta_fit = res.x
 
         # 4. Compute theoretical quantiles
-        x_grid = np.linspace(data_sorted.min(), data_sorted.max(), 3000)
+        x_grid = np.linspace(data.min(), data.max(), 3000)
         unnorm = unnorm_pdf(x_grid, alpha_fit, x_c_fit, beta_fit)
         pdf_grid = unnorm / np.trapezoid(unnorm, x_grid)
         cdf_grid = np.cumsum(pdf_grid)
         cdf_grid /= cdf_grid[-1]
 
-        quantiles = np.linspace(0.01, 0.99, n)
+        quantiles = np.linspace(0.01, 0.99, len(data))
         theoretical_q = np.interp(quantiles, cdf_grid, x_grid)
 
         # 5. QQ Plot on Log-Log scale
-        QQPlots.qq_plot(data_sorted, theoretical_q, ax, legend_txt, use_log_scale=True)
+        QQPlots.qq_plot(data, theoretical_q, ax, legend_txt, use_log_scale=True)
         if show_y_label:
             ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
         ax.set_xlabel("Theoretical Quantiles (Stretched Power Law)", fontsize=6)
