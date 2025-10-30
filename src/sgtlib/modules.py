@@ -25,11 +25,15 @@ from .utils.sgt_utils import (
     ProgressData,
     gsd_to_skeleton,
     csv_to_graph,
-    write_gsd_file,
-    sgt_csv_to_dataframe,
-    sgt_excel_to_dataframe,
+    write_gsd_file
+)
+from .utils.gen_plots import (
+    CurveFitModels,
+    QQPlots,
     sgt_spider_plot,
-    sgt_scaling_plot
+    sgt_scaling_plot,
+    sgt_csv_to_dataframe,
+    sgt_excel_to_dataframe
 )
 from .utils.config_loader import (
     load_gtc_configs,
@@ -49,6 +53,8 @@ __all__ = [
     "FilterSearchSpace",
     "SGTGraphEnv",
     "ProgressData",
+    "CurveFitModels",
+    "QQPlots",
     "load_gtc_configs",
     "load_gte_configs",
     "load_img_configs",

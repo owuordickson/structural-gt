@@ -33,7 +33,8 @@ from networkx.algorithms.wiener import wiener_index
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
 from ..utils.config_loader import load_gtc_configs
-from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate, ProgressData, CurveFitModels
+from ..utils.gen_plots import CurveFitModels
+from ..utils.sgt_utils import get_num_cores, AbortException, ProgressUpdate, ProgressData
 
 logger = logging.getLogger("SGT App")
 
