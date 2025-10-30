@@ -776,15 +776,16 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     ax_4_grids, i, ax_4_title = [], 0, ""
     if type(fit_func) == str:
         ax_3 = fig.add_subplot(gs[1, 0])     # Curve fits with selected distributions
-        ax_4 = fig.add_subplot(gs[1, 1])
 
-        # Subdivide the (1,1) slot (ax_4 area) into a 2x2 grid
-        gs_sub = gs[1, 1].subgridspec(2, 2)
-        ax_4_1 = fig.add_subplot(gs_sub[0, 0])
-        ax_4_2 = fig.add_subplot(gs_sub[0, 1])
-        ax_4_3 = fig.add_subplot(gs_sub[1, 0])
-        ax_4_4 = fig.add_subplot(gs_sub[1, 1])
-        ax_4_grids = [ax_4_1, ax_4_2, ax_4_3, ax_4_4]
+        if fit_func != "linear":
+            ax_4 = fig.add_subplot(gs[1, 1])
+            # Subdivide the (1,1) slot (ax_4 area) into a 2x2 grid
+            gs_sub = gs[1, 1].subgridspec(2, 2)
+            ax_4_1 = fig.add_subplot(gs_sub[0, 0])
+            ax_4_2 = fig.add_subplot(gs_sub[0, 1])
+            ax_4_3 = fig.add_subplot(gs_sub[1, 0])
+            ax_4_4 = fig.add_subplot(gs_sub[1, 1])
+            ax_4_grids = [ax_4_1, ax_4_2, ax_4_3, ax_4_4]
 
     # --- Plot data and compute KS test statistics ---
     txt_test = "Kolmogorov–Smirnov & P-Values\n\n"
@@ -933,9 +934,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         ax_3.legend(frameon=False, fontsize=8)
         ax_3.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
 
-        ax_4.axis("off")  # hide all ticks and labels
-        ax_4.set_frame_on(False)  # remove the border/frame
-        ax_4.set_title(f"{ax_4_title}: {y_title}")
+        if ax_4 is not None:
+            ax_4.axis("off")  # hide all ticks and labels
+            ax_4.set_frame_on(False)  # remove the border/frame
+            ax_4.set_title(f"{ax_4_title}: {y_title}")
 
     fig.tight_layout()
     return fig
