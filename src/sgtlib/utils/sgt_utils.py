@@ -112,7 +112,8 @@ class CurveFitModels:
 
         try:
             init_params = [1.0, 1.0]  # initial guess for [a, k]
-            optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params)[0]
+            optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params,
+                                                            bounds = ([1e-10, 0.01], [np.inf, 10.0]), maxfev=10000)[0]
             a_fit, k_fit = float(optimal_params[0]), float(optimal_params[1])
 
             # Generate points for the best-fit curve
@@ -123,55 +124,54 @@ class CurveFitModels:
             return None, {"a": 0.0, "k": 0.0}
 
     @staticmethod
-    def truncated_power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def stretched_power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
-        Fits a truncated power-law model to the data and returns the fitted curve and parameters.
+        Fits a stretched power-law (Weibull-tail power-law) model to the given data and returns
+        the fitted curve along with the model parameters.
 
-        The truncated power-law model follows:
-            y = a * x^(-k) * exp(-c * x)
-
-        Where:
-            - a → scale factor
-            - k → exponent of decay
-            - c → exponential cutoff parameter
+        The stretched power-law model follows the equation:
+            y = a * x^(-k) * exp(-(x / x_c)^beta)
+        where:
+            a → amplitude (scale) parameter
+            k → power-law exponent
+            x_c → cutoff scale parameter
+            beta → stretching exponent (controls tail shape)
 
         Args:
-            x_avg (np.ndarray): Independent variable values for fitting
-            y_avg (np.ndarray): Dependent variable values for fitting
-            x_fit (np.ndarray): Points over which to generate the fitted curve
+            x_avg (np.ndarray): Array of x-values (independent variable) used for fitting
+            y_avg (np.ndarray): Array of y-values (dependent variable) corresponding to x_avg
+            x_fit (np.ndarray): Array of x-values over which to generate the fitted curve
 
         Returns:
             tuple[np.ndarray, dict]:
-                - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
-                - **params** (dict): {"a": float, "k": float, "c": float}
+                - **y_fit** (np.ndarray): The fitted y-values computed from the best-fit parameters over `x_fit`.
+                - **params** (dict): A dictionary containing the fitted parameters:
+                    {"a": float, "k": float, "x_c": float, "beta": float}
+
+        Notes:
+            - Uses `scipy.optimize.curve_fit` to estimate model parameters.
+            - Initial parameter guesses are set to [1.0, 1.0, 1.0, 1.0].
         """
-        def fit_function(x, a, k, c):
-            """
-            A best-fit model that follows the truncated power law distribution: y = a * x^(-k) * exp(-c * x),
-            where a, c, and k are fitting parameters.
 
-            https://en.wikipedia.org/wiki/Power_law#Power_law_with_exponential_cutoff
-
-            Args:
-                x (np.array): Array of x values
-                a (float): fitting parameter
-                k (float): fitting parameter
-                c (float): cut-off fitting parameter
+        def fit_function(x: np.ndarray, a: float, k: float, x_c: float, beta: float) -> np.ndarray:
             """
-            return a * (x ** (-k)) * np.exp(-c * x)
+            Stretched power-law model: y = a * x^(-k) * exp(-(x / x_c)^beta)
+            """
+            return a * (x ** (-k)) * np.exp(-(x / x_c) ** beta)
 
         try:
-            init_params_cutoff = [1.0, 1.0, 0.1]
-            opt_params_cutoff: np.ndarray = \
-                sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params_cutoff)[0]
-            a_fit, k_fit, c_fit = (float(opt_params_cutoff[0]), float(opt_params_cutoff[1]), float(opt_params_cutoff[2]))
+            init_params = [0.01, 0.01, 1.0, 0.1]  # initial guesses for [a, k, x_c, beta]
+            optimal_params: np.ndarray = sp.optimize.curve_fit(fit_function, x_avg, y_avg, p0=init_params,
+                                    bounds = ([1e-10, 0.01, 1e-10, 0.01],[np.inf, 10.0, np.inf, 5.0]), maxfev=10000)[0]
+            a_fit, k_fit, x_c_fit, beta_fit = (float(optimal_params[0]), float(optimal_params[1]),
+                                               float(optimal_params[2]), float(optimal_params[3]))
 
             # Generate points for the best-fit curve
-            y_fit = fit_function(x_fit, a_fit, k_fit, c_fit)
-            return y_fit, {"a": a_fit, "k": k_fit, "c": c_fit}
+            y_fit = fit_function(x_fit, a_fit, k_fit, x_c_fit, beta_fit)
+            return y_fit, {"a": a_fit, "k": k_fit, "x_c": x_c_fit, "beta": beta_fit}
         except Exception as err:
-            print(err)
-            return None, {"a": 0.0, "k": 0.0, "c": 0.0}
+            print("Stretched power-law fit error:", err)
+            return None, {"a": 0.0, "k": 0.0, "x_c": 0.0, "beta": 0.0}
 
     @staticmethod
     def lognormal(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
@@ -244,10 +244,10 @@ class CurveFitModels:
             return a * np.exp(lamda * x) + c
 
         try:
-            init_params = [1.0, -0.1, 0.0]
+            init_params = [1.0, 0.1, 0.0]
             opt_params: np.ndarray = sp.optimize.curve_fit(
-                fit_function, x_avg, y_avg, p0=init_params, maxfev=2000
-            )[0]
+                fit_function, x_avg, y_avg, p0=init_params,
+                bounds=([-np.inf, 0, -np.inf], [np.inf, np.inf, np.inf]), maxfev=5000 )[0]
 
             a_fit, b_fit, c_fit = map(float, opt_params)
             y_fit = fit_function(x_fit, a_fit, b_fit, c_fit)
@@ -506,8 +506,8 @@ class QQPlots:
         # Plot
         # -----------------------------
         ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, s=6, edgecolor='k', linewidths=0.5,
-                   label=f"{legend_txt} (α={alpha_fit:.2f}, β={beta_fit:.2f})")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, s=6, edgecolor='k', linewidths=0.5, label=f"{legend_txt}")
+                   # label=f"{legend_txt} (k={alpha_fit:.2f}, β={beta_fit:.2f}, x_c={x_c_fit:.2f})")
 
         if show_y_label:
             ax.set_ylabel("Empirical Quantiles", fontsize=6)
@@ -517,7 +517,7 @@ class QQPlots:
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.3)
         ax.set_frame_on(True)
 
-        return "Q–Q Plot (Power-Law with Stretched-Exponential Cutoff)"
+        return "Q–Q Plot (Power-Law with Exponential Cutoff)"
 
 
 class AbortException(Exception):
@@ -1321,17 +1321,23 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                     is_left = True if i in (0, 2) else False
                     ax_4_title = QQPlots.log_residual_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
-            elif fit_func == "powerlaw" or fit_func == "PL-str":
+            elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
 
                 if i < len(ax_4_grids):
                     is_left = True if i in (0, 2) else False
-                    if fit_func == "powerlaw":
-                        ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    elif fit_func == "PL-str":
-                        ax_4_title = QQPlots.pl_stretched_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    i += 1
+            elif fit_func == "powerlaw-ec":
+                y_fit, params = CurveFitModels.stretched_power_law(x_avg, y_avg, x_fit)
+                a_fit, k_fit, cut_fit, beta_fit = params["a"], params["k"], params["x_c"], params["beta"]
+                axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}, x_c={cut_fit:.3f}, \\beta={beta_fit:.3f}$'
+
+                if i < len(ax_4_grids):
+                    is_left = True if i in (0, 2) else False
+                    ax_4_title = QQPlots.pl_stretched_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
             elif fit_func == "linear":
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
@@ -1402,9 +1408,15 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
-        elif fit_func == "powerlaw" or fit_func == "PL-str":
+        elif fit_func == "powerlaw":
             ax_3.set_title(
                 r"PowerLaw Fit: $y = a \cdot x^{-k}$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
+        elif fit_func == "powerlaw-ec":
+            ax_3.set_title(
+                r"Stretched PowerLaw Fit: $y = a \cdot x^{-k} \cdot \exp((\frac{-x}{x_c})^{\beta})$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
@@ -1425,7 +1437,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             return fig
         ax_3.set_xlabel('No. of Nodes', fontsize=12)
         ax_3.set_ylabel(y_title, fontsize=12)
-        ax_3.legend(frameon=False)
+        ax_3.legend(frameon=False, fontsize=8)
         ax_3.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
 
         ax_4.axis("off")  # hide all ticks and labels

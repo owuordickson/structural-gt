@@ -1147,7 +1147,7 @@ class GraphAnalyzer(ProgressUpdate):
 
                     # Add Kernel DataFrame (with BestScale at the last row)
                     kernel_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
-                    kernel_df.loc[len(kernel_df)] = {'kernel-dim': best_scale, 'x-avg': 0.0, 'x-std': 0.0} # Add last row
+                    kernel_df.loc[len(kernel_df)] = {'kernel-dim': best_scale, 'x-avg': 0.0, 'x-std': 0.0} # Add as last row
                     self._scaling_results["Nodes-Kernel Size"] = kernel_df.copy()
                 else:
                     # 2a. Plot on the Log-Log scale
@@ -1192,9 +1192,9 @@ class GraphAnalyzer(ProgressUpdate):
                             # 3b. Plot data (power-law best fit)
                             ax, i = plot_axis(i, "Power Law Fit and Plot of")
                             ax.plot(x_fit, y_fit_pwr,
-                                    label=f'Fit: $y = ax^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_p_val:.2f}',
+                                    label=f'Fit: $y = a \\cdot x^{{-k}}$\n$a={a_fit:.2f}, k={k_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_p_val:.2f}',
                                     color='red')
-                            ax.legend()
+                            ax.legend(fontsize=6)
 
                             # Write to DataFrame
                             if fit_data_df is not None:
@@ -1202,29 +1202,25 @@ class GraphAnalyzer(ProgressUpdate):
                         except Exception as err:
                             logging.exception("Scaling Law (Power Law Fit) Error: %s", err, extra={'user': 'SGT Logs'})
 
-                    if opt_gtc["scaling_behavior_truncated_power_law_fit"]["value"] == 1:
-                        # 2c. Compute the line of best-fit according to our truncated power-law model
+                    if opt_gtc["scaling_behavior_stretched_power_law_fit"]["value"] == 1:
+                        # 2c. Compute the line of best-fit according to our stretched power-law model
                         try:
                             # Generate points for the best-fit curve
-                            y_fit_cut, params = CurveFitModels.truncated_power_law(x_avg, y_avg, x_fit)
-                            a_fit_cut, k_fit_cut, c_fit_cut = params["a"], params["k"], params["c"]
+                            y_fit_cut, params = CurveFitModels.stretched_power_law(x_avg, y_avg, x_fit)
+                            a_fit, k_fit, cut_fit, beta_fit = params["a"], params["k"], params["x_c"], params["beta"]
 
-                            # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
-                            # res_good_fit = sp.stats.goodness_of_fit(sp.stats.truncpareto, y_avg)
-                            # ks_stat, ks_p_val = res_good_fit.statistic, res_good_fit.pvalue
-
-                            # 3c. Plot data (truncated power-law best fit)
-                            ax, i = plot_axis(i, "Truncated Power Law Fit and Plot of")
+                            # 3c. Plot data (stretched power-law best fit)
+                            ax, i = plot_axis(i, "Power Law (w. Exponential Cutoff) Fit")
                             ax.plot(x_fit, y_fit_cut,
-                                    label=f'Fit: $y = ax^{{-k}}*exp(-c*x)$\n$a={a_fit_cut:.2f}, k={k_fit_cut:.2f}, c={c_fit_cut:.2f}$',
+                                    label=f"Fit: $y = a \\cdot x^{{-k}} \\cdot \\exp(-(x / x_c)^\\beta)$\n$a={a_fit:.2f}, k={k_fit:.2f}, x_c={cut_fit:.2f}, \\beta={beta_fit:.2f}$",
                                     color='red')
-                            ax.legend()
+                            ax.legend(fontsize=6)
 
                             # Write to DataFrame
                             if fit_data_df is not None:
                                 fit_data_df['Trunc. Pwr. Law y-fit'] = y_fit_cut
                         except Exception as err:
-                            logging.exception("Scaling Law (Truncated Power Law Fit) Error: %s", err,
+                            logging.exception("Scaling Law (Stretched Power Law Fit) Error: %s", err,
                                               extra={'user': 'SGT Logs'})
 
                     if opt_gtc["scaling_behavior_log_normal_fit"]["value"] == 1:
@@ -1243,7 +1239,7 @@ class GraphAnalyzer(ProgressUpdate):
                             ax.plot(x_fit, y_fit_ln,
                                     label=f'Fit: log-normal shape\n$\\mu={mu_fit:.2f}$, $\\sigma={sigma_fit:.2f}$\nKS Stat={ks_stat:.2f}, P-Val={ks_p_val:.2f}',
                                     color='red')
-                            ax.legend()
+                            ax.legend(fontsize=6)
 
                             # Write to DataFrame
                             if fit_data_df is not None:

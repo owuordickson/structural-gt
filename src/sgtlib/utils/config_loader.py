@@ -226,7 +226,7 @@ def load_gtc_configs(cfg_path: str = ""):
         "scaling_behavior_patches_per_kernel": {"id": "scaling_behavior_patches_per_kernel", "type": "scaling-param", "text": "No. of Patches per Kernel", "value": 10},
         "scaling_behavior_compute_avg": {"id": "scaling_behavior_compute_avg", "type": "scaling-param", "text": "Compute GT Averages", "value": 0},
         "scaling_behavior_power_law_fit": {"id": "scaling_behavior_power_law_fit", "type": "scaling-param", "text": "Power Law Fit", "value": 1},
-        "scaling_behavior_truncated_power_law_fit": {"id": "scaling_behavior_truncated_power_law_fit", "type": "scaling-param", "text": "Truncated Power Law Fit", "value": 0},
+        "scaling_behavior_stretched_power_law_fit": {"id": "scaling_behavior_stretched_power_law_fit", "type": "scaling-param", "text": "Power Law w. Exponential Cutoff", "value": 0},
         "scaling_behavior_log_normal_fit": {"id": "scaling_behavior_log_normal_fit", "type": "scaling-param", "text": "Log-Normal Fit", "value": 0},
         #"computing_lang": {"id": "computing_lang", "type": "gt-metric", "text": "Programming Language", "value": 'Py'}
     }
@@ -256,7 +256,7 @@ def load_gtc_configs(cfg_path: str = ""):
         options_gtc["scaling_behavior_kernel_count"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_kernel_count'))
         options_gtc["scaling_behavior_patches_per_kernel"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_patches_per_kernel'))
         options_gtc["scaling_behavior_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_power_law_fit'))
-        options_gtc["scaling_behavior_truncated_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_truncated_power_law_fit'))
+        options_gtc["scaling_behavior_stretched_power_law_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_stretched_power_law_fit'))
         options_gtc["scaling_behavior_log_normal_fit"]["value"] = int(config.get('sgt-settings', 'scaling_behavior_log_normal_fit'))
         # options_gtc["computing_lang"]["value"] = str(config.get('sgt-settings', 'computing_lang'))
 

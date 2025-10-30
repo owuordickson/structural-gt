@@ -24,7 +24,7 @@ Item {
                         else if (
                             model.id === "scaling_behavior_compute_avg" ||
                             model.id === "scaling_behavior_power_law_fit" ||
-                            model.id === "scaling_behavior_truncated_power_law_fit" ||
+                            model.id === "scaling_behavior_stretched_power_law_fit" ||
                             model.id === "scaling_behavior_log_normal_fit"
                         )
                             if (model.id === "scaling_behavior_power_law_fit" ) {
