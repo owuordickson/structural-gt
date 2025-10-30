@@ -435,6 +435,57 @@ class QQPlots:
 
         return "Log Q–Q Plot (Power Law w. Expon. Cutoff)"
 
+    @staticmethod
+    def pwr_qq_conditional_plot(x: np.ndarray, y: np.ndarray, ax: plt.Axes, legend_txt: str, model: str, show_y_label: bool = False):
+        """
+        Conditional QQ-plot for power-law model: y = a * x^-k
+
+        Args:
+            x (np.ndarray): Independent variable
+            y (np.ndarray): Dependent variable
+            ax (plt.Axes): Matplotlib axis to plot on
+            legend_txt (str): Legend text
+            show_y_label (bool): Whether to show the Y-axis label
+        """
+
+        # 1. Fit model
+        x_fit = np.linspace(min(x), max(max(x), 10000), 100)
+        if model == "Power Law":
+            y_fit, params = CurveFitModels.power_law(x, y, x_fit)
+        elif model == "Stretched Power Law":
+            y_fit, params = CurveFitModels.stretched_power_law(x, y, x_fit)
+        elif model == "Lognormal":
+            y_fit, params = CurveFitModels.lognormal(x, y, x_fit)
+        else:
+            return None
+
+        if y_fit is None:
+            y_fit = np.zeros_like(y)
+
+        # 2. Residuals
+        # residuals = y - y_fit
+
+        # 3. Compute theoretical and residual quantiles
+        # sorted_resid = np.sort(residuals)
+        quantiles = np.linspace(0, 1, len(y))
+        empirical_q = np.quantile(y, quantiles)
+        theoretical_q = np.quantile(y, quantiles)  # empirical vs empirical for simplicity
+
+        # 4. Plot
+        ax.scatter(x, y, s=10, alpha=0.5, label="data X")
+        ax.plot(x_fit, y_fit, 'r', label="fitted y(N)")
+        #ax.plot(df["logN"], mu_hat + sigma_hat, 'g--', label="+1σ")
+        #ax.plot(df["logN"], mu_hat - sigma_hat, 'g--', label="-1σ")
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        if show_y_label:
+            ax.set_ylabel("log(data)", fontsize=6)
+        ax.set_xlabel(f"log(Node Count)", fontsize=6)
+
+        return f"Conditional Fit ({model})"
+
 
 def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> dict[str, pd.DataFrame] | None:
     """
