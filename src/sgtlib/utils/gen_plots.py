@@ -282,7 +282,7 @@ class QQPlots:
     @staticmethod
     def log_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """
-        Direct Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
+        Direct (unconditional) Q-Q plot comparing our samples to a log-normal distribution (or any other distribution).
         Direct comparison should tell us: "do the observed values distribution_data approximately follow a log-normal
         distribution?"
 
@@ -320,7 +320,7 @@ class QQPlots:
     @staticmethod
     def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """
-        Q–Q plot for a 1D sample against a power-law distribution. We are not fitting a model y = a * x^{-k},
+        Unconditional Q–Q plot for a 1D sample against a power-law distribution. We are not fitting a model y = a * x^{-k},
         but instead testing if the empirical data (x) follow a power-law probability distribution:
 
         p(x) ∝ x^{−α}, x >= x_min
@@ -357,13 +357,14 @@ class QQPlots:
         return "Log Q–Q Plot (Power Law)"
 
     @staticmethod
-    def pl_stretched_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+    def stretched_pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
         """
-        Q–Q Plot for Power-Law with Stretched-Exponential Cutoff distribution. We are testing if the empirical data (x)
-        follow a stretched power-law probability distribution
+        Unconditional Q–Q Plot for Power-Law with Stretched-Exponential Cutoff distribution. We are testing if the empirical data (x)
+        follow a stretched power-law probability distribution. It is unconditional because we do not have y for fitting
+        y = a * x^(-k) * exp(-(x / x_c)^beta).
 
-        PDF:
-        p(x) ∝ x^(-alpha) * exp(-lambda * x), for x >= x_min
+        Instead, we use PDF:
+            p(x) ∝ x^(-alpha) * exp(-lambda * x), for x >= x_min
 
         This plot visually compares the empirical quantiles of the sample to
         the theoretical quantiles from the fitted model. If points lie roughly
@@ -787,7 +788,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
                 if i < len(ax_4_grids):
                     is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.pl_stretched_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
+                    ax_4_title = QQPlots.stretched_pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
                     i += 1
             elif fit_func == "linear":
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
