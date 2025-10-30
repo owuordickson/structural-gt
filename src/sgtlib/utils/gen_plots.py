@@ -301,18 +301,19 @@ class QQPlots:
         lower_band = theoretical_q - band
 
         # 6. Plot Q–Q for log-transformed data with confidence bands
-        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2,
-                                     label="95% Confidence Band")
         ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
         ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
-
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles (log(data) residuals)", fontsize=6)
-        ax.set_xlabel("Theoretical Quantiles (Standard Normal)", fontsize=6)
+        # ax.set_xscale("log")
+        # ax.set_yscale("log")
         ax.tick_params(labelsize=5)
         ax.legend(fontsize=6)
-        ax.set_frame_on(True)  # keep only small subplot borders visible
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Standard Normal)", fontsize=6)
+
         return "Residual Q–Q Plot (Lognormal Test)"
 
     @staticmethod
@@ -336,21 +337,30 @@ class QQPlots:
         mu, sigma = stats.norm.fit(x_log)
 
         # 3. Compute theoretical vs empirical quantiles for normal Q–Q
+        n = len(x_log)
         quantiles = np.linspace(0.01, 0.99, len(x_log))
         theoretical_q = stats.norm.ppf(quantiles, loc=mu, scale=sigma)
         empirical_q = np.quantile(x_log, quantiles)
 
-        # 4. Plot Q–Q for log-transformed data
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+        # 4. 95% confidence band (approximate)
+        band = 1.36 / np.sqrt(n)
+        upper_band = theoretical_q + band * theoretical_q
+        lower_band = theoretical_q - band * theoretical_q
 
+        # 5. QQ Plot
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+        # ax.set_xscale("log")
+        # ax.set_yscale("log")
+        ax.tick_params(labelsize=5)
+        ax.legend(fontsize=6)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
         if show_y_label:
             ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
         ax.set_xlabel("Theoretical Quantiles (Normal)", fontsize=6)
-        ax.tick_params(labelsize=5)
-        ax.legend(fontsize=6)
-        ax.set_frame_on(True)  # keep only small subplot borders visible
-        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+
         return "Log Q–Q Plot (Lognormal Test)"
 
     @staticmethod
@@ -379,19 +389,21 @@ class QQPlots:
         upper_band = theoretical_q + band * theoretical_q
         lower_band = theoretical_q - band * theoretical_q
 
+        # 5. QQ Plot
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
         ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
         ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.set_xlabel("Theoretical Quantiles (Power-Law)", fontsize=6)
         ax.tick_params(labelsize=5)
         ax.legend(fontsize=6)
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
         ax.set_frame_on(True)  # keep only small subplot borders visible
-        return "Q–Q Plot vs Power-law (log-log scale)"
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Power Law)", fontsize=6)
+
+        return "Log Q–Q Plot (Power Law Test)"
 
     @staticmethod
     def pl_stretched_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
@@ -414,20 +426,18 @@ class QQPlots:
         Returns:
             str: Description of the plot.
         """
+
+        # 1. Ensure strictly positive data
         data = np.asarray(distribution_data)
         data = data[data > 0]
         n = len(data)
         data_sorted = np.sort(data)
 
-        # -----------------------------
-        # Define unnormalized PDF
-        # -----------------------------
+        # 2. Define unnormalized PDF
         def unnorm_pdf(x, alpha, x_c, beta):
             return x ** (-alpha) * np.exp(- (x / x_c) ** beta)
 
-        # -----------------------------
         # Fit parameters via numeric MLE
-        # -----------------------------
         def neg_log_likelihood(params):
             alpha, x_c, beta = params
             if alpha <= 0 or x_c <= 0 or beta <= 0:
@@ -448,9 +458,7 @@ class QQPlots:
 
         alpha_fit, x_c_fit, beta_fit = res.x
 
-        # -----------------------------
-        # Compute theoretical quantiles
-        # -----------------------------
+        # 3. Compute theoretical quantiles
         x_grid = np.linspace(data_sorted.min(), data_sorted.max(), 3000)
         unnorm = unnorm_pdf(x_grid, alpha_fit, x_c_fit, beta_fit)
         pdf_grid = unnorm / np.trapezoid(unnorm, x_grid)
@@ -461,22 +469,26 @@ class QQPlots:
         theoretical_q = np.interp(quantiles, cdf_grid, x_grid)
         empirical_q = np.quantile(data_sorted, quantiles)
 
-        # -----------------------------
-        # Plot
-        # -----------------------------
-        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
-        ax.scatter(theoretical_q, empirical_q, alpha=0.7, s=6, edgecolor='k', linewidths=0.5, label=f"{legend_txt}")
-                   # label=f"{legend_txt} (k={alpha_fit:.2f}, β={beta_fit:.2f}, x_c={x_c_fit:.2f})")
+        # 4. 95% confidence band (approximate)
+        band = 1.36 / np.sqrt(n)
+        upper_band = theoretical_q + band * theoretical_q
+        lower_band = theoretical_q - band * theoretical_q
 
-        if show_y_label:
-            ax.set_ylabel("Empirical Quantiles", fontsize=6)
-        ax.set_xlabel("Theoretical Quantiles (PL-Stretched)", fontsize=6)
+        # 5. QQ Plot
+        ax.plot(theoretical_q, theoretical_q, 'r--', label="Identity Line")
+        ax.fill_between(theoretical_q, lower_band, upper_band, color="gray", alpha=0.2, label="95% Confidence Band")
+        ax.scatter(theoretical_q, empirical_q, alpha=0.7, edgecolor="k", linewidths=0.5, s=6, label=f"{legend_txt}")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         ax.tick_params(labelsize=5)
         ax.legend(fontsize=6)
-        ax.grid(linestyle="--", linewidth=0.5, alpha=0.3)
-        ax.set_frame_on(True)
+        ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
+        ax.set_frame_on(True)  # keep only small subplot borders visible
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Stretched Power Law)", fontsize=6)
 
-        return "Q–Q Plot (Power-Law w. Exponential Cutoff)"
+        return "Log Q–Q Plot (Power Law w. Expon. Cutoff)"
 
 
 def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> dict[str, pd.DataFrame] | None:
