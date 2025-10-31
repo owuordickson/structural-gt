@@ -436,25 +436,29 @@ class QQPlots:
         return "Log Q–Q Plot (Power Law w. Expon. Cutoff)"
 
     @staticmethod
-    def pwr_qq_conditional_plot(x: np.ndarray, y: np.ndarray, ax: plt.Axes, legend_txt: str, model: str, show_y_label: bool = False):
+    def conditional_plots(x: np.ndarray, y: np.ndarray, ax: plt.Axes, legend_txt: str, model_type: str, show_y_label: bool = False):
         """
-        Conditional QQ-plot for power-law model: y = a * x^-k
+        Conditional log plots for lognormal/power-law/stretched power-law models.
 
         Args:
             x (np.ndarray): Independent variable
             y (np.ndarray): Dependent variable
             ax (plt.Axes): Matplotlib axis to plot on
             legend_txt (str): Legend text
+            model_type (str): Type of model (e.g., "lognorm")
             show_y_label (bool): Whether to show the Y-axis label
         """
 
         # 1. Fit model
-        x_fit = np.linspace(min(x), max(max(x), 10000), 100)
-        if model == "Power Law":
+        x_fit = np.linspace(min(x), max(x), 10)
+        if model_type == "powerlaw":
+            model_name = "Power Law"
             y_fit, params = CurveFitModels.power_law(x, y, x_fit)
-        elif model == "Stretched Power Law":
+        elif model_type == "powerlaw-ec":
+            model_name = "Power Law w. Expon. Cutoff"
             y_fit, params = CurveFitModels.stretched_power_law(x, y, x_fit)
-        elif model == "Lognormal":
+        elif model_type == "lognorm":
+            model_name = "Lognormal"
             y_fit, params = CurveFitModels.lognormal(x, y, x_fit)
         else:
             return None
@@ -462,29 +466,20 @@ class QQPlots:
         if y_fit is None:
             y_fit = np.zeros_like(y)
 
-        # 2. Residuals
-        # residuals = y - y_fit
-
-        # 3. Compute theoretical and residual quantiles
-        # sorted_resid = np.sort(residuals)
-        quantiles = np.linspace(0, 1, len(y))
-        empirical_q = np.quantile(y, quantiles)
-        theoretical_q = np.quantile(y, quantiles)  # empirical vs empirical for simplicity
-
-        # 4. Plot
-        ax.scatter(x, y, s=10, alpha=0.5, label="data X")
-        ax.plot(x_fit, y_fit, 'r', label="fitted y(N)")
-        #ax.plot(df["logN"], mu_hat + sigma_hat, 'g--', label="+1σ")
-        #ax.plot(df["logN"], mu_hat - sigma_hat, 'g--', label="-1σ")
+        # 2. Plot
+        ax.scatter(np.log(x), np.log(y), s=10, alpha=0.5, label=f"{legend_txt}")
+        ax.plot(np.log(x_fit), np.log(y_fit), 'r', label="fitted curve")
+        # ax.plot(df["logN"], mu_hat + sigma_hat, 'g--', label="+1σ")
+        # ax.plot(df["logN"], mu_hat - sigma_hat, 'g--', label="-1σ")
         ax.tick_params(labelsize=5)
         ax.legend(fontsize=6)
         ax.grid(linestyle="--", linewidth=0.5, alpha=0.25)
         ax.set_frame_on(True)  # keep only small subplot borders visible
         if show_y_label:
             ax.set_ylabel("log(data)", fontsize=6)
-        ax.set_xlabel(f"log(Node Count)", fontsize=6)
+        ax.set_xlabel("log(Node Count)", fontsize=6)
 
-        return f"Conditional Fit ({model})"
+        return f"Conditional Fit ({model_name})"
 
 
 def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> dict[str, pd.DataFrame] | None:
@@ -693,7 +688,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     return fig
 
 
-def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False, fit_func: str = None) -> None | plt.Figure:
+def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False, fit_func: str = None, qq_plot: bool = True) -> None | plt.Figure:
     """
     Generates a scaling plot showing error bars for a sample material and displays
     corresponding Kolmogorov–Smirnov test results for different statistical fits (Powerlaw, Exponential, Lognormal).
@@ -705,6 +700,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         labels (dict): Mapping of material keys to readable names
         skip_test (bool, optional): Whether to skip the KS test. Defaults to False
         fit_func (str, optional): Function to fit the data (log-normal, power-law, exponential). Defaults to None
+        qq_plot (bool, optional): Whether to plot the QQ plot. Defaults to True
 
     Returns:
         matplotlib.figure.Figure | None: The generated figure, or None if inputs are invalid.
@@ -765,6 +761,42 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
+    def gen_qq_plot(model_name) -> str:
+        """
+        Generate Q–Q or conditional plots for different models.
+
+        Args:
+            model_name (str|None): One of {"lognorm", "powerlaw", "powerlaw-ec"}.
+
+        Returns:
+            str: Axis title (model name or QQ plot type).
+        """
+
+        if fit_func is None:
+            return ""
+
+        # Map each model to its respective QQ function
+        qq_funcs = {
+            "lognorm": QQPlots.log_qq_plot,
+            "powerlaw": QQPlots.pwr_qq_plot,
+            "powerlaw-ec": QQPlots.stretched_pwr_qq_plot
+        }
+
+        # Check model name validity
+        if model_name not in qq_funcs:
+            return ""
+
+        # Choose axis
+        ax = ax_4_grids[i]
+
+        # Run QQ plot or conditional fit
+        if qq_plot:
+            ax_title = qq_funcs[model_name](y_avg, ax, material_name, is_left)
+        else:
+            ax_title = QQPlots.conditional_plots(x_avg, y_avg, ax, material_name, model_name, is_left)
+
+        return ax_title
+
     if y_title is None or df_data is None or labels is None:
         return None
 
@@ -785,7 +817,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     if type(fit_func) == str:
         ax_3 = fig.add_subplot(gs[1, 0])     # Curve fits with selected distributions
 
-        if fit_func != "linear":
+        if fit_func in ["lognorm", "powerlaw", "powerlaw-ec"]:
             ax_4 = fig.add_subplot(gs[1, 1])
             # Subdivide the (1,1) slot (ax_4 area) into a 2x2 grid
             gs_sub = gs[1, 1].subgridspec(2, 2)
@@ -817,30 +849,14 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
                 axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
-
-                # Plot QQ-plot
-                if i < len(ax_4_grids):
-                    is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.log_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    i += 1
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}$'
-
-                if i < len(ax_4_grids):
-                    is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    i += 1
             elif fit_func == "powerlaw-ec":
                 y_fit, params = CurveFitModels.stretched_power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit, cut_fit, beta_fit = params["a"], params["k"], params["x_c"], params["beta"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, k={k_fit:.3f}, x_c={cut_fit:.3f}, \\beta={beta_fit:.3f}$'
-
-                if i < len(ax_4_grids):
-                    is_left = True if i in (0, 2) else False
-                    ax_4_title = QQPlots.stretched_pwr_qq_plot(y_avg, ax_4_grids[i], material_name, is_left)
-                    i += 1
             elif fit_func == "linear":
                 y_fit, params = CurveFitModels.linear(x_avg, y_avg, x_fit)
                 slope_fit, intercept_fit = params["m"], params["b"]
@@ -850,6 +866,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 a_fit, b_fit, c_fit = params["a"], params["lambda"], params["c"]
                 axis_label = f'{material_name}: $a={a_fit:.3f}, b={b_fit:.3f}$'
             ax_3.plot(x_fit, y_fit, label=axis_label, linestyle='-') if y_fit is not None else None
+
+            if i < len(ax_4_grids):
+                is_left = True if i in (0, 2) else False
+                ax_4_title = gen_qq_plot(fit_func)
+                i += 1
 
         # Plot the best scale with an 'x' symbol
         legend_label = None
@@ -881,7 +902,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         )
 
     # --- Format main plot ---
-    ax_1.set_xlabel('No. of Nodes', fontsize=12)
+    ax_1.set_xlabel('Node Count', fontsize=12)
     ax_1.set_ylabel(y_title, fontsize=12)
     ax_1.set_title(f'Nodes vs {y_title} (Actual Data)', fontsize=13)
     ax_1.legend(frameon=False)
@@ -937,7 +958,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         else:
             fig.tight_layout()
             return fig
-        ax_3.set_xlabel('No. of Nodes', fontsize=12)
+        ax_3.set_xlabel('Node Count', fontsize=12)
         ax_3.set_ylabel(y_title, fontsize=12)
         ax_3.legend(frameon=False, fontsize=8)
         ax_3.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
