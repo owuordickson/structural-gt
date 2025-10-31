@@ -376,9 +376,45 @@ class QQPlots:
 
     @staticmethod
     def gamma_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
-        """"""
+        """
+        Direct (unconditional) Q–Q plot comparing samples to a Gamma distribution.
+
+        This method evaluates whether the observed data approximately follow
+        a Gamma distribution by comparing empirical quantiles to those derived
+        from the fitted Gamma model.
+
+        The Gamma distribution has PDF:
+            f(x; k, θ) = x^(k-1) * exp(-x/θ) / [Γ(k) * θ^k]
+        where:
+            k → shape parameter
+            θ → scale parameter
+
+        Steps:
+          1. Fit Gamma distribution parameters using MLE.
+          2. Compute theoretical quantiles from Gamma inverse CDF (ppf).
+          3. Compare to empirical quantiles from the data.
+
+        Returns:
+            str: Plot title identifier.
+        """
+
+        # 1. Clean and sort
+        data = np.asarray(distribution_data)
+        data = data[data > 0]  # Gamma is defined only for positive values
+        data = np.sort(data)
+
+        # 2. Fit Gamma parameters (shape=k, loc, scale=θ) via MLE
+        shape_fit, loc_fit, scale_fit = stats.gamma.fit(data, floc=0)  # force loc=0 for stability
+
+        # 3. Compute theoretical quantiles from fitted Gamma inverse CDF
+        quantiles = np.linspace(0.01, 0.99, len(data))
+        theoretical_q = stats.gamma.ppf(quantiles, a=shape_fit, loc=loc_fit, scale=scale_fit)
+        empirical_q = np.quantile(data, quantiles)
+
+        # 4. Generate the Q–Q plot
+        QQPlots.qq_plot(empirical_q, theoretical_q, ax, legend_txt, use_log_scale=True)
         if show_y_label:
-            ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
+            ax.set_ylabel("Empirical Quantiles (data)", fontsize=6)
         ax.set_xlabel("Theoretical Quantiles (Gamma)", fontsize=6)
 
         return "Log Q–Q Plot (Gamma)"
@@ -887,7 +923,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
     if type(fit_func) == str:
         ax_3 = fig.add_subplot(gs[1, 0])     # Curve fits with selected distributions
 
-        if fit_func in ["lognorm", "powerlaw", "powerlaw-ec"]:
+        if fit_func in ["lognorm", "powerlaw", "powerlaw-ec", "gamma"]:
             ax_4 = fig.add_subplot(gs[1, 1])
             # Subdivide the (1,1) slot (ax_4 area) into a 2x2 grid
             gs_sub = gs[1, 1].subgridspec(2, 2)
@@ -919,6 +955,10 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 y_fit, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
                 mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
                 axis_label = f'{material_name}: a={a_log_fit:.2f}, $\\mu={mu_fit:.3f}$, $\\sigma={sigma_fit:.3f}$'
+            elif fit_func == "gamma":
+                y_fit, params = CurveFitModels.gamma(x_avg, y_avg, x_fit)
+                a_fit, alpha_fit, theta_fit = params["a"], params["alpha"], params["theta"]
+                axis_label = f'{material_name}: a={a_fit:.2f}, $\\alpha={alpha_fit:.2f}, \\theta={theta_fit:.2f}$'
             elif fit_func == "powerlaw":
                 y_fit, params = CurveFitModels.power_law(x_avg, y_avg, x_fit)
                 a_fit, k_fit = params["a"], params["k"]
@@ -998,6 +1038,13 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         if fit_func == "lognorm":
             ax_3.set_title(
                 r"LogNormal Fit: $y = a \cdot \frac{1}{x\sigma\sqrt{2\pi}} e^{-\frac{(\ln{x}-\mu)^2}{2\sigma^2}}$"
+                f"\nNodes vs {y_title}",
+                fontsize=10
+            )
+        elif fit_func == "gamma":
+            ax_3.set_title(
+                r"Gamma Fit: $y = a \cdot \frac{x^{\alpha-1}}{\Gamma(\alpha)}\cdot \frac{\exp(-\frac{x}{\theta})}{"
+                r"\Gamma(\alpha)\theta^{\alpha}}$"
                 f"\nNodes vs {y_title}",
                 fontsize=10
             )
