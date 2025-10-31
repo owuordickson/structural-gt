@@ -216,6 +216,65 @@ class CurveFitModels:
             return None, {"a": 0.0, "lambda": 0.0, "c": 0.0}
 
     @staticmethod
+    def gamma(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+        """
+        Fits a Gamma distribution model to the given (x_avg, y_avg) data.
+
+        The Gamma probability density function (PDF) is defined as:
+            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
+
+        Where:
+            - a is a scaling factor,
+            - k (shape) and θ (scale) are the distribution parameters,
+            - Γ(k) is the Gamma function.
+
+        This model is useful for positively skewed data, commonly appearing in
+        lifetime or waiting-time distributions.
+
+        Args:
+            x_avg (np.ndarray): Independent variable values
+            y_avg (np.ndarray): Dependent variable values (to fit)
+            x_fit (np.ndarray): Points at which to generate the fitted curve
+
+        Returns:
+            tuple[np.ndarray, dict]:
+                y_fit (np.ndarray): Best-fit curve values
+                params (dict): Dictionary containing fitted parameters {a, k, theta}
+        """
+
+        def fit_function(x: np.ndarray, a: float, alpha: float, theta: float) -> np.ndarray:
+            """
+            Gamma model:
+            y = a * [x^(k-1) * exp(-x/θ)] / [θ^k * Γ(k)]
+            """
+            gamma_k = sp.special.gamma(alpha)
+            return a * ((x ** (alpha - 1)) * np.exp(-x / theta)) / ((theta ** alpha) * gamma_k)
+
+        try:
+            # Initial guesses for [a, alpha, theta]
+            init_params_gamma = [0, 1.0, 2.0]
+
+            # Fit the curve to data
+            opt_params_gamma: np.ndarray = sp.optimize.curve_fit(
+                fit_function,
+                x_avg,
+                y_avg,
+                p0=init_params_gamma,
+                bounds=([0, 0, 0], [np.inf, np.inf, np.inf]),
+                maxfev=1000
+            )[0]
+
+            a_fit, alpha_fit, theta_fit = float(opt_params_gamma[0]), float(opt_params_gamma[1]), float(
+                opt_params_gamma[2])
+
+            # Generate predicted points for the best-fit curve
+            y_fit = fit_function(x_fit, a_fit, alpha_fit, theta_fit)
+            return y_fit, {"a": a_fit, "alpha": alpha_fit, "theta": theta_fit}
+        except Exception as err:
+            print(err)
+            return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
+
+    @staticmethod
     def linear(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
         """
         Fits a linear (first-degree polynomial) model to the data.
@@ -305,17 +364,24 @@ class QQPlots:
         # 3. Compute theoretical quantiles from Lognormal inverse CDF
         quantiles = np.linspace(0.01, 0.99, len(data))
         theoretical_q = stats.lognorm.ppf(quantiles, s=sigma, scale=np.exp(mu))
-
-        # 4. Empirical quantiles
         empirical_q = np.quantile(data, quantiles)
 
-        # 5. QQ Plot for log-transformed data
+        # 4. QQ Plot for log-transformed data
         QQPlots.qq_plot(empirical_q, theoretical_q, ax, legend_txt, use_log_scale=True)
         if show_y_label:
             ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
         ax.set_xlabel("Theoretical Quantiles (Normal)", fontsize=6)
 
         return "Log Q–Q Plot (Lognormal)"
+
+    @staticmethod
+    def gamma_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
+        """"""
+        if show_y_label:
+            ax.set_ylabel("Empirical Quantiles (log(data))", fontsize=6)
+        ax.set_xlabel("Theoretical Quantiles (Gamma)", fontsize=6)
+
+        return "Log Q–Q Plot (Gamma)"
 
     @staticmethod
     def pwr_qq_plot(distribution_data: np.ndarray, ax: plt.Axes, legend_txt: str, show_y_label: bool = False):
@@ -460,6 +526,9 @@ class QQPlots:
         elif model_type == "lognorm":
             model_name = "Lognormal"
             y_fit, params = CurveFitModels.lognormal(x, y, x_fit)
+        elif model_type == "gamma":
+            model_name = "Gamma"
+            y_fit, params = CurveFitModels.gamma(x, y, x_fit)
         else:
             return None
 
@@ -778,6 +847,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # Map each model to its respective QQ function
         qq_funcs = {
             "lognorm": QQPlots.log_qq_plot,
+            "gamma": QQPlots.gamma_qq_plot,
             "powerlaw": QQPlots.pwr_qq_plot,
             "powerlaw-ec": QQPlots.stretched_pwr_qq_plot
         }
