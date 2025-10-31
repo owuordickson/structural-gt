@@ -837,17 +837,17 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             def _argcheck(self, a, x_c, beta):
                 return (a > 0) & (x_c > 0) & (beta > 0)
 
-        data = df_distribution['y-avg'].to_numpy()
-
         # Define distributions to test
         distributions = {
             "Power Law": stats.powerlaw,
             "Exponential": stats.expon,
             "Log Normal": stats.lognorm,
+            "Gamma": stats.gamma,
             #"Stretched Power Law": stretched_powerlaw, ## HAS ERROR
         }
 
         # Prepare arguments for each parallel process
+        data = df_distribution['y-avg'].to_numpy()
         args_list = [(name, dist, data) for name, dist in distributions.items()]
 
         # Use multiprocessing pool
