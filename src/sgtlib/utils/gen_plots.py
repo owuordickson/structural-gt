@@ -597,9 +597,41 @@ class StretchedPowerlawGen(sp.stats.rv_continuous):
     def _pdf(self, x, a, x_c, beta):
         # Unnormalized PDF
         #print(f"x: {x}, a: {a}, x_c: {x_c}, beta: {beta}")
-        unnormalized_pdf = x ** (-a) * np.exp(- (x / x_c) ** beta)
-        #print(f"unnormalized_pdf: {unnormalized_pdf}")
-        return unnormalized_pdf
+        # Convert to array and enforce positivity
+        x = np.asarray(x)
+        pdf = np.zeros_like(x, dtype=float)
+
+        # Only define for x > 0
+        valid = x > 0
+        x_valid = x[valid]
+
+        if len(x_valid) == 0:
+            return pdf
+
+        # Compute unnormalized pdf
+        unnormalized_pdf = x_valid ** (-a) * np.exp(-(x_valid / x_c) ** beta)
+        # return unnormalized_pdf
+
+        # Numerical normalization constant (approximation)
+        norm_const = np.trapz(unnormalized_pdf, x_valid)
+        if norm_const <= 0 or np.isnan(norm_const):
+            norm_const = 1.0  # fallback to avoid division by zero
+
+        pdf[valid] = unnormalized_pdf / norm_const
+        return pdf
+
+    def _cdf(self, x, a, x_c, beta):
+        # numerical CDF
+        x = np.asarray(x)
+        cdf = np.zeros_like(x)
+        valid = x > 0
+        x_valid = np.linspace(1e-8, x[valid].max(), 1000)
+        pdf = self._pdf(x_valid, a, x_c, beta)
+        cum = np.cumsum(pdf)
+        cum /= cum[-1]
+        cdf_func = np.interp(x[valid], x_valid, cum)
+        cdf[valid] = cdf_func
+        return cdf
 
     def _argcheck(self, a, x_c, beta):
         return (a > 0) & (x_c > 0) & (beta > 0)
@@ -844,11 +876,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # Define distributions to test
         stretched_powerlaw = StretchedPowerlawGen(a=0.01, name='stretched_powerlaw')
         distributions = {
-            #"Power Law": stats.powerlaw,
-            #"Exponential": stats.expon,
-            #"Log Normal": stats.lognorm,
-            #"Gamma": stats.gamma,
-            "Stretched Power Law": stretched_powerlaw, ## HAS ERROR
+            "Power Law": stats.powerlaw,
+            "Exponential": stats.expon,
+            "Log Normal": stats.lognorm,
+            "Gamma": stats.gamma,
+            #"Stretched Power Law": stretched_powerlaw, ## HAS ERROR
         }
 
         # Prepare arguments for each parallel process
