@@ -880,6 +880,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             "Exponential": stats.expon,
             "Log Normal": stats.lognorm,
             "Gamma": stats.gamma,
+            "Weibull": stats.weibull_min,
             #"Stretched Power Law": stretched_powerlaw, ## HAS ERROR
         }
 
