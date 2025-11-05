@@ -876,11 +876,11 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         # Define distributions to test
         stretched_powerlaw = StretchedPowerlawGen(a=0.01, name='stretched_powerlaw')
         distributions = {
-            #"Power Law": stats.powerlaw,
-            #"Exponential": stats.expon,
+            "Power Law": stats.powerlaw,
+            "Exponential": stats.expon,
             "Log Normal": stats.lognorm,
-            #"Gamma": stats.gamma,
-            #"Weibull": stats.weibull_min,
+            "Gamma": stats.gamma,
+            "Weibull": stats.weibull_min,
             #"Stretched Power Law": stretched_powerlaw, ## HAS ERROR
         }
 
