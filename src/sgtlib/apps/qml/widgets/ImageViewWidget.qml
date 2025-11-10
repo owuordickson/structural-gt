@@ -9,6 +9,7 @@ ColumnLayout {
     Layout.fillHeight: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
+    /*
     property real zoomFactor: 1.0
     property int selectedRole: (Qt.UserRole + 20)
 
@@ -444,11 +445,21 @@ ColumnLayout {
             }
         }
     }
+    */
+
+    // The Welcome View
+    WelcomeWidget{}
+
+    // Image View Controls
+    ImageViewControls{}
+
+    // Image Container
+    ImageWidget{}
 
     // Image Navigation Controls
     ImageNavControls{}
 
-
+    /*
     Connections {
         target: mainController
 
@@ -483,7 +494,7 @@ ColumnLayout {
         }
 
     }
-
+    */
 }
 
 
