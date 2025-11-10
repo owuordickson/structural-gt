@@ -58,7 +58,6 @@ class PySideApp(QObject):
         self._ui_engine.rootContext().setContextProperty("imgThumbnailModel", self._ctrl.proj_ctrl.imgThumbnailModel)
         self._ui_engine.rootContext().setContextProperty("aiSearchModel", self._ctrl.ai_ctrl.aiSearchModel)
 
-
     def _initialize_controllers(self):
         """Initialize the controllers used by the QML engine."""
         self._ui_engine.rootContext().setContextProperty("mainController", self._ctrl)
