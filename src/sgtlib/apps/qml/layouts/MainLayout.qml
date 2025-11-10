@@ -12,7 +12,7 @@ Rectangle {
         anchors.fill: parent
         columns: 1
 
-        ImageViewWidget{}
+        ImageView{}
 
     }
 
