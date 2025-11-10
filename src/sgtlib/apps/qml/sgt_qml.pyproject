@@ -17,7 +17,7 @@
         "widgets/GraphExtractWidget.qml",
         "widgets/GTWidget.qml",
         "widgets/ImageThumbnailWidget.qml",
-        "widgets/ImageViewWidget.qml",
+        "widgets/ImageView.qml",
         "widgets/ImageWidget.qml",
         "widgets/ImageViewControls.qml",
         "widgets/ImagePropertyWidget.qml",
