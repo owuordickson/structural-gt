@@ -16,11 +16,10 @@ Rectangle {
 
         Label {
             id: lblWelcome
-            //Layout.preferredWidth:
-            text: "Welcome to StructuralGT"
+            text: "StructuralGT: analyze microscopy images"
             color: "#2266ff"
             //font.bold: true
-            font.pixelSize: 24
+            font.pixelSize: 19
         }
 
         RowLayout {
