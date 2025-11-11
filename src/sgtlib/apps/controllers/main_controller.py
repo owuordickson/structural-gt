@@ -102,7 +102,7 @@ class MainController(BaseController):
 
     def _cancel_loading(self, worker_id):
         if worker_id == 1:
-            self.graph_ctrl.stop_task()
+            self.proj_ctrl.stop_task()
             self.img_ctrl.stop_task()
             self.graph_ctrl.stop_task()
 

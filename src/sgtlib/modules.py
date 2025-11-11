@@ -23,6 +23,7 @@ from .networks.fiber_network import FiberNetworkBuilder
 from .networks.graph_skeleton import GraphSkeleton
 from .utils.sgt_utils import (
     ProgressData,
+    TaskResult,
     gsd_to_skeleton,
     csv_to_graph,
     write_gsd_file
@@ -52,6 +53,7 @@ __all__ = [
     "GraphSkeleton",
     "FilterSearchSpace",
     "SGTGraphEnv",
+    "TaskResult",
     "ProgressData",
     "CurveFitModels",
     "QQPlots",
