@@ -11,7 +11,7 @@ from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
-from src.sgtlib.utils.sgt_utils import ProgressData
+from ..utils.sgt_utils import ProgressData
 
 
 class GraphSkeleton:
