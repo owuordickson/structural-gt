@@ -20,6 +20,7 @@ Rectangle {
 
         BinaryFilterWidget {}
 
+
         Rectangle {
             id: rectHLine1
             height: 1
