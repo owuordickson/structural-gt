@@ -7,6 +7,7 @@ import Qt.labs.platform as Platform
 import "widgets"
 import "layouts"
 import "windows"
+import "dialogs"
 
 ApplicationWindow {
     id: mainWindow
@@ -17,12 +18,15 @@ ApplicationWindow {
     font.family: "Arial"  // or Qt.application.font.family
     color: "#f0f0f0"
 
+    // Top Menu Bar
     menuBar: MenuBar {
     }
 
+    // Bottom Footer Bar
     footer: StatusBarLayout {
     }
 
+    // Main Layout
     GridLayout {
         anchors.fill: parent
         rows: 2
@@ -95,97 +99,17 @@ ApplicationWindow {
         }
     }
 
+    // Full Page Progress Spinner
     LoadingSpinnerOverlay{}
 
+    // Left Pane Toggle Button
     function toggleLeftPane(showVal) {
         recLeftPane.visible = showVal;
     }
 
-
-    Dialog {
-        id: dialogAbout
-        //parent: mainWindow
-        title: "About This Software"
-        modal: true
-        standardButtons: Dialog.Ok
-        anchors.centerIn: parent
-        width: 436
-        height: 640
-
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: 10
-
-            ScrollView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true  // Ensures contents are clipped to the scroll view bounds
-
-
-                Label {
-                    width: parent.width
-                    //Layout.alignment: Qt.AlignHCenter
-                    property string aboutText: projectController.get_about_details()
-                    text: aboutText
-                    wrapMode: Text.WordWrap
-                    textFormat: Text.RichText  // Enable HTML formatting
-                    //maximumLineCount: 10  // Optional: Limits lines to avoid excessive height
-                    //elide: Text.ElideRight   // Optional: Adds "..." if text overflows
-                    onLinkActivated: (link) => Qt.openUrlExternally(link)  // Opens links in default browser
-                }
-            }
-        }
-    }
-
-    Dialog {
-        id: dialogAlert
-        //parent: mainWindow
-        title: ""
-        modal: true
-        standardButtons: Dialog.Ok
-        anchors.centerIn: parent
-        width: 300
-        height: 150
-
-        /*contentItem: ColumnLayout {
-                spacing: 10
-                width: parent.width
-
-                // Custom Header for the Dialog Title
-                Label {
-                    text: dialogAlert.title
-                    font.bold: true
-                    font.pointSize: 14
-                    color: "red"  // Change title color to red
-                    horizontalAlignment: Text.AlignHCenter
-                    Layout.fillWidth: true  // Ensure it spans the full width
-                }
-
-                Label {
-                    id: lblAlertMsg
-                    width: parent.width
-                    wrapMode: Text.Wrap  // Enable text wrapping
-                    anchors.centerIn: parent
-                    leftPadding: 10
-                    rightPadding: 10
-                    horizontalAlignment: Text.AlignJustify  // Justify the text
-                    color: "#bc2222"
-                    text: ""
-                }
-            }*/
-
-        Label {
-            id: lblAlertMsg
-            width: parent.width
-            wrapMode: Text.Wrap  // Enable text wrapping
-            anchors.centerIn: parent
-            leftPadding: 10
-            rightPadding: 10
-            horizontalAlignment: Text.AlignJustify  // Justify the text
-            color: "#bc2222"
-            text: ""
-        }
-    }
+    // Dialogs
+    DialogAbout{id: dialogAbout}
+    DialogAlert{id: dialogAlert}
 
     Dialog {
         id: createProjectDialog
