@@ -50,4 +50,15 @@ Dialog {
         color: "#bc2222"
         text: ""
     }
+
+    Connections {
+        target: mainController
+
+        function onShowAlertSignal(title, msg) {
+            dialogAlert.title = title;
+            lblAlertMsg.text = msg;
+            lblAlertMsg.color = "#2255bc";
+            dialogAlert.open();
+        }
+    }
 }

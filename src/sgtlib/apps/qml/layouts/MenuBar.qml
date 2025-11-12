@@ -14,19 +14,19 @@ MenuBar {
     }
     Menu {
         title: "File"
-        MenuItem { text: "Add image"; onTriggered: imageFileDialog.open() }
-        MenuItem { text: "Add image folder"; onTriggered: imageFolderDialog.open() }
+        MenuItem { text: "Add image"; onTriggered: dialogFileImage.open() }
+        MenuItem { text: "Add image folder"; onTriggered: dialogFolderImage.open() }
         Menu {
             id: mnuImportGraphFrom
             title: "Import graph from..."
-            MenuItem {id: mnuImportCSV; text:"CSV (adj. matrix, edge list, xyz)"; enabled: true; onTriggered: graphFileDialog.open()}
-            MenuItem {id: mnuImportGSD; text:"GSD/HOOMD"; enabled: true; onTriggered: graphFileDialog.open()}
+            MenuItem {id: mnuImportCSV; text:"CSV (adj. matrix, edge list, xyz)"; enabled: true; onTriggered: dialogFileGraph.open()}
+            MenuItem {id: mnuImportGSD; text:"GSD/HOOMD"; enabled: true; onTriggered: dialogFileGraph.open()}
         }
         MenuSeparator{}
 
         Menu { title: "Project..."
-            MenuItem { text: "Create project"; onTriggered: createProjectDialog.open() }
-            MenuItem { text: "Open project"; onTriggered: projectFileDialog.open() }
+            MenuItem { text: "Create project"; onTriggered: dialogCreateProject.open() }
+            MenuItem { text: "Open project"; onTriggered: dialogFileProject.open() }
         }
 
         MenuItem {id: mnuSaveProjAs; text: "Save project"; enabled: false; onTriggered: save_project() }

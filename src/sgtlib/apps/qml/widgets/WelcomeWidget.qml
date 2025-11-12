@@ -35,7 +35,7 @@ Rectangle {
                         color: "transparent"
                     }
                     text: ""
-                    onClicked: createProjectDialog.open()
+                    onClicked: dialogCreateProject.open()
 
                     Rectangle {
                         anchors.fill: parent
@@ -60,7 +60,7 @@ Rectangle {
                         color: "transparent"
                     }
                     text: ""
-                    onClicked: projectFileDialog.open()
+                    onClicked: dialogFileProject.open()
 
                     Rectangle {
                         anchors.fill: parent
@@ -106,7 +106,7 @@ Rectangle {
                     Layout.preferredWidth: 125
                     Layout.preferredHeight: 32
                     text: ""
-                    onClicked: imageFileDialog.open()
+                    onClicked: dialogFileImage.open()
 
                     Rectangle {
                         anchors.fill: parent
@@ -128,7 +128,7 @@ Rectangle {
                     Layout.preferredWidth: 125
                     Layout.preferredHeight: 32
                     text: ""
-                    onClicked: imageFolderDialog.open()
+                    onClicked: dialogFolderImage.open()
 
                     Rectangle {
                         anchors.fill: parent

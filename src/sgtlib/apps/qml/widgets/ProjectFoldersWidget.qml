@@ -81,7 +81,7 @@ ColumnLayout {
                 color: "transparent"
             }
             enabled: imageController.display_image()
-            onClicked: outFolderDialog.open()
+            onClicked: dialogFolderOutput.open()
         }
     }
 
@@ -92,7 +92,7 @@ ColumnLayout {
         rightPadding: 10
         Layout.alignment: Qt.AlignHCenter
         enabled: imageController.display_image()
-        onClicked: imageFileDialog.open()
+        onClicked: dialogFileImage.open()
     }
 
 
