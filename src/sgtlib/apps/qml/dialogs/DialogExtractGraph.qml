@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../widgets"
 
 Dialog {
     id: dialogExtractGraph
@@ -57,7 +58,7 @@ Dialog {
                 visible: imageController.enable_img_controls()
                 onClicked: {
                     dialogExtractGraph.close();
-                    mainController.run_extract_graph();
+                    graphController.run_extract_graph();
                 }
 
                 Rectangle {
