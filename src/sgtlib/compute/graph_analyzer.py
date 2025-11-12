@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: GNU GPL v3
-
 """
 Compute graph theory metrics
 """
@@ -112,7 +111,7 @@ class GraphAnalyzer(ProgressUpdate):
         self._use_igraph: bool = use_igraph
         self._ntwk_p: ImageProcessor = imp
         self._plot_figures: list | None = None
-        self._results_df: None | pd.DataFrame = None
+        self._results_df:   None | pd.DataFrame = None
         self._weighted_results_df: None | pd.DataFrame = None
         self._scaling_results: dict = {}
         self._histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],

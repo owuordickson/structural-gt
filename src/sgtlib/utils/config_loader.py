@@ -51,8 +51,7 @@ def read_config_file(config_path):
     if success:
         config_file = result
     else:
-        # print(f"File Error: unable to find config file {config_path}. Using the default config file")
-        # Get the directory of the current script
+        # Using the default config file. Get the directory of the current script
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = 'configs.ini'
         config_file = os.path.join(script_dir, config_path)

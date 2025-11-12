@@ -22,11 +22,13 @@ from .search.filter_env import (
 from .networks.fiber_network import FiberNetworkBuilder
 from .networks.graph_skeleton import GraphSkeleton
 from .utils.sgt_utils import (
+    ProgressUpdate,
     ProgressData,
     TaskResult,
     gsd_to_skeleton,
     csv_to_graph,
-    write_gsd_file
+    write_gsd_file,
+    verify_path
 )
 from .utils.gen_plots import (
     CurveFitModels,
@@ -55,6 +57,7 @@ __all__ = [
     "SGTGraphEnv",
     "TaskResult",
     "ProgressData",
+    "ProgressUpdate",
     "CurveFitModels",
     "QQPlots",
     "load_gtc_configs",
@@ -63,6 +66,7 @@ __all__ = [
     "gsd_to_skeleton",
     "csv_to_graph",
     "write_gsd_file",
+    "verify_path",
     "sgt_csv_to_dataframe",
     "sgt_excel_to_dataframe",
     "sgt_spider_plot",
