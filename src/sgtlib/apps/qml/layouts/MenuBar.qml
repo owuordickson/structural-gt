@@ -102,8 +102,8 @@ MenuBar {
         let is_open = projectController.is_project_open();
         if (is_open === false) {
             dialogAlert.title = "Save Error";
-            lblAlertMsg.text = "Please create/open the SGT project first, then try again.";
-            lblAlertMsg.color = "#2255bc";
+            dialogAlert.alertMsg = "Please create/open the SGT project first, then try again.";
+            dialogAlert.alertColor = "#2255bc";
             dialogAlert.open();
         } else {
             projectController.run_save_project();

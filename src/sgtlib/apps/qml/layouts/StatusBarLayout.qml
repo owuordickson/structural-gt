@@ -173,8 +173,8 @@ Rectangle {
 
             if (msg_data.length > 0) {
                 dialogAlert.title = msg_data[0];
-                lblAlertMsg.text = msg_data[1];
-                lblAlertMsg.color = success_val ? "#2266ff" : "#bc2222";
+                dialogAlert.alertMsg = msg_data[1];
+                dialogAlert.alertColor = success_val ? "#2266ff" : "#bc2222";
                 dialogAlert.open();
             }
 

@@ -12,43 +12,18 @@ Dialog {
     width: 300
     height: 150
 
-    /*contentItem: ColumnLayout {
-            spacing: 10
-            width: parent.width
-
-            // Custom Header for the Dialog Title
-            Label {
-                text: dialogAlert.title
-                font.bold: true
-                font.pointSize: 14
-                color: "red"  // Change title color to red
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true  // Ensure it spans the full width
-            }
-
-            Label {
-                id: lblAlertMsg
-                width: parent.width
-                wrapMode: Text.Wrap  // Enable text wrapping
-                anchors.centerIn: parent
-                leftPadding: 10
-                rightPadding: 10
-                horizontalAlignment: Text.AlignJustify  // Justify the text
-                color: "#bc2222"
-                text: ""
-            }
-        }*/
+    property string alertMsg: ""
+    property string alertColor: "#bc2222"
 
     Label {
-        id: lblAlertMsg
         width: parent.width
         wrapMode: Text.Wrap  // Enable text wrapping
         anchors.centerIn: parent
         leftPadding: 10
         rightPadding: 10
         horizontalAlignment: Text.AlignJustify  // Justify the text
-        color: "#bc2222"
-        text: ""
+        color: dialogAlert.alertColor
+        text: dialogAlert.alertMsg
     }
 
     Connections {
@@ -56,8 +31,8 @@ Dialog {
 
         function onShowAlertSignal(title, msg) {
             dialogAlert.title = title;
-            lblAlertMsg.text = msg;
-            lblAlertMsg.color = "#2255bc";
+            dialogAlert.alertMsg = msg;
+            dialogAlert.alertColor = "#2255bc";
             dialogAlert.open();
         }
     }
