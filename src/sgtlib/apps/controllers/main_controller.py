@@ -33,7 +33,7 @@ class MainController(BaseController):
     def __init__(self, qml_app: QApplication):
         super().__init__()
         self._qml_app = qml_app
-        self.is_syncing = False
+        #self.is_syncing = False
 
         # Add Controllers
         self.proj_ctrl = ProjectController(self)

@@ -86,7 +86,7 @@ class ImageController(QObject):
             :param sgt_obj: A GraphAnalyzer object with all saved user-selected configurations.
         """
         if sgt_obj is None:
-            self._ctrl.is_syncing = False
+            #self._ctrl.is_syncing = False
             return
 
         try:
@@ -117,9 +117,9 @@ class ImageController(QObject):
 
             self.microscopyPropsModel.reset_data(img_properties)
             self.imagePropsModel.reset_data(sel_img_batch.props)
-            self._ctrl.is_syncing = False
+            #self._ctrl.is_syncing = False
         except Exception as err:
-            self._ctrl.is_syncing = False
+            #self._ctrl.is_syncing = False
             logging.exception("Fatal Error: %s", err, extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Fatal Error", "Error re-loading image configurations! Close app and try again.")
 
@@ -229,12 +229,12 @@ class ImageController(QObject):
             sgt_obj.ntwk_p.select_image_batch(batch_index)
 
             # Trigger sync models and image refresh
-            self._ctrl.is_syncing = True
+            #self._ctrl.is_syncing = True
             self._ctrl.syncModelSignal.emit(sgt_obj)
             self.reset_img_models()
-            # while self._ctrl.is_syncing:
-            #    print("waiting for sync to finish...")
-            #    logging.info("Waiting for sync to finish...", extra={'user': 'SGT Logs'})
+            ## while self._ctrl.is_syncing:
+            ##    print("waiting for sync to finish...")
+            ##    logging.info("Waiting for sync to finish...", extra={'user': 'SGT Logs'})
             self._ctrl.changeImageSignal.emit()
         except Exception as err:
             logging.exception("Batch Change Error: %s", err, extra={'user': 'SGT Logs'})
