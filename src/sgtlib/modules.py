@@ -27,6 +27,9 @@ from .utils.sgt_utils import (
     TaskResult,
     gsd_to_skeleton,
     csv_to_graph,
+    img_to_base64,
+    plot_to_opencv,
+    safe_uint8_image,
     write_gsd_file,
     verify_path
 )
@@ -67,6 +70,9 @@ __all__ = [
     "csv_to_graph",
     "write_gsd_file",
     "verify_path",
+    "img_to_base64",
+    "plot_to_opencv",
+    "safe_uint8_image",
     "sgt_csv_to_dataframe",
     "sgt_excel_to_dataframe",
     "sgt_spider_plot",
