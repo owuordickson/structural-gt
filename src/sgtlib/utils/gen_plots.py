@@ -1177,4 +1177,3 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
     fig.tight_layout()
     return fig
-
