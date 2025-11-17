@@ -518,11 +518,11 @@ class QQPlots:
         data = np.sort(data)
 
         # 2. Fit parameters
-        alpha_hat, lambda_hat, x_min = fit_stretched_powerlaw(data)
+        alpha_hat, lambda_hat, min_x = fit_stretched_powerlaw(data)
 
         # 3. Compute CDF for stretched power-law
-        x_grid = np.linspace(x_min, data.max(), 2000)
-        cdf_vals = np.array([stretched_powerlaw_cdf(xi, alpha_hat, lambda_hat, x_min) for xi in x_grid])
+        x_grid = np.linspace(min_x, data.max(), 2000)
+        cdf_vals = np.array([stretched_powerlaw_cdf(xi, alpha_hat, lambda_hat, min_x) for xi in x_grid])
         inv_cdf = sp.interpolate.interp1d(cdf_vals, x_grid, fill_value="extrapolate")
 
         # 4. Empirical quantiles from inverse CDF
@@ -548,7 +548,7 @@ class QQPlots:
             y (np.ndarray): Dependent variable
             ax (plt.Axes): Matplotlib axis to plot on
             legend_txt (str): Legend text
-            model_type (str): Type of model (e.g., "lognorm")
+            model_type (str): Type of model (e.g., "log-norm")
             show_y_label (bool): Whether to show the Y-axis label
         """
 
@@ -889,7 +889,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     ax.axis('off')
 
     # Set title and legend position
-    ax.set_title("Spider Plot with Std. Dev. Error Bands", fontsize=14, pad=20)
+    ax.set_title("Spider Plot with Std. Dev. Error Bars", fontsize=14, pad=20)
     ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
     fig.tight_layout()
     return fig
