@@ -748,7 +748,7 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
     return all_sheets
 
 
-def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], value_cols=None) -> None | plt.Figure:
+def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], value_cols=None, grid_levels: int = 6) -> None | plt.Figure:
     """
     Generates a spider (radar) plot to compare Graph-Theoretic (GT) parameters
     across multiple material samples, typically derived from SEM images.
@@ -760,12 +760,26 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
         labels (dict): Mapping of material keys to readable names
         parameters (list[str]): List of GT parameters to plot along the spider axes
-        value_cols (list, optional): List of columns containing GT parameter values. Defaults to [].
+        value_cols (list, optional): List of columns containing GT parameter values. Defaults to []
+        grid_levels (int, optional): Number of levels to use for the grid. Defaults to 6.
 
     Returns:
         None | matplotlib.figure.Figure:
             The generated Matplotlib Figure if successful, or None if inputs are invalid.
     """
+
+    def format_scale_value(value):
+        """Format numbers with K, M abbreviations"""
+        if value >= 1_000_000:
+            return f'{value / 1_000_000:.1f}M'
+        elif value >= 1_000:
+            return f'{value / 1_000:.1f}K'
+        elif value >= 100:
+            return f'{value:.0f}'
+        elif value >= 10:
+            return f'{value:.1f}'
+        else:
+            return f'{value:.2f}'
 
     if value_cols is None:
         value_cols = []
@@ -809,38 +823,84 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     df_avg = df_avg[parameters]
     df_std = df_std[parameters]
 
-    # Radar chart setup
+    # Spider plot setup
     num_vars = len(parameters)
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-    angles_closed = angles + [angles[0]]  # close the loop without mutating the input list
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
 
-    # Create the figure and axes
+    # Create the figure and axes (regular cartesian, not polar)
     fig = plt.figure(figsize=(11, 8.5), dpi=300)
-    ax = fig.add_subplot(1, 1, 1, projection='polar')
+    ax = fig.add_subplot(1, 1, 1)
+
+    # Determine max_val based on data
+    all_values = []
+    for key in labels.keys():
+        values = df_avg.loc[key].tolist()
+        errors = df_std.loc[key].tolist()
+        all_values.extend(np.array(values) + np.array(errors))
+    max_val = max(all_values)
+
+    # Draw grid lines (polygon grid)
+    for level in np.linspace(0, max_val, grid_levels + 1)[1:]:
+        x_grid = level * np.cos(np.append(angles, angles[0]))
+        y_grid = level * np.sin(np.append(angles, angles[0]))
+        ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.3)
+        # Add the scale value label below the gridline (at the bottom-most point)
+        ax.text(level, 0, format_scale_value(level), ha='center', va='top', fontsize=8, alpha=0.7)
+
+    # Draw axes from the center to each vertex
+    for angle in angles:
+        ax.plot([0, max_val * np.cos(angle)], [0, max_val * np.sin(angle)], 'k-', linewidth=0.5, alpha=0.5)
 
     # Plot each material
     for key, material_name in labels.items():
-        values = df_avg.loc[key].tolist()
-        values += [values[0]]  # close the loop
+        values = np.array(df_avg.loc[key].tolist())
+        errors = np.array(df_std.loc[key].tolist())
 
-        errors = df_std.loc[key].tolist()
-        errors += [errors[0]]
+        # Convert to cartesian coordinates
+        x = values * np.cos(angles)
+        y = values * np.sin(angles)
 
-        ax.plot(angles_closed, values, label=material_name)
-        ax.fill_between(angles_closed,
-                        np.array(values) - np.array(errors),
-                        np.array(values) + np.array(errors),
-                        alpha=0.1)
+        # Close the polygon
+        x_closed = np.append(x, x[0])
+        y_closed = np.append(y, y[0])
 
-    # Final touches
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_thetagrids(np.degrees(angles), parameters)
-    ax.set_title("Spider Plot with Std. Dev. Error Bands", fontsize=14)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+        # Plot the main line
+        ax.plot(x_closed, y_closed, '-', linewidth=1.5, label=material_name)
+        #ax.fill(x_closed, y_closed, alpha=0.1)
+
+        # Add error bands
+        x_upper = (values + errors) * np.cos(angles)
+        y_upper = (values + errors) * np.sin(angles)
+        x_lower = (values - errors) * np.cos(angles)
+        y_lower = (values - errors) * np.sin(angles)
+
+        x_upper_closed = np.append(x_upper, x_upper[0])
+        y_upper_closed = np.append(y_upper, y_upper[0])
+        x_lower_closed = np.append(x_lower, x_lower[0])
+        y_lower_closed = np.append(y_lower, y_lower[0])
+
+        ax.fill_between(x_upper_closed, y_lower_closed, y_upper_closed, alpha=0.1)
+
+    # Add labels at the vertices
+    label_distance = max_val * 1.15
+    for i, (angle, param) in enumerate(zip(angles, parameters)):
+        x_label = label_distance * np.cos(angle)
+        y_label = label_distance * np.sin(angle)
+        ax.text(x_label, y_label, param, ha='center', va='center', fontsize=10)
+
+    # Set equal aspect ratio and limits
+    ax.set_aspect('equal')
+    ax.set_xlim(-max_val * 1.3, max_val * 1.3)
+    ax.set_ylim(-max_val * 1.3, max_val * 1.3)
+
+    # Remove axes
+    ax.axis('off')
+
+    # Set title and legend position
+    ax.set_title("Spider Plot with Std. Dev. Error Bands", fontsize=14, pad=20)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
     fig.tight_layout()
     return fig
-
 
 def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False, fit_func: str = None, qq_plot: bool = True) -> None | plt.Figure:
     """
