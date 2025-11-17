@@ -10,7 +10,7 @@ Window {
     height: 764
     x: 1024  // Exactly starts where your app ends
     y: 40
-    //flags: Qt.Window | Qt.FramelessWindowHint
+    //flags: Qt.Dialog | Qt.WindowCloseButtonHint
     visible: false  // Only show when needed
     title: "SGT Logs"
 
