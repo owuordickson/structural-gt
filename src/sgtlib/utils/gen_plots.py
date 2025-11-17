@@ -518,11 +518,11 @@ class QQPlots:
         data = np.sort(data)
 
         # 2. Fit parameters
-        alpha_hat, lambda_hat, xmin = fit_stretched_powerlaw(data)
+        alpha_hat, lambda_hat, x_min = fit_stretched_powerlaw(data)
 
         # 3. Compute CDF for stretched power-law
-        x_grid = np.linspace(xmin, data.max(), 2000)
-        cdf_vals = np.array([stretched_powerlaw_cdf(xi, alpha_hat, lambda_hat, xmin) for xi in x_grid])
+        x_grid = np.linspace(x_min, data.max(), 2000)
+        cdf_vals = np.array([stretched_powerlaw_cdf(xi, alpha_hat, lambda_hat, x_min) for xi in x_grid])
         inv_cdf = sp.interpolate.interp1d(cdf_vals, x_grid, fill_value="extrapolate")
 
         # 4. Empirical quantiles from inverse CDF
@@ -845,7 +845,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         y_grid = level * np.sin(np.append(angles, angles[0]))
         ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.3)
         # Add the scale value label below the gridline (at the bottom-most point)
-        ax.text(level, 0, format_scale_value(level), ha='center', va='top', fontsize=8, alpha=0.7)
+        ax.text(level, -0.05, format_scale_value(level), ha='center', va='top', fontsize=8, alpha=0.7)
 
     # Draw axes from the center to each vertex
     for angle in angles:
@@ -860,26 +860,18 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         x = values * np.cos(angles)
         y = values * np.sin(angles)
 
-        # Close the polygon
-        x_closed = np.append(x, x[0])
-        y_closed = np.append(y, y[0])
+        # Calculate error components in cartesian coordinates
+        x_err = errors * np.abs(np.cos(angles))
+        # y_err = errors * np.abs(np.sin(angles))
 
-        # Plot the main line
-        ax.plot(x_closed, y_closed, '-', linewidth=1.5, label=material_name)
-        #ax.fill(x_closed, y_closed, alpha=0.1)
+        # Plot with error bars
+        ax.errorbar(x, y, xerr=x_err, label=material_name, capsize=6, linewidth=1.5, linestyle='-')
 
-        # Add error bands
-        x_upper = (values + errors) * np.cos(angles)
-        y_upper = (values + errors) * np.sin(angles)
-        x_lower = (values - errors) * np.cos(angles)
-        y_lower = (values - errors) * np.sin(angles)
+        # Close the polygon by connecting last point to first
+        ax.plot([x[-1], x[0]], [y[-1], y[0]], linewidth=1.5, color=ax.lines[-1].get_color())
 
-        x_upper_closed = np.append(x_upper, x_upper[0])
-        y_upper_closed = np.append(y_upper, y_upper[0])
-        x_lower_closed = np.append(x_lower, x_lower[0])
-        y_lower_closed = np.append(y_lower, y_lower[0])
-
-        ax.fill_between(x_upper_closed, y_lower_closed, y_upper_closed, alpha=0.1)
+        # Fill the polygon
+        ax.fill(x, y, alpha=0.1, color=ax.lines[-1].get_color())
 
     # Add labels at the vertices
     label_distance = max_val * 1.15
