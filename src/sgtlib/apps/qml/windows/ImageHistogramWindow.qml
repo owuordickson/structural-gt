@@ -11,7 +11,8 @@ Window {
     height: 640
     x: 1024  // Exactly starts where your app ends
     y: 40
-    //flags: Qt.Window | Qt.FramelessWindowHint
+    //flags: Qt.Window
+    //modality: Qt.NonModal
     visible: false  // Only show when needed
     title: "Histogram of Processed Image(s)"
 
