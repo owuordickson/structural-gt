@@ -867,6 +867,31 @@ class GraphAnalyzer(ProgressUpdate):
 
         return val_max, val_min
 
+    def get_config_info(self) -> str:
+        """
+        Get the user selected parameters and options information.
+        :return:
+        """
+
+        opt_gtc = self._configs
+        run_info = ""
+        parts = []
+
+        if opt_gtc["compute_scaling_behavior"]["value"] == 1:
+            num_filters = int(opt_gtc["scaling_behavior_kernel_count"]["value"])
+            num_patches = int(opt_gtc["scaling_behavior_patches_per_kernel"]["value"])
+
+            parts.append(f"Kernel Count={num_filters}")
+            parts.append(f"No. of Random Locations={num_patches}")
+
+        # Add title if needed
+        if parts:
+            # Join cleanly without worrying about leftover separators
+            run_info = " || ".join(parts)
+            run_info = f"***Graph Computation Configurations***\n{run_info}"
+
+        return run_info
+
     def get_compute_props(self) -> None:
         """
         A method that retrieves graph theory computed parameters and stores them in a list-array.
@@ -1004,12 +1029,15 @@ class GraphAnalyzer(ProgressUpdate):
             run_info += now.strftime("%Y-%m-%d %H:%M:%S") + "\n----------------------------\n\n"
 
             # Image Configs
-            # sel_img_batch = self.ntwk_p.selected_batch
             run_info += self._ntwk_p.image_obj.get_config_info()  # Get configs of first image
             run_info += "\n\n"
 
             # Graph Configs
             run_info += graph_obj.get_config_info()
+            run_info += "\n\n"
+
+            # Computation Configs
+            run_info += self.get_config_info()
             run_info += "\n\n"
 
             ax.text(0.5, 0.5, run_info, horizontalalignment='center', verticalalignment='center')
