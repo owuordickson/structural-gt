@@ -881,7 +881,7 @@ class GraphAnalyzer(ProgressUpdate):
             num_filters = int(opt_gtc["scaling_behavior_kernel_count"]["value"])
             num_patches = int(opt_gtc["scaling_behavior_patches_per_kernel"]["value"])
 
-            parts.append(f"Kernel Count={num_filters}")
+            parts.append(f"Kernel Count = {num_filters}")
             parts.append(f"No. of Random Locations={num_patches}")
 
         # Add title if needed
