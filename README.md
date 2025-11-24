@@ -30,7 +30,7 @@ pip install sgtlib
 Therefore, please follow the manual installation instructions provided below:
 
 * Install Python version 3.13 on your computer.
-* Git Clone the branch **DicksonOwuor-GUI** from this repo: ```https://github.com/owuordickson/structural-gt.git```
+* Git Clone this repo: ```https://github.com/owuordickson/structural-gt.git```
 * Extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
 * Navigate to the location where you saved the **'structural-gt'** folder using the terminal. 
