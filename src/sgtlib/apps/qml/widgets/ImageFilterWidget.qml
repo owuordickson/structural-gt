@@ -42,7 +42,7 @@ ColumnLayout {
             model: imgFilterModel
             delegate: RowLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: 10
+                //Layout.leftMargin: 10
                 Layout.alignment: Qt.AlignLeft
 
                 CheckBox {
