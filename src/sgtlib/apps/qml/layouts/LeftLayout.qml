@@ -9,7 +9,7 @@ Rectangle {
     width: parent.width
     height: parent.height
     color: "#f0f0f0"
-    border.color: "#c0c0c0"
+    border.color: "#d0d0d0"
 
     ColumnLayout {
         anchors.fill: parent

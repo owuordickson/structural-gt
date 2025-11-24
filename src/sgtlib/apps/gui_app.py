@@ -61,6 +61,7 @@ class PySideApp(QObject):
     def _initialize_controllers(self):
         """Initialize the controllers used by the QML engine."""
         self._ui_engine.rootContext().setContextProperty("mainController", self._ctrl)
+        self._ui_engine.rootContext().setContextProperty("themeManager", self._ctrl.theme_ctrl)
         self._ui_engine.rootContext().setContextProperty("aiController", self._ctrl.ai_ctrl)
         self._ui_engine.rootContext().setContextProperty("imageController", self._ctrl.img_ctrl)
         self._ui_engine.rootContext().setContextProperty("graphController", self._ctrl.graph_ctrl)
@@ -84,8 +85,7 @@ class PySideApp(QObject):
         # Cleanup when the app is closing
         self.app.aboutToQuit.connect(self._ctrl.cleanup_workers)
 
-        # Load UI
-        # Get the directory of the current script
+        # Load UI: Get the directory of the current script
         qml_dir = os.path.dirname(os.path.abspath(__file__))
         qml_path = os.path.join(qml_dir, self._qml_file)
 

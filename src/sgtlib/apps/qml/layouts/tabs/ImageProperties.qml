@@ -5,7 +5,7 @@ import "../../widgets"
 
 Rectangle {
     color: "#f0f0f0"
-    border.color: "#c0c0c0"
+    border.color: "#d0d0d0"
     Layout.fillWidth: true
     Layout.fillHeight: true
 
@@ -37,7 +37,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No image properties to show!"
-                color: "#808080"
+                color: "#909090"
                 visible: imagePropsModel.rowCount() <= 0
             }
             ImagePropertyWidget{}
@@ -65,7 +65,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No graph properties to show!"
-                color: "#808080"
+                color: "#909090"
                 visible: graphPropsModel.rowCount() <= 0
             }
             GraphPropertyWidget{}
@@ -94,7 +94,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No metrics to show!"
-                color: "#808080"
+                color: "#909090"
                 visible: graphComputeModel.rowCount() <= 0
             }
             GraphComputeWidget{}

@@ -87,7 +87,7 @@ Window {
 
                     Label {
                         text: "Another task is running, please wait..."
-                        color: "#ff2233"
+                        color: "#bc0000"
                         visible: mainController.wait && !imageController.img_filters_busy
                     }
 

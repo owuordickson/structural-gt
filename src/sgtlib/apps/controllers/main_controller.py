@@ -7,6 +7,7 @@ import logging
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Slot, Signal, Property
 
+from .theme_manager import ThemeManager
 from .ai_controller import AIController
 from .base_controller import BaseController
 from .graph_controller import GraphController
@@ -33,9 +34,9 @@ class MainController(BaseController):
     def __init__(self, qml_app: QApplication):
         super().__init__()
         self._qml_app = qml_app
-        #self.is_syncing = False
 
         # Add Controllers
+        self.theme_ctrl = ThemeManager()
         self.proj_ctrl = ProjectController(self)
         self.img_ctrl = ImageController(self)
         self.graph_ctrl = GraphController(self)

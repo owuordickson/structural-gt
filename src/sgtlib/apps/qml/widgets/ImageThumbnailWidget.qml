@@ -30,7 +30,7 @@ ColumnLayout {
         id: lblNoImages
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
         text: "No images to show!\nPlease add image/folder."
-        color: "#808080"
+        color: "#909090"
         visible: imgThumbnailModel.rowCount() <= 0
     }
 
@@ -71,7 +71,7 @@ ColumnLayout {
                     radius: 4
                     color: "transparent"
                     border.width: 1
-                    border.color: "#404040"
+                    border.color: "#d0d0d0"
 
                     Image {
                         anchors.fill: parent

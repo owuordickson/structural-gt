@@ -14,7 +14,7 @@ Rectangle {
     height: 40
     radius: 5
     color: "#f0f0f0"
-    border.color: "#c0c0c0"
+    border.color: "#d0d0d0"
     border.width: 1
 
     property int modelValueRole: Qt.UserRole + 4

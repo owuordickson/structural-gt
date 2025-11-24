@@ -13,7 +13,7 @@ Dialog {
     height: 150
 
     property string alertMsg: ""
-    property string alertColor: "#bc2222"
+    property string alertColor: "#bc0000"
 
     Label {
         width: parent.width

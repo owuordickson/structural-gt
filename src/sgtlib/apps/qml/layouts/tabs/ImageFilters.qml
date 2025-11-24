@@ -5,7 +5,7 @@ import "../../widgets"
 
 Rectangle {
     color: "#f0f0f0"
-    border.color: "#c0c0c0"
+    border.color: "#d0d0d0"
     Layout.fillWidth: true
     Layout.fillHeight: true
 

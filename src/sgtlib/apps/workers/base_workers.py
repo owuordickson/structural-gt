@@ -246,6 +246,33 @@ class BaseWorker:
             ntwk_p.remove_listener(self._update_progress)
             return False, ["Graph Rating Aborted", "Error occurred while rating graph!"]
 
+    def task_upload_file(self, file_path: str, upload_type: int):
+        """"""
+        try:
+            # 1. Verify if the file exists
+            self._update_progress(ProgressData(percent=25, sender="SGT", message=f"Reading File..."))
+            success = False
+            if success:
+                file_path = ""
+            else:
+                raise ValueError("File Error")
+
+            # 2. Check if the file extension is allowed
+            self._update_progress(ProgressData(percent=35, sender="SGT", message=f"Reading File..."))
+
+            # 3. Read the file and return graph data
+            self._update_progress(ProgressData(percent=50, sender="SGT", message=f"Reading File..."))
+            # graph_data = pd.read_csv(file_path, header=None, index_col=False).to_numpy()
+            # self._update_progress(ProgressData(percent=95, sender="SGT", message=f"Reading File..."))
+            # task_data = TaskResult(task_id="Upload CSV", status="Finished", message="CSV file successfully uploaded!", data=[upload_type, file_path,  graph_data])
+            return True, None#task_data
+        except ValueError as err:
+            logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})
+            return False, ["File Upload Failed", f"Error while reading file {file_path}!"]
+        except Exception as err:
+            logging.exception("File Error: %s", err, extra={'user': 'SGT Logs'})
+            return False, ["File Error", f"Error reading {file_path}! Try again."]
+
 
 class BaseWorkerTerm(QObject, BaseWorker):
 
