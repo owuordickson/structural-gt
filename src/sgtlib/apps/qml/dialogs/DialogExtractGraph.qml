@@ -45,7 +45,7 @@ Dialog {
 
                     Label {
                         text: "Cancel"
-                        color: "#ffffff"
+                        color: Theme.whiteText
                         anchors.centerIn: parent
                     }
                 }
@@ -69,7 +69,7 @@ Dialog {
 
                     Label {
                         text: "OK"
-                        color: "#ffffff"
+                        color: Theme.whiteText
                         anchors.centerIn: parent
                     }
                 }

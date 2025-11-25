@@ -102,7 +102,7 @@ Rectangle {
 
                                 Label {
                                     text: "Cancel"
-                                    color: "#ffffff"
+                                    color: Theme.whiteText
                                     anchors.centerIn: parent
                                 }
                             }
@@ -126,7 +126,7 @@ Rectangle {
 
                                 Label {
                                     text: "OK"
-                                    color: "#ffffff"
+                                    color: Theme.whiteText
                                     anchors.centerIn: parent
                                 }
                             }

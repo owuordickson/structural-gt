@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 Item {
     id: scalingBehaviorContent
@@ -107,7 +108,7 @@ Item {
 
                                     Label {
                                         text: "OK"
-                                        color: "#ffffff"
+                                        color: Theme.whiteText
                                         //font.bold: true
                                         //font.pixelSize: 10
                                         anchors.centerIn: parent
