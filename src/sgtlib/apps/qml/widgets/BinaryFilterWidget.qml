@@ -64,6 +64,7 @@ ColumnLayout {
         Basic.RadioButton {
             id: rdoAdaptive
             text: "Adaptive"
+            font.pixelSize: 11
             //implicitHeight: itemHeight
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
@@ -127,6 +128,7 @@ ColumnLayout {
         Basic.RadioButton {
             id: rdoGlobal
             text: "Global"
+            font.pixelSize: 11
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
             onClicked: btnGrpBinary.checkedButton = this
@@ -176,6 +178,7 @@ ColumnLayout {
 
         Label {
             id: lblGlobal
+            font.pixelSize: 11
             Layout.preferredWidth: lblWidthSize
             text: Number(sldGlobal.value).toFixed(0) // Display one decimal place
             color: Theme.text
@@ -187,6 +190,7 @@ ColumnLayout {
     Basic.RadioButton {
         id: rdoOtsu
         text: "OTSU"
+        font.pixelSize: 11
         Layout.preferredWidth: btnWidthSize
         ButtonGroup.group: btnGrpBinary
         onClicked: btnGrpBinary.checkedButton = this
@@ -221,6 +225,7 @@ ColumnLayout {
     Basic.CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
+        font.pixelSize: 11
         property bool clickedChange: false
         property bool isChecked: false
         checked: false

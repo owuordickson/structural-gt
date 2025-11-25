@@ -11,7 +11,7 @@ Dialog {
     title: "Adjust Binary Filters"
     modal: true
     width: 320
-    height: 350
+    height: 400
     background: Rectangle {color: Theme.background}
 
     ColumnLayout {

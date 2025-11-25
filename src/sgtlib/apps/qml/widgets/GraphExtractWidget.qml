@@ -74,6 +74,7 @@ Item {
                             id: checkBox
                             objectName: model.id
                             text: model.text
+                            font.pixelSize: 11
                             property bool isChecked: model.value === 1
                             checked: isChecked
                             // Custom indicator
@@ -121,6 +122,7 @@ Item {
                             id: rdoButton
                             objectName: model.id
                             text: model.text
+                            font.pixelSize: 11
                             ButtonGroup.group: btnGrpWeights
                             checked: model.value
                             onClicked: btnGrpWeights.checkedButton = this
@@ -164,6 +166,7 @@ Item {
 
                             TextField {
                                 id: txtField
+                                font.pixelSize: 11
                                 objectName: model.id
                                 width: 80
                                 property int txtVal: model.value
@@ -191,7 +194,7 @@ Item {
                                         text: "OK"
                                         color: Theme.white
                                         //font.bold: true
-                                        //font.pixelSize: 10
+                                        font.pixelSize: 10
                                         anchors.centerIn: parent
                                     }
                                 }

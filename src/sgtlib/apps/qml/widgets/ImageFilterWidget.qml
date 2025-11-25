@@ -11,7 +11,7 @@ ColumnLayout {
     Layout.preferredWidth: parent.width
     Layout.alignment: Qt.AlignTop
 
-    property int cbxWidthSize: 100
+    property int cbxWidthSize: 95
     property int spbWidthSize: 170
     property int sldWidthSize: 140
     property int lblWidthSize: 50
@@ -53,6 +53,7 @@ ColumnLayout {
                     objectName: model.id
                     Layout.preferredWidth: cbxWidthSize
                     text: model.text
+                    font.pixelSize: 11
                     property bool isChecked: model.value
                     property bool clickedChange: false  // Flag
                     checked: isChecked
@@ -164,6 +165,7 @@ ColumnLayout {
 
                         Label {
                             id: label
+                            font.pixelSize: 11
                             Layout.preferredWidth: lblWidthSize
                             text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
                             enabled: checkBox.checked
