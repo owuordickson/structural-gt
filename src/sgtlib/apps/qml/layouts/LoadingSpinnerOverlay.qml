@@ -13,7 +13,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.semiTransparent // semi-transparent dark
+        color: Theme.semiTransparentDk // semi-transparent dark
     }
 
     Column {

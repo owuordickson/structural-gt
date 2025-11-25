@@ -54,7 +54,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignLeft
             implicitHeight: 24
             border.width: 1
-            border.color: Theme.labelText
+            border.color: Theme.gray
             radius: 5
             color: "transparent"
 

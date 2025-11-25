@@ -18,7 +18,7 @@ Rectangle {
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: Theme.semiTransparent
+        shadowColor: Theme.semiTransparentDk
         shadowBlur: 0.3
         shadowHorizontalOffset: 0
         shadowVerticalOffset: 2

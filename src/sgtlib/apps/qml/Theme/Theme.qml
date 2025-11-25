@@ -20,6 +20,7 @@ QtObject {
 
     readonly property color text:       themeManager.is_dark ? "#f0f0f0" : "#1a1a1a"
     readonly property color background: themeManager.is_dark ? "#000000" : "#f0f0f0"
-    readonly property color semiTransparent:     themeManager.is_dark ? "#80ffffff" : "#50000000" // 80% or 50% opacity
-    //readonly property color disabled:   themeManager.is_dark ? "#777" : "#999"
+    readonly property color semiTransparentLt: "#80ffffff" // 80% or 50% opacity
+    readonly property color semiTransparentDk: "#80000000" // 80% opacity
+    //readonly property color disabled: themeManager.is_dark? "#777" : "#999"
 }
