@@ -52,9 +52,10 @@ ColumnLayout {
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: Rectangle {
+            adius: 4
             implicitWidth: tblImgThumbs.width
             implicitHeight: tblRowHeight + 10
-            color: model.selected ? Theme.lightGray : "transparent"
+            color: model.selected ? Theme.lightGray : Theme.background
 
             MouseArea {
                 anchors.fill: parent
