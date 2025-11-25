@@ -18,7 +18,7 @@ Rectangle {
         Label {
             id: lblWelcome
             text: "StructuralGT: analyze microscopy images"
-            color: "#2266ff"
+            color: Theme.blueText
             //font.bold: true
             font.pixelSize: 19
         }

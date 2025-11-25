@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 
 Item {
@@ -44,7 +45,7 @@ Item {
             Rectangle {
                 width: 1 // Border width
                 height: tblRowHeight
-                color: "#e0e0e0" // Border color
+                color: Theme.tableBorderColor // Border color
                 anchors.left: parent.left
             }
         }

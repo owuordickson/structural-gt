@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 import "../widgets"
 
 
@@ -104,7 +105,7 @@ Window {
                             implicitWidth: 84
                             height: 26
                             font.pixelSize: 12
-                            color: "#2266ff"
+                            color: Theme.blueText
                             Layout.alignment: Qt.AlignVCenter
                             onEditingFinished: {
                                 let newVal = parseFloat(text)

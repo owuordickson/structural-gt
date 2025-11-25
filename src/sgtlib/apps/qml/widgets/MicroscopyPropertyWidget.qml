@@ -23,7 +23,7 @@ Item {
                 Label {
                     id: label
                     wrapMode: Text.Wrap
-                    color: "#2266ff"
+                    color: Theme.blueText
                     font.pixelSize: 10
                     Layout.preferredWidth: lblWidthSize
                     Layout.leftMargin: 10
@@ -33,7 +33,7 @@ Item {
                 TextField {
                     id: txtField
                     objectName: model.id
-                    color: "#2266ff"
+                    color: Theme.blueText
                     font.pixelSize: 10
                     Layout.preferredWidth: txtWidthSize
                     text: model.value
@@ -62,7 +62,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#22bc55"
+                        color: Theme.successColor
 
                         Label {
                             text: "OK"

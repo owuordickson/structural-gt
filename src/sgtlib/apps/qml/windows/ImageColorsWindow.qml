@@ -104,7 +104,7 @@ Window {
                         Label {
                             text: "please wait..."
                             font.pointSize: 12
-                            color: "#2299ff"
+                            color: Theme.waitText
                             horizontalAlignment: Text.AlignHCenter
                             anchors.horizontalCenter: parent.horizontalCenter
                         }

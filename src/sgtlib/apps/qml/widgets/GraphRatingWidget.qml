@@ -15,7 +15,7 @@ ColumnLayout {
     Label {
         Layout.alignment: Qt.AlignHCenter
         text: "How good is the graph? Pick a score: 0 - 9."
-        color: "#2266ff"
+        color: Theme.blueText
     }
 
     Row {

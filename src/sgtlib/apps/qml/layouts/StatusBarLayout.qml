@@ -71,7 +71,7 @@ Rectangle {
                 text: projectController.get_sgt_version()
                 visible: !mainController.is_task_running()
                 Layout.fillWidth: true
-                color: "#2266ff"
+                color: Theme.blueText
             }
 
             Label {
@@ -80,7 +80,7 @@ Rectangle {
                 text: "Please wait..."
                 visible: mainController.is_task_running()
                 Layout.fillWidth: true
-                color: "#2266ff"
+                color: Theme.blueText
             }
 
             Basic.Button {

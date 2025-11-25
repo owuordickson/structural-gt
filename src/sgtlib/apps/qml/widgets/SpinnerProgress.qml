@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 
 Basic.BusyIndicator {
@@ -49,7 +50,7 @@ Basic.BusyIndicator {
                     implicitWidth: markerSize * 2
                     implicitHeight: markerSize * 2
                     radius: 5
-                    color: "#2299ff"
+                    color: Theme.waitText
 
                     required property int index
 

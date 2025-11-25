@@ -13,6 +13,7 @@ QtObject {
     readonly property color successColor:    themeManager.is_dark ? "#22bc55" : "#22bc55"
 
     readonly property color borderColor:     themeManager.is_dark ? "#333" : "#d0d0d0"
+    readonly property color tableBorderColor:     themeManager.is_dark ? "#e0e0e0" : "#e0e0e0"
     readonly property color semiTransparent:     themeManager.is_dark ? "#80000000" : "#80000000"
     //readonly property color disabled:   themeManager.is_dark ? "#777" : "#999"
 }
