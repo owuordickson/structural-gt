@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls.Material as Material
 import QtQuick.Controls.Fusion as Fusion
+import Theme 1.0
 import "../widgets"
 
 Window {
@@ -87,7 +88,7 @@ Window {
 
                     Label {
                         text: "Another task is running, please wait..."
-                        color: "#bc0000"
+                        color: Theme.errorColor
                         visible: mainController.wait && !imageController.img_filters_busy
                     }
 

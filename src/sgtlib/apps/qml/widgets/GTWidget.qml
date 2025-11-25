@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 Item {
     id: graphComputationCtrl
@@ -64,7 +65,7 @@ Item {
         Label {
             wrapMode: Text.Wrap
             Layout.leftMargin: 15
-            color: "#22bc55"
+            color: Theme.successColor
             font.pixelSize: 10
             Layout.preferredWidth: 200
             text: "**Note**: all these computations are applied on the giant graph ONLY."
@@ -94,7 +95,7 @@ Item {
         ColumnLayout {
             Label {
                 wrapMode: Text.Wrap
-                color: "#bc0000"
+                color: Theme.errorColor
                 font.pixelSize: 10
                 Layout.preferredWidth: 200
                 text: "**Warning**: this calculation takes long (esp. when node-count > 2000)"

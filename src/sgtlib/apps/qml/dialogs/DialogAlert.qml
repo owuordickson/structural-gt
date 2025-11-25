@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 Dialog {
     id: dialogAlert
@@ -13,7 +14,7 @@ Dialog {
     height: 150
 
     property string alertMsg: ""
-    property string alertColor: "#bc0000"
+    property string alertColor: Theme.errorColor
 
     Label {
         width: parent.width

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 import "../widgets"
 
 Dialog {
@@ -33,7 +34,7 @@ Dialog {
                 Rectangle {
                     anchors.fill: parent
                     radius: 5
-                    color: "#bc0000"
+                    color: Theme.errorColor
 
                     Label {
                         text: "Cancel"
@@ -52,7 +53,7 @@ Dialog {
                 Rectangle {
                     anchors.fill: parent
                     radius: 5
-                    color: "#22bc55"
+                    color: Theme.successColor
 
                     Label {
                         text: "OK"

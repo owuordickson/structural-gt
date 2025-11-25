@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
-
+import Theme 1.0
 
 Rectangle {
     id: imgContainer
@@ -76,7 +76,7 @@ Rectangle {
 
                     Label {
                         text: "Frame " + model.id
-                        color: "#bc0000"
+                        color: Theme.blueColor
                         anchors.left: parent.left
                         anchors.top: parent.top
                         anchors.margins: 2
