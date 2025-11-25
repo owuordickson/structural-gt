@@ -45,7 +45,7 @@ Rectangle {
 
                         Label {
                             text: "Create project..."
-                            color: Theme.gray
+                            color: Theme.darkGray
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent
@@ -72,7 +72,7 @@ Rectangle {
 
                         Label {
                             text: "Open project..."
-                            color: Theme.gray
+                            color: Theme.darkGray
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent

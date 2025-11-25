@@ -14,7 +14,6 @@ class ThemeManager(QObject):
     def __init__(self):
         super().__init__()
         self._isDark = ThemeManager.detect_dark_mode()
-        print(f"OS Dark Theme: {self._isDark}")
 
     @Property(bool, notify=themeChanged)
     def is_dark(self):

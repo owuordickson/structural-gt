@@ -92,7 +92,7 @@ ColumnLayout {
                     font.pixelSize: model.selected ? 12 : 10
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
-                    color: model.selected ? Theme.darkGray : Theme.gray
+                    color: Theme.text
                     clip: true
                 }
 
