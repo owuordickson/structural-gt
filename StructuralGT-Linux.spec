@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 from glob import glob
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 # Collect ovito plugin DLLs
 ovito_dlls = glob('.venv_sgt/Lib/site-packages/ovito/plugins/*.dll')
@@ -16,8 +16,8 @@ a = Analysis(
     ['src/SGT.py'],
     pathex=[os.path.abspath("src")],  # Absolute path for reliability
     binaries=[(dll, 'ovito/plugins') for dll in ovito_dlls] + [(libigraph_path, '.')],
-    datas=[('src/sgtlib/apps/qml', 'sgtlib/apps/qml')],  # Fix relative path
-    hiddenimports=collect_submodules('ovito') + ['PySide6.QtQml', 'PySide6.QtQuick', 'multiprocessing', 'subprocess', 'pip'],  # Add dependencies
+    datas=[('src/sgtlib/apps/qml', 'sgtlib/apps/qml')] + collect_data_files('sklearn'),  # Fix relative path
+    hiddenimports=collect_submodules('ovito') + collect_submodules('sklearn') + ['PySide6.QtQml', 'PySide6.QtQuick', 'multiprocessing', 'subprocess', 'pip'],  # Add dependencies
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
