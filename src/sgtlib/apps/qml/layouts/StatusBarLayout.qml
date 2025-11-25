@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Controls.Imagine as Imagine
+import Theme 1.0
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
 // Icons retrieved from https://www.flaticon.com and used under the CC0 1.0 Universal Public Domain Dedication.
@@ -11,7 +12,7 @@ Rectangle {
     id: statusBar
     width: parent.width
     height: 72
-    color: "#f0f0f0"
+    color: Theme.background
     border.color: "#d0d0d0"
 
     ColumnLayout {
@@ -104,7 +105,7 @@ Rectangle {
                     x: -60
                     y: -60
                     background: Rectangle {
-                        color: "#f0f0f0"
+                        color: Theme.background
                         border.color: "#d0d0d0"
                         border.width: 1
                         radius: 2

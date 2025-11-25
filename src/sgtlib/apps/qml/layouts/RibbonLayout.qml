@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Controls.Fusion as Fusion
 //import Qt5Compat.GraphicalEffects
+import Theme 1.0
 import "../widgets"
 
 // Icons retrieved from Iconfinder.com and used under the CC0 1.0 Universal Public Domain Dedication.
@@ -13,7 +14,7 @@ Rectangle {
     width: parent.width - 20
     height: 40
     radius: 5
-    color: "#f0f0f0"
+    color: Theme.background
     border.color: "#d0d0d0"
     border.width: 1
 
@@ -33,7 +34,7 @@ Rectangle {
     Rectangle {
         anchors.fill: rectRibbon
         radius: 5
-        color: "#f0f0f0" // the rectangle's own background
+        color: Theme.background // the rectangle's own background
         border.color: "#d0d0d0"
         border.width: 1
     }*/
@@ -98,7 +99,7 @@ Rectangle {
                     x: 2
                     y: 32
                     background: Rectangle {
-                        color: "#f0f0f0"
+                        color: Theme.background
                         border.color: "#d0d0d0"
                         border.width: 1
                         radius: 2
@@ -164,7 +165,7 @@ Rectangle {
                     x: 2
                     y: 32
                     background: Rectangle {
-                        color: "#f0f0f0"
+                        color: Theme.background
                         border.color: "#d0d0d0"
                         border.width: 1
                         radius: 2
@@ -272,7 +273,7 @@ Rectangle {
                     x: -225
                     y: 32
                     background: Rectangle {
-                        color: "#f0f0f0"
+                        color: Theme.background
                         border.color: "#d0d0d0"
                         border.width: 1
                         radius: 2

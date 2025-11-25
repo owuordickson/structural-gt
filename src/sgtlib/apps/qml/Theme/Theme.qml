@@ -3,6 +3,7 @@ import QtQuick
 
 QtObject {
     readonly property color background: themeManager.is_dark ? "#000000" : "#f0f0f0"
+    readonly property color aiBackground:     themeManager.is_dark ? "#f0fff0" : "#f0fff0"
     readonly property color text:       themeManager.is_dark ? "#f0f0f0" : "#1a1a1a"
     readonly property color whiteText:       themeManager.is_dark ? "#000000" : "#ffffff"
     readonly property color blueText:       themeManager.is_dark ? "#2266ff" : "#2266ff"

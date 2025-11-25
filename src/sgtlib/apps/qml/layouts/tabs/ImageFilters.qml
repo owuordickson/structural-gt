@@ -1,10 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 import "../../widgets"
 
 Rectangle {
-    color: "#f0f0f0"
+    color: Theme.background
     border.color: "#d0d0d0"
     Layout.fillWidth: true
     Layout.fillHeight: true

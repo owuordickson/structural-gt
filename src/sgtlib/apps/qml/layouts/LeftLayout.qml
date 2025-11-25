@@ -3,12 +3,13 @@ import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15 as MaterialControls
 import QtQuick.Layouts
 //import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 import "tabs"
 
 Rectangle {
     width: parent.width
     height: parent.height
-    color: "#f0f0f0"
+    color: Theme.background
     border.color: "#d0d0d0"
 
     ColumnLayout {

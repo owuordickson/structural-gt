@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
+import Theme 1.0
 
 Rectangle {
     id: imgViewControls
@@ -71,7 +71,7 @@ Rectangle {
                 x: -225
                 y: 32
                 background: Rectangle {
-                    color: "#f0f0f0"
+                    color: Theme.background
                     border.color: "#d0d0d0"
                     border.width: 1
                     radius: 2

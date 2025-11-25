@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 Rectangle {
     id: aiModeControls
@@ -10,7 +11,7 @@ Rectangle {
     Layout.alignment: Qt.AlignTop
     height: 72
     radius: 5
-    color: "#f0fff0"
+    color: Theme.aiBackground
     Layout.margins: 5   // shorthand for top/left/right/bottom
     visible: imageController.display_image()
     enabled: imageController.enable_img_controls()
