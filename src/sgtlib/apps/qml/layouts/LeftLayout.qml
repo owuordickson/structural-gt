@@ -25,7 +25,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blue : Theme.white
+                    color: parent.checked ? Theme.dodgerBlue : Theme.gray
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -37,7 +37,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blue : Theme.white
+                    color: parent.checked ? Theme.dodgerBlue : Theme.gray
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -49,7 +49,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blue : Theme.white
+                    color: parent.checked ? Theme.dodgerBlue : Theme.gray
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
