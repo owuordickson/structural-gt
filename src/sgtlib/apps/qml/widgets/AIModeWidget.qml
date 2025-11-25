@@ -18,7 +18,7 @@ Rectangle {
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: "#80000000"
+        shadowColor: Theme.semiTransparent
         shadowBlur: 0.3
         shadowHorizontalOffset: 0
         shadowVerticalOffset: 2
@@ -37,7 +37,7 @@ Rectangle {
             Label {
                 id: lblAIMode
                 text: "AI Mode"
-                color: "#d0d0d0"
+                color: Theme.borderColor
             }
 
             Switch {
@@ -112,7 +112,7 @@ Rectangle {
 
             Label {
                 id: lblAIStatusMsg
-                color: "#909090"
+                color: Theme.grayText
                 text: "please wait..."
             }
         }

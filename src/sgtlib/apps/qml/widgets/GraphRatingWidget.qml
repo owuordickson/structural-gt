@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 ColumnLayout {
     id: ratingContainer
@@ -68,7 +69,7 @@ ColumnLayout {
         horizontalAlignment: Text.AlignJustify  // Justify the text
         //Layout.alignment: Qt.AlignHCenter
         text: "Disclaimer: By rating the graph, you agree to share your rating and the graph image with the StructuralGT developers, and this information may be used to train AI models."
-        color: "#909090"
+        color: Theme.grayText
         font.pixelSize: 8
         font.bold: true
         wrapMode: Text.Wrap

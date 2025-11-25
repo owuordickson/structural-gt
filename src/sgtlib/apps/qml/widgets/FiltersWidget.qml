@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Imagine as Imagine
+import Theme 1.0
 
 ColumnLayout {
     id: imgFilterButtons
@@ -27,7 +28,7 @@ ColumnLayout {
         Rectangle {
             width: 1
             height: 18
-            color: "#d0d0d0"
+            color: Theme.borderColor
         }
 
         Imagine.Button {

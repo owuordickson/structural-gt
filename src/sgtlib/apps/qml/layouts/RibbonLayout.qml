@@ -201,7 +201,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 24
-            color: "#d0d0d0"
+            color: Theme.borderColor
         }
 
         RowLayout {

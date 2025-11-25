@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 import "../widgets"
 
 Item {
@@ -12,7 +13,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "#80000000" // semi-transparent dark
+        color: Theme.semiTransparent // semi-transparent dark
     }
 
     Column {
@@ -28,7 +29,7 @@ Item {
         Label {
             text: mainController.wait_text
             font.pointSize: 21
-            color: "#2299ff"
+            color: Theme.waitText
             horizontalAlignment: Text.AlignHCenter
             anchors.horizontalCenter: parent.horizontalCenter
         }

@@ -31,7 +31,7 @@ ColumnLayout {
         id: lblNoImages
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
         text: "No images to show!\nPlease add image/folder."
-        color: "#909090"
+        color: Theme.grayText
         visible: imgThumbnailModel.rowCount() <= 0
     }
 

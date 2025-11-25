@@ -19,7 +19,7 @@ Rectangle {
 
         Rectangle {
             height: 1
-            color: "#d0d0d0"
+            color: Theme.borderColor
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 5

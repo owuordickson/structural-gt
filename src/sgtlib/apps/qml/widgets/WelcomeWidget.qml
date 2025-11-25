@@ -45,7 +45,7 @@ Rectangle {
 
                         Label {
                             text: "Create project..."
-                            color: "#909090"
+                            color: Theme.grayText
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent
@@ -97,7 +97,7 @@ Rectangle {
                     Layout.leftMargin: 5
                     //Layout.preferredWidth:
                     text: "Quick Analysis"
-                    color: "#909090"
+                    color: Theme.grayText
                     font.bold: true
                     font.pixelSize: 16
                 }
@@ -112,7 +112,7 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#909090"
+                        color: Theme.grayText
 
                         Label {
                             text: "Add image"
@@ -134,7 +134,7 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "#909090"
+                        color: Theme.grayText
 
                         Label {
                             text: "Add image folder"

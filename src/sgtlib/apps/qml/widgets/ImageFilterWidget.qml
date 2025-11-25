@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 ColumnLayout {
     id: imgFiltersControl
@@ -20,7 +21,7 @@ ColumnLayout {
         id: lblNoImgFilters
         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         text: "No image filters to show!\nCreate project/add image."
-        color: "#909090"
+        color: Theme.grayText
         visible: !imageController.display_image()
     }
 

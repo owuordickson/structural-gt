@@ -38,14 +38,14 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No image properties to show!"
-                color: "#909090"
+                color: Theme.grayText
                 visible: imagePropsModel.rowCount() <= 0
             }
             ImagePropertyWidget{}
 
             Rectangle {
                 height: 1
-                color: "#d0d0d0"
+                color: Theme.borderColor
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
@@ -66,7 +66,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No graph properties to show!"
-                color: "#909090"
+                color: Theme.grayText
                 visible: graphPropsModel.rowCount() <= 0
             }
             GraphPropertyWidget{}
@@ -74,7 +74,7 @@ Rectangle {
 
             Rectangle {
                 height: 1
-                color: "#d0d0d0"
+                color: Theme.borderColor
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
@@ -95,7 +95,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 20
                 text: "No metrics to show!"
-                color: "#909090"
+                color: Theme.grayText
                 visible: graphComputeModel.rowCount() <= 0
             }
             GraphComputeWidget{}
