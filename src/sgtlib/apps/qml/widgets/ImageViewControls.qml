@@ -37,7 +37,7 @@ Rectangle {
                     radius: 9
                     anchors.verticalCenter: parent.verticalCenter
                     x: toggleShowGiantGraph.checked ? parent.width - width - 1 : 1
-                    color: Theme.black
+                    color: Theme.darkGray
                 }
             }
 
