@@ -53,6 +53,7 @@ ColumnLayout {
         text: "Binary Filters"
         font.pixelSize: 12
         font.bold: true
+        color: Theme.text
         Layout.alignment: Qt.AlignHCenter
     }
 
@@ -122,6 +123,7 @@ ColumnLayout {
             id: lblGlobal
             Layout.preferredWidth: lblWidthSize
             text: Number(sldGlobal.value).toFixed(0) // Display one decimal place
+            color: Theme.text
             enabled: rdoGlobal.checked
         }
 

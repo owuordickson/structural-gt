@@ -22,6 +22,7 @@ ColumnLayout {
         text: "Loaded Images"
         font.pixelSize: 12
         font.bold: true
+        color: Theme.text
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
         Layout.bottomMargin: 5
         visible: true

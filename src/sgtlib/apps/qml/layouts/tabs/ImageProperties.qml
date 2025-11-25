@@ -29,6 +29,7 @@ Rectangle {
                 text: "Image Properties"
                 font.pixelSize: 12
                 font.bold: true
+                color: Theme.text
                 Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
@@ -57,6 +58,7 @@ Rectangle {
                 text: "Graph Properties"
                 font.pixelSize: 12
                 font.bold: true
+                color: Theme.text
                 Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter
@@ -86,6 +88,7 @@ Rectangle {
                 text: "Computation Metrics"
                 font.pixelSize: 12
                 font.bold: true
+                color: Theme.text
                 Layout.topMargin: 10
                 Layout.bottomMargin: 5
                 Layout.alignment: Qt.AlignHCenter

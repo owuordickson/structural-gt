@@ -30,6 +30,7 @@ ColumnLayout {
         text: "Image Filters"
         font.pixelSize: 12
         font.bold: true
+        color: Theme.text
         Layout.alignment: Qt.AlignHCenter
         visible: imageController.display_image()
     }
@@ -138,6 +139,7 @@ ColumnLayout {
                             Layout.preferredWidth: lblWidthSize
                             text: model.stepSize >= 1 ? Number(slider.value).toFixed(0) : Number(slider.value).toFixed(2) // Display 2 decimal place
                             enabled: checkBox.checked
+                            color: Theme.text
                         }
                     }
                 }

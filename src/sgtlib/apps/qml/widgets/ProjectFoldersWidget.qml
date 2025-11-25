@@ -31,6 +31,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
             text: ""
+            color: Theme.text
             wrapMode: Text.NoWrap
             elide: Text.ElideRight
             maximumLineCount: 1        // ensures single-line behavior
@@ -46,6 +47,7 @@ ColumnLayout {
         Label {
             text: "Output Dir:"
             font.bold: true
+            color: Theme.text
         }
 
         Rectangle {
@@ -63,6 +65,7 @@ ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 4
                 text: ""
+                color: Theme.text
                 wrapMode: Text.NoWrap
                 elide: Text.ElideRight
                 font.pixelSize: 10
