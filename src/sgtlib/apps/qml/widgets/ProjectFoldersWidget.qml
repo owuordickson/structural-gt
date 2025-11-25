@@ -23,6 +23,7 @@ ColumnLayout {
         Label {
             text: "Project Name:"
             font.bold: true
+            color: Theme.text
         }
 
         Text {

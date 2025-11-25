@@ -32,6 +32,7 @@ Item {
                     id: label
                     Layout.preferredWidth: lblWidthSize
                     text: model.text
+                    color: Theme.text
                 }
 
                 SpinBox {

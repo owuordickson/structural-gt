@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.platform as Platform
+import Theme 1.0
 
 
 Item {
@@ -33,6 +34,7 @@ Item {
                 id: lblProjectName
                 Layout.preferredWidth: lblWidthSize
                 text: "Name:"
+                color: Theme.text
                 //font.bold: true
             }
 
@@ -58,6 +60,7 @@ Item {
                 id: lblProjectLocation
                 Layout.preferredWidth: lblWidthSize
                 text: "Location:"
+                color: Theme.text
                 //font.bold: true
             }
 
@@ -78,22 +81,6 @@ Item {
             }
         }
 
-        /*RowLayout {
-            Layout.fillWidth: true
-
-            Button {
-                text: "Create Project"
-                onClicked: {
-                    if (txtProjectName.text === "" || txtProjectLocation.text === "") {
-                        // Alert user - empty fields
-                    } else {
-                        projectController.create_sgt_project(txtProjectName.text, txtProjectLocation.text)
-                    }
-                }
-            }
-
-        }*/
-
     }
 
 
@@ -102,7 +89,7 @@ Item {
         title: "Select a project location"
         onAccepted: {
             lblLocation.text = "Location:"
-            lblLocation.color = "black";
+            lblLocation.color = Theme.black;
 
             txtProjectLocation.text = projectFolderDialog.folder;
         }

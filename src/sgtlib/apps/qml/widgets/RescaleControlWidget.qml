@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
+import Theme 1.0
 
 Item {
     id: rescaleControl
@@ -44,11 +44,19 @@ Item {
                     anchors.fill: parent
 
                     RadioButton {
+                        id: rdoButton
                         text: model.text
                         ButtonGroup.group: btnGrpScales
                         property bool isChecked: model.value
                         checked: isChecked
                         onClicked: btnGrpScales.checkedButton = this
+                        contentItem: Label {
+                            text: rdoButton.text
+                            font: rdoButton.font
+                            color: Theme.text
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: rdoButton.indicator.width + 6
+                        }
                         onCheckedChanged: {
                             if (isChecked !== checked) {  // Only update if there is a change
                                 isChecked = checked
@@ -63,7 +71,6 @@ Item {
                 }
             }
         }
-
 
 
     }

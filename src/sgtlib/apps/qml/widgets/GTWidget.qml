@@ -29,6 +29,13 @@ Item {
                     property bool isChecked: model.value === 1
                     checked: isChecked
                     onCheckedChanged: updateValue(isChecked, checked)
+                    contentItem: Label {
+                        text: parentCheckBox.text
+                        font: parentCheckBox.font
+                        color: Theme.text
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: parentCheckBox.indicator.width + 6
+                    }
 
                     function updateValue(isChecked, checked) {
                         if (isChecked !== checked) {  // Only update if there is a change

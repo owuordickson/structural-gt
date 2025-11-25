@@ -28,7 +28,7 @@ Item {
                             model.id === "scaling_behavior_stretched_power_law_fit" ||
                             model.id === "scaling_behavior_log_normal_fit"
                         )
-                            if (model.id === "scaling_behavior_power_law_fit" ) {
+                            if (model.id === "scaling_behavior_power_law_fit") {
                                 return cbxComponent_w_Title
                             } else {
                                 return cbxComponent
@@ -48,6 +48,13 @@ Item {
                                 Layout.leftMargin: 10
                                 property bool isChecked: model.value === 1
                                 checked: isChecked
+                                contentItem: Label {
+                                    text: checkBox.text
+                                    font: checkBox.font
+                                    color: Theme.text
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: checkBox.indicator.width + 6
+                                }
                                 onCheckedChanged: {
                                     if (isChecked !== checked) {  // Only update if there is a change
                                         isChecked = checked
@@ -125,6 +132,7 @@ Item {
                                 wrapMode: Text.Wrap
                                 font.pixelSize: 12
                                 font.bold: true
+                                color: Theme.text
                                 Layout.preferredWidth: 150
                                 Layout.topMargin: 5
                                 Layout.leftMargin: 10

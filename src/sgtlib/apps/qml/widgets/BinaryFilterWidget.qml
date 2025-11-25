@@ -66,6 +66,13 @@ ColumnLayout {
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
             onClicked: btnGrpBinary.checkedButton = this
+            contentItem: Label {
+                text: rdoAdaptive.text
+                font: rdoAdaptive.font
+                color: Theme.text
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: rdoAdaptive.indicator.width + 6
+            }
         }
 
         SpinBox {
@@ -102,6 +109,13 @@ ColumnLayout {
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
             onClicked: btnGrpBinary.checkedButton = this
+            contentItem: Label {
+                text: rdoGlobal.text
+                font: rdoGlobal.font
+                color: Theme.text
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: rdoGlobal.indicator.width + 6
+            }
         }
 
         Slider {
@@ -136,6 +150,13 @@ ColumnLayout {
         Layout.preferredWidth: btnWidthSize
         ButtonGroup.group: btnGrpBinary
         onClicked: btnGrpBinary.checkedButton = this
+        contentItem: Label {
+            text: rdoOtsu.text
+            font: rdoOtsu.font
+            color: Theme.text
+            verticalAlignment: Text.AlignVCenter
+            leftPadding: rdoOtsu.indicator.width + 6
+        }
     }
 
     CheckBox {
@@ -144,6 +165,13 @@ ColumnLayout {
         property bool clickedChange: false
         property bool isChecked: false
         checked: false
+        contentItem: Label {
+            text: cbxDarkFg.text
+            font: cbxDarkFg.font
+            color: Theme.text
+            verticalAlignment: Text.AlignVCenter
+            leftPadding: cbxDarkFg.indicator.width + 6
+        }
         onCheckedChanged: {
             if (clickedChange) {
                 clickedChange = false

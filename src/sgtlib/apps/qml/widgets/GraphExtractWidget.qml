@@ -44,10 +44,14 @@ Item {
 
                     // Expand/Collapse Button
                     Basic.Button {
-                        Layout.leftMargin: 10
+                        id: btnExpand
+                        //Layout.leftMargin: 10
+                        //text: expanded ? "▼" : "▶"
                         visible: hasChildren
-                        text: expanded ? "▼" : "▶"
-                        //text: expanded ? "∨" : ">"
+                        icon.source: expanded ? "../assets/icons/expand_down_icon.png" : "../assets/icons/expand_right_icon.png"
+                        icon.width: 14
+                        icon.height: 14
+                        icon.color: Theme.black
                         background: Rectangle { color: "transparent" }
                         onClicked: gteTreeView.toggleExpanded(row)
                     }
@@ -70,6 +74,13 @@ Item {
                             text: model.text
                             property bool isChecked: model.value === 1
                             checked: isChecked
+                            contentItem: Label {
+                                text: checkBox.text
+                                font: checkBox.font
+                                color: Theme.text
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: checkBox.indicator.width + 6
+                            }
                             onCheckedChanged: {
                                 if (isChecked !== checked) {  // Only update if there is a change
                                     isChecked = checked
@@ -91,6 +102,13 @@ Item {
                             ButtonGroup.group: btnGrpWeights
                             checked: model.value
                             onClicked: btnGrpWeights.checkedButton = this
+                            contentItem: Label {
+                                text: rdoButton.text
+                                font: rdoButton.font
+                                color: Theme.text
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: rdoButton.indicator.width + 6
+                            }
                             onCheckedChanged: {
                                 var val = checked ? 1 : 0;
                                 updateChild(model.id, val);

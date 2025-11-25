@@ -55,6 +55,13 @@ ColumnLayout {
                     property bool isChecked: model.value
                     property bool clickedChange: false  // Flag
                     checked: isChecked
+                    contentItem: Label {
+                        text: checkBox.text
+                        font: checkBox.font
+                        color: Theme.text
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: checkBox.indicator.width + 6
+                    }
                     onCheckedChanged: {
                         if (clickedChange) {
                             // Reset flag so the next programmatic change will run normally

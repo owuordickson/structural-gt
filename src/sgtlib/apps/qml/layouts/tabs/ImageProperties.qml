@@ -101,7 +101,7 @@ Rectangle {
                 color: Theme.gray
                 visible: graphComputeModel.rowCount() <= 0
             }
-            GraphComputeWidget{}
+            GTPropertyWidget{}
         }
     }
 

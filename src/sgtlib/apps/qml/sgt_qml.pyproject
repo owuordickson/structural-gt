@@ -55,10 +55,12 @@
         "assets/icons/top_down_arrow.png",
         "assets/icons/left_right_arrow.png",
         "assets/icons/save_icon.png",
+        "assets/icons/expand_down_icon.png",
+        "assets/icons/expand_right_icon.png",
         "widgets/BrightnessControlWidget.qml",
         "widgets/RescaleControlWidget.qml",
         "widgets/GraphPropertyWidget.qml",
-        "widgets/GraphComputeWidget.qml",
+        "widgets/GTPropertyWidget.qml",
         "widgets/CreateProjectWidget.qml",
         "widgets/LoadingSpinnerOverlay.qml",
         "widgets/AIModeWidget.qml"
