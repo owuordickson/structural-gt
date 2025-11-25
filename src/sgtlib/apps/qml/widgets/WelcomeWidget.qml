@@ -18,7 +18,7 @@ Rectangle {
         Label {
             id: lblWelcome
             text: "StructuralGT: analyze microscopy images"
-            color: Theme.blueText
+            color: Theme.blue
             //font.bold: true
             font.pixelSize: 19
         }
@@ -45,7 +45,7 @@ Rectangle {
 
                         Label {
                             text: "Create project..."
-                            color: Theme.grayText
+                            color: Theme.gray
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent
@@ -68,11 +68,11 @@ Rectangle {
                         radius: 5
                         color: "transparent"
                         border.width: 2
-                        border.color: Theme.labelText
+                        border.color: Theme.gray
 
                         Label {
                             text: "Open project..."
-                            color: Theme.labelText
+                            color: Theme.gray
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent
@@ -87,7 +87,7 @@ Rectangle {
                 Layout.rightMargin: 12
                 width: 1
                 height: 75
-                color: Theme.borderColor
+                color: Theme.lightGray
             }
 
             ColumnLayout {
@@ -97,7 +97,7 @@ Rectangle {
                     Layout.leftMargin: 5
                     //Layout.preferredWidth:
                     text: "Quick Analysis"
-                    color: Theme.grayText
+                    color: Theme.gray
                     font.bold: true
                     font.pixelSize: 16
                 }
@@ -112,11 +112,11 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: Theme.grayText
+                        color: Theme.gray
 
                         Label {
                             text: "Add image"
-                            color: Theme.whiteText
+                            color: Theme.white
                             font.bold: true
                             font.pixelSize: 12
                             anchors.centerIn: parent
@@ -134,11 +134,11 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: Theme.grayText
+                        color: Theme.gray
 
                         Label {
                             text: "Add image folder"
-                            color: Theme.whiteText
+                            color: Theme.white
                             font.bold: true
                             font.pixelSize: 12
                             anchors.centerIn: parent

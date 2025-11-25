@@ -88,7 +88,7 @@ Window {
 
                     Label {
                         text: "Another task is running, please wait..."
-                        color: Theme.errorColor
+                        color: Theme.red
                         visible: mainController.wait && !imageController.img_filters_busy
                     }
 
@@ -104,7 +104,7 @@ Window {
                         Label {
                             text: "please wait..."
                             font.pointSize: 12
-                            color: Theme.waitText
+                            color: Theme.dodgerBlue
                             horizontalAlignment: Text.AlignHCenter
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
@@ -236,7 +236,7 @@ Window {
                                     radius: 2
                                     color: Theme.black
                                     border.width: 1
-                                    border.color: Theme.borderColor
+                                    border.color: Theme.lightGray
                                 }
                             }
 
@@ -256,9 +256,9 @@ Window {
                                     width: 25
                                     height: 25
                                     radius: 2
-                                    color: Theme.whiteText
+                                    color: Theme.white
                                     border.width: 1
-                                    border.color: Theme.borderColor
+                                    border.color: Theme.lightGray
                                 }
                             }
                         }

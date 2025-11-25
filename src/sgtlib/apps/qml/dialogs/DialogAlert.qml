@@ -14,7 +14,7 @@ Dialog {
     height: 150
 
     property string alertMsg: ""
-    property string alertColor: Theme.errorColor
+    property string alertColor: Theme.red
 
     Label {
         width: parent.width
@@ -33,7 +33,7 @@ Dialog {
         function onShowAlertSignal(title, msg) {
             dialogAlert.title = title;
             dialogAlert.alertMsg = msg;
-            dialogAlert.alertColor = Theme.blueText;
+            dialogAlert.alertColor = Theme.blue;
             dialogAlert.open();
         }
     }

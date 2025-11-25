@@ -50,7 +50,7 @@ Basic.BusyIndicator {
                     implicitWidth: markerSize * 2
                     implicitHeight: markerSize * 2
                     radius: 5
-                    color: Theme.waitText
+                    color: Theme.dodgerBlue
 
                     required property int index
 

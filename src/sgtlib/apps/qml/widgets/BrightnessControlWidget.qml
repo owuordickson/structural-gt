@@ -76,11 +76,11 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: Theme.successColor
+                        color: Theme.green
 
                         Label {
                             text: "OK"
-                            color: Theme.whiteText
+                            color: Theme.white
                             //font.bold: true
                             //font.pixelSize: 10
                             anchors.centerIn: parent

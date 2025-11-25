@@ -66,7 +66,7 @@ Item {
                             Label {
                                 id: label
                                 wrapMode: Text.Wrap
-                                color: Theme.blueText
+                                color: Theme.blue
                                 font.pixelSize: 10
                                 Layout.preferredWidth: lblWidthSize
                                 Layout.leftMargin: 10
@@ -76,7 +76,7 @@ Item {
                             TextField {
                                 id: txtField
                                 objectName: model.id
-                                color: Theme.blueText
+                                color: Theme.blue
                                 font.pixelSize: 10
                                 Layout.preferredWidth: txtWidthSize
                                 text: model.value
@@ -104,11 +104,11 @@ Item {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: 5
-                                    color: Theme.successColor
+                                    color: Theme.green
 
                                     Label {
                                         text: "OK"
-                                        color: Theme.whiteText
+                                        color: Theme.white
                                         //font.bold: true
                                         //font.pixelSize: 10
                                         anchors.centerIn: parent

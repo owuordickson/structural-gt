@@ -25,8 +25,8 @@ Item {
         delegate: Rectangle {
             implicitWidth: column === 0 ? (tblImgProps.width * 0.4) : (tblImgProps.width * 0.6) //imagePropsModel.columnCount
             implicitHeight: tblRowHeight
-            color: row % 2 === 0 ? Theme.smokeWhite : Theme.whiteText // Alternating colors
-            //border.color: Theme.borderColor
+            color: row % 2 === 0 ? Theme.smokeWhite : Theme.white // Alternating colors
+            //border.color: Theme.lightGray
             //border.width: 1
 
             Text {
@@ -49,7 +49,7 @@ Item {
             Rectangle {
                 width: 1 // Border width
                 height: tblRowHeight
-                color: Theme.tableBorderColor // Border color
+                color: Theme.veryLightGray // Border color
                 anchors.left: parent.left
             }
         }

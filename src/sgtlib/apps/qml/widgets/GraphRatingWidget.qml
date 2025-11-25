@@ -15,7 +15,7 @@ ColumnLayout {
     Label {
         Layout.alignment: Qt.AlignHCenter
         text: "How good is the graph? Pick a score: 0 - 9."
-        color: Theme.blueText
+        color: Theme.blue
     }
 
     Row {
@@ -69,7 +69,7 @@ ColumnLayout {
         horizontalAlignment: Text.AlignJustify  // Justify the text
         //Layout.alignment: Qt.AlignHCenter
         text: "Disclaimer: By rating the graph, you agree to share your rating and the graph image with the StructuralGT developers, and this information may be used to train AI models."
-        color: Theme.grayText
+        color: Theme.gray
         font.pixelSize: 8
         font.bold: true
         wrapMode: Text.Wrap

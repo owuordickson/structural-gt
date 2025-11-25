@@ -65,7 +65,7 @@ Item {
         Label {
             wrapMode: Text.Wrap
             Layout.leftMargin: 15
-            color: Theme.successColor
+            color: Theme.green
             font.pixelSize: 10
             Layout.preferredWidth: 200
             text: "**Note**: all these computations are applied on the giant graph ONLY."
@@ -95,7 +95,7 @@ Item {
         ColumnLayout {
             Label {
                 wrapMode: Text.Wrap
-                color: Theme.errorColor
+                color: Theme.red
                 font.pixelSize: 10
                 Layout.preferredWidth: 200
                 text: "**Warning**: this calculation takes long (esp. when node-count > 2000)"

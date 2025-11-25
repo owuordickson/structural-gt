@@ -11,7 +11,7 @@ Rectangle {
     Layout.alignment: Qt.AlignTop
     height: 72
     radius: 5
-    color: Theme.lightGreenBg
+    color: Theme.lightGreen
     Layout.margins: 5   // shorthand for top/left/right/bottom
     visible: imageController.display_image()
     enabled: imageController.enable_img_controls()
@@ -37,7 +37,7 @@ Rectangle {
             Label {
                 id: lblAIMode
                 text: "AI Mode"
-                color: Theme.borderColor
+                color: Theme.lightGray
             }
 
             Switch {
@@ -47,12 +47,12 @@ Rectangle {
                 checked: aiController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
-                        lblAIMode.color = Theme.blueText;
+                        lblAIMode.color = Theme.blue;
                         toggleAIMode.ToolTip.text = "Deactivate";
                         aiController.toggle_ai_mode(true);
                         aiController.run_ai_filter_search();
                     } else {
-                        lblAIMode.color = Theme.borderColor;
+                        lblAIMode.color = Theme.lightGray;
                         toggleAIMode.ToolTip.text = "Activate";
                         aiController.toggle_ai_mode(false);
                     }
@@ -112,7 +112,7 @@ Rectangle {
 
             Label {
                 id: lblAIStatusMsg
-                color: Theme.grayText
+                color: Theme.gray
                 text: "please wait..."
             }
         }

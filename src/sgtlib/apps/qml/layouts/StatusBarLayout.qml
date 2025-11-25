@@ -13,7 +13,7 @@ Rectangle {
     width: parent.width
     height: 72
     color: Theme.background
-    border.color: Theme.borderColor
+    border.color: Theme.lightGray
 
     ColumnLayout {
         anchors.fill: parent
@@ -71,7 +71,7 @@ Rectangle {
                 text: projectController.get_sgt_version()
                 visible: !mainController.is_task_running()
                 Layout.fillWidth: true
-                color: Theme.blueText
+                color: Theme.blue
             }
 
             Label {
@@ -80,7 +80,7 @@ Rectangle {
                 text: "Please wait..."
                 visible: mainController.is_task_running()
                 Layout.fillWidth: true
-                color: Theme.blueText
+                color: Theme.blue
             }
 
             Basic.Button {
@@ -106,7 +106,7 @@ Rectangle {
                     y: -60
                     background: Rectangle {
                         color: Theme.background
-                        border.color: Theme.borderColor
+                        border.color: Theme.lightGray
                         border.width: 1
                         radius: 2
                     }
@@ -153,7 +153,7 @@ Rectangle {
         function onErrorSignal(msg) {
             progressBar.value = 0;
             lblStatusMsg.text = msg;
-            lblStatusMsg.color = Theme.errorColor;
+            lblStatusMsg.color = Theme.red;
 
             lblVersion.visible = !mainController.is_task_running();
             lblStatusMsg.visible = mainController.is_task_running();
@@ -165,17 +165,17 @@ Rectangle {
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                lblStatusMsg.color = Theme.blueText;
+                lblStatusMsg.color = Theme.blue;
                 //lblStatusMsg.text = "Please wait...";
             } else {
-                lblStatusMsg.color = Theme.errorColor;
+                lblStatusMsg.color = Theme.red;
                 lblStatusMsg.text = "Task terminated due to an error. Try again.";
             }
 
             if (msg_data.length > 0) {
                 dialogAlert.title = msg_data[0];
                 dialogAlert.alertMsg = msg_data[1];
-                dialogAlert.alertColor = success_val ? Theme.blueText : Theme.errorColor;
+                dialogAlert.alertColor = success_val ? Theme.blue : Theme.red;
                 dialogAlert.open();
             }
 

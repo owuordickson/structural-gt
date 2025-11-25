@@ -10,7 +10,7 @@ Rectangle {
     width: parent.width
     height: parent.height
     color: Theme.background
-    border.color: Theme.borderColor
+    border.color: Theme.lightGray
 
     ColumnLayout {
         anchors.fill: parent
@@ -25,7 +25,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blueText : Theme.whiteText
+                    color: parent.checked ? Theme.blue : Theme.white
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -37,7 +37,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blueText : Theme.whiteText
+                    color: parent.checked ? Theme.blue : Theme.white
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -49,7 +49,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? Theme.blueText
+                    color: parent.checked ? Theme.blue : Theme.white
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight

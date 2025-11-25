@@ -20,7 +20,7 @@ Item {
     property int handleSize: 24
     property int minWidth: 40
     property int minHeight: 40
-    property color borderColor: Theme.errorColor
+    property color borderColor: Theme.red
     property bool _initialized: false
 
     // snapshots used while dragging
@@ -124,7 +124,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↕"; color: Theme.whiteText; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↕"; color: Theme.white; font.pixelSize: 18
         }*/
 
         Image {
@@ -166,7 +166,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↕"; color: Theme.whiteText; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↕"; color: Theme.white; font.pixelSize: 18
         }*/
 
         Image {
@@ -245,7 +245,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↔"; color: Theme.whiteText; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↔"; color: Theme.white; font.pixelSize: 18
         }*/
 
         Image {

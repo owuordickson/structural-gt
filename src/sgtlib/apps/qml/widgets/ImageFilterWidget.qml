@@ -21,7 +21,7 @@ ColumnLayout {
         id: lblNoImgFilters
         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         text: "No image filters to show!\nCreate project/add image."
-        color: Theme.grayText
+        color: Theme.gray
         visible: !imageController.display_image()
     }
 

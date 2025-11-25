@@ -34,11 +34,11 @@ Dialog {
                 Rectangle {
                     anchors.fill: parent
                     radius: 5
-                    color: Theme.errorColor
+                    color: Theme.red
 
                     Label {
                         text: "Cancel"
-                        color: Theme.whiteText
+                        color: Theme.white
                         anchors.centerIn: parent
                     }
                 }
@@ -53,11 +53,11 @@ Dialog {
                 Rectangle {
                     anchors.fill: parent
                     radius: 5
-                    color: Theme.successColor
+                    color: Theme.green
 
                     Label {
                         text: "OK"
-                        color: Theme.whiteText
+                        color: Theme.white
                         anchors.centerIn: parent
                     }
                 }

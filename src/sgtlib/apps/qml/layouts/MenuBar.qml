@@ -103,7 +103,7 @@ MenuBar {
         if (is_open === false) {
             dialogAlert.title = "Save Error";
             dialogAlert.alertMsg = "Please create/open the SGT project first, then try again.";
-            dialogAlert.alertColor = Theme.blueText;
+            dialogAlert.alertColor = Theme.blue;
             dialogAlert.open();
         } else {
             projectController.run_save_project();

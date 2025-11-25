@@ -23,7 +23,7 @@ Item {
         delegate: Rectangle {
             implicitWidth: column === 0 ? (tblViewGraphParams.width * 0.6) : (tblViewGraphParams.width * 0.4)
             implicitHeight: tblRowHeight
-            color: row % 2 === 0 ? Theme.smokeWhite : Theme.whiteText // Alternating colors
+            color: row % 2 === 0 ? Theme.smokeWhite : Theme.white // Alternating colors
 
             Text {
                 text: model.text
@@ -45,7 +45,7 @@ Item {
             Rectangle {
                 width: 1 // Border width
                 height: tblRowHeight
-                color: Theme.tableBorderColor // Border color
+                color: Theme.veryLightGray // Border color
                 anchors.left: parent.left
             }
         }

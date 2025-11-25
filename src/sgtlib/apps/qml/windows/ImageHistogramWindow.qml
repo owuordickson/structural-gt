@@ -73,7 +73,7 @@ Window {
                     Rectangle {
                         width: parent.width - 2  // Adds horizontal spacing
                         height: parent.height - 2  // Adds vertical spacing
-                        color: Theme.whiteText  // Background color for spacing effect
+                        color: Theme.white  // Background color for spacing effect
 
                         Image {
                             source: model.image === "" ? "" : "data:image/png;base64," + model.image  // Base64 encoded image

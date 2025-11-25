@@ -12,7 +12,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
     Layout.margins: 5
-    color: Theme.grayBg
+    color: Theme.veryLightGray
     radius: 5
     visible: imageController.display_image()
 

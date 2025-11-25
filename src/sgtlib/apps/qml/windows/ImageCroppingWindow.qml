@@ -105,7 +105,7 @@ Window {
                             implicitWidth: 84
                             height: 26
                             font.pixelSize: 12
-                            color: Theme.blueText
+                            color: Theme.blue
                             Layout.alignment: Qt.AlignVCenter
                             onEditingFinished: {
                                 let newVal = parseFloat(text)

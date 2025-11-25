@@ -6,7 +6,7 @@ import "../../widgets"
 
 Rectangle {
     color: Theme.background
-    border.color: Theme.borderColor
+    border.color: Theme.lightGray
     Layout.fillWidth: true
     Layout.fillHeight: true
 
@@ -25,7 +25,7 @@ Rectangle {
         Rectangle {
             id: rectHLine1
             height: 1
-            color: Theme.borderColor
+            color: Theme.lightGray
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             Layout.leftMargin: 20

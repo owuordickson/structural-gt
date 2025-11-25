@@ -72,7 +72,7 @@ Rectangle {
                 y: 32
                 background: Rectangle {
                     color: Theme.background
-                    border.color: Theme.borderColor
+                    border.color: Theme.lightGray
                     border.width: 1
                     radius: 2
                 }
@@ -98,11 +98,11 @@ Rectangle {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: 5
-                                color: Theme.errorColor
+                                color: Theme.red
 
                                 Label {
                                     text: "Cancel"
-                                    color: Theme.whiteText
+                                    color: Theme.white
                                     anchors.centerIn: parent
                                 }
                             }
@@ -122,11 +122,11 @@ Rectangle {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: 5
-                                color: Theme.successColor
+                                color: Theme.green
 
                                 Label {
                                     text: "OK"
-                                    color: Theme.whiteText
+                                    color: Theme.white
                                     anchors.centerIn: parent
                                 }
                             }

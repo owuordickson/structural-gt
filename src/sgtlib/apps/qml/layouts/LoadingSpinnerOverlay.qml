@@ -29,7 +29,7 @@ Item {
         Label {
             text: mainController.wait_text
             font.pointSize: 21
-            color: Theme.waitText
+            color: Theme.dodgerBlue
             horizontalAlignment: Text.AlignHCenter
             anchors.horizontalCenter: parent.horizontalCenter
         }

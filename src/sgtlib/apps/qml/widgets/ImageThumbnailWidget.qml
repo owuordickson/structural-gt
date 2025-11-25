@@ -31,7 +31,7 @@ ColumnLayout {
         id: lblNoImages
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
         text: "No images to show!\nPlease add image/folder."
-        color: Theme.grayText
+        color: Theme.gray
         visible: imgThumbnailModel.rowCount() <= 0
     }
 
@@ -53,7 +53,7 @@ ColumnLayout {
         delegate: Rectangle {
             implicitWidth: tblImgThumbs.width
             implicitHeight: tblRowHeight + 10
-            color: model.selected ? Theme.borderColor : "transparent"
+            color: model.selected ? Theme.lightGray : "transparent"
 
             MouseArea {
                 anchors.fill: parent
@@ -71,7 +71,7 @@ ColumnLayout {
                     radius: 4
                     color: "transparent"
                     border.width: 1
-                    border.color: Theme.borderColor
+                    border.color: Theme.lightGray
 
                     Image {
                         anchors.fill: parent
@@ -91,7 +91,7 @@ ColumnLayout {
                     font.pixelSize: model.selected ? 12 : 10
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
-                    color: model.selected ? Theme.darkGray : Theme.grayText
+                    color: model.selected ? Theme.darkGray : Theme.gray
                     clip: true
                 }
 

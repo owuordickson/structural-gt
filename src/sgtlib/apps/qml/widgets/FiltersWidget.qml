@@ -28,7 +28,7 @@ ColumnLayout {
         Rectangle {
             width: 1
             height: 18
-            color: Theme.borderColor
+            color: Theme.lightGray
         }
 
         Imagine.Button {

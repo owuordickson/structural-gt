@@ -91,7 +91,7 @@ Window {
                     textFormat: TextEdit.RichText
                     font.pixelSize: 10
                     background: Rectangle {
-                        color: Theme.whiteText
+                        color: Theme.white
                         radius: 4
                     }
                 }
@@ -114,9 +114,9 @@ Window {
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                appendLog("Success", "Task completed successfully!", Theme.blueText)
+                appendLog("Success", "Task completed successfully!", Theme.blue)
             } else {
-                appendLog("Error", "Task terminated due to an error. Try again.", Theme.errorColor)
+                appendLog("Error", "Task terminated due to an error. Try again.", Theme.red)
             }
 
             if (msg_data.length >= 2) {

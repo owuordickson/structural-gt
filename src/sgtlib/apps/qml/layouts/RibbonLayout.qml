@@ -15,7 +15,7 @@ Rectangle {
     height: 40
     radius: 5
     color: Theme.background
-    border.color: Theme.borderColor
+    border.color: Theme.lightGray
     border.width: 1
 
     property int modelValueRole: Qt.UserRole + 4
@@ -35,7 +35,7 @@ Rectangle {
         anchors.fill: rectRibbon
         radius: 5
         color: Theme.background // the rectangle's own background
-        border.color: Theme.borderColor
+        border.color: Theme.lightGray
         border.width: 1
     }*/
 
@@ -100,7 +100,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: Theme.borderColor
+                        border.color: Theme.lightGray
                         border.width: 1
                         radius: 2
                     }
@@ -116,7 +116,7 @@ Rectangle {
 
                             Label {
                                 text: "Auto Scale Image"
-                                color: Theme.blueText
+                                color: Theme.blue
                             }
 
                             Switch {
@@ -166,7 +166,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: Theme.borderColor
+                        border.color: Theme.lightGray
                         border.width: 1
                         radius: 2
                     }
@@ -201,7 +201,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 24
-            color: Theme.borderColor
+            color: Theme.lightGray
         }
 
         RowLayout {
@@ -231,7 +231,7 @@ Rectangle {
 
                     // Optional: custom colors for hover/selection
                     background: Rectangle {
-                        color: control.hovered ? Theme.waitText : "transparent"
+                        color: control.hovered ? Theme.dodgerBlue : "transparent"
                         radius: 4
                     }
                 }
@@ -274,7 +274,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: Theme.borderColor
+                        border.color: Theme.lightGray
                         border.width: 1
                         radius: 2
                     }
@@ -298,11 +298,11 @@ Rectangle {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: 5
-                                    color: Theme.errorColor
+                                    color: Theme.red
 
                                     Label {
                                         text: "Cancel"
-                                        color: Theme.whiteText
+                                        color: Theme.white
                                         anchors.centerIn: parent
                                     }
                                 }
@@ -322,11 +322,11 @@ Rectangle {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: 5
-                                    color: Theme.successColor
+                                    color: Theme.green
 
                                     Label {
                                         text: "OK"
-                                        color: Theme.whiteText
+                                        color: Theme.white
                                         anchors.centerIn: parent
                                     }
                                 }
