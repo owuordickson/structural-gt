@@ -236,7 +236,7 @@ Window {
                                     radius: 2
                                     color: "#000000"
                                     border.width: 1
-                                    border.color: "#d0d0d0"
+                                    border.color: Theme.borderColor
                                 }
                             }
 
@@ -258,7 +258,7 @@ Window {
                                     radius: 2
                                     color: "#ffffff"
                                     border.width: 1
-                                    border.color: "#d0d0d0"
+                                    border.color: Theme.borderColor
                                 }
                             }
                         }

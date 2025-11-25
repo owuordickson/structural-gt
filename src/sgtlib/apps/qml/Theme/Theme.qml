@@ -12,6 +12,6 @@ QtObject {
     readonly property color errorColor:    themeManager.is_dark ? "#bc0000" : "#bc0000"
     readonly property color successColor:    themeManager.is_dark ? "#22bc55" : "#22bc55"
 
-    readonly property color border:     themeManager.is_dark ? "#333" : "#d0d0d0"
+    readonly property color borderColor:     themeManager.is_dark ? "#333" : "#d0d0d0"
     //readonly property color disabled:   themeManager.is_dark ? "#777" : "#999"
 }

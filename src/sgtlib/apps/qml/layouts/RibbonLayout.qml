@@ -15,7 +15,7 @@ Rectangle {
     height: 40
     radius: 5
     color: Theme.background
-    border.color: "#d0d0d0"
+    border.color: Theme.borderColor
     border.width: 1
 
     property int modelValueRole: Qt.UserRole + 4
@@ -35,7 +35,7 @@ Rectangle {
         anchors.fill: rectRibbon
         radius: 5
         color: Theme.background // the rectangle's own background
-        border.color: "#d0d0d0"
+        border.color: Theme.borderColor
         border.width: 1
     }*/
 
@@ -100,7 +100,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: "#d0d0d0"
+                        border.color: Theme.borderColor
                         border.width: 1
                         radius: 2
                     }
@@ -166,7 +166,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: "#d0d0d0"
+                        border.color: Theme.borderColor
                         border.width: 1
                         radius: 2
                     }
@@ -274,7 +274,7 @@ Rectangle {
                     y: 32
                     background: Rectangle {
                         color: Theme.background
-                        border.color: "#d0d0d0"
+                        border.color: Theme.borderColor
                         border.width: 1
                         radius: 2
                     }

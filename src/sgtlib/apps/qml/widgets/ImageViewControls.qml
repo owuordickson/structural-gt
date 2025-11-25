@@ -72,7 +72,7 @@ Rectangle {
                 y: 32
                 background: Rectangle {
                     color: Theme.background
-                    border.color: "#d0d0d0"
+                    border.color: Theme.borderColor
                     border.width: 1
                     radius: 2
                 }

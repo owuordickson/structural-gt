@@ -13,7 +13,7 @@ Rectangle {
     width: parent.width
     height: 72
     color: Theme.background
-    border.color: "#d0d0d0"
+    border.color: Theme.borderColor
 
     ColumnLayout {
         anchors.fill: parent
@@ -106,7 +106,7 @@ Rectangle {
                     y: -60
                     background: Rectangle {
                         color: Theme.background
-                        border.color: "#d0d0d0"
+                        border.color: Theme.borderColor
                         border.width: 1
                         radius: 2
                     }

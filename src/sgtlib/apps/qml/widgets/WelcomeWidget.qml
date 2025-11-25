@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
+import Theme 1.0
 
 
 Rectangle {
@@ -67,11 +68,11 @@ Rectangle {
                         radius: 5
                         color: "transparent"
                         border.width: 2
-                        border.color: "#909090"
+                        border.color: Theme.labelText
 
                         Label {
                             text: "Open project..."
-                            color: "#909090"
+                            color: Theme.labelText
                             font.bold: true
                             font.pixelSize: 16
                             anchors.centerIn: parent

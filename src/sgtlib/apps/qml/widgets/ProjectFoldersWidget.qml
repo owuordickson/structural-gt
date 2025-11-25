@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 
 ColumnLayout {
@@ -53,7 +54,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignLeft
             implicitHeight: 24
             border.width: 1
-            border.color: "#909090"
+            border.color: Theme.labelText
             radius: 5
             color: "transparent"
 

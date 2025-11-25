@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 
 Item {
@@ -25,7 +26,7 @@ Item {
             implicitWidth: column === 0 ? (tblImgProps.width * 0.4) : (tblImgProps.width * 0.6) //imagePropsModel.columnCount
             implicitHeight: tblRowHeight
             color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
-            //border.color: "#d0d0d0"
+            //border.color: Theme.borderColor
             //border.width: 1
 
             Text {

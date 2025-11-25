@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 
 ColumnLayout {
@@ -71,7 +72,7 @@ ColumnLayout {
                     radius: 4
                     color: "transparent"
                     border.width: 1
-                    border.color: "#d0d0d0"
+                    border.color: Theme.borderColor
 
                     Image {
                         anchors.fill: parent
