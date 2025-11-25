@@ -51,7 +51,7 @@ Item {
                         icon.source: expanded ? "../assets/icons/expand_down_icon.png" : "../assets/icons/expand_right_icon.png"
                         icon.width: 14
                         icon.height: 14
-                        icon.color: Theme.black
+                        icon.color: enabled ? Theme.black : Theme.disabled
                         background: Rectangle { color: "transparent" }
                         onClicked: gteTreeView.toggleExpanded(row)
                     }

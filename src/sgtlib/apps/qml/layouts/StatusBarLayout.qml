@@ -89,6 +89,7 @@ Rectangle {
                 icon.source: "../assets/icons/notify_icon.png"
                 icon.width: 21
                 icon.height: 21
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle { color: "transparent" }
                 ToolTip.text: "Check for updates"
                 ToolTip.visible: btnNotify.hovered
@@ -117,6 +118,7 @@ Rectangle {
                         Label {
                             id: lblNotifyMsg
                             font.pixelSize: 10
+                            color: Theme.text
                             wrapMode: Text.Wrap
                             textFormat: Text.RichText  // Enable HTML formatting
                             onLinkActivated: (link) => Qt.openUrlExternally(link)  // Opens links in default browser

@@ -23,6 +23,13 @@ RowLayout {
             property bool isChecked: model.value === 1
             checked: isChecked
             onCheckedChanged: updateValue(isChecked, checked)
+            contentItem: Label {
+                text: checkBox.text
+                font: checkBox.font
+                color: Theme.darkGrey
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: checkBox.indicator.width + 6
+            }
 
             function updateValue(isChecked, checked) {
                 if (isChecked !== checked) {  // Only update if there is a change

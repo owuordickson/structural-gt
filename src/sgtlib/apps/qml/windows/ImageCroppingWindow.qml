@@ -54,6 +54,7 @@ Window {
                         icon.source: "../assets/icons/undo_icon.png"
                         icon.width: 24
                         icon.height: 24
+                        icon.color: enabled ? Theme.black : Theme.disabled
                         background: Rectangle {
                             color: "transparent"
                         }
@@ -68,6 +69,7 @@ Window {
                         icon.source: "../assets/icons/save_icon.png"
                         icon.width: 24
                         icon.height: 24
+                        icon.color: enabled ? Theme.black : Theme.disabled
                         background: Rectangle {
                             color: "transparent"
                         }

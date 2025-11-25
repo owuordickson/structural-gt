@@ -53,6 +53,7 @@ Rectangle {
                 icon.source: hidePane ? "../assets/icons/hide_panel.png" : "../assets/icons/show_panel.png"
                 icon.width: 28
                 icon.height: 28
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -80,6 +81,7 @@ Rectangle {
                 icon.source: "../assets/icons/rescale_icon.png" // Path to your icon
                 icon.width: 20 // Adjust as needed
                 icon.height: 20
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -148,6 +150,7 @@ Rectangle {
                 icon.source: "../assets/icons/brightness_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -187,6 +190,7 @@ Rectangle {
                 icon.source: "../assets/icons/crop_image_icon.png"
                 icon.width: 28
                 icon.height: 28
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -256,6 +260,7 @@ Rectangle {
                 icon.source: "../assets/icons/graph_icon.png" // Path to your icon
                 icon.width: 24 // Adjust as needed
                 icon.height: 24
+                icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
                     color: "transparent"
                 }

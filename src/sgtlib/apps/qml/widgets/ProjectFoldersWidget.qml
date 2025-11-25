@@ -82,6 +82,7 @@ ColumnLayout {
             icon.source: "../assets/icons/edit_icon.png"
             icon.width: 21
             icon.height: 21
+            icon.color: enabled ? Theme.black : Theme.disabled
             background: Rectangle {
                 color: "transparent"
             }

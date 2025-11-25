@@ -36,6 +36,7 @@ Rectangle {
             icon.source: "../assets/icons/back_icon.png"
             icon.width: 24
             icon.height: 24
+            icon.color: enabled ? Theme.black : Theme.disabled
             background: Rectangle {
                 color: "transparent"
             }
@@ -85,6 +86,7 @@ Rectangle {
             icon.source: "../assets/icons/next_icon.png"
             icon.width: 24
             icon.height: 24
+            icon.color: enabled ? Theme.black : Theme.disabled
             background: Rectangle {
                 color: "transparent"
             }

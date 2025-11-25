@@ -22,6 +22,33 @@ Rectangle {
             ToolTip.text: "Display only the giant graph network."
             ToolTip.visible: toggleShowGiantGraph.hovered
             checked: false // Initial state
+
+            // Restore the indicator (the switch knob)
+            indicator: Rectangle {
+                implicitWidth: 40
+                implicitHeight: 20
+                radius: height / 2
+                anchors.verticalCenter: parent.verticalCenter
+                color: toggleShowGiantGraph.checked ? Theme.dodgerBlue : Theme.disabled
+
+                Rectangle {
+                    width: 18
+                    height: 18
+                    radius: 9
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: toggleShowGiantGraph.checked ? parent.width - width - 1 : 1
+                    color: Theme.black
+                }
+            }
+
+            // Custom text color
+            contentItem: Label {
+                text: toggleShowGiantGraph.text
+                font: toggleShowGiantGraph.font
+                color: Theme.text
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: toggleShowGiantGraph.indicator.width + 6
+            }
             onCheckedChanged: {
                 if (checked) {
                     // Actions when switched on

@@ -23,6 +23,7 @@ Item {
             id: lblScaling
             text: "Re-scale to:"
             font.bold: true
+            color: Theme.text
         }
 
         ListView {
