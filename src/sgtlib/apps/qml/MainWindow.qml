@@ -14,7 +14,7 @@ ApplicationWindow {
     visible: true
     title: projectController.get_sgt_title();
     font.family: "Arial"  // or Qt.application.font.family
-    color: "#f0f0f0"
+    color: Theme.background
 
     // Top Menu Bar
     menuBar: MenuBar {
@@ -41,7 +41,7 @@ ApplicationWindow {
             Layout.alignment: Qt.AlignTop
             Layout.preferredHeight: 40
             Layout.preferredWidth: parent.width
-            color: "#f0f0f0"
+            color: Theme.background
             RibbonLayout {
             }
         }
@@ -55,7 +55,7 @@ ApplicationWindow {
             Layout.rightMargin: 5
             Layout.preferredHeight: parent.height - 40
             Layout.preferredWidth: 300
-            color: "#f0f0f0"
+            color: Theme.background
             LeftLayout {
             }
         }
@@ -69,7 +69,7 @@ ApplicationWindow {
             Layout.preferredHeight: parent.height - 40
             Layout.preferredWidth: parent.width - 300
             Layout.fillWidth: true
-            color: "#f0f0f0"
+            color: Theme.background
             MainLayout {
             }
         }

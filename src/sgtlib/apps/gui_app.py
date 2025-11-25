@@ -75,7 +75,9 @@ class PySideApp(QObject):
         self._qml_file = 'qml/MainWindow.qml'
 
         # IMPORTANT: register the "qml" directory
-        self._ui_engine.addImportPath(os.path.join(os.path.dirname(__file__), "qml"))
+        qml_dir = os.path.dirname(os.path.abspath(__file__))
+        qml_path = os.path.join(qml_dir, self._qml_file)
+        self._ui_engine.addImportPath(os.path.join(qml_dir, "qml"))
 
         # Register Controller for Dynamic Updates
         self._ctrl = MainController(qml_app=self.app)
@@ -89,16 +91,11 @@ class PySideApp(QObject):
         # Cleanup when the app is closing
         self.app.aboutToQuit.connect(self._ctrl.cleanup_workers)
 
-        # Load UI: Get the directory of the current script
-        qml_dir = os.path.dirname(os.path.abspath(__file__))
-        qml_path = os.path.join(qml_dir, self._qml_file)
-
         # Set Theme for the entire application UI ('Basic', 'Fusion', 'Imagine', 'Material', 'Universal')
         # QQuickStyle.setStyle("Basic")
 
         # Load the QML file and display it
-        #self._ui_engine.load(qml_path)
-        self._ui_engine.load("MainWindow.qml")
+        self._ui_engine.load(qml_path)
         if not self._ui_engine.rootObjects():
             sys.exit(-1)
 
