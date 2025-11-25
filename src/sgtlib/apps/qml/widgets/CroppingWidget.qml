@@ -49,7 +49,7 @@ Item {
         y: cropOverlay.topPt
         width: Math.max(cropOverlay.minWidth, cropOverlay.rightPt - cropOverlay.leftPt)
         height: Math.max(cropOverlay.minHeight, cropOverlay.bottomPt - cropOverlay.topPt)
-        color: Theme.skyBlue
+        color: Theme.dodgerBlue
         opacity: 0.2
         border.width: 2
         border.color: cropOverlay.borderColor

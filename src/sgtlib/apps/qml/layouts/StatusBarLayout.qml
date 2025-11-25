@@ -140,7 +140,7 @@ Rectangle {
                 progressBar.value = 50;
             }
             lblStatusMsg.text = msg;
-            lblStatusMsg.color = Theme.darkGreen;
+            lblStatusMsg.color = Theme.green;
 
             lblVersion.visible = !mainController.is_task_running();
             lblStatusMsg.visible = mainController.is_task_running();
