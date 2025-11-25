@@ -23,7 +23,7 @@ Window {
         id: colorsContainer
         width: parent.width
         height: parent.height
-        color: Theme.background
+        color: Theme.veryLightGray  // Theme.background
 
         ColumnLayout {
             anchors.fill: parent
@@ -64,8 +64,21 @@ Window {
                             font.pixelSize: 10
                             implicitWidth: 75
                             implicitHeight: 28
-                            //Layout.preferredWidth: 75 // if inside RowLayout
-                            //Layout.preferredHeight: 28
+
+                            // Override the internal text field
+                            /*contentItem: TextInput {
+                                text: spbMaxColors.textFromValue(spbMaxColors.value, spbMaxColors.locale)
+                                font: spbMaxColors.font
+                                color: Theme.text
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+
+                                readOnly: !spbMaxColors.editable
+                                validator: spbMaxColors.validator
+                                inputMethodHints: spbMaxColors.inputMethodHints
+
+                                onEditingFinished: spbMaxColors.value = spbMaxColors.valueFromText(text, spbMaxColors.locale)
+                            }*/
                         }
                     }
 
