@@ -72,11 +72,15 @@ class PySideApp(QObject):
         # PySideApp._force_backend()
         self.app = QApplication(sys.argv)
         self._ui_engine = QQmlApplicationEngine()
+        self._qml_file = 'qml/MainWindow.qml'
+
+        # IMPORTANT: register the "qml" directory
+        self._ui_engine.addImportPath(os.path.join(os.path.dirname(__file__), "qml"))
+
         # Register Controller for Dynamic Updates
         self._ctrl = MainController(qml_app=self.app)
         # Register Image Provider
         self._image_provider = ImageProvider(self._ctrl)
-        self._qml_file = 'qml/MainWindow.qml'
 
         # Set Models in QML Context
         self._initialize_models()
@@ -93,7 +97,8 @@ class PySideApp(QObject):
         # QQuickStyle.setStyle("Basic")
 
         # Load the QML file and display it
-        self._ui_engine.load(qml_path)
+        #self._ui_engine.load(qml_path)
+        self._ui_engine.load("MainWindow.qml")
         if not self._ui_engine.rootObjects():
             sys.exit(-1)
 
