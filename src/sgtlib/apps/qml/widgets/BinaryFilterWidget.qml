@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 import Theme 1.0
 
 ColumnLayout {
@@ -60,12 +61,32 @@ ColumnLayout {
 
     RowLayout {
 
-        RadioButton {
+        Basic.RadioButton {
             id: rdoAdaptive
             text: "Adaptive"
+            //implicitHeight: itemHeight
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
             onClicked: btnGrpBinary.checkedButton = this
+            // Smaller radio indicator
+            indicator: Rectangle {
+                width: 14
+                height: 14
+                radius: 7
+                y: (rdoAdaptive.height - height) / 2   // center vertically
+                border.color: rdoAdaptive.checked ? Theme.dodgerBlue : Theme.text
+                border.width: 2
+                color: "transparent"
+
+                Rectangle {
+                    visible: rdoAdaptive.checked
+                    width: 8
+                    height: 8
+                    radius: 4
+                    anchors.centerIn: parent
+                    color: Theme.darkGray
+                }
+            }
             contentItem: Label {
                 text: rdoAdaptive.text
                 font: rdoAdaptive.font
@@ -103,12 +124,31 @@ ColumnLayout {
 
     RowLayout {
 
-        RadioButton {
+        Basic.RadioButton {
             id: rdoGlobal
             text: "Global"
             Layout.preferredWidth: btnWidthSize
             ButtonGroup.group: btnGrpBinary
             onClicked: btnGrpBinary.checkedButton = this
+            // Smaller radio indicator
+            indicator: Rectangle {
+                width: 14
+                height: 14
+                radius: 7
+                y: (rdoGlobal.height - height) / 2   // center vertically
+                border.color: rdoGlobal.checked ? Theme.dodgerBlue : Theme.text
+                border.width: 2
+                color: "transparent"
+
+                Rectangle {
+                    visible: rdoGlobal.checked
+                    width: 8
+                    height: 8
+                    radius: 4
+                    anchors.centerIn: parent
+                    color: Theme.darkGray
+                }
+            }
             contentItem: Label {
                 text: rdoGlobal.text
                 font: rdoGlobal.font
@@ -144,12 +184,31 @@ ColumnLayout {
 
     }
 
-    RadioButton {
+    Basic.RadioButton {
         id: rdoOtsu
         text: "OTSU"
         Layout.preferredWidth: btnWidthSize
         ButtonGroup.group: btnGrpBinary
         onClicked: btnGrpBinary.checkedButton = this
+        // Smaller radio indicator
+        indicator: Rectangle {
+            width: 14
+            height: 14
+            radius: 7
+            y: (rdoOtsu.height - height) / 2   // center vertically
+            border.color: rdoOtsu.checked ? Theme.dodgerBlue : Theme.text
+            border.width: 2
+            color: "transparent"
+
+            Rectangle {
+                visible: rdoOtsu.checked
+                width: 8
+                height: 8
+                radius: 4
+                anchors.centerIn: parent
+                color: Theme.darkGray
+            }
+        }
         contentItem: Label {
             text: rdoOtsu.text
             font: rdoOtsu.font
@@ -159,12 +218,32 @@ ColumnLayout {
         }
     }
 
-    CheckBox {
+    Basic.CheckBox {
         id: cbxDarkFg
         text: "Apply Dark Foreground"
         property bool clickedChange: false
         property bool isChecked: false
         checked: false
+        // Custom indicator
+        indicator: Rectangle {
+            width: 14
+            height: 14
+            radius: 3                       // slightly rounded corners
+            anchors.verticalCenter: parent.verticalCenter
+            border.color: cbxDarkFg.checked ? Theme.dodgerBlue : Theme.text
+            border.width: 2
+            color: "transparent"
+
+            // Inner "check mark"
+            Rectangle {
+                visible: cbxDarkFg.checked
+                width: 8
+                height: 8
+                radius: 1
+                anchors.centerIn: parent
+                color: Theme.darkGray
+            }
+        }
         contentItem: Label {
             text: cbxDarkFg.text
             font: cbxDarkFg.font

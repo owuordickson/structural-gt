@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 import Theme 1.0
 
 ColumnLayout {
@@ -47,7 +48,7 @@ ColumnLayout {
                 //Layout.leftMargin: 10
                 Layout.alignment: Qt.AlignLeft
 
-                CheckBox {
+                Basic.CheckBox {
                     id: checkBox
                     objectName: model.id
                     Layout.preferredWidth: cbxWidthSize
@@ -55,6 +56,26 @@ ColumnLayout {
                     property bool isChecked: model.value
                     property bool clickedChange: false  // Flag
                     checked: isChecked
+                    // Custom indicator
+                    indicator: Rectangle {
+                        width: 14
+                        height: 14
+                        radius: 3                       // slightly rounded corners
+                        anchors.verticalCenter: parent.verticalCenter
+                        border.color: checkBox.checked ? Theme.dodgerBlue : Theme.text
+                        border.width: 2
+                        color: "transparent"
+
+                        // Inner "check mark"
+                        Rectangle {
+                            visible: checkBox.checked
+                            width: 8
+                            height: 8
+                            radius: 1
+                            anchors.centerIn: parent
+                            color: Theme.darkGray
+                        }
+                    }
                     contentItem: Label {
                         text: checkBox.text
                         font: checkBox.font

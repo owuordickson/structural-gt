@@ -76,7 +76,7 @@ Rectangle {
 
                     Label {
                         text: "Frame " + model.id
-                        color: Theme.blueColor
+                        color: Theme.blue
                         anchors.left: parent.left
                         anchors.top: parent.top
                         anchors.margins: 2

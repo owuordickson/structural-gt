@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 import Theme 1.0
 
 Item {
@@ -44,13 +45,32 @@ Item {
                 RowLayout {
                     anchors.fill: parent
 
-                    RadioButton {
+                    Basic.RadioButton {
                         id: rdoButton
                         text: model.text
                         ButtonGroup.group: btnGrpScales
                         property bool isChecked: model.value
                         checked: isChecked
                         onClicked: btnGrpScales.checkedButton = this
+                        // Custom radio indicator
+                        indicator: Rectangle {
+                            width: 14
+                            height: 14
+                            radius: 7
+                            y: (rdoButton.height - height) / 2   // center vertically
+                            border.color: rdoButton.checked ? Theme.dodgerBlue : Theme.text
+                            border.width: 2
+                            color: "transparent"
+
+                            Rectangle {
+                                visible: rdoButton.checked
+                                width: 8
+                                height: 8
+                                radius: 4
+                                anchors.centerIn: parent
+                                color: Theme.darkGray
+                            }
+                        }
                         contentItem: Label {
                             text: rdoButton.text
                             font: rdoButton.font

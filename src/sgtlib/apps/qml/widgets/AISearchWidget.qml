@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 RowLayout {
     Layout.preferredWidth: parent.width
@@ -12,7 +14,7 @@ RowLayout {
 
     Repeater {
         model: aiSearchModel
-        delegate: CheckBox {
+        delegate: Basic.CheckBox {
             id: checkBox
             objectName: model.id
             font.pixelSize: 11
@@ -23,6 +25,26 @@ RowLayout {
             property bool isChecked: model.value === 1
             checked: isChecked
             onCheckedChanged: updateValue(isChecked, checked)
+            // Custom indicator
+            indicator: Rectangle {
+                width: 14
+                height: 14
+                radius: 3                       // slightly rounded corners
+                anchors.verticalCenter: parent.verticalCenter
+                border.color: checkBox.checked ? Theme.dodgerBlue : Theme.text
+                border.width: 2
+                color: "transparent"
+
+                // Inner "check mark"
+                Rectangle {
+                    visible: checkBox.checked
+                    width: 8
+                    height: 8
+                    radius: 1
+                    anchors.centerIn: parent
+                    color: Theme.darkGray
+                }
+            }
             contentItem: Label {
                 text: checkBox.text
                 font: checkBox.font

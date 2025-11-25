@@ -1,11 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Basic
 import Theme 1.0
 
 Item {
     id: scalingBehaviorContent
-    Layout.preferredHeight: 168
+    Layout.preferredHeight: 200
     Layout.preferredWidth: parent.width - 75
 
     property int txtWidthSize: 70
@@ -40,7 +41,7 @@ Item {
                     Component {
                         id: cbxComponent
                         RowLayout {
-                            CheckBox {
+                            Basic.CheckBox {
                                 id: checkBox
                                 objectName: model.id
                                 text: model.text
@@ -48,6 +49,26 @@ Item {
                                 Layout.leftMargin: 10
                                 property bool isChecked: model.value === 1
                                 checked: isChecked
+                                // Custom indicator
+                                indicator: Rectangle {
+                                    width: 14
+                                    height: 14
+                                    radius: 3                       // slightly rounded corners
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    border.color: checkBox.checked ? Theme.dodgerBlue : Theme.text
+                                    border.width: 2
+                                    color: "transparent"
+
+                                    // Inner "check mark"
+                                    Rectangle {
+                                        visible: checkBox.checked
+                                        width: 8
+                                        height: 8
+                                        radius: 1
+                                        anchors.centerIn: parent
+                                        color: Theme.darkGray
+                                    }
+                                }
                                 contentItem: Label {
                                     text: checkBox.text
                                     font: checkBox.font

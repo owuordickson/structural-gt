@@ -52,7 +52,9 @@ Item {
                         icon.width: 14
                         icon.height: 14
                         icon.color: enabled ? Theme.black : Theme.disabled
-                        background: Rectangle { color: "transparent" }
+                        background: Rectangle {
+                            color: "transparent"
+                        }
                         onClicked: gteTreeView.toggleExpanded(row)
                     }
 
@@ -68,12 +70,32 @@ Item {
                     Component {
                         id: cbxComponent
 
-                        CheckBox {
+                        Basic.CheckBox {
                             id: checkBox
                             objectName: model.id
                             text: model.text
                             property bool isChecked: model.value === 1
                             checked: isChecked
+                            // Custom indicator
+                            indicator: Rectangle {
+                                width: 14
+                                height: 14
+                                radius: 3                       // slightly rounded corners
+                                anchors.verticalCenter: parent.verticalCenter
+                                border.color: checkBox.checked ? Theme.dodgerBlue : Theme.text
+                                border.width: 2
+                                color: "transparent"
+
+                                // Inner "check mark"
+                                Rectangle {
+                                    visible: checkBox.checked
+                                    width: 8
+                                    height: 8
+                                    radius: 1
+                                    anchors.centerIn: parent
+                                    color: Theme.darkGray
+                                }
+                            }
                             contentItem: Label {
                                 text: checkBox.text
                                 font: checkBox.font
@@ -95,13 +117,32 @@ Item {
                     Component {
                         id: rdoComponent
 
-                        RadioButton {
+                        Basic.RadioButton {
                             id: rdoButton
                             objectName: model.id
                             text: model.text
                             ButtonGroup.group: btnGrpWeights
                             checked: model.value
                             onClicked: btnGrpWeights.checkedButton = this
+                            // Custom radio indicator
+                            indicator: Rectangle {
+                                width: 14
+                                height: 14
+                                radius: 7
+                                y: (rdoButton.height - height) / 2   // center vertically
+                                border.color: rdoButton.checked ? Theme.dodgerBlue : Theme.text
+                                border.width: 2
+                                color: "transparent"
+
+                                Rectangle {
+                                    visible: rdoButton.checked
+                                    width: 8
+                                    height: 8
+                                    radius: 4
+                                    anchors.centerIn: parent
+                                    color: Theme.darkGray
+                                }
+                            }
                             contentItem: Label {
                                 text: rdoButton.text
                                 font: rdoButton.font

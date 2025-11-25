@@ -15,6 +15,7 @@ ColumnLayout {
     Layout.rightMargin: 5
     spacing: 5
 
+    property int txtWidthSize: 170
 
     RowLayout {
         id: rowLayoutProject
@@ -28,7 +29,7 @@ ColumnLayout {
 
         Text {
             id: txtProjectName
-            Layout.minimumWidth: 175
+            Layout.minimumWidth: txtWidthSize
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
             text: ""
@@ -52,7 +53,7 @@ ColumnLayout {
         }
 
         Rectangle {
-            Layout.minimumWidth: 175
+            Layout.minimumWidth: txtWidthSize
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
             implicitHeight: 24
