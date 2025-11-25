@@ -12,6 +12,7 @@ Dialog {
     modal: true
     width: 300
     height: 400
+    background: Rectangle {color: Theme.background}
 
 
     //ColumnLayout {

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Theme 1.0
 
 Dialog {
     id: dialogAbout
@@ -11,6 +12,7 @@ Dialog {
     anchors.centerIn: parent
     width: 436
     height: 640
+    background: Rectangle {color: Theme.background}
 
     ColumnLayout {
         anchors.fill: parent
@@ -24,6 +26,7 @@ Dialog {
 
             Label {
                 width: parent.width
+                color: Theme.text
                 //Layout.alignment: Qt.AlignHCenter
                 property string aboutText: projectController.get_about_details()
                 text: aboutText

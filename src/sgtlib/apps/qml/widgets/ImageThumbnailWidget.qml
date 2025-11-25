@@ -52,7 +52,7 @@ ColumnLayout {
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: Rectangle {
-            adius: 4
+            radius: 4
             implicitWidth: tblImgThumbs.width
             implicitHeight: tblRowHeight + 10
             color: model.selected ? Theme.lightGray : Theme.background

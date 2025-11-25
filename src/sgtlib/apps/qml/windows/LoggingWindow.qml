@@ -23,7 +23,7 @@ Window {
         return now.toLocaleTimeString(Qt.locale(), "hh:mm:ss")
     }
 
-    function appendLog(type, message, color = "black") {
+    function appendLog(type, message, color = Theme.black) {
         let timestamp = currentTimestamp()
         let html = "<font color='" + color + "'>[" + timestamp + "] " + message + "</font>"
         logEntries.push({type: type, html: html})
@@ -44,7 +44,7 @@ Window {
         id: loggingDataContainer
         width: parent.width
         height: parent.height
-        color: "transparent"
+        color: Theme.background
 
         ColumnLayout {
             anchors.fill: parent
@@ -105,22 +105,22 @@ Window {
 
         function onUpdateProgressSignal(val, msg) {
             let fullMsg = (val <= 100) ? val + "%: " + msg : msg
-            appendLog("Info", fullMsg, "blue")
+            appendLog("Info", fullMsg, Theme.blue)
         }
 
         function onErrorSignal(msg) {
-            appendLog("Error", msg, "red")
+            appendLog("Error", msg, Theme.red)
         }
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                appendLog("Success", "Task completed successfully!", Theme.blue)
+                appendLog("Success", "Task completed successfully!", Theme.dodgerBlue)
             } else {
                 appendLog("Error", "Task terminated due to an error. Try again.", Theme.red)
             }
 
             if (msg_data.length >= 2) {
-                appendLog("Info", msg_data[0] + "<br>" + msg_data[1], "gray")
+                appendLog("Info", msg_data[0] + "<br>" + msg_data[1], Theme.darkGray)
             }
         }
     }

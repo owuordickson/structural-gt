@@ -12,6 +12,7 @@ Dialog {
     anchors.centerIn: parent
     width: 300
     height: 150
+    background: Rectangle {color: Theme.background}
 
     property string alertMsg: ""
     property string alertColor: Theme.red

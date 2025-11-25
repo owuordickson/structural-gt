@@ -12,6 +12,7 @@ Dialog {
     modal: true
     width: 260
     height: 150
+    background: Rectangle {color: Theme.background}
 
     ColumnLayout {
         anchors.fill: parent
