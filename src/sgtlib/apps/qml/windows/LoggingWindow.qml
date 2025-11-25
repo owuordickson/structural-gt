@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Basic as Basic
 import QtQuick.Layouts
 import QtQuick.Window
+import Theme 1.0
 
 Window {
     id: loggingWindowPanel
@@ -90,7 +91,7 @@ Window {
                     textFormat: TextEdit.RichText
                     font.pixelSize: 10
                     background: Rectangle {
-                        color: "white"
+                        color: Theme.whiteText
                         radius: 4
                     }
                 }
@@ -113,9 +114,9 @@ Window {
 
         function onTaskTerminatedSignal(success_val, msg_data) {
             if (success_val) {
-                appendLog("Success", "Task completed successfully!", "#2266ff")
+                appendLog("Success", "Task completed successfully!", Theme.blueText)
             } else {
-                appendLog("Error", "Task terminated due to an error. Try again.", "#bc2222")
+                appendLog("Error", "Task terminated due to an error. Try again.", Theme.errorColor)
             }
 
             if (msg_data.length >= 2) {

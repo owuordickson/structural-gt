@@ -95,7 +95,7 @@ Window {
                         Label {
                             text: modelData.text + ":"
                             font.pixelSize: 14
-                            color: "#606060"
+                            color: Theme.darkGray
                             Layout.alignment: Qt.AlignVCenter
                         }
 

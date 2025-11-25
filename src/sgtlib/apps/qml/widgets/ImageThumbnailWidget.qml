@@ -53,8 +53,7 @@ ColumnLayout {
         delegate: Rectangle {
             implicitWidth: tblImgThumbs.width
             implicitHeight: tblRowHeight + 10
-            //color: model.selected ? "#d0d0d0" : (row % 2 === 0 ? "#fafafa" : "white")
-            color: model.selected ? "#d0d0d0" : "transparent"
+            color: model.selected ? Theme.borderColor : "transparent"
 
             MouseArea {
                 anchors.fill: parent
@@ -92,7 +91,7 @@ ColumnLayout {
                     font.pixelSize: model.selected ? 12 : 10
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
-                    color: model.selected ? "#202020" : "#909090"
+                    color: model.selected ? Theme.darkGray : Theme.grayText
                     clip: true
                 }
 

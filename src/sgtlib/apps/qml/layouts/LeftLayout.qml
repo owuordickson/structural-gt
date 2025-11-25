@@ -25,7 +25,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#2266ff" : "white"
+                    color: parent.checked ? Theme.blueText : Theme.whiteText
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -37,7 +37,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#2266ff" : "white"
+                    color: parent.checked ? Theme.blueText : Theme.whiteText
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
@@ -49,7 +49,7 @@ Rectangle {
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
-                    color: parent.checked ? "#2266ff" : "white" // #E91E63
+                    color: parent.checked ? Theme.blueText
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight

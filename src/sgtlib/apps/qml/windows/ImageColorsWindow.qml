@@ -153,7 +153,7 @@ Window {
 
                         Label {
                             text: "Dominant colors in the image:"
-                            color: "#606060"
+                            color: Theme.darkGray
                             wrapMode: Text.Wrap
                             font.pixelSize: 10
                         }
@@ -190,7 +190,7 @@ Window {
                                     width: 75
                                     height: 24
                                     radius: 2
-                                    color: model.text   // assuming model.text holds "#RRGGBB"
+                                    color: model.text   // model.text holds "#RRGGBB"
                                 }
 
                                 // Optional: show the hex code as the tooltip, not as text
@@ -202,7 +202,7 @@ Window {
                         Label {
                             Layout.alignment: Qt.AlignHCenter
                             text: "Swap to:"
-                            color: "#606060"
+                            color: Theme.darkGray
                             wrapMode: Text.Wrap
                             font.pixelSize: 10
                         }
@@ -234,7 +234,7 @@ Window {
                                     width: 25
                                     height: 25
                                     radius: 2
-                                    color: "#000000"
+                                    color: Theme.black
                                     border.width: 1
                                     border.color: Theme.borderColor
                                 }

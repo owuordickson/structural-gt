@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Theme 1.0
 
 Item {
     id: cropOverlay
@@ -19,7 +20,7 @@ Item {
     property int handleSize: 24
     property int minWidth: 40
     property int minHeight: 40
-    property color borderColor: "red"
+    property color borderColor: Theme.errorColor
     property bool _initialized: false
 
     // snapshots used while dragging
@@ -48,7 +49,7 @@ Item {
         y: cropOverlay.topPt
         width: Math.max(cropOverlay.minWidth, cropOverlay.rightPt - cropOverlay.leftPt)
         height: Math.max(cropOverlay.minHeight, cropOverlay.bottomPt - cropOverlay.topPt)
-        color: "#00AEEF"
+        color: Theme.skyBlue
         opacity: 0.2
         border.width: 2
         border.color: cropOverlay.borderColor
@@ -123,7 +124,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↕"; color: "white"; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↕"; color: Theme.whiteText; font.pixelSize: 18
         }*/
 
         Image {
@@ -165,7 +166,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↕"; color: "white"; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↕"; color: Theme.whiteText; font.pixelSize: 18
         }*/
 
         Image {
@@ -244,7 +245,7 @@ Item {
         z: 3
 
         /*Text {
-            anchors.centerIn: parent; text: "↔"; color: "white"; font.pixelSize: 18
+            anchors.centerIn: parent; text: "↔"; color: Theme.whiteText; font.pixelSize: 18
         }*/
 
         Image {

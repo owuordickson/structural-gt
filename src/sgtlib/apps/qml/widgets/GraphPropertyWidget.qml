@@ -23,13 +23,13 @@ Item {
         delegate: Rectangle {
             implicitWidth: column === 0 ? (tblViewGraphProps.width * 0.4) : (tblViewGraphProps.width * 0.6)
             implicitHeight: tblRowHeight
-            color: row % 2 === 0 ? "#f5f5f5" : "#ffffff" // Alternating colors
+            color: row % 2 === 0 ? Theme.smokeWhite : Theme.whiteText // Alternating colors
 
             Text {
                 text: model.text
                 wrapMode: Text.Wrap
                 font.pixelSize: 10
-                color: "#303030"
+                color: Theme.darkGray
                 anchors.fill: parent
                 anchors.topMargin: 5
                 anchors.leftMargin: 10

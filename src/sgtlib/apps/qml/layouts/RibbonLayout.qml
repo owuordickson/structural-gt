@@ -27,7 +27,7 @@ Rectangle {
         verticalOffset: 5
         radius: 1
         samples: 16
-        color: "black"
+        color: Theme.black
         opacity: 0.5
     }
 
@@ -231,7 +231,7 @@ Rectangle {
 
                     // Optional: custom colors for hover/selection
                     background: Rectangle {
-                        color: control.hovered ? "#5599ff" : "transparent"
+                        color: control.hovered ? Theme.waitText : "transparent"
                         radius: 4
                     }
                 }

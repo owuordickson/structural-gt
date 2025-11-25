@@ -41,7 +41,7 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
-                        color: "yellow"
+                        color: Theme.yellow
 
                         Label {
                             text: "Create project..."
@@ -87,7 +87,7 @@ Rectangle {
                 Layout.rightMargin: 12
                 width: 1
                 height: 75
-                color: "#c0c0c0"
+                color: Theme.borderColor
             }
 
             ColumnLayout {
@@ -116,7 +116,7 @@ Rectangle {
 
                         Label {
                             text: "Add image"
-                            color: "white"
+                            color: Theme.whiteText
                             font.bold: true
                             font.pixelSize: 12
                             anchors.centerIn: parent
@@ -138,7 +138,7 @@ Rectangle {
 
                         Label {
                             text: "Add image folder"
-                            color: "white"
+                            color: Theme.whiteText
                             font.bold: true
                             font.pixelSize: 12
                             anchors.centerIn: parent

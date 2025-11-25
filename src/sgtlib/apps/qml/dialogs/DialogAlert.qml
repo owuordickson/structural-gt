@@ -33,7 +33,7 @@ Dialog {
         function onShowAlertSignal(title, msg) {
             dialogAlert.title = title;
             dialogAlert.alertMsg = msg;
-            dialogAlert.alertColor = "#2255bc";
+            dialogAlert.alertColor = Theme.blueText;
             dialogAlert.open();
         }
     }

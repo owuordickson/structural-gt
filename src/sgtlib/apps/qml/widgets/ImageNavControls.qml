@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Controls.Basic as Basic
+import Theme 1.0
 
 Rectangle {
     id: imgNavControls
@@ -11,7 +12,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
     Layout.margins: 5
-    color: "#e5e5e5"
+    color: Theme.grayBg
     radius: 5
     visible: imageController.display_image()
 

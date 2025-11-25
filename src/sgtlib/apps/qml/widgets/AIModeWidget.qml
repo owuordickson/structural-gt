@@ -11,7 +11,7 @@ Rectangle {
     Layout.alignment: Qt.AlignTop
     height: 72
     radius: 5
-    color: Theme.aiBackground
+    color: Theme.lightGreenBg
     Layout.margins: 5   // shorthand for top/left/right/bottom
     visible: imageController.display_image()
     enabled: imageController.enable_img_controls()
@@ -47,12 +47,12 @@ Rectangle {
                 checked: aiController.ai_mode_active
                 onCheckedChanged: {
                     if (checked) {
-                        lblAIMode.color = "#2266ff";
+                        lblAIMode.color = Theme.blueText;
                         toggleAIMode.ToolTip.text = "Deactivate";
                         aiController.toggle_ai_mode(true);
                         aiController.run_ai_filter_search();
                     } else {
-                        lblAIMode.color = "#d0d0d0";
+                        lblAIMode.color = Theme.borderColor;
                         toggleAIMode.ToolTip.text = "Activate";
                         aiController.toggle_ai_mode(false);
                     }

@@ -129,7 +129,7 @@ Rectangle {
                 Layout.margins: 5
                 font.bold: true
                 background: Rectangle {
-                    color: "#80ffffff"
+                    color: Theme.semiTransparent
                 }  // 80% opacity (50% transparency)
                 ToolTip.text: "Zoom in"
                 ToolTip.visible: btnZoomIn.hovered
@@ -145,7 +145,7 @@ Rectangle {
                 Layout.margins: 5
                 font.bold: true
                 background: Rectangle {
-                    color: "#80ffffff"
+                    color: Theme.semiTransparent
                 }
                 ToolTip.text: "Zoom out"
                 ToolTip.visible: btnZoomOut.hovered
