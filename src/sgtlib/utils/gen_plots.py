@@ -808,7 +808,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     param_rename_map = {
         "Number of nodes": "Nodes",
         "Number of edges": "Edges",
-        "Network diameter": "Diameter",
+        "Network diameter": "ND",
         "Average edge angle (degrees)": "Avg. E. Angle",
         "Median edge angle (degrees)": "Med. E. Angle",
         "Graph density": "GD",
@@ -867,7 +867,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.3)
         # Add the scale value label below the gridline (at the bottom-most point)
         scale_val = format_scale_value(level)
-        ax.text(shifted_level, -0.05, scale_val, ha='center', va='top', fontsize=8, alpha=0.7)
+        ax.text(0.1, shifted_level, scale_val, ha='left', va='bottom', fontsize=7, alpha=0.3)
 
     # Draw axes from the center to each vertex
     max_shifted = shift_value(max(levels))
@@ -884,6 +884,11 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         x = values * np.cos(angles)
         y = values * np.sin(angles)
 
+        # Perpendicular direction vectors for each angle (rotated +90°)
+        dx_perp = -np.sin(angles)
+        dy_perp = np.cos(angles)
+
+        """
         # Calculate error components in cartesian coordinates
         x_err = errors * np.abs(np.cos(angles))
         # y_err = errors * np.abs(np.sin(angles))
@@ -896,6 +901,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
         # Fill the polygon
         ax.fill(x, y, alpha=0.1, color=ax.lines[-1].get_color())
+        """
 
     # Add labels at the vertices
     label_distance = max_shifted * 1.15
