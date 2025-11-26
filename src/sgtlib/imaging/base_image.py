@@ -6,6 +6,7 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
+import scipy as sp
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
@@ -467,7 +468,7 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self, max_pixel_count: int = None) -> tuple[float, np.ndarray] | tuple[None, None]:
+    def evaluate_img_binary(self, max_pixel_count: int = None) -> tuple[float, float, np.ndarray] | tuple[None, None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
         original image and masking sections of the image that do not intersect with "white" (255) pixels in the
         binary image. The unmasked sections are typically where generated graph edges and nodes are located. So, the 
@@ -483,10 +484,10 @@ class BaseImage:
         """
 
         if self.img_2d is None:
-            return None, None
+            return None, None, None
 
         if self.img_bin is None:
-            return None, None
+            return None, None, None
 
         # Find pixel positions where the binary image is white (255)
         white_pixel_pos = np.argwhere(self.img_bin == 255)  # (row, col)
@@ -504,14 +505,19 @@ class BaseImage:
         if max_pixel_count is not None:
             if white_pixel_count > max_pixel_count:
                 print("Cost: Null")
-                return None, None
+                return None, None, None
 
         # Calculate standard deviation of original values
         std_dev = np.std(pixel_values)
+        px_mode_val = sp.mode(pixel_values)
+
+        if px_mode_val >= 254 or px_mode_val <= 1:
+            print("Cost: Null (all white/black pixels)")
+            return None, None, None
 
         # Create the histogram of original values at white pixel positions
         eval_hist = cv2.calcHist([pixel_values], [0], None, [256], [0, 256])
-        return float(std_dev), eval_hist
+        return float(std_dev), float(px_mode_val), eval_hist
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
@@ -535,7 +541,7 @@ class BaseImage:
         if curr_view == "original":
             img = self.img_2d
             # Evaluate the binary image
-            eval_std, eval_hist = self.evaluate_img_binary()
+            eval_std, eval_mode, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
                 print(f"Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}")
                 ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')

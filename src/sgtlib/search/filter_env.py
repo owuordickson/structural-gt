@@ -371,9 +371,12 @@ class FilterSearchSpace:
         img_mod = img_obj.img_mod.copy()
         img_obj.img_bin = img_obj.binarize_img(img_mod)
         img_obj.img_mod = img_mod
+
         # Compute SD as cost
         try:
-            eval_std, eval_hist = img_obj.evaluate_img_binary(pixel_limit)
+            eval_std, eval_mode, eval_hist = img_obj.evaluate_img_binary(pixel_limit)
+            # Check if eval_mode is 'all-white' or 'all-black'
+            print(f"Pixel Mode Value: {eval_mode}")
         except Exception as e:
             print(f"Error in cost function: {e}")
             eval_std = np.inf
