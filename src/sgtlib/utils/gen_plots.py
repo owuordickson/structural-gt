@@ -888,6 +888,29 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         dx_perp = -np.sin(angles)
         dy_perp = np.cos(angles)
 
+        # Draw the polygon line and capture color
+        poly_line, = ax.plot([*x, x[0]], [*y, y[0]], linewidth=1.5)
+        color = poly_line.get_color()
+
+        # Fill polygon
+        ax.fill(x, y, alpha=0.1, color=color)
+
+        # Draw perpendicular error bars
+        err_scale = 5  # increase to make bars longer
+        for i in range(len(angles)):
+            xi, yi = x[i], y[i]
+            err = errors[i] * err_scale
+
+            # Endpoints of perpendicular error bar
+            x1 = xi + err * dx_perp[i]
+            y1 = yi + err * dy_perp[i]
+            x2 = xi - err * dx_perp[i]
+            y2 = yi - err * dy_perp[i]
+            ax.plot([x1, x2], [y1, y2], color=color, linewidth=0.8)
+
+        # Add label to legend (without the duplicate polygon)
+        ax.plot([], [], color=color, label=material_name)
+
         """
         # Calculate error components in cartesian coordinates
         x_err = errors * np.abs(np.cos(angles))
