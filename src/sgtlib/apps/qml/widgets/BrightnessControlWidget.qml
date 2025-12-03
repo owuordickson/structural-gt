@@ -46,7 +46,7 @@ Item {
                     stepSize: 1
                     property var currVal: model.value
                     value: currVal
-                    onValueChanged: updateValue(currVal, value)
+                    onValueChanged: updateValue(value)
                     onFocusChanged: {
                         if (focus) {
                             btnOK.visible = true;
@@ -89,9 +89,9 @@ Item {
                     }
                 }
 
-                function updateValue(curr_val, val) {
-                    if (curr_val !== val){
-                        curr_val = val;
+                function updateValue(val) {
+                    if (model.value !== val){
+                        //curr_val = val;
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
                         imageController.apply_changes("processed");

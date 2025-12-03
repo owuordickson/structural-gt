@@ -69,7 +69,7 @@ Item {
 
                     function updateValue(isChecked, checked) {
                         if (isChecked !== checked) {  // Only update if there is a change
-                            isChecked = checked
+                            //isChecked = checked
                             let val = checked ? 1 : 0;
                             let index = gtcListModel.index(model.index, 0);
                             gtcListModel.setData(index, val, valueRole);

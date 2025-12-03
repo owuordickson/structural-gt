@@ -138,7 +138,7 @@ ColumnLayout {
                             stepSize: model.stepSize
                             property var currSBVal: model.dataValue
                             value: currSBVal
-                            onValueChanged: updateValue(currSBVal, value)
+                            onValueChanged: updateValue(value)
                         }
                     }
                 }
@@ -160,7 +160,7 @@ ColumnLayout {
                             stepSize: model.stepSize
                             property var currVal: model.dataValue
                             value: currVal
-                            onValueChanged: updateValue(currVal, value)
+                            onValueChanged: updateValue(value)
                         }
 
                         Label {
@@ -174,9 +174,9 @@ ColumnLayout {
                     }
                 }
 
-                function updateValue(curr_val, val) {
-                    if (curr_val !== val) {
-                        curr_val = val;
+                function updateValue(val) {
+                    if (model.value !== val) {
+                        //curr_val = val;
                         var index = imgFilterModel.index(model.index, 0);
                         imgFilterModel.setData(index, val, dataValueRole);
                         imageController.apply_changes("");
