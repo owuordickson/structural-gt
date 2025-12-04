@@ -91,6 +91,17 @@ class TreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
         item = index.internalPointer()
+
+        role_map = {
+            self.IdRole: "id",
+            self.TextRole: "text",
+            self.ValueRole: "value",
+        }
+
+        key = role_map.get(role, None)
+        if key is None:
+            return None
+
         # if role == Qt.DisplayRole:
         #    return item.data(index.column())
         if role == self.IdRole:

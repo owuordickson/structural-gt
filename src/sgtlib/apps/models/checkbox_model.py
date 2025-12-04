@@ -25,29 +25,28 @@ class CheckBoxModel(QAbstractListModel):
         if not index.isValid() or index.row() >= len(self.list_data):
             return None
         item = self.list_data[index.row()]
-        if role == self.IdRole:
-            return item["id"]
-        elif role == self.TypeRole:
-            return item["type"]
-        elif role == self.TextRole:
-            return item["text"]
-        elif role == self.ValueRole:
-            return item["value"]
-        elif role == self.DataIdRole:
-            return item["dataId"]
-        elif role == self.DataValueRole:
-            return item["dataValue"]
-        elif role == self.MinValueRole:
-            return item["minValue"]
-        elif role == self.MaxValueRole:
-            return item["maxValue"]
-        elif role == self.StepSizeRole:
-            return item["stepSize"]
-        elif role == self.VisibleRole:
-            return item["visible"]
-        elif role == self.ToolTipRole:
-            return item["tooltip"]
-        return None
+
+        # Map roles → dictionary keys
+        role_map = {
+            self.IdRole: "id",
+            self.TypeRole: "type",
+            self.TextRole: "text",
+            self.ValueRole: "value",
+            self.DataIdRole: "dataId",
+            self.DataValueRole: "dataValue",
+            self.MinValueRole: "minValue",
+            self.MaxValueRole: "maxValue",
+            self.StepSizeRole: "stepSize",
+            self.VisibleRole: "visible",
+            self.ToolTipRole: "tooltip",
+        }
+
+        key = role_map.get(role, None)
+        if key is None:
+            return None
+
+        # Safe return: return value if key exists, else None
+        return item.get(key, None)
 
     def setData(self, index, value, role=Qt.ItemDataRole.DisplayRole):
         """

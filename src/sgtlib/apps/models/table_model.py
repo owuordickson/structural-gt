@@ -21,6 +21,11 @@ class TableModel(QAbstractTableModel):
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()):
             return None
+
+        available_roles = {Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DecorationRole, self.SelectedRole}
+        if role not in available_roles:
+            return None
+
         if role == Qt.ItemDataRole.DisplayRole:
             return self.itemData[index.row()][index.column()]
         elif role == Qt.ItemDataRole.DecorationRole:

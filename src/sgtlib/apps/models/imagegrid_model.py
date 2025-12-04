@@ -28,18 +28,21 @@ class ImageGridModel(QAbstractListModel):
             return None
 
         item = self._image_data[index.row()]
-        if item["image"] is None:
+
+        # Map roles → dictionary keys
+        role_map = {
+            self.IdRole: "id",
+            self.TextRole: "text",
+            self.ImageRole: "image",
+            self.SelectedRole: "selected",
+        }
+
+        key = role_map.get(role, None)
+        if key is None:
             return None
 
-        if role == self.IdRole:
-            return item["id"]
-        elif role == self.TextRole:
-            return item["text"]
-        elif role == self.ImageRole:
-            return item["image"]
-        elif role == self.SelectedRole:
-            return item["selected"]
-        return ""
+        # Safe return: return value if key exists, else None
+        return item.get(key, None)
 
     def setData(self, index, value, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or index.row() >= len(self._image_data):
