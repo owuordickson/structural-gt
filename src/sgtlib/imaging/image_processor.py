@@ -8,6 +8,7 @@ import re
 import os
 import cv2
 # import pydicom
+import copy
 import logging
 import numpy as np
 # import nibabel as nib
@@ -648,13 +649,14 @@ class ImageProcessor(ProgressUpdate):
 
         def _run_genetic_algorithm(search_space):
             """Runs the Genetic Algorithm to find the best candidate image configuration."""
-            new_img_configs = sgt_genetic_algorithm(search_space, self.image_obj, generations=max_iters,
-                                                    pop_size=ga_init_pop)
+            new_img_configs = sgt_genetic_algorithm(search_space, img_obj, generations=max_iters, pop_size=ga_init_pop)
             filter_space.best_candidate.std_cost = search_space.best_candidate.std_cost
-            filter_space.img_configs = new_img_configs
+            filter_space.best_candidate.img_configs = new_img_configs
 
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
+        img_configs = self.image_obj.configs
+        img_obj = copy.deepcopy(self.image_obj)
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
@@ -665,41 +667,34 @@ class ImageProcessor(ProgressUpdate):
         # 1. Create a search space
         if self._filter_space is None:
             self.update_status(ProgressData(percent=20, sender="AI", message=f"Creating search environment..."))
-            self._filter_space = FilterSearchSpace.build_search_space(self.image_obj, initial_pop=ga_init_pop)
+            self._filter_space = FilterSearchSpace.build_search_space(img_configs, initial_pop=ga_init_pop)
         filter_space = self._filter_space
 
-        total_pixels = self.image_obj.img_2d.shape[0] * self.image_obj.img_2d.shape[1]
+        # 2. Run the Hill-climbing algorithm to find the best "image config combination"
         if opt_model["find_filter_selections"]["value"] == 1:
-            # 2. Run the Hill-climbing algorithm to find the best "image config combination"
             self.update_status(ProgressData(percent=50, sender="AI", message=f"Searching for filter selections..."))
             try:
-                filter_space.pixel_limit = total_pixels // 2
-                filter_space.loser_candidates = set()
-                sgt_hill_climbing_algorithm(filter_space, self.image_obj, max_iters=max_iters)
+                sgt_hill_climbing_algorithm(filter_space, img_obj, max_iters=max_iters)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error finding best apply selections:", err, extra={'user': 'SGT Logs'})
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
+        # 3. Run the Genetic Algorithm to find the best "image filter values"
         if opt_model["find_filter_values"]["value"] == 1:
-            # 3. Run the Genetic Algorithm to find the best "image filter values"
             self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
             try:
-                filter_space.best_candidate.value_space.pixel_limit = total_pixels // 2
-                filter_space.best_candidate.value_space.loser_candidates = set()
                 _run_genetic_algorithm(filter_space.best_candidate.value_space)
             except AbortException as err:
                 self.abort = True
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
+        # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
         if opt_model["find_brightness_contrast"]["value"] == 1:
-            # 4. Run the Genetic Algorithm to find the best "brightness/contrast values" (only if 'val_search_space' fxn fails)
             self.update_status(ProgressData(percent=80, sender="AI", message=f"Searching for brightness/contrast values..."))
             try:
-                filter_space.best_candidate.brightness_space.pixel_limit = total_pixels // 2
-                filter_space.best_candidate.brightness_space.loser_candidates = set()
                 _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
             except AbortException as err:
                 self.abort = True

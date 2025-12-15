@@ -301,18 +301,18 @@ class FilterSearchSpace:
         return new_img_configs
 
     @staticmethod
-    def build_search_space(img_obj: BaseImage, initial_pop: int = 256) -> SearchSpace | None:
+    def build_search_space(default_img_configs: dict, initial_pop: int = 256) -> SearchSpace | None:
         """
         Create a discrete search space where each candidate is a combination of image filter configurations.
         Encodes a combination of image filter configurations as a binary number, then this number is converted into an
         integer position in the search space.
 
-        :param img_obj: The image object.
+        :param default_img_configs: The original image configs.
         :param initial_pop: The total population size for Genetic Algorithm search space. Default is 256.
         :return: The search space.
         """
 
-        if img_obj is None:
+        if default_img_configs is None:
             return None
 
         # Parameters
@@ -322,10 +322,9 @@ class FilterSearchSpace:
 
         # Initialize search space
         best_candidate = None
-        init_configs = img_obj.configs
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=set(), loser_candidates=set(), min_pos=0, max_pos=apply_pop-1)
         for pos in range(apply_pop):
-            img_configs = FilterSearchSpace.decode_candidate_position(pos, init_configs)
+            img_configs = FilterSearchSpace.decode_candidate_position(pos, default_img_configs)
             if img_configs is not None:
                 # Create an empty candidate
                 val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(initial_pop)]
@@ -471,6 +470,12 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
     if s_space is None:
         raise AbortException("Search space cannot be None")
 
+    # Initialize search space
+    total_pixels = img_obj.img_2d.shape[0] * img_obj.img_2d.shape[1]
+    s_space.pixel_limit = total_pixels // 2
+    s_space.loser_candidates = set()
+
+    # Initialize best candidate
     best_sol = FilterSearchSpace.get_initial_candidate(s_space)
     best_sol.std_cost, best_configs = _compute_fitness(best_sol)
     print(f"GA-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
@@ -573,6 +578,11 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
 
     if s_space is None or img_obj is None:
         raise AbortException("Search space or ImageObject cannot be None")
+
+    # Initialize search space
+    total_pixels = img_obj.img_2d.shape[0] * img_obj.img_2d.shape[1]
+    s_space.pixel_limit = total_pixels // 2
+    s_space.loser_candidates = set()
 
     # 1. Initialize the current best candidate
     init_sol = FilterSearchSpace.get_initial_candidate(s_space)
