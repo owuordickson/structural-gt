@@ -207,7 +207,7 @@ class BaseWorker:
             img_configs = ntwk_p.metaheuristic_image_configs()
             if ntwk_p.abort:
                 raise AbortException("Task stopped")
-            ntwk_p.image_obj.configs = img_configs.copy()
+            ntwk_p.image_obj.configs = img_configs
             ntwk_p.remove_listener(self._update_progress)
             task_data = TaskResult(task_id="Metaheuristic Search", status="Finished", data=ntwk_p)
             return True, task_data

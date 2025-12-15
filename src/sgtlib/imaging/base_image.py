@@ -478,7 +478,7 @@ class BaseImage:
         unmasked sections of the original image. Also, a histogram of the pixel values in the unmasked sections of the 
         original image can help identify the distribution of pixel values.
 
-        :param max_pixel_count: The maximum number of white pixels allowed. If None, all pixels are evaluated.
+        :param max_pixel_count: The maximum number of white pixels is allowed. If None, all pixels are evaluated.
         
         :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
         """
@@ -501,23 +501,27 @@ class BaseImage:
 
         # Check the limit of allowed pixel count
         white_pixel_count = white_pixel_pos.shape[0]
-        print(f"Max pixel count: {max_pixel_count}; Current count: {white_pixel_count}")
+        print(f"Bin-Fxn (eval) -> Max pixel count: {max_pixel_count}; Current count: {white_pixel_count}")
         if max_pixel_count is not None:
             if white_pixel_count > max_pixel_count:
-                print("Cost: Null")
+                print("Bin-Fxn (eval) -> Cost: Null")
                 return None, None, None
 
         # Calculate standard deviation of original values
         std_dev = np.std(pixel_values)
-        px_mode_val = sp.mode(pixel_values)
+        px_mode_res = sp.stats.mode(pixel_values, axis=None, keepdims=False)
+        px_mode_count = px_mode_res.count
+        px_mode_val = px_mode_res.mode
+        print(f"Bin-Fxn (eval) -> Mode Results: {px_mode_res}. Mode Value: {px_mode_val}")
 
+        # Cutoff Limits (do not apply filters that convert the entire binary image to all-black or all-white)
         if px_mode_val >= 254 or px_mode_val <= 1:
-            print("Cost: Null (all white/black pixels)")
+            print("Bin-Fxn (eval) -> Cost: Null (all white/black pixels)")
             return None, None, None
 
         # Create the histogram of original values at white pixel positions
         eval_hist = cv2.calcHist([pixel_values], [0], None, [256], [0, 256])
-        return float(std_dev), float(px_mode_val), eval_hist
+        return float(std_dev), float(px_mode_count), eval_hist
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
@@ -543,7 +547,7 @@ class BaseImage:
             # Evaluate the binary image
             eval_std, eval_mode, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
-                print(f"Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}")
+                print(f"Bin-Fxn (plt) -> Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}\n")
                 ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
                 ax.legend(loc='upper right')
         elif curr_view == "binary":
