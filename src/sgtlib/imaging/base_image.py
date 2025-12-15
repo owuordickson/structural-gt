@@ -380,9 +380,9 @@ class BaseImage:
             else:
                 img_bin = cv2.threshold(image, gbl_val, 255, cv2.THRESH_BINARY)[ 1]
         elif opt_img["threshold_type"]["value"] == 1:
-            if self._configs["adaptive_local_threshold_value"]["value"] <= 1:
+            if opt_img["adaptive_local_threshold_value"]["value"] <= 1:
                 # Bug fix (crushes app)
-                self._configs["adaptive_local_threshold_value"]["value"] = 3
+                opt_img["adaptive_local_threshold_value"]["value"] = 3
             adp_val = int(opt_img["adaptive_local_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
                 img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, adp_val, 2)
@@ -397,7 +397,7 @@ class BaseImage:
                 temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 img_bin = temp[1]
                 otsu_res = temp[0]
-        self._configs["otsu"]["value"] = otsu_res
+        opt_img["otsu"]["value"] = otsu_res
         return img_bin
 
     def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list["BaseImage.DominantColor"]:
@@ -530,6 +530,7 @@ class BaseImage:
         :param axes: A Matplotlib axes object.
         :param curr_view: The current visualization type of the image (Original, Processed, Binary).
         """
+        opt_img = self._configs
         fig = plt.figure()
         plt_title = "Processed Image"
         if curr_view != "":
@@ -563,12 +564,12 @@ class BaseImage:
         img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
         ax.plot(img_hist, label='Image Histogram')
         ax.legend(loc='upper right')
-        if self._configs["threshold_type"]["value"] == 0:
-            global_val = int(self._configs["global_threshold_value"]["value"])
+        if opt_img["threshold_type"]["value"] == 0:
+            global_val = int(opt_img["global_threshold_value"]["value"])
             thresh_arr = np.array([[global_val, global_val], [0, max(img_hist)]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
-        elif self._configs["threshold_type"]["value"] == 2:
-            otsu_val = self._configs["otsu"]["value"]
+        elif opt_img["threshold_type"]["value"] == 2:
+            otsu_val = opt_img["otsu"]["value"]
             thresh_arr = np.array([[otsu_val, otsu_val], [0, max(img_hist)]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
         fig.tight_layout()
