@@ -432,9 +432,7 @@ class ImageProcessor(ProgressUpdate):
             img_obj.img_mod = img_obj.process_img(image=img_data)
 
             if filter_type == 2:
-                img_mod = img_obj.img_mod.copy()
-                img_obj.img_bin = img_obj.binarize_img(img_mod)
-                img_obj.img_mod = img_mod
+                img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
             img_obj.get_pixel_width()
         self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
@@ -658,7 +656,7 @@ class ImageProcessor(ProgressUpdate):
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
         img_configs = self.image_obj.configs
-        img_2d = self.image_obj.img_2d.copy()
+        img_2d = self.image_obj.img_raw.copy()
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
