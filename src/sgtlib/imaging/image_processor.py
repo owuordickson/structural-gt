@@ -8,7 +8,6 @@ import re
 import os
 import cv2
 # import pydicom
-import copy
 import logging
 import numpy as np
 # import nibabel as nib
@@ -345,7 +344,7 @@ class ImageProcessor(ProgressUpdate):
             _, fmt_2d = BaseImage.check_alpha_channel(img_data)
             image_list = []
             if (len(img_data.shape) >= 3) and (fmt_2d is None):
-                # If the image has shape (d, h, w) and does not an alpha channel which is less than 4 - (h, w, a)
+                # If the image has shape (d, h, w) and does not an alpha channel, which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, self._config_file, scale_factor) for img in img_data]
             else:
                 img_obj = BaseImage(img_data, self._config_file, scale_factor)
@@ -506,18 +505,21 @@ class ImageProcessor(ProgressUpdate):
             return
 
         opt_model = self._configs
+        img_obj = self.image_obj
+        filter_space = self._filter_space
+        sel_filter_candidate = self._filter_space.best_candidate
         if opt_model["find_filter_selections"]["value"] == 1:
-            if self._filter_space.best_candidate is not None:
-                self._filter_space.ignore_candidates.add(self._filter_space.best_candidate.position)
-                self.image_obj.reset_img_configs(self._config_file)
+            if sel_filter_candidate is not None:
+                filter_space.ignore_candidates.add(sel_filter_candidate.position)
+                img_obj.reset_img_configs(self._config_file)
 
         if opt_model["find_filter_values"]["value"] == 1:
-            val_space = self._filter_space.best_candidate.value_space
+            val_space = sel_filter_candidate.value_space
             if val_space.best_candidate is not None:
                 val_space.ignore_candidates.add(val_space.best_candidate.position)
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
-            bright_space = self._filter_space.best_candidate.brightness_space
+            bright_space = sel_filter_candidate.brightness_space
             if bright_space.best_candidate is not None:
                 bright_space.ignore_candidates.add(bright_space.best_candidate.position)
 
@@ -647,16 +649,16 @@ class ImageProcessor(ProgressUpdate):
         :return: A dictionary containing the best candidate's image configuration settings.
         """
 
-        def _run_genetic_algorithm(search_space):
+        def _run_genetic_algorithm(search_space, sel_img_configs):
             """Runs the Genetic Algorithm to find the best candidate image configuration."""
-            new_img_configs = sgt_genetic_algorithm(search_space, img_obj, generations=max_iters, pop_size=ga_init_pop)
-            filter_space.best_candidate.std_cost = search_space.best_candidate.std_cost
-            filter_space.best_candidate.img_configs = new_img_configs
+            new_img_configs = sgt_genetic_algorithm(search_space, img_2d, sel_img_configs, generations=max_iters, pop_size=ga_init_pop)
+            sel_filter_candidate.std_cost = search_space.best_candidate.std_cost
+            sel_filter_candidate.img_configs = new_img_configs
 
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
         img_configs = self.image_obj.configs
-        img_obj = copy.deepcopy(self.image_obj)
+        img_2d = self.image_obj.img_2d.copy()
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
@@ -674,7 +676,7 @@ class ImageProcessor(ProgressUpdate):
         if opt_model["find_filter_selections"]["value"] == 1:
             self.update_status(ProgressData(percent=50, sender="AI", message=f"Searching for filter selections..."))
             try:
-                sgt_hill_climbing_algorithm(filter_space, img_obj, max_iters=max_iters)
+                sgt_hill_climbing_algorithm(filter_space, img_2d, max_iters=max_iters)
             except AbortException as err:
                 self.abort = True
                 logging.exception(f"Error finding best apply selections:", err, extra={'user': 'SGT Logs'})
@@ -682,10 +684,11 @@ class ImageProcessor(ProgressUpdate):
                 return None
 
         # 3. Run the Genetic Algorithm to find the best "image filter values"
+        sel_filter_candidate = filter_space.best_candidate
         if opt_model["find_filter_values"]["value"] == 1:
             self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
             try:
-                _run_genetic_algorithm(filter_space.best_candidate.value_space)
+                _run_genetic_algorithm(sel_filter_candidate.value_space, sel_filter_candidate.img_configs)
             except AbortException as err:
                 self.abort = True
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
@@ -695,12 +698,12 @@ class ImageProcessor(ProgressUpdate):
         if opt_model["find_brightness_contrast"]["value"] == 1:
             self.update_status(ProgressData(percent=80, sender="AI", message=f"Searching for brightness/contrast values..."))
             try:
-                _run_genetic_algorithm(filter_space.best_candidate.brightness_space)
+                _run_genetic_algorithm(sel_filter_candidate.brightness_space, sel_filter_candidate.img_configs)
             except AbortException as err:
                 self.abort = True
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
-        return filter_space.best_candidate.img_configs
+        return sel_filter_candidate.img_configs
 
     def build_graph_network(self):
         """Generates or extracts graphs of selected images."""
@@ -1156,7 +1159,7 @@ class ImageProcessor(ProgressUpdate):
 
             # if type(image_data) is list:
             if (len(image_data.shape) >= 3) and (fmt_2d is None):
-                # If the image has shape (d, h, w) and third is not alpha channel
+                # If the image has shape (d, h, w), and third is not alpha channel
                 img_3d = []
                 for img in image_data:
                     img_small, scale_factor = BaseImage.resize_img(scale_size, img)

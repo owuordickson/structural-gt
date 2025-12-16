@@ -9,6 +9,7 @@ import numpy as np
 from dataclasses import dataclass
 from ..imaging.base_image import BaseImage
 from ..utils.sgt_utils import AbortException
+from ..utils.config_loader import load_img_configs
 
 
 class FilterSearchSpace:
@@ -56,14 +57,12 @@ class FilterSearchSpace:
         evaluating the binary image and finding the number of white pixels in the image. Retrieve the corresponding pixel
         values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
         the combination of image filter configurations."""
-        position: int | None = None               # 11 bits long (approx. 2k candidates)
-        value_range: tuple[int, int] | None = None                  # [min, max] values -- 0bits-20bits
-        # value_candidate: "FilterSearchSpace.Candidate" = None
-        # brightness_candidate: "FilterSearchSpace.Candidate" = None
-        value_space: "FilterSearchSpace.SearchSpace" = None         # approx. 1B candidates
-        brightness_space: "FilterSearchSpace.SearchSpace" = None    # approx. 256 candidates
+        position: int | None = None                  # 11 bits long (approx. 2k candidates)
         std_cost: float | None = None
-        graph_accuracy: float | None = None     # CNN model prediction accuracy of the generated graph
+        value_range: tuple[int, int] | None = None                      # [min, max] values -- 0bits-20bits
+        value_space: "FilterSearchSpace.SearchSpace" = None                      # approx. 1B candidates
+        brightness_space: "FilterSearchSpace.SearchSpace" = None                 # approx. 256 candidates
+        graph_accuracy: float | None = None          # CNN model prediction accuracy of the generated graph
         img_configs: dict | None = None
 
     def __init__(self):
@@ -173,15 +172,14 @@ class FilterSearchSpace:
         return init_candidate
 
     @staticmethod
-    def decode_candidate_position(encoded_pos: int, img_configs: dict) -> None|dict:
+    def decode_filter_selections(encoded_pos: int) -> None | dict:
         """
-        Decode the position of a candidate in the search space into a dictionary of image filter configurations.
+        Decode the position of a candidate in the search space into a dictionary of selected image filter configurations.
 
         :param encoded_pos: The position of the candidate in the search space.
-        :param img_configs: The dictionary of image filter configurations.
         :return: The dictionary of image filter configurations.
         """
-        if encoded_pos is None or img_configs is None:
+        if encoded_pos is None:
             return None
 
             # Step 1: Convert integer to 11-bit binary string
@@ -196,17 +194,17 @@ class FilterSearchSpace:
         filters = [int(b) for b in filter_bits]
 
         # Step 4: Map to variable names
-        new_img_configs = copy.deepcopy(img_configs)
-        new_img_configs["threshold_type"]["value"] = threshold_type
-        new_img_configs["apply_dark_foreground"]["value"] = filters[0]
-        new_img_configs["apply_gamma"]["value"] = filters[1]
-        new_img_configs["apply_autolevel"]["value"] = filters[2]
-        new_img_configs["apply_laplacian_gradient"]["value"] = filters[3]
-        new_img_configs["apply_gaussian_blur"]["value"] = filters[4]
-        new_img_configs["apply_lowpass_filter"]["value"] = filters[5]
-        new_img_configs["apply_sobel_gradient"]["value"] = filters[6]
-        new_img_configs["apply_median_filter"]["value"] = filters[7]
-        new_img_configs["apply_scharr_gradient"]["value"] = filters[8]
+        img_configs = load_img_configs("")
+        img_configs["threshold_type"]["value"] = threshold_type
+        img_configs["apply_dark_foreground"]["value"] = filters[0]
+        img_configs["apply_gamma"]["value"] = filters[1]
+        img_configs["apply_autolevel"]["value"] = filters[2]
+        img_configs["apply_laplacian_gradient"]["value"] = filters[3]
+        img_configs["apply_gaussian_blur"]["value"] = filters[4]
+        img_configs["apply_lowpass_filter"]["value"] = filters[5]
+        img_configs["apply_sobel_gradient"]["value"] = filters[6]
+        img_configs["apply_median_filter"]["value"] = filters[7]
+        img_configs["apply_scharr_gradient"]["value"] = filters[8]
 
         """
         # Step 5: Build value_bits for extra parameter ranges
@@ -225,7 +223,7 @@ class FilterSearchSpace:
         """
         # print(f"Bits: {bitstring}, Default Candidate: {img_configs}")
         # print(f"Position: {encoded_pos} -> Bits: {bitstring}")
-        return new_img_configs
+        return img_configs
 
     @staticmethod
     def decode_filter_values(img_configs: dict, value_candidate: "FilterSearchSpace.Candidate"=None, bright_candidate: "FilterSearchSpace.Candidate"=None) -> dict|None:
@@ -321,10 +319,11 @@ class FilterSearchSpace:
         bri_range = (0, 2**16)
 
         # Initialize search space
+        initial_position = 128  # decode from 'default_img_configs'
         best_candidate = None
         search_space = FilterSearchSpace.SearchSpace(candidates=[], ignore_candidates=set(), loser_candidates=set(), min_pos=0, max_pos=apply_pop-1)
         for pos in range(apply_pop):
-            img_configs = FilterSearchSpace.decode_candidate_position(pos, default_img_configs)
+            img_configs = FilterSearchSpace.decode_filter_selections(pos)
             if img_configs is not None:
                 # Create an empty candidate
                 val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(initial_pop)]
@@ -332,7 +331,7 @@ class FilterSearchSpace:
                 value_space = FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=set(), loser_candidates=set(), min_pos=val_range[0], max_pos=val_range[1])
                 brightness_space = FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=set(), loser_candidates=set(), min_pos=bri_range[0], max_pos=bri_range[1])
 
-                if pos == 128:
+                if pos == initial_position:
                     best_candidate = FilterSearchSpace.FilterCandidate(
                         position=pos,
                         value_range=(0, initial_pop),
@@ -360,28 +359,29 @@ class FilterSearchSpace:
             search_space.best_candidate = best_candidate
             search_space.best_candidate.value_space.best_candidate = FilterSearchSpace.Candidate(position=2**22, std_cost=None)
             search_space.best_candidate.brightness_space.best_candidate = FilterSearchSpace.Candidate(position=0, std_cost=None)
-            print(f"Search Space (init) -> Best Candidate {best_candidate.position}: {best_candidate.img_configs}")
         return search_space
 
     @staticmethod
-    def cost_function(img_configs: dict, img_obj: BaseImage, pixel_limit: int) -> float:
+    def cost_function(img_configs: dict, img_2d: np.ndarray, pixel_limit: int) -> float:
         """Calculate and apply the cost of a candidate. Given the image filter configurations, apply them to get a
         binary image and find the number of white pixels in the image. Retrieve the corresponding pixel values from the
         original image and calculate the Standard Deviation (SD) of the pixel values.
 
         :param img_configs: The dictionary of image filter configurations.
-        :param img_obj: The image object.
+        :param img_2d: The OpenCV or NumPy array representing the image. Can be either grayscale or color.
         :param pixel_limit: The maximum number of pixels to consider for calculating the SD.
 
         :return: The cost of the candidate as a float. If the candidate is invalid, return np.inf.
         """
 
-        if img_obj is None:
+        if img_2d is None:
             return np.inf
 
         if img_configs is None:
             return np.inf
 
+        # Create an image object from the image data
+        img_obj = BaseImage(raw_img=img_2d)
         # Copy image filter configurations to the image object
         img_obj.configs = img_configs
         # Reset image filters
@@ -408,12 +408,13 @@ class FilterSearchSpace:
 
 
 
-def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.9, sigma: float = 0.9) -> dict|None:
+def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.ndarray, img_configs: dict, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.9, sigma: float = 0.9) -> dict|None:
     """
     Executes the genetic algorithm to find the best candidate from a huge search space.
 
     :param s_space: Search space object.
-    :param img_obj: BaseImage object which contains the image itself and the image configurations.
+    :param img_data: Image as a NumPy array or OpenCV image.
+    :param img_configs: Dictionary of selected image filter configurations.
     :param generations: Number of family generations to run the algorithm for.
     :param pop_size: Initial size of the population.
     :param gamma: Crossover probability.
@@ -460,18 +461,21 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
 
     def _compute_fitness(sol):
         """Compute fitness for an individual."""
-        if s_space.max_pos >= 2 ** 30:
-            new_img_configs = FilterSearchSpace.decode_filter_values(img_obj.configs, value_candidate=sol)
+        if isinstance(sol, FilterSearchSpace.Candidate):
+            if s_space.max_pos >= 2 ** 30:
+                new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, value_candidate=sol)
+            else:
+                new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, bright_candidate=sol)
+            std_cost = FilterSearchSpace.cost_function(new_img_configs, img_data, s_space.pixel_limit)
         else:
-            new_img_configs = FilterSearchSpace.decode_filter_values(img_obj.configs, bright_candidate=sol)
-        std_cost = FilterSearchSpace.cost_function(new_img_configs, img_obj, s_space.pixel_limit)
+            std_cost, new_img_configs = np.inf, None
         return std_cost, new_img_configs
 
     if s_space is None:
         raise AbortException("Search space cannot be None")
 
     # Initialize search space
-    total_pixels = img_obj.img_2d.shape[0] * img_obj.img_2d.shape[1]
+    total_pixels = img_data.shape[0] * img_data.shape[1]
     s_space.pixel_limit = total_pixels // 2
     s_space.loser_candidates = set()
 
@@ -536,12 +540,12 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseI
 
 
 
-def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj: BaseImage, max_iters: int = 5, step_size: int = 1) -> None:
+def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.ndarray, max_iters: int = 5, step_size: int = 1) -> None:
     """
     Executes the hill climbing algorithm to find the best candidate from a small search space.
 
     :param s_space: Search space object.
-    :param img_obj: BaseImage object which contains the image itself and the image configurations.
+    :param img_data: Image as a NumPy array or OpenCV image.
     :param max_iters: Maximum number of iterations to run the algorithm for.
     :param step_size: Step size to move the current candidate.
 
@@ -568,37 +572,21 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_obj:
             val_sol = sol.value_space.best_candidate
             bri_sol = sol.brightness_space.best_candidate
             sol.img_configs = FilterSearchSpace.decode_filter_values(sol.img_configs, val_sol, bri_sol)
-            std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_obj, s_space.pixel_limit)
-        elif isinstance(sol, FilterSearchSpace.Candidate):
-            new_img_configs = FilterSearchSpace.decode_filter_values(img_obj.configs, bright_candidate=sol)
-            std_cost = FilterSearchSpace.cost_function(new_img_configs, img_obj, s_space.pixel_limit)
+            std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data, s_space.pixel_limit)
         else:
             std_cost = np.inf
         return std_cost
 
-    if s_space is None or img_obj is None:
+    if s_space is None or img_data is None:
         raise AbortException("Search space or ImageObject cannot be None")
 
     # Initialize search space
-    total_pixels = img_obj.img_2d.shape[0] * img_obj.img_2d.shape[1]
+    total_pixels = img_data.shape[0] * img_data.shape[1]
     s_space.pixel_limit = total_pixels // 2
     s_space.loser_candidates = set()
 
     # 1. Initialize the current best candidate
-    init_sol = FilterSearchSpace.get_initial_candidate(s_space)
-    if isinstance(s_space.best_candidate, FilterSearchSpace.FilterCandidate):
-        best_sol = FilterSearchSpace.FilterCandidate(
-            position=init_sol.position,
-            value_range=init_sol.value_range,
-            value_space=init_sol.value_space,
-            brightness_space=init_sol.brightness_space,
-            std_cost=np.inf,
-            graph_accuracy=0,
-            img_configs=init_sol.img_configs,
-        )
-    else:
-        best_sol = FilterSearchSpace.Candidate(position=init_sol.position, std_cost=np.inf)
-
+    best_sol = FilterSearchSpace.get_initial_candidate(s_space)
     best_sol.std_cost = _compute_fitness(best_sol)
     print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
     # 2. Run the hill climbing algorithm
