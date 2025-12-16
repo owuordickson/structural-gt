@@ -570,10 +570,10 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     :return: None
     """
 
-    def _generate_neighbors():
+    def _generate_neighbors(iter_val: int):
         """Generate neighbors by slightly modifying the current candidate."""
         lst_neighbor = []
-        for i in range(5):
+        for i in range(20):
             conf_val = float(random.randint(0, 100)/100)
             if conf_val >= 0.95:
                 # with random probability, move the center position to a random position in the search space
@@ -581,8 +581,8 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
             else:
                 # otherwise, use the best candidate as the center position
                 center_pos = best_sol.position
-            left_pos = max(s_space.min_pos, center_pos - step_size + i)
-            right_pos = min(s_space.max_pos, center_pos + step_size + i)
+            left_pos = max(s_space.min_pos, center_pos - step_size - i - iter_val)
+            right_pos = min(s_space.max_pos, center_pos + step_size + i + iter_val)
             if isinstance(best_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
                 for item in s_space.candidates:
                     if (item.position in (left_pos, center_pos, right_pos)) and ((item.position not in s_space.ignore_candidates) or (item.position not in s_space.loser_candidates)):
@@ -615,9 +615,9 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     best_sol.std_cost = _compute_fitness(best_sol)
     print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
     # 2. Run the hill climbing algorithm
-    for _ in range(max_iters):
+    for it in range(max_iters):
         # Get neighbors to the current best candidate
-        neighbors = _generate_neighbors()
+        neighbors = _generate_neighbors(it)
         best_neighbor = None
 
         # Find the best neighbor among the neighbors
