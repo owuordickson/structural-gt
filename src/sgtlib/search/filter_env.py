@@ -574,9 +574,15 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
         """Generate neighbors by slightly modifying the current candidate."""
         lst_neighbor = []
         for i in range(5):
-            center_pos = best_sol.position
-            left_pos = max(s_space.min_pos, center_pos - step_size)
-            right_pos = min(s_space.max_pos, center_pos + step_size)
+            conf_val = float(random.randint(0, 100)/100)
+            if conf_val >= 0.95:
+                # with random probability, move the center position to a random position in the search space
+                center_pos = random.randint(s_space.min_pos, s_space.max_pos)
+            else:
+                # otherwise, use the best candidate as the center position
+                center_pos = best_sol.position
+            left_pos = max(s_space.min_pos, center_pos - step_size + i)
+            right_pos = min(s_space.max_pos, center_pos + step_size + i)
             if isinstance(best_sol, (FilterSearchSpace.Candidate, FilterSearchSpace.FilterCandidate)):
                 for item in s_space.candidates:
                     if (item.position in (left_pos, center_pos, right_pos)) and ((item.position not in s_space.ignore_candidates) or (item.position not in s_space.loser_candidates)):
@@ -586,10 +592,9 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     def _compute_fitness(sol):
         """Compute fitness for an individual."""
         if isinstance(sol, FilterSearchSpace.FilterCandidate):
-            # FilterSearchSpace.decode_candidate_position(sol.position, sol.img_configs)
-            val_sol = sol.value_space.best_candidate
-            bri_sol = sol.brightness_space.best_candidate
-            sol.img_configs = FilterSearchSpace.decode_filter_values(sol.img_configs, val_sol, bri_sol)
+            # val_sol = sol.value_space.best_candidate
+            # bri_sol = sol.brightness_space.best_candidate
+            # _ = FilterSearchSpace.decode_filter_values(sol.img_configs, val_sol, bri_sol)
             std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data, s_space.pixel_limit)
         else:
             std_cost = np.inf
@@ -603,10 +608,12 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     s_space.pixel_limit = total_pixels // 2
     s_space.loser_candidates = set()
 
-    # 1. Initialize the current best candidate
+    # 1a. Initialize the current best candidate
     best_sol = FilterSearchSpace.get_initial_candidate(s_space)
+    # 1b. Reset image configs to default values
+    best_sol.img_configs = FilterSearchSpace.decode_filter_selections(best_sol.position)
     best_sol.std_cost = _compute_fitness(best_sol)
-    print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}, config: {best_sol.img_configs}")
+    print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
     # 2. Run the hill climbing algorithm
     for _ in range(max_iters):
         # Get neighbors to the current best candidate
