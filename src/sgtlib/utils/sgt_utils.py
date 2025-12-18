@@ -8,12 +8,14 @@ import os
 import io
 import sys
 import cv2
+import csv
 import base64
 import logging
 import requests
 import gsd.hoomd
 import subprocess
 import numpy as np
+import pandas as pd
 import networkx as nx
 import multiprocessing as mp
 import matplotlib.pyplot as plt
@@ -450,6 +452,53 @@ def csv_to_graph(csv_path: str) -> None | nx.Graph:
         return nx_graph
     else:
         return None
+
+
+def csv_to_numpy(csv_path: str) -> np.ndarray | None:
+    """
+    Checks if a CSV file has a header and loads its data into a NumPy array,
+    ensuring no header row is included.
+
+    Args:
+        csv_path (str): The path to the CSV file.
+
+    Returns:
+        numpy.ndarray | None: The data from the CSV file as a NumPy array without a header.
+    """
+
+    try:
+        # 1. Use the csv sniffer to detect a header
+        with open(csv_path, newline='') as csvfile:
+            sniffer = csv.Sniffer()
+            # Read a sample to let the sniffer work. 2048 bytes is an arbitrary number sufficient for a few rows.
+            sample = csvfile.read(2048)
+            # Rewind the file to the beginning
+            csvfile.seek(0)
+            # Detect if the file has a header
+            has_header = sniffer.has_header(sample)
+
+        # 2. Set the 'header' parameter for pandas accordingly
+        if has_header:
+            header_param = None  # If a header exists, tell pandas there is NO header in the DATA
+            skip_rows_param = 1  # Skip the first row which is the header
+        else:
+            header_param = None  # No header exists, so use None (pandas default is header=0)
+            skip_rows_param = 0  # No rows to skip
+
+        # 3. Read the CSV data using pandas
+        df = pd.read_csv(
+            csv_path,
+            header=header_param,
+            skiprows=skip_rows_param,
+            index_col=False
+        )
+
+        # 4. Convert the DataFrame to a NumPy array as requested
+        csv_data = df.to_numpy()
+    except Exception as e:
+        print(f"Error loading CSV file: {e}")
+        csv_data = None
+    return csv_data
 
 
 def img_to_base64(img: MatLike | Image.Image) -> str:
