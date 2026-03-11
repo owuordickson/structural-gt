@@ -219,6 +219,11 @@ class ImageProcessor(ProgressUpdate):
         return bin_images
 
     @property
+    def processed_image_2d(self) -> MatLike:
+        """Returns OpenCV version of the modified image (first slice/frame/image in the batch)."""
+        return self.image_obj.img_mod
+
+    @property
     def processed_image_3d(self) -> list[MatLike]:
         """Returns the 3D version of the modified image as a list of OpenCV arrays."""
         mod_images = [obj.img_mod for obj in self.image_obj_3d]

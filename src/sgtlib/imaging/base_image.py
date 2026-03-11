@@ -57,7 +57,7 @@ class BaseImage:
         self._img_raw: MatLike | None = safe_uint8_image(raw_img)
         self._img_2d: MatLike | None = None
         self._img_bin: MatLike | None = None
-        self._img_mod: MatLike | None = None
+        self._img_grayscale: MatLike | None = None
         self._img_mut: MatLike | None = None
         self._has_alpha_channel: bool = False
         self._scale_factor: float = scale_factor
@@ -104,12 +104,12 @@ class BaseImage:
     @property
     def img_mod(self) -> MatLike | None:
         """Returns the modified image in OpenCV format."""
-        return self._img_mod
+        return self._img_grayscale
 
     @img_mod.setter
     def img_mod(self, img_mod: MatLike | None) -> None:
         """Sets the modified image in OpenCV format."""
-        self._img_mod = img_mod
+        self._img_grayscale = img_mod
 
     @property
     def img_mut(self) -> MatLike | None:
@@ -280,82 +280,82 @@ class BaseImage:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Apply brightness/contrast
-        filtered_img = control_brightness(image)
+        grayscale_img = control_brightness(image)
 
         if float(opt_img["apply_gamma"]["dataValue"]) != 1.00:
             inv_gamma = 1.00 / float(opt_img["apply_gamma"]["dataValue"])
             inv_gamma = float(inv_gamma)
             lst_tbl = [((float(i) / 255.0) ** inv_gamma) * 255.0 for i in np.arange(0, 256)]
             table = np.array(lst_tbl).astype('uint8')
-            filtered_img = cv2.LUT(filtered_img, table)
+            grayscale_img = cv2.LUT(grayscale_img, table)
 
         # applies a low-pass filter
         if opt_img["apply_lowpass_filter"]["value"] == 1:
-            h, w = filtered_img.shape
+            h, w = grayscale_img.shape
             ham1x = np.hamming(w)[:, None]  # 1D hamming
             ham1y = np.hamming(h)[:, None]  # 1D hamming
             ham2d = np.sqrt(np.dot(ham1y, ham1x.T)) ** int(
                 opt_img["apply_lowpass_filter"]["dataValue"])  # expand to 2D hamming
-            f = cv2.dft(filtered_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
+            f = cv2.dft(grayscale_img.astype(np.float32), flags=cv2.DFT_COMPLEX_OUTPUT)
             f_shifted = np.fft.fftshift(f)
             f_complex = f_shifted[:, :, 0] * 1j + f_shifted[:, :, 1]
             f_filtered = ham2d * f_complex
             f_filtered_shifted = np.fft.fftshift(f_filtered)
             inv_img = np.fft.ifft2(f_filtered_shifted)  # inverse F.T.
-            filtered_img = np.abs(inv_img)
-            filtered_img -= filtered_img.min()
-            filtered_img = filtered_img * 255 / filtered_img.max()
-            filtered_img = filtered_img.astype(np.uint8)
+            grayscale_img = np.abs(inv_img)
+            grayscale_img -= grayscale_img.min()
+            grayscale_img = grayscale_img * 255 / grayscale_img.max()
+            grayscale_img = grayscale_img.astype(np.uint8)
 
         # applying median filter
         if opt_img["apply_median_filter"]["value"] == 1:
             # making a 5x5 array of all 1's for median filter
             med_disk = disk(5)
-            filtered_img = median(filtered_img, med_disk)
+            grayscale_img = median(grayscale_img, med_disk)
 
         # applying gaussian blur
         if opt_img["apply_gaussian_blur"]["value"] == 1:
             b_size = int(opt_img["apply_gaussian_blur"]["dataValue"])
-            filtered_img = cv2.GaussianBlur(filtered_img, (b_size, b_size), 0)
+            grayscale_img = cv2.GaussianBlur(grayscale_img, (b_size, b_size), 0)
 
         # applying auto-level filter
         if opt_img["apply_autolevel"]["value"] == 1:
             # making a disk for the auto-level filter
             auto_lvl_disk = disk(int(opt_img["apply_autolevel"]["dataValue"]))
-            filtered_img = autolevel(filtered_img, footprint=auto_lvl_disk)
+            grayscale_img = autolevel(grayscale_img, footprint=auto_lvl_disk)
 
         # applying a scharr filter,
         if opt_img["apply_scharr_gradient"]["value"] == 1:
             # applying a scharr filter, and then taking that image and weighting it 25% with the original,
             # this should bring out the edges without separating each "edge" into two separate parallel ones
             d_depth = cv2.CV_16S
-            grad_x = cv2.Scharr(filtered_img, d_depth, 1, 0)
-            grad_y = cv2.Scharr(filtered_img, d_depth, 0, 1)
-            filtered_img = apply_filter('scharr', filtered_img, grad_x, grad_y)
+            grad_x = cv2.Scharr(grayscale_img, d_depth, 1, 0)
+            grad_y = cv2.Scharr(grayscale_img, d_depth, 0, 1)
+            grayscale_img = apply_filter('scharr', grayscale_img, grad_x, grad_y)
 
         # applying sobel filter
         if opt_img["apply_sobel_gradient"]["value"] == 1:
             scale = 1
             delta = 0
             d_depth = cv2.CV_16S
-            grad_x = cv2.Sobel(filtered_img, d_depth, 1, 0, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]),
+            grad_x = cv2.Sobel(grayscale_img, d_depth, 1, 0, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]),
                                scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
-            grad_y = cv2.Sobel(filtered_img, d_depth, 0, 1, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]),
+            grad_y = cv2.Sobel(grayscale_img, d_depth, 0, 1, ksize=int(opt_img["apply_sobel_gradient"]["dataValue"]),
                                scale=scale,
                                delta=delta, borderType=cv2.BORDER_DEFAULT)
-            filtered_img = apply_filter('sobel', filtered_img, grad_x, grad_y)
+            grayscale_img = apply_filter('sobel', grayscale_img, grad_x, grad_y)
 
         # applying laplacian filter
         if opt_img["apply_laplacian_gradient"]["value"] == 1:
             d_depth = cv2.CV_16S
-            dst = cv2.Laplacian(filtered_img, d_depth, ksize=int(opt_img["apply_laplacian_gradient"]["dataValue"]))
+            dst = cv2.Laplacian(grayscale_img, d_depth, ksize=int(opt_img["apply_laplacian_gradient"]["dataValue"]))
             # dst = cv2.Canny(img_filtered, 100, 200); # canny edge detection test
             abs_dst = cv2.convertScaleAbs(dst)
-            filtered_img = cv2.addWeighted(filtered_img, 0.75, abs_dst, 0.25, 0)
-            filtered_img = cv2.convertScaleAbs(filtered_img)
+            grayscale_img = cv2.addWeighted(grayscale_img, 0.75, abs_dst, 0.25, 0)
+            grayscale_img = cv2.convertScaleAbs(grayscale_img)
 
-        return filtered_img
+        return grayscale_img
 
     def binarize_img(self, image: MatLike) -> MatLike | None:
         """
