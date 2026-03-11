@@ -411,7 +411,7 @@ class FilterSearchSpace:
         img_obj.img_grayscale = img_obj.process_img(image=img_data)
         img_obj.img_bin = img_obj.binarize_img(image=img_obj.img_grayscale.copy())
 
-        # Compute SD as cost
+        # Compute cost
         try:
             cover_ratio = img_obj.evaluate_histogram_window(110, 190)
             eval_cost = np.inf if cover_ratio is None else 1 / cover_ratio if cover_ratio > 0 else np.inf
