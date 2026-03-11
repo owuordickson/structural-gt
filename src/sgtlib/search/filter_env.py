@@ -413,15 +413,14 @@ class FilterSearchSpace:
 
         # Compute SD as cost
         try:
-            eval_std, eval_mode, eval_hist = img_obj.evaluate_img_binary()
-            print(f"Filter-Fxn (cost) -> Std. Dev: {eval_std}, Mode: {eval_mode}")
-            # Use inverse 'Mode-count' as cost value
-            eval_std = 1 / eval_mode
+            cover_ratio = img_obj.evaluate_histogram_window(125, 180)
+            eval_cost = np.inf if cover_ratio is None else 1 / cover_ratio if cover_ratio > 0 else np.inf
+            print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
         except Exception as e:
             print(f"Filter-Fxn (cost) -> Error in cost function: {e}")
-            eval_std = np.inf
-        eval_std = np.inf if eval_std is None else eval_std
-        return eval_std
+            eval_cost = np.inf
+        eval_cost = np.inf if eval_cost is None else eval_cost
+        return eval_cost
 
 
 

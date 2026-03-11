@@ -467,56 +467,40 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_histogram_window(self, low: int, high: int, required_fraction: float = 0.9) -> tuple[bool, float, int]:
+    def evaluate_histogram_window(self, start_position: int, end_position: int) -> float|None:
         """
         Evaluate whether a specified fraction of pixel values falls within a
         given histogram bin window.
 
         Args:
-            low (int):
-                Lower histogram bin index (inclusive). Represents the lower
+            start_position (int):
+                Lower histogram bin position (inclusive). Represents the lower
                 intensity bound (e.g., 100)
 
-            high (int):
-                Upper histogram bin index (inclusive). Represents the upper
+            end_position (int):
+                Upper histogram bin position (inclusive). Represents the upper
                 intensity bound (e.g., 132)
 
-            required_fraction (float, optional):
-                Minimum fraction of pixels that must lie within the specified
-                histogram window. Default is 0.9 (90%)
-
         Returns:
-            tuple:
-                success (bool):
-                    True if at least `required_fraction` of the values fall within
-                    the bin range [low, high].
-
-                actual_fraction (float):
+            actual_fraction (float):
                     Fraction of pixels that lie inside the specified bin window.
-
-                inside_count (int):
-                    Number of pixels inside the window.
         """
-        values = self.img_grayscale
-        if values.size == 0:
-            raise ValueError("Input array is empty.")
 
-        if not (0 <= low <= 255 and 0 <= high <= 255 and low <= high):
-            raise ValueError("low/high must be valid histogram bin indices (0–255).")
+        if not (0 <= start_position <= 255 and 0 <= end_position <= 255 and start_position <= end_position):
+            print("low/high must be valid histogram bin indices (0–255).")
+            return None
 
-        # Fast histogram for uint8 intensities
-        hist = np.bincount(values, minlength=256)
+        # Compute the histogram of the actual image
+        actual_hist = self.evaluate_img_binary()
+        if actual_hist is None:
+            return None
 
-        total_pixels = hist.sum()
+        # Compute the fraction of pixels that fall within the specified bin window
+        total_pixels = actual_hist.sum()
+        inside_count = actual_hist[start_position:end_position + 1].sum()  # Sum counts in the selected bin window
+        cover_ratio = inside_count / total_pixels
 
-        # Sum counts in the selected bin window
-        inside_count = hist[low:high + 1].sum()
-
-        actual_fraction = inside_count / total_pixels
-
-        success = actual_fraction >= required_fraction
-
-        return success, float(actual_fraction), int(inside_count)
+        return float(cover_ratio)
 
     def evaluate_img_binary(self) -> np.ndarray | None:
         """
@@ -595,15 +579,15 @@ class BaseImage:
             channels = ['k']
             img = self.img_bin
         elif curr_view == "mutated":
-            channels = ['b', 'g', 'r']
+            channels = ['b']
             img = self.img_mut
-        else:
-            img = self.img_grayscale
             # Evaluate the binary image
             eval_hist = self.evaluate_img_binary()
             if eval_hist is not None:
                 ax.plot(eval_hist, color='m', linewidth=lw, marker='+', label='Masked Image')
                 ax.legend(loc='upper right')
+        else:
+            img = self.img_grayscale
 
         if img is None:
             return fig
