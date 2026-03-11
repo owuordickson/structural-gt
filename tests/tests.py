@@ -21,7 +21,7 @@ ntwk_obj.apply_img_filters()
 ntwk_obj.remove_listener(print_updates)
 
 # evaluate image
-std, mode, hist = ntwk_obj.image_obj.evaluate_img_binary()
+hist = ntwk_obj.image_obj.evaluate_img_binary()
 print(f"\nActual Hist:\n{hist.astype(int).flatten()}\n")
 
 # View images

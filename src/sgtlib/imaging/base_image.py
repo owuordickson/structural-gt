@@ -6,7 +6,6 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
-import scipy as sp
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
@@ -468,7 +467,58 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self) -> tuple[float, int, np.ndarray] | tuple[None, None, None]:
+    def evaluate_histogram_window(self, low: int, high: int, required_fraction: float = 0.9) -> tuple[bool, float, int]:
+        """
+        Evaluate whether a specified fraction of pixel values falls within a
+        given histogram bin window.
+
+        Args:
+            low (int):
+                Lower histogram bin index (inclusive). Represents the lower
+                intensity bound (e.g., 100)
+
+            high (int):
+                Upper histogram bin index (inclusive). Represents the upper
+                intensity bound (e.g., 132)
+
+            required_fraction (float, optional):
+                Minimum fraction of pixels that must lie within the specified
+                histogram window. Default is 0.9 (90%)
+
+        Returns:
+            tuple:
+                success (bool):
+                    True if at least `required_fraction` of the values fall within
+                    the bin range [low, high].
+
+                actual_fraction (float):
+                    Fraction of pixels that lie inside the specified bin window.
+
+                inside_count (int):
+                    Number of pixels inside the window.
+        """
+        values = self.img_grayscale
+        if values.size == 0:
+            raise ValueError("Input array is empty.")
+
+        if not (0 <= low <= 255 and 0 <= high <= 255 and low <= high):
+            raise ValueError("low/high must be valid histogram bin indices (0–255).")
+
+        # Fast histogram for uint8 intensities
+        hist = np.bincount(values, minlength=256)
+
+        total_pixels = hist.sum()
+
+        # Sum counts in the selected bin window
+        inside_count = hist[low:high + 1].sum()
+
+        actual_fraction = inside_count / total_pixels
+
+        success = actual_fraction >= required_fraction
+
+        return success, float(actual_fraction), int(inside_count)
+
+    def evaluate_img_binary(self) -> np.ndarray | None:
         """
         Evaluate the quality of a binary image by analyzing the grayscale values
         corresponding to its white pixels.
@@ -477,44 +527,26 @@ class BaseImage:
         with value 255 (white). This mask is applied to the grayscale image
         (`img_grayscale`) to extract the grayscale intensities at those positions.
 
-        The function then computes statistics on these grayscale values:
-        - Standard deviation
-        - Mode (the most frequent grayscale value)
-        - Histogram of grayscale values
-
-        A small standard deviation indicates that the grayscale intensities of
-        the detected white pixels are consistent, which generally suggests good binary segmentation.
-
-        The function also prevents degenerate cases like:
+        The function then computes the histogram of the masked grayscale image. The function
+        also prevents degenerate cases like:
         - completely black or white image binaries,
         - images exceeding the maximum allowed number of white pixels.
 
         Returns:
-            tuple: (std_dev, mode_count, histogram)
-
-                Std_dev (float):
-                    Standard deviation of grayscale values corresponding to
-                    white pixels.
-
-                Mode_count (int):
-                    Number of pixels corresponding to the most frequent
-                    grayscale value.
-
-                Histogram (np.ndarray):
+                histogram (np.ndarray):
                     Histogram (256 bins) of grayscale values of the masked pixels.
 
-            Returns `(None, None, None)` if the evaluation cannot be performed.
+            Returns `None` if the evaluation cannot be performed.
         """
 
         img_bin = self.img_bin
-        img_rgb = self.img_2d
         img_gray = self.img_grayscale
 
         if img_bin is None or img_gray is None:
-            return None, None, None
+            return None
 
         if img_bin.shape != img_gray.shape:
-            return None, None, None
+            return None
 
         # Create a mask for white pixels
         # white_mask = (img_bin == 255)
@@ -523,26 +555,15 @@ class BaseImage:
 
         # Reject trivial masks
         if white_pixel_count == 0 or white_pixel_count == img_bin.size:
-            print("Bin-Fxn (eval) -> Cost: Null (all white or all black)")
-            return None, None, None
+            print("Bin-Fxn (eval) -> (all white or all black)")
+            return None
 
         # Extract grayscale values
         masked_grayscale = img_gray[white_mask]
 
-        # Mode and count
-        hist = np.bincount(masked_grayscale, minlength=256)
-        mode_val = np.argmax(hist)
-        mode_count = hist[mode_val]
-
-        # Standard deviation
-        std_dev = float(masked_grayscale.std())
-
-        # Extract RGB values
-        masked_rgb = img_rgb[white_mask]
-        eval_hist = cv2.calcHist([masked_rgb], [0], None, [256], [0, 256])
-        print(hist)
-
-        return std_dev, int(mode_count), eval_hist
+        # Compute histogram
+        eval_hist = np.bincount(masked_grayscale, minlength=256)
+        return eval_hist
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
@@ -553,7 +574,10 @@ class BaseImage:
         """
         opt_img = self._configs
         fig = plt.figure()
+        lw = 0.5
         plt_title = "Grayscale Image"
+        channels = ['gray']
+
         if curr_view != "":
             plt_title = f"{curr_view} image"
 
@@ -564,7 +588,6 @@ class BaseImage:
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax.set_title(plt_title)
 
-        channels = ['gray']
         if curr_view == "original":
             img = self.img_2d
             channels = ['b', 'g', 'r']
@@ -577,10 +600,9 @@ class BaseImage:
         else:
             img = self.img_grayscale
             # Evaluate the binary image
-            eval_std, eval_mode, eval_hist = self.evaluate_img_binary()
-            if eval_std is not None:
-                print(f"Bin-Fxn (plt) -> Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}\n")
-                ax.plot(eval_hist, color='m', label='Masked Image')
+            eval_hist = self.evaluate_img_binary()
+            if eval_hist is not None:
+                ax.plot(eval_hist, color='m', linewidth=lw, marker='+', label='Masked Image')
                 ax.legend(loc='upper right')
 
         if img is None:
@@ -590,7 +612,7 @@ class BaseImage:
         for i, color in enumerate(channels):
             img_hist = cv2.calcHist([img], [i], None, [256], [0, 256])
             lbl = 'Blue' if color == 'b' else 'Green' if color == 'g' else 'Red' if color == 'r' else 'Binary' if color == 'k' else 'Grayscale'
-            ax.plot(img_hist, color=color, label=f"{lbl} Channel")
+            ax.plot(img_hist, color=color, linewidth=lw, label=f"{lbl} Channel")
         ax.legend(loc='upper right')
 
         if opt_img["threshold_type"]["value"] == 0:
