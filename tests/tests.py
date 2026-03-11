@@ -27,8 +27,8 @@ plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image 
 plt.title('Binary Image')
 plt.show()
 
-print(f"Original Image Shape: {orig_image.shape}\nBinary Image Shape: {bin_image.shape}\nGrayscale Image Shape: {grayscale_image.shape}")
-print(f"Original Image: {orig_image}\nBinary Image: {bin_image}\nGrayscale Image:{grayscale_image}")
+print(f"Original Image Shape: {orig_image.shape}\nBinary Image Shape: {bin_image.size}\nGrayscale Image Shape: {grayscale_image.shape}")
+#print(f"Original Image: {orig_image}\nBinary Image: {bin_image}\nGrayscale Image:{grayscale_image}")
 
 plt.imshow(grayscale_image, cmap='gray')
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
