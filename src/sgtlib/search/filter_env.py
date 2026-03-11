@@ -414,8 +414,7 @@ class FilterSearchSpace:
         # Compute SD as cost
         try:
             eval_std, eval_mode, eval_hist = img_obj.evaluate_img_binary()
-            # Check if eval_mode is 'all-white' or 'all-black'
-            print(f"Filter-Fxn (cost) -> Pixel Mode Value: {eval_mode}")
+            print(f"Filter-Fxn (cost) -> Std. Dev: {eval_std}, Mode: {eval_mode}")
             # Use inverse 'Mode-count' as cost value
             eval_std = 1 / eval_mode
         except Exception as e:

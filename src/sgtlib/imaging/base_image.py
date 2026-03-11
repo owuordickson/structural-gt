@@ -468,71 +468,88 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self, max_pixel_count: int = None) -> tuple[float, float, np.ndarray] | tuple[None, None, None]:
+    def evaluate_img_binary(self, max_pixel_count: int | None = None) -> tuple[float, int, np.ndarray] | tuple[None, None, None]:
         """
-        Compute the standard deviation of grayscale values at locations where a binary
-        image contains white pixels (value == 255).
+        Evaluate the quality of a binary image by analyzing the grayscale values
+        corresponding to its white pixels.
 
-        The binary image is used to generate a white_mask that selects only the pixels that
-        correspond to white (255) values. This white_mask is then applied to the grayscale
-        image to extract the grayscale intensities at those same pixel locations.
-        The standard deviation of these grayscale values is returned, this tells us
-        how close these values are, typically small deviations indicate excellent
-        binary image. Cutoff Limits (do not apply filters that convert the entire binary image to all-black or all-white)
+        The binary image (`img_bin`) is used to generate a mask selecting pixels
+        with value 255 (white). This mask is applied to the grayscale image
+        (`img_grayscale`) to extract the grayscale intensities at those positions.
+
+        The function then computes statistics on these grayscale values:
+        - Standard deviation
+        - Mode (the most frequent grayscale value)
+        - Histogram of grayscale values
+
+        A small standard deviation indicates that the grayscale intensities of
+        the detected white pixels are consistent, which generally suggests good binary segmentation.
+
+        The function also prevents degenerate cases like:
+        - completely black or white image binaries,
+        - images exceeding the maximum allowed number of white pixels.
 
         Args:
-            max_pixel_count: The maximum number of white pixels that is allowed. If None, all pixels are evaluated (prevents all-white images from being evaluated).
+            max_pixel_count (int | None):
+                Maximum allowed number of white pixels.
 
         Returns:
-            float:
-                The standard deviation of the grayscale values at the masked pixel
-                locations (where `img_bin == 255`). If no white pixels are present,
-                returns `np.nan`.
+            tuple: (std_dev, mode_count, histogram)
+
+                Std_dev (float):
+                    Standard deviation of grayscale values corresponding to
+                    white pixels.
+
+                Mode_count (int):
+                    Number of pixels corresponding to the most frequent
+                    grayscale value.
+
+                Histogram (np.ndarray):
+                    Histogram (256 bins) of grayscale values of the masked pixels.
+
+            Returns `(None, None, None)` if the evaluation cannot be performed.
         """
 
-        if self.img_grayscale is None or self.img_grayscale is None:
-            return None, None, None
-
         img_bin = self.img_bin
-        img_grayscale = self.img_grayscale
-        if img_bin.shape != img_grayscale.shape:
+        img_rgb = self.img_2d
+        img_gray = self.img_grayscale
+
+        if img_bin is None or img_gray is None:
             return None, None, None
 
-        # Create a white_mask for white pixels
-        white_mask = img_bin == 255
+        if img_bin.shape != img_gray.shape:
+            return None, None, None
+
+        # Create a mask for white pixels
+        # white_mask = (img_bin == 255)
+        white_mask = img_bin.astype(bool)
         white_pixel_count = np.count_nonzero(white_mask)
 
-        # Check if the mask is an all-white or all-black image
-        if white_pixel_count >= img_bin.size or white_pixel_count == 0:
-            print("Bin-Fxn (eval) -> Cost: Null (all white/black pixels)")
+        # Reject trivial masks
+        if white_pixel_count == 0 or white_pixel_count == img_bin.size:
+            print("Bin-Fxn (eval) -> Cost: Null (all white or all black)")
             return None, None, None
 
-        # Check the limit of allowed pixel count
-        print(f"Bin-Fxn (eval) -> Max pixel count: {max_pixel_count}; Current count: {white_pixel_count}")
-        if max_pixel_count is not None:
-            if white_pixel_count > max_pixel_count:
-                print("Bin-Fxn (eval) -> Cost: Null (exceeds maximum pixel count)")
-                return None, None, None
-
-        # Extract grayscale values where the white_mask is True
-        selected_values = img_grayscale[white_mask]
-        if selected_values.size == 0:
+        if max_pixel_count is not None and white_pixel_count > max_pixel_count:
+            print("Bin-Fxn (eval) -> Cost: Null (exceeds maximum pixel count)")
             return None, None, None
 
-        # Compute standard deviation and mode
-        std_dev = np.std(selected_values)
-        px_mode_res = sp.stats.mode(selected_values, axis=None, keepdims=False)
-        px_mode_count = px_mode_res.count
-        px_mode_val = px_mode_res.mode
-        print(f"Bin-Fxn (eval) -> Mode Results: {px_mode_res}. Mode Value: {px_mode_val}")
+        # Extract grayscale values
+        masked_grayscale = img_gray[white_mask]
 
-        # Extract RGB values where the white_mask is True
-        selected_values = self.img_2d[white_mask]
+        # Mode and count
+        hist = np.bincount(masked_grayscale, minlength=256)
+        mode_val = np.argmax(hist)
+        mode_count = hist[mode_val]
 
-        # Create the histogram of the 2d_image that results from applying the white_mask
-        eval_hist = cv2.calcHist([selected_values], [0], None, [256], [0, 256])
+        # Standard deviation
+        std_dev = float(masked_grayscale.std())
 
-        return float(std_dev), float(px_mode_count), eval_hist
+        # Extract RGB values
+        masked_rgb = img_rgb[white_mask]
+        eval_hist = cv2.calcHist([masked_rgb], [0], None, [256], [0, 256])
+
+        return std_dev, int(mode_count), eval_hist
 
     def evaluate_img_binary_v1(self, max_pixel_count: int = None) -> tuple[float, float, np.ndarray] | tuple[None, None, None]:
         """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
@@ -612,7 +629,7 @@ class BaseImage:
         if curr_view == "original":
             img = self.img_2d
             # Evaluate the binary image
-            eval_std, eval_mode, eval_hist = self.evaluate_img_binary_v1()
+            eval_std, eval_mode, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
                 print(f"Bin-Fxn (plt) -> Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}\n")
                 ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
@@ -774,7 +791,7 @@ class BaseImage:
             is_white: If 1, replace with white (255), otherwise replace it with black (0).
 
         Returns:
-            Modified image as NumPy array, or None if the input is invalid.
+            Modified image as NumPy array or None if the input is invalid.
         """
         if image is None:
             return None
