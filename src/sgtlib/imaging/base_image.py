@@ -468,7 +468,7 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self, max_pixel_count: int | None = None) -> tuple[float, int, np.ndarray] | tuple[None, None, None]:
+    def evaluate_img_binary(self) -> tuple[float, int, np.ndarray] | tuple[None, None, None]:
         """
         Evaluate the quality of a binary image by analyzing the grayscale values
         corresponding to its white pixels.
@@ -488,10 +488,6 @@ class BaseImage:
         The function also prevents degenerate cases like:
         - completely black or white image binaries,
         - images exceeding the maximum allowed number of white pixels.
-
-        Args:
-            max_pixel_count (int | None):
-                Maximum allowed number of white pixels.
 
         Returns:
             tuple: (std_dev, mode_count, histogram)
@@ -530,10 +526,6 @@ class BaseImage:
             print("Bin-Fxn (eval) -> Cost: Null (all white or all black)")
             return None, None, None
 
-        if max_pixel_count is not None and white_pixel_count > max_pixel_count:
-            print("Bin-Fxn (eval) -> Cost: Null (exceeds maximum pixel count)")
-            return None, None, None
-
         # Extract grayscale values
         masked_grayscale = img_gray[white_mask]
 
@@ -548,63 +540,9 @@ class BaseImage:
         # Extract RGB values
         masked_rgb = img_rgb[white_mask]
         eval_hist = cv2.calcHist([masked_rgb], [0], None, [256], [0, 256])
+        print(hist)
 
         return std_dev, int(mode_count), eval_hist
-
-    def evaluate_img_binary_v1(self, max_pixel_count: int = None) -> tuple[float, float, np.ndarray] | tuple[None, None, None]:
-        """A function that evaluates the pre-processed image binary by overlaying the binary image on top of the
-        original image and masking sections of the image that do not intersect with "white" (255) pixels in the
-        binary image. The unmasked sections are typically where generated graph edges and nodes are located. So, the 
-        unmasked sections should have fairly the same pixel values in the original image and the binary image. In the 
-        binary image the pixel values are 255 "white", while in the original image they are typically 0-255, but with 
-        small variations. The Standard Deviation (SD) can help identify how different the pixel values are in the 
-        unmasked sections of the original image. Also, a histogram of the pixel values in the unmasked sections of the 
-        original image can help identify the distribution of pixel values.
-
-        :param max_pixel_count: The maximum number of white pixels is allowed. If None, all pixels are evaluated.
-        
-        :return: The Standard Deviation and Histogram of the unmasked sections (in the original image).
-        """
-
-        if self.img_2d is None:
-            return None, None, None
-
-        if self.img_bin is None:
-            return None, None, None
-
-        # Find pixel positions where the binary image is white (255)
-        white_pixel_pos = np.argwhere(self.img_bin == 255)  # (row, col)
-
-        # Retrieve corresponding pixel values from img_2d
-        img_rgb = self.img_2d
-        if self._has_alpha_channel:
-            img_rgb = self.img_2d[..., :3]
-        pixel_values = [img_rgb[tuple(p)] for p in white_pixel_pos]
-        pixel_values = np.array(pixel_values)
-
-        # Check the limit of allowed pixel count
-        white_pixel_count = white_pixel_pos.shape[0]
-        print(f"Bin-Fxn (eval) -> Max pixel count: {max_pixel_count}; Current count: {white_pixel_count}")
-        if max_pixel_count is not None:
-            if white_pixel_count > max_pixel_count:
-                print("Bin-Fxn (eval) -> Cost: Null")
-                return None, None, None
-
-        # Calculate standard deviation of original values
-        std_dev = np.std(pixel_values)
-        px_mode_res = sp.stats.mode(pixel_values, axis=None, keepdims=False)
-        px_mode_count = px_mode_res.count
-        px_mode_val = px_mode_res.mode
-        print(f"Bin-Fxn (eval) -> Mode Results: {px_mode_res}. Mode Value: {px_mode_val}")
-
-        # Cutoff Limits (do not apply filters that convert the entire binary image to all-black or all-white)
-        if px_mode_val >= 254 or px_mode_val <= 1:
-            print("Bin-Fxn (eval) -> Cost: Null (all white/black pixels)")
-            return None, None, None
-
-        # Create the histogram of original values at white pixel positions
-        eval_hist = cv2.calcHist([pixel_values], [0], None, [256], [0, 256])
-        return float(std_dev), float(px_mode_count), eval_hist
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
@@ -626,35 +564,43 @@ class BaseImage:
         ax.set(yticks=[], xlabel='Pixel values', ylabel='Counts')
         ax.set_title(plt_title)
 
+        channels = ['gray']
         if curr_view == "original":
             img = self.img_2d
+            channels = ['b', 'g', 'r']
+        elif curr_view == "binary":
+            channels = ['k']
+            img = self.img_bin
+        elif curr_view == "mutated":
+            channels = ['b', 'g', 'r']
+            img = self.img_mut
+        else:
+            img = self.img_grayscale
             # Evaluate the binary image
             eval_std, eval_mode, eval_hist = self.evaluate_img_binary()
             if eval_std is not None:
                 print(f"Bin-Fxn (plt) -> Evaluating Histogram of Binary Image (Std. Dev.): {eval_std}\n")
-                ax.plot(eval_hist, color='c', label='Evaluated Binary Histogram')
+                ax.plot(eval_hist, color='m', label='Masked Image')
                 ax.legend(loc='upper right')
-        elif curr_view == "binary":
-            img = self.img_bin
-        elif curr_view == "mutated":
-            img = self.img_mut
-        else:
-            img = self.img_grayscale
 
         if img is None:
             return fig
 
-        img_hist = cv2.calcHist([img], [0], None, [256], [0, 256])
-        ax.plot(img_hist, label='Image Histogram')
+        img_hist = None
+        for i, color in enumerate(channels):
+            img_hist = cv2.calcHist([img], [i], None, [256], [0, 256])
+            lbl = 'Blue' if color == 'b' else 'Green' if color == 'g' else 'Red' if color == 'r' else 'Binary' if color == 'k' else 'Grayscale'
+            ax.plot(img_hist, color=color, label=f"{lbl} Channel")
         ax.legend(loc='upper right')
+
         if opt_img["threshold_type"]["value"] == 0:
             global_val = int(opt_img["global_threshold_value"]["value"])
             thresh_arr = np.array([[global_val, global_val], [0, max(img_hist)]], dtype='object')
-            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='y')
         elif opt_img["threshold_type"]["value"] == 2:
             otsu_val = opt_img["otsu"]["value"]
             thresh_arr = np.array([[otsu_val, otsu_val], [0, max(img_hist)]], dtype='object')
-            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='black')
+            ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='y')
         fig.tight_layout()
         return fig
 

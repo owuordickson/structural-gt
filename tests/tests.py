@@ -1,6 +1,8 @@
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
-from sgtlib import modules as sgt
+# from sgtlib import modules as sgt
+from src.sgtlib import modules as sgt
 
 # set paths
 img_path = "../datasets/InVitroBioFilm.png"
@@ -18,10 +20,15 @@ ntwk_obj.add_listener(print_updates)
 ntwk_obj.apply_img_filters()
 ntwk_obj.remove_listener(print_updates)
 
+# evaluate image
+std, mode, hist = ntwk_obj.image_obj.evaluate_img_binary()
+print(f"\nActual Hist:\n{hist.astype(int).flatten()}\n")
+
 # View images
 orig_image = ntwk_obj.image_2d
 bin_image = ntwk_obj.binary_image_2d
-grayscale_image = ntwk_obj.processed_image_3d[0]
+#grayscale_image = ntwk_obj.processed_image_3d[0]
+grayscale_image = ntwk_obj.grayscale_image_2d
 plt.imshow(cv2.cvtColor(bin_image, cv2.COLOR_BGR2RGB))
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
