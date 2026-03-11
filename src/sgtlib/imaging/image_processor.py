@@ -219,15 +219,15 @@ class ImageProcessor(ProgressUpdate):
         return bin_images
 
     @property
-    def processed_image_2d(self) -> MatLike:
+    def grayscale_image_2d(self) -> MatLike:
         """Returns OpenCV version of the modified image (first slice/frame/image in the batch)."""
-        return self.image_obj.img_mod
+        return self.image_obj.img_grayscale
 
     @property
-    def processed_image_3d(self) -> list[MatLike]:
+    def grayscale_image_3d(self) -> list[MatLike]:
         """Returns the 3D version of the modified image as a list of OpenCV arrays."""
-        mod_images = [obj.img_mod for obj in self.image_obj_3d]
-        return mod_images
+        grayscale_images = [obj.img_grayscale for obj in self.image_obj_3d]
+        return grayscale_images
 
     @property
     def mutated_image_3d(self) -> list[MatLike]:
@@ -426,7 +426,7 @@ class ImageProcessor(ProgressUpdate):
         for i in range(len(sel_batch.images)):
             img_obj = sel_batch.images[i]
             if i not in sel_batch.selected_images_positions:
-                img_obj.img_mod, img_obj.img_bin = None, None
+                img_obj.img_grayscale, img_obj.img_bin = None, None
                 continue
 
             if progress < 100:
@@ -434,10 +434,10 @@ class ImageProcessor(ProgressUpdate):
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
             img_data = img_obj.img_mut.copy()
-            img_obj.img_mod = img_obj.process_img(image=img_data)
+            img_obj.img_grayscale = img_obj.process_img(image=img_data)
 
             if filter_type == 2:
-                img_obj.img_bin = img_obj.binarize_img(img_obj.img_mod.copy())
+                img_obj.img_bin = img_obj.binarize_img(img_obj.img_grayscale.copy())
             img_obj.get_pixel_width()
         self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
@@ -497,7 +497,7 @@ class ImageProcessor(ProgressUpdate):
         """Delete existing filters that have been applied on the image."""
         sel_batch = self.selected_batch
         for img_obj in sel_batch.images:
-            img_obj.img_mod, img_obj.img_bin = None, None
+            img_obj.img_grayscale, img_obj.img_bin = None, None
             sel_batch.graph_obj.reset_graph()
 
     def reset_metaheuristic_search(self):
@@ -579,7 +579,7 @@ class ImageProcessor(ProgressUpdate):
             [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
              sel_batch.selected_images_positions]
         self.update_image_props(sel_batch)
-        self.selected_batch_view = 'processed'
+        self.selected_batch_view = 'grayscale'
 
     def compute_img_histograms(self, img_pos: int) -> None | list:
         """
@@ -606,8 +606,8 @@ class ImageProcessor(ProgressUpdate):
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="binary"))
         lst_histograms.append(img_hist.copy())
 
-        self.update_status(ProgressData(percent=50, sender="GT", message="Computing histogram of processed image..."))
-        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="processed"))
+        self.update_status(ProgressData(percent=50, sender="GT", message="Computing histogram of grayscale image..."))
+        img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="grayscale"))
         lst_histograms.append(img_hist.copy())
 
         self.update_status(ProgressData(percent=80, sender="GT", message="Computing histogram of mutated image..."))
@@ -754,7 +754,7 @@ class ImageProcessor(ProgressUpdate):
             sel_batch.graph_obj.remove_listener(self.track_progress)
             self.abort = sel_batch.graph_obj.abort
             if self.abort:
-                self.selected_batch_view = 'processed'
+                self.selected_batch_view = 'grayscale'
                 return
         except Exception as err:
             self.abort = True
@@ -1063,23 +1063,23 @@ class ImageProcessor(ProgressUpdate):
                 continue
 
             filename = f"{img_file_name}_Frame{i}" if is_3d else img_file_name
-            pr_filename = filename + "_processed.jpg"
+            pr_filename = filename + "_grayscale.jpg"
             bin_filename = filename + "_binary.jpg"
             img_file = os.path.join(out_dir, pr_filename)
             bin_file = os.path.join(out_dir, bin_filename)
 
-            if img.img_mod is not None:
-                cv2.imwrite(str(img_file), img.img_mod)
+            if img.img_grayscale is not None:
+                cv2.imwrite(str(img_file), img.img_grayscale)
 
             if img.img_bin is not None:
                 cv2.imwrite(str(bin_file), img.img_bin)
 
     def draw_graph_image(self, sel_batch: ImageBatch, show_giant_only: bool = False):
         """
-        Use Matplotlib to draw the extracted graph which is superimposed on the processed image.
+        Use Matplotlib to draw the extracted graph which is superimposed on the grayscale image.
 
         :param sel_batch: ImageBatch data object.
-        :param show_giant_only: If True, only draw the largest/giant graph on the processed image.
+        :param show_giant_only: If True, only draw the largest/giant graph on the grayscale image.
         """
         sel_images = self.get_batch_images(sel_batch)
 
@@ -1186,7 +1186,7 @@ class ImageProcessor(ProgressUpdate):
             views  = [
                 {"text": "Original Image", "dataValue": "original", "value": 1, "visible": 1 },
                 {"text": "Binary Image", "dataValue": "binary", "value": 0, "visible": 1 },
-                {"text": "Processed Image", "dataValue": "processed", "value": 0, "visible": 1 },
+                {"text": "Grayscale Image", "dataValue": "grayscale", "value": 0, "visible": 1 },
                 {"text": "Extracted Graph", "dataValue": "graph", "value": 0, "visible": 1}
             ]
             img_batch = ImageProcessor.ImageBatch(
@@ -1300,7 +1300,7 @@ class ImageProcessor(ProgressUpdate):
         views = [
             {"text": "Original Image", "dataValue": "original", "value": 0, "visible": 0},
             {"text": "Binary Image", "dataValue": "binary", "value": 0, "visible": 0},
-            {"text": "Processed Image", "dataValue": "processed", "value": 0, "visible": 0},
+            {"text": "Grayscale Image", "dataValue": "grayscale", "value": 0, "visible": 0},
             {"text": "Extracted Graph", "dataValue": "graph", "value": 1, "visible": 1}
         ]
         img_batch = ImageProcessor.ImageBatch(

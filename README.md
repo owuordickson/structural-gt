@@ -117,15 +117,15 @@ ntwk_obj.remove_listener(print_updates)
 # View images
 sel_img_batch = ntwk_obj.selected_batch
 bin_images = [obj.img_bin for obj in sel_img_batch.images]
-mod_images = [obj.img_mod for obj in sel_img_batch.images]
+grayscale_images = [obj.img_grayscale for obj in sel_img_batch.images]
 plt.imshow(bin_images[0])
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
 plt.show()
 
-plt.imshow(mod_images[0])
+plt.imshow(grayscale_images[0])
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
-plt.title('Processed Image')
+plt.title('Grayscale Image')
 plt.show()
 
 # Extract graph

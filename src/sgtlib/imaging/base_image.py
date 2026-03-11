@@ -102,12 +102,12 @@ class BaseImage:
         self._img_bin = img_bin
 
     @property
-    def img_mod(self) -> MatLike | None:
+    def img_grayscale(self) -> MatLike | None:
         """Returns the modified image in OpenCV format."""
         return self._img_grayscale
 
-    @img_mod.setter
-    def img_mod(self, img_mod: MatLike | None) -> None:
+    @img_grayscale.setter
+    def img_grayscale(self, img_mod: MatLike | None) -> None:
         """Sets the modified image in OpenCV format."""
         self._img_grayscale = img_mod
 
@@ -528,11 +528,11 @@ class BaseImage:
         Uses Matplotlib to plot the histogram of the processed image.
 
         :param axes: A Matplotlib axes object.
-        :param curr_view: The current visualization type of the image (Original, Processed, Binary).
+        :param curr_view: The current visualization type of the image (Original, Grayscale, Binary).
         """
         opt_img = self._configs
         fig = plt.figure()
-        plt_title = "Processed Image"
+        plt_title = "Grayscale Image"
         if curr_view != "":
             plt_title = f"{curr_view} image"
 
@@ -556,7 +556,7 @@ class BaseImage:
         elif curr_view == "mutated":
             img = self.img_mut
         else:
-            img = self.img_mod
+            img = self.img_grayscale
 
         if img is None:
             return fig

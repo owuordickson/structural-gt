@@ -34,15 +34,15 @@ class ImageProvider(QQuickImageProvider):
                 else:
                     # 2D, Do not use if 3D
                     img_cv = bin_images[0] if len(bin_images) > 0 else None
-            elif ntwk_p.selected_batch_view == "processed":
+            elif ntwk_p.selected_batch_view == "grayscale":
                 # Apply filters
                 ntwk_p.apply_img_filters(filter_type=1)
-                mod_images = ntwk_p.processed_image_3d
+                gray_images = ntwk_p.grayscale_image_3d
                 if self._main_ctrl.img_ctrl.is_img_3d():
-                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(mod_images, sel_img_batch.selected_images_positions)
+                    self._main_ctrl.img_ctrl.img3dGridModel.reset_data(gray_images, sel_img_batch.selected_images_positions)
                 else:
                     # 2D, Do not use if 3D
-                    img_cv = mod_images[0] if len(mod_images) > 0 else None
+                    img_cv = gray_images[0] if len(gray_images) > 0 else None
             elif ntwk_p.selected_batch_view == "graph":
                 # If any is None, start the task
                 self._main_ctrl.img_ctrl.showImageFilterControls.emit(False)

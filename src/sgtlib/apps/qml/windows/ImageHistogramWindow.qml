@@ -15,7 +15,7 @@ Window {
     //flags: Qt.Window
     //modality: Qt.NonModal
     visible: false  // Only show when needed
-    title: "Histogram of Processed Image(s)"
+    title: "Histogram of Grayscale Image(s)"
 
 
     Rectangle {

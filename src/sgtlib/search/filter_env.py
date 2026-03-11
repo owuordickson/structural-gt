@@ -408,8 +408,8 @@ class FilterSearchSpace:
         img_obj.configs = img_configs
         # Apply image filters
         img_data = img_obj.img_2d.copy()
-        img_obj.img_mod = img_obj.process_img(image=img_data)
-        img_obj.img_bin = img_obj.binarize_img(image=img_obj.img_mod.copy())
+        img_obj.img_grayscale = img_obj.process_img(image=img_data)
+        img_obj.img_bin = img_obj.binarize_img(image=img_obj.img_grayscale.copy())
 
         # Compute SD as cost
         try:

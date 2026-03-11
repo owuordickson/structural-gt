@@ -71,7 +71,7 @@ Item {
 
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        imageController.apply_changes("processed");
+                        imageController.apply_changes("grayscale");
                     }
 
                     Rectangle {
@@ -94,7 +94,7 @@ Item {
                         //curr_val = val;
                         var index = imgControlModel.index(model.index, 0);
                         imgControlModel.setData(index, val, valueRole);
-                        imageController.apply_changes("processed");
+                        imageController.apply_changes("grayscale");
                     }
                 }
 

@@ -171,7 +171,7 @@ class GraphAnalyzer(ProgressUpdate):
 
     def run_analyzer(self) -> None:
         """
-            Execute functions that will process image filters and extract the graph from the processed image
+            Execute functions that will process image filters and extract the graph from the grayscale image
         """
 
         # 1. Get graph extracted from selected images
@@ -970,7 +970,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         def plot_bin_images():
             """
-            Create plot figures of original, processed, and binary image.
+            Create plot figures of original, grayscale, and binary image.
 
             :return:
             """
@@ -980,7 +980,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             for i, img in enumerate(sel_images):
                 raw_img = img.img_2d
-                filtered_img = img.img_mod
+                img_gray = img.img_grayscale
                 img_bin = img.img_bin
 
                 plt_fig = plt.Figure(figsize=(8.5, 8.5), dpi=400)
@@ -993,16 +993,16 @@ class GraphAnalyzer(ProgressUpdate):
                 ax_1.set_axis_off()
                 ax_1.imshow(raw_img, cmap='gray')
 
-                ax_2.set_title(f"Frame {i}: Processed Image") if is_3d else ax_2.set_title(f"Processed Image")
+                ax_2.set_title(f"Frame {i}: Grayscale Image") if is_3d else ax_2.set_title(f"Grayscale Image")
                 ax_2.set_axis_off()
-                ax_2.imshow(filtered_img, cmap='gray')
+                ax_2.imshow(img_gray, cmap='gray')
 
                 ax_3.set_title(f"Frame {i}: Binary Image") if is_3d else ax_3.set_title(f"Binary Image")
                 ax_3.set_axis_off()
                 ax_3.imshow(img_bin, cmap='gray')
 
                 img.plot_img_histogram(axes=ax_4)
-                hist_title = f"Frame {i}: Histogram of Processed Image" if is_3d else f"Histogram of Processed Image"
+                hist_title = f"Frame {i}: Histogram of Grayscale Image" if is_3d else f"Histogram of Grayscale Image"
                 ax_4.set_title(hist_title)
 
                 plt_figs.append(plt_fig)
@@ -1503,7 +1503,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 1. Compute graphs and plots for scaling behavior
         scaling_figs = plot_scaling_behavior()
 
-        # 2. plotting the original, processed, and binary image, as well as the histogram of pixel grayscale values
+        # 2. plotting the original, grayscale, and binary image, as well as the histogram of pixel grayscale values
         figs = plot_bin_images()
         for fig in figs:
             out_figs.append(fig)

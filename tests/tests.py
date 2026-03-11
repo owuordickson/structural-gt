@@ -21,18 +21,18 @@ ntwk_obj.remove_listener(print_updates)
 # View images
 orig_image = ntwk_obj.image_2d
 bin_image = ntwk_obj.binary_image_2d
-mod_image = ntwk_obj.processed_image_3d[0]
+grayscale_image = ntwk_obj.processed_image_3d[0]
 plt.imshow(cv2.cvtColor(bin_image, cv2.COLOR_BGR2RGB))
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
 plt.title('Binary Image')
 plt.show()
 
-print(f"Original Image Shape: {orig_image.shape}\nBinary Image Shape: {bin_image.shape}\nProcessed Image Shape: {mod_image.shape}")
-print(f"Original Image: {orig_image}\nBinary Image: {bin_image}\nProcessed Image:{mod_image}")
+print(f"Original Image Shape: {orig_image.shape}\nBinary Image Shape: {bin_image.shape}\nGrayscale Image Shape: {grayscale_image.shape}")
+print(f"Original Image: {orig_image}\nBinary Image: {bin_image}\nGrayscale Image:{grayscale_image}")
 
-plt.imshow(mod_image, cmap='gray')
+plt.imshow(grayscale_image, cmap='gray')
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
-plt.title('Processed Image')
+plt.title('Grayscale Image')
 plt.show()
 
 # Extract graph

@@ -93,12 +93,12 @@ class BaseController(QObject):
 
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
         """
-        Finds image at a specific frame position and specified view (original or binary or processed or graph);
+        Finds image at a specific frame position and specified view (original or binary or grayscale or graph);
         then, returns it as a 'base64' string.
 
         Args:
             img_pos: Position index of the image-object in the selected batch.
-            view: The current visualization type of the image (Original, Processed, Binary, Mutated, Graph).
+            view: The current visualization type of the image (Original, Grayscale, Binary, Mutated, Graph).
 
         Returns:
             base64 string of the image-object.
@@ -109,14 +109,14 @@ class BaseController(QObject):
                 images = ntwk_p.image_3d
             elif view == "binary":
                 images = ntwk_p.binary_image_3d
-            elif view == "processed":
-                images = ntwk_p.processed_image_3d
+            elif view == "grayscale":
+                images = ntwk_p.grayscale_image_3d
             elif view == "mutated":
                 images = ntwk_p.mutated_image_3d
             elif view == "graph":
                 images = [ntwk_p.graph_obj.img_ntwk]
             else:
-                raise ValueError("View must be 'original', 'binary', 'processed', 'mutated', 'graph' or 'original'")
+                raise ValueError("View must be 'original', 'binary', 'grayscale', 'mutated', 'graph' or 'original'")
 
             if view == "graph":
                 img_cv = images[0]
