@@ -413,7 +413,7 @@ class FilterSearchSpace:
 
         # Compute SD as cost
         try:
-            cover_ratio = img_obj.evaluate_histogram_window(125, 180)
+            cover_ratio = img_obj.evaluate_histogram_window(110, 190)
             eval_cost = np.inf if cover_ratio is None else 1 / cover_ratio if cover_ratio > 0 else np.inf
             print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
         except Exception as e:
