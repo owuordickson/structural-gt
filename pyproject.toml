@@ -38,13 +38,13 @@ maintainers = [
 ]
 description = "A software tool for graph theory analysis of microscopy images."
 readme =  "README.md"
-license = {file = "LICENSE"}
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE*"]
 keywords = ["nano-particles", "nano-structures", "graph-theory"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",
   "Topic :: Scientific/Engineering :: Artificial Intelligence"
