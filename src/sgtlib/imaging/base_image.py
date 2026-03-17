@@ -540,8 +540,8 @@ class BaseImage:
 
         # Reject trivial masks
         total_pixels = img_bin.size
-        print(f"Total Pixels: {total_pixels}, white pixels: {white_pixel_count}, black: {0.05*total_pixels}, white: {0.95*total_pixels}")
-        print(self.configs)
+        # print(f"Total Pixels: {total_pixels}, white pixels: {white_pixel_count}, black: {0.05*total_pixels}, white: {0.95*total_pixels}")
+        # print(self.configs)
         if white_pixel_count <= (0.05*total_pixels) or white_pixel_count >= (0.95*total_pixels):
             print("Bin-Fxn (eval) -> (almost all white or all black)")
             return None
