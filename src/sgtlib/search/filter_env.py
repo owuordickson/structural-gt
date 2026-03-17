@@ -43,7 +43,6 @@ class FilterSearchSpace:
         filters."""
         min_pos: int = 0
         max_pos: int = 0
-        pixel_limit: int = None
         candidates: list = None
         ignore_candidates: set = None
         loser_candidates: set = None
@@ -226,7 +225,7 @@ class FilterSearchSpace:
         if encoded_pos is None:
             return None
 
-            # Step 1: Convert integer to 11-bit binary string
+        # Step 1: Convert integer to 11-bit binary string
         bitstring = format(encoded_pos, "011b")  # always 11 bits
 
         # Step 2: Extract threshold type (first 2 bits)
@@ -384,17 +383,37 @@ class FilterSearchSpace:
         return search_space
 
     @staticmethod
-    def cost_function(img_configs: dict, img_2d: np.ndarray, pixel_limit: int) -> float:
+    def cost_function(img_configs: dict, img_2d: np.ndarray) -> float:
         """Calculate and apply the cost of a candidate. Given the image filter configurations, apply them to get a
-        binary image and find the number of white pixels in the image. Retrieve the corresponding pixel values from the
-        original image and calculate the Standard Deviation (SD) of the pixel values.
+        binary image and compute the histogram of the binary image. Then, compute the cost of the candidate based on the
+        histogram statistics.
 
         :param img_configs: The dictionary of image filter configurations.
         :param img_2d: The OpenCV or NumPy array representing the image. Can be either grayscale or color.
-        :param pixel_limit: The maximum number of pixels to consider for calculating the SD.
 
         :return: The cost of the candidate as a float. If the candidate is invalid, return np.inf.
         """
+
+        def compute_num_filters():
+            """Compute the number of filters in the image filter configurations."""
+            # 1. Get the selected
+            encoded_pos = FilterSearchSpace.encode_filter_selections(img_configs)
+            binary_str = format(encoded_pos, "011b")
+            applied_filters = [int(b) for b in binary_str]
+            total_filter_cost = sum(applied_filters)
+
+            # Add cost to the selected threshold type
+            total_filter_cost += img_configs["threshold_type"]["value"]
+            if img_configs["threshold_type"]["value"] == 0:
+                total_filter_cost += abs(img_configs["global_threshold_value"]["value"] - 128)
+
+            # 3. Add cost to brightness and contrast
+            if img_configs["brightness_level"]["value"] != 0:
+                total_filter_cost += 1
+
+            if img_configs["contrast_level"]["value"] != 0:
+                total_filter_cost += 1
+            return total_filter_cost
 
         if img_2d is None:
             return np.inf
@@ -413,13 +432,31 @@ class FilterSearchSpace:
 
         # Compute cost
         try:
-            cover_ratio = img_obj.evaluate_histogram_window(110, 190)
-            eval_cost = np.inf if cover_ratio is None else 1 / cover_ratio if cover_ratio > 0 else np.inf
+            start_bin = 110
+            end_bin = 190
+            w1 = 10.0
+            w2 = 0.2
+            w3 = 0.6
+
+            cover_ratio = img_obj.evaluate_histogram_window(start_bin, end_bin)
+            # actual_hist = img_obj.evaluate_img_binary()
+            pix_vals = img_obj.img_bin.flatten()
+            mean_val = np.mean(pix_vals)
+            p5 = np.percentile(pix_vals, 10).astype(int)
+            p95 = np.percentile(pix_vals, 90).astype(int)
+
+            target_center = (start_bin + end_bin) // 2
+            coverage = (1/(cover_ratio+1e-12))  # Add a small number to avoid division by zero
+            num_filters = compute_num_filters()
+            spread_err = abs(p95 - p5)
+            mean_err = abs(mean_val - target_center)
+
+            eval_cost = coverage + (w1*num_filters) + (w2*mean_err) + (w3*spread_err)
             print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
         except Exception as e:
             print(f"Filter-Fxn (cost) -> Error in cost function: {e}")
             eval_cost = np.inf
-        eval_cost = np.inf if eval_cost is None else eval_cost
+        # eval_cost = np.inf if eval_cost is None else eval_cost
         return eval_cost
 
 
@@ -482,7 +519,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
                 new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, value_candidate=sol)
             else:
                 new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, bright_candidate=sol)
-            std_cost = FilterSearchSpace.cost_function(new_img_configs, img_data, s_space.pixel_limit)
+            std_cost = FilterSearchSpace.cost_function(new_img_configs, img_data)
         else:
             std_cost, new_img_configs = np.inf, None
         return std_cost, new_img_configs
@@ -491,8 +528,6 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
         raise AbortException("Search space cannot be None")
 
     # Initialize search space
-    total_pixels = img_data.shape[0] * img_data.shape[1]
-    s_space.pixel_limit = total_pixels // 2
     s_space.loser_candidates = set()
 
     # Initialize best candidate
@@ -593,7 +628,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
             # val_sol = sol.value_space.best_candidate
             # bri_sol = sol.brightness_space.best_candidate
             # _ = FilterSearchSpace.decode_filter_values(sol.img_configs, val_sol, bri_sol)
-            std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data, s_space.pixel_limit)
+            std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data)
         else:
             std_cost = np.inf
         return std_cost
@@ -602,8 +637,6 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
         raise AbortException("Search space or ImageObject cannot be None")
 
     # Initialize search space
-    total_pixels = img_data.shape[0] * img_data.shape[1]
-    s_space.pixel_limit = total_pixels // 2
     s_space.loser_candidates = set()
 
     # 1a. Initialize the current best candidate

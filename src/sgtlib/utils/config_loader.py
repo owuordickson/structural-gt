@@ -72,6 +72,7 @@ def load_img_configs(cfg_path: str = ""):
         "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 128 },
         "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },
         "otsu": {"id": "otsu", "type": "binary-filter", "text": "", "visible": 0, "value": 0},
+        "max_thresholding_value": {"id": "max_thresholding_value", "type": "binary-filter", "text": "", "visible": 0, "value": 255},
         "apply_dark_foreground": {"id": "apply_dark_foreground", "type": "binary-filter", "text": "", "visible": 1, "value": 0},
 
         "apply_autolevel": {"id": "apply_autolevel", "type": "image-filter", "text": "Autolevel", "value": 0,
@@ -109,6 +110,7 @@ def load_img_configs(cfg_path: str = ""):
         options_img["threshold_type"]["value"] = int(config.get('filter-settings', 'threshold_type'))
         options_img["global_threshold_value"]["value"] = int(config.get('filter-settings', 'global_threshold_value'))
         options_img["adaptive_local_threshold_value"]["value"] = int(config.get('filter-settings', 'adaptive_local_threshold_value'))
+        options_img["max_thresholding_value"]["value"] = int(config.get('filter-settings', 'max_thresholding_value'))
         options_img["apply_dark_foreground"]["value"] = int(config.get('filter-settings', 'apply_dark_foreground'))
 
         options_img["apply_gamma"]["value"] = int(config.get('filter-settings', 'apply_gamma'))

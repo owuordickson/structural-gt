@@ -372,28 +372,29 @@ class BaseImage:
         otsu_res = 0  # only needed for the OTSU threshold
 
         # Applying the universal threshold, checking if it should be inverted (dark foreground)
+        max_th_val = int(opt_img["max_thresholding_value"]["value"])
         if opt_img["threshold_type"]["value"] == 0:
             gbl_val = int(opt_img["global_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = cv2.threshold(image, gbl_val, 255, cv2.THRESH_BINARY_INV)[1]
+                img_bin = cv2.threshold(image, gbl_val, max_th_val, cv2.THRESH_BINARY_INV)[1]
             else:
-                img_bin = cv2.threshold(image, gbl_val, 255, cv2.THRESH_BINARY)[ 1]
+                img_bin = cv2.threshold(image, gbl_val, max_th_val, cv2.THRESH_BINARY)[1]
         elif opt_img["threshold_type"]["value"] == 1:
             if opt_img["adaptive_local_threshold_value"]["value"] <= 1:
                 # Bug fix (crushes app)
                 opt_img["adaptive_local_threshold_value"]["value"] = 3
             adp_val = int(opt_img["adaptive_local_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, adp_val, 2)
+                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, adp_val, 2)
             else:
-                img_bin = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adp_val, 2)
+                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adp_val, 2)
         elif opt_img["threshold_type"]["value"] == 2:
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+                temp = cv2.threshold(image, 0, max_th_val, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
                 img_bin = temp[1]
                 otsu_res = temp[0]
             else:
-                temp = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                temp = cv2.threshold(image, 0, max_th_val, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 img_bin = temp[1]
                 otsu_res = temp[0]
         opt_img["otsu"]["value"] = otsu_res
@@ -467,7 +468,7 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_histogram_window(self, start_position: int, end_position: int) -> float|None:
+    def evaluate_histogram_window(self, start_position: int, end_position: int) -> float:
         """
         Evaluate whether a specified fraction of pixel values falls within a
         given histogram bin window.
@@ -488,12 +489,12 @@ class BaseImage:
 
         if not (0 <= start_position <= 255 and 0 <= end_position <= 255 and start_position <= end_position):
             print("low/high must be valid histogram bin indices (0–255).")
-            return None
+            return 0.0
 
         # Compute the histogram of the actual image
         actual_hist = self.evaluate_img_binary()
         if actual_hist is None:
-            return None
+            return 0.0
 
         # Compute the fraction of pixels that fall within the specified bin window
         total_pixels = actual_hist.sum()
@@ -584,7 +585,7 @@ class BaseImage:
             # Evaluate the binary image
             eval_hist = self.evaluate_img_binary()
             if eval_hist is not None:
-                ax.plot(eval_hist, color='m', linewidth=lw, marker='+', label='Masked Image')
+                ax.plot(eval_hist, color='m', linewidth=lw+0.5, label='Masked Image')
                 ax.legend(loc='upper right')
         else:
             img = self.img_grayscale
