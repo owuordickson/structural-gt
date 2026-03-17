@@ -550,7 +550,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
                 if best_individual is None or best_individual.std_cost is None or individual.std_cost < best_individual.std_cost:
                     print(f"GA-Alg (winner) -> position: {individual.position}, cost: {individual.std_cost}")
                     best_individual = individual
-                    temp_configs = new_configs
+                    temp_configs = copy.deepcopy(new_configs)
 
         # 1.1. Update the current best candidate
         if best_individual is None:
@@ -563,7 +563,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
         # 1.3. Update the current best candidate
         if best_individual.std_cost < best_sol.std_cost:
             best_sol = best_individual
-            best_configs = temp_configs
+            best_configs = copy.deepcopy(temp_configs)
 
         # 2. Select parents
         parents = _select_parents()
@@ -625,9 +625,6 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     def _compute_fitness(sol):
         """Compute fitness for an individual."""
         if isinstance(sol, FilterSearchSpace.FilterCandidate):
-            # val_sol = sol.value_space.best_candidate
-            # bri_sol = sol.brightness_space.best_candidate
-            # _ = FilterSearchSpace.decode_filter_values(sol.img_configs, val_sol, bri_sol)
             std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data)
         else:
             std_cost = np.inf
@@ -642,7 +639,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     # 1a. Initialize the current best candidate
     best_sol = FilterSearchSpace.get_initial_candidate(s_space)
     # 1b. Reset image configs to default values
-    best_sol.img_configs = FilterSearchSpace.decode_filter_selections(best_sol.position)
+    # best_sol.img_configs = FilterSearchSpace.decode_filter_selections(best_sol.position)
     best_sol.std_cost = _compute_fitness(best_sol)
     print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
     # 2. Run the hill climbing algorithm

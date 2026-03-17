@@ -372,7 +372,7 @@ class BaseImage:
         otsu_res = 0  # only needed for the OTSU threshold
 
         # Applying the universal threshold, checking if it should be inverted (dark foreground)
-        max_th_val = int(opt_img["max_thresholding_value"]["value"])
+        max_th_val = 255  # int(opt_img["max_thresholding_value"]["value"])
         if opt_img["threshold_type"]["value"] == 0:
             gbl_val = int(opt_img["global_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
@@ -539,8 +539,11 @@ class BaseImage:
         white_pixel_count = np.count_nonzero(white_mask)
 
         # Reject trivial masks
-        if white_pixel_count == 0 or white_pixel_count == img_bin.size:
-            print("Bin-Fxn (eval) -> (all white or all black)")
+        total_pixels = img_bin.size
+        print(f"Total Pixels: {total_pixels}, white pixels: {white_pixel_count}, black: {0.05*total_pixels}, white: {0.95*total_pixels}")
+        print(self.configs)
+        if white_pixel_count <= (0.05*total_pixels) or white_pixel_count >= (0.95*total_pixels):
+            print("Bin-Fxn (eval) -> (almost all white or all black)")
             return None
 
         # Extract grayscale values
