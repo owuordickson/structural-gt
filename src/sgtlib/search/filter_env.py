@@ -674,7 +674,7 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     if best_sol.cost == np.inf:
         prev_best_position = np.array(s_space.ignore_candidates).min()
         best_sol.position = prev_best_position
-        best_sol.cost, best_configs = _compute_fitness(best_sol)
+        best_sol.cost = _compute_fitness(best_sol)
         print(f"HC-Alg (previous) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
 
     # 3. Update the current best candidate

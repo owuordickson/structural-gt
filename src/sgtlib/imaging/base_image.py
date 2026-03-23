@@ -522,56 +522,60 @@ class BaseImage:
 
     def evaluate_img_binary(self, weight_b0=10.0, weight_b1=5.0) -> float:
         """
-        We want to MAXIMIZE gradient, so we use 1/(avg_grad + epsilon). We want to MINIMIZE b0 and b1 fragments
-
-        GA Cost Function: Lower is Better.
-        Combines Topological Stability and Edge Alignment.
+        Unsupervised fitness function for graph-extraction readiness. Evaluates a binary mask by balancing topological
+        integrity (Betti numbers) against structural alignment (edge gradient). This cost function is designed for
+        minimization: lower values indicate a mask that is continuous, hole-free, and perfectly aligned with grayscale
+        edges.
 
         Args:
-            weight_b0 (float): Weight for the Betti Number of connected components (b0).
-            weight_b1 (float): Weight for the Betti Number of holes (b1).
+            weight_b0 (float): Penalty for fragmentation (disconnected components).
+                               Increase if the skeleton is breaking into segments
+            weight_b1 (float): Penalty for punctures (unwanted holes/noise).
+                               Increase if the binary mask is too "Swiss-cheese"
 
         Returns:
-            The fitness cost of the generated binary image.
+            float: Fitness cost. Returns np.inf for trivial (empty/full) masks
+                   to steer the Genetic Algorithm away from useless solutions.
         """
 
         if self.img_bin is None or self.img_grayscale is None:
             return np.inf
 
-        # Cast to numpy array to satisfy linters and skimage
+        # Ensure valid types for skimage/scipy
         img_gray = np.asanyarray(self.img_grayscale)
         binary_mask = (np.asanyarray(self.img_bin) > 0).astype(np.uint8)
-
-        # Create a mask for white pixels
-        white_mask = binary_mask.astype(bool)
-        white_pixel_count = np.count_nonzero(white_mask)
-        # Reject trivial masks
         total_pixels = binary_mask.size
-        if white_pixel_count <= (0.05 * total_pixels) or white_pixel_count >= (0.95 * total_pixels):
-            print("Bin-Fxn (eval) -> (almost all white or all black)")
+
+        # 1. Trivial Mask Rejection (Density Check)
+        white_pixel_count = np.count_nonzero(binary_mask)
+        density = white_pixel_count / total_pixels
+        if density <= 0.005 or density >= 0.95:  # Dropped to 0.5% for very thin graphs
             return np.inf
 
-        # 1. Topological Metrics (Betti Numbers)
-        mask = binary_mask > 0
-        # b0: Connected components (Fragmentation penalty)
-        _, b0 = ndimage.label(mask, structure=np.ones((3, 3)))
+        # 2. Topological Metrics (Betti Numbers)
+        # b0: Number of connected components (Connectivity)
+        _, b0 = ndimage.label(binary_mask, structure=np.ones((3, 3)))
 
-        # b1: Holes (Noise/Puncture penalty)
-        inverted_mask = ~mask
+        # b1: Number of holes (Topology)
+        inverted_mask = (binary_mask == 0)
         _, num_bg = ndimage.label(inverted_mask, structure=ndimage.generate_binary_structure(2, 1))
         b1 = max(0, num_bg - 1)
 
-        # 2. Alignment Metric (Average Edge Gradient)
+        # 3. Alignment Metric (Average Edge Gradient)
+        # Measures if mask boundaries sit on high-contrast grayscale transitions
         grad_mag = filters.sobel(img_gray)
-        boundary = morphology.binary_dilation(mask) ^ mask
+        grad_mag = np.array(grad_mag, dtype=np.float32)
+        boundary = morphology.binary_dilation(binary_mask) ^ (binary_mask > 0)
 
         avg_grad = np.mean(grad_mag[boundary]) if np.any(boundary) else 0.0
 
-        # 3. Final Cost Calculation
-        # We want to MAXIMIZE gradient, so we use 1/(avg_grad + epsilon)
-        # We want to MINIMIZE b0 and b1 fragments
+        # 4. Final Normalized Cost Calculation
+        # Normalize Betti numbers by log-area to prevent resolution bias
+        norm_factor = np.log1p(total_pixels)
+        topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
+
+        # Minimize inverse gradient: High gradient = low cost
         alignment_cost = 1.0 / (avg_grad + 1e-6)
-        topology_penalty = (b0 * weight_b0) + (b1 * weight_b1)
 
         return alignment_cost + topology_penalty
 
