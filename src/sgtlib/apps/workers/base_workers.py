@@ -214,7 +214,7 @@ class BaseWorker:
         except AbortException as err:
             logging.exception("Task Stopped: %s", err, extra={'user': 'SGT Logs'})
             ntwk_p.remove_listener(self._update_progress)
-            return False, ["Metaheuristic Search Stopped", "Search stopped by user or due to error!"]
+            return False, ["Metaheuristic Search Stopped", "Either no valid image filters found! Or search stopped by user or due to error!"]
         except Exception as err:
             logging.exception("Error: %s", err, extra={'user': 'SGT Logs'})
             ntwk_p.remove_listener(self._update_progress)

@@ -709,8 +709,9 @@ class ImageProcessor(ProgressUpdate):
                 return None
 
         if sel_filter_candidate.cost == np.inf:
+            self.abort = True
             self.update_status(ProgressData(type="error", sender="AI", message=f"No valid image configurations found! Try again!"))
-            return img_configs
+            return None
         return sel_filter_candidate.img_configs
 
     def build_graph_network(self):
