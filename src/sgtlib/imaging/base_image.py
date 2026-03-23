@@ -522,20 +522,25 @@ class BaseImage:
 
     def evaluate_img_binary(self, weight_b0=10.0, weight_b1=5.0) -> float:
         """
-        Unsupervised fitness function for graph-extraction readiness. Evaluates a binary mask by balancing topological
-        integrity (Betti numbers) against structural alignment (edge gradient). This cost function is designed for
-        minimization: lower values indicate a mask that is continuous, hole-free, and perfectly aligned with grayscale
-        edges.
+        Evaluate the quality of a binary mask for graph extraction using an unsupervised fitness function. The objective balances:
+
+        1. Topological integrity:
+            - b0 (connected components): penalizes fragmentation
+            - b1 (holes): penalizes unwanted loops/noise
+
+        2. Structural alignment:
+            - Encourages mask boundaries to align with strong grayscale edges
+
+        The function is designed for minimization (lower is better).
 
         Args:
-            weight_b0 (float): Penalty for fragmentation (disconnected components).
-                               Increase if the skeleton is breaking into segments
-            weight_b1 (float): Penalty for punctures (unwanted holes/noise).
-                               Increase if the binary mask is too "Swiss-cheese"
+            weight_b0 (float): Penalty weight for disconnected components
+            weight_b1 (float): Penalty weight for holes in the mask
 
         Returns:
-            float: Fitness cost. Returns np.inf for trivial (empty/full) masks
-                   to steer the Genetic Algorithm away from useless solutions.
+            float:
+                Fitness cost. Lower values indicate better masks.
+                Returns a large penalty for trivial masks (too sparse or too dense).
         """
 
         if self.img_bin is None or self.img_grayscale is None:
@@ -550,23 +555,39 @@ class BaseImage:
         white_pixel_count = np.count_nonzero(binary_mask)
         density = white_pixel_count / total_pixels
         if density <= 0.005 or density >= 0.95:  # Dropped to 0.5% for very thin graphs
-            return np.inf
+            return 1e6  # softer than np.inf for GA stability
 
         # 2. Topological Metrics (Betti Numbers)
-        # b0: Number of connected components (Connectivity)
-        _, b0 = ndimage.label(binary_mask, structure=np.ones((3, 3)))
+        # b0: Number of connected components (8-connectivity)
+        structure_8 = ndimage.generate_binary_structure(2, 2)
+        _, b0 = ndimage.label(binary_mask, structure=structure_8)#np.ones((3, 3)))
 
-        # b1: Number of holes (Topology)
-        inverted_mask = (binary_mask == 0)
-        _, num_bg = ndimage.label(inverted_mask, structure=ndimage.generate_binary_structure(2, 1))
-        b1 = max(0, num_bg - 1)
+        # b1: Number of holes (Topology: count connected components in the background minus the outer region)
+        inverted_mask = ~binary_mask
+        structure_4 = ndimage.generate_binary_structure(2, 1)
+        labeled_bg, num_bg = ndimage.label(inverted_mask, structure=structure_4)
+        # b1 = max(0, num_bg - 1)
+        # Remove outer background by ignoring the label at the border
+        border_labels = np.unique(
+            np.concatenate([
+                labeled_bg[0, :], labeled_bg[-1, :],
+                labeled_bg[:, 0], labeled_bg[:, -1]
+            ])
+        )
+        hole_labels = set(range(1, num_bg + 1)) - set(border_labels)
+        b1 = len(hole_labels)
 
-        # 3. Alignment Metric (Average Edge Gradient)
-        # Measures if mask boundaries sit on high-contrast grayscale transitions
+        # 3. Edge Alignment Metric (Average Edge Gradient). Measures if mask boundaries sit on high-contrast grayscale transitions
+        # Compute gradient magnitude
         grad_mag = filters.sobel(img_gray)
         grad_mag = np.array(grad_mag, dtype=np.float32)
-        boundary = morphology.binary_dilation(binary_mask) ^ (binary_mask > 0)
+        grad_mag /= (grad_mag.max() + 1e-8)  # Normalize gradient for stability
 
+        # boundary = morphology.binary_dilation(binary_mask) ^ (binary_mask > 0)
+        # Compute Inner Boundary via OpenCV
+        kernel = np.ones((3, 3), np.uint8)
+        eroded = cv2.erode(bin_img, kernel, iterations=1)
+        boundary = (bin_img > eroded)  # Boolean mask of the inner edge
         avg_grad = np.mean(grad_mag[boundary]) if np.any(boundary) else 0.0
 
         # 4. Final Normalized Cost Calculation
@@ -575,9 +596,10 @@ class BaseImage:
         topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
 
         # Minimize inverse gradient: High gradient = low cost
-        alignment_cost = 1.0 / (avg_grad + 1e-6)
-
-        return alignment_cost + topology_penalty
+        # alignment_cost = 1.0 / (avg_grad + 1e-6)
+        # Smooth alignment cost (avoid sharp inverse)
+        alignment_cost = 1.0 - avg_grad  # already normalized [0,1]
+        return float(alignment_cost + topology_penalty)
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
