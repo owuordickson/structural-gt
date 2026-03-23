@@ -7,7 +7,7 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 import logging
 from PySide6.QtCore import QObject, Signal
 from ...compute.graph_analyzer import GraphAnalyzer
-from ...utils.sgt_utils import AbortException, plot_to_opencv, TaskResult, upload_to_dropbox, ProgressData
+from ...utils.sgt_utils import AbortException, TaskResult, upload_to_dropbox, ProgressData
 
 
 class BaseWorker:
@@ -246,7 +246,7 @@ class BaseWorker:
             ntwk_p.remove_listener(self._update_progress)
             return False, ["Graph Rating Aborted", "Error occurred while rating graph!"]
 
-    def task_upload_file(self, file_path: str, upload_type: int):
+    def task_upload_file(self, file_path: str):
         """"""
         try:
             # 1. Verify if the file exists
@@ -264,7 +264,7 @@ class BaseWorker:
             self._update_progress(ProgressData(percent=50, sender="SGT", message=f"Reading File..."))
             # graph_data = pd.read_csv(file_path, header=None, index_col=False).to_numpy()
             # self._update_progress(ProgressData(percent=95, sender="SGT", message=f"Reading File..."))
-            # task_data = TaskResult(task_id="Upload CSV", status="Finished", message="CSV file successfully uploaded!", data=[upload_type, file_path,  graph_data])
+            # task_data = TaskResult(task_id="Upload CSV", status="Finished", message="CSV file successfully uploaded!", data=[upload_type, file_path, graph_data])
             return True, None#task_data
         except ValueError as err:
             logging.exception("Task Aborted: %s", err, extra={'user': 'SGT Logs'})

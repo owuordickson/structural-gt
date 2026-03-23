@@ -284,7 +284,7 @@ class ImageController(QObject):
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.undo_img_changes(img_pos=img_idx)
 
-            # Emit signal to update UI with new image
+            # Emit signal to update the UI with a new image
             self._ctrl.changeImageSignal.emit()
             if change_type == "cropping":
                 self.showCroppingControls.emit(True)
@@ -329,7 +329,7 @@ class ImageController(QObject):
             sgt_obj = self._ctrl.get_selected_sgt_obj()
             sgt_obj.ntwk_p.crop_image(x, y, crop_width, crop_height, qimg_width, qimg_height)
 
-            # Emit signal to update UI with new image
+            # Emit signal to update the UI with a new image
             self._ctrl.changeImageSignal.emit()
             self.showCroppingControls.emit(False)
         except Exception as err:
@@ -339,7 +339,7 @@ class ImageController(QObject):
 
     @Slot(int)
     def save_cropped_image(self, img_pos: int):
-        """Save cropped image to file."""
+        """Save a cropped image to a file."""
         if self._ctrl.wait_flag:
             logging.info("Please Wait: Another Task Running!", extra={'user': 'SGT Logs'})
             self._ctrl.showAlertSignal.emit("Please Wait", "Another Task Running!")

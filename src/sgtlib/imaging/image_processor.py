@@ -893,7 +893,7 @@ class ImageProcessor(ProgressUpdate):
                 )
                 lst_img_filter.append(img_filter)
 
-                # Stop loop if filter size is too small
+                # Stop the loop if the filter size is too small
                 if kernel_size <= 50:
                     break
             return lst_img_filter
@@ -1168,7 +1168,7 @@ class ImageProcessor(ProgressUpdate):
 
             # if type(image_data) is list:
             if (len(image_data.shape) >= 3) and (fmt_2d is None):
-                # If the image has shape (d, h, w), and third is not alpha channel
+                # If the image has shape (d, h, w), and the third is not the alpha channel
                 img_3d = []
                 for img in image_data:
                     img_small, scale_factor = BaseImage.resize_img(scale_size, img)
@@ -1210,7 +1210,7 @@ class ImageProcessor(ProgressUpdate):
                 view_options=views,
             )
             img_info_list.append(img_batch)
-            #break  # REMOVE TO ALLOW 3D
+            #break # REMOVE TO ALLOW 3D
         return img_info_list
 
     @classmethod

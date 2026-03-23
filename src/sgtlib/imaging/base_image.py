@@ -6,12 +6,11 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
-from scipy import ndimage
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
 from matplotlib import pyplot as plt
-from skimage import morphology, filters
+from skimage import filters
 from skimage.filters.rank import autolevel, median
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
