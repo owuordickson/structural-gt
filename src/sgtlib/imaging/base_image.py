@@ -548,26 +548,23 @@ class BaseImage:
 
         # Ensure valid types for skimage/scipy
         img_gray = np.asanyarray(self.img_grayscale)
-        binary_mask = (np.asanyarray(self.img_bin) > 0).astype(np.uint8)
-        total_pixels = binary_mask.size
+        bin_img = np.asanyarray(self.img_bin, dtype=np.uint8)
 
         # 1. Trivial Mask Rejection (Density Check)
-        white_pixel_count = np.count_nonzero(binary_mask)
+        white_pixel_count = np.count_nonzero(bin_img)
+        total_pixels = bin_img.size
         density = white_pixel_count / total_pixels
         if density <= 0.005 or density >= 0.95:  # Dropped to 0.5% for very thin graphs
             return 1e6  # softer than np.inf for GA stability
 
         # 2. Topological Metrics (Betti Numbers)
         # b0: Number of connected components (8-connectivity)
-        structure_8 = ndimage.generate_binary_structure(2, 2)
-        _, b0 = ndimage.label(binary_mask, structure=structure_8)#np.ones((3, 3)))
+        _, b0 = cv2.connectedComponents(bin_img, connectivity=8)
 
         # b1: Number of holes (Topology: count connected components in the background minus the outer region)
-        inverted_mask = ~binary_mask
-        structure_4 = ndimage.generate_binary_structure(2, 1)
-        labeled_bg, num_bg = ndimage.label(inverted_mask, structure=structure_4)
-        # b1 = max(0, num_bg - 1)
-        # Remove outer background by ignoring the label at the border
+        inverted = cv2.bitwise_not(bin_img)
+        labeled_bg, num_bg = cv2.connectedComponents(inverted, connectivity=4)
+        # Remove the outer background by ignoring the label at the border
         border_labels = np.unique(
             np.concatenate([
                 labeled_bg[0, :], labeled_bg[-1, :],
