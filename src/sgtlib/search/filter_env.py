@@ -432,27 +432,31 @@ class FilterSearchSpace:
 
         # Compute cost
         try:
-            start_bin = 110
-            end_bin = 190
+            #start_bin = 110
+            #end_bin = 190
             w1 = 10.0
-            w2 = 0.2
-            w3 = 0.6
+            #w2 = 0.2
+            #w3 = 0.6
+            w4 = 0.1
 
-            cover_ratio = img_obj.evaluate_histogram_window(start_bin, end_bin)
+            # cover_ratio = img_obj.evaluate_histogram_window(start_bin, end_bin)
             # actual_hist = img_obj.evaluate_img_binary()
-            pix_vals = img_obj.img_bin.flatten()
-            mean_val = np.mean(pix_vals)
-            p5 = np.percentile(pix_vals, 10).astype(int)
-            p95 = np.percentile(pix_vals, 90).astype(int)
+            # pix_vals = img_obj.img_bin.flatten()
+            # mean_val = np.mean(pix_vals)
+            # p5 = np.percentile(pix_vals, 10).astype(int)
+            # p95 = np.percentile(pix_vals, 90).astype(int)
 
-            target_center = (start_bin + end_bin) // 2
-            coverage = (1/(cover_ratio+1e-12))  # Add a small number to avoid division by zero
+            # target_center = (start_bin + end_bin) // 2
+            # coverage = (1/(cover_ratio+1e-12)) # Add a small number to avoid division by zero
+            bin_cost = img_obj.compute_fitness_cost()
             num_filters = compute_num_filters()
-            spread_err = abs(p95 - p5)
-            mean_err = abs(mean_val - target_center)
+            # spread_err = abs(p95 - p5)
+            # mean_err = abs(mean_val - target_center)
 
-            eval_cost = coverage + (w1*num_filters) + (w2*mean_err) + (w3*spread_err)
-            print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
+            # eval_cost = coverage + (w1*num_filters) + (w2*mean_err) + (w3*spread_err)
+            eval_cost = (w1*num_filters) + (w4*bin_cost)
+            # print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
+            print(f"Filter-Fxn (cost) -> Bin: {bin_cost}, Cost: {eval_cost} ")
         except Exception as e:
             print(f"Filter-Fxn (cost) -> Error in cost function: {e}")
             eval_cost = np.inf

@@ -553,6 +553,54 @@ class BaseImage:
         eval_hist = np.bincount(masked_grayscale, minlength=256)
         return eval_hist
 
+    def compute_fitness_cost(self, weight_b0=10.0, weight_b1=5.0):
+        """
+        GA Cost Function: Lower is Better.
+        Combines Topological Stability and Edge Alignment.
+        """
+        from scipy import ndimage
+        from skimage import morphology, filters
+
+        if self.img_bin is None or self.img_grayscale is None:
+            return np.inf
+
+        # Cast to numpy array to satisfy linters and skimage
+        img_gray = np.asanyarray(self.img_grayscale)
+        binary_mask = (np.asanyarray(self.img_bin) > 0).astype(np.uint8)
+
+        # Create a mask for white pixels
+        white_mask = binary_mask.astype(bool)
+        white_pixel_count = np.count_nonzero(white_mask)
+        # Reject trivial masks
+        total_pixels = binary_mask.size
+        if white_pixel_count <= (0.05 * total_pixels) or white_pixel_count >= (0.95 * total_pixels):
+            print("Bin-Fxn (eval) -> (almost all white or all black)")
+            return np.inf
+
+        # 1. Topological Metrics (Betti Numbers)
+        mask = binary_mask > 0
+        # b0: Connected components (Fragmentation penalty)
+        _, b0 = ndimage.label(mask, structure=np.ones((3, 3)))
+
+        # b1: Holes (Noise/Puncture penalty)
+        inverted_mask = ~mask
+        _, num_bg = ndimage.label(inverted_mask, structure=ndimage.generate_binary_structure(2, 1))
+        b1 = max(0, num_bg - 1)
+
+        # 2. Alignment Metric (Average Edge Gradient)
+        grad_mag = filters.sobel(img_gray)
+        boundary = morphology.binary_dilation(mask) ^ mask
+
+        avg_grad = np.mean(grad_mag[boundary]) if np.any(boundary) else 0.0
+
+        # 3. Final Cost Calculation
+        # We want to MAXIMIZE gradient, so we use 1/(avg_grad + epsilon)
+        # We want to MINIMIZE b0 and b1 fragments
+        alignment_cost = 1.0 / (avg_grad + 1e-6)
+        topology_penalty = (b0 * weight_b0) + (b1 * weight_b1)
+
+        return alignment_cost + topology_penalty
+
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
         Uses Matplotlib to plot the histogram of the processed image.
