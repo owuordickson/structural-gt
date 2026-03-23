@@ -574,12 +574,12 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
         s_space.candidates = new_population
 
     # Get the best candidate from past searches if best_sol.cost is np.inf
-    print(f"GA-Alg (best) -> position:: {best_sol.position}, cost: {best_sol.cost}\n")
-    if best_sol.cost == np.inf:
-        prev_best_position = np.array(s_space.ignore_candidates).min()
+    print(f"GA-Alg (best) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
+    if best_sol.cost == np.inf and len(s_space.ignore_candidates) > 0:
+        prev_best_position = min(s_space.ignore_candidates)
         best_sol.position = prev_best_position
+        print(f"GA-Alg (previous) -> position: {prev_best_position}\n")
         best_sol.cost, best_configs = _compute_fitness(best_sol)
-        print(f"GA-Alg (previous) -> position: {best_sol.position}, cost: {best_sol.cost}")
 
     s_space.best_candidate = best_sol
     return best_configs
@@ -671,11 +671,11 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
 
     # Get the best candidate from past searches if best_sol.cost is np.inf
     print(f"HC-Alg (best) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
-    if best_sol.cost == np.inf:
-        prev_best_position = np.array(s_space.ignore_candidates).min()
+    if best_sol.cost == np.inf and len(s_space.ignore_candidates) > 0:
+        prev_best_position = min(s_space.ignore_candidates)
         best_sol.position = prev_best_position
+        print(f"HC-Alg (previous) -> position: {prev_best_position}\n")
         best_sol.cost = _compute_fitness(best_sol)
-        print(f"HC-Alg (previous) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
 
     # 3. Update the current best candidate
     s_space.best_candidate = best_sol
