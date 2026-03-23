@@ -34,7 +34,7 @@ class FilterSearchSpace:
         """A candidate in the search space. It contains a position in the search space and, the Standard Deviation (SD)
         of the pixel values."""
         position: int | None = None
-        std_cost: float | None = None
+        cost: float | None = None
 
     @dataclass
     class SearchSpace:
@@ -57,7 +57,7 @@ class FilterSearchSpace:
         values from the original image and calculate the Standard Deviation (SD) of the pixel values. Finally, it has
         the combination of image filter configurations."""
         position: int | None = None                  # 11 bits long (approx. 2k candidates)
-        std_cost: float | None = None
+        cost: float | None = None
         value_range: tuple[int, int] | None = None                      # [min, max] values -- 0bits-20bits
         value_space: "FilterSearchSpace.SearchSpace" = None                      # approx. 1B candidates
         brightness_space: "FilterSearchSpace.SearchSpace" = None                 # approx. 256 candidates
@@ -145,7 +145,7 @@ class FilterSearchSpace:
                                                                                 "value"] = apply_scharr
                                                                             # candidate = FilterSearchSpace.Candidate(
                                                                             #     position=pos,
-                                                                            #     std_cost=None,
+                                                                            #     cost=None,
                                                                             #     img_configs=init_configs
                                                                             # )
                                                                             # search_space.candidates.append(candidate)
@@ -354,8 +354,8 @@ class FilterSearchSpace:
             img_configs = FilterSearchSpace.decode_filter_selections(pos)
             if img_configs is not None:
                 # Create an empty candidate
-                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), std_cost=None) for _ in range(initial_pop)]
-                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), std_cost=None) for _ in range(initial_pop)]
+                val_pop = [FilterSearchSpace.Candidate(position=random.randrange(val_range[0], val_range[1]), cost=None) for _ in range(initial_pop)]
+                b_pop = [FilterSearchSpace.Candidate(position=random.randrange(bri_range[0], bri_range[1]), cost=None) for _ in range(initial_pop)]
                 value_space = FilterSearchSpace.SearchSpace(candidates=val_pop, ignore_candidates=set(), loser_candidates=set(), min_pos=val_range[0], max_pos=val_range[1])
                 brightness_space = FilterSearchSpace.SearchSpace(candidates=b_pop, ignore_candidates=set(), loser_candidates=set(), min_pos=bri_range[0], max_pos=bri_range[1])
 
@@ -365,7 +365,7 @@ class FilterSearchSpace:
                         value_range=(0, initial_pop),
                         value_space=value_space,
                         brightness_space=brightness_space,
-                        std_cost=None,
+                        cost=None,
                         graph_accuracy=None,
                         img_configs=img_configs,
                     )
@@ -375,7 +375,7 @@ class FilterSearchSpace:
                         value_range=(0, initial_pop),
                         value_space=value_space,
                         brightness_space=brightness_space,
-                        std_cost=None,
+                        cost=None,
                         graph_accuracy=None,
                         img_configs=img_configs,
                     )
@@ -432,31 +432,14 @@ class FilterSearchSpace:
 
         # Compute cost
         try:
-            #start_bin = 110
-            #end_bin = 190
             w1 = 10.0
-            #w2 = 0.2
-            #w3 = 0.6
-            w4 = 0.1
+            w2 = 0.1
 
-            # cover_ratio = img_obj.evaluate_histogram_window(start_bin, end_bin)
-            # actual_hist = img_obj.evaluate_img_binary()
-            # pix_vals = img_obj.img_bin.flatten()
-            # mean_val = np.mean(pix_vals)
-            # p5 = np.percentile(pix_vals, 10).astype(int)
-            # p95 = np.percentile(pix_vals, 90).astype(int)
-
-            # target_center = (start_bin + end_bin) // 2
-            # coverage = (1/(cover_ratio+1e-12)) # Add a small number to avoid division by zero
-            bin_cost = img_obj.compute_fitness_cost()
+            filter_cost = img_obj.compute_fitness_cost()
             num_filters = compute_num_filters()
-            # spread_err = abs(p95 - p5)
-            # mean_err = abs(mean_val - target_center)
 
-            # eval_cost = coverage + (w1*num_filters) + (w2*mean_err) + (w3*spread_err)
-            eval_cost = (w1*num_filters) + (w4*bin_cost)
-            # print(f"Filter-Fxn (cost) -> Cover: {cover_ratio}, Cost: {eval_cost} ")
-            print(f"Filter-Fxn (cost) -> Bin: {bin_cost}, Cost: {eval_cost} ")
+            eval_cost = (w1*num_filters) + (w2*filter_cost)
+            print(f"Filter-Fxn (cost) -> Filter: {filter_cost}, Cost: {eval_cost} ")
         except Exception as e:
             print(f"Filter-Fxn (cost) -> Error in cost function: {e}")
             eval_cost = np.inf
@@ -523,10 +506,10 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
                 new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, value_candidate=sol)
             else:
                 new_img_configs = FilterSearchSpace.decode_filter_values(img_configs, bright_candidate=sol)
-            std_cost = FilterSearchSpace.cost_function(new_img_configs, img_data)
+            fitness_cost = FilterSearchSpace.cost_function(new_img_configs, img_data)
         else:
-            std_cost, new_img_configs = np.inf, None
-        return std_cost, new_img_configs
+            fitness_cost, new_img_configs = np.inf, None
+        return fitness_cost, new_img_configs
 
     if s_space is None:
         raise AbortException("Search space cannot be None")
@@ -536,8 +519,8 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
 
     # Initialize best candidate
     best_sol = FilterSearchSpace.get_initial_candidate(s_space)
-    best_sol.std_cost, best_configs = _compute_fitness(best_sol)
-    print(f"GA-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
+    best_sol.cost, best_configs = _compute_fitness(best_sol)
+    print(f"GA-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.cost}")
     for _ in range(generations):
         best_individual = None
         temp_configs = None
@@ -545,14 +528,14 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
         # 1. Compute fitness for each individual in the population/search space
         for individual in s_space.candidates:
             if isinstance(individual, FilterSearchSpace.Candidate):
-                individual.std_cost, new_configs = _compute_fitness(individual)
+                individual.cost, new_configs = _compute_fitness(individual)
 
-                if individual.std_cost == np.inf:
+                if individual.cost == np.inf:
                     s_space.loser_candidates.add(individual.position)
                     continue
 
-                if best_individual is None or best_individual.std_cost is None or individual.std_cost < best_individual.std_cost:
-                    print(f"GA-Alg (winner) -> position: {individual.position}, cost: {individual.std_cost}")
+                if best_individual is None or best_individual.cost is None or individual.cost < best_individual.cost:
+                    print(f"GA-Alg (winner) -> position: {individual.position}, cost: {individual.cost}")
                     best_individual = individual
                     temp_configs = copy.deepcopy(new_configs)
 
@@ -561,11 +544,11 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
             break
 
         # 1.2. Check if fitness is valid
-        if best_individual.std_cost is None:
+        if best_individual.cost is None:
             break
 
         # 1.3. Update the current best candidate
-        if best_individual.std_cost < best_sol.std_cost:
+        if best_individual.cost < best_sol.cost:
             best_sol = best_individual
             best_configs = copy.deepcopy(temp_configs)
 
@@ -589,8 +572,16 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
             new_population.append(x_2) if (x_2.position not in s_space.ignore_candidates) or (x_2.position not in s_space.loser_candidates)  else None
         # 4. Apply replacement/elitism if desired
         s_space.candidates = new_population
+
+    # Get the best candidate from past searches if best_sol.cost is np.inf
+    print(f"GA-Alg (best) -> position:: {best_sol.position}, cost: {best_sol.cost}\n")
+    if best_sol.cost == np.inf:
+        prev_best_position = np.array(s_space.ignore_candidates).min()
+        best_sol.position = prev_best_position
+        best_sol.cost, best_configs = _compute_fitness(best_sol)
+        print(f"GA-Alg (previous) -> position: {best_sol.position}, cost: {best_sol.cost}")
+
     s_space.best_candidate = best_sol
-    print(f"GA-Alg (best) -> position:: {best_sol.position}, cost: {best_sol.std_cost}\n")
     return best_configs
 
 
@@ -629,10 +620,10 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     def _compute_fitness(sol):
         """Compute fitness for an individual."""
         if isinstance(sol, FilterSearchSpace.FilterCandidate):
-            std_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data)
+            fitness_cost = FilterSearchSpace.cost_function(sol.img_configs, img_data)
         else:
-            std_cost = np.inf
-        return std_cost
+            fitness_cost = np.inf
+        return fitness_cost
 
     if s_space is None or img_data is None:
         raise AbortException("Search space or ImageObject cannot be None")
@@ -644,8 +635,8 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
     best_sol = FilterSearchSpace.get_initial_candidate(s_space)
     # 1b. Reset image configs to default values
     # best_sol.img_configs = FilterSearchSpace.decode_filter_selections(best_sol.position)
-    best_sol.std_cost = _compute_fitness(best_sol)
-    print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.std_cost}")
+    best_sol.cost = _compute_fitness(best_sol)
+    print(f"HC-Alg (initial) -> position: {best_sol.position}, cost: {best_sol.cost}")
     # 2. Run the hill climbing algorithm
     for it in range(max_iters):
         # Get neighbors to the current best candidate
@@ -654,31 +645,38 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data
 
         # Find the best neighbor among the neighbors
         for neighbor in neighbors:
-            neighbor.std_cost = _compute_fitness(neighbor)
+            neighbor.cost = _compute_fitness(neighbor)
 
-            if neighbor.std_cost == np.inf:
+            if neighbor.cost == np.inf:
                 s_space.loser_candidates.add(neighbor.position)
                 continue
 
-            if best_neighbor is None or best_neighbor.std_cost is None or neighbor.std_cost < best_neighbor.std_cost:
-                print(f"HC-Alg (winner) -> position: {neighbor.position}, cost: {neighbor.std_cost}")
+            if best_neighbor is None or best_neighbor.cost is None or neighbor.cost < best_neighbor.cost:
+                print(f"HC-Alg (winner) -> position: {neighbor.position}, cost: {neighbor.cost}")
                 best_neighbor = neighbor
 
         # Update the current best candidate
         if best_neighbor is None:
             break
 
-        if best_neighbor.std_cost is None:
+        if best_neighbor.cost is None:
             break
 
-        if best_neighbor.std_cost < best_sol.std_cost:
-            print(f"HC-Alg (new best) -> position: {best_neighbor.position}, cost: {best_neighbor.std_cost}")
+        if best_neighbor.cost < best_sol.cost:
+            print(f"HC-Alg (new best) -> position: {best_neighbor.position}, cost: {best_neighbor.cost}")
             best_sol = best_neighbor
         else:
             # No improvement found, reached a local optimum
             break
 
+    # Get the best candidate from past searches if best_sol.cost is np.inf
+    print(f"HC-Alg (best) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
+    if best_sol.cost == np.inf:
+        prev_best_position = np.array(s_space.ignore_candidates).min()
+        best_sol.position = prev_best_position
+        best_sol.cost, best_configs = _compute_fitness(best_sol)
+        print(f"HC-Alg (previous) -> position: {best_sol.position}, cost: {best_sol.cost}\n")
+
     # 3. Update the current best candidate
-    print(f"HC-Alg (best) -> position: {best_sol.position}, cost: {best_sol.std_cost}\n")
     s_space.best_candidate = best_sol
     return None

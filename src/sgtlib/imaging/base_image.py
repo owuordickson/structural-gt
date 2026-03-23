@@ -6,10 +6,12 @@ Processes of an image by applying filters to it and converting it to a binary ve
 
 import cv2
 import numpy as np
+from scipy import ndimage
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk
 from matplotlib import pyplot as plt
+from skimage import morphology, filters
 from skimage.filters.rank import autolevel, median
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
@@ -468,41 +470,6 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_histogram_window(self, start_position: int, end_position: int) -> float:
-        """
-        Evaluate whether a specified fraction of pixel values falls within a
-        given histogram bin window.
-
-        Args:
-            start_position (int):
-                Lower histogram bin position (inclusive). Represents the lower
-                intensity bound (e.g., 100)
-
-            end_position (int):
-                Upper histogram bin position (inclusive). Represents the upper
-                intensity bound (e.g., 132)
-
-        Returns:
-            actual_fraction (float):
-                    Fraction of pixels that lie inside the specified bin window.
-        """
-
-        if not (0 <= start_position <= 255 and 0 <= end_position <= 255 and start_position <= end_position):
-            print("low/high must be valid histogram bin indices (0–255).")
-            return 0.0
-
-        # Compute the histogram of the actual image
-        actual_hist = self.evaluate_img_binary()
-        if actual_hist is None:
-            return 0.0
-
-        # Compute the fraction of pixels that fall within the specified bin window
-        total_pixels = actual_hist.sum()
-        inside_count = actual_hist[start_position:end_position + 1].sum()  # Sum counts in the selected bin window
-        cover_ratio = inside_count / total_pixels
-
-        return float(cover_ratio)
-
     def evaluate_img_binary(self) -> np.ndarray | None:
         """
         Evaluate the quality of a binary image by analyzing the grayscale values
@@ -553,13 +520,20 @@ class BaseImage:
         eval_hist = np.bincount(masked_grayscale, minlength=256)
         return eval_hist
 
-    def compute_fitness_cost(self, weight_b0=10.0, weight_b1=5.0):
+    def compute_fitness_cost(self, weight_b0=10.0, weight_b1=5.0) -> float:
         """
+        We want to MAXIMIZE gradient, so we use 1/(avg_grad + epsilon). We want to MINIMIZE b0 and b1 fragments
+
         GA Cost Function: Lower is Better.
         Combines Topological Stability and Edge Alignment.
+
+        Args:
+            weight_b0 (float): Weight for the Betti Number of connected components (b0).
+            weight_b1 (float): Weight for the Betti Number of holes (b1).
+
+        Returns:
+            The fitness cost of the generated binary image.
         """
-        from scipy import ndimage
-        from skimage import morphology, filters
 
         if self.img_bin is None or self.img_grayscale is None:
             return np.inf

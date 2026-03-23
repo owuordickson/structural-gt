@@ -656,7 +656,7 @@ class ImageProcessor(ProgressUpdate):
         def _run_genetic_algorithm(search_space, sel_img_configs):
             """Runs the Genetic Algorithm to find the best candidate image configuration."""
             new_img_configs = sgt_genetic_algorithm(search_space, img_2d, sel_img_configs, generations=max_iters, pop_size=ga_init_pop)
-            sel_filter_candidate.std_cost = search_space.best_candidate.std_cost
+            sel_filter_candidate.cost = search_space.best_candidate.cost
             sel_filter_candidate.img_configs = copy.deepcopy(new_img_configs)
 
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
