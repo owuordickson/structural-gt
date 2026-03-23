@@ -19,7 +19,6 @@ from ..utils.config_loader import load_img_configs
 from ..utils.sgt_utils import safe_uint8_image
 
 
-
 class BaseImage:
     """
     A class that is used to binarize an image by applying filters to it and converting it to a binary version.
@@ -45,7 +44,7 @@ class BaseImage:
         count: int = 0
         pixel_positions: np.ndarray = None
 
-    def __init__(self, raw_img: MatLike|None, cfg_file="", scale_factor=1.0):
+    def __init__(self, raw_img: MatLike | None, cfg_file="", scale_factor=1.0):
         """
         A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
@@ -387,9 +386,11 @@ class BaseImage:
                 opt_img["adaptive_local_threshold_value"]["value"] = 3
             adp_val = int(opt_img["adaptive_local_threshold_value"]["value"])
             if opt_img["apply_dark_foreground"]["value"] == 1:
-                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, adp_val, 2)
+                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                cv2.THRESH_BINARY_INV, adp_val, 2)
             else:
-                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adp_val, 2)
+                img_bin = cv2.adaptiveThreshold(image, max_th_val, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
+                                                adp_val, 2)
         elif opt_img["threshold_type"]["value"] == 2:
             if opt_img["apply_dark_foreground"]["value"] == 1:
                 temp = cv2.threshold(image, 0, max_th_val, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
@@ -402,7 +403,8 @@ class BaseImage:
         opt_img["otsu"]["value"] = otsu_res
         return img_bin
 
-    def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list["BaseImage.DominantColor"]:
+    def get_dominant_img_colors(self, top_k: int = 10, use_minibatch: bool = False) -> None | list[
+        "BaseImage.DominantColor"]:
         """
         Cluster image colors into top-k groups using KMeans or MiniBatchKMeans. Use MiniBatchKMeans if the image is
         huge (over 10MB in size).
@@ -509,7 +511,7 @@ class BaseImage:
         total_pixels = img_bin.size
         # print(f"Total Pixels: {total_pixels}, white pixels: {white_pixel_count}, black: {0.05*total_pixels}, white: {0.95*total_pixels}")
         # print(self.configs)
-        if white_pixel_count <= (0.05*total_pixels) or white_pixel_count >= (0.95*total_pixels):
+        if white_pixel_count <= (0.05 * total_pixels) or white_pixel_count >= (0.95 * total_pixels):
             print("Bin-Fxn (eval) -> (almost all white or all black)")
             return None
 
@@ -546,56 +548,58 @@ class BaseImage:
         if self.img_bin is None or self.img_grayscale is None:
             return np.inf
 
-        # Ensure valid types for skimage/scipy
-        img_gray = np.asanyarray(self.img_grayscale)
+        # 1. Prepare Data & Trivial Check
+        img_gray = np.asanyarray(self.img_grayscale, dtype=np.float32)
         bin_img = np.asanyarray(self.img_bin, dtype=np.uint8)
 
-        # 1. Trivial Mask Rejection (Density Check)
         white_pixel_count = np.count_nonzero(bin_img)
         total_pixels = bin_img.size
         density = white_pixel_count / total_pixels
-        if density <= 0.005 or density >= 0.95:  # Dropped to 0.5% for very thin graphs
-            return 1e6  # softer than np.inf for GA stability
 
-        # 2. Topological Metrics (Betti Numbers)
-        # b0: Number of connected components (8-connectivity)
-        _, b0 = cv2.connectedComponents(bin_img, connectivity=8)
+        # Reject empty or saturated masks
+        if density <= 0.005 or density >= 0.95:
+            return 1e6
 
-        # b1: Number of holes (Topology: count connected components in the background minus the outer region)
-        inverted = cv2.bitwise_not(bin_img)
-        labeled_bg, num_bg = cv2.connectedComponents(inverted, connectivity=4)
-        # Remove the outer background by ignoring the label at the border
+        # 2. Fast Topological Metrics (Betti Numbers)
+        # B0: Connected components (8-connectivity)
+        num_labels, _ = cv2.connectedComponents(bin_img, connectivity=8)
+        b0 = max(0, num_labels - 1)  # Subtract 1 for the background label
+
+        # B1: Holes (Background components - 1)
+        # This is much faster than unique border checks in high-gen GA runs
+        inverted = (bin_img == 0).astype(np.uint8)
+        num_bg, labeled_bg = cv2.connectedComponents(inverted, connectivity=4)
+        # Labels touching an image border (outer background)
         border_labels = np.unique(
             np.concatenate([
-                labeled_bg[0, :], labeled_bg[-1, :],
-                labeled_bg[:, 0], labeled_bg[:, -1]
+                labeled_bg[0, :],
+                labeled_bg[-1, :],
+                labeled_bg[:, 0],
+                labeled_bg[:, -1]
             ])
         )
-        hole_labels = set(range(1, num_bg + 1)) - set(border_labels)
-        b1 = len(hole_labels)
+        # Holes = background components not touching the border
+        all_labels = np.arange(1, num_bg)
+        hole_labels = np.setdiff1d(all_labels, border_labels)
+        b1 = hole_labels.size
 
-        # 3. Edge Alignment Metric (Average Edge Gradient). Measures if mask boundaries sit on high-contrast grayscale transitions
-        # Compute gradient magnitude
-        grad_mag = filters.sobel(img_gray)
-        grad_mag = np.array(grad_mag, dtype=np.float32)
-        grad_mag /= (grad_mag.max() + 1e-8)  # Normalize gradient for stability
+        # 3. Edge Alignment (Normalized Gradient)
+        grad_mag = np.array(filters.sobel(img_gray))
+        max_g = grad_mag.max()
+        grad_mag /= (max_g + 1e-8)
 
-        # boundary = morphology.binary_dilation(binary_mask) ^ (binary_mask > 0)
-        # Compute Inner Boundary via OpenCV
-        kernel = np.ones((3, 3), np.uint8)
-        eroded = cv2.erode(bin_img, kernel, iterations=1)
-        boundary = (bin_img > eroded)  # Boolean mask of the inner edge
+        # Fast Inner Boundary via OpenCV subtraction
+        eroded = cv2.erode(bin_img, np.ones((3, 3), np.uint8))
+        boundary = (bin_img > eroded)
         avg_grad = np.mean(grad_mag[boundary]) if np.any(boundary) else 0.0
 
         # 4. Final Normalized Cost Calculation
-        # Normalize Betti numbers by log-area to prevent resolution bias
+        # Using log-area normalization to keep penalties resolution-independent
         norm_factor = np.log1p(total_pixels)
         topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
 
-        # Minimize inverse gradient: High gradient = low cost
-        # alignment_cost = 1.0 / (avg_grad + 1e-6)
-        # Smooth alignment cost (avoid sharp inverse)
-        alignment_cost = 1.0 - avg_grad  # already normalized [0,1]
+        # Alignment: 0 is a perfect alignment, 1 is no alignment
+        alignment_cost = 1.0 - avg_grad
         return float(alignment_cost + topology_penalty)
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
@@ -633,7 +637,7 @@ class BaseImage:
             # Evaluate the binary image
             eval_hist = self.compute_masked_binary_histogram()
             if eval_hist is not None:
-                ax.plot(eval_hist, color='m', linewidth=lw+0.5, label='Masked Image')
+                ax.plot(eval_hist, color='m', linewidth=lw + 0.5, label='Masked Image')
                 ax.legend(loc='upper right')
         else:
             img = self.img_grayscale
@@ -775,7 +779,8 @@ class BaseImage:
         return std_img, scale_factor
 
     @staticmethod
-    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray, is_white: bool) -> None | np.ndarray:
+    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray,
+                             is_white: bool) -> None | np.ndarray:
         """
         Replace specific pixels in a grayscale/LA/RGB/RGBA image based on a target hex color.
 
