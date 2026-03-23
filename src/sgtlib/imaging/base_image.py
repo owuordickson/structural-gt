@@ -470,7 +470,7 @@ class BaseImage:
         color_results.sort(key=lambda x: x.count, reverse=True)
         return color_results
 
-    def evaluate_img_binary(self) -> np.ndarray | None:
+    def compute_masked_binary_histogram(self) -> np.ndarray | None:
         """
         Evaluate the quality of a binary image by analyzing the grayscale values
         corresponding to its white pixels.
@@ -520,7 +520,7 @@ class BaseImage:
         eval_hist = np.bincount(masked_grayscale, minlength=256)
         return eval_hist
 
-    def compute_fitness_cost(self, weight_b0=10.0, weight_b1=5.0) -> float:
+    def evaluate_img_binary(self, weight_b0=10.0, weight_b1=5.0) -> float:
         """
         We want to MAXIMIZE gradient, so we use 1/(avg_grad + epsilon). We want to MINIMIZE b0 and b1 fragments
 
@@ -608,7 +608,7 @@ class BaseImage:
             channels = ['b']
             img = self.img_mut
             # Evaluate the binary image
-            eval_hist = self.evaluate_img_binary()
+            eval_hist = self.compute_masked_binary_histogram()
             if eval_hist is not None:
                 ax.plot(eval_hist, color='m', linewidth=lw+0.5, label='Masked Image')
                 ax.legend(loc='upper right')

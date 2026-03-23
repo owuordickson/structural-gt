@@ -435,7 +435,7 @@ class FilterSearchSpace:
             w1 = 10.0
             w2 = 0.1
 
-            filter_cost = img_obj.compute_fitness_cost()
+            filter_cost = img_obj.evaluate_img_binary()
             num_filters = compute_num_filters()
 
             eval_cost = (w1*num_filters) + (w2*filter_cost)
