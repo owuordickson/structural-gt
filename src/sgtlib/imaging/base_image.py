@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 from dataclasses import dataclass
-from skimage.morphology import disk
+from skimage.morphology import disk, skeletonize
 from matplotlib import pyplot as plt
 from skimage import filters
 from skimage.filters.rank import autolevel, median
@@ -521,33 +521,67 @@ class BaseImage:
         eval_hist = np.bincount(masked_grayscale, minlength=256)
         return eval_hist
 
-    def evaluate_img_binary(self, weight_b0=10.0, weight_b1=5.0) -> float:
+    def evaluate_img_binary(self, alpha=0.6, beta=0.25, gamma=0.15, weight_b0=10.0, weight_b1=5.0, ) -> float:
         """
-        Evaluate the quality of a binary mask for graph extraction using an unsupervised fitness function. The objective balances:
+        Evaluate the quality of a binary mask for graph extraction using a multi-objective,
+        unsupervised fitness function. The objective is designed to guide optimization
+        algorithms (e.g., Genetic Algorithms, Hill Climbing) toward masks that produce
+        structurally meaningful and topologically coherent graphs.
 
-        1. Topological integrity:
-            - b0 (connected components): penalizes fragmentation
-            - b1 (holes): penalizes unwanted loops/noise
+        The fitness function integrates three complementary criteria:
 
-        2. Structural alignment:
-            - Encourages mask boundaries to align with strong grayscale edges
+        1. Topological Integrity (Topology-aware regularization):
+            - b0 (connected components): penalizes fragmentation and disconnected structures
+            - b1 (holes): penalizes spurious loops and topological noise
+            - Both terms are normalized using a logarithmic function of the foreground size
+              to ensure scale invariance across image resolutions.
 
-        The function is designed for minimization (lower is better).
+        2. Structural Alignment (Image-driven constraint):
+            - Encourages mask boundaries to align with strong intensity gradients in the
+              grayscale image (Sobel-based).
+            - Boundary extraction is performed using a morphological gradient to capture
+              both inner and outer edges.
+            - High alignment reduces the cost, promoting adherence to true image structures.
+
+        3. Morphological Simplicity (Thickness regularization):
+            - Encourages thin, graph-like structures by comparing the binary mask to its
+              skeletonized version.
+            - Penalizes thick or blob-like regions that are unsuitable for graph extraction.
+
+        The final cost is a weighted combination of these terms:
+
+            cost = alpha * topology_penalty
+                 + beta * alignment_cost
+                 + gamma * thickness_penalty,
+
+        where lower values indicate better solutions.
 
         Args:
-            weight_b0 (float): Penalty weight for disconnected components
-            weight_b1 (float): Penalty weight for holes in the mask
+            alpha (float):
+                Weight for the topological penalty term
+            beta (float):
+                Weight for the structural alignment term
+            gamma (float):
+                Weight for the thickness (morphological simplicity) penalty
+            weight_b0 (float):
+                Penalty weight for the number of connected components (b0)
+            weight_b1 (float):
+                Penalty weight for the number of holes (b1)
 
         Returns:
             float:
-                Fitness cost. Lower values indicate better masks.
-                Returns a large penalty for trivial masks (too sparse or too dense).
+                Scalar fitness cost (to be minimized). Lower values correspond to
+                binary masks that are topologically simple, well-aligned with image
+                structures, and morphologically suitable for graph extraction.
+
+                Returns a large penalty (1e6) for trivial masks that are either too
+                sparse or too dense.
         """
 
         if self.img_bin is None or self.img_grayscale is None:
             return np.inf
 
-        # 1. Prepare Data & Trivial Check
+        # --- 1. Prepare Data & Check for all-black or all-white masks ---
         img_gray = np.asanyarray(self.img_grayscale, dtype=np.float32)
         bin_img = np.asanyarray(self.img_bin, dtype=np.uint8)
 
@@ -555,17 +589,16 @@ class BaseImage:
         total_pixels = bin_img.size
         density = white_pixel_count / total_pixels
 
-        # Reject empty or saturated masks
+        # Reject empty or saturated masks (all-black or all-white)
         if density <= 0.005 or density >= 0.95:
             return 1e6
 
-        # 2. Fast Topological Metrics (Betti Numbers)
+        # --- 2. Topological Penalty (Betti Numbers) ---
         # B0: Connected components (8-connectivity)
         num_labels, _ = cv2.connectedComponents(bin_img, connectivity=8)
         b0 = max(0, num_labels - 1)  # Subtract 1 for the background label
 
         # B1: Holes (Background components - 1)
-        # This is much faster than unique border checks in high-gen GA runs
         inverted = (bin_img == 0).astype(np.uint8)
         num_bg, labeled_bg = cv2.connectedComponents(inverted, connectivity=4)
         # Labels touching an image border (outer background)
@@ -582,24 +615,35 @@ class BaseImage:
         hole_labels = np.setdiff1d(all_labels, border_labels)
         b1 = hole_labels.size
 
-        # 3. Edge Alignment (Normalized Gradient)
+        # Using log-area normalization to keep penalties resolution-independent
+        norm_factor = np.log1p(white_pixel_count + 1)  # Normalize by foreground
+        topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
+
+        # --- 3. Edge Alignment Cost (Normalized Gradient) ---
         grad_mag = np.array(filters.sobel(img_gray))
         max_g = grad_mag.max()
         grad_mag /= (max_g + 1e-8)
 
         # Fast Inner Boundary via OpenCV subtraction
-        eroded = cv2.erode(bin_img, np.ones((3, 3), np.uint8))
-        boundary = (bin_img > eroded)
+        # eroded = cv2.erode(bin_img, np.ones((3, 3), np.uint8))
+        # boundary = (bin_img > eroded)
+        # Captures full boundary (inner + outer)
+        boundary = cv2.morphologyEx(bin_img, cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8)) > 0
         avg_grad = np.mean(grad_mag[boundary]) if np.any(boundary) else 0.0
+        alignment_cost = 1.0 - avg_grad  # Alignment: 0 is a perfect alignment, 1 is no alignment
 
-        # 4. Final Normalized Cost Calculation
-        # Using log-area normalization to keep penalties resolution-independent
-        norm_factor = np.log1p(total_pixels)
-        topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
+        # --- 4. Thickness Penalty ---
+        skeleton = skeletonize(bin_img > 0)
+        skeleton_ratio = np.sum(skeleton) / (white_pixel_count + 1e-8)
+        thickness_penalty = 1.0 - skeleton_ratio
 
-        # Alignment: 0 is a perfect alignment, 1 is no alignment
-        alignment_cost = 1.0 - avg_grad
-        return float(alignment_cost + topology_penalty)
+        # --- 5. Final Cost Calculation ---
+        cost = (
+                alpha * topology_penalty +
+                beta * alignment_cost +
+                gamma * thickness_penalty
+        )
+        return float(cost)
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """
