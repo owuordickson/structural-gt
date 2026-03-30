@@ -150,6 +150,12 @@ sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 ```
 
 
-## References
-* Drew A. Vecchio, Samuel H. Mahler, Mark D. Hammig, and Nicholas A. Kotov
-ACS Nano 2021 15 (8), 12847-12859. DOI: [10.1021/acsnano.1c04711](https://pubs.acs.org/doi/10.1021/acsnano.1c04711?ref=pdf).
+## Contributors ✨
+
+Thanks go to these incredible people:
+
+<a href="https://github.com/owuordickson/structural-gt/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=owuordickson/structural-gt" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
