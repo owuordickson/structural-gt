@@ -317,7 +317,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             self.update_status(msg_data)
             return None
 
-    def plot_graph_network(self, image_arr: MatLike, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
+    def plot_graph_network(self, image_arr: MatLike|None, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -511,7 +511,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: MatLike, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
+    def plot_graph_edges(image: MatLike|None, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
         """
         Plot graph edges on top of the image
 

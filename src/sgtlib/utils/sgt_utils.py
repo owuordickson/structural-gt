@@ -557,7 +557,7 @@ def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
     return None
 
 
-def safe_uint8_image(img: MatLike) -> MatLike | None:
+def safe_uint8_image(img: MatLike|None) -> MatLike | None:
     """
     Converts an image to uint8 safely:
         - If already uint8, returns as is.

@@ -182,8 +182,7 @@ class ImageProcessor(ProgressUpdate):
     def image_obj(self) -> BaseImage:
         """Returns the first image (2D) object/instance in the batch."""
         sel_img_batch = self.selected_batch
-        first_index = next(iter(sel_img_batch.selected_images_positions), None)  # 1st selected image
-        first_index: int = first_index if first_index is not None else 0         # first image if None
+        first_index: int = next(iter(sel_img_batch.selected_images_positions), 0)  # 1st selected image
         return sel_img_batch.images[first_index]
 
     @property
@@ -197,41 +196,41 @@ class ImageProcessor(ProgressUpdate):
         return self.selected_batch.graph_obj
 
     @property
-    def image_2d(self) -> MatLike:
+    def image_2d(self) -> MatLike|None:
         """Returns OpenCV 2D version of the image (first slice/frame/image in the batch)."""
         return self.image_obj.img_2d
 
     @property
-    def image_3d(self) -> list[MatLike]:
+    def image_3d(self) -> list[MatLike|None]:
         """Returns the 3D version of the image as a list of OpenCV arrays."""
         images = [obj.img_2d for obj in self.image_obj_3d]
         return images
 
     @property
-    def binary_image_2d(self) -> MatLike:
+    def binary_image_2d(self) -> MatLike|None:
         """Returns OpenCV version of the binary image (first slice/frame/image in the batch)."""
         # img_bin_rgb = cv2.cvtColor(self.image_obj.img_bin, cv2.COLOR_BGR2RGB)
         return self.image_obj.img_bin
 
     @property
-    def binary_image_3d(self) -> list[MatLike]:
+    def binary_image_3d(self) -> list[MatLike|None]:
         """Returns the 3D version of the binary image as a list of OpenCV arrays."""
         bin_images = [obj.img_bin for obj in self.image_obj_3d]
         return bin_images
 
     @property
-    def grayscale_image_2d(self) -> MatLike:
+    def grayscale_image_2d(self) -> MatLike|None:
         """Returns OpenCV version of the modified image (first slice/frame/image in the batch)."""
         return self.image_obj.img_grayscale
 
     @property
-    def grayscale_image_3d(self) -> list[MatLike]:
+    def grayscale_image_3d(self) -> list[MatLike|None]:
         """Returns the 3D version of the modified image as a list of OpenCV arrays."""
         grayscale_images = [obj.img_grayscale for obj in self.image_obj_3d]
         return grayscale_images
 
     @property
-    def mutated_image_3d(self) -> list[MatLike]:
+    def mutated_image_3d(self) -> list[MatLike|None]:
         """Returns the 3D version of the mutated image as a list of OpenCV arrays."""
         mut_images = [obj.img_mut for obj in self.image_obj_3d]
         return mut_images
@@ -256,11 +255,11 @@ class ImageProcessor(ProgressUpdate):
         """
 
         # First file if it's a list
-        ext = os.path.splitext(file[0])[1].lower() if (type(file) is list) else os.path.splitext(file)[1].lower()
+        ext = os.path.splitext(file[0])[1].lower() if isinstance(file, list) else os.path.splitext(file)[1].lower()
         try:
             if ext in ['.png', '.jpg', '.jpeg', '.bmp']:
                 image_groups = defaultdict(list)
-                if type(file) is list:
+                if isinstance(file, list):
                     for img_file in file:
                         # Create clusters/groups of similar size images
                         frame = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
@@ -281,7 +280,7 @@ class ImageProcessor(ProgressUpdate):
                 return img_batch_groups
             elif ext in ['.tif', '.tiff', '.qptiff']:
                 image_groups = defaultdict(list)
-                if type(file) is list:
+                if isinstance(file, list):
                     for img_file in file:
                         # Create clusters/groups of similar size images
                         frame = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
@@ -289,7 +288,7 @@ class ImageProcessor(ProgressUpdate):
                         h, w = frame_rgb.shape[:2]
                         image_groups[(h, w)].append(frame_rgb)
                 else:
-                    # Try to load multi-page TIFF using PIL
+                    # Try to load the multipage TIFF using PIL
                     img = Image.open(file)
                     while True:
                         # Create clusters/groups of similar size images
@@ -329,11 +328,14 @@ class ImageProcessor(ProgressUpdate):
             # self.update_status(ProgressData(sender="GT", type="error", message=f"Failed to load {file}: {err}"))
             return None
 
-    def _initialize_image_batches(self, img_batches: list[ImageBatch]):
+    def _initialize_image_batches(self, img_batches: list[ImageBatch]|None):
         """
         Retrieve all image slices of the selected image batch. If the image is 2D, only one slice exists
         if it is 3D, then multiple slices exist.
         """
+
+        if img_batches is None:
+            raise ValueError("No images available! Please add at least one image.")
 
         # Check if image batches exist
         if len(img_batches) == 0:
@@ -434,7 +436,7 @@ class ImageProcessor(ProgressUpdate):
                 progress += incr
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
-            img_data = img_obj.img_mut.copy()
+            img_data = copy.deepcopy(img_obj.img_mut)
             img_obj.img_grayscale = img_obj.process_img(image=img_data)
 
             if filter_type == 2:
@@ -454,7 +456,8 @@ class ImageProcessor(ProgressUpdate):
                 return
 
             if len(sel_batch.selected_images_positions) > 0:
-                [sel_batch.images[i].init_image() for i in sel_batch.selected_images_positions]
+                for i in sel_batch.selected_images_positions:
+                    sel_batch.images[i].init_image()
             self.update_image_props(sel_batch)
         except Exception as err:
             logging.exception(f"Undo Error: {err}", extra={'user': 'GT'})
@@ -554,8 +557,9 @@ class ImageProcessor(ProgressUpdate):
 
         # Resize (Downsample) all frames to the smaller pixel size while maintaining the aspect ratio
         for img_obj in sel_batch.images:
-            img = img_obj.img_raw.copy()
-            scale_size = scale_factor * max(img.shape[0], img.shape[1])
+            img = copy.deepcopy(img_obj.img_raw)
+            img_shape = img.shape if img is not None else [1, 1]
+            scale_size = int(scale_factor * max(img_shape[0], img_shape[1]))
             img_small, _ = BaseImage.resize_img(scale_size, img)
             if img_small is None:
                 # raise Exception("Unable to Rescale Image")
@@ -816,7 +820,7 @@ class ImageProcessor(ProgressUpdate):
                 lst_img_90pct.append(img_90pct)
             return lst_img_90pct
 
-        def retrieve_kernel_patches(img: MatLike, num_filters: int, num_patches: int, padding: tuple) -> list[BaseImage.ScalingKernel]:
+        def retrieve_kernel_patches(img: MatLike|None, num_filters: int, num_patches: int, padding: tuple) -> list[BaseImage.ScalingKernel]:
             """
             Perform an incomplete convolution operation that breaks down an image into smaller square mini-images.
             Extract all patches from the image based on filter size, stride, and padding, similar to
@@ -829,6 +833,9 @@ class ImageProcessor(ProgressUpdate):
             :param padding: Padding value (pad_y, pad_x).
             :return: List of convolved images.
             """
+
+            if img is None:
+                return []
 
             def estimate_kernel_size(parent_width, num) -> int:
                 """
@@ -863,9 +870,6 @@ class ImageProcessor(ProgressUpdate):
                     lst_patches.append(patch)
                     # print(f"Filter Shape: {patch.shape} at strides: x={x}, y={y}")
                 return lst_patches
-
-            if img is None:
-                return []
 
             # Initialize Parameters
             lst_img_filter = []
@@ -1181,7 +1185,7 @@ class ImageProcessor(ProgressUpdate):
             scaling_factor = 1
             scaling_opts = []
             images = np.array(images)
-            max_size = max(h, w)
+            max_size: int = max(h, w)
             if max_size > 0 and auto_scale:
                 scaling_opts = get_scaling_options(max_size)
                 images_small, scaling_factor = rescale_img(images, scaling_opts)

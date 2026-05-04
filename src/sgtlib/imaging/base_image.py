@@ -776,7 +776,7 @@ class BaseImage:
         return run_info
 
     @staticmethod
-    def check_alpha_channel(img: MatLike) -> tuple[bool, str | None]:
+    def check_alpha_channel(img: MatLike|None) -> tuple[bool, str | None]:
         """
         A function that checks if an image has an Alpha channel or not. Only works for images with up to 4-Dimensions.
 
@@ -804,7 +804,7 @@ class BaseImage:
         return False, None
 
     @staticmethod
-    def resize_img(size: int, image: MatLike) -> tuple[MatLike | None, float | None]:
+    def resize_img(size: int, image: MatLike|None) -> tuple[MatLike | None, float | None]:
         """
         Resizes image to specified size.
 
@@ -826,7 +826,7 @@ class BaseImage:
         return std_img, scale_factor
 
     @staticmethod
-    def eliminate_img_colors(image: MatLike, hex_color: str, pixel_pos: np.ndarray,
+    def eliminate_img_colors(image: MatLike|None, hex_color: str, pixel_pos: np.ndarray,
                              is_white: bool) -> None | np.ndarray:
         """
         Replace specific pixels in a grayscale/LA/RGB/RGBA image based on a target hex color.
