@@ -546,7 +546,7 @@ def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
         img_cv_rgba = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
 
         # Convert RGBA to RGB if needed
-        if img_cv_rgba.shape[2] == 4:
+        if img_cv_rgba is not None and img_cv_rgba.shape[2] == 4:
             img_cv_rgb = cv2.cvtColor(img_cv_rgba, cv2.COLOR_RGBA2RGB)
         else:
             img_cv_rgb = img_cv_rgba

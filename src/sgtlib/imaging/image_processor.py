@@ -183,7 +183,7 @@ class ImageProcessor(ProgressUpdate):
         """Returns the first image (2D) object/instance in the batch."""
         sel_img_batch = self.selected_batch
         first_index = next(iter(sel_img_batch.selected_images_positions), None)  # 1st selected image
-        first_index = first_index if first_index is not None else 0  # first image if None
+        first_index: int = first_index if first_index is not None else 0         # first image if None
         return sel_img_batch.images[first_index]
 
     @property

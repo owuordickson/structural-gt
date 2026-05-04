@@ -5,7 +5,9 @@ Processes of an image by applying filters to it and converting it to a binary ve
 """
 
 import cv2
+import copy
 import numpy as np
+from typing import cast
 from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk, skeletonize
@@ -87,8 +89,8 @@ class BaseImage:
     @img_2d.setter
     def img_2d(self, img_2d: MatLike | None) -> None:
         """Sets the processed image in OpenCV format."""
-        self._img_2d = img_2d.copy()
-        self._img_mut = img_2d.copy()
+        self._img_2d = copy.deepcopy(img_2d)
+        self._img_mut = copy.deepcopy(img_2d)
 
     @property
     def img_bin(self) -> MatLike | None:
@@ -167,7 +169,7 @@ class BaseImage:
         """
         if self.img_raw is None:
             return
-        img_data = self.img_raw.copy()
+        img_data = copy.deepcopy(self.img_raw)
 
         self._has_alpha_channel, _ = BaseImage.check_alpha_channel(self.img_raw)
         self.img_2d = img_data
@@ -208,7 +210,7 @@ class BaseImage:
         """
 
         # Resize image
-        scaled_img = cv2.resize(self.img_2d.copy(), (actual_w, actual_h))
+        scaled_img = cv2.resize(copy.deepcopy(self.img_2d), (actual_w, actual_h))
 
         # Crop image
         self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
@@ -415,7 +417,7 @@ class BaseImage:
         Returns:
             List of dicts with dominant colors
         """
-        img_rgb = self.img_raw.copy()
+        img_rgb = copy.deepcopy(self.img_raw)
         if img_rgb is None:
             return None
 
@@ -620,7 +622,7 @@ class BaseImage:
         topology_penalty = ((b0 * weight_b0) + (b1 * weight_b1)) / norm_factor
 
         # --- 3. Edge Alignment Cost (Normalized Gradient) ---
-        grad_mag = np.array(filters.sobel(img_gray))
+        grad_mag = np.array(filters.sobel(img_gray))  # type: ignore
         max_g = grad_mag.max()
         grad_mag /= (max_g + 1e-8)
 
@@ -633,7 +635,7 @@ class BaseImage:
         alignment_cost = 1.0 - avg_grad  # Alignment: 0 is a perfect alignment, 1 is no alignment
 
         # --- 4. Thickness Penalty ---
-        skeleton = skeletonize(bin_img > 0)
+        skeleton: np.ndarray = skeletonize(bin_img > 0)
         skeleton_ratio = np.sum(skeleton) / (white_pixel_count + 1e-8)
         thickness_penalty = 1.0 - skeleton_ratio
 
@@ -695,13 +697,14 @@ class BaseImage:
             ax.plot(img_hist, color=color, linewidth=lw, label=f"{lbl} Channel")
         ax.legend(loc='upper right')
 
+        max_val = np.max(img_hist)
         if opt_img["threshold_type"]["value"] == 0:
             global_val = int(opt_img["global_threshold_value"]["value"])
-            thresh_arr = np.array([[global_val, global_val], [0, max(img_hist)]], dtype='object')
+            thresh_arr = np.array([[global_val, global_val], [0, max_val]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='y')
         elif opt_img["threshold_type"]["value"] == 2:
             otsu_val = opt_img["otsu"]["value"]
-            thresh_arr = np.array([[otsu_val, otsu_val], [0, max(img_hist)]], dtype='object')
+            thresh_arr = np.array([[otsu_val, otsu_val], [0, max_val]], dtype='object')
             ax.plot(thresh_arr[0], thresh_arr[1], ls='--', color='y')
         fig.tight_layout()
         return fig
@@ -765,8 +768,9 @@ class BaseImage:
         run_info += "\n\n"
 
         if self.img_raw is not None:
+            img_shape = cast(np.ndarray, self.img_2d) if self.img_2d is not None else [0, 0]
             run_info += "***Image Scale***\n"
-            run_info += f"Size = {self.img_2d.shape[0]} x {self.img_2d.shape[1]} px"
+            run_info += f"Size = {img_shape[0]} x {img_shape[1]} px"
             run_info += f" || Scale Factor = {self._scale_factor}"
 
         return run_info
