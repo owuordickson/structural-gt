@@ -516,18 +516,19 @@ class ImageProcessor(ProgressUpdate):
         opt_model = self._configs
         img_obj = self.image_obj
         filter_space = self._filter_space
-        sel_filter_candidate = self._filter_space.best_candidate
+        # sel_filter_candidate = self._filter_space.best_candidate
+        sel_filter_candidate = s_can.best_candidate if (s_can := self._filter_space) is not None else None
         if opt_model["find_filter_selections"]["value"] == 1:
             if sel_filter_candidate is not None:
                 filter_space.ignore_candidates.add(sel_filter_candidate.position)
                 img_obj.reset_img_configs(self._config_file)
 
-        s_can = s_can if (s_can := sel_filter_candidate) is not None else None
+
         if opt_model["find_filter_values"]["value"] == 1:
             val_space = None
-            if s_can is not None:
-                if isinstance(s_can, FilterSearchSpace.FilterCandidate):
-                    val_space = s_can.value_space
+            if sel_filter_candidate is not None:
+                if isinstance(sel_filter_candidate, FilterSearchSpace.FilterCandidate):
+                    val_space = sel_filter_candidate.value_space
             # val_space = sel_filter_candidate.value_space
             if val_space is not None:
                 if val_space.best_candidate is not None:
@@ -535,9 +536,9 @@ class ImageProcessor(ProgressUpdate):
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
             bright_space = None
-            if s_can is not None:
-                if isinstance(s_can, FilterSearchSpace.FilterCandidate):
-                    bright_space = s_can.brightness_space
+            if sel_filter_candidate is not None:
+                if isinstance(sel_filter_candidate, FilterSearchSpace.FilterCandidate):
+                    bright_space = sel_filter_candidate.brightness_space
             # bright_space = sel_filter_candidate.brightness_space
             if bright_space is not None:
                 if bright_space.best_candidate is not None:
@@ -674,11 +675,18 @@ class ImageProcessor(ProgressUpdate):
         :return: A dictionary containing the best candidate's image configuration settings.
         """
 
-        def _run_genetic_algorithm(search_space, sel_img_configs):
+        def _run_genetic_algorithm(space_key: str):
             """Runs the Genetic Algorithm to find the best candidate image configuration."""
-            new_img_configs = sgt_genetic_algorithm(search_space, img_2d, sel_img_configs, generations=max_iters, pop_size=ga_init_pop)
-            sel_filter_candidate.cost = search_space.best_candidate.cost
-            sel_filter_candidate.img_configs = copy.deepcopy(new_img_configs)
+            if sel_filter_candidate is not None:
+                if isinstance(sel_filter_candidate, FilterSearchSpace.FilterCandidate):
+                    sel_img_configs = sel_filter_candidate.img_configs
+                    if space_key == "brightness-space":
+                        search_space = sel_filter_candidate.brightness_space
+                    else:
+                        search_space = sel_filter_candidate.value_space
+                    new_img_configs = sgt_genetic_algorithm(search_space, img_2d, sel_img_configs, generations=max_iters, pop_size=ga_init_pop)
+                    sel_filter_candidate.cost = search_space.best_candidate.cost if search_space.best_candidate is not None else np.inf
+                    sel_filter_candidate.img_configs = copy.deepcopy(new_img_configs)
 
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
@@ -709,11 +717,13 @@ class ImageProcessor(ProgressUpdate):
                 return None
 
         # 3. Run the Genetic Algorithm to find the best "image filter values"
-        sel_filter_candidate = filter_space.best_candidate
+
+        # sel_filter_candidate = filter_space.best_candidate
+        sel_filter_candidate = s_can.best_candidate if (s_can := filter_space) is not None else None
         if opt_model["find_filter_values"]["value"] == 1:
             self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
             try:
-                _run_genetic_algorithm(sel_filter_candidate.value_space, sel_filter_candidate.img_configs)
+                _run_genetic_algorithm("value-space")
             except AbortException as err:
                 self.abort = True
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
@@ -723,17 +733,24 @@ class ImageProcessor(ProgressUpdate):
         if opt_model["find_brightness_contrast"]["value"] == 1:
             self.update_status(ProgressData(percent=80, sender="AI", message=f"Searching for brightness/contrast values..."))
             try:
-                _run_genetic_algorithm(sel_filter_candidate.brightness_space, sel_filter_candidate.img_configs)
+                _run_genetic_algorithm("brightness-space")
             except AbortException as err:
                 self.abort = True
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
-        if sel_filter_candidate.cost == np.inf:
+        can_cost = np.inf
+        if sel_filter_candidate is not None:
+            can_cost = sel_filter_candidate.cost
+        if can_cost == np.inf:
             self.abort = True
             self.update_status(ProgressData(type="error", sender="AI", message=f"No valid image configurations found! Try again!"))
             return None
-        return sel_filter_candidate.img_configs
+
+        if sel_filter_candidate is not None:
+            if isinstance(sel_filter_candidate, FilterSearchSpace.FilterCandidate):
+                return sel_filter_candidate.img_configs
+        return None
 
     def build_graph_network(self):
         """Generates or extracts graphs of selected images."""
@@ -1058,7 +1075,7 @@ class ImageProcessor(ProgressUpdate):
             return
 
         slices = 0
-        img_shape = img_t.shape if (img_t := selected_batch.images[0].img_2d) is not None else [0, 0]
+        img_shape = img_t.shape[:2] if (img_t := selected_batch.images[0].img_2d) is not None else [0, 0]
         height, width = img_shape  # first image
         if num_dim >= 3:
             slices = len(selected_batch.images)

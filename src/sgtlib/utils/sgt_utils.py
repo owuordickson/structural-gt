@@ -20,7 +20,7 @@ import networkx as nx
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from PIL import Image
-from cv2.typing import MatLike
+# from cv2.typing import MatLike
 from typing import LiteralString
 from dataclasses import dataclass
 
@@ -501,11 +501,14 @@ def csv_to_numpy(csv_path: str) -> np.ndarray | None:
     return csv_data
 
 
-def img_to_base64(img: MatLike | Image.Image) -> str:
+def img_to_base64(img: np.ndarray | Image.Image) -> str:
     """ Converts a Numpy/OpenCV or PIL image to a base64 encoded string."""
 
-    def opencv_to_base64(img_arr: MatLike) -> str:
+    def opencv_to_base64(img_arr: np.ndarray|None) -> str:
         """Convert an OpenCV/Numpy image to a base64 string."""
+        if img_arr is None:
+            return ""
+
         success, encoded_img = cv2.imencode('.png', img_arr)
         if success:
             buffer = io.BytesIO(encoded_img.tobytes())
@@ -530,7 +533,7 @@ def img_to_base64(img: MatLike | Image.Image) -> str:
     return ""
 
 
-def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
+def plot_to_opencv(fig: plt.Figure) -> np.ndarray | None:
     """Convert a Matplotlib figure to an OpenCV BGR image (Numpy array), retaining colors."""
     if fig:
         # Save a figure to a buffer
@@ -557,7 +560,7 @@ def plot_to_opencv(fig: plt.Figure) -> MatLike | None:
     return None
 
 
-def safe_uint8_image(img: MatLike|None) -> MatLike | None:
+def safe_uint8_image(img: np.ndarray|None) -> np.ndarray | None:
     """
     Converts an image to uint8 safely:
         - If already uint8, returns as is.
