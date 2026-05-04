@@ -53,7 +53,7 @@ class ImageProcessor(ProgressUpdate):
         is_graph_only: bool
         scale_factor: float
         scaling_options: list[dict]
-        selected_images_positions: set
+        selected_images_positions: set[int]
         selected_frame_pos: int
         view_options: list[dict]
 
@@ -360,7 +360,8 @@ class ImageProcessor(ProgressUpdate):
 
             is_2d = True
             if len(image_list) == 1:
-                if len(image_list[0].img_2d.shape) == 3 and image_list[0].has_alpha_channel:
+                img_shape = img_t.shape if (img_t := image_list[0].img_2d) is not None else []
+                if len(img_shape) == 3 and image_list[0].has_alpha_channel:
                     logging.info("Image is 2D with Alpha Channel.", extra={'user': 'SGT Logs'})
                     # self.update_status(ProgressData(sender="GT", type="warning", message=f"Image is 2D with Alpha Channel"))
                 else:
@@ -436,11 +437,12 @@ class ImageProcessor(ProgressUpdate):
                 progress += incr
                 self.update_status(ProgressData(percent=int(progress), sender="GT", message=f"Image processing in progress..."))
 
-            img_data = copy.deepcopy(img_obj.img_mut)
+            img_data = img.copy() if (img := img_obj.img_mut) is not None else None
             img_obj.img_grayscale = img_obj.process_img(image=img_data)
 
             if filter_type == 2:
-                img_obj.img_bin = img_obj.binarize_img(img_obj.img_grayscale.copy())
+                img_gray = img.copy() if (img := img_obj.img_grayscale) is not None else None
+                img_obj.img_bin = img_obj.binarize_img(img_gray)
             img_obj.get_pixel_width()
         self.update_status(ProgressData(percent=100, sender="GT", message=f"Image processing complete..."))
 
@@ -486,7 +488,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_status(ProgressData(percent=100, sender="GT", message="No dominant colors found!"))
             return
 
-        img = img_obj.img_mut.copy()
+        img = img_t.copy() if (img_t := img_obj.img_mut) is not None else None
         swap_to_white = True if swap_color == 1 else False
         for sel_color in img_obj.dominant_colors:
             if sel_color.is_selected:
@@ -494,7 +496,7 @@ class ImageProcessor(ProgressUpdate):
                 pixels = sel_color.pixel_positions
                 img = BaseImage.eliminate_img_colors(image=img, hex_color=hex_code, pixel_pos=pixels, is_white=swap_to_white)
 
-        img_obj.img_mut = img.copy()
+        img_obj.img_mut = img_t.copy() if (img_t := img) is not None else None
         self.update_status(ProgressData(percent=100, sender="GT", message="Color elimination complete..."))
 
     def reset_img_filters(self):
@@ -520,15 +522,26 @@ class ImageProcessor(ProgressUpdate):
                 filter_space.ignore_candidates.add(sel_filter_candidate.position)
                 img_obj.reset_img_configs(self._config_file)
 
+        s_can = s_can if (s_can := sel_filter_candidate) is not None else None
         if opt_model["find_filter_values"]["value"] == 1:
-            val_space = sel_filter_candidate.value_space
-            if val_space.best_candidate is not None:
-                val_space.ignore_candidates.add(val_space.best_candidate.position)
+            val_space = None
+            if s_can is not None:
+                if isinstance(s_can, FilterSearchSpace.FilterCandidate):
+                    val_space = s_can.value_space
+            # val_space = sel_filter_candidate.value_space
+            if val_space is not None:
+                if val_space.best_candidate is not None:
+                    val_space.ignore_candidates.add(val_space.best_candidate.position)
 
         if opt_model["find_brightness_contrast"]["value"] == 1:
-            bright_space = sel_filter_candidate.brightness_space
-            if bright_space.best_candidate is not None:
-                bright_space.ignore_candidates.add(bright_space.best_candidate.position)
+            bright_space = None
+            if s_can is not None:
+                if isinstance(s_can, FilterSearchSpace.FilterCandidate):
+                    bright_space = s_can.brightness_space
+            # bright_space = sel_filter_candidate.brightness_space
+            if bright_space is not None:
+                if bright_space.best_candidate is not None:
+                    bright_space.ignore_candidates.add(bright_space.best_candidate.position)
 
     def apply_img_scaling(self):
         """Re-scale (downsample or up-sample) a 2D image or 3D images to a specified size"""
@@ -550,17 +563,17 @@ class ImageProcessor(ProgressUpdate):
 
         img_px_size = 1
         for img_obj in sel_batch.images:
-            img = img_obj.img_raw
-            temp_px = max(img.shape[0], img.shape[1])
+            img_shape = img_t.copy() if (img_t := img_obj.img_raw) is not None else [1, 1]
+            temp_px = max(img_shape[0], img_shape[1])
             img_px_size = temp_px if temp_px > img_px_size else img_px_size
         scale_factor = scale_size / img_px_size
 
         # Resize (Downsample) all frames to the smaller pixel size while maintaining the aspect ratio
         for img_obj in sel_batch.images:
-            img = copy.deepcopy(img_obj.img_raw)
-            img_shape = img.shape if img is not None else [1, 1]
+            img_data = img.copy() if (img := img_obj.img_raw) is not None else None
+            img_shape = img_data.shape if img_data is not None else [1, 1]
             scale_size = int(scale_factor * max(img_shape[0], img_shape[1]))
-            img_small, _ = BaseImage.resize_img(scale_size, img)
+            img_small, _ = BaseImage.resize_img(scale_size, img_data)
             if img_small is None:
                 # raise Exception("Unable to Rescale Image")
                 return
@@ -605,19 +618,23 @@ class ImageProcessor(ProgressUpdate):
         # Computations
         self.update_status(ProgressData(percent=20, sender="GT", message="Computing histogram of original image..."))
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="original"))
-        lst_histograms.append(img_hist.copy())
+        img = img_t.copy() if (img_t := img_hist) is not None else None
+        lst_histograms.append(img)
 
         self.update_status(ProgressData(percent=40, sender="GT", message="Computing histogram of binary image..."))
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="binary"))
-        lst_histograms.append(img_hist.copy())
+        img = img_t.copy() if (img_t := img_hist) is not None else None
+        lst_histograms.append(img)
 
         self.update_status(ProgressData(percent=50, sender="GT", message="Computing histogram of grayscale image..."))
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="grayscale"))
-        lst_histograms.append(img_hist.copy())
+        img = img_t.copy() if (img_t := img_hist) is not None else None
+        lst_histograms.append(img)
 
         self.update_status(ProgressData(percent=80, sender="GT", message="Computing histogram of mutated image..."))
         img_hist = plot_to_opencv(img_obj.plot_img_histogram(curr_view="mutated"))
-        lst_histograms.append(img_hist.copy())
+        img = img_t.copy() if (img_t := img_hist) is not None else None
+        lst_histograms.append(img)
         return lst_histograms
 
     def retrieve_dominant_img_colors(self, img_pos: int, top_k: int = 6) -> None | list:
@@ -666,7 +683,7 @@ class ImageProcessor(ProgressUpdate):
         self.update_status(ProgressData(percent=0, sender="AI", message=f"Starting filter search..."))
         opt_model = self._configs
         img_configs = self.image_obj.configs
-        img_2d = self.image_obj.img_raw.copy()
+        img_2d = img_t.copy() if (img_t := self.image_obj.img_raw) is not None else None
         max_iters = opt_model["max_iterations"]["value"]
         ga_init_pop = opt_model["genetic_alg_initial_pop"]["value"]
 
@@ -802,6 +819,9 @@ class ImageProcessor(ProgressUpdate):
             """
             # Create a kernel that is 95% the size of the image
             img_bin = self.binary_image_2d
+            if img_bin is None:
+                return []
+
             h, w = img_bin.shape
             k_h, k_w = int(0.95 * h), int(0.95 * w)
 
@@ -857,6 +877,9 @@ class ImageProcessor(ProgressUpdate):
                 Returns:
                     list of extracted patches each of size kernel_dim.
                 """
+
+                if img is None:
+                    return []
 
                 lst_patches = []
                 img_h, img_w = img.shape[:2]
@@ -1035,7 +1058,8 @@ class ImageProcessor(ProgressUpdate):
             return
 
         slices = 0
-        height, width = selected_batch.images[0].img_2d.shape[:2]  # first image
+        img_shape = img_t.shape if (img_t := selected_batch.images[0].img_2d) is not None else [0, 0]
+        height, width = img_shape  # first image
         if num_dim >= 3:
             slices = len(selected_batch.images)
 
@@ -1057,7 +1081,7 @@ class ImageProcessor(ProgressUpdate):
         sel_batch = self.selected_batch
 
         if img_pos is not None:
-            if type(img_pos) is int:
+            if isinstance(img_pos, int):
                 img_obj = sel_batch.images[img_pos]
                 crop_filename = f"{img_file_name}_cropped.jpg"
                 crop_file = os.path.join(out_dir, crop_filename)

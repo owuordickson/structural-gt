@@ -254,7 +254,7 @@ class FilterSearchSpace:
         return img_configs
 
     @staticmethod
-    def decode_filter_values(img_configs: dict, value_candidate: "FilterSearchSpace.Candidate"=None, bright_candidate: "FilterSearchSpace.Candidate"=None) -> dict|None:
+    def decode_filter_values(img_configs: dict|None, value_candidate: "FilterSearchSpace.Candidate"=None, bright_candidate: "FilterSearchSpace.Candidate"=None) -> dict|None:
         """
         Decode the image filter configurations of a candidate into a dictionary.
 
@@ -452,7 +452,7 @@ class FilterSearchSpace:
 
 
 
-def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.ndarray, img_configs: dict, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.9, sigma: float = 0.9) -> dict|None:
+def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.ndarray|None, img_configs: dict|None, generations: int = 4, pop_size: int = 8, gamma: float = 1.0, mu: float = 0.9, sigma: float = 0.9) -> dict|None:
     """
     Executes the genetic algorithm to find the best candidate from a huge search space.
 
