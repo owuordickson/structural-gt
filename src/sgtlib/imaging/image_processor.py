@@ -77,7 +77,7 @@ class ImageProcessor(ProgressUpdate):
         """
         super(ImageProcessor, self).__init__()
         self._configs = load_ai_configs(cfg_file)
-        self._img_path: str = img_path if type(img_path) is str else img_path[0]
+        self._img_path: str = img_path if isinstance(img_path, str) else img_path[0]
         self._output_dir: str = out_dir
         self._config_file: str = cfg_file
         self._graph_file: str = graph_file
@@ -142,7 +142,7 @@ class ImageProcessor(ProgressUpdate):
         return self._selected_batch_index
 
     @property
-    def filter_space(self) -> FilterSearchSpace|None:
+    def filter_space(self) -> FilterSearchSpace.SearchSpace|None:
         """Returns the filter space."""
         return self._filter_space
 
@@ -289,7 +289,7 @@ class ImageProcessor(ProgressUpdate):
                         h, w = frame_rgb.shape[:2]
                         image_groups[(h, w)].append(frame_rgb)
                 else:
-                    # Try load multi-page TIFF using PIL
+                    # Try to load multi-page TIFF using PIL
                     img = Image.open(file)
                     while True:
                         # Create clusters/groups of similar size images
