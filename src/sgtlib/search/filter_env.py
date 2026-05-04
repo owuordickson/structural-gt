@@ -428,9 +428,11 @@ class FilterSearchSpace:
         # Copy image filter configurations to the image object
         img_obj.configs = img_configs
         # Apply image filters
-        img_data = copy.deepcopy(img_obj.img_2d)
+        img_data = img.copy() if (img := img_obj.img_2d) is not None else None
         img_obj.img_grayscale = img_obj.process_img(image=img_data)
-        img_obj.img_bin = img_obj.binarize_img(image=copy.deepcopy(img_obj.img_grayscale))
+
+        img_gray = img.copy() if (img := img_obj.img_grayscale) is not None else None
+        img_obj.img_bin = img_obj.binarize_img(image=img_gray)
 
         # Compute cost
         try:

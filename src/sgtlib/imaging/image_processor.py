@@ -13,7 +13,7 @@ import logging
 import numpy as np
 # import nibabel as nib
 from PIL import Image
-from cv2.typing import MatLike
+# from cv2.typing import MatLike
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -175,7 +175,7 @@ class ImageProcessor(ProgressUpdate):
         sel_img_batch = self.selected_batch
         if sel_img_batch.is_graph_only:
             return []
-        sel_images = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_positions]
+        sel_images: list[BaseImage] = [sel_img_batch.images[i] for i in sel_img_batch.selected_images_positions]
         return sel_images
 
     @property
@@ -196,41 +196,41 @@ class ImageProcessor(ProgressUpdate):
         return self.selected_batch.graph_obj
 
     @property
-    def image_2d(self) -> MatLike|None:
+    def image_2d(self) -> np.ndarray|None:
         """Returns OpenCV 2D version of the image (first slice/frame/image in the batch)."""
         return self.image_obj.img_2d
 
     @property
-    def image_3d(self) -> list[MatLike|None]:
+    def image_3d(self) -> list[np.ndarray|None]:
         """Returns the 3D version of the image as a list of OpenCV arrays."""
         images = [obj.img_2d for obj in self.image_obj_3d]
         return images
 
     @property
-    def binary_image_2d(self) -> MatLike|None:
+    def binary_image_2d(self) -> np.ndarray|None:
         """Returns OpenCV version of the binary image (first slice/frame/image in the batch)."""
         # img_bin_rgb = cv2.cvtColor(self.image_obj.img_bin, cv2.COLOR_BGR2RGB)
         return self.image_obj.img_bin
 
     @property
-    def binary_image_3d(self) -> list[MatLike|None]:
+    def binary_image_3d(self) -> list[np.ndarray|None]:
         """Returns the 3D version of the binary image as a list of OpenCV arrays."""
         bin_images = [obj.img_bin for obj in self.image_obj_3d]
         return bin_images
 
     @property
-    def grayscale_image_2d(self) -> MatLike|None:
+    def grayscale_image_2d(self) -> np.ndarray|None:
         """Returns OpenCV version of the modified image (first slice/frame/image in the batch)."""
         return self.image_obj.img_grayscale
 
     @property
-    def grayscale_image_3d(self) -> list[MatLike|None]:
+    def grayscale_image_3d(self) -> list[np.ndarray|None]:
         """Returns the 3D version of the modified image as a list of OpenCV arrays."""
         grayscale_images = [obj.img_grayscale for obj in self.image_obj_3d]
         return grayscale_images
 
     @property
-    def mutated_image_3d(self) -> list[MatLike|None]:
+    def mutated_image_3d(self) -> list[np.ndarray|None]:
         """Returns the 3D version of the mutated image as a list of OpenCV arrays."""
         mut_images = [obj.img_mut for obj in self.image_obj_3d]
         return mut_images
@@ -350,7 +350,7 @@ class ImageProcessor(ProgressUpdate):
                 raise ValueError(f"Problem with images in batch {i}!")
 
             _, fmt_2d = BaseImage.check_alpha_channel(img_data)
-            image_list = []
+            image_list: list[BaseImage] = []
             if (len(img_data.shape) >= 3) and (fmt_2d is None):
                 # If the image has shape (d, h, w) and does not an alpha channel, which is less than 4 - (h, w, a)
                 image_list = [BaseImage(img, self._config_file, scale_factor) for img in img_data]
@@ -399,7 +399,7 @@ class ImageProcessor(ProgressUpdate):
         if selected_images is None:
             return
 
-        if type(selected_images) is set:
+        if isinstance(selected_images, set):
             self._image_batches[sel_batch_idx].selected_images_positions = selected_images
 
     def track_progress(self, status_data: ProgressData):
@@ -581,8 +581,8 @@ class ImageProcessor(ProgressUpdate):
         """
         sel_batch = self.selected_batch
         if len(sel_batch.selected_images_positions) > 0:
-            [sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h) for i in
-             sel_batch.selected_images_positions]
+            for i in sel_batch.selected_images_positions:
+                sel_batch.images[i].apply_img_crop(x, y, crop_w, crop_h, actual_w, actual_h)
         self.update_image_props(sel_batch)
         self.selected_batch_view = 'grayscale'
 
@@ -795,7 +795,7 @@ class ImageProcessor(ProgressUpdate):
         graph_configs = self.graph_obj.configs
         img_obj = self.image_obj  # ONLY works for 2D
 
-        def extract_cropped_image_patches() -> list[MatLike]:
+        def extract_cropped_image_patches() -> list[np.ndarray]:
             """A method that extracts 4 filters from the original binary image. Each filter is the of size approximately
             90% of the original image height and width. This method ensures exactly four patches are extracted from
             the corners. Compute GT descriptors of 90% original image at different locations (to get their averages)
@@ -820,7 +820,7 @@ class ImageProcessor(ProgressUpdate):
                 lst_img_90pct.append(img_90pct)
             return lst_img_90pct
 
-        def retrieve_kernel_patches(img: MatLike|None, num_filters: int, num_patches: int, padding: tuple) -> list[BaseImage.ScalingKernel]:
+        def retrieve_kernel_patches(img: np.ndarray|None, num_filters: int, num_patches: int, padding: tuple) -> list[BaseImage.ScalingKernel]:
             """
             Perform an incomplete convolution operation that breaks down an image into smaller square mini-images.
             Extract all patches from the image based on filter size, stride, and padding, similar to
@@ -848,7 +848,7 @@ class ImageProcessor(ProgressUpdate):
                 est_w = int((parent_width - 10) * (1 - (num / num_kernels)))
                 return max(50, est_w)  # Avoid too small sizes
 
-            def extract_random_patches(kernel_dim) -> list[MatLike]:
+            def extract_random_patches(kernel_dim) -> list[np.ndarray]:
                 """
                 Retrieve kernel patches at random locations in the image.
                 Args:
@@ -1181,7 +1181,7 @@ class ImageProcessor(ProgressUpdate):
 
         img_info_list = []
         for (h, w), images in img_groups.items():
-            images_small = []
+            images_small = np.array([])
             scaling_factor = 1
             scaling_opts = []
             images = np.array(images)
@@ -1199,6 +1199,7 @@ class ImageProcessor(ProgressUpdate):
                 {"text": "Grayscale Image", "dataValue": "grayscale", "value": 0, "visible": 1 },
                 {"text": "Extracted Graph", "dataValue": "graph", "value": 0, "visible": 1}
             ]
+            img_indices = range(len(images))
             img_batch = ImageProcessor.ImageBatch(
                 numpy_image=images,
                 images=[],
@@ -1209,7 +1210,7 @@ class ImageProcessor(ProgressUpdate):
                 is_graph_only=False,
                 scale_factor=scaling_factor,
                 scaling_options=scaling_opts,
-                selected_images_positions=set(range(len(images))),
+                selected_images_positions=set(img_indices),
                 selected_frame_pos= 0,
                 view_options=views,
             )

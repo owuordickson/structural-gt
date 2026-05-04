@@ -8,7 +8,7 @@ import cv2
 import copy
 import numpy as np
 from typing import cast
-from cv2.typing import MatLike
+# from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk, skeletonize
 from matplotlib import pyplot as plt
@@ -25,14 +25,14 @@ class BaseImage:
     A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
     Args:
-        raw_img (MatLike): Raw image in OpenCV format
+        raw_img (np.ndarray): Raw image in OpenCV format
         scale_factor (float): Scale factor used to downsample/up-sample the image.
     """
 
     @dataclass
     class ScalingKernel:
         """A data class for storing scaling kernel parameters."""
-        image_patches: list[MatLike]
+        image_patches: list[np.ndarray]
         kernel_shape: tuple
         # stride: tuple
 
@@ -45,7 +45,7 @@ class BaseImage:
         count: int = 0
         pixel_positions: np.ndarray = None
 
-    def __init__(self, raw_img: MatLike | None, cfg_file="", scale_factor=1.0):
+    def __init__(self, raw_img: np.ndarray | None, cfg_file="", scale_factor=1.0):
         """
         A class that is used to binarize an image by applying filters to it and converting it to a binary version.
 
@@ -55,11 +55,11 @@ class BaseImage:
             scale_factor (float): Scale factor used to downsample/up-sample the image.
         """
         self._configs: dict = load_img_configs(cfg_file)  # image processing configuration parameters and options.
-        self._img_raw: MatLike | None = safe_uint8_image(raw_img)
-        self._img_2d: MatLike | None = None
-        self._img_bin: MatLike | None = None
-        self._img_grayscale: MatLike | None = None
-        self._img_mut: MatLike | None = None
+        self._img_raw: np.ndarray | None = safe_uint8_image(raw_img)
+        self._img_2d: np.ndarray | None = None
+        self._img_bin: np.ndarray | None = None
+        self._img_grayscale: np.ndarray | None = None
+        self._img_mut: np.ndarray | None = None
         self._has_alpha_channel: bool = False
         self._scale_factor: float = scale_factor
         self._window_segments: list[BaseImage.ScalingKernel] = []
@@ -77,48 +77,48 @@ class BaseImage:
         self._configs = configs
 
     @property
-    def img_raw(self) -> MatLike | None:
+    def img_raw(self) -> np.ndarray | None:
         """Returns the raw image in OpenCV format."""
         return self._img_raw
 
     @property
-    def img_2d(self) -> MatLike | None:
+    def img_2d(self) -> np.ndarray | None:
         """Returns the processed image in OpenCV format."""
         return self._img_2d
 
     @img_2d.setter
-    def img_2d(self, img_2d: MatLike | None) -> None:
+    def img_2d(self, img_2d: np.ndarray | None) -> None:
         """Sets the processed image in OpenCV format."""
         self._img_2d = copy.deepcopy(img_2d)
         self._img_mut = copy.deepcopy(img_2d)
 
     @property
-    def img_bin(self) -> MatLike | None:
+    def img_bin(self) -> np.ndarray | None:
         """Returns the binary image in OpenCV format."""
         return self._img_bin
 
     @img_bin.setter
-    def img_bin(self, img_bin: MatLike | None) -> None:
+    def img_bin(self, img_bin: np.ndarray | None) -> None:
         """Sets the binary image in OpenCV format."""
         self._img_bin = img_bin
 
     @property
-    def img_grayscale(self) -> MatLike | None:
+    def img_grayscale(self) -> np.ndarray | None:
         """Returns the modified image in OpenCV format."""
         return self._img_grayscale
 
     @img_grayscale.setter
-    def img_grayscale(self, img_mod: MatLike | None) -> None:
+    def img_grayscale(self, img_mod: np.ndarray | None) -> None:
         """Sets the modified image in OpenCV format."""
         self._img_grayscale = img_mod
 
     @property
-    def img_mut(self) -> MatLike | None:
+    def img_mut(self) -> np.ndarray | None:
         """Returns the mutated image in OpenCV format."""
         return self._img_mut
 
     @img_mut.setter
-    def img_mut(self, img_mut: MatLike | None) -> None:
+    def img_mut(self, img_mut: np.ndarray | None) -> None:
         """Sets the mutated image in OpenCV format."""
         self._img_mut = img_mut
 
@@ -210,12 +210,15 @@ class BaseImage:
         """
 
         # Resize image
-        scaled_img = cv2.resize(copy.deepcopy(self.img_2d), (actual_w, actual_h))
+        img_2d = None
+        if (img := self.img_2d) is not None:
+            img_2d = img.copy()
+        scaled_img = cv2.resize(img_2d, (actual_w, actual_h))
 
         # Crop image
         self.img_2d = scaled_img[y:y + crop_height, x:x + crop_width]
 
-    def process_img(self, image: MatLike) -> MatLike | None:
+    def process_img(self, image: np.ndarray|None) -> np.ndarray | None:
         """
         Apply filters to the image.
 
@@ -224,10 +227,14 @@ class BaseImage:
         """
 
         opt_img = self._configs
+        if image is not None:
+            if len(image.shape) == 3:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
         if image is None:
             return None
 
-        def control_brightness(img: MatLike):
+        def control_brightness(img: np.ndarray):
             """
             Apply contrast and brightness filters to the image
 
@@ -266,19 +273,16 @@ class BaseImage:
             # 1, (0, 0, 255), 2)
             return img
 
-        def apply_filter(filter_type: str, img: MatLike, fil_grad_x, fil_grad_y):
+        def apply_filter(filter_type: str, img: np.ndarray, fil_grad_x, fil_grad_y):
             """"""
             if filter_type == 'scharr' or filter_type == 'sobel':
                 abs_grad_x = cv2.convertScaleAbs(fil_grad_x)
                 abs_grad_y = cv2.convertScaleAbs(fil_grad_y)
-                fil_dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+                fil_dst = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0.0)
                 fil_abs_dst = cv2.convertScaleAbs(fil_dst)
-                result_img = cv2.addWeighted(img, 0.75, fil_abs_dst, 0.25, 0)
+                result_img = cv2.addWeighted(img, 0.75, fil_abs_dst, 0.25, 0.0)
                 return cv2.convertScaleAbs(result_img)
             return img
-
-        if len(image.shape) == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Apply brightness/contrast
         grayscale_img = control_brightness(image)
@@ -358,7 +362,7 @@ class BaseImage:
 
         return grayscale_img
 
-    def binarize_img(self, image: MatLike) -> MatLike | None:
+    def binarize_img(self, image: np.ndarray|None) -> np.ndarray | None:
         """
         Convert image to binary.
 
@@ -776,7 +780,7 @@ class BaseImage:
         return run_info
 
     @staticmethod
-    def check_alpha_channel(img: MatLike|None) -> tuple[bool, str | None]:
+    def check_alpha_channel(img: np.ndarray|None) -> tuple[bool, str | None]:
         """
         A function that checks if an image has an Alpha channel or not. Only works for images with up to 4-Dimensions.
 
@@ -804,7 +808,7 @@ class BaseImage:
         return False, None
 
     @staticmethod
-    def resize_img(size: int, image: MatLike|None) -> tuple[MatLike | None, float | None]:
+    def resize_img(size: int, image: np.ndarray|None) -> tuple[np.ndarray | None, float | None]:
         """
         Resizes image to specified size.
 
@@ -826,7 +830,7 @@ class BaseImage:
         return std_img, scale_factor
 
     @staticmethod
-    def eliminate_img_colors(image: MatLike|None, hex_color: str, pixel_pos: np.ndarray,
+    def eliminate_img_colors(image: np.ndarray|None, hex_color: str, pixel_pos: np.ndarray,
                              is_white: bool) -> None | np.ndarray:
         """
         Replace specific pixels in a grayscale/LA/RGB/RGBA image based on a target hex color.
