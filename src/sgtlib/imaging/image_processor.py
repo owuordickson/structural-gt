@@ -752,7 +752,7 @@ class ImageProcessor(ProgressUpdate):
                 return sel_filter_candidate.img_configs
         return None
 
-    def build_graph_network(self):
+    def build_graph_network(self, repeat: bool=True):
         """Generates or extracts graphs of selected images."""
 
         self.update_status(ProgressData(percent=0, sender="GT", message=f"Starting graph extraction..."))
@@ -780,7 +780,8 @@ class ImageProcessor(ProgressUpdate):
                 if img_bin[0] is None:
                     self.update_status(ProgressData(type="warning", sender="GT", message=f"No filters applied! Please wait, applying image filters."))
                     self.apply_img_filters()
-                    self.build_graph_network()
+                    if repeat:
+                        self.build_graph_network(repeat=False)
                     return
 
                 # Get the selected batch's graph object and generate the graph

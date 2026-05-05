@@ -474,7 +474,7 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
         # Select a random parent population (1/3 of the population)
         q = np.random.permutation(pop_size)
         parent_pop = []
-        for i in range(pop_size//3):
+        for i in range(p_size if (p_size := pop_size//3) > 1 else 2):
             parent_pop.append(s_space.candidates[q[i]])
         return parent_pop
 
