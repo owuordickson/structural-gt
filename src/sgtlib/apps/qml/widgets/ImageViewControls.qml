@@ -86,7 +86,7 @@ Rectangle {
             icon.color: "transparent"   // important for PNGs
             ToolTip.text: "How good is the graph? Give a score..."
             ToolTip.visible: btnGraphRating.hovered
-            visible: graphController.display_graph()
+            visible: false  // graphController.display_graph()
             onClicked: drpDownRating.open()
 
             Popup {
@@ -174,7 +174,7 @@ Rectangle {
             imgViewControls.visible = imageController.display_image();
             toggleShowGiantGraph.visible = graphController.display_graph();
             btnLoad3DGraph.visible = graphController.display_graph();
-            btnGraphRating.visible = graphController.display_graph();
+            btnGraphRating.visible = false  // graphController.display_graph();
             btnSendRating.visible = imageController.enable_img_controls();
         }
 

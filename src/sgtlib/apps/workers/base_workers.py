@@ -7,7 +7,7 @@ Base worker class for executing all resource-intensive StructuralGT tasks.
 import logging
 from PySide6.QtCore import QObject, Signal
 from ...compute.graph_analyzer import GraphAnalyzer
-from ...utils.sgt_utils import AbortException, TaskResult, upload_to_dropbox, ProgressData
+from ...utils.sgt_utils import AbortException, TaskResult, ProgressData
 
 
 class BaseWorker:
@@ -230,7 +230,7 @@ class BaseWorker:
             graph_file = ntwk_p.update_graph_rating(percent_rating)
             if graph_file is not None:
                 # Upload image to DropBox App (in the future, to the server)
-                _ = upload_to_dropbox(graph_file)
+                # _ = upload_to_dropbox(graph_file)
                 self._update_progress(ProgressData(type="warning", sender="AI", message=f"Graph image uploaded to DropBox App!"))
                 is_successful = True
             ntwk_p.remove_listener(self._update_progress)

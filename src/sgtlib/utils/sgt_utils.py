@@ -11,7 +11,6 @@ import cv2
 import csv
 import base64
 import logging
-import requests
 import gsd.hoomd
 import subprocess
 import numpy as np
@@ -20,8 +19,6 @@ import networkx as nx
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 from PIL import Image
-# from cv2.typing import MatLike
-from typing import LiteralString
 from dataclasses import dataclass
 
 
@@ -277,7 +274,7 @@ def detect_cuda_and_install_cupy():
 """
 
 
-def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True) -> None:
+def write_txt_file(data: str, path: str | bytes, wr=True) -> None:
     """Description
         Writes data into a txt file.
 
@@ -586,56 +583,3 @@ def safe_uint8_image(img: np.ndarray|None) -> np.ndarray | None:
     # Normalize to 0–255
     norm_img = ((img - min_val) / (max_val - min_val)) * 255.0
     return norm_img.astype(np.uint8)
-
-
-def upload_to_dropbox(graph_file, folder="/raw_train_data"):
-    """
-    Uploads graph_file to Dropbox inside the App Folder.
-    """
-    import json
-    import dropbox
-    from cryptography.fernet import Fernet
-
-    def _load_secrets():
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        secrets_path = 'secrets.enc'
-        secrets_file = os.path.join(current_dir, secrets_path)
-        with open(secrets_file, "rb") as pass_f:
-            fernet = Fernet()
-            decrypted = fernet.decrypt(pass_f.read())
-            return json.loads(decrypted.decode())
-
-    def _get_access_token(app_key, app_secret, refresh_token):
-        """
-        Exchanges the refresh token for a short-lived access token.
-        """
-        token_url = "https://api.dropbox.com/oauth2/token"
-        data = {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-        }
-        auth = (app_key, app_secret)
-
-        response = requests.post(token_url, data=data, auth=auth)
-        response.raise_for_status()
-        return response.json()["access_token"]
-
-    secrets = _load_secrets()
-    access_token = _get_access_token(
-        secrets["APP_KEY"],
-        secrets["APP_SECRET"],
-        secrets["REFRESH_TOKEN"]
-    )
-    dbx = dropbox.Dropbox(access_token)
-
-    # Ensure the path inside the App Folder
-    dest_path = f"{folder}/{os.path.basename(graph_file)}"
-
-    with open(graph_file, "rb") as f:
-        dbx.files_upload(
-            f.read(),
-            dest_path,
-            mode=dropbox.files.WriteMode.overwrite
-        )
-
-    return dest_path
