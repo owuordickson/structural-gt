@@ -739,10 +739,10 @@ class ImageProcessor(ProgressUpdate):
                 self.update_status(ProgressData(type="error", sender="AI", message=f"{err}"))
                 return None
 
-        can_cost = np.inf
+        candidate_cost = np.inf
         if sel_filter_candidate is not None:
-            can_cost = sel_filter_candidate.cost
-        if can_cost == np.inf:
+            candidate_cost = sel_filter_candidate.cost
+        if candidate_cost == np.inf:
             self.abort = True
             self.update_status(ProgressData(type="error", sender="AI", message=f"No valid image configurations found! Try again!"))
             return None
