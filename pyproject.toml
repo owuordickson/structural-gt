@@ -49,7 +49,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-ovito = ["ovito>=3.13.0"]
+ovito = ["ovito>=3.14.0"]
 # docs = []
 
 [project.urls]
