@@ -7,7 +7,6 @@ Create a graph skeleton from an image binary
 import math
 import numpy as np
 from scipy import ndimage
-from cv2.typing import MatLike
 from skimage.morphology import binary_dilation as dilate, binary_closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
@@ -17,7 +16,7 @@ from ..utils.sgt_utils import ProgressData
 class GraphSkeleton:
     """A class that is used for estimating the width of edges and compute their weights using binerized 2D/3D images."""
 
-    def __init__(self, img_bin: MatLike, configs: dict = None, is_2d: bool = True, progress_func = None):
+    def __init__(self, img_bin: np.ndarray, configs: dict = None, is_2d: bool = True, progress_func = None):
         """
         A class that builds a skeleton graph from an image.
         The skeleton will be 3D so that it can be analyzed with OVITO
@@ -62,6 +61,9 @@ class GraphSkeleton:
         :return:
         """
 
+        if self._configs is None:
+            return
+
         # rebuilding the binary image as a boolean for skeletonizing
         self._img_bin = np.squeeze(self._img_bin)
         img_bin_int = np.asarray(self._img_bin, dtype=np.uint16)
@@ -104,7 +106,7 @@ class GraphSkeleton:
         # self.skeleton = self.skeleton.astype(int)
         self._skeleton_3d = np.asarray([self._skeleton]) if self._is_2d else self._skeleton
 
-    def assign_weights(self, edge_pts: MatLike, weight_type: str = None, weight_options: dict = None,
+    def assign_weights(self, edge_pts: np.ndarray, weight_type: str = None, weight_options: dict = None,
                        pixel_dim: float = 1, rho_dim: float = 1) -> tuple[float, float | None, float]:
         """
         Compute and assign weights to a line edge between 2 nodes.
@@ -125,24 +127,24 @@ class GraphSkeleton:
         if len(edge_pts) < 2:
             # check to see if ge is an empty or unity list, if so, set pixel counts to 0
             # Assume only 1/2 pixel exists between edge points
-            pix_width = 0.5
-            pix_angle = None
+            pix_width: float = 0.5
+            pix_angle: float|None = None
         else:
             # if ge exists, find the midpoint of the trace, and orthogonal unit vector
             pix_width, pix_angle = self._estimate_edge_width(edge_pts)
             pix_width += 0.5  # (normalization) to make it larger than empty widths
 
-        if weight_type is None:
-            wt = pix_width / 10
+        if weight_type is None or weight_options is None:
+            wt: float = pix_width / 10
         elif weight_options.get(weight_type) == weight_options.get('DIA'):
-            wt = pix_width * pixel_dim
+            wt: float = pix_width * pixel_dim
         elif weight_options.get(weight_type) == weight_options.get('AREA'):
-            wt = math.pi * (pix_width * pixel_dim * 0.5) ** 2
+            wt: float = math.pi * (pix_width * pixel_dim * 0.5) ** 2
         elif weight_options.get(weight_type) == weight_options.get('LEN') or weight_options.get(weight_type) == weight_options.get('INV_LEN'):
-            wt = pix_length * pixel_dim
+            wt: float = pix_length * pixel_dim
             if weight_options.get(weight_type) == weight_options.get('INV_LEN'):
-                wt = wt + epsilon if wt == 0 else wt
-                wt = wt ** -1
+                wt: float = wt + epsilon if wt == 0 else wt
+                wt: float = wt ** -1
         elif weight_options.get(weight_type) == weight_options.get('ANGLE'):
             """
             Edge angle centrality" in graph theory refers to a measure of an edge's importance within a network, 
@@ -154,8 +156,8 @@ class GraphSkeleton:
                2. Calculate the angles between these connected edges.
                3. Assign a higher centrality score to edges with smaller angles, indicating a more central position in the network structure.
             """
-            sym_angle = np.minimum(pix_angle, (360 - pix_angle))
-            wt = (sym_angle + epsilon) ** -1
+            sym_angle = float(np.minimum(pix_angle, (360 - pix_angle)))
+            wt: float = (sym_angle + epsilon) ** -1
         elif weight_options.get(weight_type) == weight_options.get('FIX_CON') or weight_options.get(weight_type) == weight_options.get('VAR_CON') or weight_options.get(weight_type) == weight_options.get('RES'):
             # Varies with width
             length = pix_length * pixel_dim
@@ -165,17 +167,17 @@ class GraphSkeleton:
             num = length * rho_dim
             area = area + epsilon if area == 0 else area
             num =  num + epsilon if num == 0 else num
-            wt = (num / area)  # Resistance
+            wt: float = (num / area)  # Resistance
             if weight_options.get(weight_type) == weight_options.get('VAR_CON') or weight_options.get(weight_type) == weight_options.get('FIX_CON'):
-                wt = wt ** -1  # Conductance is inverse of resistance
+                wt: float = wt ** -1  # Conductance is inverse of resistance
         else:
             raise TypeError('Invalid weight type')
         return pix_width, pix_angle, wt
 
-    def _estimate_edge_width(self, graph_edge_coords: MatLike):
+    def _estimate_edge_width(self, graph_edge_coords: np.ndarray) -> tuple[float, float | None]:
         """Estimates the edge width of a graph edge."""
 
-        def find_orthogonal(u, v):
+        def find_orthogonal(u: np.ndarray, v: np.ndarray):
             # Inputs:
             # u, v: two coordinates (x, y) or (x, y, z)
             vec = u - v  # find the vector between u and v
@@ -183,12 +185,13 @@ class GraphSkeleton:
             if np.linalg.norm(vec) == 0:
                 n = np.array([0, ] * len(u), dtype=np.float16)
             else:
-                # make n a unit vector along u,v
-                n = vec / np.linalg.norm(vec)
+                # make 'n' a unit vector along u,v
+                n = vec / float(np.linalg.norm(vec))
 
             hl = np.linalg.norm(vec) / 2  # find the half-length of the vector u,v
             ortho_arr = np.random.randn(len(u))  # take a random vector
-            ortho_arr -= ortho_arr.dot(n) * n  # make it orthogonal to vector u,v
+            # u_unit = u / np.linalg.norm(u)
+            ortho_arr -= np.dot(ortho_arr, u) * u # make it orthogonal to vector u,v
             ortho_arr /= np.linalg.norm(ortho_arr)  # make it a unit vector
 
             # Returns the coordinates of the vector u,v midpoint; the orthogonal unit vector
@@ -250,7 +253,7 @@ class GraphSkeleton:
                 i += 1
 
         # returns the length between l1 and l2, which is the width of the fiber associated with an edge, at its midpoint
-        edge_width = np.linalg.norm(l1 - l2)
+        edge_width = float(np.linalg.norm(l1 - l2))
         return edge_width, angle_deg
 
     @classmethod
@@ -278,7 +281,7 @@ class GraphSkeleton:
         ]
 
     @classmethod
-    def get_branched_points(cls, skeleton: MatLike):
+    def get_branched_points(cls, skeleton: np.ndarray):
         """Identify and retrieve the branched points from the graph skeleton."""
         skel_int = skeleton * 1
 
@@ -313,7 +316,7 @@ class GraphSkeleton:
         return br
 
     @classmethod
-    def get_end_points(cls, skeleton: MatLike):
+    def get_end_points(cls, skeleton: np.ndarray):
         """
         Identify and retrieve the end points from the graph skeleton.
         """
@@ -337,7 +340,7 @@ class GraphSkeleton:
         return ep
 
     @classmethod
-    def prune_edges(cls, skeleton: MatLike, max_num, branch_points):
+    def prune_edges(cls, skeleton: np.ndarray, max_num, branch_points):
         """Prune dangling edges around b_points. Remove iteratively end points 'size' times from the skeleton"""
         temp_skeleton = skeleton.copy()
         for i in range(0, max_num):
@@ -349,7 +352,7 @@ class GraphSkeleton:
         return temp_skeleton
 
     @classmethod
-    def merge_nodes(cls, skeleton: MatLike, node_radius):
+    def merge_nodes(cls, skeleton: np.ndarray, node_radius):
         """Merge nearby nodes in the graph skeleton."""
         # overlay a disk over each branch point and find the overlaps to combine nodes
         skeleton_int = 1 * skeleton
@@ -375,7 +378,7 @@ class GraphSkeleton:
         return temp_skeleton
 
     @classmethod
-    def remove_bubbles(cls, img_bin: MatLike, mask_elements: list):
+    def remove_bubbles(cls, img_bin: np.ndarray, mask_elements: list):
         """
         Remove bubbles from the graph skeleton.
         Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
@@ -390,7 +393,7 @@ class GraphSkeleton:
         return temp_skeleton
 
     @staticmethod
-    def point_check(img_bin: MatLike, pt_check):
+    def point_check(img_bin: np.ndarray, pt_check):
         """Checks and verifies that a point is on a graph edge."""
 
         def boundary_check(coord, w, h, d=None):

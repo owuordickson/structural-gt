@@ -12,7 +12,7 @@ import pandas as pd
 import igraph as ig
 import networkx as nx
 import matplotlib.pyplot as plt
-from cv2.typing import MatLike
+from matplotlib.collections import PathCollection
 
 from .sknw_mod import build_sknw#, build_graph
 from ..networks.graph_skeleton import GraphSkeleton
@@ -37,7 +37,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         super(FiberNetworkBuilder, self).__init__()
         self._configs: dict = load_gte_configs(cfg_file)  # graph extraction parameters and options.
         self._props: list = []
-        self._img_ntwk: MatLike | None = None
+        self._img_ntwk: np.ndarray | None = None
         self._score_rating: float = -1.0
         self._nx_giant_graph: nx.Graph | None = None
         self._nx_graph: nx.Graph | None = None
@@ -61,12 +61,12 @@ class FiberNetworkBuilder(ProgressUpdate):
         return self._props
 
     @property
-    def img_ntwk(self) -> MatLike | None:
+    def img_ntwk(self) -> np.ndarray | None:
         """Returns the processed image with the graph drawn on it."""
         return self._img_ntwk
 
     @img_ntwk.setter
-    def img_ntwk(self, img_ntwk: MatLike | None):
+    def img_ntwk(self, img_ntwk: np.ndarray | None):
         """Sets the processed image with the graph drawn on it."""
         self._img_ntwk = img_ntwk
 
@@ -115,7 +115,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         if 0 <= score <= 100.0:
             self._score_rating = score
 
-    def fit_graph(self, save_dir: str, input_data: MatLike | str = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
+    def fit_graph(self, save_dir: str, input_data: np.ndarray | str = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
         """
         Execute functions that build a NetworkX graph from the binary image.
 
@@ -138,10 +138,10 @@ class FiberNetworkBuilder(ProgressUpdate):
             self.update_status(msg_data)
             return
 
-        if type(input_data) is str:
+        if isinstance(input_data, str):
             self.update_status(ProgressData(percent=50, sender="GT", message=f"Loading graph network from file..."))
             nx_graph = self.create_graph_from_file(input_data)
-        elif type(input_data) is np.ndarray:
+        elif isinstance(input_data, np.ndarray):
             self.update_status(ProgressData(percent=50, sender="GT", message=f"Extracting the graph network..."))
             nx_graph = self.extract_graph(image_bin=input_data, is_img_2d=is_img_2d, px_size=px_width_sz, rho_val=rho_val)
         else:
@@ -179,7 +179,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         """
         self.nx_graph, self._ig_graph, self._img_ntwk = None, None, None
 
-    def verify_graph(self, nx_graph) -> bool:
+    def verify_graph(self, nx_graph: nx.Graph|None) -> bool:
         """
         Verify if the NetworkX graph is valid. If it is valid, save in object members.
 
@@ -208,7 +208,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self._nx_giant_graph = giant_graph
         return True
 
-    def extract_graph(self, image_bin: MatLike = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
+    def extract_graph(self, image_bin: np.ndarray = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
         """
         Build a skeleton from the image and use the skeleton to build a NetworkX graph.
 
@@ -260,7 +260,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                     nx_graph[s][e]['angle'] = pix_angle
                     nx_graph[s][e]['weight'] = wt
                 else:
-                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge, None)
+                    pix_width, pix_angle, wt = graph_skel.assign_weights(ge)
                     nx_graph[s][e]['width'] = pix_width
                     nx_graph[s][e]['angle'] = pix_angle
                     del nx_graph[s][e]['weight']            # delete 'weight'
@@ -317,7 +317,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             self.update_status(msg_data)
             return None
 
-    def plot_graph_network(self, image_arr: MatLike|None, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
+    def plot_graph_network(self, image_arr: np.ndarray|None, giant_only: bool = False, plot_nodes: bool = False, a4_size: bool = False) -> None | plt.Figure:
         """
         Creates a plot figure of the graph network. It draws all the edges and nodes of the graph.
 
@@ -390,13 +390,14 @@ class FiberNetworkBuilder(ProgressUpdate):
 
         # 1. Identify the subcomponents (graph segments) that make up the entire NetworkX graph.
         self.update_status(ProgressData(percent=78, sender="GT", message=f"Identifying graph subcomponents..."))
-        graph = self.nx_graph.copy()
+        graph = nx_graph.copy() if (nx_graph := self.nx_graph) is not None else nx.Graph()
+        giant_graph = nx_graph if (nx_graph := self._nx_giant_graph) is not None else nx.Graph()
         connected_components = list(nx.connected_components(graph))
         if not connected_components:  # In case the graph is empty
             connected_components = []
         sub_graphs = [graph.subgraph(c).copy() for c in connected_components]
         num_graphs = len(sub_graphs)
-        connect_ratio = self._nx_giant_graph.number_of_nodes() / graph.number_of_nodes()
+        connect_ratio = giant_graph.number_of_nodes() / graph.number_of_nodes()
 
         # 2. Populate graph properties
         self.update_status(ProgressData(percent=80, sender="GT", message=f"Storing graph properties..."))
@@ -430,8 +431,11 @@ class FiberNetworkBuilder(ProgressUpdate):
         :return:
         """
 
-        nx_graph = self.nx_graph.copy()
+        nx_graph = graph.copy() if (graph := self.nx_graph) is not None else None
         opt_gte = self._configs
+
+        if nx_graph is None:
+            return
 
         g_filename = filename + "_graph.gexf"
         edges_filename = filename + "_EdgeList.csv"
@@ -444,7 +448,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         adj_file = os.path.join(out_dir, adj_filename)
 
         if opt_gte["export_adj_mat"]["value"] == 1:
-            adj_mat = nx.adjacency_matrix(self.nx_graph).todense()
+            adj_mat = nx.adjacency_matrix(nx_graph).todense()
             np.savetxt(str(adj_file), adj_mat, delimiter=",")
 
         if opt_gte["export_edge_list"]["value"] == 1:
@@ -511,7 +515,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: MatLike|None, nx_graph: nx.Graph, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
+    def plot_graph_edges(image: np.ndarray|None, nx_graph: nx.Graph|None, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
         """
         Plot graph edges on top of the image
 
@@ -533,6 +537,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             :param node_ax: Matplotlib axes
             """
 
+            if nx_graph is None:
+                return None
+
             node_list = list(nx_graph.nodes())
             gn = np.array([nx_graph.nodes[i]['o'] for i in node_list])
 
@@ -543,7 +550,7 @@ class FiberNetworkBuilder(ProgressUpdate):
                     i += 1
 
             if node_distribution_data is not None:
-                c_set = node_ax.scatter(gn[:, coord_1], gn[:, coord_2], s=node_marker_size, c=node_distribution_data, cmap='plasma')
+                c_set: PathCollection = node_ax.scatter(gn[:, coord_1], gn[:, coord_2], s=node_marker_size, c=node_distribution_data, cmap='plasma')
                 return c_set
             else:
                 # c_set = node_ax.scatter(gn[:, coord_1], gn[:, coord_2], s=marker_size)
@@ -582,6 +589,9 @@ class FiberNetworkBuilder(ProgressUpdate):
             return float(norm_w)
 
         def get_max_dims():
+            if nx_graph is None:
+                return 0, 0
+
             xs, ys = [], []
             node_list = list(nx_graph.nodes())
             for i in node_list:
@@ -603,29 +613,32 @@ class FiberNetworkBuilder(ProgressUpdate):
             return max_x, max_y
 
         fig_group = {0: create_plt_axes(0)}
+        if nx_graph is None:
+            return fig_group
+
         if image is None:
             img_w, img_h = get_max_dims()
             if img_w is not None and img_h is not None:
                 # GSD file has image dimensions but no image data
-                image = np.ones((img_w, img_h), dtype=np.uint8) * 255
-                image = [image]
+                temp_image = np.ones((img_w, img_h), dtype=np.uint8) * 255
+                image = np.array([temp_image])
             else:
                 # Draw graph using NetworkX library
                 ax = fig_group[0].get_axes()[0]
                 if node_distribution_data is None:
                     # Planar: tries to avoid edge crossings, (working only for planar graphs?)
-                    nx.draw(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color)
+                    nx.draw(nx_graph, ax=ax, with_labels=show_node_id, node_size=node_marker_size, edge_color=edge_color) # type: ignore
                 else:
                     # Normalize values for colormap
                     v_min, v_max = min(node_distribution_data), max(node_distribution_data)
                     nx.draw(nx_graph, ax=ax, with_labels=show_node_id,
                                    node_size=node_marker_size, node_color=node_distribution_data, cmap='plasma',
-                                   vmin=v_min, vmax=v_max, edge_color=edge_color)
+                                   vmin=v_min, vmax=v_max, edge_color=edge_color) # type: ignore
                     # Add colorbar for heatmap
                     sm = plt.cm.ScalarMappable(cmap='plasma', norm=plt.Normalize(vmin=v_min, vmax=v_max))
                     sm.set_array([])  # required for colorbar
                     cbar = fig_group[0].colorbar(sm, ax=ax, orientation='vertical', label='Value')
-                    cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
+                    cbar.ax.set_position((0.82, 0.05, 0.05, 0.9))
                 return fig_group
 
         # First, extract all widths to compute min and max
@@ -674,5 +687,5 @@ class FiberNetworkBuilder(ProgressUpdate):
                 if node_color_set is not None:
                     cbar = plt_fig.colorbar(node_color_set, ax=ax, orientation='vertical', label='Value')
                     # [left, bottom, width, height]
-                    cbar.ax.set_position([0.82, 0.05, 0.05, 0.9])
+                    cbar.ax.set_position((0.82, 0.05, 0.05, 0.9))
         return fig_group

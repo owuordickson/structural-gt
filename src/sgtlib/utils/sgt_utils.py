@@ -294,7 +294,7 @@ def write_txt_file(data: str, path: LiteralString | str | bytes, wr=True) -> Non
         pass
 
 
-def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
+def write_gsd_file(f_name: str|None, skeleton: np.ndarray|None) -> None:
     """
     A function that writes graph particles to a GSD file. Visualize with OVITO software.
     Acknowledgements: Alain Kadar (https://github.com/compass-stc/StructuralGT/)
@@ -302,6 +302,9 @@ def write_gsd_file(f_name: str, skeleton: np.ndarray) -> None:
     :param f_name: gsd.hoomd file name
     :param skeleton: skimage.morphology skeleton
     """
+
+    if f_name is None or skeleton is None:
+        return
     # pos_count = int(sum(skeleton.ravel()))
     particle_positions = np.asarray(np.where(np.asarray(skeleton) != 0)).T
     with gsd.hoomd.open(name=f_name, mode="w") as f:

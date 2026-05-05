@@ -6,7 +6,6 @@ Loads default configurations from 'configs.ini' file
 
 import os
 import configparser
-from typing import Union
 from .sgt_utils import verify_path, ProgressData
 
 
@@ -67,7 +66,7 @@ def read_config_file(config_path):
 def load_img_configs(cfg_path: str = ""):
     """Image Detection settings"""
 
-    options_img: dict[str, dict[str, Union[int, float]]] = {
+    options_img: dict[str, dict[str, str|int|float]] = {
         "threshold_type": {"id": "threshold_type", "type": "binary-filter", "text": "", "visible": 1, "value": 0 },
         "global_threshold_value": {"id": "global_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 128 },
         "adaptive_local_threshold_value": {"id": "adaptive_local_threshold_value", "type": "binary-filter", "text": "", "visible": 1, "value": 11 },
@@ -145,7 +144,7 @@ def load_img_configs(cfg_path: str = ""):
 def load_gte_configs(cfg_path: str = ""):
     """Graph Extraction Settings"""
 
-    options_gte = {
+    options_gte: dict[str, dict[str, str|int|float|list[dict[str, str|int]]]] = {
         "has_weights": {"id": "has_weights", "type": "graph-extraction", "text": "Add Weights", "value": 0,
                         "items": [
                             {"id": "DIA", "text": "by diameter", "value": 1},
@@ -178,19 +177,33 @@ def load_gte_configs(cfg_path: str = ""):
     try:
 
         options_gte["merge_nearby_nodes"]["value"] = int(config.get('extraction-settings', 'merge_nearby_nodes'))
-        options_gte["merge_nearby_nodes"]["items"][0]["value"] = int(
-            config.get('extraction-settings', 'merge_node_radius_size'))
+        # options_gte["merge_nearby_nodes"]["items"][0]["value"] = int(
+        #    config.get('extraction-settings', 'merge_node_radius_size'))
+        items = options_gte["merge_nearby_nodes"]["items"]
+        if isinstance(items, list) and len(items) > 0:
+            items[0]["value"] = int(config.get('extraction-settings', 'merge_node_radius_size'))
         options_gte["prune_dangling_edges"]["value"] = int(config.get('extraction-settings', 'prune_dangling_edges'))
-        options_gte["prune_dangling_edges"]["items"][0]["value"] = int(
-            config.get('extraction-settings', 'prune_max_iteration_count'))
+        # options_gte["prune_dangling_edges"]["items"][0]["value"] = int(
+        #    config.get('extraction-settings', 'prune_max_iteration_count'))
+        items = options_gte["prune_dangling_edges"]["items"]
+        if isinstance(items, list) and len(items) > 0:
+            items[0]["value"] = int(config.get('extraction-settings', 'prune_max_iteration_count'))
         options_gte["remove_disconnected_segments"]["value"] = int(
             config.get('extraction-settings', 'remove_disconnected_segments'))
-        options_gte["remove_disconnected_segments"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
+        # options_gte["remove_disconnected_segments"]["items"][0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
+        items = options_gte["remove_disconnected_segments"]["items"]
+        if isinstance(items, list) and len(items) > 0:
+            items[0]["value"] = int(config.get('extraction-settings', 'remove_object_size'))
         options_gte["remove_self_loops"]["value"] = int(config.get('extraction-settings', 'remove_self_loops'))
         options_gte["has_weights"]["value"] = int(config.get('extraction-settings', 'add_weights'))
         weight_type = str(config.get('extraction-settings', 'weight_type'))
-        for i in range(len(options_gte["has_weights"]["items"])):
-            options_gte["has_weights"]["items"][i]["value"] = 1 if options_gte["has_weights"]["items"][i]["id"] == weight_type else 0
+        # for i in range(len(options_gte["has_weights"]["items"])):
+        #    options_gte["has_weights"]["items"][i]["value"] = 1 if options_gte["has_weights"]["items"][i]["id"] == weight_type else 0
+        items = options_gte["has_weights"]["items"]
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    item["value"] = 1 if item.get("id") == weight_type else 0
         options_gte["display_node_id"]["value"] = int(config.get('extraction-settings', 'display_node_id'))
         options_gte["add_width_thickness"]["value"] = int(config.get('extraction-settings', 'add_width_thickness'))
         options_gte["export_edge_list"]["value"] = int(config.get('extraction-settings', 'export_edge_list'))
@@ -207,7 +220,7 @@ def load_gte_configs(cfg_path: str = ""):
 def load_gtc_configs(cfg_path: str = ""):
     """Networkx Calculation Settings"""
 
-    options_gtc = {
+    options_gtc: dict[str, dict[str, str|int|float]] = {
         "display_heatmaps": {"id": "display_heatmaps", "type": "gt-metric", "text": "Plot Heatmaps", "value": 0},
         "display_degree_histogram": {"id": "display_degree_histogram", "type": "gt-metric", "text": "Average Degree", "value": 0},
         "compute_network_diameter": {"id": "compute_network_diameter", "type": "gt-metric", "text": "Network Diameter", "value": 0},
@@ -269,7 +282,7 @@ def load_gtc_configs(cfg_path: str = ""):
 def load_ai_configs(cfg_path: str = ""):
     """ML/AI model settings for finding the best image filters for graph extraction"""
 
-    options_model = {
+    options_model: dict[str, dict[str, str|int|float]] = {
         "find_filter_selections": {"id": "find_filter_selections", "type": "search-params", "text": "Selections", "tooltip": "Search for best image filter combination selections.", "visible": 1, "value": 0},
         "find_filter_values": {"id": "find_filter_values", "type": "search-params", "text": "Values", "tooltip": "Estimate image filter values.", "visible": 1, "value": 0},
         "find_brightness_contrast": {"id": "find_brightness_contrast", "type": "search-params", "text": "Brightness", "tooltip": "Estimate brightness and contrast values.", "visible": 1, "value": 0},
