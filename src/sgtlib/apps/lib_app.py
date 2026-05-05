@@ -36,7 +36,8 @@ class ExpressGT:
         self._term_app = TerminalApp(self._config_file)
 
         # 2. Verify image files
-        self._term_app.check_image_files(img_path=self._image_file, img_dir=self._image_dir, out_dir=self._output_dir)
+        img_dir = self._image_dir if self._image_dir is not None else ""
+        self._term_app.check_image_files(img_path=self._image_file, img_dir=img_dir, out_dir=self._output_dir)
 
     def process_image(self):
         """Runs StructuralGT task that applies the selected filters on the image."""
@@ -52,11 +53,12 @@ class ExpressGT:
                 TerminalApp.task_finished(status, result)
         else:
             sgt_obj = self._term_app.get_selected_sgt_obj()
-            status, result = self._term_app.task_worker.task_apply_img_filters(sgt_obj.ntwk_p)
+            ntwk_p = obj.ntwk_p if (obj := sgt_obj) is not None else None
+            status, result = self._term_app.task_worker.task_apply_img_filters(ntwk_p)
             TerminalApp.task_finished(status, result)
 
     def extract_graph(self):
-        """Run StructuralGT task to extract graph."""
+        """Run a StructuralGT task to extract the graph."""
         run_multi_gt = True if self._image_dir != "" else False
         if run_multi_gt:
             self._term_app.replicate_sgt_configs()
@@ -69,7 +71,8 @@ class ExpressGT:
                 TerminalApp.task_finished(status, result)
         else:
             sgt_obj = self._term_app.get_selected_sgt_obj()
-            status, result = self._term_app.task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            ntwk_p = obj.ntwk_p if (obj := sgt_obj) is not None else None
+            status, result = self._term_app.task_worker.task_extract_graph(ntwk_p)
             TerminalApp.task_finished(status, result)
 
     def compute_gt_descriptors(self):

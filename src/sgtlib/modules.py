@@ -45,7 +45,8 @@ from .utils.gen_plots import (
 from .utils.config_loader import (
     load_gtc_configs,
     load_gte_configs,
-    load_img_configs
+    load_img_configs,
+    load_ai_configs
 )
 
 __all__ = [
@@ -67,6 +68,7 @@ __all__ = [
     "load_gtc_configs",
     "load_gte_configs",
     "load_img_configs",
+    "load_ai_configs",
     "gsd_to_skeleton",
     "csv_to_graph",
     "csv_to_numpy",

@@ -16,6 +16,7 @@ from .project_controller import ProjectController
 
 from ..workers.persistent_worker import PersistentProcessWorker
 from ..workers.base_workers import BaseWorker
+from ...compute.graph_analyzer import GraphAnalyzer
 from ...utils.sgt_utils import TaskResult, ProgressData
 
 
@@ -155,7 +156,7 @@ class MainController(BaseController):
         """
         self._cancel_loading(worker_id)
         if not success_val:
-            if type(result) is list:
+            if isinstance(result, list):
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 self.taskTerminatedSignal.emit(success_val, result)
         else:
@@ -171,9 +172,10 @@ class MainController(BaseController):
                 if result.task_id == "Extract Graph" or result.task_id == "Image Colors":
                     sgt_obj = self.get_selected_sgt_obj()
                     if result.task_id == "Image Colors":
-                        sgt_obj.ntwk_p = result.data[0]
-                        if result.data[1] is not None:
-                            self.img_ctrl.imgColorsModel.reset_data(result.data[1])
+                        if isinstance(result.data, list):
+                            sgt_obj.ntwk_p = result.data[0]
+                            if result.data[1] is not None:
+                                self.img_ctrl.imgColorsModel.reset_data(result.data[1])
                     else:
                         sgt_obj.ntwk_p = result.data
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=result.message))
@@ -185,7 +187,8 @@ class MainController(BaseController):
                     self.taskTerminatedSignal.emit(success_val, [])
                 if result.task_id == "Compute GT":
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"GT PDF successfully generated! Check it out in 'Output Dir'."))
-                    self.update_sgt_obj(result.data)
+                    if isinstance(result.data, GraphAnalyzer):
+                        self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Sync models and refresh image
                     self.syncModelSignal.emit(sgt_obj)
@@ -196,7 +199,8 @@ class MainController(BaseController):
                                                                                  "'Output Dir'."])
                 if result.task_id == "Compute Multi GT":
                     self.handle_progress_update(ProgressData(percent=100, sender="GT", message=f"All GT PDF successfully generated! Check it out in 'Output Dir'."))
-                    self.update_sgt_obj(result.data)
+                    if isinstance(result.data, GraphAnalyzer):
+                        self.update_sgt_obj(result.data)
                     sgt_obj = self.get_selected_sgt_obj()
                     # Sync models and refresh image
                     self.syncModelSignal.emit(sgt_obj)

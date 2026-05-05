@@ -28,8 +28,11 @@ class PySideApp(QObject):
         # Ensure Qt finds the right plugins (like when bundled)
         # Adjust the path if PySide6 is installed elsewhere
         import PySide6
-        qt_plugins = os.path.join(os.path.dirname(PySide6.__file__), "plugins")
-        os.environ["QT_PLUGIN_PATH"] = qt_plugins
+        pyside_file = PySide6.__file__
+
+        if pyside_file is not None:
+            qt_plugins = os.path.join(os.path.dirname(pyside_file), "plugins")
+            os.environ["QT_PLUGIN_PATH"] = qt_plugins
 
     def _initialize_models(self):
         """Initialize the models and providers used by the QML engine."""

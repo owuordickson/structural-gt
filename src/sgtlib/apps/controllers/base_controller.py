@@ -104,7 +104,11 @@ class BaseController(QObject):
             base64 string of the image-object.
         """
         try:
-            ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            # ntwk_p = self.get_selected_sgt_obj().ntwk_p
+            ntwk_p = obj.ntwk_p if (obj := self.get_selected_sgt_obj()) is not None else None
+            if ntwk_p is None:
+                return ""
+
             if view == "original":
                 images = ntwk_p.image_3d
             elif view == "binary":
@@ -136,8 +140,10 @@ class BaseController(QObject):
         """
         Get selected images from a specific image batch.
         """
-        sgt_obj = self.get_selected_sgt_obj()
-        ntwk_p = sgt_obj.ntwk_p
+
+        ntwk_p = obj.ntwk_p if (obj := self.get_selected_sgt_obj()) is not None else None
+        if ntwk_p is None:
+            return []
         return ntwk_p.selected_images
 
     def update_sgt_obj(self, sgt_data: GraphAnalyzer|dict|None = None):
@@ -150,7 +156,7 @@ class BaseController(QObject):
             key_at_index = keys_list[self._selected_sgt_obj_index]
             self._sgt_objs[key_at_index] = sgt_data
 
-        if type(sgt_data) is dict:
+        if isinstance(sgt_data, dict):
             for key, obj in sgt_data.items():
                 self._sgt_objs[key] = obj
 

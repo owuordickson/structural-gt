@@ -39,7 +39,7 @@ class CurveFitModels:
             return {"name": name, "ks": np.nan, "p": np.nan, "error": str(e)}
 
     @staticmethod
-    def power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def power_law(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a power-law model to the given data and returns the fitted curve along with the model parameters.
 
@@ -64,6 +64,9 @@ class CurveFitModels:
             - Uses `scipy.optimize.curve_fit` to estimate model parameters.
             - Initial parameter guesses are set to [1.0, 1.0].
         """
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"a": 0.0, "k": 0.0}
+
         def fit_function(x: np.ndarray, a: float, k: float) -> np.ndarray:
             """
             Power-law model: y = a * x^(-k)
@@ -84,7 +87,7 @@ class CurveFitModels:
             return None, {"a": 0.0, "k": 0.0}
 
     @staticmethod
-    def stretched_power_law(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def stretched_power_law(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a stretched power-law (Weibull-tail power-law) model to the given data and returns
         the fitted curve along with the model parameters.
@@ -113,6 +116,9 @@ class CurveFitModels:
             - Initial parameter guesses are set to [1.0, 1.0, 1.0, 1.0].
         """
 
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"a": 0.0, "k": 0.0, "x_c": 0.0, "beta": 0.0}
+
         def fit_function(x: np.ndarray, a: float, k: float, x_c: float, beta: float) -> np.ndarray:
             """
             Stretched power-law model: y = a * x^(-k) * exp(-(x / x_c)^beta)
@@ -134,7 +140,7 @@ class CurveFitModels:
             return None, {"a": 0.0, "k": 0.0, "x_c": 0.0, "beta": 0.0}
 
     @staticmethod
-    def lognormal(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def lognormal(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a log-normal model to the data and returns the fitted curve and parameters.
 
@@ -156,6 +162,10 @@ class CurveFitModels:
                 - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
                 - **params** (dict): {"mu": float, "sigma": float, "a": float}
         """
+
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
+
         def fit_function(x: np.ndarray, mu: float, sigma: float, a: float) -> np.ndarray:
             """
             Log-normal model:
@@ -178,7 +188,7 @@ class CurveFitModels:
             return None, {"mu": 0.0, "sigma": 0.0, "a": 0.0}
 
     @staticmethod
-    def exponential(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def exponential(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits an exponential model to the data and returns the fitted curve and parameters.
 
@@ -200,6 +210,10 @@ class CurveFitModels:
                 - **y_fit** (np.ndarray): Predicted y-values using best-fit parameters.
                 - **params** (dict): {"a": float, "lambda": float, "c": float}
         """
+
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"a": 0.0, "lambda": 0.0, "c": 0.0}
+
         def fit_function(x: np.ndarray, a: float, lamda: float, c: float) -> np.ndarray:
             return a * np.exp(lamda * x) + c
 
@@ -217,7 +231,7 @@ class CurveFitModels:
             return None, {"a": 0.0, "lambda": 0.0, "c": 0.0}
 
     @staticmethod
-    def gamma(x_avg, y_avg, x_fit) -> tuple[np.ndarray, dict] | tuple[None, dict]:
+    def gamma(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a Gamma distribution model to the given (x_avg, y_avg) data.
 
@@ -242,6 +256,9 @@ class CurveFitModels:
                 y_fit (np.ndarray): Best-fit curve values
                 params (dict): Dictionary containing fitted parameters {a, k, theta}
         """
+
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
 
         def fit_function(x: np.ndarray, a: float, alpha: float, theta: float) -> np.ndarray:
             """
@@ -276,7 +293,7 @@ class CurveFitModels:
             return None, {"a": 0.0, "k": 0.0, "theta": 0.0}
 
     @staticmethod
-    def linear(x_avg: np.ndarray, y_avg: np.ndarray, x_fit: np.ndarray) -> tuple[np.ndarray, dict]:
+    def linear(x_avg: np.ndarray|None, y_avg: np.ndarray|None, x_fit: np.ndarray|None) -> tuple[np.ndarray, dict] | tuple[None, dict]:
         """
         Fits a linear (first-degree polynomial) model to the data.
 
@@ -301,6 +318,9 @@ class CurveFitModels:
                 - params (dict): {"m": float, "b": float}
         """
 
+        if x_avg is None or y_avg is None or x_fit is None:
+            return None, {"m": 0.0, "b": 0.0}
+
         def fit_function(x, m, b):
             return m * x + b
 
@@ -323,7 +343,8 @@ class QQPlots:
         """"""
         # 1. 95% confidence band (approximate)
         # For n > 30, the 95% confidence envelope around the line y=x can be approximated as: ± 1.36 / sqrt(n)
-        band = 1.36 / np.sqrt(len(empirical_q))
+        n = len(empirical_q) if isinstance(empirical_q, np.ndarray) else 1
+        band = 1.36 / np.sqrt(n) if n > 0 else 0.0
         upper_band = theoretical_q + band * theoretical_q if upper_band is None else upper_band
         lower_band = theoretical_q - band * theoretical_q if lower_band is None else lower_band
 
@@ -500,13 +521,13 @@ class QQPlots:
             if x_min is None:
                 x_min = x.min()
 
-            def neg_log_likelihood(params):
+            def neg_log_likelihood(params) -> float:
                 alpha, lamb_da = params
                 if alpha <= 1 or lamb_da <= 0:
                     return np.inf
                 pdf_vals = stretched_powerlaw_pdf(x, alpha, lamb_da, x_min)
-                pdf_vals = np.clip(pdf_vals, 1e-12, None)
-                return -np.sum(np.log(pdf_vals))
+                pdf_vals: np.ndarray = np.clip(pdf_vals, 1e-12, None)
+                return np.sum(np.log(pdf_vals)) * -1
 
             result = sp.optimize.minimize(neg_log_likelihood, x0=[2.0, 0.1], bounds=[(1.01, 10), (1e-6, 10)])
             alpha_fit, lambda_fit = result.x
@@ -587,54 +608,6 @@ class QQPlots:
 
         return f"Conditional Fit ({model_name})"
 
-
-class StretchedPowerlawGen(sp.stats.rv_continuous):
-    """
-    Stretched Power-law distribution:
-    f(x; a, x_c, beta) = C * x^(-a) * exp(-(x / x_c)^beta)
-    """
-
-    def _pdf(self, x, a, x_c, beta):
-        # Unnormalized PDF
-        #print(f"x: {x}, a: {a}, x_c: {x_c}, beta: {beta}")
-        # Convert to array and enforce positivity
-        x = np.asarray(x)
-        pdf = np.zeros_like(x, dtype=float)
-
-        # Only define for x > 0
-        valid = x > 0
-        x_valid = x[valid]
-
-        if len(x_valid) == 0:
-            return pdf
-
-        # Compute unnormalized pdf
-        unnormalized_pdf = x_valid ** (-a) * np.exp(-(x_valid / x_c) ** beta)
-        # return unnormalized_pdf
-
-        # Numerical normalization constant (approximation)
-        norm_const = np.trapz(unnormalized_pdf, x_valid)
-        if norm_const <= 0 or np.isnan(norm_const):
-            norm_const = 1.0  # fallback to avoid division by zero
-
-        pdf[valid] = unnormalized_pdf / norm_const
-        return pdf
-
-    def _cdf(self, x, a, x_c, beta):
-        # numerical CDF
-        x = np.asarray(x)
-        cdf = np.zeros_like(x)
-        valid = x > 0
-        x_valid = np.linspace(1e-8, x[valid].max(), 1000)
-        pdf = self._pdf(x_valid, a, x_c, beta)
-        cum = np.cumsum(pdf)
-        cum /= cum[-1]
-        cdf_func = np.interp(x[valid], x_valid, cum)
-        cdf[valid] = cdf_func
-        return cdf
-
-    def _argcheck(self, a, x_c, beta):
-        return (a > 0) & (x_c > 0) & (beta > 0)
 
 
 def sgt_excel_to_dataframe(excel_dir_path: str, allowed_ext: str = ".xlsx") -> dict[str, pd.DataFrame] | None:
@@ -838,7 +811,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     df_std = df_sgt.pivot(index='Material', columns='parameter', values='Std. Dev.')
 
     # Ensure consistent parameter order
-    df_avg = df_avg[parameters]
+    df_avg: pd.DataFrame = df_avg[parameters]
     df_std = df_std[parameters]
 
     # Spider plot setup
@@ -852,11 +825,11 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     # Determine max_val based on data
     all_values = []
     for key in labels.keys():
-        values = df_avg.loc[key].tolist()
-        errors = df_std.loc[key].tolist()
+        values = df_avg.loc[key].values.tolist()
+        errors = df_std.loc[key].values.tolist()
         all_values.extend(np.array(values) + np.array(errors))
     max_val = max(all_values)
-    min_val = min(-max_val//2, min(all_values))
+    min_val: int = min(-max_val//2, min(all_values))
     levels = compute_grid_scale()
 
     # Draw grid lines (polygon grid)
@@ -982,7 +955,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
         """
 
         # Define distributions to test
-        stretched_powerlaw = StretchedPowerlawGen(a=0.01, name='stretched_powerlaw')
+        # stretched_powerlaw = StretchedPowerlawGen(a=0.01, name='stretched_powerlaw')
         distributions = {
             "Power Law": stats.powerlaw,
             "Exponential": stats.expon,
@@ -1012,7 +985,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
                 fmt_text += f"  {row['name']} → KS={row['ks']:.3f}, p={row['p']:.3f}\n"
         return fmt_text
 
-    def gen_qq_plot(model_name) -> str:
+    def gen_qq_plot(model_name: str|None) -> str:
         """
         Generate Q–Q or conditional plots for different models.
 
@@ -1023,7 +996,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             str: Axis title (model name or QQ plot type).
         """
 
-        if fit_func is None:
+        if fit_func is None or model_name is None:
             return ""
 
         # Map each model to its respective QQ function
@@ -1046,6 +1019,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
             ax_title = qq_funcs[model_name](y_avg, ax, material_name, is_left)
         else:
             ax_title = QQPlots.conditional_plots(x_avg, y_avg, ax, material_name, model_name, is_left)
+            ax_title = "" if ax_title is None else ax_title
 
         return ax_title
 

@@ -16,7 +16,7 @@ class CheckBoxModel(QAbstractListModel):
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
-        self.list_data = data
+        self.list_data: list = data
 
     def rowCount(self, parent=None):
         return len(self.list_data)

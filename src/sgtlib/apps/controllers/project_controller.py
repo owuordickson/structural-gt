@@ -10,12 +10,12 @@ import requests
 import numpy as np
 from pathlib import Path
 from packaging import version
-from typing import TYPE_CHECKING, Optional
+# from typing import TYPE_CHECKING, Optional
 from PySide6.QtCore import Signal, Slot, QObject
 
-if TYPE_CHECKING:
+# if TYPE_CHECKING:
     # False at run time, only for a type-checker
-    from _typeshed import SupportsWrite
+    # from _typeshed import SupportsWrite
 
 from ..models.table_model import TableModel
 from ... import __version__, __title__
@@ -57,7 +57,8 @@ class ProjectController(QObject):
             return False
         try:
             file_path = self._project_data["file_path"]
-            with open(file_path, 'wb') as project_file:  # type: Optional[SupportsWrite[bytes]]
+            with open(file_path, 'wb') as project_file:
+
                 pickle.dump(self._ctrl.sgt_objs, project_file)
             return True
         except Exception as err:
@@ -78,7 +79,8 @@ class ProjectController(QObject):
             item_data.append([key])  # Store the key
             sgt_obj = self._ctrl.sgt_objs[key]
             if sgt_obj.ntwk_p.selected_batch.is_graph_only:
-                empty_cv = np.ones((256, 256), dtype=np.uint8) * 255
+                empty_cv: np.ndarray = np.ones((256, 256), dtype=np.uint8)
+                empty_cv *= 255
                 img_cv = empty_cv if sgt_obj.ntwk_p.graph_obj.img_ntwk is None else sgt_obj.ntwk_p.graph_obj.img_ntwk
             else:
                 img_cv = sgt_obj.ntwk_p.image_2d

@@ -1,3 +1,4 @@
+import numpy as np
 from PIL import Image, ImageQt  # Import ImageQt for conversion
 from PySide6.QtGui import QPixmap
 from PySide6.QtQuick import QQuickImageProvider
@@ -13,7 +14,7 @@ class ImageProvider(QQuickImageProvider):
 
     def handle_change_image(self):
         if len(self._main_ctrl.sgt_objs) > 0:
-            img_cv = None
+            img_cv: np.ndarray|None = None
             sgt_obj = self._main_ctrl.get_selected_sgt_obj()
             ntwk_p = sgt_obj.ntwk_p
             sel_img_batch = ntwk_p.selected_batch

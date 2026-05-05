@@ -7,8 +7,6 @@ Processes of an image by applying filters to it and converting it to a binary ve
 import cv2
 import copy
 import numpy as np
-from typing import cast
-# from cv2.typing import MatLike
 from dataclasses import dataclass
 from skimage.morphology import disk, skeletonize
 from matplotlib import pyplot as plt
@@ -772,7 +770,7 @@ class BaseImage:
         run_info += "\n\n"
 
         if self.img_raw is not None:
-            img_shape = cast(np.ndarray, self.img_2d) if self.img_2d is not None else [0, 0]
+            img_shape = img.shape if (img := self.img_2d) is not None else [0, 0]
             run_info += "***Image Scale***\n"
             run_info += f"Size = {img_shape[0]} x {img_shape[1]} px"
             run_info += f" || Scale Factor = {self._scale_factor}"

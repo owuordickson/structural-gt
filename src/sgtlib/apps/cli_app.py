@@ -36,7 +36,7 @@ class TerminalApp(BaseController):
 
     def check_image_files(self, img_path: str="", img_dir: str = "", out_dir: str = ""):
         """"""
-        # 1. Verify config file
+        # 1. Verify the config file
         config_file_ok = strict_read_config_file(self._config_file, self.update_progress)
         if not config_file_ok:
             sys.exit('Usage: StructuralGT-cli -f datasets/InVitroBioFilm.png -c sgt_configs.ini -t 2 -o results/')
@@ -62,7 +62,7 @@ class TerminalApp(BaseController):
 
         """
         if not success_val:
-            if type(result) is list:
+            if isinstance(result, list):
                 logging.info(result[0] + ": " + result[1], extra={'user': 'SGT Logs'})
                 TerminalApp.update_progress(ProgressData(type="info", sender="GT", message=f"{result[0]}: {result[1]}"))
         else:
@@ -166,12 +166,13 @@ class TerminalApp(BaseController):
         # 2. Verify image files
         term_app.check_image_files(img_path=cfg.file_path, img_dir=cfg.img_dir_path, out_dir=cfg.output_dir)
 
-        # 3. Execute specific task
+        # 3. Execute the specific task
         if cfg.run_task == 0:
             pass
         elif cfg.run_task == 1:
             sgt_obj = term_app.get_selected_sgt_obj()
-            status, result = term_app._task_worker.task_extract_graph(sgt_obj.ntwk_p)
+            ntwk_p = obj.ntwk_p if (obj := sgt_obj) is not None else None
+            status, result = term_app._task_worker.task_extract_graph(ntwk_p)
             TerminalApp.task_finished(status, result)
         elif cfg.run_task == 2:
             run_multi_gt = True if cfg.img_dir_path != "" else False

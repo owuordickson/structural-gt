@@ -21,15 +21,23 @@ def _worker_loop(job_queue, result_queue):
 
         try:
             # --- Attach result_queue to the object that will call _update_progress ---
-            # If func is a bound method, its instance is func.__self__
+            # 1. Identify if the function is a bound method (belongs to an instance)
             owner = getattr(func, "__self__", None)
-            if owner is not None and hasattr(owner, "progress_queue"):
-                # attach the subprocess's result_queue to the unpickled instance
-                owner.attach_progress_queue(result_queue)
 
-                # --- Run the job ---
-                success, data = func(*args)
-                result_queue.put((success, data))
+            if owner is not None:
+                # 2. Check for the specific method rather than just the variable
+                attach_method = getattr(owner, "attach_progress_queue", None)
+
+                if callable(attach_method):
+                    # 3. Safely re-attach the queue to the unpickled instance
+                    if hasattr(owner, "progress_queue"):
+                        # attach the subprocess's result_queue to the unpickled instance
+                        # owner.attach_progress_queue(result_queue)
+                        attach_method(result_queue)
+
+                        # --- Run the job ---
+                        success, data = func(*args)
+                        result_queue.put((success, data))
         except Exception as e:
             # result_queue.put((False, str(e)))
             print(f"Worker Loop Exception: {e}")
