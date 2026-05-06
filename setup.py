@@ -59,7 +59,8 @@ if platform.system() == "Linux":
 
 # Setup configuration
 setup(
-    #ext_modules=ext_modules,
-    #cmdclass={"build_ext": BuildExt},  # Use the custom build class
-    # **extra_options
+    ## (UNCOMMENT TO USE)
+    # ext_modules=ext_modules,
+    #cmdclass={"build_ext": BuildExt}, # Use the custom build class
+    ## **extra_options
 )

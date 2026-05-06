@@ -825,8 +825,14 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     # Determine max_val based on data
     all_values = []
     for key in labels.keys():
-        values = df_avg.loc[key].values.tolist()
-        errors = df_std.loc[key].values.tolist()
+        vals = df_avg.loc[key]
+        err = df_std.loc[key]
+
+        # Convert to numpy arrays (handles both scalars and sequences)
+        values = np.atleast_1d(vals)
+        errors = np.atleast_1d(err)
+        # values = df_avg.loc[key].tolist()
+        # errors = df_std.loc[key].tolist()
         all_values.extend(np.array(values) + np.array(errors))
     max_val = max(all_values)
     min_val: int = min(-max_val//2, min(all_values))
@@ -849,8 +855,12 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
     # Plot each material
     for key, material_name in labels.items():
-        values = np.array(df_avg.loc[key].tolist())
-        errors = np.array(df_std.loc[key].tolist())
+        vals = df_avg.loc[key]
+        err = df_std.loc[key]
+        values = np.atleast_1d(vals)
+        errors = np.atleast_1d(err)
+        # values = np.array(df_avg.loc[key].tolist())
+        # errors = np.array(df_std.loc[key].tolist())
         values = shift_value(values)
 
         # Convert to cartesian coordinates
@@ -1067,8 +1077,8 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         # Plot Curves fitted to specific distributions
         if ax_3 is not None:
-            x_avg = df_sample['x-avg'].to_numpy()
-            y_avg = df_sample['y-avg'].to_numpy()
+            x_avg = pd.Series(df_sample['x-avg']).to_numpy()
+            y_avg = pd.Series(df_sample['y-avg']).to_numpy()
             x_fit = np.linspace(min(x_avg), max(max(x_avg), 10000), 100)
             y_fit, axis_label = None, ""
             if fit_func == "lognorm":

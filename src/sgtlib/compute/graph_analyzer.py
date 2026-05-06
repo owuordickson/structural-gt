@@ -7,7 +7,6 @@ import os
 import math
 import time
 import datetime
-import itertools
 import logging
 import multiprocessing
 import numpy as np
@@ -684,67 +683,6 @@ class GraphAnalyzer(ProgressUpdate):
         :param is_graph_connected: Boolean
         """
 
-        def nx_average_node_connectivity(flow_func=None):
-            r"""Returns the average connectivity of a graph G.
-
-            The average connectivity `\bar{\kappa}` of a graph G is the average
-            of local node connectivity over all pairs of the nx_graph nodes.
-
-            https://networkx.org/documentation/stable/_modules/networkx/algorithms/connectivity/connectivity.html#average_node_connectivity
-
-            Parameters
-            ----------
-            :param flow_func : Function
-                A function for computing the maximum flow between a pair of nodes.
-                The function has to accept at least three parameters: a Digraph,
-                a source node, and a target node. And return a residual network
-                that follows NetworkX conventions (see: meth:`maximum_flow` for
-                details). If flow_func is None, the default maximum flow function
-                (: meth:`edmonds_karp`) is used. See :meth:`local_node_connectivity`
-                for details. The choice of the default function may change from
-                version to version and should not be relied on. Default value: None.
-
-            Returns
-            -------
-            K : float
-                Average node connectivity
-
-            References
-            ----------
-            [1]  Beineke, L., O. Oellermann, and r_network. Pippert (2002). The average
-                    connectivity of a graph. Discrete mathematics 252(1-3), 31-45.
-                    https://www.sciencedirect.com/science/article/pii/S0012365X01001807
-
-            """
-
-            # if nx_graph.is_directed():
-            #    iter_func = itertools.permutations
-            # else:
-            iter_func = itertools.combinations
-
-            # Reuse the auxiliary digraph and the residual network
-            a_digraph = nx.algorithms.connectivity.build_auxiliary_node_connectivity(nx_graph)
-            r_network = nx.algorithms.flow.build_residual_network(a_digraph, "capacity")
-            # kwargs = {"flow_func": flow_func, "auxiliary": a_digraph, "residual": r_network}
-
-            total, count = 0, 0
-            with multiprocessing.Pool() as pool:
-                items = [(nx_graph, u, v, flow_func, a_digraph, r_network) for u, v in iter_func(nx_graph, 2)]
-                async_result = pool.starmap_async(nx.algorithms.connectivity.local_node_connectivity, items)
-                for n in async_result.get():
-                    total += n
-                    count += 1
-                    if self.abort:
-                        self.update_status(ProgressData(type="error", sender="GT", message=f"Task aborted."))
-                        pool.terminate()
-                        pool.join()
-                        return 0
-                    if n is not None:
-                        total += n
-                        count += 1
-            anc = total / count if count > 0 else 0
-            return anc
-
         def igraph_average_node_connectivity():
             r"""
             Returns the average connectivity of a graph G.
@@ -807,10 +745,7 @@ class GraphAnalyzer(ProgressUpdate):
             else:
                 # Use NetworkX Lib in Python
                 self.update_status(ProgressData(percent=15, sender="GT", message=f"Using NetworkX library..."))
-                if self._allow_mp:  # Multi-processing
-                    avg_node_con = nx_average_node_connectivity()
-                else:
-                    avg_node_con = average_node_connectivity(nx_graph)
+                avg_node_con = average_node_connectivity(nx_graph)
             avg_node_con = round(avg_node_con, 5)
         else:
             avg_node_con = np.nan
