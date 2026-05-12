@@ -671,6 +671,93 @@ class BaseImage:
                 sparse or too dense.
         """
 
+        def connectivity_and_neighbor_stats(binary_img):
+            """
+            Compute average connectivity number A(P1)
+            and average neighbor count B(P1)
+            for skeleton pixels only.
+
+            Parameters
+            ----------
+            binary_img : np.ndarray
+                Binary image (0/1 or bool)
+
+            Returns
+            -------
+            float
+            """
+
+            # Ensure binary
+            binary_img = (binary_img > 0).astype(np.uint8)
+
+            # Skeletonize
+            skel = skeletonize(binary_img).astype(np.uint8)
+
+            h, w = skel.shape
+
+            a_vals = []
+            b_vals = []
+
+            # Clockwise neighbors
+            # P2 P3 P4
+            # P9 P1 P5
+            # P8 P7 P6
+
+            neighbor_offsets = [
+                (-1, 0),  # P2
+                (-1, 1),  # P3
+                (0, 1),  # P4
+                (1, 1),  # P5
+                (1, 0),  # P6
+                (1, -1),  # P7
+                (0, -1),  # P8
+                (-1, -1),  # P9
+            ]
+
+            for y in range(1, h - 1):
+                for x in range(1, w - 1):
+
+                    if skel[y, x] == 0:
+                        continue
+
+                    # Get neighbors
+                    neighbors = [
+                        skel[y + dy, x + dx]
+                        for dy, dx in neighbor_offsets
+                    ]
+
+                    # ------------------------------------------------
+                    # B(P1): number of foreground neighbors
+                    # ------------------------------------------------
+                    B = sum(neighbors)
+
+                    # ------------------------------------------------
+                    # A(P1): number of 0->1 transitions
+                    # ------------------------------------------------
+                    transitions = 0
+
+                    for i in range(8):
+                        curr = neighbors[i]
+                        nxt = neighbors[(i + 1) % 8]
+
+                        if curr == 0 and nxt == 1:
+                            transitions += 1
+
+                    A = transitions
+
+                    a_vals.append(A)
+                    b_vals.append(B)
+
+            avg_connectivity_number = np.mean(a_vals)
+            std_connectivity = np.std(a_vals)
+
+            avg_neighbor_count = np.mean(b_vals)
+            std_neighbor = np.std(b_vals)
+            # num_skeleton_pixels = len(a_vals)
+
+            connectivity_cost: float = abs(avg_connectivity_number - 2) + abs(avg_neighbor_count - 2) + float(std_connectivity) + float(std_neighbor)
+            return connectivity_cost
+
         if self.img_bin is None or self.img_grayscale is None:
             return np.inf
 
@@ -693,8 +780,8 @@ class BaseImage:
         # --- 4. Thickness Penalty ---
 
         # --- 5. Final Cost Calculation ---
-        cost = 0
-        return float(cost)
+        cost: float = connectivity_and_neighbor_stats(binary_img=bin_img)
+        return cost
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:
         """

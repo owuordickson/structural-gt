@@ -20,13 +20,14 @@ class AIController(QObject):
     def __init__(self, controller_obj, parent: QObject = None):
         super().__init__(parent)
         self._ctrl = controller_obj
-        self._ai_mode_active = False
+        # self._ai_mode_active = False
         self._wait_flag_ai = False
 
         # Create Models
         self.aiSearchModel = CheckBoxModel([])
         # Attach listener for syncing models
         self._ctrl.syncModelSignal.connect(self.synchronize_ai_models)
+        self._ctrl.imageChangedSignal.connect(self._aiModeChanged.emit)
 
     @Property(bool, notify=_aiBusyChanged)
     def ai_busy(self):
@@ -34,7 +35,13 @@ class AIController(QObject):
 
     @Property(bool, notify=_aiModeChanged)
     def ai_mode_active(self):
-        return self._ai_mode_active
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
+        # return self._ai_mode_active
+        if sgt_obj is None:
+            return False
+        if sgt_obj.ntwk_p is None:
+            return False
+        return sgt_obj.ntwk_p.ai_mode_active if sgt_obj.ntwk_p.ai_mode_active is not None else False
 
     def start_task(self):
         """Activate the AI running (or busy) flag."""
@@ -72,16 +79,32 @@ class AIController(QObject):
     @Slot(bool)
     def toggle_ai_mode(self, activate):
         """Toggle AI mode."""
-        self._ai_mode_active = activate
+        # self._ai_mode_active = activate
         # if not activate:
         #    self._stop_ai_search()
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return
+        if sgt_obj.ntwk_p is None:
+            return
+        if sgt_obj.ntwk_p.ai_mode_active is None:
+            return
+        sgt_obj.ntwk_p.ai_mode_active = activate
         self._aiModeChanged.emit()
 
     @Slot()
     def run_ai_filter_search(self):
         """Run AI filter search on the selected SGT object."""
-        if not self._ai_mode_active:
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
+        if sgt_obj is None:
             return
+        if (sgt_obj.ntwk_p is None) or (not sgt_obj.ntwk_p.ai_mode_active):
+            return
+
+        if sgt_obj.ntwk_p .filter_space is not None:
+            if sgt_obj.ntwk_p .filter_space.best_candidate.position not in sgt_obj.ntwk_p .filter_space.ignore_candidates:
+                # Filters already selected and values estimated
+                return
 
         if self._wait_flag_ai:
             logging.info("Another AI task is running!", extra={'user': 'SGT Logs'})

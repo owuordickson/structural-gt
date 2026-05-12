@@ -56,6 +56,7 @@ class ImageProcessor(ProgressUpdate):
         selected_images_positions: set[int]
         selected_frame_pos: int
         view_options: list[dict]
+        ai_mode_active: bool
 
     def __init__(self, img_path, out_dir, cfg_file="", graph_file="", auto_scale=True):
         """
@@ -234,6 +235,16 @@ class ImageProcessor(ProgressUpdate):
         """Returns the 3D version of the mutated image as a list of OpenCV arrays."""
         mut_images = [obj.img_mut for obj in self.image_obj_3d]
         return mut_images
+
+    @property
+    def ai_mode_active(self) -> bool:
+        """Returns whether the AI mode is active."""
+        return self.selected_batch.ai_mode_active
+
+    @ai_mode_active.setter
+    def ai_mode_active(self, value: bool):
+        """Sets the AI mode active state."""
+        self.selected_batch.ai_mode_active = value
 
     def _load_img_from_file(self, file: list | str):
         """
@@ -1252,6 +1263,7 @@ class ImageProcessor(ProgressUpdate):
                 selected_images_positions=set(img_indices),
                 selected_frame_pos= 0,
                 view_options=views,
+                ai_mode_active=False,
             )
             img_info_list.append(img_batch)
             #break # REMOVE TO ALLOW 3D
@@ -1364,8 +1376,9 @@ class ImageProcessor(ProgressUpdate):
             scale_factor=0.0,
             scaling_options=[],
             selected_images_positions=set(),
-            selected_frame_pos= 0,
+            selected_frame_pos=0,
             view_options=views,
+            ai_mode_active=False
         )
         imp_obj._image_batches = [img_batch]
         return imp_obj, graph_file
