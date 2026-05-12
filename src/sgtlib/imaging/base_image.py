@@ -525,7 +525,7 @@ class BaseImage:
         eval_hist = np.bincount(masked_grayscale, minlength=256)
         return eval_hist
 
-    def evaluate_img_binary(self, alpha=0.6, beta=0.25, gamma=0.15, weight_b0=10.0, weight_b1=5.0, ) -> float:
+    def evaluate_img_binary_old(self, alpha=0.6, beta=0.25, gamma=0.15, weight_b0=10.0, weight_b1=5.0) -> float:
         """
         Evaluate the quality of a binary mask for graph extraction using a multi-objective,
         unsupervised fitness function. The objective is designed to guide optimization
@@ -647,6 +647,53 @@ class BaseImage:
                 beta * alignment_cost +
                 gamma * thickness_penalty
         )
+        return float(cost)
+
+    def evaluate_img_binary(self ) -> float:
+        """
+        Evaluate the quality of a binary mask for graph extraction using a multi-objective,
+        unsupervised fitness function. The objective is designed to guide optimization
+        algorithms (e.g., Genetic Algorithms, Hill Climbing) toward masks that produce
+        structurally meaningful and topologically coherent graphs.
+
+        The fitness function integrates three complementary criteria:
+
+        Args:
+
+
+        Returns:
+            float:
+                Scalar fitness cost (to be minimized). Lower values correspond to
+                binary masks that are topologically simple, well-aligned with image
+                structures, and morphologically suitable for graph extraction.
+
+                Returns a large penalty (1e6) for trivial masks that are either too
+                sparse or too dense.
+        """
+
+        if self.img_bin is None or self.img_grayscale is None:
+            return np.inf
+
+        # --- 1. Prepare Data & Check for all-black or all-white masks ---
+        # img_gray = np.asanyarray(self.img_grayscale, dtype=np.float32)
+        bin_img = np.asanyarray(self.img_bin, dtype=np.uint8)
+
+        white_pixel_count = np.count_nonzero(bin_img)
+        total_pixels = bin_img.size
+        density = white_pixel_count / total_pixels
+
+        # Reject empty or saturated masks (all-black or all-white)
+        if density <= 0.005 or density >= 0.95:
+            return 1e6
+
+        # --- 2. Topological Penalty (Betti Numbers) ---
+
+        # --- 3. Edge Alignment Cost (Normalized Gradient) ---
+
+        # --- 4. Thickness Penalty ---
+
+        # --- 5. Final Cost Calculation ---
+        cost = 0
         return float(cost)
 
     def plot_img_histogram(self, axes=None, curr_view="") -> plt.Figure:

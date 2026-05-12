@@ -523,7 +523,6 @@ class ImageProcessor(ProgressUpdate):
                 filter_space.ignore_candidates.add(sel_filter_candidate.position)
                 img_obj.reset_img_configs(self._config_file)
 
-
         if opt_model["find_filter_values"]["value"] == 1:
             val_space = None
             if sel_filter_candidate is not None:
@@ -717,8 +716,6 @@ class ImageProcessor(ProgressUpdate):
                 return None
 
         # 3. Run the Genetic Algorithm to find the best "image filter values"
-
-        # sel_filter_candidate = filter_space.best_candidate
         sel_filter_candidate = s_can.best_candidate if (s_can := filter_space) is not None else None
         if opt_model["find_filter_values"]["value"] == 1:
             self.update_status(ProgressData(percent=65, sender="AI", message=f"Searching for filter values..."))
