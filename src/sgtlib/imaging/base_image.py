@@ -649,7 +649,7 @@ class BaseImage:
         )
         return float(cost)
 
-    def evaluate_img_binary(self ) -> float:
+    def evaluate_img_binary(self) -> float:
         """
         Evaluate the quality of a binary mask for graph extraction using a multi-objective,
         unsupervised fitness function. The objective is designed to guide optimization
