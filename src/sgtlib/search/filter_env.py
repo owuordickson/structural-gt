@@ -394,6 +394,22 @@ class FilterSearchSpace:
         :return: The cost of the candidate as a float. If the candidate is invalid, return np.inf.
         """
 
+        def evaluate_img_density():
+            """"""
+            img_bin = img_obj.img_bin
+            if img_bin is None:
+                return np.inf
+
+            white_pixel_count = np.count_nonzero(img_bin)
+            total_pixels = img_bin.size
+            density = white_pixel_count / total_pixels
+
+            # Reject empty or saturated masks (all-black or all-white)
+            if density <= 0.005 or density >= 0.95:
+                return 1e9
+            else:
+                return 1
+
         def compute_num_filters():
             """Compute the number of filters in the image filter configurations."""
             # 1. Get the selected
@@ -439,11 +455,12 @@ class FilterSearchSpace:
             w1 = 10.0
             w2 = 0.1
 
-            filter_cost = img_obj.evaluate_img_binary()
+            density_cost = evaluate_img_density()
             num_filters = compute_num_filters()
+            thinning_cost = img_obj.evaluate_img_binary()
 
-            eval_cost = (w1*num_filters) + (w2*filter_cost)
-            print(f"Filter-Fxn (cost) -> Filter: {filter_cost}, Cost: {eval_cost} ")
+            eval_cost = (w1*num_filters) + (w2*thinning_cost) + density_cost
+            # print(f"Filter-Fxn (cost) -> Filter: {thinning_cost}, Cost: {eval_cost} ")
         except Exception as e:
             print(f"Filter-Fxn (cost) -> Error in cost function: {e}")
             eval_cost = np.inf
