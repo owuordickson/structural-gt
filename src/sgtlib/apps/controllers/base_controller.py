@@ -16,7 +16,7 @@ class BaseController(QObject):
 
     showAlertSignal = Signal(str, str)
 
-    def __init__(self, config_file: str = "", parent: QObject = None):
+    def __init__(self, config_file: str = "", parent: QObject|None = None):
         super().__init__(parent)
         # Initialize flags
         self._wait_flag = False

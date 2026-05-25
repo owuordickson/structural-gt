@@ -15,7 +15,7 @@ from ...compute.graph_analyzer import GraphAnalyzer
 
 class GraphController(QObject):
 
-    def __init__(self, controller_obj, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject|None = None):
         super().__init__(parent)
         self._ctrl = controller_obj
 

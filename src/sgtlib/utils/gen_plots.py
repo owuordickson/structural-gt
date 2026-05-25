@@ -338,8 +338,8 @@ class QQPlots:
     @staticmethod
     def qq_plot(empirical_q: float|np.ndarray, theoretical_q: float|np.ndarray, ax: plt.Axes, legend_txt: str,
                 use_log_scale: bool = True,
-                upper_band: float|np.ndarray = None,
-                lower_band: float|np.ndarray = None):
+                upper_band: float|np.ndarray|None = None,
+                lower_band: float|np.ndarray|None = None):
         """"""
         # 1. 95% confidence band (approximate)
         # For n > 30, the 95% confidence envelope around the line y=x can be approximated as: ± 1.36 / sqrt(n)
@@ -714,15 +714,135 @@ def sgt_csv_to_dataframe(csv_dir_path: str, delimiter: str = ",") -> dict[str, p
         if a_file.endswith(".csv"):
             # Get the Excel file and load its contents
             csv_path = os.path.join(csv_dir_path, a_file)
-            label = os.path.splitext(a_file)[0]   # The file name (without extension)
             df = pd.read_csv(csv_path, delimiter=delimiter)
 
-            if label not in all_sheets:
-                all_sheets[label] = df
+            mat_label = os.path.splitext(a_file)[0]  # The file name (without extension)
+            df.insert(0, "Material", mat_label)
+
+            if mat_label not in all_sheets:
+                all_sheets[mat_label] = df
     return all_sheets
 
 
-def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], value_cols=None, grid_levels: int = 6) -> None | plt.Figure:
+
+def descriptor_spider_plot(plot_dict: dict[str, pd.DataFrame], parameters: list[str], title_desr: str, ax=None,
+                           grid_levels: int = 6):
+    """
+    Generates a spider plot of graph descriptors.
+
+    :param plot_dict: A dictionary where keys are labels and values are DataFrames containing descriptor data.
+    :param parameters: A list of parameter names to plot on the spider plot.
+    :param title_desr: A title for the spider plot.
+    :param ax: An optional matplotlib axis object to plot on. If not provided, a new figure and axis are created.
+    :param grid_levels: The number of grid levels to use for the spider plot.
+
+    :return: A matplotlib figure object containing the spider plot.
+    """
+
+    # --- Helper Functions (Local) ---
+    def format_scale_value(value):
+        if abs(value) >= 1_000:
+            return f'{value / 1_000:.1f}K'
+        elif abs(value) >= 10:
+            return f'{value:.1f}'
+        else:
+            return f'{value:.2f}'
+
+    def shift_value(val):
+        return val - min_val
+
+    for label, avg_df in plot_dict.items():
+        plot_dict[label] = avg_df[parameters]
+
+    # --- Plot Setup ---
+    num_vars = len(parameters)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
+
+    if ax is None:
+        temp_fig = plt.figure(figsize=(11, 8.5), dpi=150)
+        ax = temp_fig.add_subplot(1, 1, 1)
+
+    # Determine global max/min for scaling
+    all_vals = [s.values for s in plot_dict.values()]
+    max_val = max([v.max() for v in all_vals])
+    min_val = min([v.min() for v in all_vals])
+
+    levels = np.linspace(min_val, max_val, grid_levels)
+    max_shifted = shift_value(max(levels))
+
+    # --- Draw Hexagon Grid ---
+    for level in levels:
+        shifted_level = shift_value(level)
+        x_grid = shifted_level * np.cos(np.append(angles, angles[0]))
+        y_grid = shifted_level * np.sin(np.append(angles, angles[0]))
+        ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.2)
+        ax.text(shifted_level, 0.05, format_scale_value(level), ha='left', va='bottom', fontsize=7, alpha=0.4)
+
+    # Draw spokes
+    for angle in angles:
+        ax.plot([0, max_shifted * np.cos(angle)], [0, max_shifted * np.sin(angle)], 'k-', linewidth=0.5, alpha=0.3)
+
+    # --- Plot Data Groups ---
+    for i, (label, avg) in enumerate(plot_dict.items()):
+        # Ensure values is a flat 1D array
+        vals = avg.values.flatten()
+        shifted_vals = shift_value(vals)
+
+        x = shifted_vals * np.cos(angles)
+        y = shifted_vals * np.sin(angles)
+
+        # Append first element to close the polygon
+        x_plot = np.append(x, x[0])
+        y_plot = np.append(y, y[0])
+
+        poly_line, = ax.plot(x_plot, y_plot, linewidth=2, label=label)
+        ax.fill(x_plot, y_plot, alpha=0.1, color=poly_line.get_color())
+
+    # --- Final Touches ---
+    label_dist = max_shifted * 1.1
+    for i, (angle, param) in enumerate(zip(angles, parameters)):
+        # Convert angle to degrees for matplotlib rotation
+        angle_deg = np.rad2deg(angle)
+        check_angle = np.round(angle_deg, 0) % 360
+
+        # Rename long parameters for clarity
+        param = param.replace('Avg. Deviation from Diagonal', 'Avg. Deviation')
+
+        # Tilt Logic:
+        # Flip text if it's on the left side (between 90 and 270 degrees)
+        # to keep it right-side up.
+        if check_angle == 0 or check_angle == 180:
+            display_angle = 90
+        elif check_angle == 120 or check_angle == 300:
+            display_angle = 30
+        elif check_angle == 240 or check_angle == 60:
+            display_angle = -30
+        else:
+            display_angle = 0
+
+        # Calculate position
+        x_pos = label_dist * np.cos(angle)
+        y_pos = label_dist * np.sin(angle)
+
+        ax.text(
+            x_pos, y_pos, param,
+            ha='center', va='center',
+            fontsize=24,
+            #fontweight='bold',
+            rotation=display_angle,  # Apply the tilt
+            rotation_mode='anchor'  # Ensures rotation is around the text center
+        )
+
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_title(f"Descriptors Spider Plot ({title_desr})", fontsize=14, pad=40)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
+
+    return ax
+
+
+
+def sgt_spider_plot(df_sgt: pd.DataFrame, material_labels: dict, gt_params: list[str], grid_levels: int = 6) -> None | plt.Figure:
     """
     Generates a spider (radar) plot to compare Graph-Theoretic (GT) parameters
     across multiple material samples, typically derived from SEM images.
@@ -732,9 +852,8 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
     Args:
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
-        labels (dict): Mapping of material keys to readable names
-        parameters (list[str]): List of GT parameters to plot along the spider axes
-        value_cols (list, optional): List of columns containing GT parameter values. Defaults to []
+        material_labels (dict): Mapping of key--name of the material (whose image is under study). Key should be present in df_sgt DataFrame
+        gt_params (list[str]): List of GT parameters to plot along the spider axes
         grid_levels (int, optional): Number of levels to use for the grid. Defaults to 6.
 
     Returns:
@@ -772,12 +891,34 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         """Shift value so that the Spider Plot center is at the minimum value."""
         return val - min_val
 
-    if value_cols is None:
-        value_cols = []
+    def compute_gt_avg():
+        """
+        Computes the average and Standard Deviation (if possible) of GT values.
+        """
 
-    if df_sgt is None or labels is None or parameters is None:
+        if len(all_df_cols) == 2:
+            df_sgt["Avg."] = df_sgt[["value"]].to_numpy()
+            return
+
+        value_cols = []
+        for col in all_df_cols:
+            if col.startswith("value"):
+                value_cols.append(col)
+
+        # Ensure the value columns exist
+        if all(col in df_sgt.columns for col in value_cols):
+            df_sgt["Avg."] = df_sgt[value_cols].to_numpy().mean(axis=1)
+            df_sgt["Std. Dev."] = df_sgt[value_cols].to_numpy().std(axis=1)
+        return
+
+    if df_sgt is None or material_labels is None or gt_params is None:
         return None
 
+    all_df_cols = df_sgt.columns.tolist()
+    if "value" not in all_df_cols and "value-1" not in all_df_cols:
+        return None
+
+    # Rename Columns: apply replacements in the "parameter" column
     param_rename_map = {
         "Number of nodes": "Nodes",
         "Number of edges": "Edges",
@@ -794,28 +935,25 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         "Average eigenvector centrality": "EC",
         "Average closeness centrality": "CC",
     }
-    if len(value_cols) <= 0:
-        value_cols = ["value-1", "value-2", "value-3", "value-4"]
-
-    # Rename Columns: apply replacements in the "Parameter" column
     if "parameter" in df_sgt.columns:
         df_sgt["parameter"] = df_sgt["parameter"].replace(param_rename_map)
 
-    # Ensure the value columns exist
-    if all(col in df_sgt.columns for col in value_cols):
-        df_sgt["Avg."] = df_sgt[value_cols].to_numpy().mean(axis=1)
-        df_sgt["Std. Dev."] = df_sgt[value_cols].to_numpy().std(axis=1)
+    # Compute Averages and Standard Deviations
+    compute_gt_avg()
 
     # Filter and pivot
     df_avg = df_sgt.pivot(index='Material', columns='parameter', values='Avg.')
-    df_std = df_sgt.pivot(index='Material', columns='parameter', values='Std. Dev.')
+    df_avg = df_avg[gt_params]  # Ensure selected parameters and consistent order
+    if 'Std. Dev.' in df_sgt.columns:
+        df_std = df_sgt.pivot(index='Material', columns='parameter', values='Std. Dev.')
+        df_std = df_std[gt_params]
+    else:
+        df_std = None
 
-    # Ensure consistent parameter order
-    df_avg: pd.DataFrame = df_avg[parameters]
-    df_std = df_std[parameters]
+
 
     # Spider plot setup
-    num_vars = len(parameters)
+    num_vars = len(gt_params)
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
 
     # Create the figure and axes (regular cartesian, not polar)
@@ -824,16 +962,16 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
 
     # Determine max_val based on data
     all_values = []
-    for key in labels.keys():
+    for key in material_labels.keys():
         vals = df_avg.loc[key]
-        err = df_std.loc[key]
+        values = np.atleast_1d(vals) # Convert to numpy arrays (handles both scalars and sequences)
 
-        # Convert to numpy arrays (handles both scalars and sequences)
-        values = np.atleast_1d(vals)
-        errors = np.atleast_1d(err)
-        # values = df_avg.loc[key].tolist()
-        # errors = df_std.loc[key].tolist()
-        all_values.extend(np.array(values) + np.array(errors))
+        if df_std is not None:
+            err = df_std.loc[key]
+            errors = np.atleast_1d(err)
+            all_values.extend(np.array(values) + np.array(errors))
+        else:
+            all_values.extend(np.array(values))
     max_val = max(all_values)
     min_val: int = min(-max_val//2, min(all_values))
     levels = compute_grid_scale()
@@ -854,13 +992,9 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         ax.plot([0, max_shifted * np.cos(angle)], [0, max_shifted * np.sin(angle)], 'k-', linewidth=0.5, alpha=0.5)
 
     # Plot each material
-    for key, material_name in labels.items():
+    for key, material_name in material_labels.items():
         vals = df_avg.loc[key]
-        err = df_std.loc[key]
         values = np.atleast_1d(vals)
-        errors = np.atleast_1d(err)
-        # values = np.array(df_avg.loc[key].tolist())
-        # errors = np.array(df_std.loc[key].tolist())
         values = shift_value(values)
 
         # Convert to cartesian coordinates
@@ -879,42 +1013,53 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
         ax.fill(x, y, alpha=0.1, color=color)
 
         # Draw perpendicular error bars
-        err_scale = 5  # increase to make bars longer
-        for i in range(len(angles)):
-            xi, yi = x[i], y[i]
-            err = errors[i] * err_scale
+        if df_std is not None:
+            err_vals = df_std.loc[key]
+            errors = np.atleast_1d(err_vals)
+            err_scale = 5  # increase to make bars longer
+            for i in range(len(angles)):
+                xi, yi = x[i], y[i]
+                err = errors[i] * err_scale
 
-            # Endpoints of perpendicular error bar
-            x1 = xi + err * dx_perp[i]
-            y1 = yi + err * dy_perp[i]
-            x2 = xi - err * dx_perp[i]
-            y2 = yi - err * dy_perp[i]
-            ax.plot([x1, x2], [y1, y2], color=color, linewidth=0.8)
+                # Endpoints of perpendicular error bar
+                x1 = xi + err * dx_perp[i]
+                y1 = yi + err * dy_perp[i]
+                x2 = xi - err * dx_perp[i]
+                y2 = yi - err * dy_perp[i]
+                ax.plot([x1, x2], [y1, y2], color=color, linewidth=0.8)
 
         # Add label to legend (without the duplicate polygon)
         ax.plot([], [], color=color, label=material_name)
 
-        """
-        # Calculate error components in cartesian coordinates
-        x_err = errors * np.abs(np.cos(angles))
-        # y_err = errors * np.abs(np.sin(angles))
-
-        # Plot with error bars
-        ax.errorbar(x, y, xerr=x_err, label=material_name, capsize=6, linewidth=1.5, linestyle='-')
-
-        # Close the polygon by connecting last point to first
-        ax.plot([x[-1], x[0]], [y[-1], y[0]], linewidth=1.5, color=ax.lines[-1].get_color())
-
-        # Fill the polygon
-        ax.fill(x, y, alpha=0.1, color=ax.lines[-1].get_color())
-        """
-
     # Add labels at the vertices
     label_distance = max_shifted * 1.15
-    for i, (angle, param) in enumerate(zip(angles, parameters)):
+    for i, (angle, param) in enumerate(zip(angles, gt_params)):
         x_label = label_distance * np.cos(angle)
         y_label = label_distance * np.sin(angle)
-        ax.text(x_label, y_label, param, ha='center', va='center', fontsize=10)
+
+        # Convert angle to degrees for matplotlib rotation
+        angle_deg = np.rad2deg(angle)
+        check_angle = np.round(angle_deg, 0) % 360
+
+        # Tilt Logic:
+        # Flip text if it's on the left side (between 90 and 270 degrees)
+        # to keep it right-side up.
+        if check_angle == 0 or check_angle == 180:
+            display_angle = 90
+        elif check_angle == 120 or check_angle == 300:
+            display_angle = 30
+        elif check_angle == 240 or check_angle == 60:
+            display_angle = -30
+        else:
+            display_angle = 0
+        ax.text(
+            x_label, y_label, param,
+            ha='center', va='center',
+            fontsize=12,
+            # fontweight='bold',
+            rotation=display_angle,  # Apply the tilt
+            rotation_mode='anchor'  # Ensures rotation is around the text center
+        )
 
     # Set equal aspect ratio and limits
     ax.set_aspect('equal')
@@ -927,22 +1072,25 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, labels: dict, parameters: list[str], v
     ax.axis('off')
 
     # Set title and legend position
-    ax.set_title("Spider Plot with Std. Dev. Error Bars", fontsize=14, pad=20)
+    if df_std is not None:
+        ax.set_title("StructuralGT Spider Plot with STD Error Bars", fontsize=14, pad=20)
+    else:
+        ax.set_title("StructuralGT Spider Plot", fontsize=14, pad=20)
     ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
     fig.tight_layout()
     return fig
 
 
-def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_test: bool = False, fit_func: str = None, qq_plot: bool = True) -> None | plt.Figure:
+def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, mat_labels: dict, skip_test: bool = False, fit_func: str | None = None, qq_plot: bool = True) -> None | plt.Figure:
     """
     Generates a scaling plot showing error bars for a sample material and displays
-    corresponding Kolmogorov–Smirnov test results for different statistical fits (Powerlaw, Exponential, Lognormal).
+    corresponding Kolmogorov–Smirnov test results for different statistical fits (PowerLaw, Exponential, Lognormal).
     The right subplot contains only formatted text (no axes, no borders).
 
     Args:
         y_title (str): Y-axis title
         df_data (pd.DataFrame): DataFrame containing 'Material', 'x-avg', 'y-avg', 'x-std', and 'y-std'
-        labels (dict): Mapping of material keys to readable names
+        mat_labels (dict): Mapping of key--name of the material (whose image is under study). Key should be present in df_data DataFrame
         skip_test (bool, optional): Whether to skip the KS test. Defaults to False
         fit_func (str, optional): Function to fit the data (log-normal, power-law, exponential). Defaults to None
         qq_plot (bool, optional): Whether to plot the QQ plot. Defaults to True
@@ -1033,7 +1181,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
         return ax_title
 
-    if y_title is None or df_data is None or labels is None:
+    if y_title is None or df_data is None or mat_labels is None:
         return None
 
     if y_title == "Kernel Size" and 'kernel-dim' in df_data.columns:
@@ -1065,7 +1213,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, labels: dict, skip_tes
 
     # --- Plot data and compute KS test statistics ---
     txt_test = "Kolmogorov–Smirnov & P-Values\n\n"
-    for key, material_name in labels.items():
+    for key, material_name in mat_labels.items():
         df_sample = df_data[df_data['Material'] == key].copy()
         if df_sample.empty:
             continue

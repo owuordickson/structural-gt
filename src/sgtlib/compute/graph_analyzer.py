@@ -215,7 +215,7 @@ class GraphAnalyzer(ProgressUpdate):
         # 6. Save GT compute metrics into props
         self.get_compute_props()
 
-    def compute_gt_metrics(self, graph: nx.Graph = None, save_histogram: bool = True, silent: bool = False) -> None|pd.DataFrame:
+    def compute_gt_metrics(self, graph: nx.Graph|None = None, save_histogram: bool = True, silent: bool = False) -> None|pd.DataFrame:
         """
         Compute unweighted graph theory metrics.
 
@@ -1280,7 +1280,7 @@ class GraphAnalyzer(ProgressUpdate):
             plt_figs = []
 
             def plot_distribution_histogram(ax: Axes, title: str, distribution: list, x_label: str,
-                                            plt_bins: np.ndarray = None, y_label: str = 'Counts'):
+                                            plt_bins: np.ndarray|None = None, y_label: str = 'Counts'):
                 """
                 Create a histogram from a distribution dataset.
 
@@ -1350,7 +1350,7 @@ class GraphAnalyzer(ProgressUpdate):
             # weighted histograms
             if opt_gte["has_weights"]["value"] == 1:
                 wt_type = graph_obj.get_weight_type()
-                weight_type = str(FiberNetworkBuilder.get_weight_options().get(wt_type))
+                weight_type: str = str(wt_str) if (wt_str := FiberNetworkBuilder.get_weight_options().get(wt_type)) is not None else ""
 
                 # degree, betweenness, closeness and eigenvector
                 plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)

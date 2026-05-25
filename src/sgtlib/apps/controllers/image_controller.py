@@ -22,7 +22,7 @@ class ImageController(QObject):
     _imgFiltersBusyChanged = Signal()
     _histogramBusyChanged = Signal()
 
-    def __init__(self, controller_obj, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject|None = None):
         super().__init__(parent)
         self._ctrl = controller_obj
         self._img_loaded = False

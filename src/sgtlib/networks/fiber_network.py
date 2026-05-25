@@ -115,7 +115,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         if 0 <= score <= 100.0:
             self._score_rating = score
 
-    def fit_graph(self, save_dir: str, input_data: np.ndarray | str = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
+    def fit_graph(self, save_dir: str, input_data: np.ndarray|str|None = None, is_img_2d: bool = True, px_width_sz: float = 1.0, rho_val: float = 1.0, file_name: str = "img") -> None:
         """
         Execute functions that build a NetworkX graph from the binary image.
 
@@ -208,7 +208,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         self._nx_giant_graph = giant_graph
         return True
 
-    def extract_graph(self, image_bin: np.ndarray = None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
+    def extract_graph(self, image_bin: np.ndarray|None= None, is_img_2d: bool = True, px_size: float = 1.0, rho_val: float = 1.0) -> nx.Graph | None:
         """
         Build a skeleton from the image and use the skeleton to build a NetworkX graph.
 
@@ -402,7 +402,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         # 2. Populate graph properties
         self.update_status(ProgressData(percent=80, sender="GT", message=f"Storing graph properties..."))
         props = [
-            ["Weight Type", str(FiberNetworkBuilder.get_weight_options().get(self.get_weight_type()))],
+            ["Weight Type", FiberNetworkBuilder.get_weight_options().get(self.get_weight_type())],
             ["Edge Count", str(graph.number_of_edges())],
             ["Node Count", str(graph.number_of_nodes())],
             ["Graph Count", str(len(connected_components))],
@@ -515,7 +515,7 @@ class FiberNetworkBuilder(ProgressUpdate):
         return weight_options
 
     @staticmethod
-    def plot_graph_edges(image: np.ndarray|None, nx_graph: nx.Graph|None, node_distribution_data: list = None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
+    def plot_graph_edges(image: np.ndarray|None, nx_graph: nx.Graph|None, node_distribution_data: list|None= None, plot_nodes: bool = False, show_node_id: bool = False, add_width_thickness: bool = False, transparent: bool = False, edge_color: str= 'r', node_marker_size: float = 3) -> dict:
         """
         Plot graph edges on top of the image
 
@@ -583,7 +583,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             if max_w == min_w:
                 return (new_min + new_max) / 2  # avoid division by zero
             if not isinstance(w, numbers.Real):
-                print(f"Invalid width type ({type(w)}); using default normalized width = 1.0")
+                print(f"Invalid width type ({w}); using default normalized width = 1.0")
                 return 1.0
             norm_w = new_min + (w - min_w) * (new_max - new_min) / (max_w - min_w)
             return float(norm_w)

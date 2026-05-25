@@ -16,7 +16,7 @@ from ..utils.sgt_utils import ProgressData
 class GraphSkeleton:
     """A class that is used for estimating the width of edges and compute their weights using binerized 2D/3D images."""
 
-    def __init__(self, img_bin: np.ndarray, configs: dict = None, is_2d: bool = True, progress_func = None):
+    def __init__(self, img_bin: np.ndarray, configs:dict|None = None, is_2d: bool = True, progress_func = None):
         """
         A class that builds a skeleton graph from an image.
         The skeleton will be 3D so that it can be analyzed with OVITO
@@ -106,7 +106,7 @@ class GraphSkeleton:
         # self.skeleton = self.skeleton.astype(int)
         self._skeleton_3d = np.asarray([self._skeleton]) if self._is_2d else self._skeleton
 
-    def assign_weights(self, edge_pts: np.ndarray, weight_type: str = None, weight_options: dict = None,
+    def assign_weights(self, edge_pts: np.ndarray, weight_type: str|None = None, weight_options: dict|None = None,
                        pixel_dim: float = 1, rho_dim: float = 1) -> tuple[float, float | None, float]:
         """
         Compute and assign weights to a line edge between 2 nodes.

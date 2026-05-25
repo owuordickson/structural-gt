@@ -254,7 +254,7 @@ class FilterSearchSpace:
         return img_configs
 
     @staticmethod
-    def decode_filter_values(img_configs: dict|None, value_candidate: "FilterSearchSpace.Candidate"=None, bright_candidate: "FilterSearchSpace.Candidate"=None) -> dict|None:
+    def decode_filter_values(img_configs: dict|None, value_candidate: "FilterSearchSpace.Candidate|None"=None, bright_candidate: "FilterSearchSpace.Candidate|None"=None) -> dict|None:
         """
         Decode the image filter configurations of a candidate into a dictionary.
 
@@ -559,7 +559,12 @@ def sgt_genetic_algorithm(s_space: FilterSearchSpace.SearchSpace, img_data: np.n
                     continue
 
                 individual_cost = individual.cost if individual.cost is not None else np.inf
-                if best_individual is None or best_individual.cost is None or individual_cost < best_individual.cost:
+                if best_individual is None:
+                    print(f"GA-Alg (winner) -> position: {individual.position}, cost: {individual.cost}")
+                    best_individual = copy.deepcopy(individual)
+                    temp_configs = copy.deepcopy(new_configs)
+
+                if best_individual.cost is None or individual_cost < best_individual.cost:
                     print(f"GA-Alg (winner) -> position: {individual.position}, cost: {individual.cost}")
                     best_individual = copy.deepcopy(individual)
                     temp_configs = copy.deepcopy(new_configs)
@@ -684,9 +689,11 @@ def sgt_hill_climbing_algorithm(s_space: FilterSearchSpace.SearchSpace|None, img
                 s_space.loser_candidates.add(neighbor.position)
                 continue
 
-            best_neighbor_cost = best_neighbor.cost if best_neighbor is not None else np.inf
             neighbor_cost = neighbor.cost if neighbor.cost is not None else np.inf
-            if best_neighbor is None or best_neighbor_cost is None or neighbor_cost < best_neighbor_cost:
+            if best_neighbor is None:
+                print(f"HC-Alg (winner) -> position: {neighbor.position}, cost: {neighbor.cost}")
+                best_neighbor = copy.deepcopy(neighbor)
+            if best_neighbor.cost is None or neighbor_cost < best_neighbor.cost:
                 print(f"HC-Alg (winner) -> position: {neighbor.position}, cost: {neighbor.cost}")
                 best_neighbor = copy.deepcopy(neighbor)
 

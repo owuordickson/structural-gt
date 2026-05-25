@@ -673,8 +673,8 @@ class BaseImage:
 
         def connectivity_and_neighbor_stats(binary_img):
             """
-            Compute average connectivity number A(P1)
-            and average neighbor count B(P1)
+            Compute average connectivity number num_transitions(P1)
+            and average neighbor count num_neighbors(P1)
             for skeleton pixels only.
 
             Parameters
@@ -727,12 +727,12 @@ class BaseImage:
                     ]
 
                     # ------------------------------------------------
-                    # B(P1): number of foreground neighbors
+                    # num_neighbors(P1): number of foreground neighbors
                     # ------------------------------------------------
-                    B = sum(neighbors)
+                    num_neighbors = sum(neighbors)
 
                     # ------------------------------------------------
-                    # A(P1): number of 0->1 transitions
+                    # num_transitions(P1): number of 0->1 transitions
                     # ------------------------------------------------
                     transitions = 0
 
@@ -743,10 +743,10 @@ class BaseImage:
                         if curr == 0 and nxt == 1:
                             transitions += 1
 
-                    A = transitions
+                    num_transitions = transitions
 
-                    a_vals.append(A)
-                    b_vals.append(B)
+                    a_vals.append(num_transitions)
+                    b_vals.append(num_neighbors)
 
             avg_connectivity_number = np.mean(a_vals)
             std_connectivity = np.std(a_vals)

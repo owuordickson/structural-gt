@@ -17,7 +17,7 @@ class AIController(QObject):
     _aiModeChanged = Signal()
     updateAIProgressSignal = Signal(int, str)
 
-    def __init__(self, controller_obj, parent: QObject = None):
+    def __init__(self, controller_obj, parent: QObject|None = None):
         super().__init__(parent)
         self._ctrl = controller_obj
         # self._ai_mode_active = False

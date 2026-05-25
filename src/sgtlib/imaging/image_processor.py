@@ -388,7 +388,7 @@ class ImageProcessor(ProgressUpdate):
             self.update_image_props(img_batch)
         self._image_batches = img_batches
 
-    def select_image_batch(self, sel_batch_idx: int, selected_images: set = None):
+    def select_image_batch(self, sel_batch_idx: int, selected_images: set|None = None):
         """
         Update the selected image batch and the selected image slices.
 
@@ -1013,7 +1013,7 @@ class ImageProcessor(ProgressUpdate):
         self.update_status(ProgressData(type="warning", sender="AI", message=f"Graph image downloaded!"))
         return graph_file
 
-    def get_filenames(self, file_path: str = None):
+    def get_filenames(self, file_path: str|None = None):
         """
         Splits the image path into file name and image directory.
 
@@ -1053,7 +1053,7 @@ class ImageProcessor(ProgressUpdate):
         sel_images = [selected_batch.images[i] for i in selected_batch.selected_images_positions]
         return sel_images
 
-    def update_image_props(self, selected_batch: ImageBatch = None):
+    def update_image_props(self, selected_batch: ImageBatch|None = None):
         """
         A method that retrieves image properties and stores them in a list-array.
 
