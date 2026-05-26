@@ -1440,7 +1440,7 @@ class GraphAnalyzer(ProgressUpdate):
                 if point_cloud is None:
                     return
                 ax.scatter(point_cloud[:, 0], point_cloud[:, 1], color='k', s=16, zorder=5)
-                ax.set_title("Node Point Cloud")
+                ax.set_title("Point Cloud Data (Nodes)")
                 ax.set_aspect('equal')
                 # ax.grid(True, linestyle='--', alpha=0.5)
 
