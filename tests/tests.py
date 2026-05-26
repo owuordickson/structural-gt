@@ -62,4 +62,4 @@ sgt.GraphAnalyzer.safe_run_analyzer(compute_obj, print_updates)
 #print(compute_obj.results_df)
 
 # Save in PDF
-#sgt.GraphAnalyzer.write_to_pdf(compute_obj)
+sgt.GraphAnalyzer.write_to_pdf(compute_obj)

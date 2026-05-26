@@ -2,10 +2,10 @@
 """
 Compute graph theory metrics
 """
-
 import os
 import math
 import time
+import copy
 import datetime
 import logging
 import gudhi
@@ -115,13 +115,14 @@ class GraphAnalyzer(ProgressUpdate):
         self._results_df:   None | pd.DataFrame = None
         self._weighted_results_df: None | pd.DataFrame = None
         self._scaling_results: dict = {}
+        self._persistence_homology_data: dict[str, None|list|np.ndarray] = {"persistence_homology": None, "point_cloud_data": None}
         self._histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
                                "percolation_distribution": [], "weighted_degree_distribution": [0],
                                "weighted_clustering_coefficients": [0], "weighted_betweenness_distribution": [0],
                                "currentflow_distribution": [0], "weighted_closeness_distribution": [0],
-                               "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0]}
+                               "weighted_eigenvector_distribution": [0], "weighted_percolation_distribution": [0],}
 
     @property
     def configs(self) -> dict:
@@ -430,8 +431,13 @@ class GraphAnalyzer(ProgressUpdate):
         # if self._configs["compute_persistent_homology"]["value"] == 1:
         compute_persistent_homology = True
         if compute_persistent_homology:
-            ph_data = self.compute_persistent_homology(graph=graph)
-            print(f"\nPH Data:\n{ph_data}\n\n")
+            if not silent:
+                self.update_status(ProgressData(percent=61, sender="GT", message="Computing persistent homology..."))
+            ph_data, pt_cloud = self.compute_persistent_homology(graph=graph)
+            # data_dict["parameter"].append("Persistent homology")
+            # data_dict["value"].append(ph_data)
+            self._persistence_homology_data["persistence_homology"] = ph_data
+            self._persistence_homology_data["point_cloud_data"] = pt_cloud
 
         return pd.DataFrame(data_dict)
 
@@ -584,7 +590,7 @@ class GraphAnalyzer(ProgressUpdate):
         """
 
         if graph is None:
-            return None
+            return None, None
 
         if not silent:
             self.update_status(ProgressData(percent=1, sender="GT", message="Computing persistent homology..."))
@@ -599,7 +605,7 @@ class GraphAnalyzer(ProgressUpdate):
             point_cloud = np.array([pos[node] for node in sorted_nodes])
         except nx.exception.NetworkXNoPath:
             # if position-data 'o' does not exist
-            return None
+            return None, None
 
         # 2. Build the Rips Complex (growing circles around pure node data).
         try:
@@ -611,43 +617,10 @@ class GraphAnalyzer(ProgressUpdate):
 
             # 3. Compute Persistent Homology
             persistence = simplex_tree.persistence()
-
-            # 4. Extract Scalars (Connected Components and Holes)
-            print("--- SCALAR RESULTS ---")
-            for dimension, (birth, death) in persistence:
-                feature_type = "Connected Component (H0)" if dimension == 0 else "Hole (H1)"
-                death_val = f"{death:.4f}" if death != float('inf') else "Infinity"
-                print(f"{feature_type}: Born at radius {birth:.4f}, Dies at radius {death_val}")
         except exception:
-            return None
+            return None, None
 
-        # 5. Plot the Results
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-        # Plot A: Pure node point cloud (Explicitly showing NO prior graph edges)
-        axes[0].scatter(point_cloud[:, 0], point_cloud[:, 1], color='red', s=25, zorder=5)
-        axes[0].set_title("Node Point Cloud")
-        axes[0].set_aspect('equal')
-        axes[0].grid(True, linestyle='--', alpha=0.5)
-
-        # Plot B: The Persistence Diagram tracking components and holes
-        gudhi.plot_persistence_diagram(persistence, axes=axes[1])
-        axes[1].set_title("Persistence Diagram (H0 and H1)")
-
-        # OVERWRITE GUDHI LEGEND: Map the default labels to your custom text
-        custom_labels = {"0": r"connected components ($H_0$)", "1": r"holes ($H_1$)"}
-        handles, labels = axes[1].get_legend_handles_labels()
-        new_labels = [custom_labels.get(label, label) for label in labels]
-        axes[1].legend(handles, new_labels, loc="upper right")
-
-        # OVERWRITE AXES: Set custom axis labels with math-formatted epsilon
-        axes[1].set_xlabel(r"Birth (Radius of $\epsilon$)")
-        axes[1].set_ylabel(r"Death (Radius of $\epsilon$)")
-
-        plt.tight_layout()
-        plt.show()
-
-        return persistence
+        return persistence, point_cloud
 
     def compute_scaling_data(self) -> defaultdict:
         """
@@ -1361,13 +1334,144 @@ class GraphAnalyzer(ProgressUpdate):
 
             return plt_figs
 
+        def plot_persistence_homology():
+            """
+            Custom persistence diagram plotter.
+            """
+            self.update_status(ProgressData(percent=92, sender="GT", message=f"Plotting persistence diagrams..."))
+
+            def plot_persistence_diagram(ax: plt.Axes | None = None):
+
+                if ph_data is None:
+                    return
+
+                if ax is None:
+                    ph_fig, ax = plt.subplots(figsize=(6, 6))
+
+                # Default labels
+                custom_labels = {0: r"connected components ($H_0$)", 1: r"holes ($H_1$)"}
+
+                # Matplotlib default color cycle (stable & familiar)
+                colors = ['r', 'b', 'g', 'c', 'm', 'y']
+
+                # Group points by dimension
+                group_infinite = {}
+                group_finite = {}
+                max_val = 0
+                for dim, (b, d) in ph_data:
+                    if d == float("inf") or np.isinf(d):
+                        group_infinite.setdefault(dim, []).append(b)
+                    else:
+                        group_finite.setdefault(dim, []).append((b, d))
+                        max_val = max(max_val, b, d)
+
+                # Set infinity line if not provided
+                min_lim = -(max_val * 0.1)
+                max_lim = max_val * 1.1
+                infinity_value = max_val * 1.15 if max_val > 0 else 1.0
+
+                # Plot each finite homology dimension separately
+                for i, (dim, points) in enumerate(sorted(group_finite.items())):
+                    points = np.array(points)
+                    color = colors[i % len(colors)]
+                    ax.scatter(
+                        points[:, 0],
+                        points[:, 1],
+                        s=40,
+                        color=color,
+                        alpha=0.5,
+                        edgecolor=color,
+                        label=custom_labels.get(dim, rf"$H_{{{dim}}}$")
+                    )
+
+                # --- Plot infinite persistence points ---
+                for i, (dim, births) in enumerate(sorted(group_infinite.items())):
+                    births = np.array(births)
+                    color = colors[i % len(colors)]
+                    # jitter so points don't overlap perfectly
+                    y_vals = infinity_value + np.linspace(-0.02, 0.02, len(births))
+                    # y_vals = np.full_like(births, infinity_value)
+                    ax.scatter(
+                        births,
+                        y_vals,
+                        s=40,
+                        color=color,
+                        alpha=0.5,
+                        edgecolor=color,
+                        # label=custom_labels.get(dim, rf"$H_{{{dim}}}$")
+                    )
+
+                # Diagonal line y = x
+                ax.plot([min_lim, max_lim], [min_lim, max_lim], linestyle="-", color="black", linewidth=1)
+
+                # Shade invalid region (below diagonal)
+                ax.fill_between(
+                    [min_lim, max_lim],
+                    [min_lim, max_lim],
+                    [min_lim, min_lim],
+                    color="gray",
+                    alpha=0.4
+                )
+
+                # Infinity line
+                ax.axhline(infinity_value, linestyle="-", color="k", linewidth=0.5)
+                current_ticks = list(ax.get_yticks())
+                new_ticks = copy.deepcopy(current_ticks)
+                new_ticks = new_ticks + [infinity_value] if infinity_value not in set(current_ticks) else new_ticks
+                for t in current_ticks:
+                    if t > infinity_value:
+                        new_ticks.remove(t)
+                new_labels = [str(int(t)) if t != infinity_value else r"$+\infty$" for t in new_ticks]
+                ax.set_yticks(new_ticks)
+                ax.set_yticklabels(new_labels)
+
+                ax.set_xlim(min_lim, max_lim)
+                ax.set_ylim(min_lim, infinity_value * 1.1)
+
+                ax.set_xlabel(r"Birth (Radius of $\epsilon$)")
+                ax.set_ylabel(r"Death (Radius of $\epsilon$)")
+                ax.set_title(r"Persistence Diagram ($H_0$ and $H_1$)")
+                ax.legend(loc="lower right")
+                # ax.grid(True, alpha=0.3)
+                # return ax
+
+            def plot_point_cloud(ax: plt.Axes):
+                """Plot A: Pure node point cloud (Explicitly showing NO prior graph edges)"""
+                if point_cloud is None:
+                    return
+                ax.scatter(point_cloud[:, 0], point_cloud[:, 1], color='k', s=16, zorder=5)
+                ax.set_title("Node Point Cloud")
+                ax.set_aspect('equal')
+                # ax.grid(True, linestyle='--', alpha=0.5)
+
+            # Get data
+            ph_data = self._persistence_homology_data["persistence_homology"] # [(dim, (birth, death)), ...]
+            point_cloud = self._persistence_homology_data["point_cloud_data"]
+            if ph_data is None or point_cloud is None:
+                return None
+
+            # Create plot figure
+            plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
+
+            # Plot A: The Persistence Diagram tracking components and holes
+            ax_1 = plt_fig.add_subplot(2, 1, 1)
+            plot_persistence_diagram(ax=ax_1)
+            """gudhi.plot_persistence_diagram(persistence, axes=ax_1)
+            ax_1.set_title("Persistence Diagram (H0 and H1)")
+            """
+
+            # Plot B: Point Cloud Data
+            ax_2 = plt_fig.add_subplot(2, 1, 2)
+            plot_point_cloud(ax=ax_2)
+            return plt_fig
+
         def plot_histograms():
             """
             Create plot figures of graph theory histograms selected by the user.
 
             :return: A list of Matplotlib figures.
             """
-            self.update_status(ProgressData(percent=92, sender="GT", message=f"Generating histograms..."))
+            self.update_status(ProgressData(percent=93, sender="GT", message=f"Generating histograms..."))
 
             opt_gte = graph_obj.configs
             plt_figs = []
@@ -1595,18 +1699,23 @@ class GraphAnalyzer(ProgressUpdate):
         for fig in scaling_figs:
             out_figs.append(fig)
 
-        # 5a. displaying histograms
+        # 5 display persistence homology diagram
+        fig = plot_persistence_homology()
+        if fig is not None:
+            out_figs.append(fig)
+
+        # 6a. displaying histograms
         figs = plot_histograms()
         for fig in figs:
             out_figs.append(fig)
 
-        # 5b. displaying heatmaps
+        # 6b. displaying heatmaps
         if opt_gtc["display_heatmaps"]["value"] == 1:
             figs = plot_heatmaps()
             for fig in figs:
                 out_figs.append(fig)
 
-        # 6. displaying run information
+        # 7. displaying run information
         fig = plot_run_configs()
         out_figs.append(fig)
         return out_figs
