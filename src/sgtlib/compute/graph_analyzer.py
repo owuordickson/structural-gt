@@ -29,7 +29,6 @@ from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
-from traits.trait_types import true
 
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
@@ -608,7 +607,7 @@ class GraphAnalyzer(ProgressUpdate):
             rips_complex = gudhi.RipsComplex(points=point_cloud)
 
             # Create the simplex tree up to dimension 2 (0 = components, 1 = holes, 2 = filled triangles)
-            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)  # Dimension 2: Triangles (Solid faces connecting 3 points)
 
             # 3. Compute Persistent Homology
             persistence = simplex_tree.persistence()
@@ -626,14 +625,24 @@ class GraphAnalyzer(ProgressUpdate):
         fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
         # Plot A: Pure node point cloud (Explicitly showing NO prior graph edges)
-        axes[0].scatter(point_cloud[:, 0], point_cloud[:, 1], color='red', s=100, zorder=5)
-        axes[0].set_title("Pure Node Point Cloud (Edges Handled by PH)")
+        axes[0].scatter(point_cloud[:, 0], point_cloud[:, 1], color='red', s=25, zorder=5)
+        axes[0].set_title("Node Point Cloud")
         axes[0].set_aspect('equal')
         axes[0].grid(True, linestyle='--', alpha=0.5)
 
         # Plot B: The Persistence Diagram tracking components and holes
         gudhi.plot_persistence_diagram(persistence, axes=axes[1])
         axes[1].set_title("Persistence Diagram (H0 and H1)")
+
+        # OVERWRITE GUDHI LEGEND: Map the default labels to your custom text
+        custom_labels = {"0": r"connected components ($H_0$)", "1": r"holes ($H_1$)"}
+        handles, labels = axes[1].get_legend_handles_labels()
+        new_labels = [custom_labels.get(label, label) for label in labels]
+        axes[1].legend(handles, new_labels, loc="upper right")
+
+        # OVERWRITE AXES: Set custom axis labels with math-formatted epsilon
+        axes[1].set_xlabel(r"Birth (Radius of $\epsilon$)")
+        axes[1].set_ylabel(r"Death (Radius of $\epsilon$)")
 
         plt.tight_layout()
         plt.show()
