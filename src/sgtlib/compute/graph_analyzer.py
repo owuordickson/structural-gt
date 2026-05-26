@@ -8,6 +8,7 @@ import math
 import time
 import datetime
 import logging
+import gudhi
 import multiprocessing
 import numpy as np
 import scipy as sp
@@ -20,6 +21,7 @@ from matplotlib.axes import Axes
 from collections import defaultdict
 from statistics import stdev, StatisticsError
 from matplotlib.backends.backend_pdf import PdfPages
+from networkx import exception
 
 from networkx.algorithms.centrality import betweenness_centrality, closeness_centrality, eigenvector_centrality
 from networkx.algorithms import average_node_connectivity, global_efficiency, clustering
@@ -27,6 +29,7 @@ from networkx.algorithms import degree_assortativity_coefficient
 from networkx.algorithms.flow import maximum_flow
 from networkx.algorithms.distance_measures import diameter, periphery
 from networkx.algorithms.wiener import wiener_index
+from traits.trait_types import true
 
 from ..networks.fiber_network import FiberNetworkBuilder
 from ..imaging.image_processor import ImageProcessor
@@ -206,7 +209,8 @@ class GraphAnalyzer(ProgressUpdate):
         self._weighted_results_df = self.compute_weighted_gt_metrics(graph_obj)
 
         if self.abort:
-            self.update_status([-1, "Problem encountered while computing weighted GT parameters."])
+            self.update_status(ProgressData(type="error", sender="GT",
+                                            message=f"Problem encountered while computing weighted GT parameters."))
             return
 
         # 5. Generate results in PDF
@@ -423,6 +427,13 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["parameter"].append("Ohms centrality -- conductivity (S/m)")
             data_dict["value"].append(round(res['conductivity'], 5))
 
+        # calculating persistent homology
+        # if self._configs["compute_persistent_homology"]["value"] == 1:
+        compute_persistent_homology = True
+        if compute_persistent_homology:
+            ph_data = self.compute_persistent_homology(graph=graph)
+            print(f"\nPH Data:\n{ph_data}\n\n")
+
         return pd.DataFrame(data_dict)
 
     def compute_weighted_gt_metrics(self, graph_obj: FiberNetworkBuilder|None = None, save_histogram: bool = True, silent: bool = False) -> None|pd.DataFrame:
@@ -555,6 +566,79 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(ae_val)
 
         return pd.DataFrame(data_dict)
+
+    def compute_persistent_homology(self, graph: nx.Graph | None = None, silent: bool = False):
+        """
+        Persistent homology is a method in TDA (Topological Data Analysis) that tries to identify topological features
+        (i.e., holes, connected components) which do not change in point cloud data during construction of various
+        simplicial complexes (filtration).
+
+        To compute persistent homology by growing circles around nodes, you are building a Vietoris–Rips filtration
+        on the point cloud. As the radius (distance) increases, circles overlap, edges form, and when three nodes
+        are mutually connected, a triangle (2-simplex) is filled in to accurately measure the birth and death of holes.
+
+        In this method, we compute the persistent homology by converting a NetworkX graph into a point cloud data
+        using its nodes.
+
+        :param graph: NetworkX graph object.
+        :param silent: Whether to send progress status and message (or silence them).
+        """
+
+        if graph is None:
+            return None
+
+        if not silent:
+            self.update_status(ProgressData(percent=1, sender="GT", message="Computing persistent homology..."))
+
+        # 1. Safely extract positions to form pure point cloud data from nodes
+        try:
+            node_list = list(graph.nodes())
+            pos = {i: graph.nodes[i]['o'] for i in node_list}
+
+            # Convert node coordinates into a standard NumPy array (Pure Point Cloud)
+            sorted_nodes = sorted(graph.nodes())
+            point_cloud = np.array([pos[node] for node in sorted_nodes])
+        except nx.exception.NetworkXNoPath:
+            # if position-data 'o' does not exist
+            return None
+
+        # 2. Build the Rips Complex (growing circles around pure node data).
+        try:
+            # This completely ignores existing graph edges and generates its own complexes/triangles
+            rips_complex = gudhi.RipsComplex(points=point_cloud)
+
+            # Create the simplex tree up to dimension 2 (0 = components, 1 = holes, 2 = filled triangles)
+            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+
+            # 3. Compute Persistent Homology
+            persistence = simplex_tree.persistence()
+
+            # 4. Extract Scalars (Connected Components and Holes)
+            print("--- SCALAR RESULTS ---")
+            for dimension, (birth, death) in persistence:
+                feature_type = "Connected Component (H0)" if dimension == 0 else "Hole (H1)"
+                death_val = f"{death:.4f}" if death != float('inf') else "Infinity"
+                print(f"{feature_type}: Born at radius {birth:.4f}, Dies at radius {death_val}")
+        except exception:
+            return None
+
+        # 5. Plot the Results
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Plot A: Pure node point cloud (Explicitly showing NO prior graph edges)
+        axes[0].scatter(point_cloud[:, 0], point_cloud[:, 1], color='red', s=100, zorder=5)
+        axes[0].set_title("Pure Node Point Cloud (Edges Handled by PH)")
+        axes[0].set_aspect('equal')
+        axes[0].grid(True, linestyle='--', alpha=0.5)
+
+        # Plot B: The Persistence Diagram tracking components and holes
+        gudhi.plot_persistence_diagram(persistence, axes=axes[1])
+        axes[1].set_title("Persistence Diagram (H0 and H1)")
+
+        plt.tight_layout()
+        plt.show()
+
+        return persistence
 
     def compute_scaling_data(self) -> defaultdict:
         """
@@ -1541,7 +1625,7 @@ class GraphAnalyzer(ProgressUpdate):
             if not sgt_obj.plot_figures:
                 raise ValueError("No figures available to write to PDF.")
 
-            with PdfPages(pdf_file) as pdf:
+            with PdfPages(pdf_file) as pdf:  # type: ignore
                 for fig in sgt_obj.plot_figures:
                     pdf.savefig(fig)
 

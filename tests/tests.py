@@ -21,8 +21,8 @@ ntwk_obj.apply_img_filters()
 ntwk_obj.remove_listener(print_updates)
 
 # evaluate image
-hist = ntwk_obj.image_obj.compute_masked_binary_histogram()
-print(f"\nActual Hist:\n{hist.astype(int).flatten()}\n")
+#hist = ntwk_obj.image_obj.compute_masked_binary_histogram()
+#print(f"\nActual Hist:\n{hist.astype(int).flatten()}\n")
 
 # View images
 orig_image = ntwk_obj.image_2d
@@ -37,7 +37,7 @@ plt.show()
 print(f"Original Image Shape: {orig_image.shape}\nBinary Image Shape: {bin_image.size}\nGrayscale Image Shape: {grayscale_image.shape}")
 #print(f"Original Image: {orig_image}\n")
 #print(f"Binary Image: {bin_image}\n")
-print(f"Grayscale Image:{grayscale_image}\n")
+#print(f"Grayscale Image:{grayscale_image}\n")
 
 plt.imshow(grayscale_image, cmap='gray')
 plt.axis('off')  # Optional: Turn off axis ticks and labels for a cleaner image display
@@ -57,8 +57,8 @@ plt.title('Graph Image')
 plt.show()
 
 # Compute graph theory metrics
-#compute_obj = sgt.GraphAnalyzer(ntwk_obj)
-#sgt.GraphAnalyzer.safe_run_analyzer(compute_obj, print_updates)
+compute_obj = sgt.GraphAnalyzer(ntwk_obj)
+sgt.GraphAnalyzer.safe_run_analyzer(compute_obj, print_updates)
 #print(compute_obj.results_df)
 
 # Save in PDF
