@@ -115,7 +115,7 @@ class GraphAnalyzer(ProgressUpdate):
         self._results_df:   None | pd.DataFrame = None
         self._weighted_results_df: None | pd.DataFrame = None
         self._scaling_results: dict = {}
-        self._persistence_homology_data: dict[str, None|list|np.ndarray] = {"persistence_homology": None, "point_cloud_data": None}
+        self._persistent_homology_data: dict[str, None|list|np.ndarray] = {"persistent_homology": None, "point_cloud_data": None}
         self._histogram_data = {"degree_distribution": [0], "clustering_coefficients": [0],
                                "betweenness_distribution": [0], "closeness_distribution": [0],
                                "eigenvector_distribution": [0], "ohms_distribution": [0],
@@ -428,16 +428,14 @@ class GraphAnalyzer(ProgressUpdate):
             data_dict["value"].append(round(res['conductivity'], 5))
 
         # calculating persistent homology
-        # if self._configs["compute_persistent_homology"]["value"] == 1:
-        compute_persistent_homology = True
-        if compute_persistent_homology:
+        if opt_gtc["compute_persistent_homology"]["value"] == 1:
             if not silent:
                 self.update_status(ProgressData(percent=61, sender="GT", message="Computing persistent homology..."))
             ph_data, pt_cloud = self.compute_persistent_homology(graph=graph)
             # data_dict["parameter"].append("Persistent homology")
             # data_dict["value"].append(ph_data)
-            self._persistence_homology_data["persistence_homology"] = ph_data
-            self._persistence_homology_data["point_cloud_data"] = pt_cloud
+            self._persistent_homology_data["persistent_homology"] = ph_data
+            self._persistent_homology_data["point_cloud_data"] = pt_cloud
 
         return pd.DataFrame(data_dict)
 
@@ -593,7 +591,7 @@ class GraphAnalyzer(ProgressUpdate):
             return None, None
 
         if not silent:
-            self.update_status(ProgressData(percent=1, sender="GT", message="Computing persistent homology..."))
+            self.update_status(ProgressData(type='info', sender="GT", message="Computing persistent homology..."))
 
         # 1. Safely extract positions to form pure point cloud data from nodes
         try:
@@ -1334,7 +1332,7 @@ class GraphAnalyzer(ProgressUpdate):
 
             return plt_figs
 
-        def plot_persistence_homology():
+        def plot_persistent_homology():
             """
             Custom persistence diagram plotter.
             """
@@ -1419,7 +1417,7 @@ class GraphAnalyzer(ProgressUpdate):
                 new_ticks = copy.deepcopy(current_ticks)
                 new_ticks = new_ticks + [infinity_value] if infinity_value not in set(current_ticks) else new_ticks
                 for t in current_ticks:
-                    if t > infinity_value:
+                    if (t*1.15) > infinity_value:
                         new_ticks.remove(t)
                 new_labels = [str(int(t)) if t != infinity_value else r"$+\infty$" for t in new_ticks]
                 ax.set_yticks(new_ticks)
@@ -1445,8 +1443,8 @@ class GraphAnalyzer(ProgressUpdate):
                 # ax.grid(True, linestyle='--', alpha=0.5)
 
             # Get data
-            ph_data = self._persistence_homology_data["persistence_homology"] # [(dim, (birth, death)), ...]
-            point_cloud = self._persistence_homology_data["point_cloud_data"]
+            ph_data = self._persistent_homology_data["persistent_homology"] # [(dim, (birth, death)), ...]
+            point_cloud = self._persistent_homology_data["point_cloud_data"]
             if ph_data is None or point_cloud is None:
                 return None
 
@@ -1700,7 +1698,7 @@ class GraphAnalyzer(ProgressUpdate):
             out_figs.append(fig)
 
         # 5 display persistence homology diagram
-        fig = plot_persistence_homology()
+        fig = plot_persistent_homology()
         if fig is not None:
             out_figs.append(fig)
 
