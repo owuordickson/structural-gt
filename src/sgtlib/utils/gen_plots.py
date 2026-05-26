@@ -734,8 +734,37 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
 
     Args:
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
+        gt_params (list[str]): List of GT parameters to plot along the spider axes:
+
+            Nodes -- Number of Nodes,
+
+            Edges -- Number of Edges,
+
+            ND -- Network Diameter,
+
+            GD -- Graph Density,
+
+            AD -- Average Degree,
+
+            GE -- Global Efficiency,
+
+            WI -- Wiener Index,
+
+            ASC -- Assortativity Coefficient,
+
+            ACC -- Average Clustering Coefficient,
+
+            BC -- Average Betweenness Centrality,
+
+            EC -- Average Eigenvector Centrality,
+
+            CC-- Average Closeness Centrality,
+
+            Avg. E. Angle -- Average Edge Angle (degrees),
+
+            Med. E. Angle -- Median Edge Angle (degrees)
+
         material_labels (dict): Mapping of key--name of the material (whose image is under study). Key should be present in df_sgt DataFrame
-        gt_params (list[str]): List of GT parameters to plot along the spider axes
         grid_levels (int, optional): Number of levels to use for the grid. Defaults to 6.
 
     Returns:
