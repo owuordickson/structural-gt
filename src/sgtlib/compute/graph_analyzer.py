@@ -431,11 +431,14 @@ class GraphAnalyzer(ProgressUpdate):
         if opt_gtc["compute_persistent_homology"]["value"] == 1:
             if not silent:
                 self.update_status(ProgressData(percent=61, sender="GT", message="Computing persistent homology..."))
-            ph_data, pt_cloud = self.compute_persistent_homology(graph=graph)
-            # data_dict["parameter"].append("Persistent homology")
-            # data_dict["value"].append(ph_data)
-            self._persistent_homology_data["persistent_homology"] = ph_data
-            self._persistent_homology_data["point_cloud_data"] = pt_cloud
+            ph_dict, mt_dict = self.compute_persistent_homology(graph=graph)
+            data_dict["parameter"].append("Persistent Homology (Critical Epsilon)")
+            data_dict["value"].append(round(mt_dict["critical_epsilon"], 5))
+            data_dict["parameter"].append("Persistent Homology (Active Holes Count)")
+            data_dict["value"].append(mt_dict["active_holes_count"])
+
+            self._persistent_homology_data["persistent_homology"] = ph_dict["persistent_homology"]
+            self._persistent_homology_data["point_cloud_data"] = ph_dict["point_cloud_data"]
 
         return pd.DataFrame(data_dict)
 
@@ -570,7 +573,7 @@ class GraphAnalyzer(ProgressUpdate):
 
         return pd.DataFrame(data_dict)
 
-    def compute_persistent_homology(self, graph: nx.Graph | None = None, silent: bool = False):
+    def compute_persistent_homology(self, graph: nx.Graph | None = None, silent: bool = False) -> tuple[dict[str, list|np.ndarray|None], dict[str, float]]:
         """
         Persistent homology is a method in TDA (Topological Data Analysis) that tries to identify topological features
         (i.e., holes, connected components) which do not change in point cloud data during construction of various
@@ -583,12 +586,106 @@ class GraphAnalyzer(ProgressUpdate):
         In this method, we compute the persistent homology by converting a NetworkX graph into a point cloud data
         using its nodes.
 
+        Next, we extract scale-based topological metrics from persistent homology data. This function analyzes
+        persistence_data intervals from a filtration and computes:
+
+        1. Critical cluster threshold (`critical_epsilon`)
+            The largest finite death value in dimension 0 (`H0`), corresponding
+            to the filtration scale at which the final two connected components
+            merge into a single connected component.
+
+        2. Active holes count (`active_holes_count`)
+            The number of dimension 1 (`H1`) features (loops/holes) that are
+           alive at the critical scale, i.e. features satisfying:
+
+               birth <= critical_epsilon < death
+
         :param graph: NetworkX graph object.
         :param silent: Whether to send progress status and message (or silence them).
         """
 
+        def extract_scale_metrics(ph_data):
+            """
+            Extract scale-based topological metrics from persistent homology data. This function analyzes persistence_data
+            intervals from a filtration and computes:
+
+            1. Critical cluster threshold (`critical_epsilon`)
+               The largest finite death value in dimension 0 (`H0`), corresponding
+               to the filtration scale at which the final two connected components
+               merge into a single connected component.
+
+            2. Active holes count (`active_holes_count`)
+               The number of dimension 1 (`H1`) features (loops/holes) that are
+               alive at the critical scale, i.e. features satisfying:
+
+                   birth <= critical_epsilon < death
+
+            Parameters
+            ----------
+            ph_data : iterable of tuple
+                Persistent homology intervals in the form:
+
+                    [(dimension, (birth, death)), ...]
+
+                where:
+                - dimension : int
+                    Homology dimension (`0` for connected components,
+                    `1` for loops, etc.)
+                - birth : float
+                    Filtration value at which the feature appears.
+                - death : float
+                    Filtration value at which the feature disappears.
+                    Infinite values are allowed.
+
+            Returns
+            -------
+            dict
+                Dictionary containing:
+                - "critical_epsilon" : float
+                    Largest finite `H0` death value.
+                - "active_holes_count" : int
+                    Number of `H1` features alive at `critical_epsilon`.
+
+            Raises
+            ------
+            ValueError
+                If no finite `H0` death values are present.
+
+            Notes
+            -----
+            The surviving connected component in `H0` typically has death = inf
+            and is excluded from the computation.
+            """
+
+            # 1. Extract all finite death values for Dimension 0 (Connected Components)
+            h0_deaths = [
+                death for dim, (birth, death) in ph_data
+                if dim == 0 and death != float('inf') and np.isfinite(death)
+            ]
+
+            if not h0_deaths:
+                raise ValueError("No finite H0 death values found in the data.")
+
+            # The last epsilon value that reduces the graph to 1 component
+            critical_epsilon = max(h0_deaths)
+
+            # 2. Count the number of Dimension 1 holes alive at this critical scale
+            # A hole is alive if: Birth <= critical_epsilon < Death
+            active_holes_count = sum(
+                1 for dim, (birth, death) in ph_data
+                if dim == 1 and birth <= critical_epsilon < death
+            )
+
+            return {
+                "critical_epsilon": critical_epsilon,
+                "active_holes_count": active_holes_count
+            }
+
+        res_dict: dict[str, list|np.ndarray|None] = { "persistent_homology": None, "point_cloud_data": None}
+        metric_dict: dict[str, float] = { "critical_epsilon": 0.0, "active_holes_count": 0.0 }
+
         if graph is None:
-            return None, None
+            return res_dict, metric_dict
 
         if not silent:
             self.update_status(ProgressData(type='info', sender="GT", message="Computing persistent homology..."))
@@ -603,7 +700,7 @@ class GraphAnalyzer(ProgressUpdate):
             point_cloud = np.array([pos[node] for node in sorted_nodes])
         except nx.exception.NetworkXNoPath:
             # if position-data 'o' does not exist
-            return None, None
+            return res_dict, metric_dict
 
         # 2. Build the Rips Complex (growing circles around pure node data).
         try:
@@ -614,11 +711,15 @@ class GraphAnalyzer(ProgressUpdate):
             simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)  # Dimension 2: Triangles (Solid faces connecting 3 points)
 
             # 3. Compute Persistent Homology
-            persistence = simplex_tree.persistence()
+            persistence_data = simplex_tree.persistence()
         except exception:
-            return None, None
+            return res_dict, metric_dict
 
-        return persistence, point_cloud
+        # 3. Compute persistence metrics
+        metric_dict = extract_scale_metrics(persistence_data)
+        res_dict["persistent_homology"] = persistence_data
+        res_dict["point_cloud_data"] = point_cloud
+        return res_dict, metric_dict
 
     def compute_scaling_data(self) -> defaultdict:
         """
