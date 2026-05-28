@@ -432,9 +432,9 @@ class GraphAnalyzer(ProgressUpdate):
             if not silent:
                 self.update_status(ProgressData(percent=61, sender="GT", message="Computing persistent homology..."))
             ph_dict, mt_dict = self.compute_persistent_homology(graph=graph)
-            data_dict["parameter"].append("Persistent Homology (Critical Epsilon)")
+            data_dict["parameter"].append("Persistent Homology--Critical Epsilon")
             data_dict["value"].append(round(mt_dict["critical_epsilon"], 5))
-            data_dict["parameter"].append("Persistent Homology (Active Holes Count)")
+            data_dict["parameter"].append("Persistent Homology--Active Holes Count")
             data_dict["value"].append(mt_dict["active_holes_count"])
 
             self._persistent_homology_data["persistent_homology"] = ph_dict["persistent_homology"]
@@ -1395,7 +1395,7 @@ class GraphAnalyzer(ProgressUpdate):
                         try:
                             # Generate predicted points for the best-fit curve
                             y_fit_ln, params = CurveFitModels.lognormal(x_avg, y_avg, x_fit)
-                            mu_fit, sigma_fit, a_log_fit = params["a"], params["k"], params["c"]
+                            mu_fit, sigma_fit, a_log_fit = params["mu"], params["sigma"], params["a"]
 
                             # Compute Kolmogorov-Smirnov Test & Goodness-of-fit P-Values
                             res_good_fit = sp.stats.goodness_of_fit(sp.stats.lognorm, y_avg)

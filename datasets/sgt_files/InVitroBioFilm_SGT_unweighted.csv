@@ -1,8 +1,8 @@
 parameter,value
-Number of nodes,286.0
-Number of edges,347.0
-Average edge angle (degrees),164.153
-Median edge angle (degrees),87.138
-Network diameter,35.0
-Persistent Homology (Critical Epsilon),61.39218191268331
-Persistent Homology (Active Holes Count),9.0
+Number of nodes,496.0
+Number of edges,563.0
+Average edge angle (degrees),169.348
+Median edge angle (degrees),88.091
+Average degree,2.27016
+Persistent Homology (Critical Epsilon),54.08327
+Persistent Homology (Active Holes Count),12.0
