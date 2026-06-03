@@ -1184,44 +1184,6 @@ class GraphAnalyzer(ProgressUpdate):
         def plot_scaling_behavior():
             """"""
 
-            def find_elbow(x, y):
-                """"""
-
-                try:
-                    from kneed import KneeLocator
-
-                    # First and second derivative
-                    dy = np.gradient(y, x)
-                    ddy = np.gradient(dy, x)
-
-                    is_increasing = np.all(dy > 0)
-                    is_decreasing = np.all(dy < 0)
-                    is_convex = np.all(ddy > 0)
-                    is_concave = np.all(ddy < 0)
-
-                    if is_increasing:
-                        direction = 'increasing'
-                    elif is_decreasing:
-                        direction = 'decreasing'
-                    else:
-                        direction = None
-
-                    if is_convex:
-                        curve = 'convex'
-                    elif is_concave:
-                        curve = 'concave'
-                    else:
-                        curve = None
-
-                    # print(f"Curve: {curve}, Direction: {direction}")
-                    if direction is None or curve is None:
-                        return None
-                    elbow = KneeLocator(x, y, S=1.0, curve=curve, direction=direction)
-                    return elbow.knee
-                except Exception as error:
-                    logging.exception("Scaling Law (Scale Estimation) Error: %s", error, extra={'user': 'SGT Logs'})
-                    return None
-
             def plot_axis(subplot_num, plt_type="", plot_err=True):
                 """"""
                 subplot_num += 1
@@ -1278,7 +1240,7 @@ class GraphAnalyzer(ProgressUpdate):
                     x_fit: np.ndarray = np.linspace(min(x_avg), max(x_avg), 100)
 
                     # Estimate best scale
-                    best_scale = find_elbow(kernel_dims[:-1], y_avg[:-1])
+                    # best_scale = find_elbow(kernel_dims[:-1], y_avg[:-1])
 
                     # Add plots to Figure
                     try:
@@ -1313,8 +1275,8 @@ class GraphAnalyzer(ProgressUpdate):
 
                     # Add Kernel DataFrame (with BestScale at the last row)
                     kernel_df = pd.DataFrame({'kernel-dim': kernel_dims, 'x-avg': x_avg, 'x-std': x_err})
-                    new_row = pd.DataFrame([{'kernel-dim': best_scale, 'x-avg': 0.0, 'x-std': 0.0}])
-                    kernel_df = pd.concat([kernel_df, new_row], ignore_index=True)  # Add as last row
+                    # new_row = pd.DataFrame([{'kernel-dim': best_scale, 'x-avg': 0.0, 'x-std': 0.0}])
+                    # kernel_df = pd.concat([kernel_df, new_row], ignore_index=True)  # Add as last row
                     self._scaling_results["Nodes-Kernel Size"] = kernel_df.copy()
                 else:
                     # 2a. Plot on the Log-Log scale

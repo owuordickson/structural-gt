@@ -12,7 +12,6 @@ networkx~=3.6.1
 scikit-image~=0.26.0
 setuptools~=82.0.1
 requests~=2.34.2
-kneed~=0.8.6
 packaging~=26.2
 xlsxwriter~=3.2.9
 scikit-learn~=1.9.0

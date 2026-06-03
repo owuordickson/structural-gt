@@ -7,7 +7,7 @@ Create a graph skeleton from an image binary
 import math
 import numpy as np
 from scipy import ndimage
-from skimage.morphology import binary_dilation as dilate, binary_closing
+from skimage.morphology import dilation as dilate, closing
 from skimage.morphology import disk, skeletonize, remove_small_objects
 
 from ..utils.sgt_utils import ProgressData
@@ -387,7 +387,7 @@ class GraphSkeleton:
         canvas = img_bin.copy()
         for mask_elem in mask_elements:
             canvas = skeletonize(mask_elem)
-            canvas = binary_closing(canvas, footprint=mask_elem)
+            canvas = closing(canvas, footprint=mask_elem)
 
         temp_skeleton = skeletonize(canvas)
         return temp_skeleton
