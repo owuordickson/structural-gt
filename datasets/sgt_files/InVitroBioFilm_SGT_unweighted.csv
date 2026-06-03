@@ -1,7 +1,18 @@
 parameter,value
-Number of nodes,496.0
-Number of edges,563.0
-Average edge angle (degrees),169.348
-Median edge angle (degrees),88.091
-Persistent Homology--Critical Epsilon,54.08327
-Persistent Homology--Active Holes Count,12.0
+Number of nodes,286.0
+Number of edges,347.0
+Average edge angle (degrees),164.153
+Median edge angle (degrees),87.138
+Average degree,2.42657
+Network diameter,35.0
+Average node connectivity,1.32969
+Graph density,0.00851
+Global efficiency,0.09319
+Wiener Index,646796.0
+Assortativity coefficient,-0.02484
+Average clustering coefficient,0.06294
+Average betweenness centrality,0.05236
+Average eigenvector centrality,0.02761
+Average closeness centrality,0.06524
+Persistent Homology--Critical Epsilon,61.39218
+Persistent Homology--Active Holes Count,9.0
