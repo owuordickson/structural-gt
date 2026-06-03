@@ -16,3 +16,4 @@ kneed~=0.8.5
 packaging~=25.0
 xlsxwriter~=3.2.9
 scikit-learn~=1.7.2
+gudhi~=3.12.0
