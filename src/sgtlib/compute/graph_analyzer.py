@@ -1448,7 +1448,7 @@ class GraphAnalyzer(ProgressUpdate):
                     ph_fig, ax = plt.subplots(figsize=(6, 6))
 
                 # Default labels
-                custom_labels = {0: r"connected components ($H_0$)", 1: r"holes ($H_1$)"}
+                custom_labels = {0: r"connected components ($\beta_0$)", 1: r"holes ($\beta_1$)"}
 
                 # Matplotlib default color cycle (stable & familiar)
                 colors = ['r', 'b', 'g', 'c', 'm', 'y']
@@ -1524,12 +1524,17 @@ class GraphAnalyzer(ProgressUpdate):
                 ax.set_yticks(new_ticks)
                 ax.set_yticklabels(new_labels)
 
+                # Critical epsilon line
+                if isinstance(critical_epsilon, float):
+                    ax.axhline(critical_epsilon, linestyle="-", color="r", linewidth=1.2)
+                    ax.text(5, critical_epsilon+0.5, r"$\epsilon_{critical}$", va='bottom', ha='left', color='r')
+
                 ax.set_xlim(min_lim, max_lim)
                 ax.set_ylim(min_lim, infinity_value * 1.1)
 
                 ax.set_xlabel(r"Birth (Radius of $\epsilon$)")
                 ax.set_ylabel(r"Death (Radius of $\epsilon$)")
-                ax.set_title(r"Persistence Diagram ($H_0$ and $H_1$)")
+                ax.set_title(r"Persistence Diagram ($\beta_0$ and $\beta_1$)")
                 ax.legend(loc="lower right")
                 # ax.grid(True, alpha=0.3)
                 # return ax
@@ -1549,15 +1554,18 @@ class GraphAnalyzer(ProgressUpdate):
             if ph_data is None or point_cloud is None:
                 return None
 
+            critical_epsilon = None
+            if self._results_df is not None:
+                for _, row in self._results_df.iterrows():
+                    if row["parameter"] == "Persistent Homology--Critical Epsilon":
+                        critical_epsilon = row["value"]
+
             # Create plot figure
             plt_fig = plt.Figure(figsize=(8.5, 11), dpi=300)
 
             # Plot A: The Persistence Diagram tracking components and holes
             ax_1 = plt_fig.add_subplot(2, 1, 1)
-            plot_persistence_diagram(ax=ax_1)
-            """gudhi.plot_persistence_diagram(persistence, axes=ax_1)
-            ax_1.set_title("Persistence Diagram (H0 and H1)")
-            """
+            plot_persistence_diagram(ax=ax_1)  # gudhi.plot_persistence_diagram(persistence, axes=ax_1)
 
             # Plot B: Point Cloud Data
             ax_2 = plt_fig.add_subplot(2, 1, 2)

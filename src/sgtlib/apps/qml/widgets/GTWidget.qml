@@ -89,6 +89,8 @@ Item {
                                 return ohmsComponent
                             case "compute_avg_node_connectivity":
                                 return avgComponent
+                            case "compute_persistent_homology":
+                                return phComponent
                             case "compute_scaling_behavior":
                                 return scalingComponent
                             default:
@@ -128,6 +130,20 @@ Item {
                 font.pixelSize: 10
                 Layout.preferredWidth: 200
                 text: "**Warning**: this calculation takes long (esp. when node-count > 2000)"
+            }
+        }
+    }
+
+    // Custom Component for 'compute_persistent_homology'
+    Component {
+        id: phComponent
+        ColumnLayout {
+            Label {
+                wrapMode: Text.Wrap
+                color: Theme.red
+                font.pixelSize: 10
+                Layout.preferredWidth: 200
+                text: "**Warning**: this calculation consumes a lot of RAM (esp. when node-count > 1000)"
             }
         }
     }
