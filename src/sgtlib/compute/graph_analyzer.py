@@ -1489,15 +1489,15 @@ class GraphAnalyzer(ProgressUpdate):
                 # Critical epsilon line
                 if isinstance(critical_epsilon, float):
                     ax.axhline(critical_epsilon, linestyle="-", color="r", linewidth=1.2)
-                    ax.text(5, critical_epsilon+0.5, r"$\epsilon_{critical}$", va='bottom', ha='left', color='r')
+                    ax.text(5, critical_epsilon+0.5, r"$\epsilon_{critical}$", va='bottom', ha='left', color='r', fontsize=16)
 
                 ax.set_xlim(min_lim, max_lim)
                 ax.set_ylim(min_lim, infinity_value * 1.1)
 
-                ax.set_xlabel(r"Birth (Radius of $\epsilon$)")
-                ax.set_ylabel(r"Death (Radius of $\epsilon$)")
-                ax.set_title(r"Persistence Diagram ($\beta_0$ and $\beta_1$)")
-                ax.legend(loc="lower right")
+                ax.set_xlabel(r"Birth (Radius of $\epsilon$)", fontsize=14)
+                ax.set_ylabel(r"Death (Radius of $\epsilon$)", fontsize=14)
+                ax.set_title(r"Persistence Diagram ($\beta_0$ and $\beta_1$)", fontsize=16)
+                ax.legend(loc="lower right", fontsize=14)
                 # ax.grid(True, alpha=0.3)
                 # return ax
 

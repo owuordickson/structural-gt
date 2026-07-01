@@ -736,9 +736,9 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
         df_sgt (pd.DataFrame): DataFrame containing - 'Material', 'Parameter', and 'value-1', 'value-2', 'value-3', 'value-4' columns
         gt_params (list[str]): List of GT parameters to plot along the spider axes:
 
-            Nodes -- Number of Nodes,
+            No. of Nodes -- Number of Nodes,
 
-            Edges -- Number of Edges,
+            No. of Edges -- Number of Edges,
 
             ND -- Network Diameter,
 
@@ -836,8 +836,8 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
 
     # Rename Columns: apply replacements in the "parameter" column
     param_rename_map = {
-        "Number of nodes": "Nodes",
-        "Number of edges": "Edges",
+        "Number of nodes": "No. of Nodes",
+        "Number of edges": "No. of Edges",
         "Network diameter": "ND",
         "Average edge angle (degrees)": "Avg. E. Angle",
         "Median edge angle (degrees)": "Med. E. Angle",
@@ -898,7 +898,7 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
         ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.3)
         # Add the scale value label below the gridline (at the bottom-most point)
         scale_val = format_scale_value(level)
-        ax.text(0.1, shifted_level, scale_val, ha='left', va='bottom', fontsize=7, alpha=0.3)
+        ax.text(0.1, shifted_level, scale_val, ha='left', va='bottom', fontsize=8, alpha=0.75)
 
     # Draw axes from the center to each vertex
     max_shifted = shift_value(max(levels))
@@ -969,8 +969,8 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
         ax.text(
             x_label, y_label, param,
             ha='center', va='center',
-            fontsize=12,
-            # fontweight='bold',
+            fontsize=14,
+            fontweight='bold',
             rotation=display_angle,  # Apply the tilt
             rotation_mode='anchor'  # Ensures rotation is around the text center
         )
@@ -987,10 +987,10 @@ def sgt_spider_plot(df_sgt: pd.DataFrame, gt_params: list[str], material_labels:
 
     # Set title and legend position
     if df_std is not None:
-        ax.set_title("StructuralGT Spider Plot with STD Error Bars", fontsize=14, pad=20)
+        ax.set_title("StructuralGT Spider Plot with STD Error Bars", fontsize=16, pad=20)
     else:
-        ax.set_title("StructuralGT Spider Plot", fontsize=14, pad=20)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
+        ax.set_title("StructuralGT Spider Plot", fontsize=16, pad=20)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0), fontsize=14)
     fig.tight_layout()
     return fig
 
@@ -1206,7 +1206,7 @@ def sgt_scaling_plot(y_title: str, df_data: pd.DataFrame, mat_labels: dict, skip
     # --- Format main plot ---
     ax_1.set_xlabel('Node Count', fontsize=12)
     ax_1.set_ylabel(y_title, fontsize=12)
-    ax_1.set_title(f'Nodes vs {y_title} (Actual Data)', fontsize=13)
+    ax_1.set_title(f'Nodes vs {y_title} (Actual Data)', fontsize=14)
     ax_1.legend(frameon=False)
     ax_1.grid(True, linestyle='--', linewidth=0.6, alpha=0.7)  # cleaner grid
 
