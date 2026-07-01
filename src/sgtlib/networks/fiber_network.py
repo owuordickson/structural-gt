@@ -505,6 +505,7 @@ class FiberNetworkBuilder(ProgressUpdate):
             'DIA': 'Diameter',
             'AREA': 'Area',  # surface area of edge
             'LEN': 'Length',
+            'DIA_LEN': 'WidthLengthRatio',
             'ANGLE': 'Angle',
             'INV_LEN': 'InverseLength',
             'VAR_CON': 'Conductance',  # with variable width

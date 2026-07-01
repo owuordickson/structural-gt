@@ -145,6 +145,8 @@ class GraphSkeleton:
             if weight_options.get(weight_type) == weight_options.get('INV_LEN'):
                 wt: float = wt + epsilon if wt == 0 else wt
                 wt: float = wt ** -1
+        elif weight_options.get(weight_type) == weight_options.get('DIA_LEN'):
+            wt: float = pix_width / pix_length
         elif weight_options.get(weight_type) == weight_options.get('ANGLE'):
             """
             Edge angle centrality" in graph theory refers to a measure of an edge's importance within a network, 
