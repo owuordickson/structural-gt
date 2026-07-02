@@ -34,7 +34,7 @@ authors = [
 maintainers = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"}
 ]
-description = "A software tool for graph theory analysis of microscopy images."
+description = "A Python library for graph theory analysis of microscopy images."
 readme =  "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE*"]
