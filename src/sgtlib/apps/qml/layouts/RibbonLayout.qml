@@ -342,6 +342,22 @@ Rectangle {
                 }
 
             }
+
+            Basic.Button {
+                id: btnSynthesize
+                text: ""
+                icon.source: "../assets/icons/synth_icon.png"
+                icon.width: 24
+                icon.height: 24
+                icon.color: enabled ? Theme.black : Theme.disabled
+                background: Rectangle {
+                    color: "transparent"
+                }
+                ToolTip.text: synthesisController.tooltip_text()
+                ToolTip.visible: btnSynthesize.hovered
+                enabled: synthesisController.is_available()
+                onClicked: synthesisController.open_synthesis_window()
+            }
         }
     }
 

@@ -1,0 +1,6 @@
+[submodule "networksynth"]
+	path = networksynth
+	url = https://github.com/WilliamLuminary/NetworkSynth.git
+	branch = dist
+	shallow = true
+	update = none
