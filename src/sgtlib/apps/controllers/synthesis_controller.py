@@ -90,8 +90,9 @@ class SynthesisController(QObject):
         """Why synthesis cannot run, or an empty string when it can."""
         if self._repo_dir == "":
             return (f"NetworkSynth is not in {DEFAULT_REPO_DIR}. Fetch it with "
-                    f"'{FETCH_COMMAND}', or name where it is with 'repo_dir' under "
-                    "[synthesis-settings] in the config file.")
+                    f"'{FETCH_COMMAND}' - it is a private repository, so this needs an "
+                    "SSH key with access to it. Or name where it already is with "
+                    "'repo_dir' under [synthesis-settings] in the config file.")
         if not verify_path(self.entry_script)[0]:
             if self._repo_dir == str(DEFAULT_REPO_DIR):
                 return (f"{DEFAULT_REPO_DIR} holds no {ENTRY_POINT}. "

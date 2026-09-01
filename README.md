@@ -164,6 +164,8 @@ git submodule update --init --checkout networksynth
 
 `--checkout` is what overrides `update = none`; without it git prints `Skipping submodule` and does nothing.
 
+Two things commonly go wrong here. The submodule is fetched over SSH, so git asks for an SSH key with access to NetworkSynth; a clone made before the URL moved to SSH keeps the old one cached, and `git submodule sync networksynth` updates it. And do not add `--depth 1` of your own: it fetches only the default branch, leaving the pinned `dist` commit absent, and git stops with `'origin/dist' is not a commit`. The `shallow = true` already recorded in `.gitmodules` fetches the right branch and is all that is needed.
+
 NetworkSynth needs Python 3.14 and pins every dependency it shares with this app to the same version, so it runs on this app's own interpreter and needs no environment of its own. The only package it adds is `pot`, the optimal-transport library behind its curvature measure, which is in `requirements.txt` here. Its parameter sweeps also want `wandb`, which is not: sweeps need a Weights & Biases account to be useful, so that mode reports its own error rather than every user carrying the dependency.
 
 The button looks for the checkout in `networksynth` and runs it with the Python running this app. To keep NetworkSynth somewhere else, or to name a different interpreter, say so under `[synthesis-settings]` - either line on its own is enough, and each overrides only what it names:
