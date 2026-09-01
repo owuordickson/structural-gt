@@ -152,45 +152,28 @@ sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 
 ### 3(d) Generating Synthetic Networks
 
-The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which generates synthetic networks modelled on an extracted graph. StructuralGT starts it as a separate program and takes no further part: the inputs, the settings and the output folder are all chosen in NetworkSynth's own window.
+The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the inputs, the settings and the output folder in its window.
 
-NetworkSynth is a submodule at `networksynth`, pinned to a commit on its `dist` branch - a code-only branch of about 780 KB, rather than the full repository. It is currently a **private repository**, and it is registered as `update = none`, which means it is never fetched unless you ask for it by name. Cloning StructuralGT leaves `networksynth` empty, with no error and no credential prompt, whether or not you have access; `--recurse-submodules` skips it too. The synthesis button simply stays disabled.
+NetworkSynth is a private repository, included here as a git submodule in `networksynth`. Cloning StructuralGT without access to it breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
 
-If you do have access, one command fetches it:
+To install it you need a GitHub SSH key with access:
 
 ```bash
 git submodule update --init --checkout networksynth
 ```
 
-`--checkout` is what overrides `update = none`; without it git prints `Skipping submodule` and does nothing.
+`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it.
 
-Two things commonly go wrong here. The submodule is fetched over SSH, so git asks for an SSH key with access to NetworkSynth; a clone made before the URL moved to SSH keeps the old one cached, and `git submodule sync networksynth` updates it. And do not add `--depth 1` of your own: it fetches only the default branch, leaving the pinned `dist` commit absent, and git stops with `'origin/dist' is not a commit`. The `shallow = true` already recorded in `.gitmodules` fetches the right branch and is all that is needed.
-
-NetworkSynth needs Python 3.14 and pins every dependency it shares with this app to the same version, so it runs on this app's own interpreter and needs no environment of its own. The only package it adds is `pot`, the optimal-transport library behind its curvature measure, which is in `requirements.txt` here. Its parameter sweeps also want `wandb`, which is not: sweeps need a Weights & Biases account to be useful, so that mode reports its own error rather than every user carrying the dependency.
-
-The button looks for the checkout in `networksynth` and runs it with the Python running this app. To keep NetworkSynth somewhere else, or to name a different interpreter, say so under `[synthesis-settings]` - either line on its own is enough, and each overrides only what it names:
-
-```ini
-[synthesis-settings]
-python_interpreter = /path/to/python
-repo_dir = /path/to/NetworkSynth
-```
-
-A packaged build is the one case that needs `python_interpreter`, or a `.venv` inside the checkout: a frozen `sys.executable` is StructuralGT itself rather than a Python, so there is no interpreter to lend.
-
-The GUI reads this from the `configs.ini` inside the package (`src/sgtlib/utils/configs.ini` when running from source), the same file the rest of its defaults come from; `sgt_configs.ini` in the project root is the copy the terminal app takes with `-c`, and the two are kept in step.
-
-Until both the checkout and an interpreter are in place the button stays disabled, and its tooltip names the step that is missing. If NetworkSynth exits with an error, the tail of its output appears in the SGT Logs window.
-
-**Moving to a newer NetworkSynth.** The submodule records a commit, not a branch, so nothing moves on its own. To take a new release:
+To move to the newest version:
 
 ```bash
-git -C networksynth fetch --tags
-git -C networksynth checkout dist-v2.0.0
-git add networksynth && git commit -m "bump NetworkSynth to dist-v2.0.0"
+git submodule update --remote --checkout networksynth
+git add networksynth && git commit -m "update NetworkSynth"
 ```
 
-Committing that gitlink is what pins the version: any later checkout of this repository brings back exactly the NetworkSynth it was built against.
+If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
+
+`wandb` is the only package not in `requirements.txt`. NetworkSynth uses it in sweep mode for online tracking. You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
 
 ## Contributors ✨
