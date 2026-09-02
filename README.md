@@ -159,18 +159,36 @@ NetworkSynth is a private repository, included here as a git submodule in `netwo
 To install it you need a GitHub SSH key with access:
 
 ```bash
+git submodule sync networksynth
 git submodule update --init --checkout networksynth
 git -C networksynth fetch origin dist --depth 1
 git -C networksynth checkout -B dist FETCH_HEAD
 ```
 
-`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. The last two lines put you on the newest release, and running them again is how you update later.
+`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. Run `git submodule sync` again any time `.gitmodules` changes, or the old URL stays cached in your clone.
 
-You never commit anything for this. `git status` stays clean whatever version you are on.
+**To update:**
+
+```bash
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
+
+**To try a pre-release, developers only:**
+
+```bash
+git -C networksynth fetch origin dist-dev --depth 1
+git -C networksynth checkout -B dist-dev FETCH_HEAD
+```
+
+**To go back:**
+
+```bash
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
-
-Pre-release builds live on a `dist-dev` branch. To try one, fetch that name instead of `dist` in the commands above, and fetch `dist` again to go back. This is for developers, and nothing you do in `networksynth` reaches anyone else unless you commit the pin.
 
 `wandb` is the only package not in `requirements.txt`. NetworkSynth uses it in sweep mode for online tracking. You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
