@@ -160,20 +160,17 @@ To install it you need a GitHub SSH key with access:
 
 ```bash
 git submodule update --init --checkout networksynth
-```
-
-`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it.
-
-To move to the newest version:
-
-```bash
 git -C networksynth fetch origin dist --depth 1
 git -C networksynth checkout -B dist FETCH_HEAD
 ```
 
-That is all you need to run it. If you maintain StructuralGT and want everyone on that version, also record it with `git add networksynth && git commit -m "update NetworkSynth"`.
+`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. The last two lines put you on the newest release, and running them again is how you update later.
+
+You never commit anything for this. `git status` stays clean whatever version you are on.
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
+
+Pre-release builds live on a `dist-dev` branch. To try one, fetch that name instead of `dist` in the commands above, and fetch `dist` again to go back. This is for developers, and nothing you do in `networksynth` reaches anyone else unless you commit the pin.
 
 `wandb` is the only package not in `requirements.txt`. NetworkSynth uses it in sweep mode for online tracking. You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
