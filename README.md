@@ -167,9 +167,11 @@ git submodule update --init --checkout networksynth
 To move to the newest version:
 
 ```bash
-git submodule update --remote --checkout networksynth
-git add networksynth && git commit -m "update NetworkSynth"
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
 ```
+
+That is all you need to run it. If you maintain StructuralGT and want everyone on that version, also record it with `git add networksynth && git commit -m "update NetworkSynth"`.
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
 

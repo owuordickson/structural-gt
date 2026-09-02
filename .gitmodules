@@ -4,3 +4,4 @@
 	branch = dist
 	shallow = true
 	update = none
+	ignore = all

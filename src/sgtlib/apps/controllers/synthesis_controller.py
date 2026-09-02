@@ -11,7 +11,11 @@ from PySide6.QtCore import Slot, QObject, QProcess, QProcessEnvironment
 from ...utils.config_loader import load_synthesis_configs
 from ...utils.sgt_utils import ProgressData, verify_path
 
-ENTRY_POINT = "gui_app.py"
+# NetworkSynth is an installable package, so it is launched as a module rather than a
+# script path. PACKAGE_DIR is what has to be on PYTHONPATH for that import to resolve,
+# and it doubles as the check that the checkout really holds NetworkSynth.
+ENTRY_MODULE = "networksynth.gui_app"
+PACKAGE_DIR = os.path.join("src", "networksynth")
 
 # Where 'git submodule update --init' puts NetworkSynth, so a source checkout needs no
 # configuration at all. Anchored on this file rather than the working directory, which
@@ -81,9 +85,9 @@ class SynthesisController(QObject):
         return ""
 
     @property
-    def entry_script(self) -> str:
-        """Path to the script that opens NetworkSynth's window."""
-        return os.path.join(self._repo_dir, ENTRY_POINT) if self._repo_dir else ""
+    def package_dir(self) -> str:
+        """The package inside the checkout, which is what we import."""
+        return os.path.join(self._repo_dir, PACKAGE_DIR) if self._repo_dir else ""
 
     @Slot(result=str)
     def unavailable_reason(self) -> str:
@@ -93,11 +97,11 @@ class SynthesisController(QObject):
                     f"'{FETCH_COMMAND}' - it is a private repository, so this needs an "
                     "SSH key with access to it. Or name where it already is with "
                     "'repo_dir' under [synthesis-settings] in the config file.")
-        if not verify_path(self.entry_script)[0]:
+        if not verify_path(self.package_dir)[0]:
             if self._repo_dir == str(DEFAULT_REPO_DIR):
-                return (f"{DEFAULT_REPO_DIR} holds no {ENTRY_POINT}. "
+                return (f"{DEFAULT_REPO_DIR} holds no {PACKAGE_DIR}. "
                         f"Fetch NetworkSynth with '{FETCH_COMMAND}'.")
-            return f"No {ENTRY_POINT} in {self._repo_dir}."
+            return f"No {PACKAGE_DIR} in {self._repo_dir}."
         if self._interpreter == "":
             return (f"This build has no interpreter to run NetworkSynth with. Make one in "
                     f"{os.path.join(self._repo_dir, '.venv')}, or name one with "
@@ -131,10 +135,14 @@ class SynthesisController(QObject):
         env = QProcessEnvironment.systemEnvironment()
         for var_name in QT_ENV_VARS:
             env.remove(var_name)
+        # The checkout is not installed, so the import path is handed over explicitly.
+        source_root = os.path.join(self._repo_dir, "src")
+        existing = env.value("PYTHONPATH")
+        env.insert("PYTHONPATH", f"{source_root}{os.pathsep}{existing}" if existing else source_root)
 
         self._process = QProcess(self)
         self._process.setProgram(self._interpreter)
-        self._process.setArguments([self.entry_script])
+        self._process.setArguments(["-m", ENTRY_MODULE])
         self._process.setWorkingDirectory(self._repo_dir)
         self._process.setProcessEnvironment(env)
         self._process.finished.connect(self.handle_synthesis_finished)
