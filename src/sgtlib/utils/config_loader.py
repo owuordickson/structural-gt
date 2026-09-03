@@ -307,3 +307,24 @@ def load_ai_configs(cfg_path: str = ""):
         return options_model
     except configparser.NoSectionError:
         return options_model
+
+
+def load_synthesis_configs(cfg_path: str = ""):
+    """Where NetworkSynth lives: an interpreter to run it with, and its repository."""
+
+    options_synth: dict[str, str] = {
+        "python_interpreter": "",
+        "repo_dir": "",
+    }
+
+    config = read_config_file(cfg_path)
+    if config is None:
+        return options_synth
+
+    try:
+        options_synth["python_interpreter"] = str(config.get('synthesis-settings', 'python_interpreter')).strip()
+        options_synth["repo_dir"] = str(config.get('synthesis-settings', 'repo_dir')).strip()
+
+        return options_synth
+    except configparser.Error:
+        return options_synth

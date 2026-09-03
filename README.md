@@ -17,7 +17,7 @@ A software tool that allows graph theory analysis of nanostructures. This is a m
 * We would love to hear from you, please give us feedback.
 
 ## 2. Install via pip
-* Install Python version 3.13 on your computer.
+* Install Python version 3.14 on your computer.
 * Execute the following commands:
 
 ```bash
@@ -29,7 +29,7 @@ pip install sgtlib
 
 Therefore, please follow the manual installation instructions provided below:
 
-* Install Python version 3.13 on your computer.
+* Install Python version 3.14 on your computer.
 * Git Clone this repo: ```https://github.com/owuordickson/structural-gt.git```
 * Extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
@@ -148,6 +148,49 @@ print(compute_obj.output_df)
 # Save in PDF
 sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 ```
+
+
+### 3(d) Generating Synthetic Networks
+
+The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the inputs, the settings and the output folder in its window.
+
+NetworkSynth is a private repository, included here as a git submodule in `networksynth`. Cloning StructuralGT without access to it breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
+
+To install it you need a GitHub SSH key with access:
+
+```bash
+git submodule sync networksynth
+git submodule update --init --checkout networksynth
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
+
+`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. Run `git submodule sync` again any time `.gitmodules` changes, or the old URL stays cached in your clone.
+
+**To update:**
+
+```bash
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
+
+**To try a pre-release, developers only:**
+
+```bash
+git -C networksynth fetch origin dist-dev --depth 1
+git -C networksynth checkout -B dist-dev FETCH_HEAD
+```
+
+**To go back:**
+
+```bash
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
+
+If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
+
+`wandb` is the only package not in `requirements.txt`. NetworkSynth uses it in sweep mode for online tracking. You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
 
 ## Contributors ✨
