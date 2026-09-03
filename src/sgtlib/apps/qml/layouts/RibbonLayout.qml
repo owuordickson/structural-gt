@@ -351,12 +351,63 @@ Rectangle {
                 icon.height: 24
                 icon.color: enabled ? Theme.black : Theme.disabled
                 background: Rectangle {
-                    color: "transparent"
+                    radius: 5
+                    color: btnSynthesize.down ? Theme.lightGray
+                                              : (btnSynthesize.hovered ? Theme.veryLightGray : "transparent")
+                    border.color: btnSynthesize.down ? Theme.dodgerBlue : "transparent"
+                    border.width: 1
                 }
                 ToolTip.text: synthesisController.tooltip_text()
-                ToolTip.visible: btnSynthesize.hovered
+                ToolTip.visible: btnSynthesize.hovered && !synthStartingToast.visible
                 enabled: synthesisController.is_available()
-                onClicked: synthesisController.open_synthesis_window()
+                onClicked: {
+                    synthStartingToast.open();
+                    synthesisController.open_synthesis_window();
+                }
+
+                Popup {
+                    id: synthStartingToast
+                    width: 230
+                    height: 44
+                    modal: false
+                    focus: false
+                    closePolicy: Popup.NoAutoClose
+                    x: btnSynthesize.width - width
+                    y: 32
+                    background: Rectangle {
+                        color: Theme.background
+                        border.color: Theme.lightGray
+                        border.width: 1
+                        radius: 2
+                    }
+
+                    onOpened: synthStartingTimer.restart()
+
+                    Timer {
+                        id: synthStartingTimer
+                        interval: 4000
+                        onTriggered: synthStartingToast.close()
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 8
+
+                        Column {
+                            SpinnerProgress {
+                                running: synthStartingToast.visible
+                                width: 20
+                                height: 20
+                            }
+                        }
+
+                        Label {
+                            text: "Starting NetworkSynth Tool..."
+                            color: Theme.blue
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
             }
         }
     }
@@ -387,6 +438,10 @@ Rectangle {
                     break;
                 }
             }
+        }
+
+        function onShowAlertSignal(title, msg) {
+            synthStartingToast.close();
         }
     }
 
