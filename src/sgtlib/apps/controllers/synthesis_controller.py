@@ -145,7 +145,8 @@ class SynthesisController(QObject):
 
         exported = nx.Graph()
         for node in graph.nodes():
-            x, y = graph.nodes[node]["o"][:2]
+
+            y, x = graph.nodes[node]["o"][:2]
             exported.add_node(node, x=float(x), y=float(y))
         for source, target, data in graph.edges(data=True):
             weight = data.get("weight")
