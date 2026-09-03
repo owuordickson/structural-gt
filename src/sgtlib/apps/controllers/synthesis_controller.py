@@ -15,6 +15,11 @@ from ...utils.sgt_utils import ProgressData, verify_path
 # script path. PACKAGE_DIR is what has to be on PYTHONPATH for that import to resolve,
 # and it doubles as the check that the checkout really holds NetworkSynth.
 ENTRY_MODULE = "networksynth.gui_app"
+
+# NetworkSynth reads a network from stdin when handed this flag, so the extracted
+# graph goes straight over the pipe and neither side writes a file for it.
+STDIN_FLAG = "--graph-from-stdin"
+IMAGE_FLAG = "--image"
 PACKAGE_DIR = os.path.join("src", "networksynth")
 
 # Where 'git submodule update --init' puts NetworkSynth, so a source checkout needs no
@@ -120,6 +125,39 @@ class SynthesisController(QObject):
         reason = self.unavailable_reason()
         return "Generate synthetic networks" if reason == "" else f"Synthesis unavailable: {reason}"
 
+    def _extracted_graph(self):
+        """The graph currently in view, or None if nothing has been extracted yet."""
+        sgt_obj = self._ctrl.get_selected_sgt_obj()
+        if sgt_obj is None:
+            return None, ""
+        ntwk_p = sgt_obj.ntwk_p
+        graph_obj = ntwk_p.graph_obj
+        graph = graph_obj.nx_graph if graph_obj is not None else None
+        return graph, (ntwk_p.img_path or "")
+
+    @staticmethod
+    def _as_graphml(graph) -> bytes:
+        """Serialise to a buffer. Positions live in 'o', which GraphML cannot hold,
+        so they are written out as plain x and y attributes."""
+        import io
+
+        import networkx as nx
+
+        exported = nx.Graph()
+        for node in graph.nodes():
+            x, y = graph.nodes[node]["o"][:2]
+            exported.add_node(node, x=float(x), y=float(y))
+        for source, target, data in graph.edges(data=True):
+            weight = data.get("weight")
+            if weight is None:
+                exported.add_edge(source, target)
+            else:
+                exported.add_edge(source, target, weight=float(weight))
+
+        buffer = io.BytesIO()
+        nx.write_graphml(exported, buffer)
+        return buffer.getvalue()
+
     @Slot()
     def open_synthesis_window(self):
         """Start NetworkSynth as a separate process and let it run on its own."""
@@ -140,15 +178,28 @@ class SynthesisController(QObject):
         existing = env.value("PYTHONPATH")
         env.insert("PYTHONPATH", f"{source_root}{os.pathsep}{existing}" if existing else source_root)
 
+        graph, image = self._extracted_graph()
+        arguments = ["-m", ENTRY_MODULE]
+        handover = b""
+        if graph is not None and graph.number_of_nodes() > 0:
+            handover = self._as_graphml(graph)
+            arguments.append(STDIN_FLAG)
+            if image:
+                arguments += [IMAGE_FLAG, image]
+
         self._process = QProcess(self)
         self._process.setProgram(self._interpreter)
-        self._process.setArguments(["-m", ENTRY_MODULE])
+        self._process.setArguments(arguments)
         self._process.setWorkingDirectory(self._repo_dir)
         self._process.setProcessEnvironment(env)
         self._process.finished.connect(self.handle_synthesis_finished)
         self._process.errorOccurred.connect(self.handle_synthesis_error)
         self._process.start()
-        self._report("info", "Opening the synthesis window...")
+        if handover:
+            self._process.write(handover)
+            self._process.closeWriteChannel()
+        opened = "Opening the synthesis window with the extracted network..."
+        self._report("info", opened if handover else "Opening the synthesis window...")
 
     def handle_synthesis_finished(self, exit_code: int, exit_status) -> None:
         """Report how NetworkSynth ended, with its own last words when it ended badly."""
