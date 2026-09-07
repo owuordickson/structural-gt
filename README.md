@@ -154,7 +154,9 @@ sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 
 The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the settings and the output folder in its window.
 
-Extract a graph first and it opens with that network and its image already loaded, so there is nothing to export or pick. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
+Extract a graph first and the button hands it straight over: the network travels down a pipe to NetworkSynth and the image is passed by path, so nothing is exported, saved or picked by hand. It opens with both already in place and drawn together, reading the network in the coordinate space StructuralGT traced it in, which is a scaled copy of the image rather than the file itself. The graph in view is the one that travels, so it is one network per click.
+
+Point it at other inputs there and change your mind, and a button in its Align section puts the extracted network back. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
 
 NetworkSynth is included here as a git submodule in `networksynth`. It is not fetched by a plain clone, and that breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
 
