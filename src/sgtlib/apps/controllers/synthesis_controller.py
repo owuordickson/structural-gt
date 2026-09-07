@@ -31,9 +31,8 @@ DEFAULT_REPO_DIR = Path(__file__).resolve().parents[4] / "networksynth"
 # only thing left to run NetworkSynth with. Either platform's layout.
 VENV_PYTHON = (Path(".venv", "bin", "python"), Path(".venv", "Scripts", "python.exe"))
 
-# The submodule is marked 'update = none', so it is fetched only when asked for by name:
-# NetworkSynth is a private repository, and a plain clone of this one must not fail for
-# somebody who has no access to it.
+# The submodule is marked 'update = none', so it is fetched only when asked for by
+# name. A plain clone of this repository therefore stays small and needs no network.
 FETCH_COMMAND = "git submodule update --init --checkout networksynth"
 
 # Qt finds its plugins through these, and a frozen build's point inside its own bundle,
@@ -99,8 +98,7 @@ class SynthesisController(QObject):
         """Why synthesis cannot run, or an empty string when it can."""
         if self._repo_dir == "":
             return (f"NetworkSynth is not in {DEFAULT_REPO_DIR}. Fetch it with "
-                    f"'{FETCH_COMMAND}' - it is a private repository, so this needs an "
-                    "SSH key with access to it. Or name where it already is with "
+                    f"'{FETCH_COMMAND}', or name where it already is with "
                     "'repo_dir' under [synthesis-settings] in the config file.")
         if not verify_path(self.package_dir)[0]:
             if self._repo_dir == str(DEFAULT_REPO_DIR):

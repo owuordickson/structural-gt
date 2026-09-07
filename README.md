@@ -152,11 +152,13 @@ sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 
 ### 3(d) Generating Synthetic Networks
 
-The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the inputs, the settings and the output folder in its window.
+The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the settings and the output folder in its window.
 
-NetworkSynth is a private repository, included here as a git submodule in `networksynth`. Cloning StructuralGT without access to it breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
+Extract a graph first and it opens with that network and its image already loaded, so there is nothing to export or pick. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
 
-To install it you need a GitHub SSH key with access:
+NetworkSynth is included here as a git submodule in `networksynth`. It is not fetched by a plain clone, and that breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
+
+To install it:
 
 ```bash
 git submodule sync networksynth
