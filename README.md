@@ -171,26 +171,15 @@ git -C networksynth checkout -B dist FETCH_HEAD
 
 `--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. Run `git submodule sync` again any time `.gitmodules` changes, or the old URL stays cached in your clone.
 
-**To update:**
+**To update, or to move between releases and pre-releases:**
 
 ```bash
-git -C networksynth fetch origin dist --depth 1
-git -C networksynth checkout -B dist FETCH_HEAD
+BRANCH=dist    # dist-dev for pre-releases, developers only
+git -C networksynth fetch origin $BRANCH --depth 1
+git -C networksynth checkout -B $BRANCH FETCH_HEAD
 ```
 
-**To try a pre-release, developers only:**
-
-```bash
-git -C networksynth fetch origin dist-dev --depth 1
-git -C networksynth checkout -B dist-dev FETCH_HEAD
-```
-
-**To go back:**
-
-```bash
-git -C networksynth fetch origin dist --depth 1
-git -C networksynth checkout -B dist FETCH_HEAD
-```
+Those two commands are the whole of it: run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
 
