@@ -179,7 +179,7 @@ git -C networksynth fetch origin $BRANCH --depth 1
 git -C networksynth checkout -B $BRANCH FETCH_HEAD
 ```
 
-Those two commands are the whole of it: run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
+Those two commands are the whole of it:      run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
 
