@@ -152,15 +152,23 @@ sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 
 ### 3(d) Generating Synthetic Networks
 
-The last button on the ribbon opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the settings and the output folder in its window.
+The synthesis button, second from the left on the ribbon, opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the settings and the output folder in its window.
 
 Extract a graph first and the button hands it straight over: the network travels down a pipe to NetworkSynth and the image is passed by path, so nothing is exported, saved or picked by hand. It opens with both already in place and drawn together, reading the network in the coordinate space StructuralGT traced it in, which is a scaled copy of the image rather than the file itself. The graph in view is the one that travels, so it is one network per click.
 
 Point it at other inputs there and change your mind, and a button in its Input card puts the extracted network back. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
 
-NetworkSynth is included here as a git submodule in `networksynth`. It is not fetched by a plain clone, and that breaks nothing: the folder stays empty and the synthesis button stays disabled, with a tooltip saying what is missing.
+NetworkSynth is a separate program, and this application finds it either as an installed package or as a checkout. Until one of them is in place the synthesis button stays disabled, with a tooltip saying what is missing.
 
-To install it:
+**Install the package.** Nothing to configure afterwards, and it works the same on every platform:
+
+```bash
+pip install "networksynth @ https://github.com/WilliamLuminary/NetworkSynth/archive/refs/heads/dist.zip"
+```
+
+That URL is always the newest release. Install it into the environment StructuralGT runs in, and the button finds it on the import path. Swap `dist` for `dist-dev` to take the newest pre-release instead, which is for developers. Every [release](https://github.com/WilliamLuminary/NetworkSynth/releases) also carries a built wheel if you would rather not build one.
+
+**Or take the submodule,** which is what a source checkout of this repository is set up for:
 
 ```bash
 git submodule sync networksynth
@@ -171,7 +179,7 @@ git -C networksynth checkout -B dist FETCH_HEAD
 
 `--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. Run `git submodule sync` again any time `.gitmodules` changes, or the old URL stays cached in your clone.
 
-**To update, or to move between releases and pre-releases:**
+**To update a submodule, or to move between releases and pre-releases:**
 
 ```bash
 BRANCH=dist    # dist-dev for pre-releases, developers only
