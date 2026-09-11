@@ -95,8 +95,6 @@ Rectangle {
                     modal: false
                     focus: false
                     closePolicy: Popup.NoAutoClose
-                    // Opens rightward: the button sits at the left of the ribbon,
-                    // so pulling the toast back by its own width put it offscreen.
                     x: 0
                     y: 32
                     background: Rectangle {
@@ -411,7 +409,6 @@ Rectangle {
                 }
 
             }
-
         }
     }
 

@@ -5,42 +5,40 @@ Pyside6 (GUI components) controller class for network synthesis.
 
 import os
 import sys
+import tomllib
 from pathlib import Path
+from packaging.requirements import Requirement
 from PySide6.QtCore import Slot, QObject, QProcess, QProcessEnvironment
 
 from ...utils.config_loader import load_synthesis_configs
 from ...utils.sgt_utils import ProgressData, verify_path
 
-# Launched as a module, whether pip installed or sitting in a checkout.
 ENTRY_MODULE = "networksynth.gui_app"
 
-# Hands the graph over the pipe, so neither side writes a file for it.
 STDIN_FLAG = "--graph-from-stdin"
 IMAGE_FLAG = "--image"
 PACKAGE_DIR = os.path.join("src", "networksynth")
 
-# Answers by exit code, so a missing package prints no traceback. find_spec locates
-# without importing. -I keeps the working directory off sys.path: the submodule folder
-# here is called networksynth and would otherwise resolve as a namespace package, whose
-# spec has no origin, which is what the check rejects.
+# -I keeps the working directory off sys.path, where the submodule folder would resolve
+# as a namespace package (spec without origin), which the check rejects.
 IMPORT_PROBE = ["-I", "-c", ("import importlib.util, sys; spec = importlib.util.find_spec('networksynth'); "
                              "sys.exit(0 if spec is not None and spec.origin else 1)")]
+
+MISSING_PROBE = ["-I", "-c", ("import importlib.metadata as m, sys\n"
+                               "for name in sys.argv[1:]:\n"
+                               "    try: m.distribution(name)\n"
+                               "    except m.PackageNotFoundError: print(name)")]
 
 INSTALL_COMMAND = ('pip install "networksynth @ '
                    'https://github.com/WilliamLuminary/NetworkSynth/archive/refs/heads/dist.zip"')
 
-# Where 'git submodule update --init' puts it. Anchored on this file, not the working
-# directory, which for a GUI is wherever the user happened to start it from.
 DEFAULT_REPO_DIR = Path(__file__).resolve().parents[4] / "networksynth"
 
-# A frozen build has no interpreter to lend. Either platform's layout.
 VENV_PYTHON = (Path(".venv", "bin", "python"), Path(".venv", "Scripts", "python.exe"))
 
-# The submodule is 'update = none', so a plain clone stays small and needs no network.
 FETCH_COMMAND = "git submodule update --init --checkout networksynth"
 
-# A frozen build's point inside its own bundle, which the child cannot use. Clearing them
-# is safe when the interpreter is shared, since Qt's own discovery finds the same files.
+# A frozen build's point inside its own bundle, which the child cannot use.
 QT_ENV_VARS = ("QT_PLUGIN_PATH", "QT_QPA_PLATFORM_PLUGIN_PATH", "QML_IMPORT_PATH", "QML2_IMPORT_PATH")
 
 STDERR_TAIL_LINES = 5
@@ -66,6 +64,7 @@ class SynthesisController(QObject):
         self._repo_dir = configs["repo_dir"] or self._submodule_dir()
         self._interpreter = configs["python_interpreter"] or self._resolve_interpreter()
         self._installed = self._is_installed()
+        self._missing = [] if self._installed else self._missing_requirements()
 
     @staticmethod
     def _submodule_dir() -> str:
@@ -104,6 +103,22 @@ class SynthesisController(QObject):
         probe.start(self._interpreter, IMPORT_PROBE)
         return probe.waitForFinished() and probe.exitCode() == 0
 
+    def _missing_requirements(self) -> list[str]:
+        """NetworkSynth's requirements the interpreter lacks, as pip specs. A checkout
+        brings nothing with it, unlike an installed package."""
+        pyproject = Path(self._repo_dir, "pyproject.toml")
+        if not self._repo_dir or not pyproject.is_file():
+            return []
+        with open(pyproject, "rb") as handle:
+            specs = tomllib.load(handle)["project"]["dependencies"]
+        by_name = {Requirement(spec).name: spec for spec in specs}
+        probe = QProcess()
+        probe.setStandardErrorFile(QProcess.nullDevice())
+        probe.start(self._interpreter, MISSING_PROBE + list(by_name))
+        probe.waitForFinished()
+        missing = bytes(probe.readAllStandardOutput()).decode().split()
+        return [by_name[name] for name in missing if name in by_name]
+
     @property
     def package_dir(self) -> str:
         """The package inside the checkout, which is what we import."""
@@ -130,6 +145,10 @@ class SynthesisController(QObject):
                 return (f"{DEFAULT_REPO_DIR} holds no {PACKAGE_DIR}. Fetch NetworkSynth "
                         f"with '{FETCH_COMMAND}', or install it with '{INSTALL_COMMAND}'.")
             return f"No {PACKAGE_DIR} in {self._repo_dir}."
+        if self._missing:
+            specs = " ".join(f'"{spec}"' for spec in self._missing)
+            return ("NetworkSynth needs packages this environment lacks. Install them with "
+                    f"'{self._interpreter} -m pip install {specs}'.")
         return ""
 
     @Slot(result=bool)
@@ -162,8 +181,7 @@ class SynthesisController(QObject):
 
         exported = nx.Graph()
         for node in graph.nodes():
-
-            y, x = graph.nodes[node]["o"][:2]
+            y, x = graph.nodes[node]["o"][-2:]
             exported.add_node(node, x=float(x), y=float(y))
         for source, target, data in graph.edges(data=True):
             weight = data.get("weight")
