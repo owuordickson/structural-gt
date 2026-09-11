@@ -158,7 +158,7 @@ Extract a graph first and the button hands it straight over: the network travels
 
 Point it at other inputs there and change your mind, and a button in its Input card puts the extracted network back. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
 
-NetworkSynth is a separate program, and this application finds it either as an installed package or as a checkout. Until one of them is in place the synthesis button stays disabled, with a tooltip saying what is missing.
+NetworkSynth is a separate program, and this application finds it either as an installed package or as a checkout.
 
 **Install the package.** Nothing to configure afterwards, and it works the same on every platform:
 
@@ -187,11 +187,17 @@ git -C networksynth fetch origin $BRANCH --depth 1
 git -C networksynth checkout -B $BRANCH FETCH_HEAD
 ```
 
-Those two commands are the whole of it:      run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
+Those two commands are the whole of it: run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
 
 If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
 
-`wandb` is the only package not in `requirements.txt`. NetworkSynth uses it in sweep mode for online tracking. You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
+The checkout runs in StructuralGT's own environment, so that environment has to cover NetworkSynth's dependencies as well. Most are shared already; install the rest from the checkout's `pyproject.toml`, currently `pot` and `psutil`:
+
+```bash
+pip install "pot~=0.9.7" "psutil~=7.2.2"
+```
+
+You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
 
 ## Contributors ✨

@@ -5,9 +5,7 @@ Pyside6 (GUI components) controller class for network synthesis.
 
 import os
 import sys
-import tomllib
 from pathlib import Path
-from packaging.requirements import Requirement
 from PySide6.QtCore import Slot, QObject, QProcess, QProcessEnvironment
 
 from ...utils.config_loader import load_synthesis_configs
@@ -24,10 +22,19 @@ PACKAGE_DIR = os.path.join("src", "networksynth")
 IMPORT_PROBE = ["-I", "-c", ("import importlib.util, sys; spec = importlib.util.find_spec('networksynth'); "
                              "sys.exit(0 if spec is not None and spec.origin else 1)")]
 
-MISSING_PROBE = ["-I", "-c", ("import importlib.metadata as m, sys\n"
-                               "for name in sys.argv[1:]:\n"
-                               "    try: m.distribution(name)\n"
-                               "    except m.PackageNotFoundError: print(name)")]
+# Prints the requirements the interpreter lacks, read from the checkout's pyproject when
+# given one, else from the installed package. Marked entries (extras, other platforms)
+# are left alone.
+REQUIREMENTS_PROBE = ["-I", "-c", (
+    "import importlib.metadata as m, re, sys, tomllib\n"
+    "if sys.argv[1]:\n"
+    "    with open(sys.argv[1], 'rb') as f: specs = tomllib.load(f)['project']['dependencies']\n"
+    "else:\n"
+    "    specs = m.requires('networksynth') or []\n"
+    "for spec in specs:\n"
+    "    if ';' in spec: continue\n"
+    "    try: m.distribution(re.match(r'[A-Za-z0-9][A-Za-z0-9._-]*', spec).group())\n"
+    "    except m.PackageNotFoundError: print(spec)")]
 
 INSTALL_COMMAND = ('pip install "networksynth @ '
                    'https://github.com/WilliamLuminary/NetworkSynth/archive/refs/heads/dist.zip"')
@@ -63,8 +70,7 @@ class SynthesisController(QObject):
         configs = load_synthesis_configs()
         self._repo_dir = configs["repo_dir"] or self._submodule_dir()
         self._interpreter = configs["python_interpreter"] or self._resolve_interpreter()
-        self._installed = self._is_installed()
-        self._missing = [] if self._installed else self._missing_requirements()
+        self._installed = False
 
     @staticmethod
     def _submodule_dir() -> str:
@@ -104,20 +110,16 @@ class SynthesisController(QObject):
         return probe.waitForFinished() and probe.exitCode() == 0
 
     def _missing_requirements(self) -> list[str]:
-        """NetworkSynth's requirements the interpreter lacks, as pip specs. A checkout
-        brings nothing with it, unlike an installed package."""
-        pyproject = Path(self._repo_dir, "pyproject.toml")
-        if not self._repo_dir or not pyproject.is_file():
+        """NetworkSynth's requirements the interpreter lacks, as pip specs. An installed
+        package declares them itself; a checkout's are read from its pyproject."""
+        pyproject = "" if self._installed else os.path.join(self._repo_dir, "pyproject.toml")
+        if pyproject and not os.path.isfile(pyproject):
             return []
-        with open(pyproject, "rb") as handle:
-            specs = tomllib.load(handle)["project"]["dependencies"]
-        by_name = {Requirement(spec).name: spec for spec in specs}
         probe = QProcess()
         probe.setStandardErrorFile(QProcess.nullDevice())
-        probe.start(self._interpreter, MISSING_PROBE + list(by_name))
+        probe.start(self._interpreter, REQUIREMENTS_PROBE + [pyproject])
         probe.waitForFinished()
-        missing = bytes(probe.readAllStandardOutput()).decode().split()
-        return [by_name[name] for name in missing if name in by_name]
+        return bytes(probe.readAllStandardOutput()).decode().split("\n")[:-1]
 
     @property
     def package_dir(self) -> str:
@@ -126,34 +128,43 @@ class SynthesisController(QObject):
 
     @Slot(result=str)
     def unavailable_reason(self) -> str:
-        """Why synthesis cannot run, or an empty string when it can."""
+        """Why synthesis cannot run at all, or an empty string. Cheap: no interpreter is asked."""
         if self._interpreter == "":
             return ("This build has no interpreter to run NetworkSynth with. Name one with "
                     "'python_interpreter' under [synthesis-settings] in the config file, or "
                     f"make a virtual environment in {os.path.join(self._repo_dir or str(DEFAULT_REPO_DIR), '.venv')}.")
         if not verify_path(self._interpreter)[0]:
             return f"No Python interpreter at {self._interpreter}."
-        if self._installed:
-            return ""
-        if self._repo_dir == "":
-            return (f"{self._interpreter} cannot import networksynth, and there is no "
-                    f"checkout in {DEFAULT_REPO_DIR}. Install it with '{INSTALL_COMMAND}', "
-                    f"fetch the checkout with '{FETCH_COMMAND}', or name where it already "
-                    "is with 'repo_dir' under [synthesis-settings] in the config file.")
-        if not verify_path(self.package_dir)[0]:
-            if self._repo_dir == str(DEFAULT_REPO_DIR):
-                return (f"{DEFAULT_REPO_DIR} holds no {PACKAGE_DIR}. Fetch NetworkSynth "
-                        f"with '{FETCH_COMMAND}', or install it with '{INSTALL_COMMAND}'.")
-            return f"No {PACKAGE_DIR} in {self._repo_dir}."
-        if self._missing:
-            specs = " ".join(f'"{spec}"' for spec in self._missing)
+        return ""
+
+    def _launch_reason(self) -> str:
+        """Why NetworkSynth cannot start now, or an empty string. Asks the interpreter each
+        time, so a package installed since the last attempt is seen without a restart."""
+        reason = self.unavailable_reason()
+        if reason != "":
+            return reason
+        self._installed = self._is_installed()
+        if not self._installed:
+            if self._repo_dir == "":
+                return (f"{self._interpreter} cannot import networksynth, and there is no "
+                        f"checkout in {DEFAULT_REPO_DIR}. Install it with '{INSTALL_COMMAND}', "
+                        f"fetch the checkout with '{FETCH_COMMAND}', or name where it already "
+                        "is with 'repo_dir' under [synthesis-settings] in the config file.")
+            if not verify_path(self.package_dir)[0]:
+                if self._repo_dir == str(DEFAULT_REPO_DIR):
+                    return (f"{DEFAULT_REPO_DIR} holds no {PACKAGE_DIR}. Fetch NetworkSynth "
+                            f"with '{FETCH_COMMAND}', or install it with '{INSTALL_COMMAND}'.")
+                return f"No {PACKAGE_DIR} in {self._repo_dir}."
+        missing = self._missing_requirements()
+        if missing:
+            specs = " ".join(f'"{spec}"' for spec in missing)
             return ("NetworkSynth needs packages this environment lacks. Install them with "
                     f"'{self._interpreter} -m pip install {specs}'.")
         return ""
 
     @Slot(result=bool)
     def is_available(self) -> bool:
-        """True when NetworkSynth and an interpreter to run it with are both in place."""
+        """True when there is an interpreter to try with."""
         return self.unavailable_reason() == ""
 
     @Slot(result=str)
@@ -197,7 +208,7 @@ class SynthesisController(QObject):
     @Slot()
     def open_synthesis_window(self):
         """Start NetworkSynth as a separate process and let it run on its own."""
-        reason = self.unavailable_reason()
+        reason = self._launch_reason()
         if reason != "":
             self._ctrl.showAlertSignal.emit("Synthesis Unavailable", reason)
             return
