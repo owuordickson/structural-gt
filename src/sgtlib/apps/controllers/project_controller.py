@@ -346,7 +346,10 @@ class ProjectController(QObject):
 
             # Read and load project data and SGT objects
             with open(str(sgt_path), 'rb') as sgt_file:
-                self._ctrl.sgt_objs = pickle.load(sgt_file)
+                loaded_objs = pickle.load(sgt_file)
+            self._ctrl.sgt_objs.clear()
+            self._ctrl.sgt_objs.update(loaded_objs)
+            self._ctrl.selected_sgt_obj_index = 0
 
             if self._ctrl.sgt_objs:
                 key_list = list(self._ctrl.sgt_objs.keys())

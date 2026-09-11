@@ -13,6 +13,7 @@ from .base_controller import BaseController
 from .graph_controller import GraphController
 from .image_controller import ImageController
 from .project_controller import ProjectController
+from .synthesis_controller import SynthesisController
 
 from ..workers.persistent_worker import PersistentProcessWorker
 from ..workers.base_workers import BaseWorker
@@ -42,6 +43,7 @@ class MainController(BaseController):
         self.img_ctrl = ImageController(self)
         self.graph_ctrl = GraphController(self)
         self.ai_ctrl = AIController(self)
+        self.synth_ctrl = SynthesisController(self)
 
         # Create Persistent Workers (Processes)
         self._gt_worker = PersistentProcessWorker(worker_id=1)

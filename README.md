@@ -17,7 +17,7 @@ A software tool that allows graph theory analysis of nanostructures. This is a m
 * We would love to hear from you, please give us feedback.
 
 ## 2. Install via pip
-* Install Python version 3.13 on your computer.
+* Install Python version 3.14 on your computer.
 * Execute the following commands:
 
 ```bash
@@ -29,7 +29,7 @@ pip install sgtlib
 
 Therefore, please follow the manual installation instructions provided below:
 
-* Install Python version 3.13 on your computer.
+* Install Python version 3.14 on your computer.
 * Git Clone this repo: ```https://github.com/owuordickson/structural-gt.git```
 * Extract the ```source code``` folder named **'structural-gt'** and save it to your preferred location on your PC.
 * Open a terminal application such as CMD. 
@@ -148,6 +148,56 @@ print(compute_obj.output_df)
 # Save in PDF
 sgt.GraphAnalyzer.write_to_pdf(compute_obj)
 ```
+
+
+### 3(d) Generating Synthetic Networks
+
+The synthesis button, second from the left on the ribbon, opens [NetworkSynth](https://github.com/WilliamLuminary/NetworkSynth), which builds synthetic networks modelled on an extracted graph. It runs as its own program, so you choose the settings and the output folder in its window.
+
+Extract a graph first and the button hands it straight over: the network travels down a pipe to NetworkSynth and the image is passed by path, so nothing is exported, saved or picked by hand. It opens with both already in place and drawn together, reading the network in the coordinate space StructuralGT traced it in, which is a scaled copy of the image rather than the file itself. The graph in view is the one that travels, so it is one network per click.
+
+Point it at other inputs there and change your mind, and a button in its Input card puts the extracted network back. Open it with no graph extracted and it starts empty, ready for whatever inputs you choose there.
+
+NetworkSynth is a separate program, and this application finds it either as an installed package or as a checkout.
+
+**Install the package.** Nothing to configure afterwards, and it works the same on every platform:
+
+```bash
+pip install "networksynth @ https://github.com/WilliamLuminary/NetworkSynth/archive/refs/heads/dist.zip"
+```
+
+That URL is always the newest release. Install it into the environment StructuralGT runs in, and the button finds it on the import path. Swap `dist` for `dist-dev` to take the newest pre-release instead, which is for developers. Every [release](https://github.com/WilliamLuminary/NetworkSynth/releases) also carries a built wheel if you would rather not build one.
+
+**Or take the submodule,** which is what a source checkout of this repository is set up for:
+
+```bash
+git submodule sync networksynth
+git submodule update --init --checkout networksynth
+git -C networksynth fetch origin dist --depth 1
+git -C networksynth checkout -B dist FETCH_HEAD
+```
+
+`--checkout` is needed because the submodule is set to `update = none`, so a plain `--init` skips it. Run `git submodule sync` again any time `.gitmodules` changes, or the old URL stays cached in your clone.
+
+**To update a submodule, or to move between releases and pre-releases:**
+
+```bash
+BRANCH=dist    # dist-dev for pre-releases, developers only
+git -C networksynth fetch origin $BRANCH --depth 1
+git -C networksynth checkout -B $BRANCH FETCH_HEAD
+```
+
+Those two commands are the whole of it: run them with `dist` to take the newest release, with `dist-dev` to try a pre-release, and with `dist` again to come back.
+
+If NetworkSynth fails, the last lines of its output appear in the SGT Logs window.
+
+The checkout runs in StructuralGT's own environment, so that environment has to cover NetworkSynth's dependencies as well. Most are shared already; install the rest from the checkout's `pyproject.toml`, currently `pot` and `psutil`:
+
+```bash
+pip install "pot~=0.9.7" "psutil~=7.2.2"
+```
+
+You can also point the button at a different folder or a different Python under `[synthesis-settings]` in `sgt_configs.ini`.
 
 
 ## Contributors ✨

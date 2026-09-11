@@ -69,6 +69,7 @@ class PySideApp(QObject):
         self._ui_engine.rootContext().setContextProperty("imageController", self._ctrl.img_ctrl)
         self._ui_engine.rootContext().setContextProperty("graphController", self._ctrl.graph_ctrl)
         self._ui_engine.rootContext().setContextProperty("projectController", self._ctrl.proj_ctrl)
+        self._ui_engine.rootContext().setContextProperty("synthesisController", self._ctrl.synth_ctrl)
 
     def __init__(self):
         super().__init__()
