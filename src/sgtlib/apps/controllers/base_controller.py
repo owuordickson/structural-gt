@@ -80,16 +80,15 @@ class BaseController(QObject):
                     img_obj.configs = shared_img_configs
 
     def get_selected_sgt_obj(self) -> GraphAnalyzer | None:
-        """Retrieve the SGT object at a specified index."""
-        try:
-            keys_list = list(self._sgt_objs.keys())
-            key_at_index = keys_list[self._selected_sgt_obj_index]
-            sgt_obj = self._sgt_objs[key_at_index]
-            return sgt_obj
-        except IndexError:
-            logging.info("No Image Error: Please import/add an image.", extra={'user': 'SGT Logs'})
-            # self.showAlertSignal.emit("No Image Error", "No image added! Please import/add an image.")
+        """Retrieve the selected SGT object, or None while no image has been added."""
+        if not self._sgt_objs:
             return None
+        keys_list = list(self._sgt_objs.keys())
+        if not 0 <= self._selected_sgt_obj_index < len(keys_list):
+            logging.warning("Selected image index %d is out of range for %d images.",
+                            self._selected_sgt_obj_index, len(keys_list), extra={'user': 'SGT Logs'})
+            return None
+        return self._sgt_objs[keys_list[self._selected_sgt_obj_index]]
 
     def get_selected_image(self, img_pos: int = 0, view: str = "original") -> str:
         """

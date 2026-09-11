@@ -19,10 +19,12 @@ STDIN_FLAG = "--graph-from-stdin"
 IMAGE_FLAG = "--image"
 PACKAGE_DIR = os.path.join("src", "networksynth")
 
-# -I keeps the working directory off sys.path: the submodule folder here is called
-# networksynth and would otherwise import as a namespace package, whose __file__ is
-# None, which is what the assert rejects.
-IMPORT_PROBE = ["-I", "-c", "import networksynth; assert networksynth.__file__"]
+# Answers by exit code, so a missing package prints no traceback. find_spec locates
+# without importing. -I keeps the working directory off sys.path: the submodule folder
+# here is called networksynth and would otherwise resolve as a namespace package, whose
+# spec has no origin, which is what the check rejects.
+IMPORT_PROBE = ["-I", "-c", ("import importlib.util, sys; spec = importlib.util.find_spec('networksynth'); "
+                             "sys.exit(0 if spec is not None and spec.origin else 1)")]
 
 INSTALL_COMMAND = ('pip install "networksynth @ '
                    'https://github.com/WilliamLuminary/NetworkSynth/archive/refs/heads/dist.zip"')
@@ -96,7 +98,11 @@ class SynthesisController(QObject):
         """
         if self._interpreter == "" or not verify_path(self._interpreter)[0]:
             return False
-        return QProcess.execute(self._interpreter, IMPORT_PROBE) == 0
+        probe = QProcess()
+        probe.setStandardOutputFile(QProcess.nullDevice())
+        probe.setStandardErrorFile(QProcess.nullDevice())
+        probe.start(self._interpreter, IMPORT_PROBE)
+        return probe.waitForFinished() and probe.exitCode() == 0
 
     @property
     def package_dir(self) -> str:
